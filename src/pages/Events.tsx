@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Calendar, MapPin, Clock, ExternalLink } from 'lucide-react';
+import { Plus, Calendar, MapPin, Clock, ExternalLink, CheckSquare, User } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface Event {
   id: string;
@@ -15,37 +16,64 @@ interface Event {
   url?: string;
   status: 'confirmed' | 'pending' | 'cancelled';
   artist?: string;
+  artistId?: string;
+  contactId?: string;
+  contactName?: string;
+  relatedTasks?: Array<{
+    id: string;
+    title: string;
+    status: 'todo' | 'in-progress' | 'done';
+    dueDate: string;
+  }>;
 }
 
 const sampleEvents: Event[] = [
   {
-    id: '1',
+    id: 'event-1',
     name: 'Summer Music Festival 2024',
     type: 'Festival',
     date: '2024-07-15',
     venue: 'Central Park',
     url: 'https://summerfest2024.com',
     status: 'confirmed',
-    artist: 'The Midnight Express'
+    artist: 'The Midnight Express',
+    artistId: 'artist-1',
+    contactId: 'contact-1',
+    contactName: 'John Smith - MSG',
+    relatedTasks: [
+      { id: '1', title: 'Send contract to Madison Square Garden', status: 'todo', dueDate: '2024-06-15' }
+    ]
   },
   {
-    id: '2',
+    id: 'event-2',
     name: 'Acoustic Night',
     type: 'Concert',
     date: '2024-06-20',
     venue: 'Blue Note Jazz Club',
     status: 'pending',
-    artist: 'Sarah Mitchell'
+    artist: 'Sarah Mitchell',
+    artistId: 'artist-2',
+    contactId: 'contact-2',
+    contactName: 'Sarah Williams',
+    relatedTasks: [
+      { id: '2', title: 'Call venue about sound requirements', status: 'in-progress', dueDate: '2024-06-12' }
+    ]
   },
   {
-    id: '3',
+    id: 'event-3',
     name: 'Rock Legends Tour',
     type: 'Tour',
     date: '2024-08-10',
     venue: 'Madison Square Garden',
     url: 'https://rocklegends.com',
     status: 'confirmed',
-    artist: 'Thunder Road'
+    artist: 'Thunder Road',
+    artistId: 'artist-3',
+    contactId: 'contact-3',
+    contactName: 'Mike Producer',
+    relatedTasks: [
+      { id: '3', title: 'Schedule meeting with artist management', status: 'done', dueDate: '2024-06-14' }
+    ]
   }
 ];
 
@@ -65,6 +93,19 @@ const getStatusColor = (status: string) => {
 export const Events: React.FC = () => {
   const [events, setEvents] = useState<Event[]>(sampleEvents);
   const [showAddForm, setShowAddForm] = useState(false);
+
+  const getTaskStatusColor = (status: string) => {
+    switch (status) {
+      case 'done':
+        return 'bg-green-100 text-green-800';
+      case 'in-progress':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'todo':
+        return 'bg-blue-100 text-blue-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -105,11 +146,61 @@ export const Events: React.FC = () => {
                     </div>
                     {event.artist && (
                       <div className="flex items-center text-gray-600">
-                        <Clock className="h-4 w-4 mr-2" />
-                        <span>{event.artist}</span>
+                        <Link 
+                          to="/artists" 
+                          className="text-purple-600 hover:text-purple-800 flex items-center space-x-1"
+                        >
+                          <Clock className="h-4 w-4 mr-1" />
+                          <span>{event.artist}</span>
+                          <ExternalLink className="h-3 w-3" />
+                        </Link>
                       </div>
                     )}
                   </div>
+
+                  {/* Contact Information */}
+                  {event.contactName && (
+                    <div className="mt-3">
+                      <Link 
+                        to="/contacts" 
+                        className="text-purple-600 hover:text-purple-800 flex items-center space-x-1"
+                      >
+                        <User className="h-4 w-4" />
+                        <span>Contact: {event.contactName}</span>
+                        <ExternalLink className="h-3 w-3" />
+                      </Link>
+                    </div>
+                  )}
+
+                  {/* Related Tasks */}
+                  {event.relatedTasks && event.relatedTasks.length > 0 && (
+                    <div className="mt-4">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <CheckSquare className="h-4 w-4 text-gray-600" />
+                        <span className="text-sm font-medium text-gray-700">Related Tasks:</span>
+                      </div>
+                      <div className="space-y-1">
+                        {event.relatedTasks.map((task) => (
+                          <Link
+                            key={task.id}
+                            to="/tasks"
+                            className="flex items-center justify-between p-2 bg-gray-50 rounded hover:bg-gray-100 transition-colors"
+                          >
+                            <div className="flex items-center space-x-2">
+                              <span className="text-sm text-gray-700">{task.title}</span>
+                              <Badge className={`${getTaskStatusColor(task.status)} text-xs`}>
+                                {task.status.replace('-', ' ')}
+                              </Badge>
+                            </div>
+                            <div className="flex items-center space-x-1 text-xs text-gray-500">
+                              <span>Due: {new Date(task.dueDate).toLocaleDateString()}</span>
+                              <ExternalLink className="h-3 w-3" />
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   
                   {event.url && (
                     <div className="mt-3">

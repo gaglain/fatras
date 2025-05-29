@@ -1,11 +1,13 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Mail, Phone, Calendar, User, Bell, Clock, Users, Grid2X2 } from 'lucide-react';
+import { Plus, Mail, Phone, Calendar, User, Bell, Clock, Users, Grid2X2, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Link } from 'react-router-dom';
 
 interface Task {
   id: string;
@@ -15,8 +17,12 @@ interface Task {
   owner: string;
   dueDate: string;
   status: 'todo' | 'in-progress' | 'done';
-  contact?: string;
-  event?: string;
+  contactId?: string;
+  contactName?: string;
+  eventId?: string;
+  eventName?: string;
+  artistId?: string;
+  artistName?: string;
   description?: string;
 }
 
@@ -29,8 +35,12 @@ const sampleTasks: Task[] = [
     owner: 'Alice Johnson',
     dueDate: '2024-06-15',
     status: 'todo',
-    contact: 'John Smith - MSG',
-    event: 'Summer Concert Series',
+    contactId: 'contact-1',
+    contactName: 'John Smith - MSG',
+    eventId: 'event-1',
+    eventName: 'Summer Concert Series',
+    artistId: 'artist-1',
+    artistName: 'The Midnight Express',
     description: 'Send finalized contract for July concert'
   },
   {
@@ -41,8 +51,12 @@ const sampleTasks: Task[] = [
     owner: 'Bob Miller',
     dueDate: '2024-06-12',
     status: 'in-progress',
-    contact: 'Sarah Williams',
-    event: 'Acoustic Night',
+    contactId: 'contact-2',
+    contactName: 'Sarah Williams',
+    eventId: 'event-2',
+    eventName: 'Acoustic Night',
+    artistId: 'artist-2',
+    artistName: 'Sarah Mitchell',
     description: 'Discuss audio setup for acoustic show'
   },
   {
@@ -53,8 +67,12 @@ const sampleTasks: Task[] = [
     owner: 'Alice Johnson',
     dueDate: '2024-06-14',
     status: 'done',
-    contact: 'Mike Producer',
-    event: 'World Tour 2024',
+    contactId: 'contact-3',
+    contactName: 'Mike Producer',
+    eventId: 'event-3',
+    eventName: 'World Tour 2024',
+    artistId: 'artist-3',
+    artistName: 'Thunder Road',
     description: 'Discuss tour logistics and requirements'
   },
   {
@@ -65,8 +83,12 @@ const sampleTasks: Task[] = [
     owner: 'Carol Davis',
     dueDate: '2024-06-10',
     status: 'todo',
-    contact: 'Venue Manager',
-    event: 'Festival Booking'
+    contactId: 'contact-4',
+    contactName: 'Venue Manager',
+    eventId: 'event-4',
+    eventName: 'Festival Booking',
+    artistId: 'artist-4',
+    artistName: 'Indie Band'
   }
 ];
 
@@ -187,17 +209,42 @@ export const Tasks: React.FC = () => {
                 </span>
               </div>
               
-              {task.contact && (
+              {task.contactName && (
                 <div className="flex items-center space-x-1">
                   <User className="h-3 w-3" />
-                  <span>Contact: {task.contact}</span>
+                  <Link 
+                    to="/contacts" 
+                    className="text-purple-600 hover:text-purple-800 flex items-center space-x-1"
+                  >
+                    <span>Contact: {task.contactName}</span>
+                    <ExternalLink className="h-2 w-2" />
+                  </Link>
                 </div>
               )}
               
-              {task.event && (
+              {task.eventName && (
                 <div className="flex items-center space-x-1">
                   <Calendar className="h-3 w-3" />
-                  <span>Event: {task.event}</span>
+                  <Link 
+                    to="/events" 
+                    className="text-purple-600 hover:text-purple-800 flex items-center space-x-1"
+                  >
+                    <span>Event: {task.eventName}</span>
+                    <ExternalLink className="h-2 w-2" />
+                  </Link>
+                </div>
+              )}
+
+              {task.artistName && (
+                <div className="flex items-center space-x-1">
+                  <Users className="h-3 w-3" />
+                  <Link 
+                    to="/artists" 
+                    className="text-purple-600 hover:text-purple-800 flex items-center space-x-1"
+                  >
+                    <span>Artist: {task.artistName}</span>
+                    <ExternalLink className="h-2 w-2" />
+                  </Link>
                 </div>
               )}
               
