@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Mail, Phone, Calendar, User, Bell, Clock, Users } from 'lucide-react';
+import { Plus, Mail, Phone, Calendar, User, Bell, Clock, Users, Grid2X2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface Task {
@@ -112,7 +111,7 @@ const isDueSoon = (dueDate: string) => {
 export const Tasks: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>(sampleTasks);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [view, setView] = useState<'kanban' | 'list'>('kanban');
+  const [view, setView] = useState<'kanban' | 'list' | 'grid'>('kanban');
   const { toast } = useToast();
 
   const moveTask = (taskId: string, newStatus: 'todo' | 'in-progress' | 'done') => {
@@ -155,10 +154,10 @@ export const Tasks: React.FC = () => {
     const isTaskDueSoon = isDueSoon(task.dueDate);
 
     return (
-      <Card className={`mb-3 hover:shadow-md transition-shadow cursor-pointer ${
+      <Card className={`hover:shadow-md transition-shadow cursor-pointer ${
         isTaskOverdue ? 'border-red-300 bg-red-50' : 
         isTaskDueSoon ? 'border-yellow-300 bg-yellow-50' : ''
-      }`}>
+      } ${view === 'grid' ? 'h-full' : 'mb-3'}`}>
         <CardContent className="p-4">
           <div className="space-y-3">
             <div className="flex items-start justify-between">
@@ -173,6 +172,11 @@ export const Tasks: React.FC = () => {
               <Badge className={`${getPriorityColor(task.priority)} text-xs`}>
                 {task.priority}
               </Badge>
+              {view === 'grid' && (
+                <Badge variant="outline" className="text-xs">
+                  {task.status.replace('-', ' ')}
+                </Badge>
+              )}
             </div>
 
             <div className="space-y-2 text-xs text-gray-600">
@@ -249,13 +253,14 @@ export const Tasks: React.FC = () => {
           <p className="text-gray-600 mt-2">Track emails, calls, meetings, and other important tasks</p>
         </div>
         <div className="flex space-x-3">
-          <Select value={view} onValueChange={(value: 'kanban' | 'list') => setView(value)}>
+          <Select value={view} onValueChange={(value: 'kanban' | 'list' | 'grid') => setView(value)}>
             <SelectTrigger className="w-32">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="kanban">Kanban</SelectItem>
               <SelectItem value="list">List</SelectItem>
+              <SelectItem value="grid">Grid</SelectItem>
             </SelectContent>
           </Select>
           <Button onClick={() => setShowAddForm(true)} className="bg-purple-600 hover:bg-purple-700">
@@ -325,6 +330,22 @@ export const Tasks: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Grid View */}
+      {view === 'grid' && (
+        <div className="space-y-6">
+          <div className="flex items-center space-x-2">
+            <Grid2X2 className="h-5 w-5 text-gray-600" />
+            <h3 className="text-lg font-semibold text-gray-900">All Tasks</h3>
+            <Badge variant="outline">{tasks.length}</Badge>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {tasks.map(task => (
+              <TaskCard key={task.id} task={task} />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Kanban Board */}
       {view === 'kanban' && (
