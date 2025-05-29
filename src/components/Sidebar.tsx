@@ -10,7 +10,8 @@ import {
   FileText, 
   Package, 
   BookOpen,
-  Home
+  Home,
+  Route
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -23,6 +24,7 @@ const navigation = [
   { name: 'Email', href: '/email', icon: Mail },
   { name: 'Contracts', href: '/contracts', icon: FileText },
   { name: 'Merchandise', href: '/merchandise', icon: Package },
+  { name: 'Road Show', href: '/road-show', icon: Route },
   { name: 'Show Bible', href: '/show-bible', icon: BookOpen },
 ];
 

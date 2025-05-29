@@ -13,6 +13,7 @@ import { Artists } from "./pages/Artists";
 import { Email } from "./pages/Email";
 import { Contracts } from "./pages/Contracts";
 import { Merchandise } from "./pages/Merchandise";
+import { RoadShow } from "./pages/RoadShow";
 import { ShowBible } from "./pages/ShowBible";
 import NotFound from "./pages/NotFound";
 
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/email" element={<Email />} />
             <Route path="/contracts" element={<Contracts />} />
             <Route path="/merchandise" element={<Merchandise />} />
+            <Route path="/road-show" element={<RoadShow />} />
             <Route path="/show-bible" element={<ShowBible />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
