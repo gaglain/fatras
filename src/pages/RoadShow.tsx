@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Route, Edit, Eye, Share, Download } from 'lucide-react';
+import { Plus, Route, Edit, Eye, Share, Download, MapPin, Clock, ExternalLink } from 'lucide-react';
 
 interface RoadShow {
   id: string;
@@ -12,7 +12,10 @@ interface RoadShow {
   event: string;
   artist: string;
   venue: string;
+  address: string;
   date: string;
+  showTime: string;
+  checkTime: string;
   lastUpdated: string;
   sections: string[];
   collaborators: string[];
@@ -25,7 +28,10 @@ const sampleRoadShows: RoadShow[] = [
     event: 'Summer Music Festival 2024',
     artist: 'The Midnight Express',
     venue: 'Central Park',
+    address: 'Central Park, New York, NY 10024, États-Unis',
     date: '2024-07-15',
+    showTime: '20:00',
+    checkTime: '16:00',
     lastUpdated: '2024-06-12',
     sections: ['Technical Rider', 'Stage Plot', 'Set List', 'Hospitality', 'Security', 'Marketing'],
     collaborators: ['Alice Johnson', 'Bob Miller', 'Sarah Wilson']
@@ -36,7 +42,10 @@ const sampleRoadShows: RoadShow[] = [
     event: 'Acoustic Night',
     artist: 'Sarah Mitchell',
     venue: 'Blue Note Jazz Club',
+    address: '131 W 3rd St, New York, NY 10012, États-Unis',
     date: '2024-06-20',
+    showTime: '21:30',
+    checkTime: '18:00',
     lastUpdated: '2024-06-10',
     sections: ['Sound Requirements', 'Set List', 'Lighting', 'Hospitality'],
     collaborators: ['Alice Johnson', 'Mike Rodriguez']
@@ -47,7 +56,10 @@ const sampleRoadShows: RoadShow[] = [
     event: 'Rock Legends Tour',
     artist: 'Thunder Road',
     venue: 'Madison Square Garden',
+    address: '4 Pennsylvania Plaza, New York, NY 10001, États-Unis',
     date: '2024-08-10',
+    showTime: '19:30',
+    checkTime: '15:00',
     lastUpdated: '2024-06-11',
     sections: ['Technical Rider', 'Stage Plot', 'Set List', 'Pyrotechnics', 'Security', 'VIP', 'Merchandise'],
     collaborators: ['Bob Miller', 'Sarah Wilson', 'Tom Anderson']
@@ -59,16 +71,20 @@ export const RoadShow: React.FC = () => {
   const [selectedRoadShow, setSelectedRoadShow] = useState<RoadShow | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
 
+  const getGoogleMapsUrl = (address: string) => {
+    return `https://maps.google.com/?q=${encodeURIComponent(address)}`;
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Road Show</h1>
-          <p className="text-gray-600 mt-2">Comprehensive production documentation for each show</p>
+          <h1 className="text-3xl font-bold text-gray-900">Tournée</h1>
+          <p className="text-gray-600 mt-2">Documentation complète de production pour chaque spectacle</p>
         </div>
         <Button onClick={() => setShowCreateForm(true)} className="bg-purple-600 hover:bg-purple-700">
           <Plus className="h-4 w-4 mr-2" />
-          Create Road Show
+          Créer une Tournée
         </Button>
       </div>
 
@@ -85,22 +101,54 @@ export const RoadShow: React.FC = () => {
                       <h3 className="text-xl font-semibold text-gray-900">{roadShow.title}</h3>
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                       <div>
-                        <p className="text-sm text-gray-500">Event</p>
+                        <p className="text-sm text-gray-500">Événement</p>
                         <p className="font-medium">{roadShow.event}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Artist</p>
+                        <p className="text-sm text-gray-500">Artiste</p>
                         <p className="font-medium">{roadShow.artist}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Venue</p>
+                        <p className="text-sm text-gray-500">Lieu</p>
                         <p className="font-medium">{roadShow.venue}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Show Date</p>
+                        <p className="text-sm text-gray-500">Date du spectacle</p>
                         <p className="font-medium">{new Date(roadShow.date).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                      <div className="flex items-center space-x-2">
+                        <Clock className="h-4 w-4 text-gray-500" />
+                        <div>
+                          <p className="text-sm text-gray-500">Heure de checking</p>
+                          <p className="font-medium">{roadShow.checkTime}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Clock className="h-4 w-4 text-gray-500" />
+                        <div>
+                          <p className="text-sm text-gray-500">Heure du spectacle</p>
+                          <p className="font-medium">{roadShow.showTime}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <MapPin className="h-4 w-4 text-gray-500" />
+                        <div>
+                          <p className="text-sm text-gray-500">Adresse</p>
+                          <a 
+                            href={getGoogleMapsUrl(roadShow.address)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-medium text-blue-600 hover:text-blue-800 flex items-center space-x-1"
+                          >
+                            <span className="truncate max-w-48">{roadShow.address}</span>
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
+                        </div>
                       </div>
                     </div>
                     
@@ -114,8 +162,8 @@ export const RoadShow: React.FC = () => {
                     </div>
                     
                     <div className="flex items-center justify-between text-sm text-gray-500">
-                      <span>Last updated: {new Date(roadShow.lastUpdated).toLocaleDateString()}</span>
-                      <span>Collaborators: {roadShow.collaborators.join(', ')}</span>
+                      <span>Dernière mise à jour: {new Date(roadShow.lastUpdated).toLocaleDateString()}</span>
+                      <span>Collaborateurs: {roadShow.collaborators.join(', ')}</span>
                     </div>
                   </div>
                   
@@ -126,15 +174,15 @@ export const RoadShow: React.FC = () => {
                       onClick={() => setSelectedRoadShow(roadShow)}
                     >
                       <Eye className="h-3 w-3 mr-1" />
-                      View
+                      Voir
                     </Button>
                     <Button variant="outline" size="sm">
                       <Edit className="h-3 w-3 mr-1" />
-                      Edit
+                      Modifier
                     </Button>
                     <Button variant="outline" size="sm">
                       <Share className="h-3 w-3 mr-1" />
-                      Share
+                      Partager
                     </Button>
                   </div>
                 </div>
@@ -147,20 +195,20 @@ export const RoadShow: React.FC = () => {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <Button variant="outline" onClick={() => setSelectedRoadShow(null)}>
-              ← Back to Road Shows
+              ← Retour aux Tournées
             </Button>
             <div className="flex space-x-2">
               <Button variant="outline">
                 <Edit className="h-4 w-4 mr-2" />
-                Edit
+                Modifier
               </Button>
               <Button variant="outline">
                 <Download className="h-4 w-4 mr-2" />
-                Export PDF
+                Exporter PDF
               </Button>
               <Button variant="outline">
                 <Share className="h-4 w-4 mr-2" />
-                Share
+                Partager
               </Button>
             </div>
           </div>
@@ -168,8 +216,22 @@ export const RoadShow: React.FC = () => {
           <Card>
             <CardHeader>
               <CardTitle>{selectedRoadShow.title}</CardTitle>
-              <div className="text-sm text-gray-600">
-                {selectedRoadShow.event} • {selectedRoadShow.artist} • {selectedRoadShow.venue}
+              <div className="text-sm text-gray-600 space-y-2">
+                <div>{selectedRoadShow.event} • {selectedRoadShow.artist} • {selectedRoadShow.venue}</div>
+                <div className="flex items-center space-x-4">
+                  <span>Check: {selectedRoadShow.checkTime}</span>
+                  <span>Show: {selectedRoadShow.showTime}</span>
+                  <a 
+                    href={getGoogleMapsUrl(selectedRoadShow.address)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 flex items-center space-x-1"
+                  >
+                    <MapPin className="h-3 w-3" />
+                    <span>Voir sur Maps</span>
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
@@ -235,18 +297,29 @@ export const RoadShow: React.FC = () => {
       {/* Create Road Show Form Modal */}
       {showCreateForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <Card className="w-full max-w-lg mx-4">
+          <Card className="w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
             <CardHeader>
-              <CardTitle>Create New Road Show</CardTitle>
+              <CardTitle>Créer une Nouvelle Tournée</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Input placeholder="Road Show Title" />
-              <Input placeholder="Event Name" />
-              <Input placeholder="Artist" />
-              <Input placeholder="Venue" />
-              <Input type="date" placeholder="Show Date" />
+              <Input placeholder="Titre de la tournée" />
+              <Input placeholder="Nom de l'événement" />
+              <Input placeholder="Artiste" />
+              <Input placeholder="Lieu" />
+              <Input placeholder="Adresse complète" />
+              <Input type="date" placeholder="Date du spectacle" />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Heure de checking</label>
+                  <Input type="time" placeholder="Checking" />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Heure du spectacle</label>
+                  <Input type="time" placeholder="Spectacle" />
+                </div>
+              </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Initial Sections</label>
+                <label className="text-sm font-medium text-gray-700">Sections initiales</label>
                 <div className="grid grid-cols-2 gap-2">
                   {['Technical Rider', 'Stage Plot', 'Set List', 'Hospitality', 'Security', 'Marketing', 'Lighting', 'Transportation'].map((section) => (
                     <label key={section} className="flex items-center space-x-2">
@@ -256,13 +329,13 @@ export const RoadShow: React.FC = () => {
                   ))}
                 </div>
               </div>
-              <Input placeholder="Collaborators (comma separated)" />
+              <Input placeholder="Collaborateurs (séparés par des virgules)" />
               <div className="flex space-x-3 pt-4">
                 <Button onClick={() => setShowCreateForm(false)} variant="outline" className="flex-1">
-                  Cancel
+                  Annuler
                 </Button>
                 <Button onClick={() => setShowCreateForm(false)} className="flex-1 bg-purple-600 hover:bg-purple-700">
-                  Create Road Show
+                  Créer la Tournée
                 </Button>
               </div>
             </CardContent>

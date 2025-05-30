@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,17 +6,23 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import { Upload, Palette, Type, Monitor, Save } from 'lucide-react';
+import { Upload, Palette, Type, Monitor, Save, Plus, X, Mail } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 export const Preferences: React.FC = () => {
   const [logo, setLogo] = useState<string | null>(null);
   const [companyName, setCompanyName] = useState('ShowManager Pro');
   const [primaryColor, setPrimaryColor] = useState('#9333ea');
   const [secondaryColor, setSecondaryColor] = useState('#6b7280');
+  const [backgroundColor, setBackgroundColor] = useState('#f9fafb');
   const [fontFamily, setFontFamily] = useState('inter');
   const [fontSize, setFontSize] = useState('medium');
   const [darkMode, setDarkMode] = useState(false);
   const [compactMode, setCompactMode] = useState(false);
+  const [customTaskTypes, setCustomTaskTypes] = useState(['email', 'phone', 'meeting', 'other']);
+  const [newTaskType, setNewTaskType] = useState('');
+  const [gmailConnected, setGmailConnected] = useState(false);
+  const [gmailEmail, setGmailEmail] = useState('');
 
   const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -30,6 +35,25 @@ export const Preferences: React.FC = () => {
     }
   };
 
+  const addTaskType = () => {
+    if (newTaskType && !customTaskTypes.includes(newTaskType.toLowerCase())) {
+      setCustomTaskTypes([...customTaskTypes, newTaskType.toLowerCase()]);
+      setNewTaskType('');
+    }
+  };
+
+  const removeTaskType = (typeToRemove: string) => {
+    if (!['email', 'phone', 'meeting', 'other'].includes(typeToRemove)) {
+      setCustomTaskTypes(customTaskTypes.filter(type => type !== typeToRemove));
+    }
+  };
+
+  const connectGmail = () => {
+    // Mock Gmail connection
+    setGmailConnected(true);
+    setGmailEmail('user@gmail.com');
+  };
+
   const colorPresets = [
     { name: 'Violet', primary: '#9333ea', secondary: '#6b7280' },
     { name: 'Bleu', primary: '#2563eb', secondary: '#6b7280' },
@@ -37,6 +61,15 @@ export const Preferences: React.FC = () => {
     { name: 'Rouge', primary: '#dc2626', secondary: '#6b7280' },
     { name: 'Orange', primary: '#ea580c', secondary: '#6b7280' },
     { name: 'Rose', primary: '#e11d48', secondary: '#6b7280' },
+  ];
+
+  const backgroundPresets = [
+    { name: 'Gris Clair', color: '#f9fafb' },
+    { name: 'Blanc', color: '#ffffff' },
+    { name: 'Bleu Clair', color: '#f0f9ff' },
+    { name: 'Violet Clair', color: '#faf5ff' },
+    { name: 'Vert Clair', color: '#f0fdf4' },
+    { name: 'Beige', color: '#fefbf3' },
   ];
 
   const fontOptions = [
@@ -54,10 +87,14 @@ export const Preferences: React.FC = () => {
       companyName,
       primaryColor,
       secondaryColor,
+      backgroundColor,
       fontFamily,
       fontSize,
       darkMode,
       compactMode,
+      customTaskTypes,
+      gmailConnected,
+      gmailEmail,
     };
     
     localStorage.setItem('appPreferences', JSON.stringify(preferences));
@@ -65,9 +102,11 @@ export const Preferences: React.FC = () => {
     // Apply changes to document
     document.documentElement.style.setProperty('--primary-color', primaryColor);
     document.documentElement.style.setProperty('--secondary-color', secondaryColor);
+    document.body.style.backgroundColor = backgroundColor;
     document.documentElement.className = darkMode ? 'dark' : '';
     
-    console.log('Préférences sauvegardées:', preferences);
+    // Reload to apply changes
+    window.location.reload();
   };
 
   return (
@@ -174,6 +213,29 @@ export const Preferences: React.FC = () => {
 
             <Separator />
 
+            <div>
+              <Label>Couleurs d'arrière-plan</Label>
+              <div className="grid grid-cols-3 gap-2 mt-2">
+                {backgroundPresets.map((preset) => (
+                  <button
+                    key={preset.name}
+                    className="p-3 border rounded-lg hover:bg-gray-50 text-center"
+                    onClick={() => setBackgroundColor(preset.color)}
+                  >
+                    <div className="flex justify-center mb-1">
+                      <div 
+                        className="w-8 h-4 rounded border" 
+                        style={{ backgroundColor: preset.color }}
+                      />
+                    </div>
+                    <span className="text-xs">{preset.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <Separator />
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="primary-color">Couleur principale</Label>
@@ -195,24 +257,96 @@ export const Preferences: React.FC = () => {
               </div>
               
               <div>
-                <Label htmlFor="secondary-color">Couleur secondaire</Label>
+                <Label htmlFor="background-color">Couleur d'arrière-plan</Label>
                 <div className="flex space-x-2 mt-1">
                   <Input
-                    id="secondary-color"
+                    id="background-color"
                     type="color"
-                    value={secondaryColor}
-                    onChange={(e) => setSecondaryColor(e.target.value)}
+                    value={backgroundColor}
+                    onChange={(e) => setBackgroundColor(e.target.value)}
                     className="w-16 h-10 p-1"
                   />
                   <Input
-                    value={secondaryColor}
-                    onChange={(e) => setSecondaryColor(e.target.value)}
-                    placeholder="#6b7280"
+                    value={backgroundColor}
+                    onChange={(e) => setBackgroundColor(e.target.value)}
+                    placeholder="#f9fafb"
                     className="flex-1"
                   />
                 </div>
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Task Types */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Types de Tâches Personnalisés</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label>Types de tâches disponibles</Label>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {customTaskTypes.map((type) => (
+                  <Badge key={type} variant="outline" className="flex items-center space-x-1">
+                    <span>{type}</span>
+                    {!['email', 'phone', 'meeting', 'other'].includes(type) && (
+                      <X 
+                        className="h-3 w-3 cursor-pointer" 
+                        onClick={() => removeTaskType(type)}
+                      />
+                    )}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+            <div className="flex space-x-2">
+              <Input
+                placeholder="Nouveau type de tâche"
+                value={newTaskType}
+                onChange={(e) => setNewTaskType(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && addTaskType()}
+              />
+              <Button onClick={addTaskType} size="sm">
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Email Integration */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Mail className="h-5 w-5 mr-2" />
+              Intégration Email
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label>Connexion Gmail</Label>
+                <p className="text-sm text-gray-500">
+                  {gmailConnected ? `Connecté à ${gmailEmail}` : 'Connectez votre compte Gmail'}
+                </p>
+              </div>
+              {gmailConnected ? (
+                <Button variant="outline" onClick={() => setGmailConnected(false)}>
+                  Déconnecter
+                </Button>
+              ) : (
+                <Button onClick={connectGmail} className="bg-red-600 hover:bg-red-700">
+                  Connecter Gmail
+                </Button>
+              )}
+            </div>
+            {gmailConnected && (
+              <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                <p className="text-sm text-green-800">
+                  ✓ Gmail connecté avec succès. Vous pouvez maintenant envoyer des emails directement depuis l'application.
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
 

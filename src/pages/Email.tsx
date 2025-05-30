@@ -4,7 +4,20 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Mail, Send, Calendar, Phone, FileText, Edit, Trash2 } from 'lucide-react';
+import { Plus, Mail, Send, Calendar, Phone, FileText, Edit, Trash2, Inbox, Search, Star, Archive } from 'lucide-react';
+import { EmailViewer } from '@/components/EmailViewer';
+
+interface Email {
+  id: string;
+  from: string;
+  to: string;
+  subject: string;
+  content: string;
+  date: string;
+  isRead: boolean;
+  isStarred: boolean;
+  attachments?: string[];
+}
 
 interface EmailTemplate {
   id: string;
@@ -22,6 +35,40 @@ interface ScheduledEmail {
   scheduledFor: string;
   status: 'scheduled' | 'sent' | 'failed';
 }
+
+const sampleEmails: Email[] = [
+  {
+    id: '1',
+    from: 'john.smith@venue.com',
+    to: 'user@showmanager.com',
+    subject: 'Confirmation de la réservation - Salle de Concert',
+    content: 'Bonjour,\n\nNous confirmons votre réservation pour le 15 juillet 2024.\n\nVeuillez trouver les détails ci-dessous:\n- Date: 15 juillet 2024\n- Heure: 20h00\n- Lieu: Salle principale\n- Capacité: 500 personnes\n\nCordialement,\nJohn Smith\nGestionnaire de venue',
+    date: '2024-06-13T10:30:00',
+    isRead: false,
+    isStarred: true,
+    attachments: ['contract_final.pdf', 'technical_rider.pdf']
+  },
+  {
+    id: '2',
+    from: 'sarah@festivalprods.com',
+    to: 'user@showmanager.com',
+    subject: 'Demande de fiche technique - Thunder Road',
+    content: 'Bonjour,\n\nPourriez-vous nous envoyer la fiche technique mise à jour pour Thunder Road?\n\nNous devons finaliser le setup pour le festival.\n\nMerci,\nSarah',
+    date: '2024-06-12T14:15:00',
+    isRead: true,
+    isStarred: false
+  },
+  {
+    id: '3',
+    from: 'mike@production.com',
+    to: 'user@showmanager.com',
+    subject: 'Nouvelle date disponible - The Midnight Express',
+    content: 'Salut,\n\nNous avons une nouvelle date qui s\'est libérée le 20 août.\n\nSeriez-vous intéressés pour The Midnight Express?\n\nFaites-moi savoir rapidement.\n\nMike',
+    date: '2024-06-11T09:45:00',
+    isRead: true,
+    isStarred: false
+  }
+];
 
 const emailTemplates: EmailTemplate[] = [
   {
@@ -84,27 +131,65 @@ const scheduledEmails: ScheduledEmail[] = [
 ];
 
 export const Email: React.FC = () => {
+  const [emails, setEmails] = useState<Email[]>(sampleEmails);
+  const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
   const [showCompose, setShowCompose] = useState(false);
   const [showScheduled, setShowScheduled] = useState(false);
   const [showTemplateEditor, setShowTemplateEditor] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState<string>('all');
 
   const categories = ['all', 'Contrat', 'Réservation', 'Technique', 'Commercial', 'Finance'];
+
+  const filteredEmails = emails.filter(email => {
+    const matchesSearch = email.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         email.from.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         email.content.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesFilter = filterType === 'all' || 
+                         (filterType === 'unread' && !email.isRead) ||
+                         (filterType === 'starred' && email.isStarred);
+
+    return matchesSearch && matchesFilter;
+  });
 
   const filteredTemplates = selectedCategory === 'all' 
     ? emailTemplates 
     : emailTemplates.filter(template => template.category === selectedCategory);
 
-  const handleEditTemplate = (template: EmailTemplate) => {
-    setSelectedTemplate(template);
-    setShowTemplateEditor(true);
+  const handleEmailClick = (email: Email) => {
+    if (!email.isRead) {
+      setEmails(emails.map(e => e.id === email.id ? { ...e, isRead: true } : e));
+    }
+    setSelectedEmail(email);
   };
 
-  const handleCreateTemplate = () => {
-    setSelectedTemplate(null);
-    setShowTemplateEditor(true);
+  const handleReply = (email: Email) => {
+    setSelectedEmail(null);
+    setShowCompose(true);
+    // Pre-fill compose form with reply data
   };
+
+  const handleForward = (email: Email) => {
+    setSelectedEmail(null);
+    setShowCompose(true);
+    // Pre-fill compose form with forward data
+  };
+
+  if (selectedEmail) {
+    return (
+      <div className="h-full">
+        <EmailViewer
+          email={selectedEmail}
+          onClose={() => setSelectedEmail(null)}
+          onReply={handleReply}
+          onForward={handleForward}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -125,31 +210,136 @@ export const Email: React.FC = () => {
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="cursor-pointer hover:shadow-lg transition-shadow">
-          <CardContent className="p-6 text-center">
-            <Mail className="h-8 w-8 text-purple-600 mx-auto mb-3" />
-            <h3 className="font-semibold text-gray-900">Envoyer Email</h3>
-            <p className="text-sm text-gray-600">Composer et envoyer des emails aux contacts</p>
-          </CardContent>
-        </Card>
-        
-        <Card className="cursor-pointer hover:shadow-lg transition-shadow">
-          <CardContent className="p-6 text-center">
-            <Calendar className="h-8 w-8 text-purple-600 mx-auto mb-3" />
-            <h3 className="font-semibold text-gray-900">Programmer Réunion</h3>
-            <p className="text-sm text-gray-600">Organiser des appels et réunions</p>
-          </CardContent>
-        </Card>
-        
-        <Card className="cursor-pointer hover:shadow-lg transition-shadow">
-          <CardContent className="p-6 text-center">
-            <Phone className="h-8 w-8 text-purple-600 mx-auto mb-3" />
-            <h3 className="font-semibold text-gray-900">Appel Téléphonique</h3>
-            <p className="text-sm text-gray-600">Enregistrer et suivre les communications téléphoniques</p>
-          </CardContent>
-        </Card>
+      {/* Email Inbox */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center">
+                  <Inbox className="h-5 w-5 mr-2" />
+                  Boîte de réception
+                </CardTitle>
+                <div className="flex items-center space-x-2">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                    <Input
+                      placeholder="Rechercher..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 w-64"
+                    />
+                  </div>
+                  <Select value={filterType} onValueChange={setFilterType}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue placeholder="Filtre" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tous</SelectItem>
+                      <SelectItem value="unread">Non lus</SelectItem>
+                      <SelectItem value="starred">Favoris</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="space-y-0">
+                {filteredEmails.map((email) => (
+                  <div
+                    key={email.id}
+                    className={`p-4 border-b hover:bg-gray-50 cursor-pointer transition-colors ${
+                      !email.isRead ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
+                    }`}
+                    onClick={() => handleEmailClick(email)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center space-x-2 mb-1">
+                          {email.isStarred && <Star className="h-4 w-4 text-yellow-500 fill-current" />}
+                          {!email.isRead && <div className="w-2 h-2 bg-blue-500 rounded-full" />}
+                          <span className={`font-medium ${!email.isRead ? 'text-gray-900' : 'text-gray-700'}`}>
+                            {email.from}
+                          </span>
+                        </div>
+                        <h4 className={`font-medium truncate ${!email.isRead ? 'text-gray-900' : 'text-gray-800'}`}>
+                          {email.subject}
+                        </h4>
+                        <p className="text-sm text-gray-600 truncate mt-1">
+                          {email.content.substring(0, 100)}...
+                        </p>
+                      </div>
+                      <div className="text-right ml-4">
+                        <p className="text-sm text-gray-500">
+                          {new Date(email.date).toLocaleDateString('fr-FR')}
+                        </p>
+                        {email.attachments && email.attachments.length > 0 && (
+                          <Badge variant="outline" className="mt-1 text-xs">
+                            {email.attachments.length} pièce(s) jointe(s)
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="space-y-6">
+          {/* Quick Actions */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Actions rapides</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Button onClick={() => setShowCompose(true)} className="w-full bg-purple-600 hover:bg-purple-700">
+                <Mail className="h-4 w-4 mr-2" />
+                Composer
+              </Button>
+              <Button variant="outline" className="w-full">
+                <Calendar className="h-4 w-4 mr-2" />
+                Programmer
+              </Button>
+              <Button variant="outline" className="w-full">
+                <Phone className="h-4 w-4 mr-2" />
+                Appel rapide
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Email Stats */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Statistiques</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Total</span>
+                <span className="font-medium">{emails.length}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Non lus</span>
+                <span className="font-medium text-blue-600">
+                  {emails.filter(e => !e.isRead).length}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Favoris</span>
+                <span className="font-medium text-yellow-600">
+                  {emails.filter(e => e.isStarred).length}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Programmés</span>
+                <span className="font-medium text-purple-600">
+                  {scheduledEmails.length}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       {/* Scheduled Emails */}
@@ -200,7 +390,7 @@ export const Email: React.FC = () => {
                   ))}
                 </SelectContent>
               </Select>
-              <Button onClick={handleCreateTemplate} variant="outline" size="sm">
+              <Button onClick={() => setShowTemplateEditor(true)} variant="outline" size="sm">
                 <Plus className="h-4 w-4 mr-1" />
                 Nouveau Modèle
               </Button>
