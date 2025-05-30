@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { X, Send, Paperclip, FileText, Image, Video, Music, Upload, Template } from 'lucide-react';
+import { X, Send, Paperclip, FileText, Image, Video, Music, Upload, FileTemplate } from 'lucide-react';
 
 interface EmailHistory {
   id: string;
@@ -193,7 +192,7 @@ export const EmailPopup: React.FC<EmailPopupProps> = ({ isOpen, onClose, email, 
                     size="sm"
                     onClick={() => setShowTemplates(!showTemplates)}
                   >
-                    <Template className="h-3 w-3 mr-1" />
+                    <FileTemplate className="h-3 w-3 mr-1" />
                     Modèles
                   </Button>
                 </div>

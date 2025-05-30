@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Mail, Send, Calendar, Phone, Template, Edit, Trash2 } from 'lucide-react';
+import { Plus, Mail, Send, Calendar, Phone, FileTemplate, Edit, Trash2 } from 'lucide-react';
 
 interface EmailTemplate {
   id: string;
