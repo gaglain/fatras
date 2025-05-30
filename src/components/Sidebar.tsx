@@ -16,16 +16,16 @@ import {
 import { cn } from '@/lib/utils';
 
 const navigation = [
-  { name: 'Dashboard', href: '/', icon: Home },
+  { name: 'Tableau de Bord', href: '/', icon: Home },
   { name: 'Contacts', href: '/contacts', icon: Users },
-  { name: 'Events', href: '/events', icon: Calendar },
-  { name: 'Tasks', href: '/tasks', icon: CheckSquare },
-  { name: 'Artists', href: '/artists', icon: Music },
+  { name: 'Événements', href: '/events', icon: Calendar },
+  { name: 'Tâches', href: '/tasks', icon: CheckSquare },
+  { name: 'Artistes', href: '/artists', icon: Music },
   { name: 'Email', href: '/email', icon: Mail },
-  { name: 'Contracts', href: '/contracts', icon: FileText },
-  { name: 'Merchandise', href: '/merchandise', icon: Package },
+  { name: 'Contrats', href: '/contracts', icon: FileText },
+  { name: 'Marchandise', href: '/merchandise', icon: Package },
   { name: 'Road Show', href: '/road-show', icon: Route },
-  { name: 'Show Bible', href: '/show-bible', icon: BookOpen },
+  { name: 'Bible de Spectacle', href: '/show-bible', icon: BookOpen },
 ];
 
 export const Sidebar: React.FC = () => {
@@ -35,7 +35,7 @@ export const Sidebar: React.FC = () => {
     <div className="w-64 bg-white shadow-lg">
       <div className="p-6">
         <h1 className="text-2xl font-bold text-purple-600">ArtistCRM</h1>
-        <p className="text-sm text-gray-500 mt-1">Booker Management</p>
+        <p className="text-sm text-gray-500 mt-1">Gestion de Booking</p>
       </div>
       
       <nav className="mt-6">

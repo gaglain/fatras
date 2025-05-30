@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Music, Calendar, MapPin, Clock, Bed } from 'lucide-react';
+import { Plus, Music, Calendar, MapPin, Clock, Bed, BookOpen } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface Artist {
   id: string;
@@ -33,22 +34,22 @@ const sampleArtists: Artist[] = [
     genre: 'Rock',
     status: 'active',
     upcomingShows: 8,
-    currentTour: 'Summer Rock Tour 2024'
+    currentTour: 'Tournée Rock Été 2024'
   },
   {
     id: '2',
     name: 'Sarah Mitchell',
-    genre: 'Folk/Acoustic',
+    genre: 'Folk/Acoustique',
     status: 'active',
     upcomingShows: 3
   },
   {
     id: '3',
     name: 'Thunder Road',
-    genre: 'Classic Rock',
+    genre: 'Rock Classique',
     status: 'active',
     upcomingShows: 12,
-    currentTour: 'Legends Never Die Tour'
+    currentTour: 'Tournée Legends Never Die'
   }
 ];
 
@@ -61,7 +62,7 @@ const sampleTourSchedule: TourSchedule[] = [
     showTime: '20:00',
     rehearsalTime: '16:00',
     hotel: 'The Plaza Hotel',
-    notes: 'VIP meet & greet after show'
+    notes: 'Rencontre VIP après le spectacle'
   },
   {
     id: '2',
@@ -75,6 +76,7 @@ const sampleTourSchedule: TourSchedule[] = [
 ];
 
 export const Artists: React.FC = () => {
+  const navigate = useNavigate();
   const [artists, setArtists] = useState<Artist[]>(sampleArtists);
   const [tourSchedule, setTourSchedule] = useState<TourSchedule[]>(sampleTourSchedule);
   const [selectedArtist, setSelectedArtist] = useState<string | null>(null);
@@ -88,19 +90,25 @@ export const Artists: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Artist Management</h1>
-          <p className="text-gray-600 mt-2">Manage artists, tours, schedules, and logistics</p>
+          <h1 className="text-3xl font-bold text-gray-900">Gestion des Artistes</h1>
+          <p className="text-gray-600 mt-2">Gérer les artistes, tournées, plannings et logistique</p>
         </div>
-        <Button onClick={() => setShowAddForm(true)} className="bg-purple-600 hover:bg-purple-700">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Artist
-        </Button>
+        <div className="flex space-x-2">
+          <Button variant="outline" onClick={() => navigate('/show-bible')}>
+            <BookOpen className="h-4 w-4 mr-2" />
+            Bible de Spectacle
+          </Button>
+          <Button onClick={() => setShowAddForm(true)} className="bg-purple-600 hover:bg-purple-700">
+            <Plus className="h-4 w-4 mr-2" />
+            Ajouter Artiste
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Artists List */}
         <div className="lg:col-span-1">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Artists</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Artistes</h2>
           <div className="space-y-3">
             {artists.map((artist) => (
               <Card 
@@ -120,15 +128,30 @@ export const Artists: React.FC = () => {
                       <p className="text-sm text-gray-500">{artist.genre}</p>
                     </div>
                     <Badge variant={artist.status === 'active' ? 'default' : 'secondary'}>
-                      {artist.status}
+                      {artist.status === 'active' ? 'Actif' : 'Inactif'}
                     </Badge>
                   </div>
                   
                   <div className="text-sm text-gray-600">
-                    <p>{artist.upcomingShows} upcoming shows</p>
+                    <p>{artist.upcomingShows} spectacles à venir</p>
                     {artist.currentTour && (
                       <p className="text-purple-600 font-medium">{artist.currentTour}</p>
                     )}
+                  </div>
+                  
+                  <div className="mt-3">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate('/show-bible');
+                      }}
+                    >
+                      <BookOpen className="h-3 w-3 mr-1" />
+                      Voir Bible
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -140,8 +163,8 @@ export const Artists: React.FC = () => {
         <div className="lg:col-span-2">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">
             {selectedArtist ? 
-              `Tour Schedule - ${artists.find(a => a.id === selectedArtist)?.name}` : 
-              'Select an artist to view tour schedule'
+              `Planning de Tournée - ${artists.find(a => a.id === selectedArtist)?.name}` : 
+              'Sélectionner un artiste pour voir le planning de tournée'
             }
           </h2>
           
@@ -157,17 +180,17 @@ export const Artists: React.FC = () => {
                         <div className="space-y-2">
                           <div className="flex items-center text-gray-600">
                             <Calendar className="h-4 w-4 mr-2" />
-                            <span>{new Date(schedule.date).toLocaleDateString()}</span>
+                            <span>{new Date(schedule.date).toLocaleDateString('fr-FR')}</span>
                           </div>
                           
                           <div className="flex items-center text-gray-600">
                             <Clock className="h-4 w-4 mr-2" />
-                            <span>Show: {schedule.showTime}</span>
+                            <span>Spectacle: {schedule.showTime}</span>
                           </div>
                           
                           <div className="flex items-center text-gray-600">
                             <Clock className="h-4 w-4 mr-2" />
-                            <span>Rehearsal: {schedule.rehearsalTime}</span>
+                            <span>Répétition: {schedule.rehearsalTime}</span>
                           </div>
                           
                           {schedule.hotel && (
@@ -190,10 +213,10 @@ export const Artists: React.FC = () => {
                         <div className="mt-4 space-y-2">
                           <Button variant="outline" size="sm" className="w-full">
                             <Calendar className="h-3 w-3 mr-1" />
-                            Add to Google Calendar
+                            Ajouter au Google Calendar
                           </Button>
                           <Button variant="outline" size="sm" className="w-full">
-                            Edit Schedule
+                            Modifier Planning
                           </Button>
                         </div>
                       </div>
@@ -205,10 +228,10 @@ export const Artists: React.FC = () => {
               {selectedArtistSchedule.length === 0 && (
                 <Card>
                   <CardContent className="p-6 text-center">
-                    <p className="text-gray-500">No tour dates scheduled for this artist.</p>
+                    <p className="text-gray-500">Aucune date de tournée programmée pour cet artiste.</p>
                     <Button className="mt-4" variant="outline">
                       <Plus className="h-4 w-4 mr-2" />
-                      Add Tour Date
+                      Ajouter Date de Tournée
                     </Button>
                   </CardContent>
                 </Card>
@@ -218,7 +241,7 @@ export const Artists: React.FC = () => {
             <Card>
               <CardContent className="p-8 text-center">
                 <Music className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">Select an artist from the list to view their tour schedule and manage logistics.</p>
+                <p className="text-gray-500">Sélectionnez un artiste dans la liste pour voir son planning de tournée et gérer la logistique.</p>
               </CardContent>
             </Card>
           )}
@@ -230,18 +253,18 @@ export const Artists: React.FC = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <Card className="w-full max-w-md mx-4">
             <CardHeader>
-              <CardTitle>Add New Artist</CardTitle>
+              <CardTitle>Ajouter Nouvel Artiste</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Input placeholder="Artist Name" />
+              <Input placeholder="Nom de l'artiste" />
               <Input placeholder="Genre" />
-              <Input placeholder="Current Tour (optional)" />
+              <Input placeholder="Tournée actuelle (optionnel)" />
               <div className="flex space-x-3 pt-4">
                 <Button onClick={() => setShowAddForm(false)} variant="outline" className="flex-1">
-                  Cancel
+                  Annuler
                 </Button>
                 <Button onClick={() => setShowAddForm(false)} className="flex-1 bg-purple-600 hover:bg-purple-700">
-                  Save Artist
+                  Sauvegarder Artiste
                 </Button>
               </div>
             </CardContent>
