@@ -4,15 +4,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Search, Phone, Mail, User, Calendar, ExternalLink } from 'lucide-react';
 import { EmailPopup } from '@/components/EmailPopup';
+import { useUser } from '@/contexts/UserContext';
 
 interface Contact {
   id: string;
   name: string;
   phone: string;
   email: string;
-  owner: string;
+  ownerId: string;
   company?: string;
   role?: string;
   linkedEventIds?: string[];
@@ -24,7 +26,7 @@ const sampleContacts: Contact[] = [
     name: 'John Smith',
     phone: '+1 (555) 123-4567',
     email: 'john.smith@venue.com',
-    owner: 'Alice Johnson',
+    ownerId: 'user-1',
     company: 'Madison Square Garden',
     role: 'Gestionnaire de Lieu',
     linkedEventIds: ['event-1', 'event-3']
@@ -34,7 +36,7 @@ const sampleContacts: Contact[] = [
     name: 'Sarah Wilson',
     phone: '+1 (555) 987-6543',
     email: 'sarah@festivalprods.com',
-    owner: 'Bob Miller',
+    ownerId: 'user-2',
     company: 'Festival Productions',
     role: 'Coordinateur d\'Événements',
     linkedEventIds: ['event-1', 'event-2']
@@ -44,7 +46,7 @@ const sampleContacts: Contact[] = [
     name: 'Mike Rodriguez',
     phone: '+1 (555) 456-7890',
     email: 'mike.r@soundtech.com',
-    owner: 'Alice Johnson',
+    ownerId: 'user-1',
     company: 'Sound Tech Solutions',
     role: 'Ingénieur Audio',
     linkedEventIds: ['event-3']
@@ -53,13 +55,15 @@ const sampleContacts: Contact[] = [
 
 // Sample events for linking
 const sampleEvents = [
-  { id: 'event-1', name: 'Festival de Musique d\'Été 2024', date: '2024-07-15' },
-  { id: 'event-2', name: 'Soirée Acoustique', date: '2024-06-20' },
-  { id: 'event-3', name: 'Tournée Rock Legends', date: '2024-08-10' }
+  { id: 'event-1', name: 'Festival de Musique d\'Été 2024', date: '2024-07-15', ownerId: 'user-1' },
+  { id: 'event-2', name: 'Soirée Acoustique', date: '2024-06-20', ownerId: 'user-2' },
+  { id: 'event-3', name: 'Tournée Rock Legends', date: '2024-08-10', ownerId: 'user-1' }
 ];
 
 export const Contacts: React.FC = () => {
+  const { currentUser, users, getUserPermissions, changeOwnership } = useUser();
   const [contacts, setContacts] = useState<Contact[]>(sampleContacts);
+  const [events, setEvents] = useState(sampleEvents);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
   const [emailPopup, setEmailPopup] = useState<{ show: boolean; email: string; contactName: string }>({
@@ -68,20 +72,55 @@ export const Contacts: React.FC = () => {
     contactName: ''
   });
 
-  const filteredContacts = contacts.filter(contact =>
-    contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    contact.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    contact.company?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const permissions = currentUser ? getUserPermissions(currentUser) : null;
+
+  const filteredContacts = contacts.filter(contact => {
+    const matchesSearch = contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      contact.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      contact.company?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Show all contacts if user can edit all, otherwise only show owned contacts
+    const canView = permissions?.canEditAllContacts || contact.ownerId === currentUser?.id;
+    
+    return matchesSearch && canView;
+  });
 
   const getLinkedEvents = (eventIds?: string[]) => {
     if (!eventIds) return [];
-    return sampleEvents.filter(event => eventIds.includes(event.id));
+    return events.filter(event => eventIds.includes(event.id));
   };
 
   const handleEmailClick = (email: string, contactName: string) => {
     setEmailPopup({ show: true, email, contactName });
   };
+
+  const handleOwnershipChange = (contactId: string, newOwnerId: string) => {
+    // Update contact ownership
+    setContacts(prev => prev.map(contact => 
+      contact.id === contactId ? { ...contact, ownerId: newOwnerId } : contact
+    ));
+
+    // Update linked events ownership
+    const contact = contacts.find(c => c.id === contactId);
+    if (contact?.linkedEventIds) {
+      setEvents(prev => prev.map(event => 
+        contact.linkedEventIds?.includes(event.id) 
+          ? { ...event, ownerId: newOwnerId }
+          : event
+      ));
+    }
+
+    changeOwnership('contact', contactId, newOwnerId);
+  };
+
+  const getOwnerName = (ownerId: string) => {
+    const owner = users.find(user => user.id === ownerId);
+    return owner?.name || 'Utilisateur inconnu';
+  };
+
+  if (!currentUser || !permissions) {
+    return <div>Chargement...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -90,10 +129,12 @@ export const Contacts: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-900">Contacts</h1>
           <p className="text-gray-600 mt-2">Gérer vos gestionnaires de lieux, promoteurs et contacts de l'industrie</p>
         </div>
-        <Button onClick={() => setShowAddForm(true)} className="bg-purple-600 hover:bg-purple-700">
-          <Plus className="h-4 w-4 mr-2" />
-          Ajouter Contact
-        </Button>
+        {permissions.canCreateContacts && (
+          <Button onClick={() => setShowAddForm(true)} className="bg-purple-600 hover:bg-purple-700">
+            <Plus className="h-4 w-4 mr-2" />
+            Ajouter Contact
+          </Button>
+        )}
       </div>
 
       {/* Search and Filters */}
@@ -120,7 +161,7 @@ export const Contacts: React.FC = () => {
                 <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
                   <User className="h-6 w-6 text-purple-600" />
                 </div>
-                <div>
+                <div className="flex-1">
                   <CardTitle className="text-lg">{contact.name}</CardTitle>
                   <p className="text-sm text-gray-500">{contact.role}</p>
                 </div>
@@ -143,8 +184,29 @@ export const Contacts: React.FC = () => {
                   <strong>Entreprise:</strong> {contact.company}
                 </div>
               )}
-              <div className="text-sm text-gray-600">
-                <strong>Propriétaire:</strong> {contact.owner}
+              
+              {/* Owner Management */}
+              <div className="text-sm">
+                <strong className="text-gray-700">Propriétaire:</strong>
+                {permissions.canEditAllContacts ? (
+                  <Select
+                    value={contact.ownerId}
+                    onValueChange={(value) => handleOwnershipChange(contact.id, value)}
+                  >
+                    <SelectTrigger className="w-full mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {users.filter(user => user.isActive).map((user) => (
+                        <SelectItem key={user.id} value={user.id}>
+                          {user.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <span className="ml-2 text-gray-600">{getOwnerName(contact.ownerId)}</span>
+                )}
               </div>
 
               {/* Linked Events */}
@@ -159,6 +221,7 @@ export const Contacts: React.FC = () => {
                       <div key={event.id} className="text-xs bg-blue-50 p-2 rounded">
                         <div className="font-medium text-blue-800">{event.name}</div>
                         <div className="text-blue-600">{new Date(event.date).toLocaleDateString('fr-FR')}</div>
+                        <div className="text-xs text-gray-500">Propriétaire: {getOwnerName(event.ownerId)}</div>
                       </div>
                     ))}
                   </div>
@@ -198,7 +261,23 @@ export const Contacts: React.FC = () => {
               <Input placeholder="Numéro de téléphone" />
               <Input placeholder="Entreprise" />
               <Input placeholder="Rôle/Titre" />
-              <Input placeholder="Propriétaire" />
+              
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-1 block">Propriétaire</label>
+                <Select defaultValue={currentUser.id}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {users.filter(user => user.isActive).map((user) => (
+                      <SelectItem key={user.id} value={user.id}>
+                        {user.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
               <div className="flex space-x-3 pt-4">
                 <Button onClick={() => setShowAddForm(false)} variant="outline" className="flex-1">
                   Annuler

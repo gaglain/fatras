@@ -26,7 +26,7 @@ const sidebarItems = [
   { icon: CheckSquare, label: 'Tâches', href: '/tasks' },
   { icon: BookOpen, label: 'Bible du Spectacle', href: '/show-bible' },
   { icon: MapPin, label: 'Tournée', href: '/roadshow' },
-  { icon: ShoppingBag, label: 'Marchandisage', href: '/merchandise' },
+  { icon: ShoppingBag, label: 'Boutique', href: '/merchandise' },
   { icon: Settings, label: 'Préférences', href: '/preferences' },
 ];
 
