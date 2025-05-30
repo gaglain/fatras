@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Mail, Send, Calendar, Phone } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Plus, Mail, Send, Calendar, Phone, Template, Edit, Trash2 } from 'lucide-react';
 
 interface EmailTemplate {
   id: string;
@@ -12,6 +13,7 @@ interface EmailTemplate {
   subject: string;
   category: string;
   content: string;
+  variables: string[];
 }
 
 interface ScheduledEmail {
@@ -28,21 +30,40 @@ const emailTemplates: EmailTemplate[] = [
     name: 'Suivi de Contrat',
     subject: 'Suivi du contrat pour {{event_name}}',
     category: 'Contrat',
-    content: 'Bonjour {{contact_name}},\n\nJ\'espère que ce email vous trouve en bonne santé. Je souhaitais faire le suivi du contrat que nous avons envoyé pour {{event_name}} le {{event_date}}...'
+    content: 'Bonjour {{contact_name}},\n\nJ\'espère que ce email vous trouve en bonne santé. Je souhaitais faire le suivi du contrat que nous avons envoyé pour {{event_name}} le {{event_date}}.\n\nSi vous avez des questions, n\'hésitez pas à me contacter.\n\nCordialement,\n{{user_name}}',
+    variables: ['contact_name', 'event_name', 'event_date', 'user_name']
   },
   {
     id: '2',
     name: 'Confirmation de Spectacle',
-    subject: 'Confirmation de spectacle - {{artist_name}} à {{venue}}',
+    subject: 'Confirmation de spectacle - {{artist_name}} à {{venue_name}}',
     category: 'Réservation',
-    content: 'Cher {{contact_name}},\n\nNous sommes heureux de confirmer la réservation pour {{artist_name}} à {{venue}} le {{event_date}}...'
+    content: 'Cher {{contact_name}},\n\nNous sommes heureux de confirmer la réservation pour {{artist_name}} à {{venue_name}} le {{event_date}}.\n\nDétails de l\'événement :\n- Artiste : {{artist_name}}\n- Lieu : {{venue_name}}\n- Date : {{event_date}}\n- Heure : {{event_time}}\n- Montant : {{contract_amount}}\n\nNous vous enverrons la fiche technique sous peu.\n\nCordialement,\n{{user_name}}',
+    variables: ['contact_name', 'artist_name', 'venue_name', 'event_date', 'event_time', 'contract_amount', 'user_name']
   },
   {
     id: '3',
     name: 'Exigences Techniques',
-    subject: 'Fiche technique et exigences de scène',
+    subject: 'Fiche technique et exigences de scène - {{artist_name}}',
     category: 'Technique',
-    content: 'Bonjour {{contact_name}},\n\nVeuillez trouver en pièce jointe la fiche technique et les exigences de scène pour {{artist_name}}...'
+    content: 'Bonjour {{contact_name}},\n\nVeuillez trouver en pièce jointe la fiche technique et les exigences de scène pour {{artist_name}}.\n\nCette fiche contient :\n- Plan de scène\n- Liste du matériel requis\n- Exigences d\'éclairage\n- Exigences sonores\n- Besoins en personnel technique\n\nMerci de confirmer que ces exigences peuvent être respectées.\n\nCordialement,\n{{user_name}}',
+    variables: ['contact_name', 'artist_name', 'user_name']
+  },
+  {
+    id: '4',
+    name: 'Demande de Renseignements',
+    subject: 'Demande de renseignements - {{artist_name}}',
+    category: 'Commercial',
+    content: 'Bonjour {{contact_name}},\n\nNous organisons un événement le {{event_date}} à {{venue_name}} et aimerions avoir des informations concernant {{artist_name}}.\n\nPourriez-vous nous envoyer :\n- Vos tarifs pour cette date\n- Les disponibilités de l\'artiste\n- La fiche technique\n- Les conditions particulières\n\nNous attendons votre retour avec impatience.\n\nMerci d\'avance,\n{{user_name}}\n{{company_name}}',
+    variables: ['contact_name', 'event_date', 'venue_name', 'artist_name', 'user_name', 'company_name']
+  },
+  {
+    id: '5',
+    name: 'Rappel de Paiement',
+    subject: 'Rappel de paiement - {{event_name}}',
+    category: 'Finance',
+    content: 'Bonjour {{contact_name}},\n\nNous espérons que tout se passe bien pour vous.\n\nNous vous contactons concernant le paiement de {{contract_amount}} pour l\'événement {{event_name}} du {{event_date}}.\n\nSelon nos records, ce paiement était dû le {{due_date}}.\n\nPourriez-vous nous confirmer la date de règlement ?\n\nMerci pour votre attention.\n\nCordialement,\n{{user_name}}',
+    variables: ['contact_name', 'contract_amount', 'event_name', 'event_date', 'due_date', 'user_name']
   }
 ];
 
@@ -66,6 +87,25 @@ const scheduledEmails: ScheduledEmail[] = [
 export const Email: React.FC = () => {
   const [showCompose, setShowCompose] = useState(false);
   const [showScheduled, setShowScheduled] = useState(false);
+  const [showTemplateEditor, setShowTemplateEditor] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+
+  const categories = ['all', 'Contrat', 'Réservation', 'Technique', 'Commercial', 'Finance'];
+
+  const filteredTemplates = selectedCategory === 'all' 
+    ? emailTemplates 
+    : emailTemplates.filter(template => template.category === selectedCategory);
+
+  const handleEditTemplate = (template: EmailTemplate) => {
+    setSelectedTemplate(template);
+    setShowTemplateEditor(true);
+  };
+
+  const handleCreateTemplate = () => {
+    setSelectedTemplate(null);
+    setShowTemplateEditor(true);
+  };
 
   return (
     <div className="space-y-6">
@@ -147,11 +187,30 @@ export const Email: React.FC = () => {
       {/* Email Templates */}
       <Card>
         <CardHeader>
-          <CardTitle>Modèles d'Email</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Modèles d'Email</CardTitle>
+            <div className="flex items-center space-x-3">
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="Catégorie" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toutes</SelectItem>
+                  {categories.slice(1).map(category => (
+                    <SelectItem key={category} value={category}>{category}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button onClick={handleCreateTemplate} variant="outline" size="sm">
+                <Plus className="h-4 w-4 mr-1" />
+                Nouveau Modèle
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {emailTemplates.map((template) => (
+            {filteredTemplates.map((template) => (
               <Card key={template.id} className="cursor-pointer hover:shadow-md transition-shadow">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-3">
@@ -159,7 +218,22 @@ export const Email: React.FC = () => {
                     <Badge variant="outline">{template.category}</Badge>
                   </div>
                   <p className="text-sm text-gray-600 mb-3">{template.subject}</p>
-                  <p className="text-xs text-gray-500 mb-4 line-clamp-3">
+                  <div className="mb-3">
+                    <p className="text-xs text-gray-500 mb-1">Variables disponibles:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {template.variables.slice(0, 3).map((variable) => (
+                        <Badge key={variable} variant="secondary" className="text-xs">
+                          {variable}
+                        </Badge>
+                      ))}
+                      {template.variables.length > 3 && (
+                        <Badge variant="secondary" className="text-xs">
+                          +{template.variables.length - 3}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500 mb-4 line-clamp-2">
                     {template.content.substring(0, 100)}...
                   </p>
                   <div className="flex space-x-2">
@@ -167,7 +241,16 @@ export const Email: React.FC = () => {
                       <Send className="h-3 w-3 mr-1" />
                       Utiliser
                     </Button>
-                    <Button size="sm" variant="outline">Modifier</Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => handleEditTemplate(template)}
+                    >
+                      <Edit className="h-3 w-3" />
+                    </Button>
+                    <Button size="sm" variant="outline">
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -175,6 +258,59 @@ export const Email: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Template Editor Modal */}
+      {showTemplateEditor && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <Card className="w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <CardHeader>
+              <CardTitle>
+                {selectedTemplate ? 'Modifier le Modèle' : 'Créer un Nouveau Modèle'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <Input placeholder="Nom du modèle" defaultValue={selectedTemplate?.name} />
+                <Select defaultValue={selectedTemplate?.category}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Catégorie" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.slice(1).map(category => (
+                      <SelectItem key={category} value={category}>{category}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Input placeholder="Objet de l'email" defaultValue={selectedTemplate?.subject} />
+              <textarea 
+                placeholder="Contenu du modèle... Utilisez {{variable}} pour les champs dynamiques"
+                className="w-full p-3 border border-gray-300 rounded-md"
+                rows={12}
+                defaultValue={selectedTemplate?.content}
+              />
+              <div className="bg-gray-50 p-3 rounded-md">
+                <h4 className="font-medium text-sm mb-2">Variables disponibles:</h4>
+                <div className="flex flex-wrap gap-1 text-xs">
+                  {['contact_name', 'artist_name', 'event_name', 'event_date', 'venue_name', 'contract_amount', 'user_name', 'company_name'].map((variable) => (
+                    <Badge key={variable} variant="secondary">
+                      {`{{${variable}}}`}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+              <div className="flex space-x-3 pt-4">
+                <Button onClick={() => setShowTemplateEditor(false)} variant="outline" className="flex-1">
+                  Annuler
+                </Button>
+                <Button className="flex-1 bg-purple-600 hover:bg-purple-700">
+                  {selectedTemplate ? 'Mettre à Jour' : 'Créer'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Compose Email Modal */}
       {showCompose && (
@@ -188,7 +324,21 @@ export const Email: React.FC = () => {
                 <Input placeholder="À" />
                 <Input placeholder="CC (optionnel)" />
               </div>
-              <Input placeholder="Objet" />
+              <div className="flex space-x-2">
+                <Input placeholder="Objet" className="flex-1" />
+                <Select>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="Modèle" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {emailTemplates.map((template) => (
+                      <SelectItem key={template.id} value={template.id}>
+                        {template.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <textarea 
                 placeholder="Composez votre email..."
                 className="w-full p-3 border border-gray-300 rounded-md"

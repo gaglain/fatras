@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { X, Send, Paperclip, FileText, Image, Video, Music } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { X, Send, Paperclip, FileText, Image, Video, Music, Upload, Template } from 'lucide-react';
 
 interface EmailHistory {
   id: string;
@@ -19,6 +20,13 @@ interface EmailPopupProps {
   onClose: () => void;
   email: string;
   contactName: string;
+}
+
+interface EmailTemplate {
+  id: string;
+  name: string;
+  subject: string;
+  content: string;
 }
 
 const sampleEmailHistory: EmailHistory[] = [
@@ -45,11 +53,37 @@ const sampleEmailHistory: EmailHistory[] = [
   }
 ];
 
+const emailTemplates: EmailTemplate[] = [
+  {
+    id: '1',
+    name: 'Suivi de Contrat',
+    subject: 'Suivi du contrat pour {{event_name}}',
+    content: 'Bonjour {{contact_name}},\n\nJ\'espère que ce email vous trouve en bonne santé. Je souhaitais faire le suivi du contrat que nous avons envoyé pour {{event_name}} le {{event_date}}.\n\nCordialement,\n{{user_name}}'
+  },
+  {
+    id: '2',
+    name: 'Confirmation d\'Événement',
+    subject: 'Confirmation - {{artist_name}} à {{venue_name}}',
+    content: 'Cher {{contact_name}},\n\nNous sommes heureux de confirmer la réservation pour {{artist_name}} à {{venue_name}} le {{event_date}}.\n\nDétails de l\'événement :\n- Artiste : {{artist_name}}\n- Lieu : {{venue_name}}\n- Date : {{event_date}}\n- Montant : {{contract_amount}}\n\nCordialement,\n{{user_name}}'
+  },
+  {
+    id: '3',
+    name: 'Demande de Renseignements',
+    subject: 'Demande de renseignements - {{artist_name}}',
+    content: 'Bonjour {{contact_name}},\n\nNous aimerions avoir plus d\'informations concernant {{artist_name}} pour un potentiel événement.\n\nPourriez-vous nous envoyer :\n- Tarifs\n- Disponibilités\n- Exigences techniques\n\nMerci d\'avance,\n{{user_name}}'
+  }
+];
+
 export const EmailPopup: React.FC<EmailPopupProps> = ({ isOpen, onClose, email, contactName }) => {
   const [showCompose, setShowCompose] = useState(false);
   const [showBibleFiles, setShowBibleFiles] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
+  const [emailSubject, setEmailSubject] = useState('');
+  const [emailContent, setEmailContent] = useState('');
+  const [attachedBibleFiles, setAttachedBibleFiles] = useState<string[]>([]);
+  const [externalFiles, setExternalFiles] = useState<File[]>([]);
 
-  // Sample Bible files for attachment
   const bibleFiles = [
     { id: '1', name: 'Technical Rider - The Midnight Express.pdf', type: 'pdf', size: '2.3 MB' },
     { id: '2', name: 'Stage Plot.jpg', type: 'image', size: '1.8 MB' },
@@ -73,6 +107,26 @@ export const EmailPopup: React.FC<EmailPopupProps> = ({ isOpen, onClose, email, 
     }
   };
 
+  const handleTemplateSelect = (template: EmailTemplate) => {
+    setSelectedTemplate(template);
+    setEmailSubject(template.subject);
+    setEmailContent(template.content);
+    setShowTemplates(false);
+  };
+
+  const handleBibleFileToggle = (fileId: string) => {
+    setAttachedBibleFiles(prev => 
+      prev.includes(fileId) 
+        ? prev.filter(id => id !== fileId)
+        : [...prev, fileId]
+    );
+  };
+
+  const handleExternalFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    setExternalFiles(prev => [...prev, ...files]);
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -93,7 +147,6 @@ export const EmailPopup: React.FC<EmailPopupProps> = ({ isOpen, onClose, email, 
         <CardContent className="p-4">
           {!showCompose ? (
             <>
-              {/* Action Buttons */}
               <div className="flex space-x-2 mb-4">
                 <Button 
                   onClick={() => setShowCompose(true)} 
@@ -108,7 +161,6 @@ export const EmailPopup: React.FC<EmailPopupProps> = ({ isOpen, onClose, email, 
                 </Button>
               </div>
 
-              {/* Email History */}
               <div className="space-y-2 max-h-80 overflow-y-auto">
                 <h4 className="font-medium text-gray-900 mb-2">Historique des conversations</h4>
                 {sampleEmailHistory.map((email) => (
@@ -127,7 +179,6 @@ export const EmailPopup: React.FC<EmailPopupProps> = ({ isOpen, onClose, email, 
             </>
           ) : (
             <>
-              {/* Compose Email */}
               <div className="space-y-3 max-h-96 overflow-y-auto">
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="font-medium">Composer un email</h4>
@@ -136,14 +187,48 @@ export const EmailPopup: React.FC<EmailPopupProps> = ({ isOpen, onClose, email, 
                   </Button>
                 </div>
                 
-                <Input placeholder="Objet" />
+                <div className="flex space-x-2 mb-3">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setShowTemplates(!showTemplates)}
+                  >
+                    <Template className="h-3 w-3 mr-1" />
+                    Modèles
+                  </Button>
+                </div>
+
+                {showTemplates && (
+                  <div className="border border-gray-200 rounded-md p-3 mb-3">
+                    <h5 className="font-medium text-sm mb-2">Modèles d'email</h5>
+                    <div className="space-y-1">
+                      {emailTemplates.map((template) => (
+                        <div 
+                          key={template.id} 
+                          className="p-2 hover:bg-gray-50 rounded cursor-pointer text-sm"
+                          onClick={() => handleTemplateSelect(template)}
+                        >
+                          <div className="font-medium">{template.name}</div>
+                          <div className="text-xs text-gray-500">{template.subject}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                <Input 
+                  placeholder="Objet" 
+                  value={emailSubject}
+                  onChange={(e) => setEmailSubject(e.target.value)}
+                />
                 <textarea 
                   placeholder="Votre message..."
                   className="w-full p-3 border border-gray-300 rounded-md text-sm"
                   rows={6}
+                  value={emailContent}
+                  onChange={(e) => setEmailContent(e.target.value)}
                 />
                 
-                {/* Attachment Options */}
                 <div className="flex items-center space-x-2">
                   <Button 
                     variant="outline" 
@@ -151,15 +236,24 @@ export const EmailPopup: React.FC<EmailPopupProps> = ({ isOpen, onClose, email, 
                     onClick={() => setShowBibleFiles(!showBibleFiles)}
                   >
                     <Paperclip className="h-3 w-3 mr-1" />
-                    Bible
+                    Bible ({attachedBibleFiles.length})
                   </Button>
-                  <Button variant="outline" size="sm">
-                    <Paperclip className="h-3 w-3 mr-1" />
-                    Fichier
-                  </Button>
+                  <label className="cursor-pointer">
+                    <Button variant="outline" size="sm" asChild>
+                      <span>
+                        <Upload className="h-3 w-3 mr-1" />
+                        Fichier ({externalFiles.length})
+                      </span>
+                    </Button>
+                    <input 
+                      type="file" 
+                      multiple 
+                      className="hidden" 
+                      onChange={handleExternalFileUpload}
+                    />
+                  </label>
                 </div>
 
-                {/* Bible Files Selection */}
                 {showBibleFiles && (
                   <div className="border border-gray-200 rounded-md p-3 max-h-40 overflow-y-auto">
                     <h5 className="font-medium text-sm mb-2">Fichiers de la Bible</h5>
@@ -171,7 +265,34 @@ export const EmailPopup: React.FC<EmailPopupProps> = ({ isOpen, onClose, email, 
                             <p className="text-xs font-medium truncate">{file.name}</p>
                             <p className="text-xs text-gray-500">{file.size}</p>
                           </div>
-                          <input type="checkbox" className="rounded" />
+                          <input 
+                            type="checkbox" 
+                            className="rounded"
+                            checked={attachedBibleFiles.includes(file.id)}
+                            onChange={() => handleBibleFileToggle(file.id)}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {externalFiles.length > 0 && (
+                  <div className="border border-gray-200 rounded-md p-3">
+                    <h5 className="font-medium text-sm mb-2">Fichiers attachés</h5>
+                    <div className="space-y-1">
+                      {externalFiles.map((file, index) => (
+                        <div key={index} className="flex items-center space-x-2 text-xs">
+                          <FileText className="h-3 w-3" />
+                          <span className="flex-1 truncate">{file.name}</span>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-6 w-6 p-0"
+                            onClick={() => setExternalFiles(prev => prev.filter((_, i) => i !== index))}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
                         </div>
                       ))}
                     </div>
