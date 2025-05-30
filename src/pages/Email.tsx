@@ -25,24 +25,24 @@ interface ScheduledEmail {
 const emailTemplates: EmailTemplate[] = [
   {
     id: '1',
-    name: 'Contract Follow-up',
-    subject: 'Following up on contract for {{event_name}}',
-    category: 'Contract',
-    content: 'Hi {{contact_name}},\n\nI hope this email finds you well. I wanted to follow up on the contract we sent for {{event_name}} on {{event_date}}...'
+    name: 'Suivi de Contrat',
+    subject: 'Suivi du contrat pour {{event_name}}',
+    category: 'Contrat',
+    content: 'Bonjour {{contact_name}},\n\nJ\'espère que ce email vous trouve en bonne santé. Je souhaitais faire le suivi du contrat que nous avons envoyé pour {{event_name}} le {{event_date}}...'
   },
   {
     id: '2',
-    name: 'Show Confirmation',
-    subject: 'Show confirmation - {{artist_name}} at {{venue}}',
-    category: 'Booking',
-    content: 'Dear {{contact_name}},\n\nWe are pleased to confirm the booking for {{artist_name}} at {{venue}} on {{event_date}}...'
+    name: 'Confirmation de Spectacle',
+    subject: 'Confirmation de spectacle - {{artist_name}} à {{venue}}',
+    category: 'Réservation',
+    content: 'Cher {{contact_name}},\n\nNous sommes heureux de confirmer la réservation pour {{artist_name}} à {{venue}} le {{event_date}}...'
   },
   {
     id: '3',
-    name: 'Technical Requirements',
-    subject: 'Technical rider and stage requirements',
-    category: 'Technical',
-    content: 'Hello {{contact_name}},\n\nPlease find attached the technical rider and stage requirements for {{artist_name}}...'
+    name: 'Exigences Techniques',
+    subject: 'Fiche technique et exigences de scène',
+    category: 'Technique',
+    content: 'Bonjour {{contact_name}},\n\nVeuillez trouver en pièce jointe la fiche technique et les exigences de scène pour {{artist_name}}...'
   }
 ];
 
@@ -50,14 +50,14 @@ const scheduledEmails: ScheduledEmail[] = [
   {
     id: '1',
     to: 'john.smith@venue.com',
-    subject: 'Contract follow-up for Summer Festival',
+    subject: 'Suivi de contrat pour Festival d\'Été',
     scheduledFor: '2024-06-15T10:00:00',
     status: 'scheduled'
   },
   {
     id: '2',
     to: 'sarah@festivalprods.com',
-    subject: 'Technical requirements for Thunder Road',
+    subject: 'Exigences techniques pour Thunder Road',
     scheduledFor: '2024-06-16T14:30:00',
     status: 'scheduled'
   }
@@ -71,17 +71,17 @@ export const Email: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Email Management</h1>
-          <p className="text-gray-600 mt-2">Send emails, schedule communications, and manage templates</p>
+          <h1 className="text-3xl font-bold text-gray-900">Gestion Email</h1>
+          <p className="text-gray-600 mt-2">Envoyer des emails, programmer des communications et gérer les modèles</p>
         </div>
         <div className="flex space-x-3">
           <Button onClick={() => setShowScheduled(!showScheduled)} variant="outline">
             <Calendar className="h-4 w-4 mr-2" />
-            Scheduled ({scheduledEmails.length})
+            Programmés ({scheduledEmails.length})
           </Button>
           <Button onClick={() => setShowCompose(true)} className="bg-purple-600 hover:bg-purple-700">
             <Plus className="h-4 w-4 mr-2" />
-            Compose Email
+            Composer Email
           </Button>
         </div>
       </div>
@@ -91,24 +91,24 @@ export const Email: React.FC = () => {
         <Card className="cursor-pointer hover:shadow-lg transition-shadow">
           <CardContent className="p-6 text-center">
             <Mail className="h-8 w-8 text-purple-600 mx-auto mb-3" />
-            <h3 className="font-semibold text-gray-900">Send Email</h3>
-            <p className="text-sm text-gray-600">Compose and send emails to contacts</p>
+            <h3 className="font-semibold text-gray-900">Envoyer Email</h3>
+            <p className="text-sm text-gray-600">Composer et envoyer des emails aux contacts</p>
           </CardContent>
         </Card>
         
         <Card className="cursor-pointer hover:shadow-lg transition-shadow">
           <CardContent className="p-6 text-center">
             <Calendar className="h-8 w-8 text-purple-600 mx-auto mb-3" />
-            <h3 className="font-semibold text-gray-900">Schedule Meeting</h3>
-            <p className="text-sm text-gray-600">Set up calls and meetings</p>
+            <h3 className="font-semibold text-gray-900">Programmer Réunion</h3>
+            <p className="text-sm text-gray-600">Organiser des appels et réunions</p>
           </CardContent>
         </Card>
         
         <Card className="cursor-pointer hover:shadow-lg transition-shadow">
           <CardContent className="p-6 text-center">
             <Phone className="h-8 w-8 text-purple-600 mx-auto mb-3" />
-            <h3 className="font-semibold text-gray-900">Phone Call</h3>
-            <p className="text-sm text-gray-600">Log and track phone communications</p>
+            <h3 className="font-semibold text-gray-900">Appel Téléphonique</h3>
+            <p className="text-sm text-gray-600">Enregistrer et suivre les communications téléphoniques</p>
           </CardContent>
         </Card>
       </div>
@@ -117,7 +117,7 @@ export const Email: React.FC = () => {
       {showScheduled && (
         <Card>
           <CardHeader>
-            <CardTitle>Scheduled Emails</CardTitle>
+            <CardTitle>Emails Programmés</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -125,17 +125,17 @@ export const Email: React.FC = () => {
                 <div key={email.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                   <div className="flex-1">
                     <h4 className="font-medium text-gray-900">{email.subject}</h4>
-                    <p className="text-sm text-gray-600">To: {email.to}</p>
+                    <p className="text-sm text-gray-600">À: {email.to}</p>
                     <p className="text-sm text-gray-500">
-                      Scheduled for: {new Date(email.scheduledFor).toLocaleString()}
+                      Programmé pour: {new Date(email.scheduledFor).toLocaleString('fr-FR')}
                     </p>
                   </div>
                   <div className="flex items-center space-x-3">
                     <Badge variant={email.status === 'scheduled' ? 'default' : 'secondary'}>
-                      {email.status}
+                      {email.status === 'scheduled' ? 'Programmé' : email.status === 'sent' ? 'Envoyé' : 'Échec'}
                     </Badge>
-                    <Button variant="outline" size="sm">Edit</Button>
-                    <Button variant="outline" size="sm">Cancel</Button>
+                    <Button variant="outline" size="sm">Modifier</Button>
+                    <Button variant="outline" size="sm">Annuler</Button>
                   </div>
                 </div>
               ))}
@@ -147,7 +147,7 @@ export const Email: React.FC = () => {
       {/* Email Templates */}
       <Card>
         <CardHeader>
-          <CardTitle>Email Templates</CardTitle>
+          <CardTitle>Modèles d'Email</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -165,9 +165,9 @@ export const Email: React.FC = () => {
                   <div className="flex space-x-2">
                     <Button size="sm" variant="outline" className="flex-1">
                       <Send className="h-3 w-3 mr-1" />
-                      Use
+                      Utiliser
                     </Button>
-                    <Button size="sm" variant="outline">Edit</Button>
+                    <Button size="sm" variant="outline">Modifier</Button>
                   </div>
                 </CardContent>
               </Card>
@@ -181,36 +181,36 @@ export const Email: React.FC = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <Card className="w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
             <CardHeader>
-              <CardTitle>Compose Email</CardTitle>
+              <CardTitle>Composer Email</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <Input placeholder="To" />
-                <Input placeholder="CC (optional)" />
+                <Input placeholder="À" />
+                <Input placeholder="CC (optionnel)" />
               </div>
-              <Input placeholder="Subject" />
+              <Input placeholder="Objet" />
               <textarea 
-                placeholder="Compose your email..."
+                placeholder="Composez votre email..."
                 className="w-full p-3 border border-gray-300 rounded-md"
                 rows={12}
               />
               <div className="flex items-center space-x-4">
                 <label className="flex items-center space-x-2">
                   <input type="checkbox" className="rounded" />
-                  <span className="text-sm">Schedule for later</span>
+                  <span className="text-sm">Programmer pour plus tard</span>
                 </label>
                 <Input type="datetime-local" className="w-auto" />
               </div>
               <div className="flex space-x-3 pt-4">
                 <Button onClick={() => setShowCompose(false)} variant="outline" className="flex-1">
-                  Cancel
+                  Annuler
                 </Button>
                 <Button variant="outline" className="flex-1">
-                  Save as Draft
+                  Sauvegarder comme Brouillon
                 </Button>
                 <Button onClick={() => setShowCompose(false)} className="flex-1 bg-purple-600 hover:bg-purple-700">
                   <Send className="h-4 w-4 mr-2" />
-                  Send
+                  Envoyer
                 </Button>
               </div>
             </CardContent>
