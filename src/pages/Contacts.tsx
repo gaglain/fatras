@@ -265,7 +265,7 @@ export const Contacts: React.FC = () => {
                   <div className="flex items-center space-x-2">
                     <CardTitle className="text-lg">{contact.name}</CardTitle>
                     {contact.source === 'website' && (
-                      <Globe className="h-4 w-4 text-blue-500" title="Contact depuis le site web" />
+                      <Globe className="h-4 w-4 text-blue-500" />
                     )}
                   </div>
                   <p className="text-sm text-gray-500">{contact.role}</p>
