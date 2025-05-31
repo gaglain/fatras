@@ -178,6 +178,11 @@ export const Email: React.FC = () => {
     // Pre-fill compose form with forward data
   };
 
+  const handleEditTemplate = (template: EmailTemplate) => {
+    setSelectedTemplate(template);
+    setShowTemplateEditor(true);
+  };
+
   if (selectedEmail) {
     return (
       <div className="h-full">
