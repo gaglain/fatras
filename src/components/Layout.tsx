@@ -1,52 +1,29 @@
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
+import { ChatWidget } from './ChatWidget';
+import { useUser } from '@/contexts/UserContext';
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
-interface AppPreferences {
-  logo?: string | null;
-  companyName?: string;
-  primaryColor?: string;
-  secondaryColor?: string;
-  backgroundColor?: string;
-  darkMode?: boolean;
-}
-
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const [preferences, setPreferences] = useState<AppPreferences>({});
-  const [notificationCount, setNotificationCount] = useState(3); // Mock notification count
-
-  useEffect(() => {
-    // Load preferences from localStorage
-    const savedPreferences = localStorage.getItem('appPreferences');
-    if (savedPreferences) {
-      const prefs = JSON.parse(savedPreferences);
-      setPreferences(prefs);
-      
-      // Apply background color
-      if (prefs.backgroundColor) {
-        document.body.style.backgroundColor = prefs.backgroundColor;
-      }
-    }
-  }, []);
-
+  const { currentUser } = useUser();
+  
   return (
-    <div className="min-h-screen flex" style={{ backgroundColor: preferences.backgroundColor || '#f9fafb' }}>
+    <div className="min-h-screen bg-gray-50 flex">
       <Sidebar />
       <div className="flex-1 flex flex-col">
         <Header 
-          logo={preferences.logo}
-          companyName={preferences.companyName}
-          notificationCount={notificationCount}
+          companyName="ShowManager Pro"
         />
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-6 overflow-auto">
           {children}
         </main>
       </div>
+      {currentUser && <ChatWidget />}
     </div>
   );
 };

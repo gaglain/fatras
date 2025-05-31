@@ -13,7 +13,8 @@ import {
   MapPin,
   BookOpen,
   ShoppingBag,
-  Settings
+  Settings,
+  Globe
 } from 'lucide-react';
 
 const sidebarItems = [
@@ -30,6 +31,7 @@ const sidebarItems = [
   { icon: BookOpen, label: 'Bible du Spectacle', href: '/show-bible' },
   { icon: MapPin, label: 'Tournée', href: '/roadshow' },
   { icon: ShoppingBag, label: 'Boutique', href: '/merchandise' },
+  { icon: Globe, label: 'Site Web', href: '/website' },
   { icon: Settings, label: 'Préférences', href: '/preferences' },
 ];
 

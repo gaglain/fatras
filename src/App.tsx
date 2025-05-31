@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -20,6 +21,7 @@ import NotFound from "./pages/NotFound";
 import { Messagerie } from "./pages/Messagerie";
 import { Agenda } from "./pages/Agenda";
 import { Opportunities } from "./pages/Opportunities";
+import { Website } from "./pages/Website";
 
 const queryClient = new QueryClient();
 
@@ -30,25 +32,33 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Layout>
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/contacts" element={<Contacts />} />
-              <Route path="/events" element={<Events />} />
-              <Route path="/tasks" element={<Tasks />} />
-              <Route path="/artists" element={<Artists />} />
-              <Route path="/email" element={<Email />} />
-              <Route path="/contracts" element={<Contracts />} />
-              <Route path="/opportunities" element={<Opportunities />} />
-              <Route path="/messagerie" element={<Messagerie />} />
-              <Route path="/agenda" element={<Agenda />} />
-              <Route path="/merchandise" element={<Merchandise />} />
-              <Route path="/roadshow" element={<RoadShow />} />
-              <Route path="/show-bible" element={<ShowBible />} />
-              <Route path="/preferences" element={<Preferences />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Layout>
+          <Routes>
+            {/* Site web public */}
+            <Route path="/website" element={<Website />} />
+            
+            {/* Back office */}
+            <Route path="*" element={
+              <Layout>
+                <Routes>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/contacts" element={<Contacts />} />
+                  <Route path="/events" element={<Events />} />
+                  <Route path="/tasks" element={<Tasks />} />
+                  <Route path="/artists" element={<Artists />} />
+                  <Route path="/email" element={<Email />} />
+                  <Route path="/contracts" element={<Contracts />} />
+                  <Route path="/opportunities" element={<Opportunities />} />
+                  <Route path="/messagerie" element={<Messagerie />} />
+                  <Route path="/agenda" element={<Agenda />} />
+                  <Route path="/merchandise" element={<Merchandise />} />
+                  <Route path="/roadshow" element={<RoadShow />} />
+                  <Route path="/show-bible" element={<ShowBible />} />
+                  <Route path="/preferences" element={<Preferences />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Layout>
+            } />
+          </Routes>
         </BrowserRouter>
       </UserProvider>
     </TooltipProvider>
