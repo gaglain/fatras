@@ -4,13 +4,21 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Calendar, MapPin, Clock, ExternalLink, CheckSquare, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
+
+interface EventType {
+  id: string;
+  name: string;
+  color: string;
+  isActive: boolean;
+}
 
 interface Event {
   id: string;
   name: string;
-  type: string;
+  typeIds: string[]; // Support multiple event types
   date: string;
   venue: string;
   address: {
@@ -32,11 +40,20 @@ interface Event {
   }>;
 }
 
+// Sample event types
+const sampleEventTypes: EventType[] = [
+  { id: '1', name: 'Festival', color: 'bg-purple-500', isActive: true },
+  { id: '2', name: 'Concert', color: 'bg-blue-500', isActive: true },
+  { id: '3', name: 'Événement d\'entreprise', color: 'bg-green-500', isActive: true },
+  { id: '4', name: 'Événement privé', color: 'bg-orange-500', isActive: true },
+  { id: '5', name: 'Mariage', color: 'bg-pink-500', isActive: true },
+];
+
 const sampleEvents: Event[] = [
   {
     id: 'event-1',
     name: 'Festival de Musique d\'Été 2024',
-    type: 'Festival',
+    typeIds: ['1'], // Festival
     date: '2024-07-15',
     venue: 'Central Park',
     address: {
@@ -57,7 +74,7 @@ const sampleEvents: Event[] = [
   {
     id: 'event-2',
     name: 'Soirée Acoustique',
-    type: 'Concert',
+    typeIds: ['2'], // Concert
     date: '2024-06-20',
     venue: 'Blue Note Jazz Club',
     address: {
@@ -98,7 +115,9 @@ const getStatusColor = (status: string) => {
 
 export const Events: React.FC = () => {
   const [events, setEvents] = useState<Event[]>(sampleEvents);
+  const [eventTypes, setEventTypes] = useState<EventType[]>(sampleEventTypes);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [selectedTypeIds, setSelectedTypeIds] = useState<string[]>([]);
 
   const getTaskStatusColor = (status: string) => {
     switch (status) {
@@ -123,6 +142,18 @@ export const Events: React.FC = () => {
     return sampleContacts.filter(contact => contactIds.includes(contact.id));
   };
 
+  const getEventTypesByIds = (typeIds: string[]) => {
+    return eventTypes.filter(type => typeIds.includes(type.id));
+  };
+
+  const handleTypeSelection = (typeId: string) => {
+    setSelectedTypeIds(prev => 
+      prev.includes(typeId) 
+        ? prev.filter(id => id !== typeId)
+        : [...prev, typeId]
+    );
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -130,10 +161,15 @@ export const Events: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-900">Événements</h1>
           <p className="text-gray-600 mt-2">Gérer les concerts, festivals et dates de tournée</p>
         </div>
-        <Button onClick={() => setShowAddForm(true)} className="bg-purple-600 hover:bg-purple-700">
-          <Plus className="h-4 w-4 mr-2" />
-          Ajouter Événement
-        </Button>
+        <div className="flex space-x-3">
+          <Link to="/event-types">
+            <Button variant="outline">Gérer Types</Button>
+          </Link>
+          <Button onClick={() => setShowAddForm(true)} className="bg-purple-600 hover:bg-purple-700">
+            <Plus className="h-4 w-4 mr-2" />
+            Ajouter Événement
+          </Button>
+        </div>
       </div>
 
       {/* Events List */}
@@ -148,7 +184,12 @@ export const Events: React.FC = () => {
                     <Badge className={getStatusColor(event.status)}>
                       {event.status === 'confirmed' ? 'Confirmé' : event.status === 'pending' ? 'En attente' : 'Annulé'}
                     </Badge>
-                    <Badge variant="outline">{event.type}</Badge>
+                    {/* Multiple Event Type Badges */}
+                    {getEventTypesByIds(event.typeIds).map((type) => (
+                      <Badge key={type.id} className={`${type.color} text-white`}>
+                        {type.name}
+                      </Badge>
+                    ))}
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
@@ -283,12 +324,28 @@ export const Events: React.FC = () => {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <Input placeholder="Nom de l'événement" />
-                <Input placeholder="Type (Concert, Festival, Tournée)" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
                 <Input type="date" placeholder="Date de l'événement" />
-                <Input placeholder="Lieu/Salle" />
               </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">Types d'événement *</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {eventTypes.filter(type => type.isActive).map((type) => (
+                    <label key={type.id} className="flex items-center space-x-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
+                      <input
+                        type="checkbox"
+                        checked={selectedTypeIds.includes(type.id)}
+                        onChange={() => handleTypeSelection(type.id)}
+                        className="rounded"
+                      />
+                      <div className={`w-3 h-3 rounded-full ${type.color}`}></div>
+                      <span className="text-sm">{type.name}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              
+              <Input placeholder="Lieu/Salle" />
               <div className="space-y-2">
                 <h4 className="font-medium">Adresse complète</h4>
                 <Input placeholder="Rue et numéro" />
@@ -304,7 +361,11 @@ export const Events: React.FC = () => {
                 <Button onClick={() => setShowAddForm(false)} variant="outline" className="flex-1">
                   Annuler
                 </Button>
-                <Button onClick={() => setShowAddForm(false)} className="flex-1 bg-purple-600 hover:bg-purple-700">
+                <Button 
+                  onClick={() => setShowAddForm(false)} 
+                  disabled={selectedTypeIds.length === 0}
+                  className="flex-1 bg-purple-600 hover:bg-purple-700"
+                >
                   Sauvegarder Événement
                 </Button>
               </div>

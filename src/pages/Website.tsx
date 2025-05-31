@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -91,6 +90,16 @@ const sampleMerchandise = [
   }
 ];
 
+// Dynamic event types from the system
+const eventTypes = [
+  { id: '1', name: 'Festival', description: 'Grands événements musicaux' },
+  { id: '2', name: 'Concert', description: 'Concerts en salle' },
+  { id: '3', name: 'Événement d\'entreprise', description: 'Événements corporatifs' },
+  { id: '4', name: 'Événement privé', description: 'Fêtes privées' },
+  { id: '5', name: 'Mariage', description: 'Cérémonies de mariage' },
+  { id: '6', name: 'Autre', description: 'Autre type d\'événement' }
+];
+
 export const Website: React.FC = () => {
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState<'home' | 'artists' | 'artist-detail' | 'shows' | 'tour' | 'shop' | 'checkout' | 'contact'>('home');
@@ -112,6 +121,23 @@ export const Website: React.FC = () => {
 
   const handleContactSubmit = () => {
     console.log('Creating new contact from website:', contactForm);
+    
+    // Simulate creating contact in database
+    const newContact = {
+      id: `website-contact-${Date.now()}`,
+      name: `${contactForm.firstName} ${contactForm.lastName}`,
+      phone: contactForm.phone,
+      email: contactForm.email,
+      ownerId: 'system', // Will be assigned to appropriate user
+      source: 'website' as const,
+      eventName: contactForm.eventName,
+      eventType: contactForm.eventType,
+      message: contactForm.message,
+      createdAt: new Date().toISOString()
+    };
+    
+    console.log('New contact created:', newContact);
+    
     alert('Votre demande de booking a été envoyée avec succès ! Nous vous recontacterons bientôt.');
     setContactForm({
       firstName: '',
@@ -663,12 +689,11 @@ export const Website: React.FC = () => {
                     <SelectValue placeholder="Sélectionnez le type d'événement" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="festival">Festival</SelectItem>
-                    <SelectItem value="concert">Concert</SelectItem>
-                    <SelectItem value="entreprise">Événement d'entreprise</SelectItem>
-                    <SelectItem value="prive">Événement privé</SelectItem>
-                    <SelectItem value="mariage">Mariage</SelectItem>
-                    <SelectItem value="autre">Autre</SelectItem>
+                    {eventTypes.map((type) => (
+                      <SelectItem key={type.id} value={type.name}>
+                        {type.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
