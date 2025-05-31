@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -5,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, MapPin, Music, ShoppingBag, Star, Heart } from 'lucide-react';
+import { Calendar, MapPin, Music, ShoppingBag, Star, Heart, Phone, Mail } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const sampleArtists = [
