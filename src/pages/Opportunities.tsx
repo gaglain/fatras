@@ -1,10 +1,23 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, FileText, Download, Edit, Eye, ArrowRight, DollarSign } from 'lucide-react';
+import { Plus, FileText, Download, Edit, Eye, ArrowRight, DollarSign, User } from 'lucide-react';
+
+interface Contact {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+}
+
+interface Event {
+  id: string;
+  title: string;
+  date: string;
+  venue: string;
+}
 
 interface Opportunity {
   id: string;
@@ -17,9 +30,11 @@ interface Opportunity {
   createdDate: string;
   lastUpdated: string;
   priority: 'low' | 'medium' | 'high';
-  probability: number; // 0-100
-  contactPerson?: string;
-  notes?: string;
+  probability: number;
+  ownerId: string;
+  ownerName: string;
+  contactId?: string;
+  eventId?: string;
   quotationData?: {
     showName: string;
     price: number;
@@ -32,8 +47,40 @@ interface Opportunity {
     soundRentalCosts: number;
     playingConditions: string;
     approximateShowTime: string;
+    totalHT?: number;
+    totalTTC?: number;
   };
 }
+
+const sampleContacts: Contact[] = [
+  {
+    id: '1',
+    name: 'John Smith',
+    email: 'john.smith@example.com',
+    phone: '0612345678'
+  },
+  {
+    id: '2',
+    name: 'Sarah Williams',
+    email: 'sarah.williams@example.com',
+    phone: '0687654321'
+  }
+];
+
+const sampleEvents: Event[] = [
+  {
+    id: '1',
+    title: 'Festival d\'Été 2024',
+    date: '2024-07-15',
+    venue: 'Central Park'
+  },
+  {
+    id: '2',
+    title: 'Soirée Acoustique',
+    date: '2024-06-20',
+    venue: 'Blue Note Jazz Club'
+  }
+];
 
 const sampleOpportunities: Opportunity[] = [
   {
@@ -48,7 +95,10 @@ const sampleOpportunities: Opportunity[] = [
     lastUpdated: '2024-05-25',
     priority: 'high',
     probability: 90,
-    contactPerson: 'John Smith',
+    ownerId: '1',
+    ownerName: 'John Doe',
+    contactId: '1',
+    eventId: '1',
     quotationData: {
       showName: 'Festival d\'Été 2024',
       price: 50000,
@@ -60,7 +110,9 @@ const sampleOpportunities: Opportunity[] = [
       trainCosts: 0,
       soundRentalCosts: 8000,
       playingConditions: 'Scène couverte, éclairage professionnel',
-      approximateShowTime: '21h00'
+      approximateShowTime: '21h00',
+      totalHT: 64050,
+      totalTTC: 76860
     }
   },
   {
@@ -75,7 +127,25 @@ const sampleOpportunities: Opportunity[] = [
     lastUpdated: '2024-06-05',
     priority: 'medium',
     probability: 65,
-    contactPerson: 'Sarah Williams'
+    ownerId: '2',
+    ownerName: 'Jane Smith',
+    contactId: '2',
+    eventId: '2',
+    quotationData: {
+      showName: 'Soirée Acoustique',
+      price: 8500,
+      castingArtists: 2,
+      rentalCosts: 1000,
+      roadCosts: 200,
+      tollCosts: 50,
+      parkingCosts: 20,
+      trainCosts: 0,
+      soundRentalCosts: 1500,
+      playingConditions: 'Petite scène intérieure',
+      approximateShowTime: '20h30',
+      totalHT: 11270,
+      totalTTC: 13524
+    }
   },
   {
     id: '3',
@@ -88,7 +158,9 @@ const sampleOpportunities: Opportunity[] = [
     createdDate: '2024-06-10',
     lastUpdated: '2024-06-10',
     priority: 'high',
-    probability: 40
+    probability: 40,
+    ownerId: '1',
+    ownerName: 'John Doe'
   }
 ];
 
@@ -139,6 +211,29 @@ export const Opportunities: React.FC = () => {
   const [showQuotationForm, setShowQuotationForm] = useState(false);
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
   const [filterStage, setFilterStage] = useState<string>('all');
+  const [quotationForm, setQuotationForm] = useState({
+    showName: '',
+    price: 0,
+    castingArtists: 0,
+    rentalCosts: 0,
+    roadCosts: 0,
+    tollCosts: 0,
+    parkingCosts: 0,
+    trainCosts: 0,
+    soundRentalCosts: 0,
+    playingConditions: '',
+    approximateShowTime: ''
+  });
+
+  const calculateTotals = () => {
+    const totalHT = quotationForm.price + quotationForm.rentalCosts + quotationForm.roadCosts + 
+                   quotationForm.tollCosts + quotationForm.parkingCosts + quotationForm.trainCosts + 
+                   quotationForm.soundRentalCosts;
+    const totalTTC = totalHT * 1.20; // 20% TVA
+    return { totalHT, totalTTC };
+  };
+
+  const { totalHT, totalTTC } = calculateTotals();
 
   const filteredOpportunities = filterStage === 'all' 
     ? opportunities 
@@ -168,13 +263,20 @@ export const Opportunities: React.FC = () => {
     }));
   };
 
-  const createQuotation = (opportunityData: any) => {
-    console.log('Création du devis:', opportunityData);
+  const createQuotation = () => {
+    const { totalHT, totalTTC } = calculateTotals();
+    const quotationData = {
+      ...quotationForm,
+      totalHT,
+      totalTTC
+    };
+    console.log('Création du devis:', quotationData);
     setShowQuotationForm(false);
   };
 
   return (
     <div className="space-y-6">
+      
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Opportunités Commerciales</h1>
@@ -186,7 +288,7 @@ export const Opportunities: React.FC = () => {
         </Button>
       </div>
 
-      {/* Pipeline Stats */}
+      
       <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
         {Object.entries(stageLabels).map(([stage, label]) => {
           const count = opportunities.filter(o => o.stage === stage).length;
@@ -208,7 +310,7 @@ export const Opportunities: React.FC = () => {
         })}
       </div>
 
-      {/* Filter Controls */}
+      
       <div className="flex items-center space-x-4">
         <Button 
           variant={filterStage === 'all' ? 'default' : 'outline'} 
@@ -251,7 +353,7 @@ export const Opportunities: React.FC = () => {
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mt-4">
                     <div>
                       <p className="text-sm text-gray-500">Artiste</p>
                       <p className="font-medium">{opportunity.artist}</p>
@@ -268,11 +370,18 @@ export const Opportunities: React.FC = () => {
                       <p className="text-sm text-gray-500">Montant estimé</p>
                       <p className="font-medium text-green-600">{opportunity.estimatedAmount}</p>
                     </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Propriétaire</p>
+                      <div className="flex items-center space-x-2">
+                        <User className="h-4 w-4 text-gray-400" />
+                        <p className="font-medium">{opportunity.ownerName}</p>
+                      </div>
+                    </div>
                   </div>
                   
-                  {opportunity.contactPerson && (
+                  {opportunity.contactId && (
                     <div className="mt-3">
-                      <p className="text-sm text-gray-500">Contact: <span className="font-medium">{opportunity.contactPerson}</span></p>
+                      <p className="text-sm text-gray-500">Contact: <span className="font-medium">{sampleContacts.find(c => c.id === opportunity.contactId)?.name}</span></p>
                     </div>
                   )}
                   
@@ -342,32 +451,97 @@ export const Opportunities: React.FC = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <Input placeholder="Nom du spectacle" defaultValue={selectedOpportunity.title} />
-                <Input placeholder="Prix du spectacle (€)" type="number" />
+                <Input 
+                  placeholder="Nom du spectacle" 
+                  value={quotationForm.showName}
+                  onChange={(e) => setQuotationForm(prev => ({...prev, showName: e.target.value}))}
+                />
+                <Input 
+                  placeholder="Prix du spectacle (€)" 
+                  type="number"
+                  value={quotationForm.price}
+                  onChange={(e) => setQuotationForm(prev => ({...prev, price: Number(e.target.value)}))}
+                />
               </div>
               
               <div className="grid grid-cols-3 gap-4">
-                <Input placeholder="Nombre d'artistes casting" type="number" />
-                <Input placeholder="Coût location matériel (€)" type="number" />
-                <Input placeholder="Coût route (€)" type="number" />
+                <Input 
+                  placeholder="Nombre d'artistes casting" 
+                  type="number"
+                  value={quotationForm.castingArtists}
+                  onChange={(e) => setQuotationForm(prev => ({...prev, castingArtists: Number(e.target.value)}))}
+                />
+                <Input 
+                  placeholder="Coût location matériel (€)" 
+                  type="number"
+                  value={quotationForm.rentalCosts}
+                  onChange={(e) => setQuotationForm(prev => ({...prev, rentalCosts: Number(e.target.value)}))}
+                />
+                <Input 
+                  placeholder="Coût route (€)" 
+                  type="number"
+                  value={quotationForm.roadCosts}
+                  onChange={(e) => setQuotationForm(prev => ({...prev, roadCosts: Number(e.target.value)}))}
+                />
               </div>
               
               <div className="grid grid-cols-3 gap-4">
-                <Input placeholder="Coût péage (€)" type="number" />
-                <Input placeholder="Coût parking (€)" type="number" />
-                <Input placeholder="Coût train (€)" type="number" />
+                <Input 
+                  placeholder="Coût péage (€)" 
+                  type="number"
+                  value={quotationForm.tollCosts}
+                  onChange={(e) => setQuotationForm(prev => ({...prev, tollCosts: Number(e.target.value)}))}
+                />
+                <Input 
+                  placeholder="Coût parking (€)" 
+                  type="number"
+                  value={quotationForm.parkingCosts}
+                  onChange={(e) => setQuotationForm(prev => ({...prev, parkingCosts: Number(e.target.value)}))}
+                />
+                <Input 
+                  placeholder="Coût train (€)" 
+                  type="number"
+                  value={quotationForm.trainCosts}
+                  onChange={(e) => setQuotationForm(prev => ({...prev, trainCosts: Number(e.target.value)}))}
+                />
               </div>
               
               <div className="grid grid-cols-2 gap-4">
-                <Input placeholder="Coût location son (€)" type="number" />
-                <Input placeholder="Heure approximative du spectacle" />
+                <Input 
+                  placeholder="Coût location son (€)" 
+                  type="number"
+                  value={quotationForm.soundRentalCosts}
+                  onChange={(e) => setQuotationForm(prev => ({...prev, soundRentalCosts: Number(e.target.value)}))}
+                />
+                <Input 
+                  placeholder="Heure approximative du spectacle"
+                  value={quotationForm.approximateShowTime}
+                  onChange={(e) => setQuotationForm(prev => ({...prev, approximateShowTime: e.target.value}))}
+                />
               </div>
               
               <textarea 
                 placeholder="Conditions pour jouer"
                 className="w-full p-3 border border-gray-300 rounded-md"
-                rows={4}
+                rows={3}
+                value={quotationForm.playingConditions}
+                onChange={(e) => setQuotationForm(prev => ({...prev, playingConditions: e.target.value}))}
               />
+
+              {/* Totals Display */}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-semibold mb-2">Récapitulatif des coûts</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Total HT</p>
+                    <p className="text-xl font-bold text-gray-900">{totalHT.toLocaleString()} €</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Total TTC (TVA 20%)</p>
+                    <p className="text-xl font-bold text-green-600">{totalTTC.toLocaleString()} €</p>
+                  </div>
+                </div>
+              </div>
               
               <div className="flex space-x-3 pt-4">
                 <Button onClick={() => setShowQuotationForm(false)} variant="outline" className="flex-1">
@@ -376,7 +550,7 @@ export const Opportunities: React.FC = () => {
                 <Button variant="outline" className="flex-1">
                   Sauvegarder Brouillon
                 </Button>
-                <Button onClick={() => createQuotation({})} className="flex-1 bg-purple-600 hover:bg-purple-700">
+                <Button onClick={createQuotation} className="flex-1 bg-purple-600 hover:bg-purple-700">
                   Créer et Envoyer Devis
                 </Button>
               </div>
