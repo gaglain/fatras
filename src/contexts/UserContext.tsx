@@ -1,13 +1,21 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
+export type UserRole = 'super-admin' | 'booker' | 'artist' | 'casting-artist' | 'user' | 'external-user';
+
 export interface User {
   id: string;
   name: string;
+  lastName: string;
   email: string;
-  role: 'admin' | 'manager' | 'member';
+  role: UserRole;
   avatar?: string;
   isActive: boolean;
+  googleCalendarConnected?: boolean;
+  gmailConnected?: boolean;
+  department?: string;
+  phone?: string;
+  bio?: string;
 }
 
 export interface UserPermissions {
@@ -18,6 +26,12 @@ export interface UserPermissions {
   canEditAllEvents: boolean;
   canDeleteEvents: boolean;
   canManageUsers: boolean;
+  canManageContracts: boolean;
+  canViewFinancials: boolean;
+  canManageSettings: boolean;
+  canAccessChat: boolean;
+  canCreateOpportunities: boolean;
+  canManageCasting: boolean;
 }
 
 interface UserContextType {
@@ -30,6 +44,8 @@ interface UserContextType {
   getUserPermissions: (user: User) => UserPermissions;
   getUserById: (id: string) => User | undefined;
   changeOwnership: (itemType: 'contact' | 'event', itemId: string, newOwnerId: string) => void;
+  connectGoogleCalendar: (userId: string) => void;
+  connectGmail: (userId: string) => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -37,24 +53,44 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 const sampleUsers: User[] = [
   {
     id: 'user-1',
-    name: 'Alice Johnson',
+    name: 'Alice',
+    lastName: 'Johnson',
     email: 'alice@showmanager.com',
-    role: 'admin',
-    isActive: true
+    role: 'super-admin',
+    isActive: true,
+    googleCalendarConnected: true,
+    gmailConnected: true,
+    department: 'Direction',
+    phone: '+33 1 23 45 67 89',
+    bio: 'Directrice générale avec 15 ans d\'expérience dans l\'événementiel'
   },
   {
     id: 'user-2',
-    name: 'Bob Miller',
+    name: 'Bob',
+    lastName: 'Miller',
     email: 'bob@showmanager.com',
-    role: 'manager',
-    isActive: true
+    role: 'booker',
+    isActive: true,
+    department: 'Booking',
+    phone: '+33 1 23 45 67 90'
   },
   {
     id: 'user-3',
-    name: 'Charlie Brown',
+    name: 'Charlie',
+    lastName: 'Brown',
     email: 'charlie@showmanager.com',
-    role: 'member',
-    isActive: true
+    role: 'artist',
+    isActive: true,
+    department: 'Artistes'
+  },
+  {
+    id: 'user-4',
+    name: 'Diana',
+    lastName: 'Prince',
+    email: 'diana@external.com',
+    role: 'external-user',
+    isActive: true,
+    department: 'Partenaire externe'
   }
 ];
 
@@ -82,7 +118,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const getUserPermissions = (user: User): UserPermissions => {
     switch (user.role) {
-      case 'admin':
+      case 'super-admin':
         return {
           canCreateContacts: true,
           canEditAllContacts: true,
@@ -90,9 +126,15 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           canCreateEvents: true,
           canEditAllEvents: true,
           canDeleteEvents: true,
-          canManageUsers: true
+          canManageUsers: true,
+          canManageContracts: true,
+          canViewFinancials: true,
+          canManageSettings: true,
+          canAccessChat: true,
+          canCreateOpportunities: true,
+          canManageCasting: true
         };
-      case 'manager':
+      case 'booker':
         return {
           canCreateContacts: true,
           canEditAllContacts: true,
@@ -100,9 +142,47 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           canCreateEvents: true,
           canEditAllEvents: true,
           canDeleteEvents: false,
-          canManageUsers: false
+          canManageUsers: false,
+          canManageContracts: true,
+          canViewFinancials: true,
+          canManageSettings: false,
+          canAccessChat: true,
+          canCreateOpportunities: true,
+          canManageCasting: true
         };
-      case 'member':
+      case 'artist':
+        return {
+          canCreateContacts: false,
+          canEditAllContacts: false,
+          canDeleteContacts: false,
+          canCreateEvents: false,
+          canEditAllEvents: false,
+          canDeleteEvents: false,
+          canManageUsers: false,
+          canManageContracts: false,
+          canViewFinancials: false,
+          canManageSettings: false,
+          canAccessChat: true,
+          canCreateOpportunities: false,
+          canManageCasting: false
+        };
+      case 'casting-artist':
+        return {
+          canCreateContacts: false,
+          canEditAllContacts: false,
+          canDeleteContacts: false,
+          canCreateEvents: false,
+          canEditAllEvents: false,
+          canDeleteEvents: false,
+          canManageUsers: false,
+          canManageContracts: false,
+          canViewFinancials: false,
+          canManageSettings: false,
+          canAccessChat: true,
+          canCreateOpportunities: false,
+          canManageCasting: false
+        };
+      case 'user':
         return {
           canCreateContacts: true,
           canEditAllContacts: false,
@@ -110,7 +190,29 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           canCreateEvents: true,
           canEditAllEvents: false,
           canDeleteEvents: false,
-          canManageUsers: false
+          canManageUsers: false,
+          canManageContracts: false,
+          canViewFinancials: false,
+          canManageSettings: false,
+          canAccessChat: true,
+          canCreateOpportunities: false,
+          canManageCasting: false
+        };
+      case 'external-user':
+        return {
+          canCreateContacts: false,
+          canEditAllContacts: false,
+          canDeleteContacts: false,
+          canCreateEvents: false,
+          canEditAllEvents: false,
+          canDeleteEvents: false,
+          canManageUsers: false,
+          canManageContracts: false,
+          canViewFinancials: false,
+          canManageSettings: false,
+          canAccessChat: false,
+          canCreateOpportunities: false,
+          canManageCasting: false
         };
       default:
         return {
@@ -120,7 +222,13 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           canCreateEvents: false,
           canEditAllEvents: false,
           canDeleteEvents: false,
-          canManageUsers: false
+          canManageUsers: false,
+          canManageContracts: false,
+          canViewFinancials: false,
+          canManageSettings: false,
+          canAccessChat: false,
+          canCreateOpportunities: false,
+          canManageCasting: false
         };
     }
   };
@@ -130,8 +238,15 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const changeOwnership = (itemType: 'contact' | 'event', itemId: string, newOwnerId: string) => {
-    // This would be implemented to update ownership in the respective data stores
     console.log(`Changing ownership of ${itemType} ${itemId} to user ${newOwnerId}`);
+  };
+
+  const connectGoogleCalendar = (userId: string) => {
+    updateUser(userId, { googleCalendarConnected: true });
+  };
+
+  const connectGmail = (userId: string) => {
+    updateUser(userId, { gmailConnected: true });
   };
 
   return (
@@ -144,7 +259,9 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       removeUser,
       getUserPermissions,
       getUserById,
-      changeOwnership
+      changeOwnership,
+      connectGoogleCalendar,
+      connectGmail
     }}>
       {children}
     </UserContext.Provider>

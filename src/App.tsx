@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -18,6 +17,9 @@ import { RoadShow } from "./pages/RoadShow";
 import { ShowBible } from "./pages/ShowBible";
 import { Preferences } from "./pages/Preferences";
 import NotFound from "./pages/NotFound";
+import { Messagerie } from "./pages/Messagerie";
+import { Agenda } from "./pages/Agenda";
+import { Opportunities } from "./pages/Opportunities";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +39,9 @@ const App = () => (
               <Route path="/artists" element={<Artists />} />
               <Route path="/email" element={<Email />} />
               <Route path="/contracts" element={<Contracts />} />
+              <Route path="/opportunities" element={<Opportunities />} />
+              <Route path="/messagerie" element={<Messagerie />} />
+              <Route path="/agenda" element={<Agenda />} />
               <Route path="/merchandise" element={<Merchandise />} />
               <Route path="/roadshow" element={<RoadShow />} />
               <Route path="/show-bible" element={<ShowBible />} />
