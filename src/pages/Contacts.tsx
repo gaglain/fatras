@@ -1,11 +1,11 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Search, Phone, Mail, User, Calendar, ExternalLink } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Plus, Search, Phone, Mail, User, Calendar, ExternalLink, Globe } from 'lucide-react';
 import { EmailPopup } from '@/components/EmailPopup';
 import { useUser } from '@/contexts/UserContext';
 
@@ -18,6 +18,10 @@ interface Contact {
   company?: string;
   role?: string;
   linkedEventIds?: string[];
+  source?: 'manual' | 'website';
+  message?: string;
+  eventName?: string;
+  eventType?: string;
 }
 
 const sampleContacts: Contact[] = [
@@ -50,6 +54,19 @@ const sampleContacts: Contact[] = [
     company: 'Sound Tech Solutions',
     role: 'Ingénieur Audio',
     linkedEventIds: ['event-3']
+  },
+  {
+    id: 'contact-4',
+    name: 'Marie Dubois',
+    phone: '+33 6 12 34 56 78',
+    email: 'marie.dubois@festival-ete.fr',
+    ownerId: 'user-1',
+    company: 'Festival d\'Été de Lyon',
+    role: 'Coordinatrice Événements',
+    source: 'website',
+    eventName: 'Festival d\'Été 2024',
+    eventType: 'festival',
+    message: 'Bonjour, nous organisons un festival d\'été à Lyon et aimerions avoir des informations sur vos spectacles disponibles en juillet.'
   }
 ];
 
@@ -66,6 +83,7 @@ export const Contacts: React.FC = () => {
   const [events, setEvents] = useState(sampleEvents);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [emailPopup, setEmailPopup] = useState<{ show: boolean; email: string; contactName: string }>({
     show: false,
     email: '',
@@ -118,6 +136,88 @@ export const Contacts: React.FC = () => {
     return owner?.name || 'Utilisateur inconnu';
   };
 
+  const renderContactModal = () => {
+    if (!selectedContact) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <Card className="w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              {selectedContact.source === 'website' && <Globe className="h-5 w-5 text-blue-500" />}
+              <span>{selectedContact.name}</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Email</label>
+                <p className="text-gray-700">{selectedContact.email}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Téléphone</label>
+                <p className="text-gray-700">{selectedContact.phone}</p>
+              </div>
+              {selectedContact.company && (
+                <div>
+                  <label className="block text-sm font-medium mb-1">Entreprise</label>
+                  <p className="text-gray-700">{selectedContact.company}</p>
+                </div>
+              )}
+              {selectedContact.role && (
+                <div>
+                  <label className="block text-sm font-medium mb-1">Rôle</label>
+                  <p className="text-gray-700">{selectedContact.role}</p>
+                </div>
+              )}
+            </div>
+
+            {selectedContact.source === 'website' && (
+              <div className="bg-blue-50 p-4 rounded-lg space-y-3">
+                <h4 className="font-medium text-blue-900">Demande de Booking</h4>
+                {selectedContact.eventName && (
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-blue-800">Événement</label>
+                    <p className="text-blue-700">{selectedContact.eventName}</p>
+                  </div>
+                )}
+                {selectedContact.eventType && (
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-blue-800">Type d'événement</label>
+                    <Badge className="bg-blue-100 text-blue-800">
+                      {selectedContact.eventType}
+                    </Badge>
+                  </div>
+                )}
+                {selectedContact.message && (
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-blue-800">Message</label>
+                    <p className="text-blue-700 bg-white p-3 rounded border">
+                      {selectedContact.message}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="flex space-x-3 pt-4">
+              <Button onClick={() => setSelectedContact(null)} variant="outline" className="flex-1">
+                Fermer
+              </Button>
+              <Button 
+                onClick={() => handleEmailClick(selectedContact.email, selectedContact.name)}
+                className="flex-1 bg-purple-600 hover:bg-purple-700"
+              >
+                <Mail className="h-4 w-4 mr-2" />
+                Répondre
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
+
   if (!currentUser || !permissions) {
     return <div>Chargement...</div>;
   }
@@ -162,7 +262,12 @@ export const Contacts: React.FC = () => {
                   <User className="h-6 w-6 text-purple-600" />
                 </div>
                 <div className="flex-1">
-                  <CardTitle className="text-lg">{contact.name}</CardTitle>
+                  <div className="flex items-center space-x-2">
+                    <CardTitle className="text-lg">{contact.name}</CardTitle>
+                    {contact.source === 'website' && (
+                      <Globe className="h-4 w-4 text-blue-500" title="Contact depuis le site web" />
+                    )}
+                  </div>
                   <p className="text-sm text-gray-500">{contact.role}</p>
                 </div>
               </div>
@@ -183,6 +288,13 @@ export const Contacts: React.FC = () => {
                 <div className="text-sm text-gray-600">
                   <strong>Entreprise:</strong> {contact.company}
                 </div>
+              )}
+
+              {/* Website Contact Badge */}
+              {contact.source === 'website' && (
+                <Badge className="bg-blue-100 text-blue-800">
+                  Demande de booking
+                </Badge>
               )}
               
               {/* Owner Management */}
@@ -233,14 +345,18 @@ export const Contacts: React.FC = () => {
                   size="sm" 
                   variant="outline" 
                   className="flex-1"
+                  onClick={() => setSelectedContact(contact)}
+                >
+                  {contact.source === 'website' ? 'Voir Demande' : 'Détails'}
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="flex-1"
                   onClick={() => handleEmailClick(contact.email, contact.name)}
                 >
                   <Mail className="h-3 w-3 mr-1" />
                   Email
-                </Button>
-                <Button size="sm" variant="outline" className="flex-1">
-                  <Phone className="h-3 w-3 mr-1" />
-                  Appeler
                 </Button>
               </div>
             </CardContent>
@@ -290,6 +406,9 @@ export const Contacts: React.FC = () => {
           </Card>
         </div>
       )}
+
+      {/* Contact Details Modal */}
+      {renderContactModal()}
 
       {/* Email Popup */}
       <EmailPopup
