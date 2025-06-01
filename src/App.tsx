@@ -15,7 +15,7 @@ import { Tasks } from './pages/Tasks';
 import { Messagerie } from './pages/Messagerie';
 import { Agenda } from './pages/Agenda';
 import { ShowBible } from './pages/ShowBible';
-import { Roadshow } from './pages/RoadShow';
+import { RoadShow } from './pages/RoadShow';
 import { Merchandise } from './pages/Merchandise';
 import { Website } from './pages/Website';
 import { Preferences } from './pages/Preferences';
@@ -45,7 +45,7 @@ function App() {
               <Route path="/messagerie" element={<Messagerie />} />
               <Route path="/agenda" element={<Agenda />} />
               <Route path="/show-bible" element={<ShowBible />} />
-              <Route path="/roadshow" element={<Roadshow />} />
+              <Route path="/roadshow" element={<RoadShow />} />
               <Route path="/merchandise" element={<Merchandise />} />
               <Route path="/application" element={<Application />} />
               <Route path="/website" element={<Website />} />
