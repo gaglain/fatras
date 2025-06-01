@@ -1,3 +1,4 @@
+
 // Update this page (the content is just a fallback if you fail to update the page)
 
 const Index = () => {
@@ -11,4 +12,5 @@ const Index = () => {
   );
 };
 
+export { Index };
 export default Index;

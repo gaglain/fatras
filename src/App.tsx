@@ -3,7 +3,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { UserProvider } from './contexts/UserContext';
-import { Index } from './pages/Index';
+import Index from './pages/Index';
 import { Dashboard } from './pages/Dashboard';
 import { Events } from './pages/Events';
 import { EventTypes } from './pages/EventTypes';
@@ -21,7 +21,7 @@ import { RoadShow } from './pages/RoadShow';
 import { Merchandise } from './pages/Merchandise';
 import { Preferences } from './pages/Preferences';
 import { Website } from './pages/Website';
-import { NotFound } from './pages/NotFound';
+import NotFound from './pages/NotFound';
 import { Toaster } from './components/ui/sonner';
 import './App.css';
 

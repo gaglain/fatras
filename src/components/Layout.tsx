@@ -1,15 +1,12 @@
 
 import React from 'react';
+import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { ChatWidget } from './ChatWidget';
 import { useUser } from '@/contexts/UserContext';
 
-interface LayoutProps {
-  children: React.ReactNode;
-}
-
-export const Layout: React.FC<LayoutProps> = ({ children }) => {
+export const Layout: React.FC = () => {
   const { currentUser } = useUser();
   
   return (
@@ -20,7 +17,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           companyName="ShowManager Pro"
         />
         <main className="flex-1 p-6 overflow-auto">
-          {children}
+          <Outlet />
         </main>
       </div>
       {currentUser && <ChatWidget />}
