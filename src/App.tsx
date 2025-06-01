@@ -2,6 +2,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { Layout } from './components/Layout';
+import { WebsiteLayout } from './components/WebsiteLayout';
 import { Dashboard } from './pages/Dashboard';
 import { Contacts } from './pages/Contacts';
 import { Events } from './pages/Events';
@@ -31,6 +32,14 @@ function App() {
       <UserProvider>
         <Router>
           <Routes>
+            {/* Route séparée pour le site web public */}
+            <Route path="/website" element={
+              <WebsiteLayout>
+                <Website />
+              </WebsiteLayout>
+            } />
+            
+            {/* Routes du back office avec Layout */}
             <Route path="/" element={<Layout />}>
               <Route index element={<Dashboard />} />
               <Route path="/contacts" element={<Contacts />} />
@@ -48,7 +57,6 @@ function App() {
               <Route path="/roadshow" element={<RoadShow />} />
               <Route path="/merchandise" element={<Merchandise />} />
               <Route path="/application" element={<Application />} />
-              <Route path="/website" element={<Website />} />
               <Route path="/preferences" element={<Preferences />} />
             </Route>
             <Route path="*" element={<NotFound />} />
