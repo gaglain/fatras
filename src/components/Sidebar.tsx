@@ -14,7 +14,8 @@ import {
   BookOpen,
   ShoppingBag,
   Settings,
-  Globe
+  Globe,
+  Smartphone
 } from 'lucide-react';
 
 const sidebarItems = [
@@ -31,6 +32,7 @@ const sidebarItems = [
   { icon: BookOpen, label: 'Bible du Spectacle', href: '/show-bible' },
   { icon: MapPin, label: 'Tournée', href: '/roadshow' },
   { icon: ShoppingBag, label: 'Boutique', href: '/merchandise' },
+  { icon: Smartphone, label: 'Application', href: '/application' },
   { icon: Globe, label: 'Site Web', href: '/website' },
   { icon: Settings, label: 'Préférences', href: '/preferences' },
 ];
