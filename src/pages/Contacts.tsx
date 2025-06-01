@@ -6,9 +6,10 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Search, Phone, Mail, User, Calendar, ExternalLink, Globe, FileText, CheckSquare, History } from 'lucide-react';
+import { Plus, Search, Phone, Mail, User, Calendar, ExternalLink, Globe, FileText, CheckSquare, History, Upload } from 'lucide-react';
 import { EmailPopup } from '@/components/EmailPopup';
 import { useUser } from '@/contexts/UserContext';
+import { CSVImporter } from '@/components/CSVImporter';
 
 interface Contact {
   id: string;
@@ -19,7 +20,7 @@ interface Contact {
   company?: string;
   role?: string;
   linkedEventIds?: string[];
-  source?: 'manual' | 'website';
+  source?: 'manual' | 'website' | 'csv';
   message?: string;
   eventName?: string;
   eventType?: string;
@@ -132,6 +133,7 @@ export const Contacts: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+  const [showCSVImporter, setShowCSVImporter] = useState(false);
   const [emailPopup, setEmailPopup] = useState<{ show: boolean; email: string; contactName: string }>({
     show: false,
     email: '',
@@ -403,6 +405,35 @@ export const Contacts: React.FC = () => {
     );
   };
 
+  const handleCSVImport = (importedContacts: any[]) => {
+    const newContacts = importedContacts.map((contact, index) => ({
+      id: `imported-${Date.now()}-${index}`,
+      name: contact.name || `${contact.firstName || ''} ${contact.lastName || ''}`.trim(),
+      phone: contact.phone || '',
+      email: contact.email || '',
+      ownerId: currentUser?.id || 'user-1',
+      company: contact.company,
+      role: contact.role,
+      source: 'csv' as const,
+      eventName: contact.eventName,
+      eventType: contact.eventType,
+      message: contact.message,
+      linkedEventIds: [],
+      contractIds: [],
+      taskIds: [],
+      activityHistory: [{
+        id: `activity-${Date.now()}`,
+        type: 'email' as const,
+        description: 'Contact importé via CSV',
+        date: new Date().toISOString(),
+        user: currentUser?.name || 'Utilisateur'
+      }]
+    }));
+
+    setContacts(prev => [...prev, ...newContacts]);
+    console.log(`${newContacts.length} contacts importés avec succès`);
+  };
+
   if (!currentUser || !permissions) {
     return <div>Chargement...</div>;
   }
@@ -415,10 +446,20 @@ export const Contacts: React.FC = () => {
           <p className="text-gray-600 mt-2">Gérer vos gestionnaires de lieux, promoteurs et contacts de l'industrie</p>
         </div>
         {permissions.canCreateContacts && (
-          <Button onClick={() => setShowAddForm(true)} className="bg-purple-600 hover:bg-purple-700">
-            <Plus className="h-4 w-4 mr-2" />
-            Ajouter Contact
-          </Button>
+          <div className="flex space-x-3">
+            <Button 
+              onClick={() => setShowCSVImporter(true)} 
+              variant="outline"
+              className="border-purple-200 text-purple-600 hover:bg-purple-50"
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Importer CSV
+            </Button>
+            <Button onClick={() => setShowAddForm(true)} className="bg-purple-600 hover:bg-purple-700">
+              <Plus className="h-4 w-4 mr-2" />
+              Ajouter Contact
+            </Button>
+          </div>
         )}
       </div>
 
@@ -433,7 +474,6 @@ export const Contacts: React.FC = () => {
             className="pl-10"
           />
         </div>
-        <Button variant="outline">Importer Contacts</Button>
         <Button variant="outline">Exporter</Button>
       </div>
 
@@ -594,6 +634,13 @@ export const Contacts: React.FC = () => {
 
       {/* Contact Details Modal */}
       {renderContactModal()}
+
+      {/* CSV Importer */}
+      <CSVImporter
+        isOpen={showCSVImporter}
+        onClose={() => setShowCSVImporter(false)}
+        onImport={handleCSVImport}
+      />
 
       {/* Email Popup */}
       <EmailPopup
