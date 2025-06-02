@@ -42,24 +42,26 @@ function App() {
                 <Website />
               </WebsiteLayout>
             } />
-            <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
-            <Route path="/agenda" element={<Layout><Agenda /></Layout>} />
-            <Route path="/contacts" element={<Layout><Contacts /></Layout>} />
-            <Route path="/artists" element={<Layout><Artists /></Layout>} />
-            <Route path="/artists/:id" element={<Layout><ArtistDetail /></Layout>} />
-            <Route path="/events" element={<Layout><Events /></Layout>} />
-            <Route path="/event-types" element={<Layout><EventTypes /></Layout>} />
-            <Route path="/contracts" element={<Layout><Contracts /></Layout>} />
-            <Route path="/tasks" element={<Layout><Tasks /></Layout>} />
-            <Route path="/email" element={<Layout><Email /></Layout>} />
-            <Route path="/email-campaigns" element={<Layout><EmailCampaigns /></Layout>} />
-            <Route path="/messagerie" element={<Layout><Messagerie /></Layout>} />
-            <Route path="/show-bible" element={<Layout><ShowBible /></Layout>} />
-            <Route path="/road-show" element={<Layout><RoadShow /></Layout>} />
-            <Route path="/merchandise" element={<Layout><Merchandise /></Layout>} />
-            <Route path="/opportunities" element={<Layout><Opportunities /></Layout>} />
-            <Route path="/application" element={<Layout><Application /></Layout>} />
-            <Route path="/preferences" element={<Layout><Preferences /></Layout>} />
+            <Route path="/*" element={<Layout />}>
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="agenda" element={<Agenda />} />
+              <Route path="contacts" element={<Contacts />} />
+              <Route path="artists" element={<Artists />} />
+              <Route path="artists/:id" element={<ArtistDetail />} />
+              <Route path="events" element={<Events />} />
+              <Route path="event-types" element={<EventTypes />} />
+              <Route path="contracts" element={<Contracts />} />
+              <Route path="tasks" element={<Tasks />} />
+              <Route path="email" element={<Email />} />
+              <Route path="email-campaigns" element={<EmailCampaigns />} />
+              <Route path="messagerie" element={<Messagerie />} />
+              <Route path="show-bible" element={<ShowBible />} />
+              <Route path="road-show" element={<RoadShow />} />
+              <Route path="merchandise" element={<Merchandise />} />
+              <Route path="opportunities" element={<Opportunities />} />
+              <Route path="application" element={<Application />} />
+              <Route path="preferences" element={<Preferences />} />
+            </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
           <Toaster />
