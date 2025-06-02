@@ -6,14 +6,17 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Search, Phone, Mail, User, Calendar, ExternalLink, Globe, FileText, CheckSquare, History, Upload } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Plus, Search, Phone, Mail, User, Calendar, ExternalLink, Globe, FileText, CheckSquare, History, Upload, Trash2 } from 'lucide-react';
 import { EmailPopup } from '@/components/EmailPopup';
 import { useUser } from '@/contexts/UserContext';
 import { CSVImporter } from '@/components/CSVImporter';
 
 interface Contact {
   id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   phone: string;
   email: string;
   ownerId: string;
@@ -26,6 +29,7 @@ interface Contact {
   eventType?: string;
   contractIds?: string[];
   taskIds?: string[];
+  acceptsPromotionalEmails: boolean;
   activityHistory?: Array<{
     id: string;
     type: 'email' | 'call' | 'meeting' | 'contract' | 'event';
@@ -38,7 +42,8 @@ interface Contact {
 const sampleContacts: Contact[] = [
   {
     id: 'contact-1',
-    name: 'John Smith',
+    firstName: 'John',
+    lastName: 'Smith',
     phone: '+1 (555) 123-4567',
     email: 'john.smith@venue.com',
     ownerId: 'user-1',
@@ -47,6 +52,7 @@ const sampleContacts: Contact[] = [
     linkedEventIds: ['event-1', 'event-3'],
     contractIds: ['contract-1'],
     taskIds: ['task-1', 'task-3'],
+    acceptsPromotionalEmails: true,
     activityHistory: [
       {
         id: '1',
@@ -61,19 +67,13 @@ const sampleContacts: Contact[] = [
         description: 'Appel téléphonique - Discussion tarifs',
         date: '2024-05-18T10:15:00',
         user: 'Jean Martin'
-      },
-      {
-        id: '3',
-        type: 'meeting',
-        description: 'Réunion en présentiel au MSG',
-        date: '2024-05-15T15:00:00',
-        user: 'Marie Dupont'
       }
     ]
   },
   {
     id: 'contact-4',
-    name: 'Marie Dubois',
+    firstName: 'Marie',
+    lastName: 'Dubois',
     phone: '+33 6 12 34 56 78',
     email: 'marie.dubois@festival-ete.fr',
     ownerId: 'user-1',
@@ -82,6 +82,7 @@ const sampleContacts: Contact[] = [
     source: 'website',
     eventName: 'Festival d\'Été 2024',
     eventType: 'Festival',
+    acceptsPromotionalEmails: false,
     message: 'Bonjour, nous organisons un festival d\'été à Lyon et aimerions avoir des informations sur vos spectacles disponibles en juillet.',
     activityHistory: [
       {
@@ -134,6 +135,16 @@ export const Contacts: React.FC = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [showCSVImporter, setShowCSVImporter] = useState(false);
+  const [newContact, setNewContact] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    company: '',
+    role: '',
+    ownerId: currentUser?.id || 'user-1',
+    acceptsPromotionalEmails: true
+  });
   const [emailPopup, setEmailPopup] = useState<{ show: boolean; email: string; contactName: string }>({
     show: false,
     email: '',
@@ -143,11 +154,11 @@ export const Contacts: React.FC = () => {
   const permissions = currentUser ? getUserPermissions(currentUser) : null;
 
   const filteredContacts = contacts.filter(contact => {
-    const matchesSearch = contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const fullName = `${contact.firstName} ${contact.lastName}`;
+    const matchesSearch = fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       contact.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       contact.company?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    // Show all contacts if user can edit all, otherwise only show owned contacts
     const canView = permissions?.canEditAllContacts || contact.ownerId === currentUser?.id;
     
     return matchesSearch && canView;
@@ -163,12 +174,10 @@ export const Contacts: React.FC = () => {
   };
 
   const handleOwnershipChange = (contactId: string, newOwnerId: string) => {
-    // Update contact ownership
     setContacts(prev => prev.map(contact => 
       contact.id === contactId ? { ...contact, ownerId: newOwnerId } : contact
     ));
 
-    // Update linked events ownership
     const contact = contacts.find(c => c.id === contactId);
     if (contact?.linkedEventIds) {
       setEvents(prev => prev.map(event => 
@@ -179,6 +188,62 @@ export const Contacts: React.FC = () => {
     }
 
     changeOwnership('contact', contactId, newOwnerId);
+  };
+
+  const handleDeleteContact = (contactId: string) => {
+    const contact = contacts.find(c => c.id === contactId);
+    
+    // Remove linked events
+    if (contact?.linkedEventIds) {
+      setEvents(prev => prev.filter(event => !contact.linkedEventIds?.includes(event.id)));
+    }
+    
+    // Remove contact
+    setContacts(prev => prev.filter(c => c.id !== contactId));
+    
+    console.log(`Contact ${contactId} and linked events deleted`);
+  };
+
+  const handleAddContact = () => {
+    if (!newContact.firstName || !newContact.lastName || !newContact.email) {
+      return;
+    }
+
+    const contact: Contact = {
+      id: `contact-${Date.now()}`,
+      firstName: newContact.firstName,
+      lastName: newContact.lastName,
+      email: newContact.email,
+      phone: newContact.phone,
+      company: newContact.company,
+      role: newContact.role,
+      ownerId: newContact.ownerId,
+      acceptsPromotionalEmails: newContact.acceptsPromotionalEmails,
+      source: 'manual',
+      linkedEventIds: [],
+      contractIds: [],
+      taskIds: [],
+      activityHistory: [{
+        id: `activity-${Date.now()}`,
+        type: 'email',
+        description: 'Contact créé manuellement',
+        date: new Date().toISOString(),
+        user: currentUser?.name || 'Utilisateur'
+      }]
+    };
+
+    setContacts(prev => [...prev, contact]);
+    setNewContact({
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+      company: '',
+      role: '',
+      ownerId: currentUser?.id || 'user-1',
+      acceptsPromotionalEmails: true
+    });
+    setShowAddForm(false);
   };
 
   const getOwnerName = (ownerId: string) => {
@@ -220,9 +285,17 @@ export const Contacts: React.FC = () => {
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <Card className="w-full max-w-6xl mx-4 max-h-[90vh] overflow-y-auto">
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              {selectedContact.source === 'website' && <Globe className="h-5 w-5 text-blue-500" />}
-              <span>{selectedContact.name}</span>
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                {selectedContact.source === 'website' && <Globe className="h-5 w-5 text-blue-500" />}
+                <span>{selectedContact.firstName} {selectedContact.lastName}</span>
+                <Badge className={selectedContact.acceptsPromotionalEmails ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
+                  {selectedContact.acceptsPromotionalEmails ? 'Accepte emails promo' : 'Refuse emails promo'}
+                </Badge>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => setSelectedContact(null)}>
+                ×
+              </Button>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -237,6 +310,14 @@ export const Contacts: React.FC = () => {
 
               <TabsContent value="details" className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Prénom</label>
+                    <p className="text-gray-700">{selectedContact.firstName}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Nom</label>
+                    <p className="text-gray-700">{selectedContact.lastName}</p>
+                  </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">Email</label>
                     <p className="text-gray-700">{selectedContact.email}</p>
@@ -392,7 +473,7 @@ export const Contacts: React.FC = () => {
                 Fermer
               </Button>
               <Button 
-                onClick={() => handleEmailClick(selectedContact.email, selectedContact.name)}
+                onClick={() => handleEmailClick(selectedContact.email, `${selectedContact.firstName} ${selectedContact.lastName}`)}
                 className="flex-1 bg-purple-600 hover:bg-purple-700"
               >
                 <Mail className="h-4 w-4 mr-2" />
@@ -408,7 +489,8 @@ export const Contacts: React.FC = () => {
   const handleCSVImport = (importedContacts: any[]) => {
     const newContacts = importedContacts.map((contact, index) => ({
       id: `imported-${Date.now()}-${index}`,
-      name: contact.name || `${contact.firstName || ''} ${contact.lastName || ''}`.trim(),
+      firstName: contact.firstName || contact.name?.split(' ')[0] || '',
+      lastName: contact.lastName || contact.name?.split(' ').slice(1).join(' ') || '',
       phone: contact.phone || '',
       email: contact.email || '',
       ownerId: currentUser?.id || 'user-1',
@@ -418,6 +500,7 @@ export const Contacts: React.FC = () => {
       eventName: contact.eventName,
       eventType: contact.eventType,
       message: contact.message,
+      acceptsPromotionalEmails: contact.acceptsPromotionalEmails !== false,
       linkedEventIds: [],
       contractIds: [],
       taskIds: [],
@@ -488,19 +571,47 @@ export const Contacts: React.FC = () => {
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center space-x-2">
-                    <CardTitle className="text-lg">{contact.name}</CardTitle>
+                    <CardTitle className="text-lg">{contact.firstName} {contact.lastName}</CardTitle>
                     {contact.source === 'website' && (
                       <Globe className="h-4 w-4 text-blue-500" />
                     )}
                   </div>
                   <p className="text-sm text-gray-500">{contact.role}</p>
                 </div>
+                <div className="flex flex-col space-y-1">
+                  <Badge className={contact.acceptsPromotionalEmails ? 'bg-green-100 text-green-800 text-xs' : 'bg-red-100 text-red-800 text-xs'}>
+                    {contact.acceptsPromotionalEmails ? '✓ Emails' : '✗ Emails'}
+                  </Badge>
+                  {permissions.canEditAllContacts && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="outline" size="sm" className="h-6 w-6 p-0">
+                          <Trash2 className="h-3 w-3 text-red-500" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Supprimer le contact</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Êtes-vous sûr de vouloir supprimer ce contact ? Cette action supprimera également tous les événements liés et ne peut pas être annulée.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Annuler</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDeleteContact(contact.id)} className="bg-red-600 hover:bg-red-700">
+                            Supprimer
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
+                </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
               <div 
                 className="flex items-center text-sm text-gray-600 cursor-pointer hover:text-purple-600"
-                onClick={() => handleEmailClick(contact.email, contact.name)}
+                onClick={() => handleEmailClick(contact.email, `${contact.firstName} ${contact.lastName}`)}
               >
                 <Mail className="h-4 w-4 mr-2" />
                 {contact.email}
@@ -515,14 +626,12 @@ export const Contacts: React.FC = () => {
                 </div>
               )}
 
-              {/* Website Contact Badge */}
               {contact.source === 'website' && (
                 <Badge className="bg-blue-100 text-blue-800">
                   Demande de booking
                 </Badge>
               )}
               
-              {/* Owner Management */}
               <div className="text-sm">
                 <strong className="text-gray-700">Propriétaire:</strong>
                 {permissions.canEditAllContacts ? (
@@ -546,7 +655,6 @@ export const Contacts: React.FC = () => {
                 )}
               </div>
 
-              {/* Linked Events */}
               {contact.linkedEventIds && contact.linkedEventIds.length > 0 && (
                 <div className="mt-3">
                   <div className="flex items-center space-x-2 mb-2">
@@ -578,7 +686,7 @@ export const Contacts: React.FC = () => {
                   size="sm" 
                   variant="outline" 
                   className="flex-1"
-                  onClick={() => handleEmailClick(contact.email, contact.name)}
+                  onClick={() => handleEmailClick(contact.email, `${contact.firstName} ${contact.lastName}`)}
                 >
                   <Mail className="h-3 w-3 mr-1" />
                   Email
@@ -597,15 +705,50 @@ export const Contacts: React.FC = () => {
               <CardTitle>Ajouter Nouveau Contact</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Input placeholder="Nom complet" />
-              <Input placeholder="Adresse email" />
-              <Input placeholder="Numéro de téléphone" />
-              <Input placeholder="Entreprise" />
-              <Input placeholder="Rôle/Titre" />
+              <div className="grid grid-cols-2 gap-3">
+                <Input 
+                  placeholder="Prénom *" 
+                  value={newContact.firstName}
+                  onChange={(e) => setNewContact({...newContact, firstName: e.target.value})}
+                />
+                <Input 
+                  placeholder="Nom *" 
+                  value={newContact.lastName}
+                  onChange={(e) => setNewContact({...newContact, lastName: e.target.value})}
+                />
+              </div>
+              <Input 
+                placeholder="Adresse email *" 
+                value={newContact.email}
+                onChange={(e) => setNewContact({...newContact, email: e.target.value})}
+              />
+              <Input 
+                placeholder="Numéro de téléphone" 
+                value={newContact.phone}
+                onChange={(e) => setNewContact({...newContact, phone: e.target.value})}
+              />
+              <Input 
+                placeholder="Entreprise" 
+                value={newContact.company}
+                onChange={(e) => setNewContact({...newContact, company: e.target.value})}
+              />
+              <Input 
+                placeholder="Rôle/Titre" 
+                value={newContact.role}
+                onChange={(e) => setNewContact({...newContact, role: e.target.value})}
+              />
+              
+              <div className="flex items-center space-x-2">
+                <Switch 
+                  checked={newContact.acceptsPromotionalEmails}
+                  onCheckedChange={(checked) => setNewContact({...newContact, acceptsPromotionalEmails: checked})}
+                />
+                <label className="text-sm font-medium">Accepte les emails promotionnels</label>
+              </div>
               
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-1 block">Propriétaire</label>
-                <Select defaultValue={currentUser.id}>
+                <Select value={newContact.ownerId} onValueChange={(value) => setNewContact({...newContact, ownerId: value})}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -623,7 +766,7 @@ export const Contacts: React.FC = () => {
                 <Button onClick={() => setShowAddForm(false)} variant="outline" className="flex-1">
                   Annuler
                 </Button>
-                <Button onClick={() => setShowAddForm(false)} className="flex-1 bg-purple-600 hover:bg-purple-700">
+                <Button onClick={handleAddContact} className="flex-1 bg-purple-600 hover:bg-purple-700">
                   Sauvegarder Contact
                 </Button>
               </div>

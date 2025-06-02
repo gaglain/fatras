@@ -1,71 +1,76 @@
 
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { cn } from '@/lib/utils';
+import { useLocation, Link } from 'react-router-dom';
 import { 
-  LayoutDashboard, 
+  Calendar, 
   Users, 
-  Calendar,
-  FileText,
-  Mail,
-  CheckSquare,
-  Music,
-  MapPin,
-  BookOpen,
-  ShoppingBag,
-  Settings,
+  FileText, 
+  CheckSquare, 
+  BarChart3, 
+  Settings, 
+  MessageSquare,
+  User,
   Globe,
-  Smartphone
+  Mail,
+  Music,
+  ShoppingBag,
+  BookOpen,
+  Truck,
+  Package
 } from 'lucide-react';
 
-const sidebarItems = [
-  { icon: LayoutDashboard, label: 'Tableau de bord', href: '/' },
-  { icon: Users, label: 'Contacts', href: '/contacts' },
-  { icon: Calendar, label: 'Événements', href: '/events' },
-  { icon: Music, label: 'Artistes', href: '/artists' },
-  { icon: FileText, label: 'Opportunités', href: '/opportunities' },
-  { icon: FileText, label: 'Contrats', href: '/contracts' },
-  { icon: Mail, label: 'Email', href: '/email' },
-  { icon: CheckSquare, label: 'Tâches', href: '/tasks' },
-  { icon: Mail, label: 'Messagerie', href: '/messagerie' },
-  { icon: Calendar, label: 'Agenda', href: '/agenda' },
-  { icon: BookOpen, label: 'Bible du Spectacle', href: '/show-bible' },
-  { icon: MapPin, label: 'Tournée', href: '/roadshow' },
-  { icon: ShoppingBag, label: 'Boutique', href: '/merchandise' },
-  { icon: Smartphone, label: 'Application', href: '/application' },
-  { icon: Globe, label: 'Site Web', href: '/website' },
-  { icon: Settings, label: 'Préférences', href: '/preferences' },
+const menuItems = [
+  { icon: BarChart3, label: 'Tableau de Bord', path: '/dashboard' },
+  { icon: Calendar, label: 'Agenda', path: '/agenda' },
+  { icon: Users, label: 'Contacts', path: '/contacts' },
+  { icon: Music, label: 'Artistes', path: '/artists' },
+  { icon: Calendar, label: 'Événements', path: '/events' },
+  { icon: FileText, label: 'Contrats', path: '/contracts' },
+  { icon: CheckSquare, label: 'Tâches', path: '/tasks' },
+  { icon: Mail, label: 'Email', path: '/email' },
+  { icon: Mail, label: 'Campagnes Email', path: '/email-campaigns' },
+  { icon: MessageSquare, label: 'Messagerie', path: '/messagerie' },
+  { icon: BookOpen, label: 'Bible du Spectacle', path: '/show-bible' },
+  { icon: Truck, label: 'Road Show', path: '/road-show' },
+  { icon: ShoppingBag, label: 'Merchandising', path: '/merchandise' },
+  { icon: Package, label: 'Opportunités', path: '/opportunities' },
+  { icon: Globe, label: 'Site Web', path: '/website' },
+  { icon: Settings, label: 'Application', path: '/application' },
+  { icon: Settings, label: 'Préférences', path: '/preferences' },
 ];
 
 export const Sidebar: React.FC = () => {
   const location = useLocation();
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 h-full">
-      <div className="p-6">
+    <div className="w-64 bg-white border-r border-gray-200 h-full flex flex-col">
+      <div className="p-6 border-b border-gray-200">
         <h1 className="text-xl font-bold text-gray-900">ShowManager Pro</h1>
       </div>
-      <nav className="mt-6">
-        <div className="px-3">
-          {sidebarItems.map((item) => {
-            const isActive = location.pathname === item.href;
+      
+      <nav className="flex-1 overflow-y-auto p-4">
+        <ul className="space-y-1">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = location.pathname === item.path;
+            
             return (
-              <Link
-                key={item.href}
-                to={item.href}
-                className={cn(
-                  'flex items-center px-3 py-2 text-sm font-medium rounded-md mb-1 transition-colors',
-                  isActive
-                    ? 'bg-purple-100 text-purple-700'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                )}
-              >
-                <item.icon className="mr-3 h-5 w-5" />
-                {item.label}
-              </Link>
+              <li key={item.path}>
+                <Link
+                  to={item.path}
+                  className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    isActive
+                      ? 'bg-purple-100 text-purple-600'
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  }`}
+                >
+                  <Icon className="h-5 w-5" />
+                  <span>{item.label}</span>
+                </Link>
+              </li>
             );
           })}
-        </div>
+        </ul>
       </nav>
     </div>
   );
