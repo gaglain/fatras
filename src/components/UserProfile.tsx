@@ -21,7 +21,9 @@ import {
   Edit,
   Trash2,
   CheckCircle,
-  XCircle
+  XCircle,
+  Camera,
+  Save
 } from 'lucide-react';
 import { useUser, type UserRole } from '@/contexts/UserContext';
 
@@ -29,6 +31,8 @@ export const UserProfile: React.FC = () => {
   const { currentUser, users, getUserPermissions, addUser, updateUser, removeUser } = useUser();
   const [showAddUserForm, setShowAddUserForm] = useState(false);
   const [editingUser, setEditingUser] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedProfile, setEditedProfile] = useState(currentUser || {});
   const [newUser, setNewUser] = useState({
     name: '',
     lastName: '',
@@ -45,6 +49,24 @@ export const UserProfile: React.FC = () => {
 
   const permissions = getUserPermissions(currentUser);
 
+  const handleSaveProfile = () => {
+    updateUser(currentUser.id, editedProfile);
+    setIsEditing(false);
+    console.log('Profil mis à jour avec succès');
+  };
+
+  const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const avatarUrl = e.target?.result as string;
+        setEditedProfile({ ...editedProfile, avatar: avatarUrl });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleAddUser = () => {
     addUser({
       ...newUser,
@@ -60,6 +82,7 @@ export const UserProfile: React.FC = () => {
       bio: ''
     });
     setShowAddUserForm(false);
+    console.log('Nouvel utilisateur créé avec succès. Un email a été envoyé avec les accès.');
   };
 
   const handleUpdateUser = (userId: string, updates: any) => {
@@ -120,44 +143,132 @@ export const UserProfile: React.FC = () => {
             {/* Profile Card */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <User className="h-5 w-5" />
-                  <span>Informations Personnelles</span>
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <User className="h-5 w-5" />
+                    <span>Informations Personnelles</span>
+                  </div>
+                  {!isEditing ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setIsEditing(true);
+                        setEditedProfile(currentUser);
+                      }}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  ) : (
+                    <div className="flex space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setIsEditing(false)}
+                      >
+                        Annuler
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={handleSaveProfile}
+                        className="bg-purple-600 hover:bg-purple-700"
+                      >
+                        <Save className="h-4 w-4 mr-1" />
+                        Sauvegarder
+                      </Button>
+                    </div>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex flex-col items-center space-y-4">
                   <Avatar className="w-24 h-24">
-                    <AvatarImage src={currentUser.avatar} />
+                    <AvatarImage src={isEditing ? editedProfile.avatar : currentUser.avatar} />
                     <AvatarFallback className="text-lg">
-                      {currentUser.name[0]}{currentUser.lastName[0]}
+                      {(isEditing ? editedProfile.name : currentUser.name)?.[0]}
+                      {(isEditing ? editedProfile.lastName : currentUser.lastName)?.[0]}
                     </AvatarFallback>
                   </Avatar>
-                  <Button variant="outline" size="sm">
-                    Changer Photo
-                  </Button>
+                  {isEditing && (
+                    <div className="relative">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handlePhotoUpload}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        id="photo-upload"
+                      />
+                      <Button variant="outline" size="sm" asChild>
+                        <label htmlFor="photo-upload" className="cursor-pointer">
+                          <Camera className="h-4 w-4 mr-2" />
+                          Changer Photo
+                        </label>
+                      </Button>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="space-y-3">
                   <div>
-                    <Label>Nom</Label>
-                    <Input value={currentUser.name} />
+                    <Label>Prénom</Label>
+                    {isEditing ? (
+                      <Input
+                        value={editedProfile.name || ''}
+                        onChange={(e) => setEditedProfile({ ...editedProfile, name: e.target.value })}
+                        placeholder="Prénom"
+                      />
+                    ) : (
+                      <Input value={currentUser.name} disabled />
+                    )}
                   </div>
                   <div>
-                    <Label>Prénom</Label>
-                    <Input value={currentUser.lastName} />
+                    <Label>Nom</Label>
+                    {isEditing ? (
+                      <Input
+                        value={editedProfile.lastName || ''}
+                        onChange={(e) => setEditedProfile({ ...editedProfile, lastName: e.target.value })}
+                        placeholder="Nom"
+                      />
+                    ) : (
+                      <Input value={currentUser.lastName} disabled />
+                    )}
                   </div>
                   <div>
                     <Label>Email</Label>
-                    <Input value={currentUser.email} />
+                    {isEditing ? (
+                      <Input
+                        type="email"
+                        value={editedProfile.email || ''}
+                        onChange={(e) => setEditedProfile({ ...editedProfile, email: e.target.value })}
+                        placeholder="Email"
+                      />
+                    ) : (
+                      <Input value={currentUser.email} disabled />
+                    )}
                   </div>
                   <div>
                     <Label>Téléphone</Label>
-                    <Input value={currentUser.phone || ''} placeholder="Numéro de téléphone" />
+                    {isEditing ? (
+                      <Input
+                        value={editedProfile.phone || ''}
+                        onChange={(e) => setEditedProfile({ ...editedProfile, phone: e.target.value })}
+                        placeholder="Numéro de téléphone"
+                      />
+                    ) : (
+                      <Input value={currentUser.phone || ''} placeholder="Numéro de téléphone" disabled />
+                    )}
                   </div>
                   <div>
                     <Label>Département</Label>
-                    <Input value={currentUser.department || ''} placeholder="Département" />
+                    {isEditing ? (
+                      <Input
+                        value={editedProfile.department || ''}
+                        onChange={(e) => setEditedProfile({ ...editedProfile, department: e.target.value })}
+                        placeholder="Département"
+                      />
+                    ) : (
+                      <Input value={currentUser.department || ''} placeholder="Département" disabled />
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -233,17 +344,23 @@ export const UserProfile: React.FC = () => {
                 </div>
 
                 <div>
-                  <Label>Bio</Label>
-                  <Textarea 
-                    value={currentUser.bio || ''} 
-                    placeholder="Parlez-nous de vous..."
-                    className="min-h-[100px]"
-                  />
+                  <Label>Biographie</Label>
+                  {isEditing ? (
+                    <Textarea 
+                      value={editedProfile.bio || ''} 
+                      onChange={(e) => setEditedProfile({ ...editedProfile, bio: e.target.value })}
+                      placeholder="Parlez-nous de vous..."
+                      className="min-h-[100px]"
+                    />
+                  ) : (
+                    <Textarea 
+                      value={currentUser.bio || ''} 
+                      placeholder="Parlez-nous de vous..."
+                      className="min-h-[100px]"
+                      disabled
+                    />
+                  )}
                 </div>
-
-                <Button className="w-full bg-purple-600 hover:bg-purple-700">
-                  Sauvegarder les Modifications
-                </Button>
               </CardContent>
             </Card>
           </div>

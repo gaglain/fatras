@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -70,10 +71,10 @@ const Header: React.FC<{ currentPage: string; setCurrentPage: (page: PageType) =
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="flex items-center justify-between h-16">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-purple-600 via-purple-700 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
+          <div className="w-10 h-10 bg-gradient-to-br from-pink-400 via-purple-400 to-indigo-400 rounded-xl flex items-center justify-center shadow-lg">
             <Music className="h-5 w-5 text-white" />
           </div>
-          <h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+          <h1 className="text-xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">
             ShowManager
           </h1>
         </div>
@@ -82,31 +83,31 @@ const Header: React.FC<{ currentPage: string; setCurrentPage: (page: PageType) =
         <nav className="hidden md:flex items-center space-x-8">
           <button 
             onClick={() => setCurrentPage('home')} 
-            className={`text-sm font-medium transition-colors hover:text-purple-600 ${currentPage === 'home' ? 'text-purple-600' : 'text-gray-600'}`}
+            className={`text-sm font-medium transition-colors hover:text-pink-500 ${currentPage === 'home' ? 'text-pink-500' : 'text-gray-700'}`}
           >
             Accueil
           </button>
           <button 
             onClick={() => setCurrentPage('artists')} 
-            className={`text-sm font-medium transition-colors hover:text-purple-600 ${currentPage === 'artists' ? 'text-purple-600' : 'text-gray-600'}`}
+            className={`text-sm font-medium transition-colors hover:text-pink-500 ${currentPage === 'artists' ? 'text-pink-500' : 'text-gray-700'}`}
           >
             Artistes
           </button>
           <button 
             onClick={() => setCurrentPage('tour')} 
-            className={`text-sm font-medium transition-colors hover:text-purple-600 ${currentPage === 'tour' ? 'text-purple-600' : 'text-gray-600'}`}
+            className={`text-sm font-medium transition-colors hover:text-pink-500 ${currentPage === 'tour' ? 'text-pink-500' : 'text-gray-700'}`}
           >
             Tournée
           </button>
           <button 
             onClick={() => setCurrentPage('shop')} 
-            className={`text-sm font-medium transition-colors hover:text-purple-600 ${currentPage === 'shop' ? 'text-purple-600' : 'text-gray-600'}`}
+            className={`text-sm font-medium transition-colors hover:text-pink-500 ${currentPage === 'shop' ? 'text-pink-500' : 'text-gray-700'}`}
           >
             Boutique
           </button>
           <button 
             onClick={() => setCurrentPage('contact')} 
-            className={`text-sm font-medium transition-colors hover:text-purple-600 ${currentPage === 'contact' ? 'text-purple-600' : 'text-gray-600'}`}
+            className={`text-sm font-medium transition-colors hover:text-pink-500 ${currentPage === 'contact' ? 'text-pink-500' : 'text-gray-700'}`}
           >
             Contact
           </button>
@@ -115,7 +116,7 @@ const Header: React.FC<{ currentPage: string; setCurrentPage: (page: PageType) =
         {/* Bouton menu mobile */}
         <div className="md:hidden">
           <button 
-            className="p-2 rounded-md text-gray-600 hover:text-purple-600 hover:bg-gray-100 transition-colors"
+            className="p-2 rounded-md text-gray-600 hover:text-pink-500 hover:bg-gray-100 transition-colors"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -125,14 +126,14 @@ const Header: React.FC<{ currentPage: string; setCurrentPage: (page: PageType) =
       
       {/* Menu mobile */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-gray-100 py-4 bg-white">
+        <div className="md:hidden border-t border-gray-100 py-4 bg-white/95 backdrop-blur-md">
           <nav className="flex flex-col space-y-4">
             <button 
               onClick={() => {
                 setCurrentPage('home');
                 setMobileMenuOpen(false);
               }} 
-              className={`text-left text-sm font-medium transition-colors hover:text-purple-600 ${currentPage === 'home' ? 'text-purple-600' : 'text-gray-600'}`}
+              className={`text-left text-sm font-medium transition-colors hover:text-pink-500 ${currentPage === 'home' ? 'text-pink-500' : 'text-gray-700'}`}
             >
               Accueil
             </button>
@@ -141,7 +142,7 @@ const Header: React.FC<{ currentPage: string; setCurrentPage: (page: PageType) =
                 setCurrentPage('artists');
                 setMobileMenuOpen(false);
               }} 
-              className={`text-left text-sm font-medium transition-colors hover:text-purple-600 ${currentPage === 'artists' ? 'text-purple-600' : 'text-gray-600'}`}
+              className={`text-left text-sm font-medium transition-colors hover:text-pink-500 ${currentPage === 'artists' ? 'text-pink-500' : 'text-gray-700'}`}
             >
               Artistes
             </button>
@@ -150,7 +151,7 @@ const Header: React.FC<{ currentPage: string; setCurrentPage: (page: PageType) =
                 setCurrentPage('tour');
                 setMobileMenuOpen(false);
               }} 
-              className={`text-left text-sm font-medium transition-colors hover:text-purple-600 ${currentPage === 'tour' ? 'text-purple-600' : 'text-gray-600'}`}
+              className={`text-left text-sm font-medium transition-colors hover:text-pink-500 ${currentPage === 'tour' ? 'text-pink-500' : 'text-gray-700'}`}
             >
               Tournée
             </button>
@@ -159,7 +160,7 @@ const Header: React.FC<{ currentPage: string; setCurrentPage: (page: PageType) =
                 setCurrentPage('shop');
                 setMobileMenuOpen(false);
               }} 
-              className={`text-left text-sm font-medium transition-colors hover:text-purple-600 ${currentPage === 'shop' ? 'text-purple-600' : 'text-gray-600'}`}
+              className={`text-left text-sm font-medium transition-colors hover:text-pink-500 ${currentPage === 'shop' ? 'text-pink-500' : 'text-gray-700'}`}
             >
               Boutique
             </button>
@@ -168,7 +169,7 @@ const Header: React.FC<{ currentPage: string; setCurrentPage: (page: PageType) =
                 setCurrentPage('contact');
                 setMobileMenuOpen(false);
               }} 
-              className={`text-left text-sm font-medium transition-colors hover:text-purple-600 ${currentPage === 'contact' ? 'text-purple-600' : 'text-gray-600'}`}
+              className={`text-left text-sm font-medium transition-colors hover:text-pink-500 ${currentPage === 'contact' ? 'text-pink-500' : 'text-gray-700'}`}
             >
               Contact
             </button>
@@ -180,22 +181,23 @@ const Header: React.FC<{ currentPage: string; setCurrentPage: (page: PageType) =
 );
 
 const Hero: React.FC<NavigationProps> = ({ setCurrentPage }) => (
-  <section className="pt-20 pb-16 md:pb-20 bg-gradient-to-br from-purple-50 via-white to-pink-50 min-h-screen flex items-center">
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <section className="pt-20 pb-16 md:pb-20 bg-gradient-to-br from-pink-100 via-purple-50 to-indigo-100 min-h-screen flex items-center relative overflow-hidden">
+    <div className="absolute inset-0 bg-gradient-to-r from-pink-200/20 to-purple-200/20"></div>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
       <div className="text-center max-w-4xl mx-auto">
         <h2 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight">
-          Des Spectacles
-          <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent block mt-2">
-            Inoubliables
+          Créons des
+          <span className="bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent block mt-2">
+            Moments Magiques
           </span>
         </h2>
-        <p className="text-base md:text-lg lg:text-xl text-gray-600 mb-8 md:mb-10 leading-relaxed max-w-2xl mx-auto px-4">
+        <p className="text-base md:text-lg lg:text-xl text-gray-700 mb-8 md:mb-10 leading-relaxed max-w-2xl mx-auto px-4">
           Découvrez nos artistes talentueux et créons ensemble des expériences musicales exceptionnelles pour vos événements
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center px-4">
           <Button 
             size="lg" 
-            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 md:px-8 py-3 md:py-4 text-base md:text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 w-full sm:w-auto"
+            className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white px-6 md:px-8 py-3 md:py-4 text-base md:text-lg rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 w-full sm:w-auto"
             onClick={() => setCurrentPage('artists')}
           >
             Découvrir nos Artistes
@@ -204,7 +206,7 @@ const Hero: React.FC<NavigationProps> = ({ setCurrentPage }) => (
           <Button 
             size="lg" 
             variant="outline"
-            className="border-2 border-purple-200 text-purple-600 hover:bg-purple-50 px-6 md:px-8 py-3 md:py-4 text-base md:text-lg rounded-xl w-full sm:w-auto"
+            className="border-2 border-pink-300 text-pink-600 hover:bg-pink-50 px-6 md:px-8 py-3 md:py-4 text-base md:text-lg rounded-2xl w-full sm:w-auto"
             onClick={() => setCurrentPage('contact')}
           >
             Nous Contacter
@@ -216,16 +218,16 @@ const Hero: React.FC<NavigationProps> = ({ setCurrentPage }) => (
 );
 
 const Artists: React.FC<{ setCurrentPage: (page: PageType) => void; setSelectedArtist: (artist: any) => void }> = ({ setCurrentPage, setSelectedArtist }) => (
-  <section className="pt-20 pb-16 md:pb-20 bg-gray-50">
+  <section className="pt-20 pb-16 md:pb-20 bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-50">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="text-center mb-12 md:mb-16">
         <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">Nos Artistes</h2>
-        <p className="text-base md:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto">Découvrez les talents qui font vibrer nos scènes</p>
+        <p className="text-base md:text-lg lg:text-xl text-gray-700 max-w-2xl mx-auto">Découvrez les talents qui font vibrer nos scènes</p>
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
         {sampleArtists.map((artist) => (
-          <Card key={artist.id} className="group hover:shadow-2xl transition-all duration-500 border-0 shadow-lg overflow-hidden bg-white rounded-2xl">
+          <Card key={artist.id} className="group hover:shadow-2xl transition-all duration-500 border-0 shadow-lg overflow-hidden bg-white rounded-3xl">
             <div className="relative">
               <img 
                 src={artist.image} 
@@ -235,7 +237,7 @@ const Artists: React.FC<{ setCurrentPage: (page: PageType) => void; setSelectedA
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
               <div className="absolute bottom-4 md:bottom-6 left-4 md:left-6 text-white">
                 <h3 className="text-xl md:text-2xl lg:text-3xl font-bold mb-2">{artist.name}</h3>
-                <Badge className="bg-white/20 text-white border-white/30 backdrop-blur-sm text-xs md:text-sm">
+                <Badge className="bg-white/20 text-white border-white/30 backdrop-blur-sm text-xs md:text-sm rounded-full">
                   {artist.genre}
                 </Badge>
               </div>
@@ -251,11 +253,11 @@ const Artists: React.FC<{ setCurrentPage: (page: PageType) => void; setSelectedA
               <div className="flex items-center justify-between mb-4 md:mb-6">
                 <div className="flex items-center space-x-4 md:space-x-6 text-xs md:text-sm text-gray-500">
                   <div className="text-center">
-                    <div className="font-bold text-purple-600 text-base md:text-lg">{artist.upcomingShows}</div>
+                    <div className="font-bold text-pink-600 text-base md:text-lg">{artist.upcomingShows}</div>
                     <div className="text-xs">Prochains shows</div>
                   </div>
                   <div className="text-center">
-                    <div className="font-bold text-purple-600 text-base md:text-lg">{artist.totalShows}</div>
+                    <div className="font-bold text-pink-600 text-base md:text-lg">{artist.totalShows}</div>
                     <div className="text-xs">Total shows</div>
                   </div>
                 </div>
@@ -266,7 +268,7 @@ const Artists: React.FC<{ setCurrentPage: (page: PageType) => void; setSelectedA
                   setSelectedArtist(artist);
                   setCurrentPage('artist-detail');
                 }}
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-xl py-2 md:py-3 text-sm md:text-base"
+                className="w-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 rounded-2xl py-2 md:py-3 text-sm md:text-base"
               >
                 <Eye className="mr-2 h-3 w-3 md:h-4 md:w-4" />
                 Voir le Profil Complet
@@ -714,7 +716,7 @@ export const Website: React.FC = () => {
       <footer className="bg-gray-900 text-white py-8 md:py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="flex items-center justify-center space-x-3 mb-4">
-            <div className="w-6 h-6 md:w-8 md:h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
+            <div className="w-6 h-6 md:w-8 md:h-8 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full flex items-center justify-center">
               <Music className="h-3 w-3 md:h-4 md:w-4 text-white" />
             </div>
             <span className="text-lg md:text-xl font-bold">ShowManager</span>
