@@ -5,9 +5,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Play, Download, Calendar, Star } from 'lucide-react';
 
+type PageType = 'home' | 'artists' | 'artist-detail' | 'contact' | 'tour' | 'shop';
+
 interface ArtistDetailProps {
   artist: any;
-  setCurrentPage: (page: string) => void;
+  setCurrentPage: (page: PageType) => void;
 }
 
 export const ArtistDetail: React.FC<ArtistDetailProps> = ({ artist, setCurrentPage }) => {

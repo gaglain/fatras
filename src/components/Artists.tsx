@@ -5,8 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Star, Play, Eye } from 'lucide-react';
 
+type PageType = 'home' | 'artists' | 'artist-detail' | 'contact' | 'tour' | 'shop';
+
 interface ArtistsProps {
-  setCurrentPage: (page: string) => void;
+  setCurrentPage: (page: PageType) => void;
   setSelectedArtist: (artist: any) => void;
 }
 

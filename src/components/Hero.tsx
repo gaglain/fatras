@@ -3,8 +3,10 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 
+type PageType = 'home' | 'artists' | 'artist-detail' | 'contact' | 'tour' | 'shop';
+
 interface HeroProps {
-  setCurrentPage: (page: string) => void;
+  setCurrentPage: (page: PageType) => void;
 }
 
 export const Hero: React.FC<HeroProps> = ({ setCurrentPage }) => {
