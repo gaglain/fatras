@@ -12,8 +12,7 @@ import { ArtistDetail } from '@/components/ArtistDetail';
 import { Tour } from '@/components/Tour';
 import { Shop } from '@/components/Shop';
 import { Contact } from '@/components/Contact';
-import { BlockEditor } from '@/components/BlockEditor/BlockEditor';
-import { Block } from '@/components/BlockEditor/types';
+import { WebsiteWithEditor } from './WebsiteWithEditor';
 
 const sampleArtists = [
   {
@@ -432,7 +431,6 @@ export const Website: React.FC = () => {
 
   // Si on est en mode éditeur de blocs, on charge le composant WebsiteWithEditor
   if (isBlockEditor) {
-    const { WebsiteWithEditor } = require('./WebsiteWithEditor');
     return <WebsiteWithEditor />;
   }
 
