@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar, MapPin, Music, Play, Download, Phone, Mail, Instagram, Facebook, ArrowRight, Eye, Star, Menu, X, Truck, ShoppingBag, Settings, Upload, Palette } from 'lucide-react';
+import { BlockEditor } from '@/components/BlockEditor/BlockEditor';
+import { Block } from '@/components/BlockEditor/types';
 
 const sampleArtists = [
   {
@@ -80,6 +82,8 @@ interface HeaderProps {
   setMobileMenuOpen: (open: boolean) => void;
   themeSettings: ThemeSettings;
   setThemeSettings: (settings: ThemeSettings) => void;
+  isBlockEditor?: boolean;
+  setIsBlockEditor?: (value: boolean) => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ 
@@ -88,7 +92,9 @@ const Header: React.FC<HeaderProps> = ({
   mobileMenuOpen, 
   setMobileMenuOpen, 
   themeSettings, 
-  setThemeSettings 
+  setThemeSettings,
+  isBlockEditor,
+  setIsBlockEditor
 }) => {
   const [showCustomizer, setShowCustomizer] = useState(false);
 
@@ -172,6 +178,14 @@ const Header: React.FC<HeaderProps> = ({
               >
                 Contact
               </button>
+              {setIsBlockEditor && (
+                <button 
+                  onClick={() => setIsBlockEditor(!isBlockEditor)}
+                  className={`text-sm font-medium transition-colors px-3 py-1 rounded-md ${isBlockEditor ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100'}`}
+                >
+                  {isBlockEditor ? 'Mode Standard' : 'Mode Éditeur'}
+                </button>
+              )}
               <button 
                 onClick={() => setShowCustomizer(true)}
                 className="p-2 rounded-md text-gray-600 hover:bg-gray-100 transition-colors"
@@ -397,517 +411,6 @@ const Header: React.FC<HeaderProps> = ({
   );
 };
 
-const Hero: React.FC<NavigationProps> = ({ setCurrentPage }) => (
-  <section className="pt-20 pb-16 md:pb-20 bg-gradient-to-br from-pink-100 via-purple-50 to-indigo-100 min-h-screen flex items-center relative overflow-hidden">
-    <div className="absolute inset-0 bg-gradient-to-r from-pink-200/20 to-purple-200/20"></div>
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-      <div className="text-center max-w-4xl mx-auto">
-        <h2 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight">
-          Créons des
-          <span className="bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent block mt-2">
-            Moments Magiques
-          </span>
-        </h2>
-        <p className="text-base md:text-lg lg:text-xl text-gray-700 mb-8 md:mb-10 leading-relaxed max-w-2xl mx-auto px-4">
-          Découvrez nos artistes talentueux et créons ensemble des expériences musicales exceptionnelles pour vos événements
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center px-4">
-          <Button 
-            size="lg" 
-            className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white px-6 md:px-8 py-3 md:py-4 text-base md:text-lg rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 w-full sm:w-auto"
-            onClick={() => setCurrentPage('artists')}
-          >
-            Découvrir nos Artistes
-            <ArrowRight className="ml-2 h-4 w-4 md:h-5 md:w-5" />
-          </Button>
-          <Button 
-            size="lg" 
-            variant="outline"
-            className="border-2 border-pink-300 text-pink-600 hover:bg-pink-50 px-6 md:px-8 py-3 md:py-4 text-base md:text-lg rounded-2xl w-full sm:w-auto"
-            onClick={() => setCurrentPage('contact')}
-          >
-            Nous Contacter
-          </Button>
-        </div>
-      </div>
-    </div>
-  </section>
-);
-
-const Artists: React.FC<{ setCurrentPage: (page: PageType) => void; setSelectedArtist: (artist: any) => void }> = ({ setCurrentPage, setSelectedArtist }) => (
-  <section className="pt-20 pb-16 md:pb-20 bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-50">
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="text-center mb-12 md:mb-16">
-        <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">Nos Artistes</h2>
-        <p className="text-base md:text-lg lg:text-xl text-gray-700 max-w-2xl mx-auto">Découvrez les talents qui font vibrer nos scènes</p>
-      </div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
-        {sampleArtists.map((artist) => (
-          <Card key={artist.id} className="group hover:shadow-2xl transition-all duration-500 border-0 shadow-lg overflow-hidden bg-white rounded-3xl">
-            <div className="relative">
-              <img 
-                src={artist.image} 
-                alt={artist.name} 
-                className="w-full h-48 sm:h-64 md:h-80 object-cover group-hover:scale-105 transition-transform duration-500" 
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-              <div className="absolute bottom-4 md:bottom-6 left-4 md:left-6 text-white">
-                <h3 className="text-xl md:text-2xl lg:text-3xl font-bold mb-2">{artist.name}</h3>
-                <Badge className="bg-white/20 text-white border-white/30 backdrop-blur-sm text-xs md:text-sm rounded-full">
-                  {artist.genre}
-                </Badge>
-              </div>
-              <div className="absolute top-4 md:top-6 right-4 md:right-6 flex items-center space-x-1 bg-white/20 backdrop-blur-sm rounded-full px-2 md:px-3 py-1">
-                <Star className="h-3 w-3 md:h-4 md:w-4 text-yellow-400 fill-current" />
-                <span className="text-white font-medium text-xs md:text-sm">{artist.rating}</span>
-              </div>
-            </div>
-            
-            <CardContent className="p-4 md:p-6">
-              <p className="text-gray-600 mb-4 md:mb-6 leading-relaxed text-sm md:text-base line-clamp-3">{artist.bio}</p>
-              
-              <div className="flex items-center justify-between mb-4 md:mb-6">
-                <div className="flex items-center space-x-4 md:space-x-6 text-xs md:text-sm text-gray-500">
-                  <div className="text-center">
-                    <div className="font-bold text-pink-600 text-base md:text-lg">{artist.upcomingShows}</div>
-                    <div className="text-xs">Prochains shows</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="font-bold text-pink-600 text-base md:text-lg">{artist.totalShows}</div>
-                    <div className="text-xs">Total shows</div>
-                  </div>
-                </div>
-              </div>
-              
-              <Button 
-                onClick={() => {
-                  setSelectedArtist(artist);
-                  setCurrentPage('artist-detail');
-                }}
-                className="w-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 rounded-2xl py-2 md:py-3 text-sm md:text-base"
-              >
-                <Eye className="mr-2 h-3 w-3 md:h-4 md:w-4" />
-                Voir le Profil Complet
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </div>
-  </section>
-);
-
-const ArtistDetail: React.FC<{ artist: any; setCurrentPage: (page: PageType) => void }> = ({ artist, setCurrentPage }) => {
-  if (!artist) return null;
-  
-  return (
-    <div className="pt-20 pb-16 md:pb-20 bg-gray-50 min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Button 
-          onClick={() => setCurrentPage('artists')} 
-          variant="outline" 
-          className="mb-6 md:mb-8 rounded-xl"
-        >
-          ← Retour aux Artistes
-        </Button>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-          {/* Artist Info */}
-          <div className="lg:col-span-1">
-            <Card className="sticky top-24 rounded-2xl shadow-xl border-0">
-              <div className="relative">
-                <img 
-                  src={artist.image} 
-                  alt={artist.name} 
-                  className="w-full h-48 md:h-64 object-cover rounded-t-2xl" 
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent rounded-t-2xl" />
-                <div className="absolute bottom-4 left-4 text-white">
-                  <h1 className="text-xl md:text-2xl font-bold">{artist.name}</h1>
-                  <Badge className="bg-white/20 text-white border-white/30 mt-2 text-xs md:text-sm">
-                    {artist.genre}
-                  </Badge>
-                </div>
-              </div>
-              
-              <CardContent className="p-4 md:p-6">
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-2 text-sm md:text-base">Biographie</h3>
-                    <p className="text-gray-600 text-xs md:text-sm leading-relaxed">{artist.bio}</p>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-                    <div className="text-center">
-                      <div className="text-xl md:text-2xl font-bold text-purple-600">{artist.upcomingShows}</div>
-                      <div className="text-xs text-gray-500">Prochains spectacles</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-xl md:text-2xl font-bold text-purple-600">{artist.rating}</div>
-                      <div className="text-xs text-gray-500">Note moyenne</div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-          
-          {/* Content Sections */}
-          <div className="lg:col-span-2 space-y-6 md:space-y-8">
-            {/* Videos */}
-            <Card className="rounded-2xl shadow-lg border-0">
-              <CardContent className="p-4 md:p-6">
-                <h3 className="text-lg md:text-xl font-semibold mb-4 flex items-center">
-                  <Play className="mr-2 h-4 w-4 md:h-5 md:w-5 text-purple-600" />
-                  Vidéos
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {artist.videos?.map((video: any, index: number) => (
-                    <div key={index} className="relative group cursor-pointer">
-                      <img 
-                        src={video.url} 
-                        alt={video.title}
-                        className="w-full h-24 md:h-32 object-cover rounded-xl"
-                      />
-                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-xl">
-                        <Play className="h-6 w-6 md:h-8 md:w-8 text-white" />
-                      </div>
-                      <div className="mt-2">
-                        <p className="font-medium text-xs md:text-sm">{video.title}</p>
-                        <p className="text-xs text-gray-500 capitalize">{video.type}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Audio */}
-            <Card className="rounded-2xl shadow-lg border-0">
-              <CardContent className="p-4 md:p-6">
-                <h3 className="text-lg md:text-xl font-semibold mb-4 flex items-center">
-                  <Music className="mr-2 h-4 w-4 md:h-5 md:w-5 text-purple-600" />
-                  Enregistrements Audio
-                </h3>
-                <div className="space-y-3">
-                  {artist.audio?.map((track: any, index: number) => (
-                    <div key={index} className="flex items-center justify-between p-3 md:p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 md:w-10 md:h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                          <Music className="h-4 w-4 md:h-5 md:w-5 text-purple-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-sm md:text-base">{track.title}</p>
-                          <p className="text-xs md:text-sm text-gray-500">{track.duration}</p>
-                        </div>
-                      </div>
-                      <Button size="sm" variant="outline" className="rounded-lg">
-                        <Play className="h-3 w-3 md:h-4 md:w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Documents */}
-            <Card className="rounded-2xl shadow-lg border-0">
-              <CardContent className="p-4 md:p-6">
-                <h3 className="text-lg md:text-xl font-semibold mb-4 flex items-center">
-                  <Download className="mr-2 h-4 w-4 md:h-5 md:w-5 text-purple-600" />
-                  Documents Techniques
-                </h3>
-                <div className="space-y-3">
-                  {artist.documents?.map((doc: any, index: number) => (
-                    <div key={index} className="flex items-center justify-between p-3 md:p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 md:w-10 md:h-10 bg-red-100 rounded-full flex items-center justify-center">
-                          <Download className="h-4 w-4 md:h-5 md:w-5 text-red-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-sm md:text-base">{doc.title}</p>
-                          <p className="text-xs md:text-sm text-gray-500 uppercase">{doc.type}</p>
-                        </div>
-                      </div>
-                      <Button size="sm" variant="outline" className="rounded-lg">
-                        <Download className="h-3 w-3 md:h-4 md:w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const Contact: React.FC = () => {
-  const [contactForm, setContactForm] = useState({
-    firstName: '',
-    lastName: '',
-    phone: '',
-    email: '',
-    eventName: '',
-    eventType: '',
-    message: ''
-  });
-
-  const handleContactSubmit = () => {
-    console.log('Creating new contact from website:', contactForm);
-    alert('Votre demande de booking a été envoyée avec succès ! Nous vous recontacterons bientôt.');
-    setContactForm({
-      firstName: '',
-      lastName: '',
-      phone: '',
-      email: '',
-      eventName: '',
-      eventType: '',
-      message: ''
-    });
-  };
-
-  return (
-    <section className="pt-20 pb-16 md:pb-20 bg-gray-50">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-8 md:mb-12">
-          <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">Contactez-nous</h2>
-          <p className="text-base md:text-lg lg:text-xl text-gray-600">Réservez nos artistes pour vos événements</p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
-          <Card className="shadow-xl border-0 rounded-2xl">
-            <CardContent className="p-6 md:p-8">
-              <h3 className="text-xl md:text-2xl font-semibold mb-6">Demande de Booking</h3>
-              
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Input
-                    placeholder="Prénom *"
-                    value={contactForm.firstName}
-                    onChange={(e) => setContactForm({ ...contactForm, firstName: e.target.value })}
-                    className="rounded-xl"
-                  />
-                  <Input
-                    placeholder="Nom *"
-                    value={contactForm.lastName}
-                    onChange={(e) => setContactForm({ ...contactForm, lastName: e.target.value })}
-                    className="rounded-xl"
-                  />
-                </div>
-
-                <Input
-                  placeholder="Téléphone *"
-                  value={contactForm.phone}
-                  onChange={(e) => setContactForm({ ...contactForm, phone: e.target.value })}
-                  className="rounded-xl"
-                />
-
-                <Input
-                  type="email"
-                  placeholder="Email *"
-                  value={contactForm.email}
-                  onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
-                  className="rounded-xl"
-                />
-
-                <Input
-                  placeholder="Nom de l'événement *"
-                  value={contactForm.eventName}
-                  onChange={(e) => setContactForm({ ...contactForm, eventName: e.target.value })}
-                  className="rounded-xl"
-                />
-
-                <Select value={contactForm.eventType} onValueChange={(value) => setContactForm({ ...contactForm, eventType: value })}>
-                  <SelectTrigger className="rounded-xl">
-                    <SelectValue placeholder="Type d'événement *" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {eventTypes.map((type) => (
-                      <SelectItem key={type.id} value={type.name}>
-                        {type.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Textarea
-                  placeholder="Décrivez votre projet..."
-                  value={contactForm.message}
-                  onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
-                  className="min-h-[120px] rounded-xl"
-                />
-
-                <Button 
-                  onClick={handleContactSubmit}
-                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-base md:text-lg py-4 md:py-6 rounded-xl"
-                  disabled={!contactForm.firstName || !contactForm.lastName || !contactForm.phone || !contactForm.email || !contactForm.eventName || !contactForm.eventType}
-                >
-                  Envoyer la Demande
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="space-y-6">
-            <Card className="shadow-xl border-0 rounded-2xl">
-              <CardContent className="p-6 md:p-8">
-                <h3 className="text-xl md:text-2xl font-semibold mb-6">Nos Coordonnées</h3>
-                <div className="space-y-6">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 md:w-12 md:h-12 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <Phone className="h-5 w-5 md:h-6 md:w-6 text-purple-600" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900 text-sm md:text-base">Téléphone</p>
-                      <p className="text-gray-600 text-sm md:text-base">+33 1 23 45 67 89</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 md:w-12 md:h-12 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <Mail className="h-5 w-5 md:h-6 md:w-6 text-purple-600" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900 text-sm md:text-base">Email</p>
-                      <p className="text-gray-600 text-sm md:text-base break-all">booking@showmanager.com</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 md:w-12 md:h-12 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <MapPin className="h-5 w-5 md:h-6 md:w-6 text-purple-600" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900 text-sm md:text-base">Adresse</p>
-                      <p className="text-gray-600 text-sm md:text-base">123 Rue de la Musique<br />75001 Paris, France</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-xl border-0 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-2xl">
-              <CardContent className="p-6 md:p-8">
-                <h3 className="text-xl md:text-2xl font-semibold mb-4">Suivez-nous</h3>
-                <div className="flex space-x-4">
-                  <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-full flex items-center justify-center cursor-pointer hover:bg-white/30 transition-colors">
-                    <Instagram className="h-5 w-5 md:h-6 md:w-6" />
-                  </div>
-                  <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-full flex items-center justify-center cursor-pointer hover:bg-white/30 transition-colors">
-                    <Facebook className="h-5 w-5 md:h-6 md:w-6" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-};
-
-const Tour: React.FC = () => (
-  <section className="pt-20 pb-16 md:pb-20 bg-gray-50">
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="text-center mb-8 md:mb-12">
-        <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">Dates de Tournée</h2>
-        <p className="text-base md:text-lg lg:text-xl text-gray-600">Rejoignez-nous lors de nos prochains spectacles</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[
-          { date: '15 JUL 2024', venue: 'Olympia', city: 'Paris', status: 'available' },
-          { date: '22 JUL 2024', venue: 'Zénith', city: 'Lyon', status: 'sold-out' },
-          { date: '30 JUL 2024', venue: 'Palais des Sports', city: 'Marseille', status: 'available' },
-          { date: '05 AUG 2024', venue: 'Arena', city: 'Montpellier', status: 'available' },
-          { date: '12 AUG 2024', venue: 'Théâtre Antique', city: 'Orange', status: 'few-left' },
-          { date: '20 AUG 2024', venue: 'Festival Rock', city: 'Nîmes', status: 'available' }
-        ].map((show, index) => (
-          <Card key={index} className="hover:shadow-xl transition-all duration-300 border-0 shadow-lg rounded-2xl overflow-hidden">
-            <CardContent className="p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <div className="text-2xl font-bold text-purple-600 mb-1">{show.date}</div>
-                  <h3 className="text-lg font-semibold text-gray-900">{show.venue}</h3>
-                  <p className="text-gray-600 flex items-center">
-                    <MapPin className="h-4 w-4 mr-1" />
-                    {show.city}
-                  </p>
-                </div>
-                <Badge 
-                  className={
-                    show.status === 'sold-out' ? 'bg-red-100 text-red-800' :
-                    show.status === 'few-left' ? 'bg-orange-100 text-orange-800' :
-                    'bg-green-100 text-green-800'
-                  }
-                >
-                  {show.status === 'sold-out' ? 'Complet' : 
-                   show.status === 'few-left' ? 'Dernières places' : 'Disponible'}
-                </Badge>
-              </div>
-              <Button 
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-xl"
-                disabled={show.status === 'sold-out'}
-              >
-                {show.status === 'sold-out' ? 'Complet' : 'Réserver'}
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </div>
-  </section>
-);
-
-const Shop: React.FC = () => (
-  <section className="pt-20 pb-16 md:pb-20 bg-gray-50">
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="text-center mb-8 md:mb-12">
-        <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">Boutique</h2>
-        <p className="text-base md:text-lg lg:text-xl text-gray-600">Découvrez nos produits exclusifs</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[
-          { name: 'T-Shirt Noir Logo', price: '25€', image: '/placeholder.svg', category: 'Vêtements' },
-          { name: 'Hoodie Premium', price: '45€', image: '/placeholder.svg', category: 'Vêtements' },
-          { name: 'Album Vinyl Collector', price: '35€', image: '/placeholder.svg', category: 'Musique' },
-          { name: 'Casquette Snapback', price: '20€', image: '/placeholder.svg', category: 'Accessoires' },
-          { name: 'Poster Dédicacé', price: '15€', image: '/placeholder.svg', category: 'Collectibles' },
-          { name: 'Mug Céramique', price: '12€', image: '/placeholder.svg', category: 'Accessoires' },
-          { name: 'CD Album Deluxe', price: '18€', image: '/placeholder.svg', category: 'Musique' },
-          { name: 'Sac Tote Bag', price: '22€', image: '/placeholder.svg', category: 'Accessoires' }
-        ].map((product, index) => (
-          <Card key={index} className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg rounded-2xl overflow-hidden">
-            <div className="relative">
-              <img 
-                src={product.image} 
-                alt={product.name} 
-                className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500" 
-              />
-              <Badge className="absolute top-3 left-3 bg-white/90 text-gray-800">
-                {product.category}
-              </Badge>
-            </div>
-            <CardContent className="p-4">
-              <h3 className="font-semibold text-gray-900 mb-2">{product.name}</h3>
-              <div className="flex items-center justify-between">
-                <span className="text-xl font-bold text-purple-600">{product.price}</span>
-                <Button size="sm" className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-lg">
-                  <ShoppingBag className="h-4 w-4 mr-1" />
-                  Ajouter
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </div>
-  </section>
-);
-
 export const Website: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<PageType>('home');
   const [selectedArtist, setSelectedArtist] = useState<any>(null);
@@ -919,6 +422,13 @@ export const Website: React.FC = () => {
     secondaryColor: '#8b5cf6',
     accentColor: '#6366f1'
   });
+  const [isBlockEditor, setIsBlockEditor] = useState(false);
+
+  // Si on est en mode éditeur de blocs, on charge le composant WebsiteWithEditor
+  if (isBlockEditor) {
+    const { WebsiteWithEditor } = require('./WebsiteWithEditor');
+    return <WebsiteWithEditor />;
+  }
 
   return (
     <div className="min-h-screen bg-white">
@@ -929,6 +439,8 @@ export const Website: React.FC = () => {
         setMobileMenuOpen={setMobileMenuOpen}
         themeSettings={themeSettings}
         setThemeSettings={setThemeSettings}
+        isBlockEditor={isBlockEditor}
+        setIsBlockEditor={setIsBlockEditor}
       />
       
       {/* Inject custom CSS variables */}
