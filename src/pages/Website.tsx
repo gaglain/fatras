@@ -6,6 +6,12 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar, MapPin, Music, Play, Download, Phone, Mail, Instagram, Facebook, ArrowRight, Eye, Star, Menu, X, Truck, ShoppingBag, Settings, Upload, Palette } from 'lucide-react';
+import { Hero } from '@/components/Hero';
+import { Artists } from '@/components/Artists';
+import { ArtistDetail } from '@/components/ArtistDetail';
+import { Tour } from '@/components/Tour';
+import { Shop } from '@/components/Shop';
+import { Contact } from '@/components/Contact';
 import { BlockEditor } from '@/components/BlockEditor/BlockEditor';
 import { Block } from '@/components/BlockEditor/types';
 
