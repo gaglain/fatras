@@ -59,7 +59,13 @@ const eventTypes = [
   { id: '5', name: 'Mariage', description: 'Cérémonies de mariage' }
 ];
 
-const Header: React.FC<{ currentPage: string; setCurrentPage: (page: string) => void; mobileMenuOpen: boolean; setMobileMenuOpen: (open: boolean) => void }> = ({ currentPage, setCurrentPage, mobileMenuOpen, setMobileMenuOpen }) => (
+type PageType = 'home' | 'artists' | 'artist-detail' | 'contact' | 'tour' | 'shop';
+
+interface NavigationProps {
+  setCurrentPage: (page: PageType) => void;
+}
+
+const Header: React.FC<{ currentPage: string; setCurrentPage: (page: PageType) => void; mobileMenuOpen: boolean; setMobileMenuOpen: (open: boolean) => void }> = ({ currentPage, setCurrentPage, mobileMenuOpen, setMobileMenuOpen }) => (
   <header className="fixed top-0 w-full bg-white/95 backdrop-blur-md z-50 border-b border-gray-100 shadow-sm">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="flex items-center justify-between h-16">
@@ -173,7 +179,7 @@ const Header: React.FC<{ currentPage: string; setCurrentPage: (page: string) => 
   </header>
 );
 
-const Hero: React.FC<{ setCurrentPage: (page: string) => void }> = ({ setCurrentPage }) => (
+const Hero: React.FC<NavigationProps> = ({ setCurrentPage }) => (
   <section className="pt-20 pb-16 md:pb-20 bg-gradient-to-br from-purple-50 via-white to-pink-50 min-h-screen flex items-center">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="text-center max-w-4xl mx-auto">
@@ -209,7 +215,7 @@ const Hero: React.FC<{ setCurrentPage: (page: string) => void }> = ({ setCurrent
   </section>
 );
 
-const Artists: React.FC<{ setCurrentPage: (page: string) => void; setSelectedArtist: (artist: any) => void }> = ({ setCurrentPage, setSelectedArtist }) => (
+const Artists: React.FC<{ setCurrentPage: (page: PageType) => void; setSelectedArtist: (artist: any) => void }> = ({ setCurrentPage, setSelectedArtist }) => (
   <section className="pt-20 pb-16 md:pb-20 bg-gray-50">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="text-center mb-12 md:mb-16">
@@ -273,7 +279,7 @@ const Artists: React.FC<{ setCurrentPage: (page: string) => void; setSelectedArt
   </section>
 );
 
-const ArtistDetail: React.FC<{ artist: any; setCurrentPage: (page: string) => void }> = ({ artist, setCurrentPage }) => {
+const ArtistDetail: React.FC<{ artist: any; setCurrentPage: (page: PageType) => void }> = ({ artist, setCurrentPage }) => {
   if (!artist) return null;
   
   return (
@@ -684,7 +690,7 @@ const Shop: React.FC = () => (
 );
 
 export const Website: React.FC = () => {
-  const [currentPage, setCurrentPage] = useState<'home' | 'artists' | 'artist-detail' | 'contact' | 'tour' | 'shop'>('home');
+  const [currentPage, setCurrentPage] = useState<PageType>('home');
   const [selectedArtist, setSelectedArtist] = useState<any>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
