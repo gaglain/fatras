@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,14 +24,14 @@ import {
   Camera,
   Save
 } from 'lucide-react';
-import { useUser, type UserRole } from '@/contexts/UserContext';
+import { useUser, type UserRole, type User as UserType } from '@/contexts/UserContext';
 
 export const UserProfile: React.FC = () => {
   const { currentUser, users, getUserPermissions, addUser, updateUser, removeUser } = useUser();
   const [showAddUserForm, setShowAddUserForm] = useState(false);
   const [editingUser, setEditingUser] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [editedProfile, setEditedProfile] = useState(currentUser || {});
+  const [editedProfile, setEditedProfile] = useState<Partial<UserType>>(currentUser || {});
   const [newUser, setNewUser] = useState({
     name: '',
     lastName: '',

@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { Bell, Search, Plus, Edit, Upload } from 'lucide-react';
+import { Bell, Search, Plus, Edit, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
