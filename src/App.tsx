@@ -6,6 +6,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { Layout } from '@/components/Layout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { DashboardHome } from '@/components/dashboard/DashboardHome';
+import { UserProvider } from '@/contexts/UserContext';
 
 // Import existing pages with named exports
 import { Dashboard } from '@/pages/Dashboard';
@@ -33,34 +34,36 @@ const queryClient = new QueryClient();
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router>
-        <ProtectedRoute>
-          <Routes>
-            <Route path="/" element={<Layout />}>
-              <Route index element={<DashboardHome />} />
-              <Route path="dashboard" element={<DashboardHome />} />
-              <Route path="contacts" element={<Contacts />} />
-              <Route path="events" element={<Events />} />
-              <Route path="contracts" element={<Contracts />} />
-              <Route path="artists" element={<Artists />} />
-              <Route path="artist-detail" element={<ArtistDetail />} />
-              <Route path="agenda" element={<Agenda />} />
-              <Route path="email" element={<Email />} />
-              <Route path="email-campaigns" element={<EmailCampaigns />} />
-              <Route path="messagerie" element={<Messagerie />} />
-              <Route path="tasks" element={<Tasks />} />
-              <Route path="opportunities" element={<Opportunities />} />
-              <Route path="merchandise" element={<Merchandise />} />
-              <Route path="road-show" element={<RoadShow />} />
-              <Route path="show-bible" element={<ShowBible />} />
-              <Route path="event-types" element={<EventTypes />} />
-              <Route path="preferences" element={<Preferences />} />
-              <Route path="website" element={<Website />} />
-              <Route path="website-editor" element={<WebsiteWithEditor />} />
-            </Route>
-          </Routes>
-        </ProtectedRoute>
-      </Router>
+      <UserProvider>
+        <Router>
+          <ProtectedRoute>
+            <Routes>
+              <Route path="/" element={<Layout />}>
+                <Route index element={<DashboardHome />} />
+                <Route path="dashboard" element={<DashboardHome />} />
+                <Route path="contacts" element={<Contacts />} />
+                <Route path="events" element={<Events />} />
+                <Route path="contracts" element={<Contracts />} />
+                <Route path="artists" element={<Artists />} />
+                <Route path="artist-detail" element={<ArtistDetail />} />
+                <Route path="agenda" element={<Agenda />} />
+                <Route path="email" element={<Email />} />
+                <Route path="email-campaigns" element={<EmailCampaigns />} />
+                <Route path="messagerie" element={<Messagerie />} />
+                <Route path="tasks" element={<Tasks />} />
+                <Route path="opportunities" element={<Opportunities />} />
+                <Route path="merchandise" element={<Merchandise />} />
+                <Route path="road-show" element={<RoadShow />} />
+                <Route path="show-bible" element={<ShowBible />} />
+                <Route path="event-types" element={<EventTypes />} />
+                <Route path="preferences" element={<Preferences />} />
+                <Route path="website" element={<Website />} />
+                <Route path="website-editor" element={<WebsiteWithEditor />} />
+              </Route>
+            </Routes>
+          </ProtectedRoute>
+        </Router>
+      </UserProvider>
       <Toaster />
     </QueryClientProvider>
   );
