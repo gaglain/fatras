@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Music, Calendar, MapPin, Clock, Bed, BookOpen } from 'lucide-react';
+import { Plus, Music, Calendar, MapPin, Clock, Bed, BookOpen, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface Artist {
@@ -86,6 +86,16 @@ export const Artists: React.FC = () => {
     schedule => schedule.artistId === selectedArtist
   );
 
+  const handleDeleteArtist = (artistId: string) => {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cet artiste ? Cette action est irréversible.')) {
+      setArtists(prev => prev.filter(artist => artist.id !== artistId));
+      setTourSchedule(prev => prev.filter(schedule => schedule.artistId !== artistId));
+      if (selectedArtist === artistId) {
+        setSelectedArtist(null);
+      }
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -127,9 +137,22 @@ export const Artists: React.FC = () => {
                       <h3 className="font-medium text-gray-900">{artist.name}</h3>
                       <p className="text-sm text-gray-500">{artist.genre}</p>
                     </div>
-                    <Badge variant={artist.status === 'active' ? 'default' : 'secondary'}>
-                      {artist.status === 'active' ? 'Actif' : 'Inactif'}
-                    </Badge>
+                    <div className="flex items-center space-x-1">
+                      <Badge variant={artist.status === 'active' ? 'default' : 'secondary'}>
+                        {artist.status === 'active' ? 'Actif' : 'Inactif'}
+                      </Badge>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteArtist(artist.id);
+                        }}
+                        className="p-1 h-6 w-6 text-red-600 hover:text-red-800 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
                   </div>
                   
                   <div className="text-sm text-gray-600">
