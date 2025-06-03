@@ -4,8 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Send, Hash, Users, MessageCircle, MoreVertical, Pin } from 'lucide-react';
+import { Plus, Send, Hash, Users, MessageCircle, MoreVertical } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
+import { PollCreator } from '@/components/messaging/PollCreator';
+import { toast } from 'sonner';
 
 interface Message {
   id: string;
@@ -35,30 +37,12 @@ const sampleChannels: Channel[] = [
     type: 'public',
     description: 'Canal général pour toute l\'équipe',
     members: ['user-1', 'user-2', 'user-3'],
-    messages: [
-      {
-        id: '1',
-        userId: 'user-1',
-        content: 'Bonjour tout le monde ! 👋',
-        timestamp: '2024-06-01T10:00:00Z',
-        type: 'text',
-        reactions: [{ emoji: '👋', users: ['user-2', 'user-3'] }]
-      }
-    ]
-  },
-  {
-    id: 'festival-summer',
-    name: 'Festival d\'Été 2024',
-    type: 'event',
-    description: 'Discussion pour le Festival d\'Été',
-    members: ['user-1', 'user-2'],
-    eventId: 'event-1',
     messages: []
   }
 ];
 
 export const Messagerie: React.FC = () => {
-  const { users, getUserById } = useUser();
+  const { users, getUserById, currentUser } = useUser();
   const [channels, setChannels] = useState<Channel[]>(sampleChannels);
   const [selectedChannel, setSelectedChannel] = useState<Channel>(channels[0]);
   const [messageText, setMessageText] = useState('');
@@ -70,7 +54,7 @@ export const Messagerie: React.FC = () => {
 
     const newMessage: Message = {
       id: Date.now().toString(),
-      userId: 'user-1', // Current user
+      userId: currentUser?.id || 'user-1',
       content: messageText,
       timestamp: new Date().toISOString(),
       type: 'text'
@@ -82,13 +66,19 @@ export const Messagerie: React.FC = () => {
         : channel
     ));
 
+    setSelectedChannel(prev => ({
+      ...prev,
+      messages: [...prev.messages, newMessage]
+    }));
+
     setMessageText('');
+    toast.success('Message envoyé');
   };
 
   const createPoll = (question: string, options: string[]) => {
     const pollMessage: Message = {
       id: Date.now().toString(),
-      userId: 'user-1',
+      userId: currentUser?.id || 'user-1',
       content: question,
       timestamp: new Date().toISOString(),
       type: 'poll',
@@ -101,7 +91,73 @@ export const Messagerie: React.FC = () => {
         : channel
     ));
 
+    setSelectedChannel(prev => ({
+      ...prev,
+      messages: [...prev.messages, pollMessage]
+    }));
+
     setShowPollCreator(false);
+    toast.success('Sondage créé avec succès');
+  };
+
+  const voteOnPoll = (messageId: string, optionIndex: number) => {
+    const userId = currentUser?.id || 'user-1';
+    
+    setChannels(prev => prev.map(channel => 
+      channel.id === selectedChannel.id 
+        ? {
+            ...channel,
+            messages: channel.messages.map(msg => {
+              if (msg.id === messageId && msg.pollOptions) {
+                const newOptions = msg.pollOptions.map((option, index) => {
+                  if (index === optionIndex) {
+                    const hasVoted = option.votes.includes(userId);
+                    return {
+                      ...option,
+                      votes: hasVoted 
+                        ? option.votes.filter(id => id !== userId)
+                        : [...option.votes, userId]
+                    };
+                  }
+                  // Remove vote from other options
+                  return {
+                    ...option,
+                    votes: option.votes.filter(id => id !== userId)
+                  };
+                });
+                return { ...msg, pollOptions: newOptions };
+              }
+              return msg;
+            })
+          }
+        : channel
+    ));
+
+    // Update selected channel
+    setSelectedChannel(prev => ({
+      ...prev,
+      messages: prev.messages.map(msg => {
+        if (msg.id === messageId && msg.pollOptions) {
+          const newOptions = msg.pollOptions.map((option, index) => {
+            if (index === optionIndex) {
+              const hasVoted = option.votes.includes(userId);
+              return {
+                ...option,
+                votes: hasVoted 
+                  ? option.votes.filter(id => id !== userId)
+                  : [...option.votes, userId]
+              };
+            }
+            return {
+              ...option,
+              votes: option.votes.filter(id => id !== userId)
+            };
+          });
+          return { ...msg, pollOptions: newOptions };
+        }
+        return msg;
+      })
+    }));
   };
 
   const formatTime = (timestamp: string) => {
@@ -197,57 +253,90 @@ export const Messagerie: React.FC = () => {
 
         {/* Messages Area */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {selectedChannel.messages.map((message) => {
-            const user = getUserById(message.userId);
-            return (
-              <div key={message.id} className="flex space-x-3">
-                <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
-                  <span className="text-white text-sm font-medium">
-                    {user?.name.charAt(0) || 'U'}
-                  </span>
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2 mb-1">
-                    <span className="font-medium text-gray-900">{user?.name || 'Utilisateur'}</span>
-                    <span className="text-xs text-gray-500">{formatTime(message.timestamp)}</span>
+          {selectedChannel.messages.length === 0 ? (
+            <div className="text-center text-gray-500 py-8">
+              <MessageCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>Aucun message dans ce canal</p>
+              <p className="text-sm">Soyez le premier à écrire un message !</p>
+            </div>
+          ) : (
+            selectedChannel.messages.map((message) => {
+              const user = getUserById(message.userId);
+              return (
+                <div key={message.id} className="flex space-x-3">
+                  <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
+                    <span className="text-white text-sm font-medium">
+                      {user?.name.charAt(0) || 'U'}
+                    </span>
                   </div>
-                  
-                  {message.type === 'text' && (
-                    <p className="text-gray-700">{message.content}</p>
-                  )}
-                  
-                  {message.type === 'poll' && (
-                    <Card className="mt-2 max-w-md">
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm">{message.content}</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-2">
-                        {message.pollOptions?.map((option, index) => (
-                          <button
-                            key={index}
-                            className="w-full text-left p-2 rounded border hover:bg-gray-50 flex justify-between"
-                          >
-                            <span>{option.option}</span>
-                            <Badge variant="secondary">{option.votes.length}</Badge>
-                          </button>
-                        ))}
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {message.reactions && message.reactions.length > 0 && (
-                    <div className="flex space-x-1 mt-2">
-                      {message.reactions.map((reaction, index) => (
-                        <Badge key={index} variant="outline" className="text-xs">
-                          {reaction.emoji} {reaction.users.length}
-                        </Badge>
-                      ))}
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <span className="font-medium text-gray-900">{user?.name || 'Utilisateur'}</span>
+                      <span className="text-xs text-gray-500">{formatTime(message.timestamp)}</span>
                     </div>
-                  )}
+                    
+                    {message.type === 'text' && (
+                      <p className="text-gray-700">{message.content}</p>
+                    )}
+                    
+                    {message.type === 'poll' && (
+                      <Card className="mt-2 max-w-md">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm">{message.content}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                          {message.pollOptions?.map((option, index) => {
+                            const hasVoted = option.votes.includes(currentUser?.id || 'user-1');
+                            const totalVotes = message.pollOptions?.reduce((sum, opt) => sum + opt.votes.length, 0) || 0;
+                            const percentage = totalVotes > 0 ? (option.votes.length / totalVotes) * 100 : 0;
+                            
+                            return (
+                              <button
+                                key={index}
+                                onClick={() => voteOnPoll(message.id, index)}
+                                className={`w-full text-left p-3 rounded border transition-colors ${
+                                  hasVoted ? 'bg-purple-50 border-purple-200' : 'hover:bg-gray-50'
+                                }`}
+                              >
+                                <div className="flex justify-between items-center">
+                                  <span className="font-medium">{option.option}</span>
+                                  <div className="flex items-center space-x-2">
+                                    <span className="text-sm text-gray-600">{percentage.toFixed(0)}%</span>
+                                    <Badge variant="secondary">{option.votes.length}</Badge>
+                                  </div>
+                                </div>
+                                {totalVotes > 0 && (
+                                  <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
+                                    <div 
+                                      className="bg-purple-600 h-2 rounded-full transition-all duration-300"
+                                      style={{ width: `${percentage}%` }}
+                                    ></div>
+                                  </div>
+                                )}
+                              </button>
+                            );
+                          })}
+                          <div className="text-xs text-gray-500 pt-2">
+                            {message.pollOptions?.reduce((sum, opt) => sum + opt.votes.length, 0) || 0} vote(s) au total
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {message.reactions && message.reactions.length > 0 && (
+                      <div className="flex space-x-1 mt-2">
+                        {message.reactions.map((reaction, index) => (
+                          <Badge key={index} variant="outline" className="text-xs">
+                            {reaction.emoji} {reaction.users.length}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
 
         {/* Message Input */}
@@ -272,29 +361,10 @@ export const Messagerie: React.FC = () => {
 
       {/* Poll Creator Modal */}
       {showPollCreator && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <Card className="w-full max-w-md mx-4">
-            <CardHeader>
-              <CardTitle>Créer un sondage</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Input placeholder="Question du sondage" />
-              <Input placeholder="Option 1" />
-              <Input placeholder="Option 2" />
-              <Button variant="outline" size="sm" className="w-full">
-                + Ajouter une option
-              </Button>
-              <div className="flex space-x-3 pt-4">
-                <Button onClick={() => setShowPollCreator(false)} variant="outline" className="flex-1">
-                  Annuler
-                </Button>
-                <Button onClick={() => createPoll("Exemple de sondage", ["Option 1", "Option 2"])} className="flex-1">
-                  Créer
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <PollCreator
+          onCreatePoll={createPoll}
+          onClose={() => setShowPollCreator(false)}
+        />
       )}
     </div>
   );

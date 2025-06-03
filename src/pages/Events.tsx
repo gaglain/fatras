@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,7 +17,7 @@ interface EventType {
 interface Event {
   id: string;
   name: string;
-  typeIds: string[]; // Support multiple event types
+  typeIds: string[];
   date: string;
   venue: string;
   address: {
@@ -40,7 +39,6 @@ interface Event {
   }>;
 }
 
-// Sample event types
 const sampleEventTypes: EventType[] = [
   { id: '1', name: 'Festival', color: 'bg-purple-500', isActive: true },
   { id: '2', name: 'Concert', color: 'bg-blue-500', isActive: true },
@@ -49,102 +47,15 @@ const sampleEventTypes: EventType[] = [
   { id: '5', name: 'Mariage', color: 'bg-pink-500', isActive: true },
 ];
 
-const sampleEvents: Event[] = [
-  {
-    id: 'event-1',
-    name: 'Festival de Musique d\'Été 2024',
-    typeIds: ['1'], // Festival
-    date: '2024-07-15',
-    venue: 'Central Park',
-    address: {
-      street: '1 Central Park West',
-      city: 'New York',
-      postalCode: '10023',
-      country: 'États-Unis'
-    },
-    url: 'https://summerfest2024.com',
-    status: 'confirmed',
-    artist: 'The Midnight Express',
-    artistId: 'artist-1',
-    contactIds: ['contact-1', 'contact-2'],
-    relatedTasks: [
-      { id: '1', title: 'Envoyer contrat au Madison Square Garden', status: 'todo', dueDate: '2024-06-15' }
-    ]
-  },
-  {
-    id: 'event-2',
-    name: 'Soirée Acoustique',
-    typeIds: ['2'], // Concert
-    date: '2024-06-20',
-    venue: 'Blue Note Jazz Club',
-    address: {
-      street: '131 W 3rd St',
-      city: 'New York',
-      postalCode: '10012',
-      country: 'États-Unis'
-    },
-    status: 'pending',
-    artist: 'Sarah Mitchell',
-    artistId: 'artist-2',
-    contactIds: ['contact-2'],
-    relatedTasks: [
-      { id: '2', title: 'Appeler la salle pour les exigences sonores', status: 'in-progress', dueDate: '2024-06-12' }
-    ]
-  }
-];
-
-// Sample contacts for linking
-const sampleContacts = [
-  { id: 'contact-1', name: 'John Smith - MSG', email: 'john.smith@venue.com' },
-  { id: 'contact-2', name: 'Sarah Williams', email: 'sarah@festivalprods.com' },
-  { id: 'contact-3', name: 'Mike Producer', email: 'mike.r@soundtech.com' }
-];
-
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'confirmed':
-      return 'bg-green-100 text-green-800';
-    case 'pending':
-      return 'bg-yellow-100 text-yellow-800';
-    case 'cancelled':
-      return 'bg-red-100 text-red-800';
-    default:
-      return 'bg-gray-100 text-gray-800';
-  }
-};
+// Données nettoyées
+const sampleEvents: Event[] = [];
+const sampleContacts = [];
 
 export const Events: React.FC = () => {
   const [events, setEvents] = useState<Event[]>(sampleEvents);
   const [eventTypes, setEventTypes] = useState<EventType[]>(sampleEventTypes);
   const [showAddForm, setShowAddForm] = useState(false);
   const [selectedTypeIds, setSelectedTypeIds] = useState<string[]>([]);
-
-  const getTaskStatusColor = (status: string) => {
-    switch (status) {
-      case 'done':
-        return 'bg-green-100 text-green-800';
-      case 'in-progress':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'todo':
-        return 'bg-blue-100 text-blue-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getGoogleMapsUrl = (address: Event['address'], venue: string) => {
-    const fullAddress = `${venue}, ${address.street}, ${address.city}, ${address.postalCode}, ${address.country}`;
-    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
-  };
-
-  const getContactsByIds = (contactIds?: string[]) => {
-    if (!contactIds) return [];
-    return sampleContacts.filter(contact => contactIds.includes(contact.id));
-  };
-
-  const getEventTypesByIds = (typeIds: string[]) => {
-    return eventTypes.filter(type => typeIds.includes(type.id));
-  };
 
   const handleTypeSelection = (typeId: string) => {
     setSelectedTypeIds(prev => 
@@ -172,11 +83,23 @@ export const Events: React.FC = () => {
         </div>
       </div>
 
-      {/* Events List */}
-      <div className="space-y-4">
-        {events.map((event) => (
-          <Card key={event.id} className="hover:shadow-lg transition-shadow cursor-pointer">
-            <CardContent className="p-6">
+      {events.length === 0 ? (
+        <Card className="text-center py-12">
+          <CardContent>
+            <Calendar className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun événement trouvé</h3>
+            <p className="text-gray-500 mb-4">Commencez par créer votre premier événement</p>
+            <Button onClick={() => setShowAddForm(true)} className="bg-purple-600 hover:bg-purple-700">
+              <Plus className="h-4 w-4 mr-2" />
+              Créer Événement
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {events.map((event) => (
+            <Card key={event.id} className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 mb-2">
@@ -313,8 +236,8 @@ export const Events: React.FC = () => {
           </Card>
         ))}
       </div>
+      )}
 
-      {/* Add Event Form Modal */}
       {showAddForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <Card className="w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
@@ -375,4 +298,44 @@ export const Events: React.FC = () => {
       )}
     </div>
   );
+};
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'confirmed':
+      return 'bg-green-100 text-green-800';
+    case 'pending':
+      return 'bg-yellow-100 text-yellow-800';
+    case 'cancelled':
+      return 'bg-red-100 text-red-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
+};
+
+const getTaskStatusColor = (status: string) => {
+  switch (status) {
+    case 'done':
+      return 'bg-green-100 text-green-800';
+    case 'in-progress':
+      return 'bg-yellow-100 text-yellow-800';
+    case 'todo':
+      return 'bg-blue-100 text-blue-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
+};
+
+const getGoogleMapsUrl = (address: Event['address'], venue: string) => {
+  const fullAddress = `${venue}, ${address.street}, ${address.city}, ${address.postalCode}, ${address.country}`;
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
+};
+
+const getContactsByIds = (contactIds?: string[]) => {
+  if (!contactIds) return [];
+  return sampleContacts.filter(contact => contactIds.includes(contact.id));
+};
+
+const getEventTypesByIds = (typeIds: string[]) => {
+  return eventTypes.filter(type => typeIds.includes(type.id));
 };
