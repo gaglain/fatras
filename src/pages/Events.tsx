@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -108,7 +109,7 @@ export const Events: React.FC = () => {
                       {event.status === 'confirmed' ? 'Confirmé' : event.status === 'pending' ? 'En attente' : 'Annulé'}
                     </Badge>
                     {/* Multiple Event Type Badges */}
-                    {getEventTypesByIds(event.typeIds).map((type) => (
+                    {getEventTypesByIds(event.typeIds, eventTypes).map((type) => (
                       <Badge key={type.id} className={`${type.color} text-white`}>
                         {type.name}
                       </Badge>
@@ -336,6 +337,6 @@ const getContactsByIds = (contactIds?: string[]) => {
   return sampleContacts.filter(contact => contactIds.includes(contact.id));
 };
 
-const getEventTypesByIds = (typeIds: string[]) => {
-  return eventTypes.filter(type => typeIds.includes(type.id));
+const getEventTypesByIds = (typeIds: string[], eventTypesArray: EventType[]) => {
+  return eventTypesArray.filter(type => typeIds.includes(type.id));
 };
