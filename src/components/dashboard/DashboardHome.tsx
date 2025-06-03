@@ -1,108 +1,127 @@
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Plus, Users, Calendar, FileText } from 'lucide-react';
 import { DashboardStats } from './DashboardStats';
-import { useAuth } from '@/hooks/useAuth';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Plus, Calendar, Users, FileText, Mail } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-interface DashboardHomeProps {
-  onNavigate: (page: string) => void;
-}
-
-export const DashboardHome: React.FC<DashboardHomeProps> = ({ onNavigate }) => {
-  const { user } = useAuth();
-
+export const DashboardHome: React.FC = () => {
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">
-            Bienvenue sur votre plateforme de booking d'artistes
-          </p>
+          <h1 className="text-3xl font-bold text-gray-900">Tableau de Bord</h1>
+          <p className="text-gray-600 mt-2">Bienvenue sur votre plateforme de booking d'artistes</p>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={() => onNavigate('contacts')} className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            Nouveau Contact
-          </Button>
-          <Button onClick={() => onNavigate('events')} variant="outline" className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            Nouvel Événement
-          </Button>
+        <div className="flex space-x-3">
+          <Link to="/events">
+            <Button className="bg-purple-600 hover:bg-purple-700">
+              <Plus className="h-4 w-4 mr-2" />
+              Nouvel Événement
+            </Button>
+          </Link>
         </div>
       </div>
 
+      {/* Stats Cards */}
       <DashboardStats />
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="cursor-pointer hover:bg-accent/5" onClick={() => onNavigate('contacts')}>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Gestion des Contacts
-            </CardTitle>
-            <CardDescription>
-              Gérez votre CRM et vos prospects
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Centralisez toutes vos informations clients et prospects avec un système de lead scoring.
-            </p>
-          </CardContent>
+      {/* Quick Actions */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+          <Link to="/contacts">
+            <CardContent className="p-6 text-center">
+              <Users className="h-8 w-8 text-purple-600 mx-auto mb-3" />
+              <h3 className="font-semibold text-gray-900">Gestion Contacts</h3>
+              <p className="text-sm text-gray-600 mt-1">Gérer vos contacts et prospects</p>
+            </CardContent>
+          </Link>
         </Card>
 
-        <Card className="cursor-pointer hover:bg-accent/5" onClick={() => onNavigate('events')}>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Événements
-            </CardTitle>
-            <CardDescription>
-              Planifiez et gérez vos bookings
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Organisez vos événements et liez-les automatiquement à vos contacts.
-            </p>
-          </CardContent>
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+          <Link to="/events">
+            <CardContent className="p-6 text-center">
+              <Calendar className="h-8 w-8 text-blue-600 mx-auto mb-3" />
+              <h3 className="font-semibold text-gray-900">Événements</h3>
+              <p className="text-sm text-gray-600 mt-1">Planifier et gérer vos événements</p>
+            </CardContent>
+          </Link>
         </Card>
 
-        <Card className="cursor-pointer hover:bg-accent/5" onClick={() => onNavigate('contracts')}>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Devis & Contrats
-            </CardTitle>
-            <CardDescription>
-              Créez et gérez vos propositions
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Générez des devis personnalisés et suivez leur statut en temps réel.
-            </p>
-          </CardContent>
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+          <Link to="/contracts">
+            <CardContent className="p-6 text-center">
+              <FileText className="h-8 w-8 text-green-600 mx-auto mb-3" />
+              <h3 className="font-semibold text-gray-900">Devis & Contrats</h3>
+              <p className="text-sm text-gray-600 mt-1">Créer et suivre vos devis</p>
+            </CardContent>
+          </Link>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+          <Link to="/email-campaigns">
+            <CardContent className="p-6 text-center">
+              <Mail className="h-8 w-8 text-orange-600 mx-auto mb-3" />
+              <h3 className="font-semibold text-gray-900">Marketing</h3>
+              <p className="text-sm text-gray-600 mt-1">Campagnes et automatisation</p>
+            </CardContent>
+          </Link>
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Activité Récente</CardTitle>
-          <CardDescription>
-            Dernières actions sur votre plateforme
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-6 text-muted-foreground">
-            <p>Aucune activité récente</p>
-            <p className="text-sm">Commencez par créer votre premier contact ou événement</p>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Recent Activity */}
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Activité Récente</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <div>
+                  <p className="text-sm font-medium">Nouveau contact ajouté</p>
+                  <p className="text-xs text-gray-500">Il y a 2 heures</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                <div>
+                  <p className="text-sm font-medium">Événement planifié</p>
+                  <p className="text-xs text-gray-500">Hier</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                <div>
+                  <p className="text-sm font-medium">Devis envoyé</p>
+                  <p className="text-xs text-gray-500">Il y a 3 jours</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Prochains Événements</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="text-center text-gray-500 py-4">
+                <Calendar className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">Aucun événement planifié</p>
+                <Link to="/events">
+                  <Button variant="outline" size="sm" className="mt-2">
+                    Créer un événement
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
