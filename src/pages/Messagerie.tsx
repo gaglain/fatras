@@ -1,12 +1,13 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Send, Hash, Users, MessageCircle, MoreVertical } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Plus, Send, Hash, Users, MessageCircle, MoreVertical, X } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import { PollCreator } from '@/components/messaging/PollCreator';
+import { UserMention } from '@/components/UserMention';
 import { toast } from 'sonner';
 
 interface Message {
@@ -48,6 +49,9 @@ export const Messagerie: React.FC = () => {
   const [messageText, setMessageText] = useState('');
   const [showCreateChannel, setShowCreateChannel] = useState(false);
   const [showPollCreator, setShowPollCreator] = useState(false);
+  const [newChannelName, setNewChannelName] = useState('');
+  const [newChannelDescription, setNewChannelDescription] = useState('');
+  const [newChannelType, setNewChannelType] = useState<'public' | 'private' | 'event'>('public');
 
   const sendMessage = () => {
     if (!messageText.trim()) return;
@@ -73,6 +77,31 @@ export const Messagerie: React.FC = () => {
 
     setMessageText('');
     toast.success('Message envoyé');
+  };
+
+  const createChannel = () => {
+    if (!newChannelName.trim()) {
+      toast.error('Veuillez saisir un nom de canal');
+      return;
+    }
+
+    const newChannel: Channel = {
+      id: `channel-${Date.now()}`,
+      name: newChannelName,
+      type: newChannelType,
+      description: newChannelDescription,
+      members: [currentUser?.id || 'user-1'],
+      messages: [],
+      isArchived: false
+    };
+
+    setChannels(prev => [...prev, newChannel]);
+    setSelectedChannel(newChannel);
+    setShowCreateChannel(false);
+    setNewChannelName('');
+    setNewChannelDescription('');
+    setNewChannelType('public');
+    toast.success(`Canal "${newChannelName}" créé avec succès`);
   };
 
   const createPoll = (question: string, options: string[]) => {
@@ -119,7 +148,6 @@ export const Messagerie: React.FC = () => {
                         : [...option.votes, userId]
                     };
                   }
-                  // Remove vote from other options
                   return {
                     ...option,
                     votes: option.votes.filter(id => id !== userId)
@@ -133,7 +161,6 @@ export const Messagerie: React.FC = () => {
         : channel
     ));
 
-    // Update selected channel
     setSelectedChannel(prev => ({
       ...prev,
       messages: prev.messages.map(msg => {
@@ -174,13 +201,56 @@ export const Messagerie: React.FC = () => {
         <div className="p-4 border-b">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold text-gray-900">Messagerie</h2>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => setShowCreateChannel(true)}
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
+            <Dialog open={showCreateChannel} onOpenChange={setShowCreateChannel}>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Créer un nouveau canal</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Nom du canal</label>
+                    <Input
+                      value={newChannelName}
+                      onChange={(e) => setNewChannelName(e.target.value)}
+                      placeholder="nom-du-canal"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Description (optionnel)</label>
+                    <Input
+                      value={newChannelDescription}
+                      onChange={(e) => setNewChannelDescription(e.target.value)}
+                      placeholder="Description du canal"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Type de canal</label>
+                    <select 
+                      value={newChannelType} 
+                      onChange={(e) => setNewChannelType(e.target.value as 'public' | 'private' | 'event')}
+                      className="w-full p-2 border border-gray-300 rounded-md"
+                    >
+                      <option value="public">Public</option>
+                      <option value="private">Privé</option>
+                      <option value="event">Événement</option>
+                    </select>
+                  </div>
+                  <div className="flex space-x-2">
+                    <Button variant="outline" onClick={() => setShowCreateChannel(false)} className="flex-1">
+                      Annuler
+                    </Button>
+                    <Button onClick={createChannel} className="flex-1">
+                      Créer
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 
@@ -342,12 +412,11 @@ export const Messagerie: React.FC = () => {
         {/* Message Input */}
         <div className="p-4 border-t bg-white">
           <div className="flex space-x-2">
-            <Input
-              placeholder={`Message #${selectedChannel.name}`}
+            <UserMention
               value={messageText}
-              onChange={(e) => setMessageText(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-              className="flex-1"
+              onChange={setMessageText}
+              placeholder={`Message #${selectedChannel.name}`}
+              className="flex-1 border border-gray-300 rounded-md px-3 py-2 resize-none"
             />
             <Button onClick={() => setShowPollCreator(true)} variant="outline" size="sm">
               Sondage

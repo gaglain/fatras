@@ -1,161 +1,175 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Edit, Trash2, MapPin, Calendar, Users, Clock, Eye, EyeOff } from 'lucide-react';
+import { 
+  Plus, 
+  MapPin, 
+  Calendar, 
+  Clock, 
+  Users, 
+  Eye, 
+  EyeOff,
+  Search,
+  Edit,
+  Trash2,
+  User
+} from 'lucide-react';
+import { useUser } from '@/contexts/UserContext';
+import { toast } from 'sonner';
 
-interface RoadShowItem {
+interface RoadShowEvent {
   id: string;
   title: string;
-  description: string;
-  location: string;
+  venue: string;
+  address: string;
   date: string;
   time: string;
-  status: 'planned' | 'in_progress' | 'completed' | 'cancelled';
-  visibility: 'public' | 'private' | 'casting_only';
-  assignedTo: string[];
-  notes: string;
-  createdAt: string;
-}
-
-interface RoadShowFormData {
-  title: string;
+  duration: string;
   description: string;
-  location: string;
-  date: string;
-  time: string;
-  status: 'planned' | 'in_progress' | 'completed' | 'cancelled';
-  visibility: 'public' | 'private' | 'casting_only';
-  assignedTo: string[];
+  status: 'planned' | 'confirmed' | 'completed' | 'cancelled';
+  casting: string[];
+  visibleTo: string[];
+  createdBy: string;
   notes: string;
 }
 
-const defaultRoadShowItems: RoadShowItem[] = [
+interface CastMember {
+  id: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+  phone: string;
+  email: string;
+}
+
+const sampleCastMembers: CastMember[] = [
   {
-    id: '1',
-    title: 'Concert Festival Rock',
-    description: 'Performance principale au festival rock annuel',
-    location: 'Paris, Stade de France',
-    date: '2024-07-15',
-    time: '20:00',
-    status: 'planned',
-    visibility: 'casting_only',
-    assignedTo: ['jean.dupont@email.com', 'marie.martin@email.com'],
-    notes: 'Prévoir équipement son spécialisé',
-    createdAt: '2024-01-15'
+    id: 'cast-1',
+    firstName: 'Sophie',
+    lastName: 'Martin',
+    role: 'Chanteuse principale',
+    phone: '06 12 34 56 78',
+    email: 'sophie.martin@example.com'
   },
   {
-    id: '2',
-    title: 'Concert Acoustique',
-    description: 'Session acoustique intime',
-    location: 'Lyon, L\'Olympia',
-    date: '2024-06-20',
-    time: '19:30',
-    status: 'in_progress',
-    visibility: 'casting_only',
-    assignedTo: ['sophie.bernard@email.com'],
-    notes: 'Configuration acoustique uniquement',
-    createdAt: '2024-01-10'
+    id: 'cast-2',
+    firstName: 'Pierre',
+    lastName: 'Dubois',
+    role: 'Guitariste',
+    phone: '06 23 45 67 89',
+    email: 'pierre.dubois@example.com'
+  },
+  {
+    id: 'cast-3',
+    firstName: 'Marie',
+    lastName: 'Leroy',
+    role: 'Danseuse',
+    phone: '06 34 56 78 90',
+    email: 'marie.leroy@example.com'
   }
 ];
 
-const castingMembers = [
-  'jean.dupont@email.com',
-  'marie.martin@email.com',
-  'sophie.bernard@email.com',
-  'lucas.petit@email.com',
-  'emma.garcia@email.com'
+const sampleEvents: RoadShowEvent[] = [
+  {
+    id: '1',
+    title: 'Concert Privé Villa Marguerite',
+    venue: 'Villa Marguerite',
+    address: '123 Avenue des Roses, 06400 Cannes',
+    date: '2024-07-15',
+    time: '20:00',
+    duration: '2h30',
+    description: 'Concert privé pour anniversaire de mariage',
+    status: 'confirmed',
+    casting: ['cast-1', 'cast-2'],
+    visibleTo: ['user-1', 'user-2', 'cast-1', 'cast-2'],
+    createdBy: 'user-1',
+    notes: 'Prévoir matériel de sonorisation'
+  },
+  {
+    id: '2',
+    title: 'Festival Été Musical',
+    venue: 'Scène Principale Festival',
+    address: 'Parc des Expositions, Nice',
+    date: '2024-07-22',
+    time: '21:30',
+    duration: '1h45',
+    description: 'Prestation festival d\'été',
+    status: 'planned',
+    casting: ['cast-1', 'cast-3'],
+    visibleTo: ['user-1', 'cast-1', 'cast-3'],
+    createdBy: 'user-1',
+    notes: ''
+  }
 ];
 
 export const RoadShow: React.FC = () => {
-  const [roadShowItems, setRoadShowItems] = useState<RoadShowItem[]>(defaultRoadShowItems);
-  const [selectedItem, setSelectedItem] = useState<RoadShowItem | null>(null);
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [showEditDialog, setShowEditDialog] = useState(false);
-
-  const [formData, setFormData] = useState<RoadShowFormData>({
+  const { users, currentUser, getUserById } = useUser();
+  const [events, setEvents] = useState<RoadShowEvent[]>(sampleEvents);
+  const [castMembers, setCastMembers] = useState<CastMember[]>(sampleCastMembers);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<RoadShowEvent | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [castSearchTerm, setCastSearchTerm] = useState('');
+  const [formData, setFormData] = useState({
     title: '',
-    description: '',
-    location: '',
+    venue: '',
+    address: '',
     date: '',
     time: '',
-    status: 'planned',
-    visibility: 'casting_only',
-    assignedTo: [],
+    duration: '',
+    description: '',
+    status: 'planned' as const,
+    casting: [] as string[],
+    visibleTo: [] as string[],
     notes: ''
   });
 
   const resetForm = () => {
     setFormData({
       title: '',
-      description: '',
-      location: '',
+      venue: '',
+      address: '',
       date: '',
       time: '',
+      duration: '',
+      description: '',
       status: 'planned',
-      visibility: 'casting_only',
-      assignedTo: [],
+      casting: [],
+      visibleTo: [],
       notes: ''
     });
   };
 
-  const handleCreateItem = () => {
-    const newItem: RoadShowItem = {
+  const handleCreateEvent = () => {
+    if (!formData.title || !formData.venue || !formData.date) {
+      toast.error('Veuillez remplir les champs obligatoires');
+      return;
+    }
+
+    const newEvent: RoadShowEvent = {
       id: Date.now().toString(),
       ...formData,
-      createdAt: new Date().toISOString().split('T')[0]
+      createdBy: currentUser?.id || 'user-1'
     };
-    
-    setRoadShowItems([...roadShowItems, newItem]);
-    setShowCreateDialog(false);
+
+    setEvents([...events, newEvent]);
+    setShowCreateForm(false);
     resetForm();
-  };
-
-  const handleEditItem = (item: RoadShowItem) => {
-    setSelectedItem(item);
-    setFormData({
-      title: item.title,
-      description: item.description,
-      location: item.location,
-      date: item.date,
-      time: item.time,
-      status: item.status,
-      visibility: item.visibility,
-      assignedTo: item.assignedTo,
-      notes: item.notes
-    });
-    setShowEditDialog(true);
-  };
-
-  const handleUpdateItem = () => {
-    if (!selectedItem) return;
-    
-    const updatedItems = roadShowItems.map(item => 
-      item.id === selectedItem.id 
-        ? { ...item, ...formData }
-        : item
-    );
-    
-    setRoadShowItems(updatedItems);
-    setShowEditDialog(false);
-    setSelectedItem(null);
-    resetForm();
-  };
-
-  const handleDeleteItem = (itemId: string) => {
-    setRoadShowItems(roadShowItems.filter(item => item.id !== itemId));
+    toast.success('Événement ajouté à la feuille de route');
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
+      case 'confirmed': return 'bg-green-100 text-green-800';
       case 'planned': return 'bg-blue-100 text-blue-800';
-      case 'in_progress': return 'bg-yellow-100 text-yellow-800';
-      case 'completed': return 'bg-green-100 text-green-800';
+      case 'completed': return 'bg-gray-100 text-gray-800';
       case 'cancelled': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
@@ -163,74 +177,130 @@ export const RoadShow: React.FC = () => {
 
   const getStatusLabel = (status: string) => {
     switch (status) {
+      case 'confirmed': return 'Confirmé';
       case 'planned': return 'Planifié';
-      case 'in_progress': return 'En cours';
       case 'completed': return 'Terminé';
       case 'cancelled': return 'Annulé';
-      default: return status;
+      default: return 'Inconnu';
     }
   };
 
-  const getVisibilityIcon = (visibility: string) => {
-    switch (visibility) {
-      case 'public': return <Eye className="h-4 w-4 text-green-600" />;
-      case 'private': return <EyeOff className="h-4 w-4 text-red-600" />;
-      case 'casting_only': return <Users className="h-4 w-4 text-blue-600" />;
-      default: return <Eye className="h-4 w-4" />;
-    }
+  const canViewEvent = (event: RoadShowEvent) => {
+    if (!currentUser) return false;
+    return event.visibleTo.includes(currentUser.id) || event.createdBy === currentUser.id;
   };
 
-  const getVisibilityLabel = (visibility: string) => {
-    switch (visibility) {
-      case 'public': return 'Public';
-      case 'private': return 'Privé';
-      case 'casting_only': return 'Casting uniquement';
-      default: return visibility;
-    }
+  const filteredEvents = events.filter(event => 
+    canViewEvent(event) &&
+    (event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+     event.venue.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
+  const filteredCastMembers = castMembers.filter(member =>
+    member.firstName.toLowerCase().includes(castSearchTerm.toLowerCase()) ||
+    member.lastName.toLowerCase().includes(castSearchTerm.toLowerCase()) ||
+    member.role.toLowerCase().includes(castSearchTerm.toLowerCase())
+  );
+
+  const toggleCastMember = (memberId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      casting: prev.casting.includes(memberId)
+        ? prev.casting.filter(id => id !== memberId)
+        : [...prev.casting, memberId]
+    }));
   };
 
-  const handleAssignedToChange = (member: string, checked: boolean) => {
-    if (checked) {
-      setFormData({ ...formData, assignedTo: [...formData.assignedTo, member] });
-    } else {
-      setFormData({ ...formData, assignedTo: formData.assignedTo.filter(m => m !== member) });
-    }
+  const toggleVisibility = (userId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      visibleTo: prev.visibleTo.includes(userId)
+        ? prev.visibleTo.filter(id => id !== userId)
+        : [...prev.visibleTo, userId]
+    }));
   };
 
-  const upcomingEvents = roadShowItems.filter(item => item.status === 'planned').length;
-  const inProgressEvents = roadShowItems.filter(item => item.status === 'in_progress').length;
-  const completedEvents = roadShowItems.filter(item => item.status === 'completed').length;
+  const getCastMemberName = (memberId: string) => {
+    const member = castMembers.find(m => m.id === memberId);
+    return member ? `${member.firstName} ${member.lastName}` : 'Membre inconnu';
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Feuille de route</h1>
-          <p className="text-gray-600 mt-2">Planifiez et gérez votre feuille de route artistique</p>
+          <h1 className="text-3xl font-bold text-gray-900">Feuille de Route</h1>
+          <p className="text-gray-600 mt-2">Planifiez et gérez vos événements et tournées</p>
         </div>
-        <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="bg-purple-600 hover:bg-purple-700">
               <Plus className="h-4 w-4 mr-2" />
               Nouvel Événement
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Créer un nouvel événement</DialogTitle>
+              <DialogTitle>Ajouter un événement à la feuille de route</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4">
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Titre de l'événement *</label>
+                  <Input
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    placeholder="Concert, festival, événement privé..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Lieu *</label>
+                  <Input
+                    value={formData.venue}
+                    onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
+                    placeholder="Nom du lieu ou de la salle"
+                  />
+                </div>
+              </div>
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Titre</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Adresse complète</label>
                 <Input
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="Titre de l'événement"
+                  value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  placeholder="Adresse complète du lieu"
                 />
               </div>
-              
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Date *</label>
+                  <Input
+                    type="date"
+                    value={formData.date}
+                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Heure</label>
+                  <Input
+                    type="time"
+                    value={formData.time}
+                    onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Durée</label>
+                  <Input
+                    value={formData.duration}
+                    onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+                    placeholder="ex: 2h30"
+                  />
+                </div>
+              </div>
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                 <Textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -239,96 +309,92 @@ export const RoadShow: React.FC = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Lieu</label>
-                  <Input
-                    value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    placeholder="Lieu de l'événement"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
-                  <Input
-                    type="date"
-                    value={formData.date}
-                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Heure</label>
-                  <Input
-                    type="time"
-                    value={formData.time}
-                    onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Statut</label>
-                  <Select value={formData.status} onValueChange={(value: any) => setFormData({ ...formData, status: value })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="planned">Planifié</SelectItem>
-                      <SelectItem value="in_progress">En cours</SelectItem>
-                      <SelectItem value="completed">Terminé</SelectItem>
-                      <SelectItem value="cancelled">Annulé</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Visibilité</label>
-                  <Select value={formData.visibility} onValueChange={(value: any) => setFormData({ ...formData, visibility: value })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="casting_only">Casting uniquement</SelectItem>
-                      <SelectItem value="private">Privé</SelectItem>
-                      <SelectItem value="public">Public</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Membres du casting assignés</label>
-                <div className="space-y-2 max-h-32 overflow-y-auto border rounded-lg p-3">
-                  {castingMembers.map((member) => (
-                    <label key={member} className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        checked={formData.assignedTo.includes(member)}
-                        onChange={(e) => handleAssignedToChange(member, e.target.checked)}
-                        className="rounded"
+                <label className="block text-sm font-medium text-gray-700 mb-1">Statut</label>
+                <Select value={formData.status} onValueChange={(value: any) => setFormData({ ...formData, status: value })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="planned">Planifié</SelectItem>
+                    <SelectItem value="confirmed">Confirmé</SelectItem>
+                    <SelectItem value="completed">Terminé</SelectItem>
+                    <SelectItem value="cancelled">Annulé</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Casting Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Casting</label>
+                <div className="space-y-2">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                    <Input
+                      placeholder="Rechercher par prénom..."
+                      value={castSearchTerm}
+                      onChange={(e) => setCastSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                  <div className="max-h-32 overflow-y-auto border rounded-lg p-2">
+                    {filteredCastMembers.map((member) => (
+                      <div key={member.id} className="flex items-center space-x-2 p-2 hover:bg-gray-50">
+                        <Checkbox
+                          checked={formData.casting.includes(member.id)}
+                          onCheckedChange={() => toggleCastMember(member.id)}
+                        />
+                        <div className="flex-1">
+                          <div className="font-medium text-sm">{member.firstName} {member.lastName}</div>
+                          <div className="text-xs text-gray-500">{member.role}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Visibility Settings */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Visible par</label>
+                <div className="space-y-2 max-h-32 overflow-y-auto border rounded-lg p-2">
+                  {users.filter(user => user.isActive).map((user) => (
+                    <div key={user.id} className="flex items-center space-x-2 p-1">
+                      <Checkbox
+                        checked={formData.visibleTo.includes(user.id)}
+                        onCheckedChange={() => toggleVisibility(user.id)}
                       />
-                      <span className="text-sm">{member}</span>
-                    </label>
+                      <span className="text-sm">{user.name}</span>
+                    </div>
+                  ))}
+                  {castMembers.map((member) => (
+                    <div key={`cast-${member.id}`} className="flex items-center space-x-2 p-1">
+                      <Checkbox
+                        checked={formData.visibleTo.includes(member.id)}
+                        onCheckedChange={() => toggleVisibility(member.id)}
+                      />
+                      <span className="text-sm">{member.firstName} {member.lastName} (Casting)</span>
+                    </div>
                   ))}
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
                 <Textarea
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  placeholder="Notes additionnelles..."
+                  placeholder="Notes internes, matériel nécessaire..."
                   rows={2}
                 />
               </div>
 
-              <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+              <div className="flex space-x-3">
+                <Button variant="outline" onClick={() => setShowCreateForm(false)} className="flex-1">
                   Annuler
                 </Button>
-                <Button onClick={handleCreateItem}>
-                  Créer l'événement
+                <Button onClick={handleCreateEvent} className="flex-1 bg-purple-600 hover:bg-purple-700">
+                  Ajouter à la feuille de route
                 </Button>
               </div>
             </div>
@@ -336,228 +402,111 @@ export const RoadShow: React.FC = () => {
         </Dialog>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Calendar className="h-8 w-8 text-blue-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Événements</p>
-                <p className="text-2xl font-bold text-gray-900">{roadShowItems.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Clock className="h-8 w-8 text-yellow-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">À venir</p>
-                <p className="text-2xl font-bold text-gray-900">{upcomingEvents}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Users className="h-8 w-8 text-green-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">En cours</p>
-                <p className="text-2xl font-bold text-gray-900">{inProgressEvents}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <MapPin className="h-8 w-8 text-purple-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Terminés</p>
-                <p className="text-2xl font-bold text-gray-900">{completedEvents}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Search */}
+      <div className="relative max-w-md">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+        <Input
+          placeholder="Rechercher des événements..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-10"
+        />
       </div>
 
-      {/* Road Show Items List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Feuille de route</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {roadShowItems.map((item) => (
-              <div key={item.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                <div className="flex items-center space-x-4">
-                  <div className="flex flex-col items-center">
-                    <MapPin className="h-6 w-6 text-gray-400 mb-1" />
-                    {getVisibilityIcon(item.visibility)}
-                  </div>
-                  <div>
-                    <h3 className="font-medium">{item.title}</h3>
-                    <p className="text-sm text-gray-600">{item.description}</p>
-                    <div className="flex items-center space-x-2 mt-1">
-                      <span className="text-sm text-gray-500">{item.location}</span>
-                      <span className="text-sm text-gray-500">•</span>
-                      <span className="text-sm text-gray-500">{item.date} à {item.time}</span>
-                      <span className="text-sm text-gray-500">•</span>
-                      <span className="text-sm text-gray-500">{getVisibilityLabel(item.visibility)}</span>
-                    </div>
-                    {item.assignedTo.length > 0 && (
-                      <div className="mt-1">
-                        <span className="text-xs text-gray-500">Assigné à: {item.assignedTo.join(', ')}</span>
+      {/* Events Timeline */}
+      <div className="space-y-4">
+        {filteredEvents.length === 0 ? (
+          <Card className="text-center py-12">
+            <CardContent>
+              <MapPin className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun événement trouvé</h3>
+              <p className="text-gray-500 mb-4">Commencez par ajouter votre premier événement à la feuille de route</p>
+            </CardContent>
+          </Card>
+        ) : (
+          filteredEvents
+            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+            .map((event) => (
+              <Card key={event.id} className="hover:shadow-lg transition-shadow">
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-2">
+                        <h3 className="text-xl font-semibold">{event.title}</h3>
+                        <Badge className={getStatusColor(event.status)}>
+                          {getStatusLabel(event.status)}
+                        </Badge>
                       </div>
-                    )}
+                      <div className="space-y-1 text-sm text-gray-600">
+                        <div className="flex items-center space-x-2">
+                          <MapPin className="h-4 w-4" />
+                          <span>{event.venue}</span>
+                        </div>
+                        {event.address && (
+                          <div className="flex items-center space-x-2">
+                            <span className="w-4"></span>
+                            <span>{event.address}</span>
+                          </div>
+                        )}
+                        <div className="flex items-center space-x-4">
+                          <div className="flex items-center space-x-2">
+                            <Calendar className="h-4 w-4" />
+                            <span>{new Date(event.date).toLocaleDateString('fr-FR')}</span>
+                          </div>
+                          {event.time && (
+                            <div className="flex items-center space-x-2">
+                              <Clock className="h-4 w-4" />
+                              <span>{event.time}</span>
+                              {event.duration && <span>({event.duration})</span>}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      {event.visibleTo.length > 0 && (
+                        <Badge variant="outline" className="text-xs">
+                          <Eye className="h-3 w-3 mr-1" />
+                          {event.visibleTo.length} personnes
+                        </Badge>
+                      )}
+                      <Button size="sm" variant="outline">
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <Badge className={getStatusColor(item.status)}>
-                    {getStatusLabel(item.status)}
-                  </Badge>
-                  <div className="flex space-x-1">
-                    <Button size="sm" variant="outline" onClick={() => handleEditItem(item)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => handleDeleteItem(item.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* Edit Dialog */}
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Modifier l'événement</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Titre</label>
-              <Input
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder="Titre de l'événement"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-              <Textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Description de l'événement..."
-                rows={3}
-              />
-            </div>
+                  {event.description && (
+                    <p className="text-gray-700 mb-4">{event.description}</p>
+                  )}
 
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Lieu</label>
-                <Input
-                  value={formData.location}
-                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  placeholder="Lieu de l'événement"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
-                <Input
-                  type="date"
-                  value={formData.date}
-                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Heure</label>
-                <Input
-                  type="time"
-                  value={formData.time}
-                  onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                />
-              </div>
-            </div>
+                  {event.casting.length > 0 && (
+                    <div className="mb-4">
+                      <h4 className="font-medium text-gray-900 mb-2 flex items-center">
+                        <Users className="h-4 w-4 mr-2" />
+                        Casting
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {event.casting.map((memberId) => (
+                          <Badge key={memberId} variant="outline">
+                            {getCastMemberName(memberId)}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Statut</label>
-                <Select value={formData.status} onValueChange={(value: any) => setFormData({ ...formData, status: value })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="planned">Planifié</SelectItem>
-                    <SelectItem value="in_progress">En cours</SelectItem>
-                    <SelectItem value="completed">Terminé</SelectItem>
-                    <SelectItem value="cancelled">Annulé</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Visibilité</label>
-                <Select value={formData.visibility} onValueChange={(value: any) => setFormData({ ...formData, visibility: value })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="casting_only">Casting uniquement</SelectItem>
-                    <SelectItem value="private">Privé</SelectItem>
-                    <SelectItem value="public">Public</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Membres du casting assignés</label>
-              <div className="space-y-2 max-h-32 overflow-y-auto border rounded-lg p-3">
-                {castingMembers.map((member) => (
-                  <label key={member} className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      checked={formData.assignedTo.includes(member)}
-                      onChange={(e) => handleAssignedToChange(member, e.target.checked)}
-                      className="rounded"
-                    />
-                    <span className="text-sm">{member}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
-              <Textarea
-                value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                placeholder="Notes additionnelles..."
-                rows={2}
-              />
-            </div>
-
-            <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={() => setShowEditDialog(false)}>
-                Annuler
-              </Button>
-              <Button onClick={handleUpdateItem}>
-                Sauvegarder
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+                  {event.notes && (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                      <h4 className="font-medium text-yellow-800 mb-1">Notes</h4>
+                      <p className="text-yellow-700 text-sm">{event.notes}</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))
+        )}
+      </div>
     </div>
   );
 };

@@ -1,107 +1,118 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-export type UserRole = 'super-admin' | 'booker' | 'artist' | 'casting-artist' | 'user' | 'external-user';
-
 export interface User {
   id: string;
   name: string;
-  lastName: string;
   email: string;
-  role: UserRole;
-  avatar?: string;
+  role: 'admin' | 'manager' | 'user';
   isActive: boolean;
-  googleCalendarConnected?: boolean;
-  gmailConnected?: boolean;
-  department?: string;
-  phone?: string;
-  bio?: string;
+  username?: string; // Nouveau champ pour le pseudo
 }
 
 export interface UserPermissions {
   canCreateContacts: boolean;
   canEditAllContacts: boolean;
   canDeleteContacts: boolean;
-  canCreateEvents: boolean;
-  canEditAllEvents: boolean;
-  canDeleteEvents: boolean;
+  canViewAllTasks: boolean;
+  canAssignTasks: boolean;
   canManageUsers: boolean;
-  canManageContracts: boolean;
-  canViewFinancials: boolean;
-  canManageSettings: boolean;
-  canAccessChat: boolean;
-  canCreateOpportunities: boolean;
-  canManageCasting: boolean;
 }
 
 interface UserContextType {
-  currentUser: User | null;
   users: User[];
-  setCurrentUser: (user: User) => void;
+  currentUser: User | null;
+  setCurrentUser: (user: User | null) => void;
+  getUserById: (id: string) => User | undefined;
+  getUserPermissions: (user: User) => UserPermissions;
   addUser: (user: Omit<User, 'id'>) => void;
   updateUser: (id: string, updates: Partial<User>) => void;
-  removeUser: (id: string) => void;
-  getUserPermissions: (user: User) => UserPermissions;
-  getUserById: (id: string) => User | undefined;
-  changeOwnership: (itemType: 'contact' | 'event', itemId: string, newOwnerId: string) => void;
-  connectGoogleCalendar: (userId: string) => void;
-  connectGmail: (userId: string) => void;
+  deactivateUser: (id: string) => void;
+  changeOwnership: (itemType: string, itemId: string, newOwnerId: string) => void;
 }
 
-const UserContext = createContext<UserContextType | undefined>(undefined);
-
-const sampleUsers: User[] = [
-  {
-    id: 'user-1',
-    name: 'Alice',
-    lastName: 'Johnson',
-    email: 'alice@showmanager.com',
-    role: 'super-admin',
+const defaultUsers: User[] = [
+  { 
+    id: 'user-1', 
+    name: 'Admin Principal', 
+    email: 'admin@showmanager.fr', 
+    role: 'admin', 
     isActive: true,
-    googleCalendarConnected: true,
-    gmailConnected: true,
-    department: 'Direction',
-    phone: '+33 1 23 45 67 89',
-    bio: 'Directrice générale avec 15 ans d\'expérience dans l\'événementiel'
+    username: 'admin'
   },
-  {
-    id: 'user-2',
-    name: 'Bob',
-    lastName: 'Miller',
-    email: 'bob@showmanager.com',
-    role: 'booker',
+  { 
+    id: 'user-2', 
+    name: 'Manager Événements', 
+    email: 'manager@showmanager.fr', 
+    role: 'manager', 
     isActive: true,
-    department: 'Booking',
-    phone: '+33 1 23 45 67 90'
+    username: 'manager_events'
   },
-  {
-    id: 'user-3',
-    name: 'Charlie',
-    lastName: 'Brown',
-    email: 'charlie@showmanager.com',
-    role: 'artist',
+  { 
+    id: 'user-3', 
+    name: 'Assistant', 
+    email: 'assistant@showmanager.fr', 
+    role: 'user', 
     isActive: true,
-    department: 'Artistes'
-  },
-  {
-    id: 'user-4',
-    name: 'Diana',
-    lastName: 'Prince',
-    email: 'diana@external.com',
-    role: 'external-user',
-    isActive: true,
-    department: 'Partenaire externe'
+    username: 'assistant'
   }
 ];
 
-export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState<User | null>(sampleUsers[0]);
-  const [users, setUsers] = useState<User[]>(sampleUsers);
+const UserContext = createContext<UserContextType | undefined>(undefined);
 
-  const addUser = (user: Omit<User, 'id'>) => {
+export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [users, setUsers] = useState<User[]>(defaultUsers);
+  const [currentUser, setCurrentUser] = useState<User | null>(defaultUsers[0]);
+
+  const getUserById = (id: string): User | undefined => {
+    return users.find(user => user.id === id);
+  };
+
+  const getUserPermissions = (user: User): UserPermissions => {
+    switch (user.role) {
+      case 'admin':
+        return {
+          canCreateContacts: true,
+          canEditAllContacts: true,
+          canDeleteContacts: true,
+          canViewAllTasks: true,
+          canAssignTasks: true,
+          canManageUsers: true
+        };
+      case 'manager':
+        return {
+          canCreateContacts: true,
+          canEditAllContacts: true,
+          canDeleteContacts: false,
+          canViewAllTasks: true,
+          canAssignTasks: true,
+          canManageUsers: false
+        };
+      case 'user':
+        return {
+          canCreateContacts: true,
+          canEditAllContacts: false,
+          canDeleteContacts: false,
+          canViewAllTasks: false,
+          canAssignTasks: false,
+          canManageUsers: false
+        };
+      default:
+        return {
+          canCreateContacts: false,
+          canEditAllContacts: false,
+          canDeleteContacts: false,
+          canViewAllTasks: false,
+          canAssignTasks: false,
+          canManageUsers: false
+        };
+    }
+  };
+
+  const addUser = (userData: Omit<User, 'id'>) => {
     const newUser: User = {
-      ...user,
-      id: `user-${Date.now()}`
+      ...userData,
+      id: `user-${Date.now()}`,
     };
     setUsers(prev => [...prev, newUser]);
   };
@@ -112,156 +123,27 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     ));
   };
 
-  const removeUser = (id: string) => {
-    setUsers(prev => prev.filter(user => user.id !== id));
+  const deactivateUser = (id: string) => {
+    setUsers(prev => prev.map(user => 
+      user.id === id ? { ...user, isActive: false } : user
+    ));
   };
 
-  const getUserPermissions = (user: User): UserPermissions => {
-    switch (user.role) {
-      case 'super-admin':
-        return {
-          canCreateContacts: true,
-          canEditAllContacts: true,
-          canDeleteContacts: true,
-          canCreateEvents: true,
-          canEditAllEvents: true,
-          canDeleteEvents: true,
-          canManageUsers: true,
-          canManageContracts: true,
-          canViewFinancials: true,
-          canManageSettings: true,
-          canAccessChat: true,
-          canCreateOpportunities: true,
-          canManageCasting: true
-        };
-      case 'booker':
-        return {
-          canCreateContacts: true,
-          canEditAllContacts: true,
-          canDeleteContacts: false,
-          canCreateEvents: true,
-          canEditAllEvents: true,
-          canDeleteEvents: false,
-          canManageUsers: false,
-          canManageContracts: true,
-          canViewFinancials: true,
-          canManageSettings: false,
-          canAccessChat: true,
-          canCreateOpportunities: true,
-          canManageCasting: true
-        };
-      case 'artist':
-        return {
-          canCreateContacts: false,
-          canEditAllContacts: false,
-          canDeleteContacts: false,
-          canCreateEvents: false,
-          canEditAllEvents: false,
-          canDeleteEvents: false,
-          canManageUsers: false,
-          canManageContracts: false,
-          canViewFinancials: false,
-          canManageSettings: false,
-          canAccessChat: true,
-          canCreateOpportunities: false,
-          canManageCasting: false
-        };
-      case 'casting-artist':
-        return {
-          canCreateContacts: false,
-          canEditAllContacts: false,
-          canDeleteContacts: false,
-          canCreateEvents: false,
-          canEditAllEvents: false,
-          canDeleteEvents: false,
-          canManageUsers: false,
-          canManageContracts: false,
-          canViewFinancials: false,
-          canManageSettings: false,
-          canAccessChat: true,
-          canCreateOpportunities: false,
-          canManageCasting: false
-        };
-      case 'user':
-        return {
-          canCreateContacts: true,
-          canEditAllContacts: false,
-          canDeleteContacts: false,
-          canCreateEvents: true,
-          canEditAllEvents: false,
-          canDeleteEvents: false,
-          canManageUsers: false,
-          canManageContracts: false,
-          canViewFinancials: false,
-          canManageSettings: false,
-          canAccessChat: true,
-          canCreateOpportunities: false,
-          canManageCasting: false
-        };
-      case 'external-user':
-        return {
-          canCreateContacts: false,
-          canEditAllContacts: false,
-          canDeleteContacts: false,
-          canCreateEvents: false,
-          canEditAllEvents: false,
-          canDeleteEvents: false,
-          canManageUsers: false,
-          canManageContracts: false,
-          canViewFinancials: false,
-          canManageSettings: false,
-          canAccessChat: false,
-          canCreateOpportunities: false,
-          canManageCasting: false
-        };
-      default:
-        return {
-          canCreateContacts: false,
-          canEditAllContacts: false,
-          canDeleteContacts: false,
-          canCreateEvents: false,
-          canEditAllEvents: false,
-          canDeleteEvents: false,
-          canManageUsers: false,
-          canManageContracts: false,
-          canViewFinancials: false,
-          canManageSettings: false,
-          canAccessChat: false,
-          canCreateOpportunities: false,
-          canManageCasting: false
-        };
-    }
-  };
-
-  const getUserById = (id: string) => {
-    return users.find(user => user.id === id);
-  };
-
-  const changeOwnership = (itemType: 'contact' | 'event', itemId: string, newOwnerId: string) => {
+  const changeOwnership = (itemType: string, itemId: string, newOwnerId: string) => {
     console.log(`Changing ownership of ${itemType} ${itemId} to user ${newOwnerId}`);
-  };
-
-  const connectGoogleCalendar = (userId: string) => {
-    updateUser(userId, { googleCalendarConnected: true });
-  };
-
-  const connectGmail = (userId: string) => {
-    updateUser(userId, { gmailConnected: true });
   };
 
   return (
     <UserContext.Provider value={{
-      currentUser,
       users,
+      currentUser,
       setCurrentUser,
+      getUserById,
+      getUserPermissions,
       addUser,
       updateUser,
-      removeUser,
-      getUserPermissions,
-      getUserById,
-      changeOwnership,
-      connectGoogleCalendar,
-      connectGmail
+      deactivateUser,
+      changeOwnership
     }}>
       {children}
     </UserContext.Provider>
