@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -91,13 +90,20 @@ export const WebsiteBackoffice: React.FC = () => {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [activeTab, setActiveTab] = useState('pages');
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData<{
+    title: string;
+    slug: string;
+    type: 'page' | 'blog' | 'event' | 'artist';
+    content: string;
+    metaDescription: string;
+    status: 'published' | 'draft' | 'archived';
+  }>({
     title: '',
     slug: '',
-    type: 'page' as const,
+    type: 'page',
     content: '',
     metaDescription: '',
-    status: 'draft' as const
+    status: 'draft'
   });
 
   const resetForm = () => {
