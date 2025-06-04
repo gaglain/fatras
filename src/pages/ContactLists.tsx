@@ -245,7 +245,13 @@ export const ContactLists: React.FC = () => {
       name: list.name,
       description: list.description,
       isAutomatic: list.isAutomatic,
-      filters: list.filters
+      filters: {
+        status: list.filters.status || [],
+        tags: list.filters.tags || [],
+        source: list.filters.source || [],
+        leadScoreMin: list.filters.leadScoreMin || 0,
+        company: list.filters.company || ''
+      }
     });
     setSelectedContacts(list.contacts);
     setShowEditDialog(true);
