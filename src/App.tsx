@@ -28,6 +28,7 @@ import { EventTypes } from '@/pages/EventTypes';
 import { Preferences } from '@/pages/Preferences';
 import { Website } from '@/pages/Website';
 import { WebsiteWithEditor } from '@/pages/WebsiteWithEditor';
+import { Application } from '@/pages/Application';
 
 const queryClient = new QueryClient();
 
@@ -59,6 +60,7 @@ function App() {
                 <Route path="preferences" element={<Preferences />} />
                 <Route path="website" element={<Website />} />
                 <Route path="website-editor" element={<WebsiteWithEditor />} />
+                <Route path="application" element={<Application />} />
               </Route>
             </Routes>
           </ProtectedRoute>

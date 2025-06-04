@@ -13,6 +13,7 @@ import { Tour } from '@/components/Tour';
 import { Shop } from '@/components/Shop';
 import { Contact } from '@/components/Contact';
 import { WebsiteWithEditor } from './WebsiteWithEditor';
+import { WebsiteBackoffice } from '@/pages/WebsiteBackoffice';
 
 const sampleArtists = [
   {
@@ -89,6 +90,8 @@ interface HeaderProps {
   setThemeSettings: (settings: ThemeSettings) => void;
   isBlockEditor?: boolean;
   setIsBlockEditor?: (value: boolean) => void;
+  showBackoffice: boolean;
+  setShowBackoffice: (value: boolean) => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ 
@@ -99,7 +102,9 @@ const Header: React.FC<HeaderProps> = ({
   themeSettings, 
   setThemeSettings,
   isBlockEditor,
-  setIsBlockEditor
+  setIsBlockEditor,
+  showBackoffice,
+  setShowBackoffice
 }) => {
   const [showCustomizer, setShowCustomizer] = useState(false);
 
@@ -197,6 +202,12 @@ const Header: React.FC<HeaderProps> = ({
               >
                 <Settings className="h-5 w-5" />
               </button>
+              <Button 
+                variant="outline" 
+                onClick={() => setShowBackoffice(true)}
+              >
+                Back Office
+              </Button>
             </nav>
             
             {/* Bouton menu mobile */}
@@ -265,6 +276,12 @@ const Header: React.FC<HeaderProps> = ({
                 >
                   Contact
                 </button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowBackoffice(true)}
+                >
+                  Back Office
+                </Button>
               </nav>
             </div>
           )}
@@ -428,10 +445,31 @@ export const Website: React.FC = () => {
     accentColor: '#6366f1'
   });
   const [isBlockEditor, setIsBlockEditor] = useState(false);
+  const [showBackoffice, setShowBackoffice] = useState(false);
 
   // Si on est en mode éditeur de blocs, on charge le composant WebsiteWithEditor
   if (isBlockEditor) {
     return <WebsiteWithEditor />;
+  }
+
+  // Si on est en mode back office, on charge le composant WebsiteBackoffice
+  if (showBackoffice) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-white border-b px-6 py-4 flex items-center justify-between">
+          <h1 className="text-lg font-semibold">Back Office - Site Web</h1>
+          <Button 
+            variant="outline" 
+            onClick={() => setShowBackoffice(false)}
+          >
+            Retour au site
+          </Button>
+        </div>
+        <div className="p-6">
+          <WebsiteBackoffice />
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -445,6 +483,8 @@ export const Website: React.FC = () => {
         setThemeSettings={setThemeSettings}
         isBlockEditor={isBlockEditor}
         setIsBlockEditor={setIsBlockEditor}
+        showBackoffice={showBackoffice}
+        setShowBackoffice={setShowBackoffice}
       />
       
       {/* Inject custom CSS variables */}
