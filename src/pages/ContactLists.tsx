@@ -113,14 +113,25 @@ export const ContactLists: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string;
+    description: string;
+    isAutomatic: boolean;
+    filters: {
+      status: string[];
+      tags: string[];
+      source: string[];
+      leadScoreMin: number;
+      company: string;
+    }
+  }>({
     name: '',
     description: '',
     isAutomatic: false,
     filters: {
-      status: [] as string[],
-      tags: [] as string[],
-      source: [] as string[],
+      status: [],
+      tags: [],
+      source: [],
       leadScoreMin: 0,
       company: ''
     }
@@ -158,7 +169,13 @@ export const ContactLists: React.FC = () => {
       name: formData.name,
       description: formData.description,
       contacts: formData.isAutomatic ? [] : selectedContacts,
-      filters: formData.isAutomatic ? formData.filters : {},
+      filters: formData.isAutomatic ? {
+        status: formData.filters.status.length > 0 ? formData.filters.status : undefined,
+        tags: formData.filters.tags.length > 0 ? formData.filters.tags : undefined,
+        source: formData.filters.source.length > 0 ? formData.filters.source : undefined,
+        leadScoreMin: formData.filters.leadScoreMin > 0 ? formData.filters.leadScoreMin : undefined,
+        company: formData.filters.company ? formData.filters.company : undefined
+      } : {},
       isAutomatic: formData.isAutomatic,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
@@ -179,7 +196,13 @@ export const ContactLists: React.FC = () => {
             name: formData.name,
             description: formData.description,
             contacts: formData.isAutomatic ? list.contacts : selectedContacts,
-            filters: formData.isAutomatic ? formData.filters : {},
+            filters: formData.isAutomatic ? {
+              status: formData.filters.status.length > 0 ? formData.filters.status : undefined,
+              tags: formData.filters.tags.length > 0 ? formData.filters.tags : undefined,
+              source: formData.filters.source.length > 0 ? formData.filters.source : undefined,
+              leadScoreMin: formData.filters.leadScoreMin > 0 ? formData.filters.leadScoreMin : undefined,
+              company: formData.filters.company ? formData.filters.company : undefined
+            } : {},
             isAutomatic: formData.isAutomatic,
             updatedAt: new Date().toISOString()
           }
