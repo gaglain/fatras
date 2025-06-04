@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Route, Edit, Eye, Share, Download, MapPin, Clock, ExternalLink } from 'lucide-react';
+import { Plus, Route, Edit, Eye, Share, Download, MapPin, Clock, ExternalLink, Trash2 } from 'lucide-react';
 
 interface RoadShow {
   id: string;
@@ -70,9 +69,54 @@ export const RoadShow: React.FC = () => {
   const [roadShows, setRoadShows] = useState<RoadShow[]>(sampleRoadShows);
   const [selectedRoadShow, setSelectedRoadShow] = useState<RoadShow | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [editingRoadShow, setEditingRoadShow] = useState<RoadShow | null>(null);
 
   const getGoogleMapsUrl = (address: string) => {
     return `https://maps.google.com/?q=${encodeURIComponent(address)}`;
+  };
+
+  const handleDeleteRoadShow = (id: string) => {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette tournée ?')) {
+      setRoadShows(prev => prev.filter(rs => rs.id !== id));
+      if (selectedRoadShow?.id === id) {
+        setSelectedRoadShow(null);
+      }
+    }
+  };
+
+  const handleEditRoadShow = (roadShow: RoadShow) => {
+    setEditingRoadShow(roadShow);
+    setShowCreateForm(true);
+  };
+
+  const handleExportPDF = (roadShow: RoadShow) => {
+    // Simulate PDF export
+    const content = `Tournée: ${roadShow.title}\nArtiste: ${roadShow.artist}\nLieu: ${roadShow.venue}\nDate: ${roadShow.date}`;
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${roadShow.title.replace(/\s+/g, '_')}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleShare = async (roadShow: RoadShow) => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: roadShow.title,
+          text: `Tournée ${roadShow.artist} - ${roadShow.venue}`,
+          url: window.location.href
+        });
+      } catch (err) {
+        console.log('Erreur de partage:', err);
+      }
+    } else {
+      // Fallback: copy to clipboard
+      navigator.clipboard.writeText(`${roadShow.title} - ${window.location.href}`);
+      alert('Lien copié dans le presse-papiers !');
+    }
   };
 
   return (
@@ -92,7 +136,7 @@ export const RoadShow: React.FC = () => {
         /* Road Shows List */
         <div className="space-y-4">
           {roadShows.map((roadShow) => (
-            <Card key={roadShow.id} className="hover:shadow-lg transition-shadow cursor-pointer">
+            <Card key={roadShow.id} className="hover:shadow-lg transition-shadow">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
@@ -176,13 +220,37 @@ export const RoadShow: React.FC = () => {
                       <Eye className="h-3 w-3 mr-1" />
                       Voir
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleEditRoadShow(roadShow)}
+                    >
                       <Edit className="h-3 w-3 mr-1" />
                       Modifier
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleExportPDF(roadShow)}
+                    >
+                      <Download className="h-3 w-3 mr-1" />
+                      PDF
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleShare(roadShow)}
+                    >
                       <Share className="h-3 w-3 mr-1" />
                       Partager
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDeleteRoadShow(roadShow.id)}
+                      className="text-red-600 hover:text-red-800 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-3 w-3" />
                     </Button>
                   </div>
                 </div>
@@ -198,15 +266,15 @@ export const RoadShow: React.FC = () => {
               ← Retour aux Tournées
             </Button>
             <div className="flex space-x-2">
-              <Button variant="outline">
+              <Button variant="outline" onClick={() => handleEditRoadShow(selectedRoadShow)}>
                 <Edit className="h-4 w-4 mr-2" />
                 Modifier
               </Button>
-              <Button variant="outline">
+              <Button variant="outline" onClick={() => handleExportPDF(selectedRoadShow)}>
                 <Download className="h-4 w-4 mr-2" />
                 Exporter PDF
               </Button>
-              <Button variant="outline">
+              <Button variant="outline" onClick={() => handleShare(selectedRoadShow)}>
                 <Share className="h-4 w-4 mr-2" />
                 Partager
               </Button>
@@ -294,28 +362,55 @@ export const RoadShow: React.FC = () => {
         </div>
       )}
 
-      {/* Create Road Show Form Modal */}
+      {/* Create/Edit Road Show Form Modal */}
       {showCreateForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <Card className="w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
             <CardHeader>
-              <CardTitle>Créer une Nouvelle Tournée</CardTitle>
+              <CardTitle>{editingRoadShow ? 'Modifier la Tournée' : 'Créer une Nouvelle Tournée'}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Input placeholder="Titre de la tournée" />
-              <Input placeholder="Nom de l'événement" />
-              <Input placeholder="Artiste" />
-              <Input placeholder="Lieu" />
-              <Input placeholder="Adresse complète" />
-              <Input type="date" placeholder="Date du spectacle" />
+              <Input 
+                placeholder="Titre de la tournée" 
+                defaultValue={editingRoadShow?.title || ''} 
+              />
+              <Input 
+                placeholder="Nom de l'événement" 
+                defaultValue={editingRoadShow?.event || ''} 
+              />
+              <Input 
+                placeholder="Artiste" 
+                defaultValue={editingRoadShow?.artist || ''} 
+              />
+              <Input 
+                placeholder="Lieu" 
+                defaultValue={editingRoadShow?.venue || ''} 
+              />
+              <Input 
+                placeholder="Adresse complète" 
+                defaultValue={editingRoadShow?.address || ''} 
+              />
+              <Input 
+                type="date" 
+                placeholder="Date du spectacle" 
+                defaultValue={editingRoadShow?.date || ''} 
+              />
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-gray-700">Heure de checking</label>
-                  <Input type="time" placeholder="Checking" />
+                  <Input 
+                    type="time" 
+                    placeholder="Checking" 
+                    defaultValue={editingRoadShow?.checkTime || ''} 
+                  />
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-700">Heure du spectacle</label>
-                  <Input type="time" placeholder="Spectacle" />
+                  <Input 
+                    type="time" 
+                    placeholder="Spectacle" 
+                    defaultValue={editingRoadShow?.showTime || ''} 
+                  />
                 </div>
               </div>
               <div className="space-y-2">
@@ -329,13 +424,29 @@ export const RoadShow: React.FC = () => {
                   ))}
                 </div>
               </div>
-              <Input placeholder="Collaborateurs (séparés par des virgules)" />
+              <Input 
+                placeholder="Collaborateurs (séparés par des virgules)" 
+                defaultValue={editingRoadShow?.collaborators.join(', ') || ''} 
+              />
               <div className="flex space-x-3 pt-4">
-                <Button onClick={() => setShowCreateForm(false)} variant="outline" className="flex-1">
+                <Button 
+                  onClick={() => {
+                    setShowCreateForm(false);
+                    setEditingRoadShow(null);
+                  }} 
+                  variant="outline" 
+                  className="flex-1"
+                >
                   Annuler
                 </Button>
-                <Button onClick={() => setShowCreateForm(false)} className="flex-1 bg-purple-600 hover:bg-purple-700">
-                  Créer la Tournée
+                <Button 
+                  onClick={() => {
+                    setShowCreateForm(false);
+                    setEditingRoadShow(null);
+                  }} 
+                  className="flex-1 bg-purple-600 hover:bg-purple-700"
+                >
+                  {editingRoadShow ? 'Modifier' : 'Créer'} la Tournée
                 </Button>
               </div>
             </CardContent>

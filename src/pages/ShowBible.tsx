@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, BookOpen, Edit, Eye, Upload, Play, Music, Users, Utensils, Mic, FileText, Image, Film, Volume2, ArrowLeft } from 'lucide-react';
+import { Plus, BookOpen, Edit, Eye, Upload, Play, Music, Users, Utensils, Mic, FileText, Image, Film, Volume2, ArrowLeft, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface Artist {
@@ -181,11 +181,52 @@ export const ShowBible: React.FC = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [activeTab, setActiveTab] = useState('bio');
   const [uploadType, setUploadType] = useState<'video' | 'audio' | 'image' | 'document' | null>(null);
+  const [editingArtist, setEditingArtist] = useState<Artist | null>(null);
 
   const handleFileUpload = (type: 'video' | 'audio' | 'image' | 'document') => {
     setUploadType(type);
-    // In a real app, this would open a file picker
-    console.log(`Upload ${type} for artist ${selectedArtist?.name}`);
+    // Create file input element
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = type === 'image' ? 'image/*' : type === 'video' ? 'video/*' : type === 'audio' ? 'audio/*' : '.pdf,.doc,.docx,.txt';
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file && selectedArtist) {
+        // Simulate file upload
+        const newFile: MediaFile = {
+          id: Date.now().toString(),
+          name: file.name,
+          type,
+          url: URL.createObjectURL(file),
+          uploadDate: new Date().toISOString().split('T')[0]
+        };
+        
+        setArtists(prev => prev.map(artist => 
+          artist.id === selectedArtist.id 
+            ? { ...artist, [type + 's']: [...artist[type + 's'], newFile] }
+            : artist
+        ));
+        
+        if (selectedArtist) {
+          setSelectedArtist({ ...selectedArtist, [type + 's']: [...selectedArtist[type + 's'], newFile] });
+        }
+      }
+    };
+    input.click();
+  };
+
+  const handleDeleteArtist = (artistId: string) => {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cet artiste et sa bible ?')) {
+      setArtists(prev => prev.filter(artist => artist.id !== artistId));
+      if (selectedArtist?.id === artistId) {
+        setSelectedArtist(null);
+      }
+    }
+  };
+
+  const handleEditArtist = (artist: Artist) => {
+    setEditingArtist(artist);
+    setShowCreateForm(true);
   };
 
   const getMediaIcon = (type: string) => {
@@ -221,7 +262,7 @@ export const ShowBible: React.FC = () => {
         /* Artists List */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {artists.map((artist) => (
-            <Card key={artist.id} className="hover:shadow-lg transition-shadow cursor-pointer">
+            <Card key={artist.id} className="hover:shadow-lg transition-shadow">
               <CardContent className="p-6">
                 <div className="flex items-center space-x-4 mb-4">
                   <img 
@@ -229,7 +270,7 @@ export const ShowBible: React.FC = () => {
                     alt={artist.name}
                     className="w-16 h-16 rounded-full object-cover"
                   />
-                  <div>
+                  <div className="flex-1">
                     <h3 className="text-xl font-semibold text-gray-900">{artist.name}</h3>
                     <Badge variant="outline">{artist.genre}</Badge>
                   </div>
@@ -262,9 +303,21 @@ export const ShowBible: React.FC = () => {
                     <Eye className="h-3 w-3 mr-1" />
                     Voir
                   </Button>
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleEditArtist(artist)}
+                  >
                     <Edit className="h-3 w-3 mr-1" />
                     Modifier
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDeleteArtist(artist.id)}
+                    className="text-red-600 hover:text-red-800 hover:bg-red-50"
+                  >
+                    <Trash2 className="h-3 w-3" />
                   </Button>
                 </div>
                 
@@ -284,9 +337,17 @@ export const ShowBible: React.FC = () => {
               Retour aux Artistes
             </Button>
             <div className="flex space-x-2">
-              <Button variant="outline">
+              <Button variant="outline" onClick={() => handleEditArtist(selectedArtist)}>
                 <Edit className="h-4 w-4 mr-2" />
                 Modifier Profil
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => handleDeleteArtist(selectedArtist.id)}
+                className="text-red-600 hover:text-red-800 hover:bg-red-50"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Supprimer
               </Button>
             </div>
           </div>
@@ -629,27 +690,73 @@ export const ShowBible: React.FC = () => {
         </div>
       )}
 
-      {/* Create Artist Form Modal */}
+      {/* Create/Edit Artist Form Modal */}
       {showCreateForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <Card className="w-full max-w-lg mx-4">
+          <Card className="w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
             <CardHeader>
-              <CardTitle>Ajouter Nouvel Artiste</CardTitle>
+              <CardTitle>{editingArtist ? 'Modifier l\'Artiste' : 'Ajouter Nouvel Artiste'}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Input placeholder="Nom de l'artiste" />
-              <Input placeholder="Genre" />
-              <textarea 
-                placeholder="Biographie" 
-                className="w-full p-3 border rounded-md resize-none h-24"
-              />
-              <Input placeholder="URL de la photo" />
+              <div className="grid grid-cols-2 gap-4">
+                <Input 
+                  placeholder="Nom de l'artiste" 
+                  defaultValue={editingArtist?.name || ''} 
+                />
+                <Input 
+                  placeholder="Genre" 
+                  defaultValue={editingArtist?.genre || ''} 
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">Photo de profil</label>
+                <Input type="file" accept="image/*" />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">Biographie</label>
+                <textarea 
+                  className="w-full p-3 border rounded-md min-h-32"
+                  placeholder="Biographie de l'artiste..."
+                  defaultValue={editingArtist?.bio || ''}
+                />
+              </div>
+              
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Médias Vidéo</label>
+                  <Input type="file" accept="video/*" multiple />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Médias Audio</label>
+                  <Input type="file" accept="audio/*" multiple />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Documents</label>
+                  <Input type="file" accept=".pdf,.doc,.docx,.txt" multiple />
+                </div>
+              </div>
+              
               <div className="flex space-x-3 pt-4">
-                <Button onClick={() => setShowCreateForm(false)} variant="outline" className="flex-1">
+                <Button 
+                  onClick={() => {
+                    setShowCreateForm(false);
+                    setEditingArtist(null);
+                  }} 
+                  variant="outline" 
+                  className="flex-1"
+                >
                   Annuler
                 </Button>
-                <Button onClick={() => setShowCreateForm(false)} className="flex-1 bg-purple-600 hover:bg-purple-700">
-                  Ajouter Artiste
+                <Button 
+                  onClick={() => {
+                    setShowCreateForm(false);
+                    setEditingArtist(null);
+                  }} 
+                  className="flex-1 bg-purple-600 hover:bg-purple-700"
+                >
+                  {editingArtist ? 'Modifier' : 'Ajouter'} Artiste
                 </Button>
               </div>
             </CardContent>

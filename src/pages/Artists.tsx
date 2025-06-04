@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Music, Calendar, MapPin, Clock, Bed, BookOpen, Trash2 } from 'lucide-react';
+import { Plus, Music, Calendar, MapPin, Clock, Bed, BookOpen, Trash2, Upload, Image } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface Artist {
@@ -81,6 +80,16 @@ export const Artists: React.FC = () => {
   const [tourSchedule, setTourSchedule] = useState<TourSchedule[]>(sampleTourSchedule);
   const [selectedArtist, setSelectedArtist] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingArtist, setEditingArtist] = useState<Artist | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    genre: '',
+    currentTour: '',
+    photo: null as File | null,
+    bio: '',
+    rider: null as File | null,
+    setList: null as File | null
+  });
 
   const selectedArtistSchedule = tourSchedule.filter(
     schedule => schedule.artistId === selectedArtist
@@ -94,6 +103,60 @@ export const Artists: React.FC = () => {
         setSelectedArtist(null);
       }
     }
+  };
+
+  const handleEditArtist = (artist: Artist) => {
+    setEditingArtist(artist);
+    setFormData({
+      name: artist.name,
+      genre: artist.genre,
+      currentTour: artist.currentTour || '',
+      photo: null,
+      bio: '',
+      rider: null,
+      setList: null
+    });
+    setShowAddForm(true);
+  };
+
+  const handleFileChange = (field: string, file: File | null) => {
+    setFormData(prev => ({ ...prev, [field]: file }));
+  };
+
+  const handleSaveArtist = () => {
+    if (!formData.name || !formData.genre) {
+      alert('Veuillez remplir tous les champs obligatoires');
+      return;
+    }
+
+    const newArtist: Artist = {
+      id: editingArtist?.id || Date.now().toString(),
+      name: formData.name,
+      genre: formData.genre,
+      status: 'active',
+      upcomingShows: editingArtist?.upcomingShows || 0,
+      currentTour: formData.currentTour || undefined
+    };
+
+    if (editingArtist) {
+      setArtists(prev => prev.map(artist => 
+        artist.id === editingArtist.id ? newArtist : artist
+      ));
+    } else {
+      setArtists(prev => [...prev, newArtist]);
+    }
+
+    setShowAddForm(false);
+    setEditingArtist(null);
+    setFormData({
+      name: '',
+      genre: '',
+      currentTour: '',
+      photo: null,
+      bio: '',
+      rider: null,
+      setList: null
+    });
   };
 
   return (
@@ -141,6 +204,17 @@ export const Artists: React.FC = () => {
                       <Badge variant={artist.status === 'active' ? 'default' : 'secondary'}>
                         {artist.status === 'active' ? 'Actif' : 'Inactif'}
                       </Badge>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditArtist(artist);
+                        }}
+                        className="p-1 h-6 w-6 text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                      >
+                        <Music className="h-3 w-3" />
+                      </Button>
                       <Button
                         variant="outline"
                         size="sm"
@@ -271,23 +345,102 @@ export const Artists: React.FC = () => {
         </div>
       </div>
 
-      {/* Add Artist Form Modal */}
+      {/* Add/Edit Artist Form Modal */}
       {showAddForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <Card className="w-full max-w-md mx-4">
+          <Card className="w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
             <CardHeader>
-              <CardTitle>Ajouter Nouvel Artiste</CardTitle>
+              <CardTitle>{editingArtist ? 'Modifier l\'Artiste' : 'Ajouter Nouvel Artiste'}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Input placeholder="Nom de l'artiste" />
-              <Input placeholder="Genre" />
-              <Input placeholder="Tournée actuelle (optionnel)" />
+              <div className="grid grid-cols-2 gap-4">
+                <Input 
+                  placeholder="Nom de l'artiste *" 
+                  value={formData.name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                />
+                <Input 
+                  placeholder="Genre *" 
+                  value={formData.genre}
+                  onChange={(e) => setFormData(prev => ({ ...prev, genre: e.target.value }))}
+                />
+              </div>
+              
+              <Input 
+                placeholder="Tournée actuelle (optionnel)" 
+                value={formData.currentTour}
+                onChange={(e) => setFormData(prev => ({ ...prev, currentTour: e.target.value }))}
+              />
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">Photo de profil</label>
+                <div className="flex items-center space-x-4">
+                  <Input 
+                    type="file" 
+                    accept="image/*"
+                    onChange={(e) => handleFileChange('photo', e.target.files?.[0] || null)}
+                  />
+                  <Button variant="outline" size="sm">
+                    <Upload className="h-4 w-4 mr-2" />
+                    Charger Photo
+                  </Button>
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">Biographie</label>
+                <textarea 
+                  className="w-full p-3 border rounded-md min-h-24"
+                  placeholder="Biographie de l'artiste..."
+                  value={formData.bio}
+                  onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Rider Technique (PDF)</label>
+                  <Input 
+                    type="file" 
+                    accept=".pdf"
+                    onChange={(e) => handleFileChange('rider', e.target.files?.[0] || null)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Set List (PDF/TXT)</label>
+                  <Input 
+                    type="file" 
+                    accept=".pdf,.txt,.doc,.docx"
+                    onChange={(e) => handleFileChange('setList', e.target.files?.[0] || null)}
+                  />
+                </div>
+              </div>
+              
               <div className="flex space-x-3 pt-4">
-                <Button onClick={() => setShowAddForm(false)} variant="outline" className="flex-1">
+                <Button 
+                  onClick={() => {
+                    setShowAddForm(false);
+                    setEditingArtist(null);
+                    setFormData({
+                      name: '',
+                      genre: '',
+                      currentTour: '',
+                      photo: null,
+                      bio: '',
+                      rider: null,
+                      setList: null
+                    });
+                  }} 
+                  variant="outline" 
+                  className="flex-1"
+                >
                   Annuler
                 </Button>
-                <Button onClick={() => setShowAddForm(false)} className="flex-1 bg-purple-600 hover:bg-purple-700">
-                  Sauvegarder Artiste
+                <Button 
+                  onClick={handleSaveArtist}
+                  className="flex-1 bg-purple-600 hover:bg-purple-700"
+                >
+                  {editingArtist ? 'Modifier' : 'Sauvegarder'} Artiste
                 </Button>
               </div>
             </CardContent>
