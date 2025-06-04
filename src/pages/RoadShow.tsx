@@ -1,458 +1,563 @@
+
 import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Route, Edit, Eye, Share, Download, MapPin, Clock, ExternalLink, Trash2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Plus, Edit, Trash2, MapPin, Calendar, Users, Clock, Eye, EyeOff } from 'lucide-react';
 
-interface RoadShow {
+interface RoadShowItem {
   id: string;
   title: string;
-  event: string;
-  artist: string;
-  venue: string;
-  address: string;
+  description: string;
+  location: string;
   date: string;
-  showTime: string;
-  checkTime: string;
-  lastUpdated: string;
-  sections: string[];
-  collaborators: string[];
+  time: string;
+  status: 'planned' | 'in_progress' | 'completed' | 'cancelled';
+  visibility: 'public' | 'private' | 'casting_only';
+  assignedTo: string[];
+  notes: string;
+  createdAt: string;
 }
 
-const sampleRoadShows: RoadShow[] = [
+interface RoadShowFormData {
+  title: string;
+  description: string;
+  location: string;
+  date: string;
+  time: string;
+  status: 'planned' | 'in_progress' | 'completed' | 'cancelled';
+  visibility: 'public' | 'private' | 'casting_only';
+  assignedTo: string[];
+  notes: string;
+}
+
+const defaultRoadShowItems: RoadShowItem[] = [
   {
     id: '1',
-    title: 'Summer Festival 2024 Production Bible',
-    event: 'Summer Music Festival 2024',
-    artist: 'The Midnight Express',
-    venue: 'Central Park',
-    address: 'Central Park, New York, NY 10024, États-Unis',
+    title: 'Concert Festival Rock',
+    description: 'Performance principale au festival rock annuel',
+    location: 'Paris, Stade de France',
     date: '2024-07-15',
-    showTime: '20:00',
-    checkTime: '16:00',
-    lastUpdated: '2024-06-12',
-    sections: ['Technical Rider', 'Stage Plot', 'Set List', 'Hospitality', 'Security', 'Marketing'],
-    collaborators: ['Alice Johnson', 'Bob Miller', 'Sarah Wilson']
+    time: '20:00',
+    status: 'planned',
+    visibility: 'casting_only',
+    assignedTo: ['jean.dupont@email.com', 'marie.martin@email.com'],
+    notes: 'Prévoir équipement son spécialisé',
+    createdAt: '2024-01-15'
   },
   {
     id: '2',
-    title: 'Acoustic Night Production Notes',
-    event: 'Acoustic Night',
-    artist: 'Sarah Mitchell',
-    venue: 'Blue Note Jazz Club',
-    address: '131 W 3rd St, New York, NY 10012, États-Unis',
+    title: 'Concert Acoustique',
+    description: 'Session acoustique intime',
+    location: 'Lyon, L\'Olympia',
     date: '2024-06-20',
-    showTime: '21:30',
-    checkTime: '18:00',
-    lastUpdated: '2024-06-10',
-    sections: ['Sound Requirements', 'Set List', 'Lighting', 'Hospitality'],
-    collaborators: ['Alice Johnson', 'Mike Rodriguez']
-  },
-  {
-    id: '3',
-    title: 'Rock Legends Tour - MSG Show Bible',
-    event: 'Rock Legends Tour',
-    artist: 'Thunder Road',
-    venue: 'Madison Square Garden',
-    address: '4 Pennsylvania Plaza, New York, NY 10001, États-Unis',
-    date: '2024-08-10',
-    showTime: '19:30',
-    checkTime: '15:00',
-    lastUpdated: '2024-06-11',
-    sections: ['Technical Rider', 'Stage Plot', 'Set List', 'Pyrotechnics', 'Security', 'VIP', 'Merchandise'],
-    collaborators: ['Bob Miller', 'Sarah Wilson', 'Tom Anderson']
+    time: '19:30',
+    status: 'in_progress',
+    visibility: 'casting_only',
+    assignedTo: ['sophie.bernard@email.com'],
+    notes: 'Configuration acoustique uniquement',
+    createdAt: '2024-01-10'
   }
 ];
 
+const castingMembers = [
+  'jean.dupont@email.com',
+  'marie.martin@email.com',
+  'sophie.bernard@email.com',
+  'lucas.petit@email.com',
+  'emma.garcia@email.com'
+];
+
 export const RoadShow: React.FC = () => {
-  const [roadShows, setRoadShows] = useState<RoadShow[]>(sampleRoadShows);
-  const [selectedRoadShow, setSelectedRoadShow] = useState<RoadShow | null>(null);
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [editingRoadShow, setEditingRoadShow] = useState<RoadShow | null>(null);
+  const [roadShowItems, setRoadShowItems] = useState<RoadShowItem[]>(defaultRoadShowItems);
+  const [selectedItem, setSelectedItem] = useState<RoadShowItem | null>(null);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
 
-  const getGoogleMapsUrl = (address: string) => {
-    return `https://maps.google.com/?q=${encodeURIComponent(address)}`;
+  const [formData, setFormData] = useState<RoadShowFormData>({
+    title: '',
+    description: '',
+    location: '',
+    date: '',
+    time: '',
+    status: 'planned',
+    visibility: 'casting_only',
+    assignedTo: [],
+    notes: ''
+  });
+
+  const resetForm = () => {
+    setFormData({
+      title: '',
+      description: '',
+      location: '',
+      date: '',
+      time: '',
+      status: 'planned',
+      visibility: 'casting_only',
+      assignedTo: [],
+      notes: ''
+    });
   };
 
-  const handleDeleteRoadShow = (id: string) => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer cette tournée ?')) {
-      setRoadShows(prev => prev.filter(rs => rs.id !== id));
-      if (selectedRoadShow?.id === id) {
-        setSelectedRoadShow(null);
-      }
+  const handleCreateItem = () => {
+    const newItem: RoadShowItem = {
+      id: Date.now().toString(),
+      ...formData,
+      createdAt: new Date().toISOString().split('T')[0]
+    };
+    
+    setRoadShowItems([...roadShowItems, newItem]);
+    setShowCreateDialog(false);
+    resetForm();
+  };
+
+  const handleEditItem = (item: RoadShowItem) => {
+    setSelectedItem(item);
+    setFormData({
+      title: item.title,
+      description: item.description,
+      location: item.location,
+      date: item.date,
+      time: item.time,
+      status: item.status,
+      visibility: item.visibility,
+      assignedTo: item.assignedTo,
+      notes: item.notes
+    });
+    setShowEditDialog(true);
+  };
+
+  const handleUpdateItem = () => {
+    if (!selectedItem) return;
+    
+    const updatedItems = roadShowItems.map(item => 
+      item.id === selectedItem.id 
+        ? { ...item, ...formData }
+        : item
+    );
+    
+    setRoadShowItems(updatedItems);
+    setShowEditDialog(false);
+    setSelectedItem(null);
+    resetForm();
+  };
+
+  const handleDeleteItem = (itemId: string) => {
+    setRoadShowItems(roadShowItems.filter(item => item.id !== itemId));
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'planned': return 'bg-blue-100 text-blue-800';
+      case 'in_progress': return 'bg-yellow-100 text-yellow-800';
+      case 'completed': return 'bg-green-100 text-green-800';
+      case 'cancelled': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const handleEditRoadShow = (roadShow: RoadShow) => {
-    setEditingRoadShow(roadShow);
-    setShowCreateForm(true);
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'planned': return 'Planifié';
+      case 'in_progress': return 'En cours';
+      case 'completed': return 'Terminé';
+      case 'cancelled': return 'Annulé';
+      default: return status;
+    }
   };
 
-  const handleExportPDF = (roadShow: RoadShow) => {
-    // Simulate PDF export
-    const content = `Tournée: ${roadShow.title}\nArtiste: ${roadShow.artist}\nLieu: ${roadShow.venue}\nDate: ${roadShow.date}`;
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${roadShow.title.replace(/\s+/g, '_')}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+  const getVisibilityIcon = (visibility: string) => {
+    switch (visibility) {
+      case 'public': return <Eye className="h-4 w-4 text-green-600" />;
+      case 'private': return <EyeOff className="h-4 w-4 text-red-600" />;
+      case 'casting_only': return <Users className="h-4 w-4 text-blue-600" />;
+      default: return <Eye className="h-4 w-4" />;
+    }
   };
 
-  const handleShare = async (roadShow: RoadShow) => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: roadShow.title,
-          text: `Tournée ${roadShow.artist} - ${roadShow.venue}`,
-          url: window.location.href
-        });
-      } catch (err) {
-        console.log('Erreur de partage:', err);
-      }
+  const getVisibilityLabel = (visibility: string) => {
+    switch (visibility) {
+      case 'public': return 'Public';
+      case 'private': return 'Privé';
+      case 'casting_only': return 'Casting uniquement';
+      default: return visibility;
+    }
+  };
+
+  const handleAssignedToChange = (member: string, checked: boolean) => {
+    if (checked) {
+      setFormData({ ...formData, assignedTo: [...formData.assignedTo, member] });
     } else {
-      // Fallback: copy to clipboard
-      navigator.clipboard.writeText(`${roadShow.title} - ${window.location.href}`);
-      alert('Lien copié dans le presse-papiers !');
+      setFormData({ ...formData, assignedTo: formData.assignedTo.filter(m => m !== member) });
     }
   };
+
+  const upcomingEvents = roadShowItems.filter(item => item.status === 'planned').length;
+  const inProgressEvents = roadShowItems.filter(item => item.status === 'in_progress').length;
+  const completedEvents = roadShowItems.filter(item => item.status === 'completed').length;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Tournée</h1>
-          <p className="text-gray-600 mt-2">Documentation complète de production pour chaque spectacle</p>
+          <h1 className="text-3xl font-bold text-gray-900">Feuille de route</h1>
+          <p className="text-gray-600 mt-2">Planifiez et gérez votre feuille de route artistique</p>
         </div>
-        <Button onClick={() => setShowCreateForm(true)} className="bg-purple-600 hover:bg-purple-700">
-          <Plus className="h-4 w-4 mr-2" />
-          Créer une Tournée
-        </Button>
-      </div>
-
-      {!selectedRoadShow ? (
-        /* Road Shows List */
-        <div className="space-y-4">
-          {roadShows.map((roadShow) => (
-            <Card key={roadShow.id} className="hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-3">
-                      <Route className="h-5 w-5 text-purple-600" />
-                      <h3 className="text-xl font-semibold text-gray-900">{roadShow.title}</h3>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                      <div>
-                        <p className="text-sm text-gray-500">Événement</p>
-                        <p className="font-medium">{roadShow.event}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Artiste</p>
-                        <p className="font-medium">{roadShow.artist}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Lieu</p>
-                        <p className="font-medium">{roadShow.venue}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Date du spectacle</p>
-                        <p className="font-medium">{new Date(roadShow.date).toLocaleDateString()}</p>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                      <div className="flex items-center space-x-2">
-                        <Clock className="h-4 w-4 text-gray-500" />
-                        <div>
-                          <p className="text-sm text-gray-500">Heure de checking</p>
-                          <p className="font-medium">{roadShow.checkTime}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Clock className="h-4 w-4 text-gray-500" />
-                        <div>
-                          <p className="text-sm text-gray-500">Heure du spectacle</p>
-                          <p className="font-medium">{roadShow.showTime}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <MapPin className="h-4 w-4 text-gray-500" />
-                        <div>
-                          <p className="text-sm text-gray-500">Adresse</p>
-                          <a 
-                            href={getGoogleMapsUrl(roadShow.address)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="font-medium text-blue-600 hover:text-blue-800 flex items-center space-x-1"
-                          >
-                            <span className="truncate max-w-48">{roadShow.address}</span>
-                            <ExternalLink className="h-3 w-3" />
-                          </a>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="mb-4">
-                      <p className="text-sm text-gray-500 mb-2">Sections ({roadShow.sections.length})</p>
-                      <div className="flex flex-wrap gap-2">
-                        {roadShow.sections.map((section, index) => (
-                          <Badge key={index} variant="outline">{section}</Badge>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center justify-between text-sm text-gray-500">
-                      <span>Dernière mise à jour: {new Date(roadShow.lastUpdated).toLocaleDateString()}</span>
-                      <span>Collaborateurs: {roadShow.collaborators.join(', ')}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex space-x-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => setSelectedRoadShow(roadShow)}
-                    >
-                      <Eye className="h-3 w-3 mr-1" />
-                      Voir
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleEditRoadShow(roadShow)}
-                    >
-                      <Edit className="h-3 w-3 mr-1" />
-                      Modifier
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleExportPDF(roadShow)}
-                    >
-                      <Download className="h-3 w-3 mr-1" />
-                      PDF
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleShare(roadShow)}
-                    >
-                      <Share className="h-3 w-3 mr-1" />
-                      Partager
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDeleteRoadShow(roadShow.id)}
-                      className="text-red-600 hover:text-red-800 hover:bg-red-50"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        /* Road Show Detail View */
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <Button variant="outline" onClick={() => setSelectedRoadShow(null)}>
-              ← Retour aux Tournées
+        <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Nouvel Événement
             </Button>
-            <div className="flex space-x-2">
-              <Button variant="outline" onClick={() => handleEditRoadShow(selectedRoadShow)}>
-                <Edit className="h-4 w-4 mr-2" />
-                Modifier
-              </Button>
-              <Button variant="outline" onClick={() => handleExportPDF(selectedRoadShow)}>
-                <Download className="h-4 w-4 mr-2" />
-                Exporter PDF
-              </Button>
-              <Button variant="outline" onClick={() => handleShare(selectedRoadShow)}>
-                <Share className="h-4 w-4 mr-2" />
-                Partager
-              </Button>
-            </div>
-          </div>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Créer un nouvel événement</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Titre</label>
+                <Input
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  placeholder="Titre de l'événement"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                <Textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Description de l'événement..."
+                  rows={3}
+                />
+              </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>{selectedRoadShow.title}</CardTitle>
-              <div className="text-sm text-gray-600 space-y-2">
-                <div>{selectedRoadShow.event} • {selectedRoadShow.artist} • {selectedRoadShow.venue}</div>
-                <div className="flex items-center space-x-4">
-                  <span>Check: {selectedRoadShow.checkTime}</span>
-                  <span>Show: {selectedRoadShow.showTime}</span>
-                  <a 
-                    href={getGoogleMapsUrl(selectedRoadShow.address)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-800 flex items-center space-x-1"
-                  >
-                    <MapPin className="h-3 w-3" />
-                    <span>Voir sur Maps</span>
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Lieu</label>
+                  <Input
+                    value={formData.location}
+                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    placeholder="Lieu de l'événement"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                  <Input
+                    type="date"
+                    value={formData.date}
+                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Heure</label>
+                  <Input
+                    type="time"
+                    value={formData.time}
+                    onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+                  />
                 </div>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                {/* Sections Navigation */}
-                <div className="lg:col-span-1">
-                  <h3 className="font-semibold text-gray-900 mb-3">Sections</h3>
-                  <div className="space-y-2">
-                    {selectedRoadShow.sections.map((section, index) => (
-                      <button
-                        key={index}
-                        className="w-full text-left p-3 rounded-lg hover:bg-gray-50 text-sm border border-gray-200"
-                      >
-                        {section}
-                      </button>
-                    ))}
-                  </div>
-                </div>
 
-                {/* Content Area */}
-                <div className="lg:col-span-3">
-                  <div className="bg-gray-50 rounded-lg p-6 min-h-96">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Technical Rider</h3>
-                    <div className="space-y-4 text-gray-700">
-                      <div>
-                        <h4 className="font-medium mb-2">Sound Requirements</h4>
-                        <ul className="list-disc list-inside space-y-1 text-sm">
-                          <li>32-channel mixing console (Yamaha CL5 or equivalent)</li>
-                          <li>Line array PA system - minimum 100dB SPL at FOH</li>
-                          <li>16-channel monitor system with personal IEM capability</li>
-                          <li>Drum kit with 8-piece mic setup</li>
-                        </ul>
-                      </div>
-                      
-                      <div>
-                        <h4 className="font-medium mb-2">Lighting Requirements</h4>
-                        <ul className="list-disc list-inside space-y-1 text-sm">
-                          <li>Full LED wash system with RGBW capability</li>
-                          <li>Moving head spots (minimum 12 units)</li>
-                          <li>Haze machines for atmospheric effects</li>
-                          <li>Follow spots (2 units minimum)</li>
-                        </ul>
-                      </div>
-
-                      <div>
-                        <h4 className="font-medium mb-2">Stage Requirements</h4>
-                        <ul className="list-disc list-inside space-y-1 text-sm">
-                          <li>Stage dimensions: minimum 40' x 28'</li>
-                          <li>Load-in height: minimum 16'</li>
-                          <li>Power: 400A 3-phase service</li>
-                          <li>Barricade: 4' height, minimum 10' from stage</li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Create/Edit Road Show Form Modal */}
-      {showCreateForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <Card className="w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
-            <CardHeader>
-              <CardTitle>{editingRoadShow ? 'Modifier la Tournée' : 'Créer une Nouvelle Tournée'}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Input 
-                placeholder="Titre de la tournée" 
-                defaultValue={editingRoadShow?.title || ''} 
-              />
-              <Input 
-                placeholder="Nom de l'événement" 
-                defaultValue={editingRoadShow?.event || ''} 
-              />
-              <Input 
-                placeholder="Artiste" 
-                defaultValue={editingRoadShow?.artist || ''} 
-              />
-              <Input 
-                placeholder="Lieu" 
-                defaultValue={editingRoadShow?.venue || ''} 
-              />
-              <Input 
-                placeholder="Adresse complète" 
-                defaultValue={editingRoadShow?.address || ''} 
-              />
-              <Input 
-                type="date" 
-                placeholder="Date du spectacle" 
-                defaultValue={editingRoadShow?.date || ''} 
-              />
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Heure de checking</label>
-                  <Input 
-                    type="time" 
-                    placeholder="Checking" 
-                    defaultValue={editingRoadShow?.checkTime || ''} 
-                  />
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Statut</label>
+                  <Select value={formData.status} onValueChange={(value: any) => setFormData({ ...formData, status: value })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="planned">Planifié</SelectItem>
+                      <SelectItem value="in_progress">En cours</SelectItem>
+                      <SelectItem value="completed">Terminé</SelectItem>
+                      <SelectItem value="cancelled">Annulé</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Heure du spectacle</label>
-                  <Input 
-                    type="time" 
-                    placeholder="Spectacle" 
-                    defaultValue={editingRoadShow?.showTime || ''} 
-                  />
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Visibilité</label>
+                  <Select value={formData.visibility} onValueChange={(value: any) => setFormData({ ...formData, visibility: value })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="casting_only">Casting uniquement</SelectItem>
+                      <SelectItem value="private">Privé</SelectItem>
+                      <SelectItem value="public">Public</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Sections initiales</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {['Technical Rider', 'Stage Plot', 'Set List', 'Hospitality', 'Security', 'Marketing', 'Lighting', 'Transportation'].map((section) => (
-                    <label key={section} className="flex items-center space-x-2">
-                      <input type="checkbox" className="rounded" defaultChecked />
-                      <span className="text-sm">{section}</span>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Membres du casting assignés</label>
+                <div className="space-y-2 max-h-32 overflow-y-auto border rounded-lg p-3">
+                  {castingMembers.map((member) => (
+                    <label key={member} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.assignedTo.includes(member)}
+                        onChange={(e) => handleAssignedToChange(member, e.target.checked)}
+                        className="rounded"
+                      />
+                      <span className="text-sm">{member}</span>
                     </label>
                   ))}
                 </div>
               </div>
-              <Input 
-                placeholder="Collaborateurs (séparés par des virgules)" 
-                defaultValue={editingRoadShow?.collaborators.join(', ') || ''} 
-              />
-              <div className="flex space-x-3 pt-4">
-                <Button 
-                  onClick={() => {
-                    setShowCreateForm(false);
-                    setEditingRoadShow(null);
-                  }} 
-                  variant="outline" 
-                  className="flex-1"
-                >
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+                <Textarea
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  placeholder="Notes additionnelles..."
+                  rows={2}
+                />
+              </div>
+
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
                   Annuler
                 </Button>
-                <Button 
-                  onClick={() => {
-                    setShowCreateForm(false);
-                    setEditingRoadShow(null);
-                  }} 
-                  className="flex-1 bg-purple-600 hover:bg-purple-700"
-                >
-                  {editingRoadShow ? 'Modifier' : 'Créer'} la Tournée
+                <Button onClick={handleCreateItem}>
+                  Créer l'événement
                 </Button>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <Calendar className="h-8 w-8 text-blue-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Événements</p>
+                <p className="text-2xl font-bold text-gray-900">{roadShowItems.length}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <Clock className="h-8 w-8 text-yellow-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">À venir</p>
+                <p className="text-2xl font-bold text-gray-900">{upcomingEvents}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <Users className="h-8 w-8 text-green-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">En cours</p>
+                <p className="text-2xl font-bold text-gray-900">{inProgressEvents}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <MapPin className="h-8 w-8 text-purple-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Terminés</p>
+                <p className="text-2xl font-bold text-gray-900">{completedEvents}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Road Show Items List */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Feuille de route</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {roadShowItems.map((item) => (
+              <div key={item.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                <div className="flex items-center space-x-4">
+                  <div className="flex flex-col items-center">
+                    <MapPin className="h-6 w-6 text-gray-400 mb-1" />
+                    {getVisibilityIcon(item.visibility)}
+                  </div>
+                  <div>
+                    <h3 className="font-medium">{item.title}</h3>
+                    <p className="text-sm text-gray-600">{item.description}</p>
+                    <div className="flex items-center space-x-2 mt-1">
+                      <span className="text-sm text-gray-500">{item.location}</span>
+                      <span className="text-sm text-gray-500">•</span>
+                      <span className="text-sm text-gray-500">{item.date} à {item.time}</span>
+                      <span className="text-sm text-gray-500">•</span>
+                      <span className="text-sm text-gray-500">{getVisibilityLabel(item.visibility)}</span>
+                    </div>
+                    {item.assignedTo.length > 0 && (
+                      <div className="mt-1">
+                        <span className="text-xs text-gray-500">Assigné à: {item.assignedTo.join(', ')}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Badge className={getStatusColor(item.status)}>
+                    {getStatusLabel(item.status)}
+                  </Badge>
+                  <div className="flex space-x-1">
+                    <Button size="sm" variant="outline" onClick={() => handleEditItem(item)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => handleDeleteItem(item.id)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Edit Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Modifier l'événement</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Titre</label>
+              <Input
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                placeholder="Titre de l'événement"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+              <Textarea
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Description de l'événement..."
+                rows={3}
+              />
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Lieu</label>
+                <Input
+                  value={formData.location}
+                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  placeholder="Lieu de l'événement"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                <Input
+                  type="date"
+                  value={formData.date}
+                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Heure</label>
+                <Input
+                  type="time"
+                  value={formData.time}
+                  onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Statut</label>
+                <Select value={formData.status} onValueChange={(value: any) => setFormData({ ...formData, status: value })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="planned">Planifié</SelectItem>
+                    <SelectItem value="in_progress">En cours</SelectItem>
+                    <SelectItem value="completed">Terminé</SelectItem>
+                    <SelectItem value="cancelled">Annulé</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Visibilité</label>
+                <Select value={formData.visibility} onValueChange={(value: any) => setFormData({ ...formData, visibility: value })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="casting_only">Casting uniquement</SelectItem>
+                    <SelectItem value="private">Privé</SelectItem>
+                    <SelectItem value="public">Public</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Membres du casting assignés</label>
+              <div className="space-y-2 max-h-32 overflow-y-auto border rounded-lg p-3">
+                {castingMembers.map((member) => (
+                  <label key={member} className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      checked={formData.assignedTo.includes(member)}
+                      onChange={(e) => handleAssignedToChange(member, e.target.checked)}
+                      className="rounded"
+                    />
+                    <span className="text-sm">{member}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+              <Textarea
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                placeholder="Notes additionnelles..."
+                rows={2}
+              />
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setShowEditDialog(false)}>
+                Annuler
+              </Button>
+              <Button onClick={handleUpdateItem}>
+                Sauvegarder
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

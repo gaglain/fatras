@@ -1,244 +1,271 @@
+
 import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Package, TrendingUp, DollarSign, ShoppingCart, Bell } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Plus, Edit, Trash2, Package, ShoppingCart, DollarSign, TrendingUp, Image, Upload } from 'lucide-react';
 
-interface ProductVariation {
-  type: 'size' | 'color' | 'gender';
-  options: string[];
-}
-
-interface MerchItem {
+interface Product {
   id: string;
   name: string;
-  artist: string;
-  category: string;
+  description: string;
   price: number;
   stock: number;
-  sold: number;
-  revenue: number;
-  variations?: ProductVariation[];
+  category: string;
+  image?: string;
+  status: 'active' | 'inactive' | 'out_of_stock';
+  createdAt: string;
 }
 
-interface MerchSummary {
-  totalRevenue: number;
-  totalItemsSold: number;
-  lowStockItems: number;
-  topSellingItem: string;
+interface ProductFormData {
+  name: string;
+  description: string;
+  price: number;
+  stock: number;
+  category: string;
+  status: 'active' | 'inactive' | 'out_of_stock';
 }
 
-interface Sale {
-  id: string;
-  productId: string;
-  productName: string;
-  buyerEmail: string;
-  amount: number;
-  variations?: any;
-  date: string;
-  paymentMethod: 'paypal' | 'card';
-}
-
-const sampleMerchItems: MerchItem[] = [
+const defaultProducts: Product[] = [
   {
     id: '1',
-    name: 'Summer Tour T-Shirt',
-    artist: 'The Midnight Express',
-    category: 'Apparel',
-    price: 25,
-    stock: 150,
-    sold: 89,
-    revenue: 2225
+    name: 'T-shirt Logo Band',
+    description: 'T-shirt officiel avec logo du groupe',
+    price: 25.99,
+    stock: 50,
+    category: 'Vêtements',
+    status: 'active',
+    createdAt: '2024-01-15'
   },
   {
     id: '2',
-    name: 'Acoustic Sessions CD',
-    artist: 'Sarah Mitchell',
-    category: 'Music',
-    price: 15,
-    stock: 45,
-    sold: 32,
-    revenue: 480
+    name: 'Album Vinyle Collector',
+    description: 'Edition limitée vinyle collector',
+    price: 35.00,
+    stock: 20,
+    category: 'Musique',
+    status: 'active',
+    createdAt: '2024-01-10'
   },
   {
     id: '3',
-    name: 'Legends Never Die Hoodie',
-    artist: 'Thunder Road',
-    category: 'Apparel',
-    price: 45,
-    stock: 8,
-    sold: 67,
-    revenue: 3015
-  },
-  {
-    id: '4',
-    name: 'Band Logo Sticker Pack',
-    artist: 'The Midnight Express',
-    category: 'Accessories',
-    price: 5,
-    stock: 200,
-    sold: 156,
-    revenue: 780
-  }
-];
-
-const sampleSales: Sale[] = [
-  {
-    id: '1',
-    productId: '1',
-    productName: 'Summer Tour T-Shirt',
-    buyerEmail: 'john@example.com',
-    amount: 25,
-    variations: { size: 'L', color: 'Noir' },
-    date: '2024-06-15T10:30:00Z',
-    paymentMethod: 'paypal'
+    name: 'Casquette Tour 2024',
+    description: 'Casquette officielle de la tournée 2024',
+    price: 18.50,
+    stock: 0,
+    category: 'Accessoires',
+    status: 'out_of_stock',
+    createdAt: '2024-01-08'
   }
 ];
 
 export const Merchandise: React.FC = () => {
-  const { toast } = useToast();
-  const [merchItems, setMerchItems] = useState<MerchItem[]>([
-    {
-      id: '1',
-      name: 'Summer Tour T-Shirt',
-      artist: 'The Midnight Express',
-      category: 'Apparel',
-      price: 25,
-      stock: 150,
-      sold: 89,
-      revenue: 2225,
-      variations: [
-        { type: 'size', options: ['S', 'M', 'L', 'XL'] },
-        { type: 'color', options: ['Noir', 'Blanc', 'Gris'] },
-        { type: 'gender', options: ['Homme', 'Femme', 'Unisexe'] }
-      ]
-    },
-    {
-      id: '2',
-      name: 'Acoustic Sessions CD',
-      artist: 'Sarah Mitchell',
-      category: 'Music',
-      price: 15,
-      stock: 45,
-      sold: 32,
-      revenue: 480
-    },
-    {
-      id: '3',
-      name: 'Legends Never Die Hoodie',
-      artist: 'Thunder Road',
-      category: 'Apparel',
-      price: 45,
-      stock: 8,
-      sold: 67,
-      revenue: 3015
-    },
-    {
-      id: '4',
-      name: 'Band Logo Sticker Pack',
-      artist: 'The Midnight Express',
-      category: 'Accessories',
-      price: 5,
-      stock: 200,
-      sold: 156,
-      revenue: 780
-    }
-  ]);
-  const [sales, setSales] = useState<Sale[]>(sampleSales);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [showSalesPanel, setShowSalesPanel] = useState(false);
-  const [newProduct, setNewProduct] = useState({
+  const [products, setProducts] = useState<Product[]>(defaultProducts);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+
+  const [formData, setFormData] = useState<ProductFormData>({
     name: '',
-    artist: '',
-    category: '',
+    description: '',
     price: 0,
     stock: 0,
-    variations: [] as ProductVariation[]
+    category: '',
+    status: 'active'
   });
 
-  // Simulate new sale notification
-  const simulateNewSale = () => {
-    const newSale: Sale = {
-      id: Date.now().toString(),
-      productId: '1',
-      productName: 'Summer Tour T-Shirt',
-      buyerEmail: 'customer@example.com',
-      amount: 25,
-      variations: { size: 'M', color: 'Noir' },
-      date: new Date().toISOString(),
-      paymentMethod: 'paypal'
-    };
-    
-    setSales(prev => [newSale, ...prev]);
-    
-    toast({
-      title: "Nouvelle vente !",
-      description: `${newSale.productName} vendu pour ${newSale.amount}€`,
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      description: '',
+      price: 0,
+      stock: 0,
+      category: '',
+      status: 'active'
     });
   };
 
-  const addVariation = (type: 'size' | 'color' | 'gender') => {
-    const defaultOptions = {
-      size: ['S', 'M', 'L', 'XL'],
-      color: ['Noir', 'Blanc', 'Gris'],
-      gender: ['Homme', 'Femme', 'Unisexe']
+  const handleCreateProduct = () => {
+    const newProduct: Product = {
+      id: Date.now().toString(),
+      ...formData,
+      createdAt: new Date().toISOString().split('T')[0]
     };
-
-    setNewProduct(prev => ({
-      ...prev,
-      variations: [...prev.variations, { type, options: defaultOptions[type] }]
-    }));
+    
+    setProducts([...products, newProduct]);
+    setShowCreateDialog(false);
+    resetForm();
   };
 
-  const removeVariation = (index: number) => {
-    setNewProduct(prev => ({
-      ...prev,
-      variations: prev.variations.filter((_, i) => i !== index)
-    }));
+  const handleEditProduct = (product: Product) => {
+    setSelectedProduct(product);
+    setFormData({
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      stock: product.stock,
+      category: product.category,
+      status: product.status
+    });
+    setShowEditDialog(true);
   };
 
-  const summary: MerchSummary = {
-    totalRevenue: merchItems.reduce((sum, item) => sum + item.revenue, 0),
-    totalItemsSold: merchItems.reduce((sum, item) => sum + item.sold, 0),
-    lowStockItems: merchItems.filter(item => item.stock < 20).length,
-    topSellingItem: merchItems.reduce((top, item) => item.sold > top.sold ? item : top, merchItems[0])?.name || ''
+  const handleUpdateProduct = () => {
+    if (!selectedProduct) return;
+    
+    const updatedProducts = products.map(product => 
+      product.id === selectedProduct.id 
+        ? { ...product, ...formData }
+        : product
+    );
+    
+    setProducts(updatedProducts);
+    setShowEditDialog(false);
+    setSelectedProduct(null);
+    resetForm();
   };
+
+  const handleDeleteProduct = (productId: string) => {
+    setProducts(products.filter(product => product.id !== productId));
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active': return 'bg-green-100 text-green-800';
+      case 'inactive': return 'bg-gray-100 text-gray-800';
+      case 'out_of_stock': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'active': return 'Actif';
+      case 'inactive': return 'Inactif';
+      case 'out_of_stock': return 'Rupture de stock';
+      default: return status;
+    }
+  };
+
+  const totalRevenue = products.reduce((sum, product) => sum + (product.price * (50 - product.stock)), 0);
+  const totalStock = products.reduce((sum, product) => sum + product.stock, 0);
+  const activeProducts = products.filter(product => product.status === 'active').length;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Merchandise Management</h1>
-          <p className="text-gray-600 mt-2">Track inventory, sales, and revenue for artist merchandise</p>
+          <h1 className="text-3xl font-bold text-gray-900">Merchandising</h1>
+          <p className="text-gray-600 mt-2">Gérez vos produits dérivés et articles de merchandise</p>
         </div>
-        <div className="flex space-x-2">
-          <Button onClick={simulateNewSale} variant="outline">
-            <Bell className="h-4 w-4 mr-2" />
-            Simuler Vente
-          </Button>
-          <Button onClick={() => setShowSalesPanel(true)} variant="outline">
-            Ventes ({sales.length})
-          </Button>
-          <Button onClick={() => setShowAddForm(true)} className="bg-purple-600 hover:bg-purple-700">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Merch Item
-          </Button>
-        </div>
+        <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Nouveau Produit
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Créer un nouveau produit</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Nom du produit</label>
+                  <Input
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="Nom du produit"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Catégorie</label>
+                  <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner une catégorie" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Vêtements">Vêtements</SelectItem>
+                      <SelectItem value="Accessoires">Accessoires</SelectItem>
+                      <SelectItem value="Musique">Musique</SelectItem>
+                      <SelectItem value="Posters">Posters</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                <Textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Description du produit..."
+                  rows={3}
+                />
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Prix (€)</label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
+                    placeholder="0.00"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Stock</label>
+                  <Input
+                    type="number"
+                    value={formData.stock}
+                    onChange={(e) => setFormData({ ...formData, stock: parseInt(e.target.value) || 0 })}
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Statut</label>
+                  <Select value={formData.status} onValueChange={(value: any) => setFormData({ ...formData, status: value })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Actif</SelectItem>
+                      <SelectItem value="inactive">Inactif</SelectItem>
+                      <SelectItem value="out_of_stock">Rupture de stock</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+                  Annuler
+                </Button>
+                <Button onClick={handleCreateProduct}>
+                  Créer le produit
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      {/* Summary Stats */}
+      {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                <p className="text-3xl font-bold text-green-600">${summary.totalRevenue.toLocaleString()}</p>
-              </div>
-              <div className="bg-green-100 p-3 rounded-lg">
-                <DollarSign className="h-6 w-6 text-green-600" />
+            <div className="flex items-center">
+              <Package className="h-8 w-8 text-blue-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Produits</p>
+                <p className="text-2xl font-bold text-gray-900">{products.length}</p>
               </div>
             </div>
           </CardContent>
@@ -246,13 +273,11 @@ export const Merchandise: React.FC = () => {
 
         <Card>
           <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Items Sold</p>
-                <p className="text-3xl font-bold text-blue-600">{summary.totalItemsSold}</p>
-              </div>
-              <div className="bg-blue-100 p-3 rounded-lg">
-                <ShoppingCart className="h-6 w-6 text-blue-600" />
+            <div className="flex items-center">
+              <ShoppingCart className="h-8 w-8 text-green-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Produits Actifs</p>
+                <p className="text-2xl font-bold text-gray-900">{activeProducts}</p>
               </div>
             </div>
           </CardContent>
@@ -260,13 +285,11 @@ export const Merchandise: React.FC = () => {
 
         <Card>
           <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Low Stock Items</p>
-                <p className="text-3xl font-bold text-red-600">{summary.lowStockItems}</p>
-              </div>
-              <div className="bg-red-100 p-3 rounded-lg">
-                <Package className="h-6 w-6 text-red-600" />
+            <div className="flex items-center">
+              <Package className="h-8 w-8 text-yellow-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Stock Total</p>
+                <p className="text-2xl font-bold text-gray-900">{totalStock}</p>
               </div>
             </div>
           </CardContent>
@@ -274,84 +297,57 @@ export const Merchandise: React.FC = () => {
 
         <Card>
           <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Top Seller</p>
-                <p className="text-lg font-bold text-purple-600 truncate">{summary.topSellingItem}</p>
-              </div>
-              <div className="bg-purple-100 p-3 rounded-lg">
-                <TrendingUp className="h-6 w-6 text-purple-600" />
+            <div className="flex items-center">
+              <DollarSign className="h-8 w-8 text-purple-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Revenus Estimés</p>
+                <p className="text-2xl font-bold text-gray-900">{totalRevenue.toFixed(2)}€</p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Merchandise Items */}
+      {/* Products List */}
       <Card>
         <CardHeader>
-          <CardTitle>Inventory</CardTitle>
+          <CardTitle>Catalogue de Produits</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {merchItems.map((item) => (
-              <div key={item.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900">{item.name}</h3>
-                      <Badge variant="outline">{item.category}</Badge>
-                      {item.stock < 20 && (
-                        <Badge className="bg-red-100 text-red-800">Low Stock</Badge>
-                      )}
-                    </div>
-                    
-                    <p className="text-gray-600 mb-3">{item.artist}</p>
-                    
-                    {/* Variations Display */}
-                    {item.variations && (
-                      <div className="mb-3">
-                        <p className="text-sm font-medium text-gray-700 mb-1">Variations disponibles:</p>
-                        <div className="flex flex-wrap gap-2">
-                          {item.variations.map((variation, index) => (
-                            <div key={index} className="text-xs">
-                              <span className="font-medium capitalize">{variation.type}:</span>
-                              <span className="ml-1 text-gray-600">{variation.options.join(', ')}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
+            {products.map((product) => (
+              <div key={product.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                <div className="flex items-center space-x-4">
+                  <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
+                    {product.image ? (
+                      <img src={product.image} alt={product.name} className="w-full h-full object-cover rounded-lg" />
+                    ) : (
+                      <Image className="h-8 w-8 text-gray-400" />
                     )}
-                    
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                      <div>
-                        <p className="text-sm text-gray-500">Price</p>
-                        <p className="font-semibold text-green-600">${item.price}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">In Stock</p>
-                        <p className="font-semibold">{item.stock}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Sold</p>
-                        <p className="font-semibold">{item.sold}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Revenue</p>
-                        <p className="font-semibold text-green-600">${item.revenue}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Success Rate</p>
-                        <p className="font-semibold">
-                          {((item.sold / (item.sold + item.stock)) * 100).toFixed(1)}%
-                        </p>
-                      </div>
+                  </div>
+                  <div>
+                    <h3 className="font-medium">{product.name}</h3>
+                    <p className="text-sm text-gray-600">{product.description}</p>
+                    <div className="flex items-center space-x-2 mt-1">
+                      <span className="text-sm font-medium text-green-600">{product.price}€</span>
+                      <span className="text-sm text-gray-500">•</span>
+                      <span className="text-sm text-gray-500">{product.stock} en stock</span>
+                      <span className="text-sm text-gray-500">•</span>
+                      <span className="text-sm text-gray-500">{product.category}</span>
                     </div>
                   </div>
-                  
-                  <div className="flex space-x-2">
-                    <Button variant="outline" size="sm">Edit</Button>
-                    <Button variant="outline" size="sm">Restock</Button>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Badge className={getStatusColor(product.status)}>
+                    {getStatusLabel(product.status)}
+                  </Badge>
+                  <div className="flex space-x-1">
+                    <Button size="sm" variant="outline" onClick={() => handleEditProduct(product)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => handleDeleteProduct(product.id)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -360,134 +356,94 @@ export const Merchandise: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Sales Panel */}
-      {showSalesPanel && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <Card className="w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <CardTitle>Historique des Ventes</CardTitle>
-                <Button onClick={() => setShowSalesPanel(false)} variant="outline">Fermer</Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {sales.map((sale) => (
-                <div key={sale.id} className="border rounded-lg p-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-semibold">{sale.productName}</h3>
-                      <p className="text-sm text-gray-600">Client: {sale.buyerEmail}</p>
-                      <p className="text-sm text-gray-600">
-                        Date: {new Date(sale.date).toLocaleDateString()}
-                      </p>
-                      {sale.variations && (
-                        <div className="text-sm text-gray-600 mt-1">
-                          Variations: {Object.entries(sale.variations).map(([key, value]) => 
-                            `${key}: ${value}`
-                          ).join(', ')}
-                        </div>
-                      )}
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-green-600">{sale.amount}€</p>
-                      <Badge className={sale.paymentMethod === 'paypal' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}>
-                        {sale.paymentMethod === 'paypal' ? 'PayPal' : 'Carte'}
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Add Merch Item Form Modal */}
-      {showAddForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <Card className="w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-            <CardHeader>
-              <CardTitle>Add Merchandise Item</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Input 
-                placeholder="Item Name" 
-                value={newProduct.name}
-                onChange={(e) => setNewProduct(prev => ({...prev, name: e.target.value}))}
-              />
-              <Input 
-                placeholder="Artist" 
-                value={newProduct.artist}
-                onChange={(e) => setNewProduct(prev => ({...prev, artist: e.target.value}))}
-              />
-              <div className="grid grid-cols-2 gap-4">
-                <select 
-                  className="w-full p-2 border border-gray-300 rounded-md"
-                  value={newProduct.category}
-                  onChange={(e) => setNewProduct(prev => ({...prev, category: e.target.value}))}
-                >
-                  <option value="">Category</option>
-                  <option value="Apparel">Apparel</option>
-                  <option value="Music">Music</option>
-                  <option value="Accessories">Accessories</option>
-                  <option value="Posters">Posters</option>
-                </select>
-                <Input 
-                  type="number" 
-                  placeholder="Price ($)" 
-                  value={newProduct.price}
-                  onChange={(e) => setNewProduct(prev => ({...prev, price: Number(e.target.value)}))}
+      {/* Edit Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Modifier le produit</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Nom du produit</label>
+                <Input
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Nom du produit"
                 />
               </div>
-              <Input 
-                type="number" 
-                placeholder="Initial Stock Quantity" 
-                value={newProduct.stock}
-                onChange={(e) => setNewProduct(prev => ({...prev, stock: Number(e.target.value)}))}
-              />
-
-              {/* Product Variations */}
               <div>
-                <h4 className="font-medium mb-2">Variations du produit</h4>
-                <div className="space-y-3">
-                  {newProduct.variations.map((variation, index) => (
-                    <div key={index} className="border rounded-lg p-3">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="font-medium capitalize">{variation.type}</span>
-                        <Button size="sm" variant="outline" onClick={() => removeVariation(index)}>
-                          Supprimer
-                        </Button>
-                      </div>
-                      <p className="text-sm text-gray-600">{variation.options.join(', ')}</p>
-                    </div>
-                  ))}
-                </div>
-                
-                <div className="flex space-x-2 mt-3">
-                  <Button size="sm" variant="outline" onClick={() => addVariation('size')}>
-                    + Taille
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => addVariation('color')}>
-                    + Couleur
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => addVariation('gender')}>
-                    + Genre
-                  </Button>
-                </div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Catégorie</label>
+                <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner une catégorie" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Vêtements">Vêtements</SelectItem>
+                    <SelectItem value="Accessoires">Accessoires</SelectItem>
+                    <SelectItem value="Musique">Musique</SelectItem>
+                    <SelectItem value="Posters">Posters</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+              <Textarea
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Description du produit..."
+                rows={3}
+              />
+            </div>
 
-              <div className="flex space-x-3 pt-4">
-                <Button onClick={() => setShowAddForm(false)} variant="outline" className="flex-1">
-                  Cancel
-                </Button>
-                <Button onClick={() => setShowAddForm(false)} className="flex-1 bg-purple-600 hover:bg-purple-700">
-                  Add Item
-                </Button>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Prix (€)</label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={formData.price}
+                  onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
+                  placeholder="0.00"
+                />
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Stock</label>
+                <Input
+                  type="number"
+                  value={formData.stock}
+                  onChange={(e) => setFormData({ ...formData, stock: parseInt(e.target.value) || 0 })}
+                  placeholder="0"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Statut</label>
+                <Select value={formData.status} onValueChange={(value: any) => setFormData({ ...formData, status: value })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Actif</SelectItem>
+                    <SelectItem value="inactive">Inactif</SelectItem>
+                    <SelectItem value="out_of_stock">Rupture de stock</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setShowEditDialog(false)}>
+                Annuler
+              </Button>
+              <Button onClick={handleUpdateProduct}>
+                Sauvegarder
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

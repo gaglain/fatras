@@ -15,7 +15,7 @@ import {
   Music,
   ShoppingBag,
   BookOpen,
-  Truck,
+  MapPin,
   Package,
   Smartphone
 } from 'lucide-react';
@@ -33,7 +33,7 @@ const menuItems = [
   { icon: Mail, label: 'Campagnes Email', path: '/email-campaigns' },
   { icon: MessageSquare, label: 'Messagerie', path: '/messagerie' },
   { icon: BookOpen, label: 'Bible du Spectacle', path: '/show-bible' },
-  { icon: Truck, label: 'Road Show', path: '/road-show' },
+  { icon: MapPin, label: 'Feuille de route', path: '/road-show' },
   { icon: ShoppingBag, label: 'Merchandising', path: '/merchandise' },
   { icon: Package, label: 'Opportunités', path: '/opportunities' },
   { icon: Globe, label: 'Site Web', path: '/website' },

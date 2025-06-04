@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -68,10 +69,6 @@ const eventTypes = [
 ];
 
 type PageType = 'home' | 'artists' | 'artist-detail' | 'contact' | 'tour' | 'shop';
-
-interface NavigationProps {
-  setCurrentPage: (page: PageType) => void;
-}
 
 interface ThemeSettings {
   logo: string | null;
@@ -202,12 +199,6 @@ const Header: React.FC<HeaderProps> = ({
               >
                 <Settings className="h-5 w-5" />
               </button>
-              <Button 
-                variant="outline" 
-                onClick={() => setShowBackoffice(true)}
-              >
-                Back Office
-              </Button>
             </nav>
             
             {/* Bouton menu mobile */}
@@ -276,12 +267,6 @@ const Header: React.FC<HeaderProps> = ({
                 >
                   Contact
                 </button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setShowBackoffice(true)}
-                >
-                  Back Office
-                </Button>
               </nav>
             </div>
           )}
@@ -454,22 +439,7 @@ export const Website: React.FC = () => {
 
   // Si on est en mode back office, on charge le composant WebsiteBackoffice
   if (showBackoffice) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="bg-white border-b px-6 py-4 flex items-center justify-between">
-          <h1 className="text-lg font-semibold">Back Office - Site Web</h1>
-          <Button 
-            variant="outline" 
-            onClick={() => setShowBackoffice(false)}
-          >
-            Retour au site
-          </Button>
-        </div>
-        <div className="p-6">
-          <WebsiteBackoffice />
-        </div>
-      </div>
-    );
+    return <WebsiteBackoffice onReturn={() => setShowBackoffice(false)} />;
   }
 
   return (
