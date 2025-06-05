@@ -1,73 +1,67 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from '@/components/ui/sonner';
-import { Layout } from '@/components/Layout';
-import { ProtectedRoute } from '@/components/ProtectedRoute';
-import { DashboardHome } from '@/components/dashboard/DashboardHome';
-import { UserProvider } from '@/contexts/UserContext';
-
-// Import existing pages with named exports
+import { Toaster } from 'sonner';
+import { Header } from '@/components/Header';
+import { Sidebar } from '@/components/Sidebar';
 import { Dashboard } from '@/pages/Dashboard';
 import { Contacts } from '@/pages/Contacts';
-import { Events } from '@/pages/Events';
-import { Contracts } from '@/pages/Contracts';
+import { ContactLists } from '@/pages/ContactLists';
 import { Artists } from '@/pages/Artists';
-import { ArtistDetail } from '@/pages/ArtistDetail';
-import { Agenda } from '@/pages/Agenda';
+import { Events } from '@/pages/Events';
+import { Tasks } from '@/pages/Tasks';
+import { Contracts } from '@/pages/Contracts';
 import { Email } from '@/pages/Email';
 import { EmailCampaigns } from '@/pages/EmailCampaigns';
 import { Messagerie } from '@/pages/Messagerie';
-import { Tasks } from '@/pages/Tasks';
-import { Opportunities } from '@/pages/Opportunities';
-import { Merchandise } from '@/pages/Merchandise';
-import { RoadShow } from '@/pages/RoadShow';
+import { Agenda } from '@/pages/Agenda';
 import { ShowBible } from '@/pages/ShowBible';
-import { EventTypes } from '@/pages/EventTypes';
-import { Preferences } from '@/pages/Preferences';
+import { RoadShow } from '@/pages/RoadShow';
+import { Merchandise } from '@/pages/Merchandise';
+import { Opportunities } from '@/pages/Opportunities';
 import { Website } from '@/pages/Website';
-import { WebsiteWithEditor } from '@/pages/WebsiteWithEditor';
 import { Application } from '@/pages/Application';
-
-const queryClient = new QueryClient();
+import { Preferences } from '@/pages/Preferences';
+import { UserProvider } from '@/contexts/UserContext';
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <UserProvider>
-        <Router>
-          <ProtectedRoute>
-            <Routes>
-              <Route path="/" element={<Layout />}>
-                <Route index element={<DashboardHome />} />
-                <Route path="dashboard" element={<DashboardHome />} />
-                <Route path="contacts" element={<Contacts />} />
-                <Route path="events" element={<Events />} />
-                <Route path="contracts" element={<Contracts />} />
-                <Route path="artists" element={<Artists />} />
-                <Route path="artist-detail" element={<ArtistDetail />} />
-                <Route path="agenda" element={<Agenda />} />
-                <Route path="email" element={<Email />} />
-                <Route path="email-campaigns" element={<EmailCampaigns />} />
-                <Route path="messagerie" element={<Messagerie />} />
-                <Route path="tasks" element={<Tasks />} />
-                <Route path="opportunities" element={<Opportunities />} />
-                <Route path="merchandise" element={<Merchandise />} />
-                <Route path="road-show" element={<RoadShow />} />
-                <Route path="show-bible" element={<ShowBible />} />
-                <Route path="event-types" element={<EventTypes />} />
-                <Route path="preferences" element={<Preferences />} />
-                <Route path="website" element={<Website />} />
-                <Route path="website-editor" element={<WebsiteWithEditor />} />
-                <Route path="application" element={<Application />} />
-              </Route>
-            </Routes>
-          </ProtectedRoute>
-        </Router>
-      </UserProvider>
-      <Toaster />
-    </QueryClientProvider>
+    <UserProvider>
+      <Router>
+        <div className="min-h-screen bg-gray-50 flex">
+          <Sidebar />
+          <div className="flex-1 flex flex-col">
+            <Header />
+            <main className="flex-1 overflow-y-auto">
+              <div className="p-6">
+                <Routes>
+                  <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/contacts" element={<Contacts />} />
+                  <Route path="/contact-lists" element={<ContactLists />} />
+                  <Route path="/artists" element={<Artists />} />
+                  <Route path="/events" element={<Events />} />
+                  <Route path="/tasks" element={<Tasks />} />
+                  <Route path="/contracts" element={<Contracts />} />
+                  <Route path="/email" element={<Email />} />
+                  <Route path="/email-campaigns" element={<EmailCampaigns />} />
+                  <Route path="/messagerie" element={<Messagerie />} />
+                  <Route path="/agenda" element={<Agenda />} />
+                  <Route path="/show-bible" element={<ShowBible />} />
+                  <Route path="/road-show" element={<RoadShow />} />
+                  <Route path="/merchandise" element={<Merchandise />} />
+                  <Route path="/opportunities" element={<Opportunities />} />
+                  <Route path="/website" element={<Website />} />
+                  <Route path="/application" element={<Application />} />
+                  <Route path="/preferences" element={<Preferences />} />
+                </Routes>
+              </div>
+            </main>
+          </div>
+        </div>
+        <Toaster position="top-right" />
+      </Router>
+    </UserProvider>
   );
 }
 

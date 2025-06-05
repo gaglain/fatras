@@ -17,7 +17,8 @@ import {
   BookOpen,
   MapPin,
   Package,
-  Smartphone
+  Smartphone,
+  UserCheck
 } from 'lucide-react';
 import { TaskNotification } from '@/components/tasks/TaskNotification';
 
@@ -25,6 +26,7 @@ const menuItems = [
   { icon: BarChart3, label: 'Tableau de Bord', path: '/dashboard' },
   { icon: Calendar, label: 'Agenda', path: '/agenda' },
   { icon: Users, label: 'Contacts', path: '/contacts' },
+  { icon: UserCheck, label: 'Listes de Contacts', path: '/contact-lists' },
   { icon: Music, label: 'Artistes', path: '/artists' },
   { icon: Calendar, label: 'Événements', path: '/events' },
   { icon: FileText, label: 'Contrats', path: '/contracts' },

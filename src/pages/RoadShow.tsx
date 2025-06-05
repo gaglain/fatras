@@ -5,171 +5,176 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { 
-  Plus, 
-  MapPin, 
-  Calendar, 
-  Clock, 
-  Users, 
-  Eye, 
-  EyeOff,
-  Search,
-  Edit,
-  Trash2,
-  User
-} from 'lucide-react';
+import { Plus, MapPin, Calendar, Clock, Users, Search, Music, Eye, Edit, Trash2 } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
-import { toast } from 'sonner';
 
-interface RoadShowEvent {
+interface TourStop {
   id: string;
-  title: string;
+  city: string;
   venue: string;
-  address: string;
   date: string;
   time: string;
-  duration: string;
-  description: string;
-  status: 'planned' | 'confirmed' | 'completed' | 'cancelled';
-  casting: string[];
-  visibleTo: string[];
-  createdBy: string;
+  capacity: number;
+  ticketsAvailable: number;
+  status: 'confirmed' | 'pending' | 'cancelled';
+  crew: string[];
+  equipment: string[];
   notes: string;
+  artists: string[];
+  createdBy: string;
 }
 
-interface CastMember {
+interface Artist {
   id: string;
-  firstName: string;
-  lastName: string;
-  role: string;
-  phone: string;
-  email: string;
+  name: string;
+  genre: string;
 }
 
-const sampleCastMembers: CastMember[] = [
-  {
-    id: 'cast-1',
-    firstName: 'Sophie',
-    lastName: 'Martin',
-    role: 'Chanteuse principale',
-    phone: '06 12 34 56 78',
-    email: 'sophie.martin@example.com'
-  },
-  {
-    id: 'cast-2',
-    firstName: 'Pierre',
-    lastName: 'Dubois',
-    role: 'Guitariste',
-    phone: '06 23 45 67 89',
-    email: 'pierre.dubois@example.com'
-  },
-  {
-    id: 'cast-3',
-    firstName: 'Marie',
-    lastName: 'Leroy',
-    role: 'Danseuse',
-    phone: '06 34 56 78 90',
-    email: 'marie.leroy@example.com'
-  }
+const sampleArtists: Artist[] = [
+  { id: '1', name: 'The Midnight Express', genre: 'Rock' },
+  { id: '2', name: 'Sarah Mitchell', genre: 'Folk' },
+  { id: '3', name: 'Jazz Collective', genre: 'Jazz' },
+  { id: '4', name: 'Electronic Dreams', genre: 'Electronic' }
 ];
 
-const sampleEvents: RoadShowEvent[] = [
+const sampleTourStops: TourStop[] = [
   {
     id: '1',
-    title: 'Concert Privé Villa Marguerite',
-    venue: 'Villa Marguerite',
-    address: '123 Avenue des Roses, 06400 Cannes',
+    city: 'Paris',
+    venue: 'L\'Olympia',
     date: '2024-07-15',
     time: '20:00',
-    duration: '2h30',
-    description: 'Concert privé pour anniversaire de mariage',
+    capacity: 2000,
+    ticketsAvailable: 500,
     status: 'confirmed',
-    casting: ['cast-1', 'cast-2'],
-    visibleTo: ['user-1', 'user-2', 'cast-1', 'cast-2'],
-    createdBy: 'user-1',
-    notes: 'Prévoir matériel de sonorisation'
+    crew: ['John Doe', 'Jane Smith'],
+    equipment: ['Sound System', 'Lighting'],
+    notes: 'VIP backstage access required',
+    artists: ['1', '2'],
+    createdBy: 'user-1'
   },
   {
     id: '2',
-    title: 'Festival Été Musical',
-    venue: 'Scène Principale Festival',
-    address: 'Parc des Expositions, Nice',
-    date: '2024-07-22',
-    time: '21:30',
-    duration: '1h45',
-    description: 'Prestation festival d\'été',
-    status: 'planned',
-    casting: ['cast-1', 'cast-3'],
-    visibleTo: ['user-1', 'cast-1', 'cast-3'],
-    createdBy: 'user-1',
-    notes: ''
+    city: 'Lyon',
+    venue: 'Le Transbordeur',
+    date: '2024-07-18',
+    time: '21:00',
+    capacity: 1500,
+    ticketsAvailable: 200,
+    status: 'pending',
+    crew: ['Mike Wilson'],
+    equipment: ['Sound System'],
+    notes: 'Waiting for final confirmation',
+    artists: ['1'],
+    createdBy: 'user-1'
   }
 ];
 
 export const RoadShow: React.FC = () => {
-  const { users, currentUser, getUserById } = useUser();
-  const [events, setEvents] = useState<RoadShowEvent[]>(sampleEvents);
-  const [castMembers, setCastMembers] = useState<CastMember[]>(sampleCastMembers);
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<RoadShowEvent | null>(null);
+  const { users, getUserById, currentUser } = useUser();
+  const [tourStops, setTourStops] = useState<TourStop[]>(sampleTourStops);
+  const [selectedStop, setSelectedStop] = useState<TourStop | null>(null);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [castSearchTerm, setCastSearchTerm] = useState('');
+  const [filterArtist, setFilterArtist] = useState<string>('all');
+  const [filterUser, setFilterUser] = useState<string>('all');
+  const [crewSearchTerm, setCrewSearchTerm] = useState('');
+  
   const [formData, setFormData] = useState({
-    title: '',
+    city: '',
     venue: '',
-    address: '',
     date: '',
     time: '',
-    duration: '',
-    description: '',
-    status: 'planned' as const,
-    casting: [] as string[],
-    visibleTo: [] as string[],
-    notes: ''
+    capacity: '',
+    ticketsAvailable: '',
+    status: 'pending' as 'confirmed' | 'pending' | 'cancelled',
+    crew: [] as string[],
+    equipment: [] as string[],
+    notes: '',
+    artists: [] as string[]
   });
 
   const resetForm = () => {
     setFormData({
-      title: '',
+      city: '',
       venue: '',
-      address: '',
       date: '',
       time: '',
-      duration: '',
-      description: '',
-      status: 'planned',
-      casting: [],
-      visibleTo: [],
-      notes: ''
+      capacity: '',
+      ticketsAvailable: '',
+      status: 'pending',
+      crew: [],
+      equipment: [],
+      notes: '',
+      artists: []
     });
   };
 
-  const handleCreateEvent = () => {
-    if (!formData.title || !formData.venue || !formData.date) {
-      toast.error('Veuillez remplir les champs obligatoires');
-      return;
-    }
-
-    const newEvent: RoadShowEvent = {
+  const handleCreateStop = () => {
+    const newStop: TourStop = {
       id: Date.now().toString(),
       ...formData,
-      createdBy: currentUser?.id || 'user-1'
+      capacity: parseInt(formData.capacity),
+      ticketsAvailable: parseInt(formData.ticketsAvailable),
+      createdBy: currentUser?.id || 'unknown'
     };
-
-    setEvents([...events, newEvent]);
-    setShowCreateForm(false);
+    
+    setTourStops([...tourStops, newStop]);
+    setShowCreateDialog(false);
     resetForm();
-    toast.success('Événement ajouté à la feuille de route');
+  };
+
+  const handleEditStop = (stop: TourStop) => {
+    setSelectedStop(stop);
+    setFormData({
+      city: stop.city,
+      venue: stop.venue,
+      date: stop.date,
+      time: stop.time,
+      capacity: stop.capacity.toString(),
+      ticketsAvailable: stop.ticketsAvailable.toString(),
+      status: stop.status,
+      crew: stop.crew,
+      equipment: stop.equipment,
+      notes: stop.notes,
+      artists: stop.artists
+    });
+    setShowEditDialog(true);
+  };
+
+  const handleUpdateStop = () => {
+    if (!selectedStop) return;
+    
+    const updatedStops = tourStops.map(stop => 
+      stop.id === selectedStop.id 
+        ? { 
+            ...stop, 
+            ...formData,
+            capacity: parseInt(formData.capacity),
+            ticketsAvailable: parseInt(formData.ticketsAvailable)
+          }
+        : stop
+    );
+    
+    setTourStops(updatedStops);
+    setShowEditDialog(false);
+    setSelectedStop(null);
+    resetForm();
+  };
+
+  const handleDeleteStop = (stopId: string) => {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette étape ?')) {
+      setTourStops(tourStops.filter(stop => stop.id !== stopId));
+    }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'confirmed': return 'bg-green-100 text-green-800';
-      case 'planned': return 'bg-blue-100 text-blue-800';
-      case 'completed': return 'bg-gray-100 text-gray-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
       case 'cancelled': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
@@ -178,103 +183,67 @@ export const RoadShow: React.FC = () => {
   const getStatusLabel = (status: string) => {
     switch (status) {
       case 'confirmed': return 'Confirmé';
-      case 'planned': return 'Planifié';
-      case 'completed': return 'Terminé';
+      case 'pending': return 'En attente';
       case 'cancelled': return 'Annulé';
-      default: return 'Inconnu';
+      default: return status;
     }
   };
 
-  const canViewEvent = (event: RoadShowEvent) => {
-    if (!currentUser) return false;
-    return event.visibleTo.includes(currentUser.id) || event.createdBy === currentUser.id;
-  };
+  const filteredStops = tourStops.filter(stop => {
+    const matchesSearch = stop.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      stop.venue.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesArtist = filterArtist === 'all' || stop.artists.includes(filterArtist);
+    const matchesUser = filterUser === 'all' || stop.createdBy === filterUser;
+    
+    return matchesSearch && matchesArtist && matchesUser;
+  });
 
-  const filteredEvents = events.filter(event => 
-    canViewEvent(event) &&
-    (event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-     event.venue.toLowerCase().includes(searchTerm.toLowerCase()))
+  const filteredUsers = users.filter(user => 
+    user.name.toLowerCase().includes(crewSearchTerm.toLowerCase())
   );
-
-  const filteredCastMembers = castMembers.filter(member =>
-    member.firstName.toLowerCase().includes(castSearchTerm.toLowerCase()) ||
-    member.lastName.toLowerCase().includes(castSearchTerm.toLowerCase()) ||
-    member.role.toLowerCase().includes(castSearchTerm.toLowerCase())
-  );
-
-  const toggleCastMember = (memberId: string) => {
-    setFormData(prev => ({
-      ...prev,
-      casting: prev.casting.includes(memberId)
-        ? prev.casting.filter(id => id !== memberId)
-        : [...prev.casting, memberId]
-    }));
-  };
-
-  const toggleVisibility = (userId: string) => {
-    setFormData(prev => ({
-      ...prev,
-      visibleTo: prev.visibleTo.includes(userId)
-        ? prev.visibleTo.filter(id => id !== userId)
-        : [...prev.visibleTo, userId]
-    }));
-  };
-
-  const getCastMemberName = (memberId: string) => {
-    const member = castMembers.find(m => m.id === memberId);
-    return member ? `${member.firstName} ${member.lastName}` : 'Membre inconnu';
-  };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Feuille de Route</h1>
-          <p className="text-gray-600 mt-2">Planifiez et gérez vos événements et tournées</p>
+          <p className="text-gray-600 mt-2">Gérez votre tournée et planifiez vos dates</p>
         </div>
-        <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
+        <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogTrigger asChild>
-            <Button className="bg-purple-600 hover:bg-purple-700">
+            <Button>
               <Plus className="h-4 w-4 mr-2" />
-              Nouvel Événement
+              Nouvelle Étape
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Ajouter un événement à la feuille de route</DialogTitle>
+              <DialogTitle>Créer une nouvelle étape de tournée</DialogTitle>
             </DialogHeader>
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Titre de l'événement *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Ville</label>
                   <Input
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    placeholder="Concert, festival, événement privé..."
+                    value={formData.city}
+                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                    placeholder="Paris"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Lieu *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Lieu</label>
                   <Input
                     value={formData.venue}
                     onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
-                    placeholder="Nom du lieu ou de la salle"
+                    placeholder="L'Olympia"
                   />
                 </div>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Adresse complète</label>
-                <Input
-                  value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  placeholder="Adresse complète du lieu"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Date *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
                   <Input
                     type="date"
                     value={formData.date}
@@ -282,119 +251,81 @@ export const RoadShow: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Heure</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Heure</label>
                   <Input
                     type="time"
                     value={formData.time}
                     onChange={(e) => setFormData({ ...formData, time: e.target.value })}
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Durée</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Capacité</label>
                   <Input
-                    value={formData.duration}
-                    onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                    placeholder="ex: 2h30"
+                    type="number"
+                    value={formData.capacity}
+                    onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
+                    placeholder="2000"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Billets disponibles</label>
+                  <Input
+                    type="number"
+                    value={formData.ticketsAvailable}
+                    onChange={(e) => setFormData({ ...formData, ticketsAvailable: e.target.value })}
+                    placeholder="500"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                <Textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Description de l'événement..."
-                  rows={3}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Statut</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Statut</label>
                 <Select value={formData.status} onValueChange={(value: any) => setFormData({ ...formData, status: value })}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="planned">Planifié</SelectItem>
+                    <SelectItem value="pending">En attente</SelectItem>
                     <SelectItem value="confirmed">Confirmé</SelectItem>
-                    <SelectItem value="completed">Terminé</SelectItem>
                     <SelectItem value="cancelled">Annulé</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              {/* Casting Selection */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Casting</label>
-                <div className="space-y-2">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                    <Input
-                      placeholder="Rechercher par prénom..."
-                      value={castSearchTerm}
-                      onChange={(e) => setCastSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                  <div className="max-h-32 overflow-y-auto border rounded-lg p-2">
-                    {filteredCastMembers.map((member) => (
-                      <div key={member.id} className="flex items-center space-x-2 p-2 hover:bg-gray-50">
-                        <Checkbox
-                          checked={formData.casting.includes(member.id)}
-                          onCheckedChange={() => toggleCastMember(member.id)}
-                        />
-                        <div className="flex-1">
-                          <div className="font-medium text-sm">{member.firstName} {member.lastName}</div>
-                          <div className="text-xs text-gray-500">{member.role}</div>
-                        </div>
-                      </div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Artistes</label>
+                <Select value={formData.artists[0] || ''} onValueChange={(value) => setFormData({ ...formData, artists: [value] })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un artiste" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sampleArtists.map((artist) => (
+                      <SelectItem key={artist.id} value={artist.id}>
+                        {artist.name}
+                      </SelectItem>
                     ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Visibility Settings */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Visible par</label>
-                <div className="space-y-2 max-h-32 overflow-y-auto border rounded-lg p-2">
-                  {users.filter(user => user.isActive).map((user) => (
-                    <div key={user.id} className="flex items-center space-x-2 p-1">
-                      <Checkbox
-                        checked={formData.visibleTo.includes(user.id)}
-                        onCheckedChange={() => toggleVisibility(user.id)}
-                      />
-                      <span className="text-sm">{user.name}</span>
-                    </div>
-                  ))}
-                  {castMembers.map((member) => (
-                    <div key={`cast-${member.id}`} className="flex items-center space-x-2 p-1">
-                      <Checkbox
-                        checked={formData.visibleTo.includes(member.id)}
-                        onCheckedChange={() => toggleVisibility(member.id)}
-                      />
-                      <span className="text-sm">{member.firstName} {member.lastName} (Casting)</span>
-                    </div>
-                  ))}
-                </div>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                <Textarea
+                <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+                <Input
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  placeholder="Notes internes, matériel nécessaire..."
-                  rows={2}
+                  placeholder="Notes spéciales..."
                 />
               </div>
 
-              <div className="flex space-x-3">
-                <Button variant="outline" onClick={() => setShowCreateForm(false)} className="flex-1">
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
                   Annuler
                 </Button>
-                <Button onClick={handleCreateEvent} className="flex-1 bg-purple-600 hover:bg-purple-700">
-                  Ajouter à la feuille de route
+                <Button onClick={handleCreateStop}>
+                  Créer l'étape
                 </Button>
               </div>
             </div>
@@ -402,111 +333,219 @@ export const RoadShow: React.FC = () => {
         </Dialog>
       </div>
 
-      {/* Search */}
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-        <Input
-          placeholder="Rechercher des événements..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10"
-        />
+      {/* Filtres */}
+      <div className="flex flex-wrap gap-4">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            placeholder="Rechercher par ville ou lieu..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        
+        <Select value={filterArtist} onValueChange={setFilterArtist}>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="Filtrer par artiste" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tous les artistes</SelectItem>
+            {sampleArtists.map((artist) => (
+              <SelectItem key={artist.id} value={artist.id}>
+                {artist.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={filterUser} onValueChange={setFilterUser}>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="Filtrer par créateur" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tous les utilisateurs</SelectItem>
+            {users.filter(user => user.isActive).map((user) => (
+              <SelectItem key={user.id} value={user.id}>
+                {user.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
-      {/* Events Timeline */}
-      <div className="space-y-4">
-        {filteredEvents.length === 0 ? (
-          <Card className="text-center py-12">
-            <CardContent>
-              <MapPin className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun événement trouvé</h3>
-              <p className="text-gray-500 mb-4">Commencez par ajouter votre premier événement à la feuille de route</p>
-            </CardContent>
-          </Card>
-        ) : (
-          filteredEvents
-            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-            .map((event) => (
-              <Card key={event.id} className="hover:shadow-lg transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
-                        <h3 className="text-xl font-semibold">{event.title}</h3>
-                        <Badge className={getStatusColor(event.status)}>
-                          {getStatusLabel(event.status)}
-                        </Badge>
+      {/* Liste des étapes */}
+      <div className="grid gap-6">
+        {filteredStops.map((stop) => {
+          const creator = getUserById(stop.createdBy);
+          const stopArtists = stop.artists.map(artistId => 
+            sampleArtists.find(artist => artist.id === artistId)
+          ).filter(Boolean);
+          
+          return (
+            <Card key={stop.id} className="hover:shadow-lg transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-3 mb-2">
+                      <MapPin className="h-5 w-5 text-purple-600" />
+                      <h3 className="text-xl font-semibold">{stop.city} - {stop.venue}</h3>
+                      <Badge className={getStatusColor(stop.status)}>
+                        {getStatusLabel(stop.status)}
+                      </Badge>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+                      <div className="flex items-center space-x-2">
+                        <Calendar className="h-4 w-4 text-gray-500" />
+                        <span>{new Date(stop.date).toLocaleDateString('fr-FR')}</span>
                       </div>
-                      <div className="space-y-1 text-sm text-gray-600">
-                        <div className="flex items-center space-x-2">
-                          <MapPin className="h-4 w-4" />
-                          <span>{event.venue}</span>
-                        </div>
-                        {event.address && (
-                          <div className="flex items-center space-x-2">
-                            <span className="w-4"></span>
-                            <span>{event.address}</span>
-                          </div>
-                        )}
-                        <div className="flex items-center space-x-4">
-                          <div className="flex items-center space-x-2">
-                            <Calendar className="h-4 w-4" />
-                            <span>{new Date(event.date).toLocaleDateString('fr-FR')}</span>
-                          </div>
-                          {event.time && (
-                            <div className="flex items-center space-x-2">
-                              <Clock className="h-4 w-4" />
-                              <span>{event.time}</span>
-                              {event.duration && <span>({event.duration})</span>}
-                            </div>
-                          )}
-                        </div>
+                      <div className="flex items-center space-x-2">
+                        <Clock className="h-4 w-4 text-gray-500" />
+                        <span>{stop.time}</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Users className="h-4 w-4 text-gray-500" />
+                        <span>{stop.ticketsAvailable}/{stop.capacity} places</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Music className="h-4 w-4 text-gray-500" />
+                        <span>{stopArtists.map(artist => artist?.name).join(', ') || 'Aucun artiste'}</span>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      {event.visibleTo.length > 0 && (
-                        <Badge variant="outline" className="text-xs">
-                          <Eye className="h-3 w-3 mr-1" />
-                          {event.visibleTo.length} personnes
-                        </Badge>
-                      )}
-                      <Button size="sm" variant="outline">
-                        <Edit className="h-4 w-4" />
-                      </Button>
+                    
+                    {stop.notes && (
+                      <p className="text-gray-600 mt-3 italic">"{stop.notes}"</p>
+                    )}
+                    
+                    <div className="text-sm text-gray-500 mt-3">
+                      Créé par: {creator?.name || 'Utilisateur inconnu'}
                     </div>
                   </div>
-
-                  {event.description && (
-                    <p className="text-gray-700 mb-4">{event.description}</p>
-                  )}
-
-                  {event.casting.length > 0 && (
-                    <div className="mb-4">
-                      <h4 className="font-medium text-gray-900 mb-2 flex items-center">
-                        <Users className="h-4 w-4 mr-2" />
-                        Casting
-                      </h4>
-                      <div className="flex flex-wrap gap-2">
-                        {event.casting.map((memberId) => (
-                          <Badge key={memberId} variant="outline">
-                            {getCastMemberName(memberId)}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {event.notes && (
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                      <h4 className="font-medium text-yellow-800 mb-1">Notes</h4>
-                      <p className="text-yellow-700 text-sm">{event.notes}</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))
-        )}
+                  
+                  <div className="flex space-x-2">
+                    <Button variant="outline" size="sm">
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => handleEditStop(stop)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleDeleteStop(stop.id)}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
+
+      {/* Dialog de modification */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Modifier l'étape de tournée</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Ville</label>
+                <Input
+                  value={formData.city}
+                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  placeholder="Paris"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Lieu</label>
+                <Input
+                  value={formData.venue}
+                  onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
+                  placeholder="L'Olympia"
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                <Input
+                  type="date"
+                  value={formData.date}
+                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Heure</label>
+                <Input
+                  type="time"
+                  value={formData.time}
+                  onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Capacité</label>
+                <Input
+                  type="number"
+                  value={formData.capacity}
+                  onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
+                  placeholder="2000"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Billets disponibles</label>
+                <Input
+                  type="number"
+                  value={formData.ticketsAvailable}
+                  onChange={(e) => setFormData({ ...formData, ticketsAvailable: e.target.value })}
+                  placeholder="500"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Statut</label>
+              <Select value={formData.status} onValueChange={(value: any) => setFormData({ ...formData, status: value })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">En attente</SelectItem>
+                  <SelectItem value="confirmed">Confirmé</SelectItem>
+                  <SelectItem value="cancelled">Annulé</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+              <Input
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                placeholder="Notes spéciales..."
+              />
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setShowEditDialog(false)}>
+                Annuler
+              </Button>
+              <Button onClick={handleUpdateStop}>
+                Sauvegarder
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
