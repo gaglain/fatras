@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -91,15 +90,15 @@ export const Tasks: React.FC = () => {
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showTaskEdit, setShowTaskEdit] = useState(false);
-  const [editFormData, setEditFormData] = useState({
+  const [editFormData, setEditFormData: any] = useState({
     title: '',
     description: '',
     assignedTo: '',
     dueDate: '',
-    priority: 'medium' as const,
-    status: 'todo' as const,
+    priority: 'medium',
+    status: 'todo',
     relatedToId: '',
-    relatedToType: 'contact' as const
+    relatedToType: 'contact'
   });
 
   const permissions = getUserPermissions(currentUser!);

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -95,24 +96,18 @@ export const UserProfile: React.FC = () => {
 
   const getRoleLabel = (role: UserRole) => {
     const roleLabels = {
-      'super-admin': 'Super Admin',
-      'booker': 'Booker',
-      'artist': 'Artiste',
-      'casting-artist': 'Artiste Casting',
-      'user': 'Utilisateur',
-      'external-user': 'Utilisateur Externe'
+      'admin': 'Administrateur',
+      'manager': 'Manager',
+      'user': 'Utilisateur'
     };
     return roleLabels[role];
   };
 
   const getRoleBadgeColor = (role: UserRole) => {
     const colors = {
-      'super-admin': 'bg-red-100 text-red-800',
-      'booker': 'bg-blue-100 text-blue-800',
-      'artist': 'bg-purple-100 text-purple-800',
-      'casting-artist': 'bg-pink-100 text-pink-800',
-      'user': 'bg-gray-100 text-gray-800',
-      'external-user': 'bg-orange-100 text-orange-800'
+      'admin': 'bg-red-100 text-red-800',
+      'manager': 'bg-blue-100 text-blue-800',
+      'user': 'bg-gray-100 text-gray-800'
     };
     return colors[role];
   };
@@ -475,12 +470,9 @@ export const UserProfile: React.FC = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="super-admin">Super Admin</SelectItem>
-                    <SelectItem value="booker">Booker</SelectItem>
-                    <SelectItem value="artist">Artiste</SelectItem>
-                    <SelectItem value="casting-artist">Artiste Casting</SelectItem>
+                    <SelectItem value="admin">Administrateur</SelectItem>
+                    <SelectItem value="manager">Manager</SelectItem>
                     <SelectItem value="user">Utilisateur</SelectItem>
-                    <SelectItem value="external-user">Utilisateur Externe</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

@@ -1,13 +1,22 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
+export type UserRole = 'admin' | 'manager' | 'user';
+
 export interface User {
   id: string;
   name: string;
+  lastName: string;
   email: string;
-  role: 'admin' | 'manager' | 'user';
+  role: UserRole;
   isActive: boolean;
-  username?: string; // Nouveau champ pour le pseudo
+  username?: string;
+  avatar?: string;
+  phone?: string;
+  department?: string;
+  bio?: string;
+  googleCalendarConnected?: boolean;
+  gmailConnected?: boolean;
 }
 
 export interface UserPermissions {
@@ -28,33 +37,52 @@ interface UserContextType {
   addUser: (user: Omit<User, 'id'>) => void;
   updateUser: (id: string, updates: Partial<User>) => void;
   deactivateUser: (id: string) => void;
+  removeUser: (id: string) => void;
   changeOwnership: (itemType: string, itemId: string, newOwnerId: string) => void;
 }
 
 const defaultUsers: User[] = [
   { 
     id: 'user-1', 
-    name: 'Admin Principal', 
+    name: 'Admin', 
+    lastName: 'Principal',
     email: 'admin@showmanager.fr', 
     role: 'admin', 
     isActive: true,
-    username: 'admin'
+    username: 'admin',
+    phone: '06 12 34 56 78',
+    department: 'Direction',
+    bio: 'Administrateur principal du système',
+    googleCalendarConnected: true,
+    gmailConnected: true
   },
   { 
     id: 'user-2', 
-    name: 'Manager Événements', 
+    name: 'Manager', 
+    lastName: 'Événements',
     email: 'manager@showmanager.fr', 
     role: 'manager', 
     isActive: true,
-    username: 'manager_events'
+    username: 'manager_events',
+    phone: '06 23 45 67 89',
+    department: 'Événements',
+    bio: 'Gestionnaire des événements',
+    googleCalendarConnected: false,
+    gmailConnected: true
   },
   { 
     id: 'user-3', 
     name: 'Assistant', 
+    lastName: 'Production',
     email: 'assistant@showmanager.fr', 
     role: 'user', 
     isActive: true,
-    username: 'assistant'
+    username: 'assistant',
+    phone: '06 34 56 78 90',
+    department: 'Production',
+    bio: 'Assistant de production',
+    googleCalendarConnected: false,
+    gmailConnected: false
   }
 ];
 
@@ -121,12 +149,19 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setUsers(prev => prev.map(user => 
       user.id === id ? { ...user, ...updates } : user
     ));
+    if (currentUser?.id === id) {
+      setCurrentUser(prev => prev ? { ...prev, ...updates } : null);
+    }
   };
 
   const deactivateUser = (id: string) => {
     setUsers(prev => prev.map(user => 
       user.id === id ? { ...user, isActive: false } : user
     ));
+  };
+
+  const removeUser = (id: string) => {
+    setUsers(prev => prev.filter(user => user.id !== id));
   };
 
   const changeOwnership = (itemType: string, itemId: string, newOwnerId: string) => {
@@ -143,6 +178,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       addUser,
       updateUser,
       deactivateUser,
+      removeUser,
       changeOwnership
     }}>
       {children}

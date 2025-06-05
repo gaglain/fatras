@@ -93,12 +93,18 @@ export const ShowBible: React.FC = () => {
   const [showCategoryDialog, setShowCategoryDialog] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [uploadForm, setUploadForm] = useState({
+  const [uploadForm, setUploadForm] = useState<{
+    name: string;
+    type: 'audio' | 'video' | 'image' | 'text' | 'pdf' | 'other';
+    category: string;
+    description: string;
+    file: File | null;
+  }>({
     name: '',
-    type: 'text' as const,
+    type: 'text',
     category: 'other',
     description: '',
-    file: null as File | null
+    file: null
   });
   const [categoryForm, setCategoryForm] = useState({
     name: '',
@@ -217,6 +223,15 @@ export const ShowBible: React.FC = () => {
 
   const getDocumentCountByCategory = (categoryId: string) => {
     return documents.filter(doc => doc.category === categoryId).length;
+  };
+
+  const downloadDocument = (document: Document) => {
+    const link = window.document.createElement('a');
+    link.href = document.url;
+    link.download = document.name;
+    window.document.body.appendChild(link);
+    link.click();
+    window.document.body.removeChild(link);
   };
 
   return (
@@ -480,12 +495,7 @@ export const ShowBible: React.FC = () => {
                       size="sm" 
                       variant="outline" 
                       className="flex-1"
-                      onClick={() => {
-                        const link = document.createElement('a');
-                        link.href = document.url;
-                        link.download = document.name;
-                        link.click();
-                      }}
+                      onClick={() => downloadDocument(document)}
                     >
                       <Download className="h-4 w-4 mr-2" />
                       Télécharger
