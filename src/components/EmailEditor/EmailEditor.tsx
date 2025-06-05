@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Plus, GripVertical, Trash2, Eye } from 'lucide-react';
-import { EmailBlock } from './types';
+import { EmailBlock, TextBlockContent, HeadingBlockContent, ImageBlockContent, ButtonBlockContent, SpacerBlockContent, DividerBlockContent } from './types';
 import { BlockToolbar } from './BlockToolbar';
 import { TextBlock } from './blocks/TextBlock';
 import { ImageBlock } from './blocks/ImageBlock';
@@ -39,22 +39,22 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
     setSelectedBlockId(newBlock.id);
   };
 
-  const getDefaultContent = (type: EmailBlock['type']) => {
+  const getDefaultContent = (type: EmailBlock['type']): TextBlockContent | HeadingBlockContent | ImageBlockContent | ButtonBlockContent | SpacerBlockContent | DividerBlockContent => {
     switch (type) {
       case 'text':
-        return { text: 'Tapez votre texte ici...', fontSize: 16, fontWeight: 'normal', textAlign: 'left', color: '#000000' };
+        return { text: 'Tapez votre texte ici...', fontSize: 16, fontWeight: 'normal', textAlign: 'left', color: '#000000' } as TextBlockContent;
       case 'heading':
-        return { text: 'Votre titre', level: 2, textAlign: 'left', color: '#000000' };
+        return { text: 'Votre titre', level: 2, textAlign: 'left', color: '#000000' } as HeadingBlockContent;
       case 'image':
-        return { src: '', alt: '', width: 100, alignment: 'center' };
+        return { src: '', alt: '', width: 100, alignment: 'center' } as ImageBlockContent;
       case 'button':
-        return { text: 'Cliquez ici', link: '', backgroundColor: '#007bff', textColor: '#ffffff', borderRadius: 4, padding: '12px 24px', alignment: 'center' };
+        return { text: 'Cliquez ici', link: '', backgroundColor: '#007bff', textColor: '#ffffff', borderRadius: 4, padding: '12px 24px', alignment: 'center' } as ButtonBlockContent;
       case 'spacer':
-        return { height: 20 };
+        return { height: 20 } as SpacerBlockContent;
       case 'divider':
-        return { color: '#cccccc', thickness: 1, style: 'solid' };
+        return { color: '#cccccc', thickness: 1, style: 'solid' } as DividerBlockContent;
       default:
-        return {};
+        return { text: '', fontSize: 16, fontWeight: 'normal', textAlign: 'left', color: '#000000' } as TextBlockContent;
     }
   };
 
@@ -89,17 +89,17 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
 
     switch (block.type) {
       case 'text':
-        return <TextBlock content={block.content} onChange={(content) => updateBlock(block.id, content)} />;
+        return <TextBlock content={block.content as TextBlockContent} onChange={(content) => updateBlock(block.id, content)} />;
       case 'heading':
-        return <HeadingBlock content={block.content} onChange={(content) => updateBlock(block.id, content)} />;
+        return <HeadingBlock content={block.content as HeadingBlockContent} onChange={(content) => updateBlock(block.id, content)} />;
       case 'image':
-        return <ImageBlock content={block.content} onChange={(content) => updateBlock(block.id, content)} />;
+        return <ImageBlock content={block.content as ImageBlockContent} onChange={(content) => updateBlock(block.id, content)} />;
       case 'button':
-        return <ButtonBlock content={block.content} onChange={(content) => updateBlock(block.id, content)} />;
+        return <ButtonBlock content={block.content as ButtonBlockContent} onChange={(content) => updateBlock(block.id, content)} />;
       case 'spacer':
-        return <SpacerBlock content={block.content} onChange={(content) => updateBlock(block.id, content)} />;
+        return <SpacerBlock content={block.content as SpacerBlockContent} onChange={(content) => updateBlock(block.id, content)} />;
       case 'divider':
-        return <DividerBlock content={block.content} onChange={(content) => updateBlock(block.id, content)} />;
+        return <DividerBlock content={block.content as DividerBlockContent} onChange={(content) => updateBlock(block.id, content)} />;
       default:
         return null;
     }
