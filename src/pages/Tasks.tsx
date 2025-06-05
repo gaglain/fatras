@@ -90,7 +90,16 @@ export const Tasks: React.FC = () => {
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showTaskEdit, setShowTaskEdit] = useState(false);
-  const [editFormData, setEditFormData: any] = useState({
+  const [editFormData, setEditFormData] = useState<{
+    title: string;
+    description: string;
+    assignedTo: string;
+    dueDate: string;
+    priority: 'low' | 'medium' | 'high' | 'urgent';
+    status: 'todo' | 'in_progress' | 'completed';
+    relatedToId: string;
+    relatedToType: 'contact' | 'event' | 'contract';
+  }>({
     title: '',
     description: '',
     assignedTo: '',

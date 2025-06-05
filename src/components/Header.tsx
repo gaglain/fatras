@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Bell, Search, Plus, Edit, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -199,7 +198,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <img src={currentUser.avatar} alt="Avatar" className="h-8 w-8 rounded-full object-cover" />
               ) : (
                 <span className="text-white text-sm font-medium">
-                  {currentUser?.name.charAt(0) || 'U'}{currentUser?.lastName?.charAt(0) || 'U'}
+                  {currentUser?.name?.charAt(0) || 'U'}{currentUser?.lastName?.charAt(0) || 'U'}
                 </span>
               )}
             </div>
