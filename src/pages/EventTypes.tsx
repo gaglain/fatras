@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Calendar, Edit, Trash2, Music, Star, ArrowUp, ArrowDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 interface EventType {
   id: string;
@@ -96,8 +97,8 @@ export const EventTypes: React.FC = () => {
   ];
 
   const handleCreateType = () => {
-    if (!formData.name) {
-      alert('Le nom est obligatoire');
+    if (!formData.name.trim()) {
+      toast.error('Le nom est obligatoire');
       return;
     }
 
@@ -115,8 +116,10 @@ export const EventTypes: React.FC = () => {
       setEventTypes(prev => prev.map(type => 
         type.id === editingType.id ? { ...newType, id: editingType.id, order: editingType.order } : type
       ));
+      toast.success('Type d\'événement modifié avec succès');
     } else {
       setEventTypes(prev => [...prev, newType]);
+      toast.success('Type d\'événement créé avec succès');
     }
 
     resetForm();
@@ -147,6 +150,7 @@ export const EventTypes: React.FC = () => {
   const handleDelete = (typeId: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer ce type d\'événement ?')) {
       setEventTypes(prev => prev.filter(type => type.id !== typeId));
+      toast.success('Type d\'événement supprimé');
     }
   };
 
@@ -154,6 +158,9 @@ export const EventTypes: React.FC = () => {
     setEventTypes(prev => prev.map(type => 
       type.id === typeId ? { ...type, isActive: !type.isActive } : type
     ));
+    
+    const type = eventTypes.find(t => t.id === typeId);
+    toast.success(`Type d'événement ${type?.isActive ? 'désactivé' : 'activé'}`);
   };
 
   const moveType = (typeId: string, direction: 'up' | 'down') => {

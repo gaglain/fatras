@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { CheckSquare, Search, Plus, Calendar, User, Phone, Mail, Edit, X } from 'lucide-react';
+import { CheckSquare, Search, Plus, Calendar, User, Phone, Mail, Edit, X, Filter } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import { TaskCreator } from '@/components/tasks/TaskCreator';
 import { toast } from 'sonner';
@@ -87,27 +87,19 @@ export const Tasks: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>(sampleTasks);
   const [contacts] = useState<Contact[]>(sampleContacts);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedUser, setSelectedUser] = useState<string>('all');
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showTaskEdit, setShowTaskEdit] = useState(false);
-  const [editFormData, setEditFormData] = useState<{
-    title: string;
-    description: string;
-    assignedTo: string;
-    dueDate: string;
-    priority: 'low' | 'medium' | 'high' | 'urgent';
-    status: 'todo' | 'in_progress' | 'completed';
-    relatedToId: string;
-    relatedToType: 'contact' | 'event' | 'contract';
-  }>({
+  const [editFormData, setEditFormData] = useState({
     title: '',
     description: '',
     assignedTo: '',
     dueDate: '',
-    priority: 'medium',
-    status: 'todo',
+    priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent',
+    status: 'todo' as 'todo' | 'in_progress' | 'completed',
     relatedToId: '',
-    relatedToType: 'contact'
+    relatedToType: 'contact' as 'contact' | 'event' | 'contract'
   });
 
   const permissions = getUserPermissions(currentUser!);
@@ -116,9 +108,11 @@ export const Tasks: React.FC = () => {
     const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       task.description.toLowerCase().includes(searchTerm.toLowerCase());
     
+    const matchesUser = selectedUser === 'all' || task.assignedTo === selectedUser;
+    
     const canView = permissions.canViewAllTasks || task.assignedTo === currentUser?.id || task.createdBy === currentUser?.id;
     
-    return matchesSearch && canView;
+    return matchesSearch && matchesUser && canView;
   });
 
   const getPriorityColor = (priority: string) => {
@@ -208,6 +202,61 @@ export const Tasks: React.FC = () => {
   const inProgressTasks = filteredTasks.filter(task => task.status === 'in_progress');
   const completedTasks = filteredTasks.filter(task => task.status === 'completed');
 
+  const TaskCard = ({ task }: { task: Task }) => {
+    const assignedUser = getUserById(task.assignedTo);
+    const relatedContact = getRelatedContact(task.id);
+    
+    return (
+      <Card className="hover:shadow-md transition-shadow">
+        <CardContent className="p-6">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex-1">
+              <div className="flex items-center space-x-3 mb-2">
+                <h3 className="text-lg font-semibold">{task.title}</h3>
+                <Badge className={getPriorityColor(task.priority)}>
+                  {getPriorityLabel(task.priority)}
+                </Badge>
+                {task.status !== 'completed' && (
+                  <Badge className={getStatusColor(task.status)}>
+                    {getStatusLabel(task.status)}
+                  </Badge>
+                )}
+              </div>
+              <p className="text-gray-600 mb-3">{task.description}</p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+                <div className="flex items-center space-x-2">
+                  <User className="h-4 w-4" />
+                  <span>Assigné à: {assignedUser?.name || 'Utilisateur inconnu'}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Calendar className="h-4 w-4" />
+                  <span>Échéance: {new Date(task.dueDate).toLocaleDateString('fr-FR')}</span>
+                </div>
+                {relatedContact && (
+                  <div>
+                    <span className="text-gray-500">Contact lié:</span>
+                    <button
+                      onClick={() => handleContactClick(relatedContact)}
+                      className="ml-2 text-purple-600 hover:text-purple-800 font-medium"
+                    >
+                      {relatedContact.firstName} {relatedContact.lastName}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+            {task.status !== 'completed' && (
+              <Button size="sm" variant="outline" onClick={() => handleTaskEdit(task)}>
+                <Edit className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -218,14 +267,33 @@ export const Tasks: React.FC = () => {
         <TaskCreator onTaskCreated={handleTaskCreated} />
       </div>
 
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-        <Input
-          placeholder="Rechercher des tâches..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10"
-        />
+      <div className="flex items-center space-x-4">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            placeholder="Rechercher des tâches..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          <Filter className="h-4 w-4 text-gray-500" />
+          <Select value={selectedUser} onValueChange={setSelectedUser}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Filtrer par utilisateur" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous les utilisateurs</SelectItem>
+              {users.filter(user => user.isActive).map((user) => (
+                <SelectItem key={user.id} value={user.id}>
+                  {user.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <Tabs defaultValue="all" className="space-y-6">
@@ -237,203 +305,29 @@ export const Tasks: React.FC = () => {
         </TabsList>
 
         <TabsContent value="all" className="space-y-4">
-          {filteredTasks.map((task) => {
-            const assignedUser = getUserById(task.assignedTo);
-            const relatedContact = getRelatedContact(task.id);
-            
-            return (
-              <Card key={task.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
-                        <h3 className="text-lg font-semibold">{task.title}</h3>
-                        <Badge className={getPriorityColor(task.priority)}>
-                          {getPriorityLabel(task.priority)}
-                        </Badge>
-                        <Badge className={getStatusColor(task.status)}>
-                          {getStatusLabel(task.status)}
-                        </Badge>
-                      </div>
-                      <p className="text-gray-600 mb-3">{task.description}</p>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
-                        <div className="flex items-center space-x-2">
-                          <User className="h-4 w-4" />
-                          <span>Assigné à: {assignedUser?.name || 'Utilisateur inconnu'}</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Calendar className="h-4 w-4" />
-                          <span>Échéance: {new Date(task.dueDate).toLocaleDateString('fr-FR')}</span>
-                        </div>
-                        {relatedContact && (
-                          <div>
-                            <span className="text-gray-500">Contact lié:</span>
-                            <button
-                              onClick={() => handleContactClick(relatedContact)}
-                              className="ml-2 text-purple-600 hover:text-purple-800 font-medium"
-                            >
-                              {relatedContact.firstName} {relatedContact.lastName}
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <Button size="sm" variant="outline" onClick={() => handleTaskEdit(task)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+          {filteredTasks.map((task) => (
+            <TaskCard key={task.id} task={task} />
+          ))}
         </TabsContent>
 
         <TabsContent value="todo" className="space-y-4">
-          {todoTasks.map((task) => {
-            const assignedUser = getUserById(task.assignedTo);
-            const relatedContact = getRelatedContact(task.id);
-            
-            return (
-              <Card key={task.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
-                        <h3 className="text-lg font-semibold">{task.title}</h3>
-                        <Badge className={getPriorityColor(task.priority)}>
-                          {getPriorityLabel(task.priority)}
-                        </Badge>
-                      </div>
-                      <p className="text-gray-600 mb-3">{task.description}</p>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
-                        <div className="flex items-center space-x-2">
-                          <User className="h-4 w-4" />
-                          <span>Assigné à: {assignedUser?.name || 'Utilisateur inconnu'}</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Calendar className="h-4 w-4" />
-                          <span>Échéance: {new Date(task.dueDate).toLocaleDateString('fr-FR')}</span>
-                        </div>
-                        {relatedContact && (
-                          <div>
-                            <span className="text-gray-500">Contact lié:</span>
-                            <button
-                              onClick={() => handleContactClick(relatedContact)}
-                              className="ml-2 text-purple-600 hover:text-purple-800 font-medium"
-                            >
-                              {relatedContact.firstName} {relatedContact.lastName}
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <Button size="sm" variant="outline" onClick={() => handleTaskEdit(task)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+          {todoTasks.map((task) => (
+            <TaskCard key={task.id} task={task} />
+          ))}
         </TabsContent>
 
         <TabsContent value="in_progress" className="space-y-4">
-          {inProgressTasks.map((task) => {
-            const assignedUser = getUserById(task.assignedTo);
-            const relatedContact = getRelatedContact(task.id);
-            
-            return (
-              <Card key={task.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
-                        <h3 className="text-lg font-semibold">{task.title}</h3>
-                        <Badge className={getPriorityColor(task.priority)}>
-                          {getPriorityLabel(task.priority)}
-                        </Badge>
-                      </div>
-                      <p className="text-gray-600 mb-3">{task.description}</p>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
-                        <div className="flex items-center space-x-2">
-                          <User className="h-4 w-4" />
-                          <span>Assigné à: {assignedUser?.name || 'Utilisateur inconnu'}</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Calendar className="h-4 w-4" />
-                          <span>Échéance: {new Date(task.dueDate).toLocaleDateString('fr-FR')}</span>
-                        </div>
-                        {relatedContact && (
-                          <div>
-                            <span className="text-gray-500">Contact lié:</span>
-                            <button
-                              onClick={() => handleContactClick(relatedContact)}
-                              className="ml-2 text-purple-600 hover:text-purple-800 font-medium"
-                            >
-                              {relatedContact.firstName} {relatedContact.lastName}
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <Button size="sm" variant="outline" onClick={() => handleTaskEdit(task)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+          {inProgressTasks.map((task) => (
+            <TaskCard key={task.id} task={task} />
+          ))}
         </TabsContent>
 
         <TabsContent value="completed" className="space-y-4">
-          {completedTasks.map((task) => {
-            const assignedUser = getUserById(task.assignedTo);
-            const relatedContact = getRelatedContact(task.id);
-            
-            return (
-              <Card key={task.id} className="hover:shadow-md transition-shadow opacity-75">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
-                        <h3 className="text-lg font-semibold line-through">{task.title}</h3>
-                        <Badge className="bg-green-100 text-green-800">
-                          Terminée
-                        </Badge>
-                      </div>
-                      <p className="text-gray-600 mb-3">{task.description}</p>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
-                        <div className="flex items-center space-x-2">
-                          <User className="h-4 w-4" />
-                          <span>Assigné à: {assignedUser?.name || 'Utilisateur inconnu'}</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Calendar className="h-4 w-4" />
-                          <span>Échéance: {new Date(task.dueDate).toLocaleDateString('fr-FR')}</span>
-                        </div>
-                        {relatedContact && (
-                          <div>
-                            <span className="text-gray-500">Contact lié:</span>
-                            <button
-                              onClick={() => handleContactClick(relatedContact)}
-                              className="ml-2 text-purple-600 hover:text-purple-800 font-medium"
-                            >
-                              {relatedContact.firstName} {relatedContact.lastName}
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+          {completedTasks.map((task) => (
+            <div key={task.id} className="opacity-75">
+              <TaskCard task={task} />
+            </div>
+          ))}
         </TabsContent>
       </Tabs>
 
