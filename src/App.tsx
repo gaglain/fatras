@@ -11,6 +11,7 @@ import { Contacts } from '@/pages/Contacts';
 import { ContactLists } from '@/pages/ContactLists';
 import { Artists } from '@/pages/Artists';
 import { Events } from '@/pages/Events';
+import { EventTypes } from '@/pages/EventTypes';
 import { Tasks } from '@/pages/Tasks';
 import { Contracts } from '@/pages/Contracts';
 import { Email } from '@/pages/Email';
@@ -22,6 +23,8 @@ import { RoadShow } from '@/pages/RoadShow';
 import { Merchandise } from '@/pages/Merchandise';
 import { Opportunities } from '@/pages/Opportunities';
 import { Website } from '@/pages/Website';
+import { WebsiteWithEditor } from '@/pages/WebsiteWithEditor';
+import { WebsiteBackoffice } from '@/pages/WebsiteBackoffice';
 import { Application } from '@/pages/Application';
 import { Preferences } from '@/pages/Preferences';
 import { FrontHome } from '@/pages/FrontHome';
@@ -63,6 +66,7 @@ function App() {
                       <Route path="/contact-lists" element={<ContactLists />} />
                       <Route path="/artists" element={<Artists />} />
                       <Route path="/events" element={<Events />} />
+                      <Route path="/event-types" element={<EventTypes />} />
                       <Route path="/tasks" element={<Tasks />} />
                       <Route path="/contracts" element={<Contracts />} />
                       <Route path="/email" element={<Email />} />
@@ -74,6 +78,8 @@ function App() {
                       <Route path="/merchandise" element={<Merchandise />} />
                       <Route path="/opportunities" element={<Opportunities />} />
                       <Route path="/website" element={<Website />} />
+                      <Route path="/website/editor" element={<WebsiteWithEditor />} />
+                      <Route path="/website/backoffice" element={<WebsiteBackoffice />} />
                       <Route path="/application" element={<Application />} />
                       <Route path="/preferences" element={<Preferences />} />
                     </Routes>

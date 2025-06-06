@@ -1,85 +1,161 @@
 
-import React from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { NavLink } from 'react-router-dom';
 import { 
-  Calendar, 
+  Home, 
   Users, 
-  FileText, 
+  Music, 
+  Calendar, 
   CheckSquare, 
-  BarChart3, 
+  FileText, 
+  Mail, 
+  MessageSquare, 
+  Clock, 
+  Book, 
+  MapPin, 
+  ShoppingBag, 
+  Target, 
+  Globe, 
   Settings, 
-  MessageSquare,
-  User,
-  Globe,
-  Mail,
-  Music,
-  ShoppingBag,
-  BookOpen,
-  MapPin,
-  Package,
-  Smartphone,
-  UserCheck
+  ChevronDown,
+  ChevronRight,
+  Contact,
+  MailOpen
 } from 'lucide-react';
-import { TaskNotification } from '@/components/tasks/TaskNotification';
 
 const menuItems = [
-  { icon: BarChart3, label: 'Tableau de Bord', path: '/dashboard' },
-  { icon: Calendar, label: 'Agenda', path: '/agenda' },
-  { icon: Users, label: 'Contacts', path: '/contacts' },
-  { icon: UserCheck, label: 'Listes de Contacts', path: '/contact-lists' },
-  { icon: Music, label: 'Artistes', path: '/artists' },
-  { icon: Calendar, label: 'Événements', path: '/events' },
-  { icon: FileText, label: 'Contrats', path: '/contracts' },
-  { icon: CheckSquare, label: 'Tâches', path: '/tasks', hasNotification: true },
-  { icon: Mail, label: 'Email', path: '/email' },
-  { icon: Mail, label: 'Campagnes Email', path: '/email-campaigns' },
-  { icon: MessageSquare, label: 'Messagerie', path: '/messagerie' },
-  { icon: BookOpen, label: 'Bible du Spectacle', path: '/show-bible' },
-  { icon: MapPin, label: 'Feuille de route', path: '/road-show' },
-  { icon: ShoppingBag, label: 'Merchandising', path: '/merchandise' },
-  { icon: Package, label: 'Opportunités', path: '/opportunities' },
-  { icon: Globe, label: 'Site Web', path: '/website' },
-  { icon: Smartphone, label: 'Application', path: '/application' },
-  { icon: Settings, label: 'Préférences', path: '/preferences' },
+  { to: '/dashboard', icon: Home, label: 'Tableau de bord' },
+  { 
+    icon: Users, 
+    label: 'Contacts', 
+    items: [
+      { to: '/contacts', label: 'Tous les contacts' },
+      { to: '/contact-lists', label: 'Listes de contacts' }
+    ]
+  },
+  { to: '/artists', icon: Music, label: 'Artistes' },
+  { 
+    icon: Calendar, 
+    label: 'Événements', 
+    items: [
+      { to: '/events', label: 'Tous les événements' },
+      { to: '/event-types', label: 'Types d\'événements' }
+    ]
+  },
+  { to: '/tasks', icon: CheckSquare, label: 'Tâches' },
+  { to: '/contracts', icon: FileText, label: 'Contrats' },
+  { 
+    icon: Mail, 
+    label: 'Communication', 
+    items: [
+      { to: '/email', label: 'Emails' },
+      { to: '/email-campaigns', label: 'Campagnes' },
+      { to: '/messagerie', label: 'Messagerie' }
+    ]
+  },
+  { to: '/agenda', icon: Clock, label: 'Agenda' },
+  { to: '/show-bible', icon: Book, label: 'Show Bible' },
+  { to: '/road-show', icon: MapPin, label: 'Road Show' },
+  { to: '/merchandise', icon: ShoppingBag, label: 'Merchandising' },
+  { to: '/opportunities', icon: Target, label: 'Opportunités' },
+  { to: '/website', icon: Globe, label: 'Site Web' },
+  { to: '/preferences', icon: Settings, label: 'Préférences' }
 ];
 
 export const Sidebar: React.FC = () => {
-  const location = useLocation();
-  const pendingTasksCount = 5; // This would come from your task management system
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
+
+  const toggleExpanded = (label: string) => {
+    setExpandedItems(prev => 
+      prev.includes(label) 
+        ? prev.filter(item => item !== label)
+        : [...prev, label]
+    );
+  };
+
+  const renderMenuItem = (item: any, index: number) => {
+    const hasSubItems = item.items && item.items.length > 0;
+    const isExpanded = expandedItems.includes(item.label);
+    const Icon = item.icon;
+
+    if (hasSubItems) {
+      return (
+        <div key={index}>
+          <button
+            onClick={() => toggleExpanded(item.label)}
+            className="w-full flex items-center justify-between px-3 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-md text-sm font-medium group transition-colors"
+          >
+            <div className="flex items-center">
+              <Icon className="mr-3 h-4 w-4" />
+              {item.label}
+            </div>
+            {isExpanded ? (
+              <ChevronDown className="h-4 w-4" />
+            ) : (
+              <ChevronRight className="h-4 w-4" />
+            )}
+          </button>
+          
+          {isExpanded && (
+            <div className="ml-6 mt-1 space-y-1">
+              {item.items.map((subItem: any, subIndex: number) => (
+                <NavLink
+                  key={subIndex}
+                  to={subItem.to}
+                  className={({ isActive }) =>
+                    `flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
+                      isActive
+                        ? 'bg-purple-100 text-purple-700 font-medium'
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    }`
+                  }
+                >
+                  {subItem.label}
+                </NavLink>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <NavLink
+        key={index}
+        to={item.to}
+        className={({ isActive }) =>
+          `flex items-center px-3 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-md text-sm font-medium group transition-colors ${
+            isActive ? 'bg-purple-100 text-purple-700' : ''
+          }`
+        }
+      >
+        <Icon className="mr-3 h-4 w-4" />
+        {item.label}
+      </NavLink>
+    );
+  };
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 h-full flex flex-col">
-      <div className="p-6 border-b border-gray-200">
-        <h1 className="text-xl font-bold text-gray-900">ShowManager Pro</h1>
+    <div className="hidden md:flex md:flex-shrink-0">
+      <div className="flex flex-col w-64">
+        <div className="flex flex-col flex-grow pt-5 pb-4 overflow-y-auto bg-white border-r border-gray-200">
+          <div className="flex items-center flex-shrink-0 px-4">
+            <div className="flex items-center">
+              <div className="flex-shrink-0 w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
+                <Music className="w-5 h-5 text-white" />
+              </div>
+              <div className="ml-3">
+                <p className="text-lg font-semibold text-gray-900">MusicCRM</p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-5 flex-grow flex flex-col">
+            <nav className="flex-1 px-2 space-y-1 bg-white">
+              {menuItems.map(renderMenuItem)}
+            </nav>
+          </div>
+        </div>
       </div>
-      
-      <nav className="flex-1 overflow-y-auto p-4">
-        <ul className="space-y-1">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.path;
-            
-            return (
-              <li key={item.path}>
-                <Link
-                  to={item.path}
-                  className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors relative ${
-                    isActive
-                      ? 'bg-purple-100 text-purple-600'
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                  }`}
-                >
-                  <Icon className="h-5 w-5" />
-                  <span className="flex-1">{item.label}</span>
-                  {item.hasNotification && (
-                    <TaskNotification pendingCount={pendingTasksCount} />
-                  )}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
     </div>
   );
 };
