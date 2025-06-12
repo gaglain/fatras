@@ -3,11 +3,11 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Bell, Mail, CheckSquare, Calendar, X } from 'lucide-react';
+import { Bell, Mail, CheckSquare, Calendar, X, User } from 'lucide-react';
 
 interface Notification {
   id: string;
-  type: 'email' | 'task' | 'event' | 'message';
+  type: 'email' | 'task' | 'event' | 'message' | 'contact';
   title: string;
   message: string;
   timestamp: string;
@@ -37,6 +37,7 @@ export const NotificationPopup: React.FC<NotificationPopupProps> = ({
       case 'email': return <Mail className="h-4 w-4" />;
       case 'task': return <CheckSquare className="h-4 w-4" />;
       case 'event': return <Calendar className="h-4 w-4" />;
+      case 'contact': return <User className="h-4 w-4" />;
       case 'message': return <Bell className="h-4 w-4" />;
       default: return <Bell className="h-4 w-4" />;
     }
