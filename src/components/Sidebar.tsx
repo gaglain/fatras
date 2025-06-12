@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
@@ -20,7 +19,8 @@ import {
   Settings,
   UserCog,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Briefcase
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -57,8 +57,17 @@ const defaultNavigation: MenuItem[] = [
       { name: 'Agenda', href: '/agenda', icon: CalendarDays, visible: true }
     ]
   },
-  { name: 'Tâches', href: '/tasks', icon: CheckSquare, visible: true },
-  { name: 'Contrats', href: '/contracts', icon: FileText, visible: true },
+  { 
+    name: 'Booking', 
+    href: '/opportunities', 
+    icon: Briefcase, 
+    visible: true,
+    children: [
+      { name: 'Opportunités', href: '/opportunities', icon: Target, visible: true },
+      { name: 'Contrats', href: '/contracts', icon: FileText, visible: true },
+      { name: 'Tâches', href: '/tasks', icon: CheckSquare, visible: true }
+    ]
+  },
   { 
     name: 'Communication', 
     href: '/email', 
@@ -79,8 +88,7 @@ const defaultNavigation: MenuItem[] = [
     visible: true,
     children: [
       { name: 'Road Show', href: '/road-show', icon: Route, visible: true },
-      { name: 'Merchandise', href: '/merchandise', icon: ShoppingBag, visible: true },
-      { name: 'Opportunités', href: '/opportunities', icon: Target, visible: true }
+      { name: 'Merchandise', href: '/merchandise', icon: ShoppingBag, visible: true }
     ]
   },
   { name: 'Site Web', href: '/website', icon: Globe, visible: true },
@@ -100,7 +108,7 @@ const defaultNavigation: MenuItem[] = [
 export const Sidebar: React.FC = () => {
   const location = useLocation();
   const [navigation, setNavigation] = useState<MenuItem[]>(defaultNavigation);
-  const [openSections, setOpenSections] = useState<string[]>(['Contacts & Relations', 'Événements & Agenda', 'Communication', 'Production & Ventes', 'Administration']);
+  const [openSections, setOpenSections] = useState<string[]>(['Contacts & Relations', 'Événements & Agenda', 'Booking', 'Communication', 'Production & Ventes', 'Administration']);
 
   // Charger la configuration sauvegardée
   useEffect(() => {

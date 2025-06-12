@@ -5,35 +5,71 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { MessageCircle, Send, X, Users, Phone, Video, Minimize2, Maximize2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { MessageCircle, Send, X, Users, Phone, Video, Minimize2, Maximize2, Hash, MessageSquare } from 'lucide-react';
 
 export const ChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      sender: 'Marie Martin',
-      message: 'Salut ! As-tu les détails pour le contrat de demain ?',
-      time: '14:30',
-      isMe: false
-    },
-    {
-      id: 2,
-      sender: 'Moi',
-      message: 'Oui, je viens de l\'envoyer par email.',
-      time: '14:32',
-      isMe: true
-    },
-    {
-      id: 3,
-      sender: 'Jean Dupont',
-      message: 'L\'équipe technique est prête pour ce soir. Tout est OK côté son.',
-      time: '15:15',
-      isMe: false
-    }
+  const [selectedChannel, setSelectedChannel] = useState('general');
+
+  const [channels] = useState([
+    { id: 'general', name: 'Général', type: 'channel', unread: 3 },
+    { id: 'booking', name: 'Booking', type: 'channel', unread: 1 },
+    { id: 'production', name: 'Production', type: 'channel', unread: 0 },
+    { id: 'tech', name: 'Technique', type: 'channel', unread: 2 },
+    { id: 'marie-martin', name: 'Marie Martin', type: 'dm', unread: 1 },
+    { id: 'jean-dupont', name: 'Jean Dupont', type: 'dm', unread: 0 }
   ]);
+
+  const [messages, setMessages] = useState({
+    general: [
+      {
+        id: 1,
+        sender: 'Marie Martin',
+        message: 'Salut ! As-tu les détails pour le contrat de demain ?',
+        time: '14:30',
+        isMe: false
+      },
+      {
+        id: 2,
+        sender: 'Moi',
+        message: 'Oui, je viens de l\'envoyer par email.',
+        time: '14:32',
+        isMe: true
+      }
+    ],
+    booking: [
+      {
+        id: 1,
+        sender: 'Jean Dupont',
+        message: 'Nouveau contrat signé pour la tournée d\'été !',
+        time: '15:15',
+        isMe: false
+      }
+    ],
+    production: [],
+    tech: [
+      {
+        id: 1,
+        sender: 'Sophie Tech',
+        message: 'Le matériel son est prêt pour ce soir',
+        time: '16:00',
+        isMe: false
+      }
+    ],
+    'marie-martin': [
+      {
+        id: 1,
+        sender: 'Marie Martin',
+        message: 'Peux-tu me rappeler demain ?',
+        time: '17:30',
+        isMe: false
+      }
+    ],
+    'jean-dupont': []
+  });
 
   const [activeUsers] = useState([
     { id: 1, name: 'Marie Martin', status: 'online' },
@@ -53,7 +89,10 @@ export const ChatWidget: React.FC = () => {
       isMe: true
     };
     
-    setMessages(prev => [...prev, newMessage]);
+    setMessages(prev => ({
+      ...prev,
+      [selectedChannel]: [...(prev[selectedChannel] || []), newMessage]
+    }));
     setMessage('');
   };
 
@@ -71,10 +110,13 @@ export const ChatWidget: React.FC = () => {
   };
 
   const onlineUsersCount = activeUsers.filter(u => u.status === 'online').length;
+  const totalUnread = channels.reduce((sum, channel) => sum + channel.unread, 0);
+  const currentChannel = channels.find(c => c.id === selectedChannel);
+  const currentMessages = messages[selectedChannel] || [];
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
-      {/* Chat Toggle Button - Always visible */}
+      {/* Chat Toggle Button */}
       <Button
         onClick={() => {
           setIsOpen(!isOpen);
@@ -83,9 +125,9 @@ export const ChatWidget: React.FC = () => {
         className="h-14 w-14 rounded-full bg-primary hover:bg-primary/90 shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-110"
       >
         <MessageCircle className="h-6 w-6 text-primary-foreground" />
-        {onlineUsersCount > 0 && (
-          <Badge className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-green-500 text-white text-xs p-0 flex items-center justify-center animate-pulse">
-            {onlineUsersCount}
+        {totalUnread > 0 && (
+          <Badge className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-red-500 text-white text-xs p-0 flex items-center justify-center animate-pulse">
+            {totalUnread}
           </Badge>
         )}
       </Button>
@@ -98,8 +140,8 @@ export const ChatWidget: React.FC = () => {
           <CardHeader className="pb-3 border-b bg-primary text-primary-foreground rounded-t-lg">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm flex items-center">
-                <Users className="h-4 w-4 mr-2" />
-                Messagerie Interne
+                {currentChannel?.type === 'channel' ? <Hash className="h-4 w-4 mr-2" /> : <MessageSquare className="h-4 w-4 mr-2" />}
+                {currentChannel?.name || 'Messagerie'}
                 <Badge variant="secondary" className="ml-2 text-xs bg-primary-foreground/20 text-primary-foreground">
                   {onlineUsersCount} en ligne
                 </Badge>
@@ -127,27 +169,53 @@ export const ChatWidget: React.FC = () => {
           
           {!isMinimized && (
             <CardContent className="flex flex-col h-full p-0">
-              {/* Active Users */}
+              {/* Channel/Topic Selection */}
               <div className="p-3 border-b bg-muted/50">
-                <div className="flex flex-wrap gap-2">
-                  {activeUsers.slice(0, 4).map((user) => (
-                    <div key={user.id} className="flex items-center space-x-1 text-xs bg-background rounded-full px-2 py-1">
-                      <div className={`w-2 h-2 rounded-full ${getStatusColor(user.status)}`} />
-                      <span className="text-muted-foreground">{user.name.split(' ')[0]}</span>
-                    </div>
-                  ))}
-                  {activeUsers.length > 4 && (
-                    <div className="text-xs text-muted-foreground bg-background rounded-full px-2 py-1">
-                      +{activeUsers.length - 4} autres
-                    </div>
-                  )}
-                </div>
+                <Select value={selectedChannel} onValueChange={setSelectedChannel}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <div className="text-xs font-medium text-muted-foreground px-2 py-1">CHANNELS</div>
+                    {channels.filter(c => c.type === 'channel').map((channel) => (
+                      <SelectItem key={channel.id} value={channel.id}>
+                        <div className="flex items-center justify-between w-full">
+                          <div className="flex items-center">
+                            <Hash className="h-3 w-3 mr-1" />
+                            {channel.name}
+                          </div>
+                          {channel.unread > 0 && (
+                            <Badge className="ml-2 h-4 w-4 p-0 text-xs bg-red-500 text-white rounded-full flex items-center justify-center">
+                              {channel.unread}
+                            </Badge>
+                          )}
+                        </div>
+                      </SelectItem>
+                    ))}
+                    <div className="text-xs font-medium text-muted-foreground px-2 py-1 mt-2">MESSAGES PRIVÉS</div>
+                    {channels.filter(c => c.type === 'dm').map((channel) => (
+                      <SelectItem key={channel.id} value={channel.id}>
+                        <div className="flex items-center justify-between w-full">
+                          <div className="flex items-center">
+                            <MessageSquare className="h-3 w-3 mr-1" />
+                            {channel.name}
+                          </div>
+                          {channel.unread > 0 && (
+                            <Badge className="ml-2 h-4 w-4 p-0 text-xs bg-red-500 text-white rounded-full flex items-center justify-center">
+                              {channel.unread}
+                            </Badge>
+                          )}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Messages */}
               <ScrollArea className="flex-1 p-3">
                 <div className="space-y-3">
-                  {messages.map((msg) => (
+                  {currentMessages.map((msg) => (
                     <div
                       key={msg.id}
                       className={`flex ${msg.isMe ? 'justify-end' : 'justify-start'}`}
@@ -174,7 +242,7 @@ export const ChatWidget: React.FC = () => {
               <div className="border-t p-3 bg-background">
                 <div className="flex space-x-2">
                   <Input
-                    placeholder="Tapez votre message..."
+                    placeholder={`Message ${currentChannel?.type === 'channel' ? '#' + currentChannel.name : currentChannel?.name}...`}
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
@@ -191,16 +259,18 @@ export const ChatWidget: React.FC = () => {
                 </div>
                 
                 {/* Quick Actions */}
-                <div className="flex space-x-2 mt-2">
-                  <Button variant="outline" size="sm" className="flex-1">
-                    <Phone className="h-3 w-3 mr-1" />
-                    Appel
-                  </Button>
-                  <Button variant="outline" size="sm" className="flex-1">
-                    <Video className="h-3 w-3 mr-1" />
-                    Vidéo
-                  </Button>
-                </div>
+                {currentChannel?.type === 'dm' && (
+                  <div className="flex space-x-2 mt-2">
+                    <Button variant="outline" size="sm" className="flex-1">
+                      <Phone className="h-3 w-3 mr-1" />
+                      Appel
+                    </Button>
+                    <Button variant="outline" size="sm" className="flex-1">
+                      <Video className="h-3 w-3 mr-1" />
+                      Vidéo
+                    </Button>
+                  </div>
+                )}
               </div>
             </CardContent>
           )}
