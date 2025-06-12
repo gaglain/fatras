@@ -13,9 +13,13 @@ export const ThemeToggle: React.FC = () => {
       size="sm"
       onClick={toggleTheme}
       className="h-8 w-8 p-0"
+      title={`Basculer vers le mode ${theme === 'light' ? 'sombre' : 'clair'}`}
     >
-      <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-      <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+      {theme === 'light' ? (
+        <Moon className="h-4 w-4" />
+      ) : (
+        <Sun className="h-4 w-4" />
+      )}
       <span className="sr-only">Basculer le thème</span>
     </Button>
   );
