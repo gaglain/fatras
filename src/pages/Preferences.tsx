@@ -68,11 +68,13 @@ export const Preferences: React.FC = () => {
     
     // Mettre à jour le favicon si fourni
     if (companySettings.favicon) {
-      const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
-      link.type = 'image/x-icon';
-      link.rel = 'shortcut icon';
-      link.href = companySettings.favicon;
-      document.getElementsByTagName('head')[0].appendChild(link);
+      const link = document.querySelector("link[rel*='icon']") as HTMLLinkElement || document.createElement('link');
+      (link as HTMLLinkElement).type = 'image/x-icon';
+      (link as HTMLLinkElement).rel = 'shortcut icon';
+      (link as HTMLLinkElement).href = companySettings.favicon;
+      if (!document.querySelector("link[rel*='icon']")) {
+        document.getElementsByTagName('head')[0].appendChild(link);
+      }
     }
 
     // Déclencher un événement pour notifier les autres composants
@@ -206,7 +208,8 @@ export const Preferences: React.FC = () => {
                 <div>
                   <Label>Mode compact</Label>
                   <p className="text-sm text-muted-foreground">
-                    Réduire l'espacement pour afficher plus d'informations
+                    Réduire l'espacement entre les éléments pour afficher plus d'informations à l'écran. 
+                    Utile pour les écrans plus petits ou pour maximiser l'espace de travail.
                   </p>
                 </div>
                 <Switch

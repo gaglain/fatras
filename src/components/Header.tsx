@@ -11,12 +11,13 @@ import { NotificationCenter } from './NotificationCenter';
 import { UserProfile } from './UserProfile';
 
 export const Header: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [companySettings, setCompanySettings] = useState({
     name: 'Fatras Booking',
-    logo: ''
+    logo: '',
+    favicon: ''
   });
 
   // Charger les paramètres de l'entreprise
@@ -47,6 +48,32 @@ export const Header: React.FC = () => {
       window.removeEventListener('companySettingsChanged', handleSettingsChange);
     };
   }, []);
+
+  // Mettre à jour le favicon quand les paramètres changent
+  useEffect(() => {
+    if (companySettings.favicon) {
+      const link = document.querySelector("link[rel*='icon']") as HTMLLinkElement || document.createElement('link');
+      link.type = 'image/x-icon';
+      link.rel = 'shortcut icon';
+      link.href = companySettings.favicon;
+      if (!document.querySelector("link[rel*='icon']")) {
+        document.getElementsByTagName('head')[0].appendChild(link);
+      }
+    }
+  }, [companySettings.favicon]);
+
+  const getUserDisplayName = () => {
+    if (user?.user_metadata?.name) return user.user_metadata.name;
+    if (user?.user_metadata?.full_name) return user.user_metadata.full_name;
+    if (user?.user_metadata?.first_name) {
+      return `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}`.trim();
+    }
+    return user?.email?.split('@')[0] || 'Utilisateur';
+  };
+
+  const getUserAvatar = () => {
+    return user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '';
+  };
 
   return (
     <header className="bg-background border-b border-border px-6 py-4">
@@ -91,9 +118,9 @@ export const Header: React.FC = () => {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={user?.avatar} alt={user?.name} />
+                  <AvatarImage src={getUserAvatar()} alt={getUserDisplayName()} />
                   <AvatarFallback>
-                    {user?.name?.charAt(0) || 'U'}
+                    {getUserDisplayName().charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
               </Button>
@@ -107,7 +134,7 @@ export const Header: React.FC = () => {
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Paramètres</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={logout}>
+              <DropdownMenuItem onClick={() => signOut()}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Déconnexion</span>
               </DropdownMenuItem>
@@ -117,11 +144,11 @@ export const Header: React.FC = () => {
       </div>
 
       {showNotifications && (
-        <NotificationCenter onClose={() => setShowNotifications(false)} />
+        <NotificationCenter />
       )}
 
       {showProfile && (
-        <UserProfile onClose={() => setShowProfile(false)} />
+        <UserProfile />
       )}
     </header>
   );
