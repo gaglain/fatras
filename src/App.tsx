@@ -6,6 +6,7 @@ import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
 import { FrontLayout } from '@/components/FrontLayout';
 import { BackOfficeHeader } from '@/components/BackOfficeHeader';
+import { ChatWidget } from '@/components/ChatWidget';
 import { Dashboard } from '@/pages/Dashboard';
 import { Contacts } from '@/pages/Contacts';
 import { ContactLists } from '@/pages/ContactLists';
@@ -92,6 +93,7 @@ function App() {
                     </div>
                   </main>
                 </div>
+                <ChatWidget />
               </div>
             } />
           </Routes>
