@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
@@ -20,6 +21,7 @@ import { Agenda } from '@/pages/Agenda';
 import { ShowBible } from '@/pages/ShowBible';
 import { RoadShow } from '@/pages/RoadShow';
 import { Merchandise } from '@/pages/Merchandise';
+import { Opportunities } from '@/pages/Opportunities';
 import { Website } from '@/pages/Website';
 import { WebsiteWithEditor } from '@/pages/WebsiteWithEditor';
 import { WebsiteBackoffice } from '@/pages/WebsiteBackoffice';
