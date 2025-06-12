@@ -1,11 +1,11 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Plus, Clock, MapPin, Users, ExternalLink, CalendarDays } from 'lucide-react';
+import { Calendar, Plus, Clock, MapPin, Users, ExternalLink, CalendarDays, Settings } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
+import { toast } from 'sonner';
 
 interface AgendaEvent {
   id: string;
@@ -20,7 +20,7 @@ interface AgendaEvent {
   attendees: string[];
   googleEventId?: string;
   isFromGoogle?: boolean;
-  linkedEventId?: string; // Link to Events page
+  linkedEventId?: string;
 }
 
 const sampleAgendaEvents: AgendaEvent[] = [
@@ -59,6 +59,133 @@ export const Agenda: React.FC = () => {
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('week');
   const [showAddEvent, setShowAddEvent] = useState(false);
   const [isGoogleConnected, setIsGoogleConnected] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+
+  const initializeGoogleCalendar = () => {
+    return new Promise((resolve) => {
+      if (window.gapi) {
+        window.gapi.load('client:auth2', () => {
+          window.gapi.client.init({
+            apiKey: 'YOUR_API_KEY', // À remplacer par la vraie clé API
+            clientId: 'YOUR_CLIENT_ID', // À remplacer par le vrai client ID
+            discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'],
+            scope: 'https://www.googleapis.com/auth/calendar'
+          }).then(() => {
+            resolve(window.gapi.auth2.getAuthInstance());
+          });
+        });
+      } else {
+        // Charger l'API Google si elle n'est pas déjà chargée
+        const script = document.createElement('script');
+        script.src = 'https://apis.google.com/js/api.js';
+        script.onload = () => {
+          window.gapi.load('client:auth2', () => {
+            window.gapi.client.init({
+              apiKey: 'YOUR_API_KEY',
+              clientId: 'YOUR_CLIENT_ID',
+              discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'],
+              scope: 'https://www.googleapis.com/auth/calendar'
+            }).then(() => {
+              resolve(window.gapi.auth2.getAuthInstance());
+            });
+          });
+        };
+        document.head.appendChild(script);
+      }
+    });
+  };
+
+  const connectToGoogleCalendar = async () => {
+    setIsConnecting(true);
+    try {
+      const authInstance = await initializeGoogleCalendar();
+      const isSignedIn = authInstance.isSignedIn.get();
+      
+      if (!isSignedIn) {
+        await authInstance.signIn();
+      }
+      
+      // Synchroniser les événements existants
+      await syncGoogleCalendarEvents();
+      
+      setIsGoogleConnected(true);
+      toast.success('Google Calendar connecté avec succès !');
+    } catch (error) {
+      console.error('Erreur lors de la connexion à Google Calendar:', error);
+      toast.error('Erreur lors de la connexion à Google Calendar. Vérifiez vos paramètres.');
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
+  const syncGoogleCalendarEvents = async () => {
+    try {
+      const response = await window.gapi.client.calendar.events.list({
+        calendarId: 'primary',
+        timeMin: new Date().toISOString(),
+        maxResults: 50,
+        singleEvents: true,
+        orderBy: 'startTime'
+      });
+
+      const googleEvents = response.result.items.map((event: any) => ({
+        id: `google-${event.id}`,
+        title: event.summary || 'Événement sans titre',
+        startDate: event.start.date || event.start.dateTime?.split('T')[0],
+        endDate: event.end.date || event.end.dateTime?.split('T')[0],
+        startTime: event.start.dateTime ? new Date(event.start.dateTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '00:00',
+        endTime: event.end.dateTime ? new Date(event.end.dateTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '23:59',
+        location: event.location || '',
+        description: event.description || '',
+        type: 'personal' as const,
+        attendees: event.attendees?.map((att: any) => att.email) || [],
+        googleEventId: event.id,
+        isFromGoogle: true
+      }));
+
+      // Fusionner avec les événements existants (éviter les doublons)
+      setEvents(prev => {
+        const nonGoogleEvents = prev.filter(event => !event.isFromGoogle);
+        return [...nonGoogleEvents, ...googleEvents];
+      });
+
+      toast.success(`${googleEvents.length} événements synchronisés depuis Google Calendar`);
+    } catch (error) {
+      console.error('Erreur lors de la synchronisation:', error);
+      toast.error('Erreur lors de la synchronisation des événements');
+    }
+  };
+
+  const createGoogleCalendarEvent = async (eventData: any) => {
+    if (!isGoogleConnected) return;
+
+    try {
+      const event = {
+        summary: eventData.title,
+        location: eventData.location,
+        description: eventData.description,
+        start: {
+          dateTime: `${eventData.startDate}T${eventData.startTime}:00`,
+          timeZone: 'Europe/Paris'
+        },
+        end: {
+          dateTime: `${eventData.endDate}T${eventData.endTime}:00`,
+          timeZone: 'Europe/Paris'
+        }
+      };
+
+      const response = await window.gapi.client.calendar.events.insert({
+        calendarId: 'primary',
+        resource: event
+      });
+
+      toast.success('Événement ajouté à Google Calendar');
+      return response.result.id;
+    } catch (error) {
+      console.error('Erreur lors de la création de l\'événement Google:', error);
+      toast.error('Erreur lors de l\'ajout à Google Calendar');
+    }
+  };
 
   const getDayEvents = (date: string) => {
     return events.filter(event => 
@@ -69,7 +196,7 @@ export const Agenda: React.FC = () => {
   const getWeekDates = () => {
     const selected = new Date(selectedDate);
     const start = new Date(selected);
-    start.setDate(selected.getDate() - selected.getDay() + 1); // Monday
+    start.setDate(selected.getDate() - selected.getDay() + 1);
     
     const dates = [];
     for (let i = 0; i < 7; i++) {
@@ -78,12 +205,6 @@ export const Agenda: React.FC = () => {
       dates.push(date.toISOString().split('T')[0]);
     }
     return dates;
-  };
-
-  const syncWithGoogle = () => {
-    // This would integrate with Google Calendar API
-    console.log('Synchronisation avec Google Calendar...');
-    setIsGoogleConnected(true);
   };
 
   const getTypeColor = (type: string) => {
@@ -105,15 +226,28 @@ export const Agenda: React.FC = () => {
         </div>
         <div className="flex space-x-3">
           {!isGoogleConnected ? (
-            <Button onClick={syncWithGoogle} variant="outline">
+            <Button 
+              onClick={connectToGoogleCalendar} 
+              variant="outline"
+              disabled={isConnecting}
+            >
               <CalendarDays className="h-4 w-4 mr-2" />
-              Connecter Google Calendar
+              {isConnecting ? 'Connexion...' : 'Connecter Google Calendar'}
             </Button>
           ) : (
-            <Badge className="bg-green-100 text-green-800">
-              <CalendarDays className="h-3 w-3 mr-1" />
-              Google Calendar connecté
-            </Badge>
+            <div className="flex items-center space-x-2">
+              <Badge className="bg-green-100 text-green-800">
+                <CalendarDays className="h-3 w-3 mr-1" />
+                Google Calendar connecté
+              </Badge>
+              <Button 
+                onClick={syncGoogleCalendarEvents} 
+                variant="outline" 
+                size="sm"
+              >
+                Synchroniser
+              </Button>
+            </div>
           )}
           <Button onClick={() => setShowAddEvent(true)} className="bg-purple-600 hover:bg-purple-700">
             <Plus className="h-4 w-4 mr-2" />
@@ -121,6 +255,24 @@ export const Agenda: React.FC = () => {
           </Button>
         </div>
       </div>
+
+      {!isGoogleConnected && (
+        <Card className="bg-blue-50 border-blue-200">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-3">
+              <Settings className="h-5 w-5 text-blue-600" />
+              <div>
+                <h4 className="font-medium text-blue-900">Configuration Google Calendar</h4>
+                <p className="text-sm text-blue-700">
+                  Pour utiliser la synchronisation Google Calendar, vous devez configurer vos clés API dans les paramètres.
+                  <br />
+                  <a href="/preferences" className="underline">Configurer maintenant</a>
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* View Controls */}
       <div className="flex items-center justify-between">
@@ -190,9 +342,17 @@ export const Agenda: React.FC = () => {
                         <div className="text-xs text-gray-500">
                           {event.startTime} - {event.endTime}
                         </div>
-                        <Badge className={`${getTypeColor(event.type)} text-xs mt-1`}>
-                          {event.type}
-                        </Badge>
+                        <div className="flex items-center space-x-1 mt-1">
+                          <Badge className={`${getTypeColor(event.type)} text-xs`}>
+                            {event.type}
+                          </Badge>
+                          {event.isFromGoogle && (
+                            <Badge variant="outline" className="text-xs">
+                              <CalendarDays className="h-2 w-2 mr-1" />
+                              G
+                            </Badge>
+                          )}
+                        </div>
                       </Card>
                     ))}
                 </div>

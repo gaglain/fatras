@@ -3,10 +3,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Send, Hash, Users, MessageCircle, MoreVertical, X } from 'lucide-react';
+import { Plus, Send, Hash, Users, MessageCircle, MoreVertical, X, Search, UserPlus } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import { PollCreator } from '@/components/messaging/PollCreator';
+import { DirectMessage } from '@/components/messaging/DirectMessage';
 import { UserMention } from '@/components/UserMention';
 import { toast } from 'sonner';
 
@@ -31,6 +33,13 @@ interface Channel {
   isArchived?: boolean;
 }
 
+interface UserWithStatus {
+  id: string;
+  name: string;
+  email: string;
+  status: 'online' | 'away' | 'busy' | 'offline';
+}
+
 const sampleChannels: Channel[] = [
   {
     id: 'general',
@@ -42,13 +51,39 @@ const sampleChannels: Channel[] = [
   }
 ];
 
+const sampleUsersWithStatus: UserWithStatus[] = [
+  {
+    id: 'user-1',
+    name: 'Marie Martin',
+    email: 'marie@example.com',
+    status: 'online'
+  },
+  {
+    id: 'user-2',
+    name: 'Jean Dupont',
+    email: 'jean@example.com',
+    status: 'away'
+  },
+  {
+    id: 'user-3',
+    name: 'Sophie Durand',
+    email: 'sophie@example.com',
+    status: 'online'
+  }
+];
+
 export const Messagerie: React.FC = () => {
   const { users, getUserById, currentUser } = useUser();
   const [channels, setChannels] = useState<Channel[]>(sampleChannels);
   const [selectedChannel, setSelectedChannel] = useState<Channel>(channels[0]);
+  const [selectedUser, setSelectedUser] = useState<UserWithStatus | null>(null);
+  const [viewMode, setViewMode] = useState<'channels' | 'direct'>('channels');
+  const [availableUsers] = useState<UserWithStatus[]>(sampleUsersWithStatus);
   const [messageText, setMessageText] = useState('');
   const [showCreateChannel, setShowCreateChannel] = useState(false);
   const [showPollCreator, setShowPollCreator] = useState(false);
+  const [showUserSearch, setShowUserSearch] = useState(false);
+  const [userSearchTerm, setUserSearchTerm] = useState('');
   const [newChannelName, setNewChannelName] = useState('');
   const [newChannelDescription, setNewChannelDescription] = useState('');
   const [newChannelType, setNewChannelType] = useState<'public' | 'private' | 'event'>('public');
@@ -194,63 +229,145 @@ export const Messagerie: React.FC = () => {
     });
   };
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'online': return 'bg-green-500';
+      case 'away': return 'bg-yellow-500';
+      case 'busy': return 'bg-red-500';
+      default: return 'bg-gray-400';
+    }
+  };
+
+  const filteredUsers = availableUsers.filter(user =>
+    user.name.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+    user.email.toLowerCase().includes(userSearchTerm.toLowerCase())
+  );
+
+  const startDirectMessage = (user: UserWithStatus) => {
+    setSelectedUser(user);
+    setViewMode('direct');
+    setShowUserSearch(false);
+  };
+
+  const backToChannels = () => {
+    setViewMode('channels');
+    setSelectedUser(null);
+  };
+
+  if (viewMode === 'direct' && selectedUser) {
+    return (
+      <div className="h-[calc(100vh-120px)]">
+        <DirectMessage user={selectedUser} onBack={backToChannels} />
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-[calc(100vh-120px)]">
-      {/* Sidebar - Channels */}
+      {/* Sidebar - Channels & Users */}
       <div className="w-64 bg-gray-50 border-r border-gray-200 flex flex-col">
         <div className="p-4 border-b">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold text-gray-900">Messagerie</h2>
-            <Dialog open={showCreateChannel} onOpenChange={setShowCreateChannel}>
-              <DialogTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Créer un nouveau canal</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Nom du canal</label>
-                    <Input
-                      value={newChannelName}
-                      onChange={(e) => setNewChannelName(e.target.value)}
-                      placeholder="nom-du-canal"
-                    />
+            <div className="flex space-x-1">
+              <Dialog open={showCreateChannel} onOpenChange={setShowCreateChannel}>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Créer un nouveau canal</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Nom du canal</label>
+                      <Input
+                        value={newChannelName}
+                        onChange={(e) => setNewChannelName(e.target.value)}
+                        placeholder="nom-du-canal"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Description (optionnel)</label>
+                      <Input
+                        value={newChannelDescription}
+                        onChange={(e) => setNewChannelDescription(e.target.value)}
+                        placeholder="Description du canal"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Type de canal</label>
+                      <select 
+                        value={newChannelType} 
+                        onChange={(e) => setNewChannelType(e.target.value as 'public' | 'private' | 'event')}
+                        className="w-full p-2 border border-gray-300 rounded-md"
+                      >
+                        <option value="public">Public</option>
+                        <option value="private">Privé</option>
+                        <option value="event">Événement</option>
+                      </select>
+                    </div>
+                    <div className="flex space-x-2">
+                      <Button variant="outline" onClick={() => setShowCreateChannel(false)} className="flex-1">
+                        Annuler
+                      </Button>
+                      <Button onClick={createChannel} className="flex-1">
+                        Créer
+                      </Button>
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Description (optionnel)</label>
-                    <Input
-                      value={newChannelDescription}
-                      onChange={(e) => setNewChannelDescription(e.target.value)}
-                      placeholder="Description du canal"
-                    />
+                </DialogContent>
+              </Dialog>
+              
+              <Dialog open={showUserSearch} onOpenChange={setShowUserSearch}>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <UserPlus className="h-4 w-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Démarrer une conversation</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                      <Input
+                        placeholder="Rechercher un utilisateur..."
+                        value={userSearchTerm}
+                        onChange={(e) => setUserSearchTerm(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                    <div className="max-h-60 overflow-y-auto space-y-2">
+                      {filteredUsers.map((user) => (
+                        <button
+                          key={user.id}
+                          onClick={() => startDirectMessage(user)}
+                          className="w-full p-3 rounded-lg hover:bg-gray-100 flex items-center space-x-3 text-left"
+                        >
+                          <div className="relative">
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage src="" alt={user.name} />
+                              <AvatarFallback className="bg-purple-600 text-white">
+                                {user.name.charAt(0)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${getStatusColor(user.status)}`} />
+                          </div>
+                          <div className="flex-1">
+                            <div className="font-medium text-gray-900">{user.name}</div>
+                            <div className="text-sm text-gray-500 capitalize">{user.status}</div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Type de canal</label>
-                    <select 
-                      value={newChannelType} 
-                      onChange={(e) => setNewChannelType(e.target.value as 'public' | 'private' | 'event')}
-                      className="w-full p-2 border border-gray-300 rounded-md"
-                    >
-                      <option value="public">Public</option>
-                      <option value="private">Privé</option>
-                      <option value="event">Événement</option>
-                    </select>
-                  </div>
-                  <div className="flex space-x-2">
-                    <Button variant="outline" onClick={() => setShowCreateChannel(false)} className="flex-1">
-                      Annuler
-                    </Button>
-                    <Button onClick={createChannel} className="flex-1">
-                      Créer
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
         </div>
 
@@ -262,9 +379,12 @@ export const Messagerie: React.FC = () => {
             {channels.filter(c => c.type === 'public').map((channel) => (
               <button
                 key={channel.id}
-                onClick={() => setSelectedChannel(channel)}
+                onClick={() => {
+                  setSelectedChannel(channel);
+                  setViewMode('channels');
+                }}
                 className={`w-full text-left px-2 py-1 rounded flex items-center space-x-2 hover:bg-gray-200 ${
-                  selectedChannel.id === channel.id ? 'bg-blue-100 text-blue-700' : 'text-gray-700'
+                  selectedChannel.id === channel.id && viewMode === 'channels' ? 'bg-blue-100 text-blue-700' : 'text-gray-700'
                 }`}
               >
                 <Hash className="h-4 w-4" />
@@ -273,35 +393,36 @@ export const Messagerie: React.FC = () => {
             ))}
 
             <div className="px-2 py-1 text-xs font-medium text-gray-500 uppercase tracking-wider mt-4">
-              Événements
+              Messages directs
             </div>
-            {channels.filter(c => c.type === 'event').map((channel) => (
+            {availableUsers.filter(u => u.status === 'online').slice(0, 5).map((user) => (
               <button
-                key={channel.id}
-                onClick={() => setSelectedChannel(channel)}
+                key={user.id}
+                onClick={() => startDirectMessage(user)}
                 className={`w-full text-left px-2 py-1 rounded flex items-center space-x-2 hover:bg-gray-200 ${
-                  selectedChannel.id === channel.id ? 'bg-blue-100 text-blue-700' : 'text-gray-700'
+                  selectedUser?.id === user.id ? 'bg-blue-100 text-blue-700' : 'text-gray-700'
                 }`}
               >
-                <MessageCircle className="h-4 w-4" />
-                <span className="text-sm">{channel.name}</span>
+                <div className="relative">
+                  <div className="w-4 h-4 bg-purple-600 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs">{user.name.charAt(0)}</span>
+                  </div>
+                  <div className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-white ${getStatusColor(user.status)}`} />
+                </div>
+                <span className="text-sm truncate">{user.name}</span>
               </button>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Main Chat Area */}
+      {/* Main Chat Area - Show only for channels */}
       <div className="flex-1 flex flex-col">
         {/* Chat Header */}
         <div className="p-4 border-b bg-white">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              {selectedChannel.type === 'public' ? (
-                <Hash className="h-5 w-5 text-gray-500" />
-              ) : (
-                <MessageCircle className="h-5 w-5 text-gray-500" />
-              )}
+              <Hash className="h-5 w-5 text-gray-500" />
               <div>
                 <h3 className="font-semibold text-gray-900">{selectedChannel.name}</h3>
                 {selectedChannel.description && (

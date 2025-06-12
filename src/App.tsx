@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
@@ -36,6 +35,7 @@ import { UserProvider } from '@/contexts/UserContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { WebsitePageEditor } from '@/pages/WebsitePageEditor';
 import { Forms } from '@/pages/Forms';
+import { UserManagement } from '@/pages/UserManagement';
 
 function App() {
   return (
@@ -87,6 +87,7 @@ function App() {
                         <Route path="/website/editor/:pageId" element={<WebsitePageEditor />} />
                         <Route path="/website/backoffice" element={<WebsiteBackoffice />} />
                         <Route path="/forms" element={<Forms />} />
+                        <Route path="/user-management" element={<UserManagement />} />
                         <Route path="/application" element={<Application />} />
                         <Route path="/preferences" element={<Preferences />} />
                       </Routes>
