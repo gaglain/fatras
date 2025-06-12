@@ -73,14 +73,14 @@ export const ChatWidget: React.FC = () => {
   const onlineUsersCount = activeUsers.filter(u => u.status === 'online').length;
 
   return (
-    <>
-      {/* Chat Toggle Button */}
+    <div className="fixed bottom-6 right-6 z-50">
+      {/* Chat Toggle Button - Always visible */}
       <Button
         onClick={() => {
           setIsOpen(!isOpen);
           if (!isOpen) setIsMinimized(false);
         }}
-        className="fixed bottom-6 right-6 h-14 w-14 rounded-full bg-primary hover:bg-primary/90 shadow-lg z-50 flex items-center justify-center transition-all duration-200 hover:scale-110"
+        className="h-14 w-14 rounded-full bg-primary hover:bg-primary/90 shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-110"
       >
         <MessageCircle className="h-6 w-6 text-primary-foreground" />
         {onlineUsersCount > 0 && (
@@ -92,7 +92,7 @@ export const ChatWidget: React.FC = () => {
 
       {/* Chat Popup */}
       {isOpen && (
-        <Card className={`fixed bottom-24 right-6 shadow-2xl z-40 transition-all duration-300 ${
+        <Card className={`absolute bottom-20 right-0 shadow-2xl transition-all duration-300 ${
           isMinimized ? 'w-80 h-16' : 'w-96 h-[600px]'
         }`}>
           <CardHeader className="pb-3 border-b bg-primary text-primary-foreground rounded-t-lg">
@@ -100,7 +100,7 @@ export const ChatWidget: React.FC = () => {
               <CardTitle className="text-sm flex items-center">
                 <Users className="h-4 w-4 mr-2" />
                 Messagerie Interne
-                <Badge variant="secondary" className="ml-2 text-xs">
+                <Badge variant="secondary" className="ml-2 text-xs bg-primary-foreground/20 text-primary-foreground">
                   {onlineUsersCount} en ligne
                 </Badge>
               </CardTitle>
@@ -127,7 +127,7 @@ export const ChatWidget: React.FC = () => {
           
           {!isMinimized && (
             <CardContent className="flex flex-col h-full p-0">
-              {/* Active Users - Only show when not minimized */}
+              {/* Active Users */}
               <div className="p-3 border-b bg-muted/50">
                 <div className="flex flex-wrap gap-2">
                   {activeUsers.slice(0, 4).map((user) => (
@@ -206,6 +206,6 @@ export const ChatWidget: React.FC = () => {
           )}
         </Card>
       )}
-    </>
+    </div>
   );
 };

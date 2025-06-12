@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -5,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { MapPin, Calendar, Clock, Users, Eye, Edit, Trash2, Download } from 'lucide-react';
 import { TourStop, Artist } from '@/types/roadshow.types';
 import { TourStopPreview } from './TourStopPreview';
+import { generateTourStopPDF } from '@/utils/pdfGenerator';
 import { toast } from 'sonner';
 
 interface TourStopCardProps {
@@ -58,38 +60,13 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
   };
 
   const handleDownloadPDF = () => {
-    console.log('Téléchargement PDF direct pour:', stop);
-    
-    const content = `
-FEUILLE DE ROUTE - ${stop.city.toUpperCase()}
-
-Lieu: ${stop.venue}
-Adresse: ${stop.address}
-Date: ${new Date(stop.date).toLocaleDateString('fr-FR')}
-Heure: ${stop.time}
-Capacité: ${stop.capacity} personnes
-
-Casting:
-${stop.artistLineup.map(artist => {
-  const user = getUserById(artist.userId);
-  return `- ${user?.name || 'Artiste inconnu'} ${artist.confirmed ? '(Confirmé)' : '(En attente)'}`;
-}).join('\n')}
-
-${stop.notes ? `\nNotes: ${stop.notes}` : ''}
-
-Statut: ${getStatusLabel(stop.status)}
-Généré le ${new Date().toLocaleString('fr-FR')}
-    `;
-
-    const element = document.createElement('a');
-    const file = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    element.href = URL.createObjectURL(file);
-    element.download = `feuille-route-${stop.city}-${stop.date}.txt`;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
-    
-    toast.success(`Feuille de route téléchargée: ${stop.city}`);
+    try {
+      generateTourStopPDF(stop, getUserById);
+      toast.success(`Feuille de route PDF téléchargée: ${stop.city}`);
+    } catch (error) {
+      console.error('Erreur lors de la génération du PDF:', error);
+      toast.error('Erreur lors de la génération du PDF');
+    }
   };
 
   return (
