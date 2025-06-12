@@ -22,6 +22,7 @@ import {
   UserCheck
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useUser, type UserRole } from '@/contexts/UserContext';
 
 interface User {
   id: string;
@@ -29,7 +30,7 @@ interface User {
   firstName: string;
   lastName: string;
   pseudo: string;
-  role: 'admin' | 'manager' | 'user' | 'viewer';
+  role: UserRole;
   status: 'active' | 'inactive' | 'pending';
   lastLogin: string;
   createdAt: string;
@@ -78,8 +79,7 @@ const sampleUsers: User[] = [
 const roleLabels = {
   admin: 'Administrateur',
   manager: 'Manager',
-  user: 'Utilisateur',
-  viewer: 'Observateur'
+  user: 'Utilisateur'
 };
 
 const statusLabels = {
@@ -112,7 +112,7 @@ export const UserManagement: React.FC = () => {
     firstName: '',
     lastName: '',
     pseudo: '',
-    role: 'user' as const,
+    role: 'user' as UserRole,
     permissions: [] as string[]
   });
 
@@ -129,7 +129,6 @@ export const UserManagement: React.FC = () => {
       case 'admin': return 'bg-red-100 text-red-800';
       case 'manager': return 'bg-blue-100 text-blue-800';
       case 'user': return 'bg-green-100 text-green-800';
-      case 'viewer': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -291,7 +290,7 @@ export const UserManagement: React.FC = () => {
               
               <div>
                 <Label>Rôle</Label>
-                <Select value={newUser.role} onValueChange={(value: any) => setNewUser({ ...newUser, role: value })}>
+                <Select value={newUser.role} onValueChange={(value: UserRole) => setNewUser({ ...newUser, role: value })}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -299,7 +298,6 @@ export const UserManagement: React.FC = () => {
                     <SelectItem value="admin">Administrateur</SelectItem>
                     <SelectItem value="manager">Manager</SelectItem>
                     <SelectItem value="user">Utilisateur</SelectItem>
-                    <SelectItem value="viewer">Observateur</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -360,7 +358,6 @@ export const UserManagement: React.FC = () => {
             <SelectItem value="admin">Administrateur</SelectItem>
             <SelectItem value="manager">Manager</SelectItem>
             <SelectItem value="user">Utilisateur</SelectItem>
-            <SelectItem value="viewer">Observateur</SelectItem>
           </SelectContent>
         </Select>
       </div>
