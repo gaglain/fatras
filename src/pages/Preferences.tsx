@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MenuManager } from '@/components/MenuManager';
 import { useTheme } from '@/contexts/ThemeContext';
-import { User, Settings, Layout, Bell, Globe, Shield, Palette } from 'lucide-react';
+import { User, Settings, Layout, Bell, Globe, Shield, Palette, Download, Smartphone } from 'lucide-react';
 
 export const Preferences: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
@@ -73,6 +74,10 @@ export const Preferences: React.FC = () => {
   const savePreferences = () => {
     localStorage.setItem('userPreferences', JSON.stringify(userSettings));
     alert('Préférences sauvegardées !');
+  };
+
+  const downloadApp = (platform: 'ios' | 'android') => {
+    alert(`Le téléchargement de l'application ${platform.toUpperCase()} n'est pas encore disponible. Cette fonctionnalité sera ajoutée prochainement.`);
   };
 
   return (
@@ -272,7 +277,7 @@ export const Preferences: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <Label>Notifications par email</Label>
-                  <p className="text-sm text-gray-600">Recevoir les notifications par email</p>
+                  <p className="text-sm text-muted-foreground">Recevoir les notifications par email</p>
                 </div>
                 <Switch
                   checked={userSettings.emailNotifications}
@@ -283,7 +288,7 @@ export const Preferences: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <Label>Notifications SMS</Label>
-                  <p className="text-sm text-gray-600">Recevoir les notifications par SMS</p>
+                  <p className="text-sm text-muted-foreground">Recevoir les notifications par SMS</p>
                 </div>
                 <Switch
                   checked={userSettings.smsNotifications}
@@ -294,7 +299,7 @@ export const Preferences: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <Label>Notifications desktop</Label>
-                  <p className="text-sm text-gray-600">Afficher les notifications sur le bureau</p>
+                  <p className="text-sm text-muted-foreground">Afficher les notifications sur le bureau</p>
                 </div>
                 <Switch
                   checked={userSettings.desktopNotifications}
@@ -314,7 +319,9 @@ export const Preferences: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <Label>Vue compacte</Label>
-                  <p className="text-sm text-muted-foreground">Affichage plus dense des informations</p>
+                  <p className="text-sm text-muted-foreground">
+                    Affichage plus dense avec moins d'espacement, icônes plus petites et texte réduit pour voir plus d'informations sur l'écran
+                  </p>
                 </div>
                 <Switch
                   checked={userSettings.compactView}
@@ -331,6 +338,49 @@ export const Preferences: React.FC = () => {
                   checked={userSettings.autoSave}
                   onCheckedChange={(value) => handleSettingChange('autoSave', value)}
                 />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Applications mobiles</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground mb-4">
+                Téléchargez l'application ShowManager sur votre appareil mobile pour un accès complet en déplacement.
+              </p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Button 
+                  variant="outline" 
+                  onClick={() => downloadApp('ios')}
+                  className="h-16 flex items-center justify-center space-x-3"
+                >
+                  <Smartphone className="h-6 w-6" />
+                  <div className="text-left">
+                    <div className="font-medium">App Store</div>
+                    <div className="text-xs text-muted-foreground">Télécharger pour iOS</div>
+                  </div>
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  onClick={() => downloadApp('android')}
+                  className="h-16 flex items-center justify-center space-x-3"
+                >
+                  <Download className="h-6 w-6" />
+                  <div className="text-left">
+                    <div className="font-medium">Google Play</div>
+                    <div className="text-xs text-muted-foreground">Télécharger pour Android</div>
+                  </div>
+                </Button>
+              </div>
+              
+              <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  <strong>Note :</strong> Les applications mobiles iOS et Android sont en cours de développement et seront bientôt disponibles sur les stores officiels.
+                </p>
               </div>
             </CardContent>
           </Card>

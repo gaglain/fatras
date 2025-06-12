@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -11,68 +11,92 @@ import { GripVertical, Eye, EyeOff, Upload, Edit } from 'lucide-react';
 
 interface MenuItem {
   id: string;
-  label: string;
+  name: string;
   href: string;
   icon: string;
   visible: boolean;
   order: number;
   userRole?: string[];
-  items?: MenuItem[];
+  children?: MenuItem[];
 }
 
 const defaultMenuItems: MenuItem[] = [
-  { id: '1', label: 'Tableau de bord', href: '/dashboard', icon: 'Home', visible: true, order: 1, userRole: ['admin', 'manager', 'user'] },
+  { id: '1', name: 'Dashboard', href: '/dashboard', icon: 'LayoutDashboard', visible: true, order: 1, userRole: ['admin', 'manager', 'user'] },
   { 
     id: '2', 
-    label: 'Contacts', 
+    name: 'Contacts & Relations', 
     href: '/contacts', 
     icon: 'Users', 
     visible: true, 
     order: 2, 
     userRole: ['admin', 'manager'],
-    items: [
-      { id: '2a', label: 'Tous les contacts', href: '/contacts', icon: 'Users', visible: true, order: 1 },
-      { id: '2b', label: 'Listes de contacts', href: '/contact-lists', icon: 'List', visible: true, order: 2 }
+    children: [
+      { id: '2a', name: 'Contacts', href: '/contacts', icon: 'Users', visible: true, order: 1 },
+      { id: '2b', name: 'Listes de contacts', href: '/contact-lists', icon: 'UserPlus', visible: true, order: 2 }
     ]
   },
-  { id: '3', label: 'Artistes', href: '/artists', icon: 'Music', visible: true, order: 3, userRole: ['admin', 'manager'] },
+  { id: '3', name: 'Artistes', href: '/artists', icon: 'Palette', visible: true, order: 3, userRole: ['admin', 'manager'] },
   { 
     id: '4', 
-    label: 'Événements', 
+    name: 'Événements & Agenda', 
     href: '/events', 
     icon: 'Calendar', 
     visible: true, 
     order: 4, 
     userRole: ['admin', 'manager'],
-    items: [
-      { id: '4a', label: 'Tous les événements', href: '/events', icon: 'Calendar', visible: true, order: 1 },
-      { id: '4b', label: 'Types d\'événements', href: '/event-types', icon: 'Settings', visible: true, order: 2 }
+    children: [
+      { id: '4a', name: 'Événements', href: '/events', icon: 'Calendar', visible: true, order: 1 },
+      { id: '4b', name: 'Types d\'événements', href: '/event-types', icon: 'CalendarDays', visible: true, order: 2 },
+      { id: '4c', name: 'Agenda', href: '/agenda', icon: 'CalendarDays', visible: true, order: 3 }
     ]
   },
-  { id: '5', label: 'Tâches', href: '/tasks', icon: 'CheckSquare', visible: true, order: 5, userRole: ['admin', 'manager', 'user'] },
-  { id: '6', label: 'Contrats', href: '/contracts', icon: 'FileText', visible: true, order: 6, userRole: ['admin', 'manager'] },
+  { id: '5', name: 'Tâches', href: '/tasks', icon: 'CheckSquare', visible: true, order: 5, userRole: ['admin', 'manager', 'user'] },
+  { id: '6', name: 'Contrats', href: '/contracts', icon: 'FileText', visible: true, order: 6, userRole: ['admin', 'manager'] },
   { 
     id: '7', 
-    label: 'Communication', 
+    name: 'Communication', 
     href: '/email', 
     icon: 'Mail', 
     visible: true, 
     order: 7, 
     userRole: ['admin', 'manager'],
-    items: [
-      { id: '7a', label: 'Emails', href: '/email', icon: 'Mail', visible: true, order: 1 },
-      { id: '7b', label: 'Campagnes', href: '/email-campaigns', icon: 'MailOpen', visible: true, order: 2 },
-      { id: '7c', label: 'Messagerie', href: '/messagerie', icon: 'MessageSquare', visible: true, order: 3 },
-      { id: '7d', label: 'Formulaires', href: '/forms', icon: 'FileText', visible: true, order: 4 }
+    children: [
+      { id: '7a', name: 'Email', href: '/email', icon: 'Mail', visible: true, order: 1 },
+      { id: '7b', name: 'Campagnes email', href: '/email-campaigns', icon: 'Mail', visible: true, order: 2 },
+      { id: '7c', name: 'Messagerie', href: '/messagerie', icon: 'MessageSquare', visible: true, order: 3 },
+      { id: '7d', name: 'Formulaires', href: '/forms', icon: 'FileText', visible: true, order: 4 }
     ]
   },
-  { id: '8', label: 'Agenda', href: '/agenda', icon: 'Clock', visible: true, order: 8, userRole: ['admin', 'manager', 'user'] },
-  { id: '9', label: 'Show Bible', href: '/show-bible', icon: 'Book', visible: true, order: 9, userRole: ['admin', 'manager'] },
-  { id: '10', label: 'Feuille de route', href: '/road-show', icon: 'MapPin', visible: true, order: 10, userRole: ['admin', 'manager'] },
-  { id: '11', label: 'Merchandising', href: '/merchandise', icon: 'ShoppingBag', visible: true, order: 11, userRole: ['admin', 'manager'] },
-  { id: '12', label: 'Opportunités', href: '/opportunities', icon: 'Target', visible: true, order: 12, userRole: ['admin', 'manager'] },
-  { id: '13', label: 'Site Web', href: '/website', icon: 'Globe', visible: true, order: 13, userRole: ['admin'] },
-  { id: '14', label: 'Préférences', href: '/preferences', icon: 'Settings', visible: true, order: 14, userRole: ['admin', 'manager', 'user'] }
+  { id: '8', name: 'Ressources', href: '/show-bible', icon: 'FileStack', visible: true, order: 8, userRole: ['admin', 'manager'] },
+  { 
+    id: '9', 
+    name: 'Production & Ventes', 
+    href: '/road-show', 
+    icon: 'Route', 
+    visible: true, 
+    order: 9, 
+    userRole: ['admin', 'manager'],
+    children: [
+      { id: '9a', name: 'Road Show', href: '/road-show', icon: 'Route', visible: true, order: 1 },
+      { id: '9b', name: 'Merchandise', href: '/merchandise', icon: 'ShoppingBag', visible: true, order: 2 },
+      { id: '9c', name: 'Opportunités', href: '/opportunities', icon: 'Target', visible: true, order: 3 }
+    ]
+  },
+  { id: '10', name: 'Site Web', href: '/website', icon: 'Globe', visible: true, order: 10, userRole: ['admin'] },
+  { 
+    id: '11', 
+    name: 'Administration', 
+    href: '/user-management', 
+    icon: 'Settings', 
+    visible: true, 
+    order: 11, 
+    userRole: ['admin'],
+    children: [
+      { id: '11a', name: 'Gestion Utilisateurs', href: '/user-management', icon: 'UserCog', visible: true, order: 1 },
+      { id: '11b', name: 'Application', href: '/application', icon: 'Settings', visible: true, order: 2 },
+      { id: '11c', name: 'Préférences', href: '/preferences', icon: 'Settings', visible: true, order: 3 }
+    ]
+  }
 ];
 
 const userRoles = [
@@ -84,8 +108,25 @@ const userRoles = [
 export const MenuManager: React.FC = () => {
   const [menuItems, setMenuItems] = useState<MenuItem[]>(defaultMenuItems);
   const [selectedUserRole, setSelectedUserRole] = useState<string>('admin');
-  const [companyName, setCompanyName] = useState('MusicCRM');
+  const [companyName, setCompanyName] = useState('ShowManager');
   const [companyLogo, setCompanyLogo] = useState<string>('');
+  const [appIcon, setAppIcon] = useState<string>('');
+
+  // Charger la configuration sauvegardée au montage
+  useEffect(() => {
+    const saved = localStorage.getItem('menuConfiguration');
+    if (saved) {
+      try {
+        const config = JSON.parse(saved);
+        if (config.menuItems) setMenuItems(config.menuItems);
+        if (config.companyName) setCompanyName(config.companyName);
+        if (config.companyLogo) setCompanyLogo(config.companyLogo);
+        if (config.appIcon) setAppIcon(config.appIcon);
+      } catch (error) {
+        console.error('Erreur lors du chargement de la configuration:', error);
+      }
+    }
+  }, []);
 
   const handleDragEnd = (result: any) => {
     if (!result.destination) return;
@@ -113,15 +154,7 @@ export const MenuManager: React.FC = () => {
   const updateLabel = (id: string, newLabel: string) => {
     setMenuItems(items =>
       items.map(item =>
-        item.id === id ? { ...item, label: newLabel } : item
-      )
-    );
-  };
-
-  const updateUserRole = (id: string, roles: string[]) => {
-    setMenuItems(items =>
-      items.map(item =>
-        item.id === id ? { ...item, userRole: roles } : item
+        item.id === id ? { ...item, name: newLabel } : item
       )
     );
   };
@@ -137,13 +170,41 @@ export const MenuManager: React.FC = () => {
     }
   };
 
+  const handleIconUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const iconUrl = e.target?.result as string;
+        setAppIcon(iconUrl);
+        
+        // Mettre à jour l'icône dans le HTML
+        const favicon = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
+        if (favicon) {
+          favicon.href = iconUrl;
+        } else {
+          const newFavicon = document.createElement('link');
+          newFavicon.rel = 'icon';
+          newFavicon.href = iconUrl;
+          document.head.appendChild(newFavicon);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const saveConfiguration = () => {
     const config = {
       menuItems,
       companyName,
-      companyLogo
+      companyLogo,
+      appIcon
     };
     localStorage.setItem('menuConfiguration', JSON.stringify(config));
+    
+    // Déclencher un événement pour que la sidebar se mette à jour
+    window.dispatchEvent(new CustomEvent('menuConfigUpdated', { detail: config }));
+    
     alert('Configuration du menu sauvegardée !');
   };
 
@@ -164,7 +225,7 @@ export const MenuManager: React.FC = () => {
               id="companyName"
               value={companyName}
               onChange={(e) => setCompanyName(e.target.value)}
-              placeholder="MusicCRM"
+              placeholder="ShowManager"
             />
           </div>
           
@@ -191,6 +252,34 @@ export const MenuManager: React.FC = () => {
                 </Button>
               </div>
             </div>
+          </div>
+
+          <div>
+            <Label htmlFor="appIcon">Icône de l'application</Label>
+            <div className="flex items-center space-x-4 mt-2">
+              {appIcon && (
+                <img src={appIcon} alt="Icône" className="h-8 w-8 object-contain rounded" />
+              )}
+              <div>
+                <Input
+                  id="appIcon"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleIconUpload}
+                  className="hidden"
+                />
+                <Button 
+                  variant="outline" 
+                  onClick={() => document.getElementById('appIcon')?.click()}
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Choisir une icône
+                </Button>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">
+              Cette icône sera utilisée comme favicon de l'application
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -245,16 +334,16 @@ export const MenuManager: React.FC = () => {
                             )}
                             
                             <Input
-                              value={item.label}
+                              value={item.name}
                               onChange={(e) => updateLabel(item.id, e.target.value)}
                               className="flex-1"
                             />
                             
                             <div className="flex items-center space-x-2">
                               <span className="text-xs text-muted-foreground">#{item.order}</span>
-                              {item.items && (
+                              {item.children && (
                                 <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
-                                  {item.items.length} sous-éléments
+                                  {item.children.length} sous-éléments
                                 </span>
                               )}
                             </div>

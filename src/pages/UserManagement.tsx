@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 import { 
   Plus, 
   Search, 
@@ -27,6 +28,7 @@ interface User {
   email: string;
   firstName: string;
   lastName: string;
+  pseudo: string;
   role: 'admin' | 'manager' | 'user' | 'viewer';
   status: 'active' | 'inactive' | 'pending';
   lastLogin: string;
@@ -40,6 +42,7 @@ const sampleUsers: User[] = [
     email: 'admin@showmanager.com',
     firstName: 'Admin',
     lastName: 'Principal',
+    pseudo: 'SuperAdmin',
     role: 'admin',
     status: 'active',
     lastLogin: '2024-06-12T10:30:00Z',
@@ -51,6 +54,7 @@ const sampleUsers: User[] = [
     email: 'manager@showmanager.com',
     firstName: 'Marie',
     lastName: 'Martin',
+    pseudo: 'MarieM',
     role: 'manager',
     status: 'active',
     lastLogin: '2024-06-11T15:45:00Z',
@@ -62,6 +66,7 @@ const sampleUsers: User[] = [
     email: 'user@showmanager.com',
     firstName: 'Jean',
     lastName: 'Dupont',
+    pseudo: 'JeanD',
     role: 'user',
     status: 'active',
     lastLogin: '2024-06-10T09:15:00Z',
@@ -83,6 +88,19 @@ const statusLabels = {
   pending: 'En attente'
 };
 
+const availablePermissions = [
+  { value: 'contacts', label: 'Contacts' },
+  { value: 'events', label: 'Événements' },
+  { value: 'artists', label: 'Artistes' },
+  { value: 'contracts', label: 'Contrats' },
+  { value: 'tasks', label: 'Tâches' },
+  { value: 'email', label: 'Email' },
+  { value: 'agenda', label: 'Agenda' },
+  { value: 'merchandise', label: 'Merchandise' },
+  { value: 'opportunities', label: 'Opportunités' },
+  { value: 'website', label: 'Site Web' }
+];
+
 export const UserManagement: React.FC = () => {
   const [users, setUsers] = useState<User[]>(sampleUsers);
   const [searchTerm, setSearchTerm] = useState('');
@@ -93,13 +111,15 @@ export const UserManagement: React.FC = () => {
     email: '',
     firstName: '',
     lastName: '',
+    pseudo: '',
     role: 'user' as const,
     permissions: [] as string[]
   });
 
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchTerm.toLowerCase());
+      `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.pseudo.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = selectedRole === 'all' || user.role === selectedRole;
     return matchesSearch && matchesRole;
   });
@@ -129,6 +149,7 @@ export const UserManagement: React.FC = () => {
       email: newUser.email,
       firstName: newUser.firstName,
       lastName: newUser.lastName,
+      pseudo: newUser.pseudo,
       role: newUser.role,
       status: 'pending',
       lastLogin: '',
@@ -142,15 +163,54 @@ export const UserManagement: React.FC = () => {
       email: '',
       firstName: '',
       lastName: '',
+      pseudo: '',
       role: 'user',
       permissions: []
     });
     toast.success('Utilisateur ajouté avec succès');
   };
 
+  const handleEditUser = (user: User) => {
+    setEditingUser(user);
+    setNewUser({
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      pseudo: user.pseudo,
+      role: user.role,
+      permissions: user.permissions
+    });
+    setShowAddUser(true);
+  };
+
+  const handleUpdateUser = () => {
+    if (!editingUser) return;
+    
+    const updatedUsers = users.map(user => 
+      user.id === editingUser.id 
+        ? { ...user, ...newUser }
+        : user
+    );
+    
+    setUsers(updatedUsers);
+    setShowAddUser(false);
+    setEditingUser(null);
+    setNewUser({
+      email: '',
+      firstName: '',
+      lastName: '',
+      pseudo: '',
+      role: 'user',
+      permissions: []
+    });
+    toast.success('Utilisateur modifié avec succès');
+  };
+
   const handleDeleteUser = (userId: string) => {
-    setUsers(prev => prev.filter(user => user.id !== userId));
-    toast.success('Utilisateur supprimé');
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) {
+      setUsers(prev => prev.filter(user => user.id !== userId));
+      toast.success('Utilisateur supprimé');
+    }
   };
 
   const toggleUserStatus = (userId: string) => {
@@ -161,12 +221,21 @@ export const UserManagement: React.FC = () => {
     ));
   };
 
+  const togglePermission = (permission: string) => {
+    setNewUser(prev => ({
+      ...prev,
+      permissions: prev.permissions.includes(permission)
+        ? prev.permissions.filter(p => p !== permission)
+        : [...prev.permissions, permission]
+    }));
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Gestion des Utilisateurs</h1>
-          <p className="text-gray-600 mt-2">Gérer les utilisateurs, rôles et permissions</p>
+          <h1 className="text-3xl font-bold text-foreground">Gestion des Utilisateurs</h1>
+          <p className="text-muted-foreground mt-2">Gérer les utilisateurs, rôles et permissions</p>
         </div>
         <Dialog open={showAddUser} onOpenChange={setShowAddUser}>
           <DialogTrigger asChild>
@@ -175,14 +244,16 @@ export const UserManagement: React.FC = () => {
               Ajouter un utilisateur
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Ajouter un nouvel utilisateur</DialogTitle>
+              <DialogTitle>
+                {editingUser ? 'Modifier l\'utilisateur' : 'Ajouter un nouvel utilisateur'}
+              </DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Prénom</label>
+                  <Label>Prénom</Label>
                   <Input
                     value={newUser.firstName}
                     onChange={(e) => setNewUser({ ...newUser, firstName: e.target.value })}
@@ -190,7 +261,7 @@ export const UserManagement: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Nom</label>
+                  <Label>Nom</Label>
                   <Input
                     value={newUser.lastName}
                     onChange={(e) => setNewUser({ ...newUser, lastName: e.target.value })}
@@ -198,8 +269,18 @@ export const UserManagement: React.FC = () => {
                   />
                 </div>
               </div>
+              
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <Label>Pseudo</Label>
+                <Input
+                  value={newUser.pseudo}
+                  onChange={(e) => setNewUser({ ...newUser, pseudo: e.target.value })}
+                  placeholder="Pseudo pour les tâches et messagerie"
+                />
+              </div>
+              
+              <div>
+                <Label>Email</Label>
                 <Input
                   type="email"
                   value={newUser.email}
@@ -207,8 +288,9 @@ export const UserManagement: React.FC = () => {
                   placeholder="email@exemple.com"
                 />
               </div>
+              
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Rôle</label>
+                <Label>Rôle</Label>
                 <Select value={newUser.role} onValueChange={(value: any) => setNewUser({ ...newUser, role: value })}>
                   <SelectTrigger>
                     <SelectValue />
@@ -221,12 +303,36 @@ export const UserManagement: React.FC = () => {
                   </SelectContent>
                 </Select>
               </div>
+              
+              <div>
+                <Label>Permissions</Label>
+                <div className="grid grid-cols-3 gap-2 mt-2">
+                  {availablePermissions.map((permission) => (
+                    <div key={permission.value} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id={permission.value}
+                        checked={newUser.permissions.includes(permission.value)}
+                        onChange={() => togglePermission(permission.value)}
+                        className="h-4 w-4 text-purple-600"
+                      />
+                      <Label htmlFor={permission.value} className="text-sm">
+                        {permission.label}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
               <div className="flex space-x-2">
                 <Button variant="outline" onClick={() => setShowAddUser(false)} className="flex-1">
                   Annuler
                 </Button>
-                <Button onClick={handleAddUser} className="flex-1">
-                  Ajouter
+                <Button 
+                  onClick={editingUser ? handleUpdateUser : handleAddUser} 
+                  className="flex-1"
+                >
+                  {editingUser ? 'Modifier' : 'Ajouter'}
                 </Button>
               </div>
             </div>
@@ -237,7 +343,7 @@ export const UserManagement: React.FC = () => {
       {/* Search and Filters */}
       <div className="flex gap-4">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
             placeholder="Rechercher des utilisateurs..."
             value={searchTerm}
@@ -264,7 +370,7 @@ export const UserManagement: React.FC = () => {
         <Card>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-purple-600">{users.length}</div>
-            <div className="text-sm text-gray-500">Utilisateurs totaux</div>
+            <div className="text-sm text-muted-foreground">Utilisateurs totaux</div>
           </CardContent>
         </Card>
         <Card>
@@ -272,7 +378,7 @@ export const UserManagement: React.FC = () => {
             <div className="text-2xl font-bold text-green-600">
               {users.filter(u => u.status === 'active').length}
             </div>
-            <div className="text-sm text-gray-500">Actifs</div>
+            <div className="text-sm text-muted-foreground">Actifs</div>
           </CardContent>
         </Card>
         <Card>
@@ -280,7 +386,7 @@ export const UserManagement: React.FC = () => {
             <div className="text-2xl font-bold text-blue-600">
               {users.filter(u => u.role === 'admin').length}
             </div>
-            <div className="text-sm text-gray-500">Administrateurs</div>
+            <div className="text-sm text-muted-foreground">Administrateurs</div>
           </CardContent>
         </Card>
         <Card>
@@ -288,7 +394,7 @@ export const UserManagement: React.FC = () => {
             <div className="text-2xl font-bold text-yellow-600">
               {users.filter(u => u.status === 'pending').length}
             </div>
-            <div className="text-sm text-gray-500">En attente</div>
+            <div className="text-sm text-muted-foreground">En attente</div>
           </CardContent>
         </Card>
       </div>
@@ -299,9 +405,10 @@ export const UserManagement: React.FC = () => {
           <TableHeader>
             <TableRow>
               <TableHead>Utilisateur</TableHead>
+              <TableHead>Pseudo</TableHead>
               <TableHead>Rôle</TableHead>
               <TableHead>Statut</TableHead>
-              <TableHead>Dernière connexion</TableHead>
+              <TableHead>Permissions</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -317,12 +424,15 @@ export const UserManagement: React.FC = () => {
                     </div>
                     <div>
                       <div className="font-medium">{user.firstName} {user.lastName}</div>
-                      <div className="text-sm text-gray-500 flex items-center">
+                      <div className="text-sm text-muted-foreground flex items-center">
                         <Mail className="h-3 w-3 mr-1" />
                         {user.email}
                       </div>
                     </div>
                   </div>
+                </TableCell>
+                <TableCell>
+                  <Badge variant="outline">{user.pseudo}</Badge>
                 </TableCell>
                 <TableCell>
                   <Badge className={getRoleColor(user.role)}>
@@ -341,14 +451,18 @@ export const UserManagement: React.FC = () => {
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  {user.lastLogin ? (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Calendar className="h-3 w-3 mr-1" />
-                      {new Date(user.lastLogin).toLocaleDateString('fr-FR')}
-                    </div>
-                  ) : (
-                    <span className="text-gray-400">Jamais connecté</span>
-                  )}
+                  <div className="flex flex-wrap gap-1">
+                    {user.permissions.slice(0, 3).map((permission) => (
+                      <Badge key={permission} variant="secondary" className="text-xs">
+                        {availablePermissions.find(p => p.value === permission)?.label}
+                      </Badge>
+                    ))}
+                    {user.permissions.length > 3 && (
+                      <Badge variant="secondary" className="text-xs">
+                        +{user.permissions.length - 3}
+                      </Badge>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center space-x-2">
@@ -362,7 +476,7 @@ export const UserManagement: React.FC = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => setEditingUser(user)}
+                      onClick={() => handleEditUser(user)}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
