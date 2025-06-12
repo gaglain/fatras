@@ -4,10 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { MessageCircle, Send, X, Users, Phone, Video } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { MessageCircle, Send, X, Users, Phone, Video, Minimize2, Maximize2 } from 'lucide-react';
 
 export const ChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([
     {
@@ -23,13 +25,21 @@ export const ChatWidget: React.FC = () => {
       message: 'Oui, je viens de l\'envoyer par email.',
       time: '14:32',
       isMe: true
+    },
+    {
+      id: 3,
+      sender: 'Jean Dupont',
+      message: 'L\'équipe technique est prête pour ce soir. Tout est OK côté son.',
+      time: '15:15',
+      isMe: false
     }
   ]);
 
   const [activeUsers] = useState([
     { id: 1, name: 'Marie Martin', status: 'online' },
     { id: 2, name: 'Jean Dupont', status: 'away' },
-    { id: 3, name: 'Paul Leroy', status: 'online' }
+    { id: 3, name: 'Paul Leroy', status: 'online' },
+    { id: 4, name: 'Sophie Durand', status: 'busy' }
   ]);
 
   const sendMessage = () => {
@@ -60,95 +70,140 @@ export const ChatWidget: React.FC = () => {
     }
   };
 
+  const onlineUsersCount = activeUsers.filter(u => u.status === 'online').length;
+
   return (
     <>
       {/* Chat Toggle Button */}
       <Button
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 h-14 w-14 rounded-full bg-purple-600 hover:bg-purple-700 shadow-lg z-40 flex items-center justify-center"
+        onClick={() => {
+          setIsOpen(!isOpen);
+          if (!isOpen) setIsMinimized(false);
+        }}
+        className="fixed bottom-6 right-6 h-14 w-14 rounded-full bg-primary hover:bg-primary/90 shadow-lg z-50 flex items-center justify-center transition-all duration-200 hover:scale-110"
       >
-        <MessageCircle className="h-6 w-6 text-white" />
-        {activeUsers.filter(u => u.status === 'online').length > 0 && (
-          <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-green-500 text-white text-xs p-0 flex items-center justify-center">
-            {activeUsers.filter(u => u.status === 'online').length}
+        <MessageCircle className="h-6 w-6 text-primary-foreground" />
+        {onlineUsersCount > 0 && (
+          <Badge className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-green-500 text-white text-xs p-0 flex items-center justify-center animate-pulse">
+            {onlineUsersCount}
           </Badge>
         )}
       </Button>
 
       {/* Chat Popup */}
       {isOpen && (
-        <Card className="fixed bottom-24 right-6 w-96 h-[500px] shadow-xl z-50 flex flex-col">
-          <CardHeader className="pb-3 border-b">
+        <Card className={`fixed bottom-24 right-6 shadow-2xl z-40 transition-all duration-300 ${
+          isMinimized ? 'w-80 h-16' : 'w-96 h-[600px]'
+        }`}>
+          <CardHeader className="pb-3 border-b bg-primary text-primary-foreground rounded-t-lg">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm flex items-center">
                 <Users className="h-4 w-4 mr-2" />
                 Messagerie Interne
+                <Badge variant="secondary" className="ml-2 text-xs">
+                  {onlineUsersCount} en ligne
+                </Badge>
               </CardTitle>
               <div className="flex space-x-1">
-                <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                  <Phone className="h-3 w-3" />
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-6 w-6 p-0 text-primary-foreground hover:bg-primary-foreground/20"
+                  onClick={() => setIsMinimized(!isMinimized)}
+                >
+                  {isMinimized ? <Maximize2 className="h-3 w-3" /> : <Minimize2 className="h-3 w-3" />}
                 </Button>
-                <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                  <Video className="h-3 w-3" />
-                </Button>
-                <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setIsOpen(false)}>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-6 w-6 p-0 text-primary-foreground hover:bg-primary-foreground/20" 
+                  onClick={() => setIsOpen(false)}
+                >
                   <X className="h-3 w-3" />
                 </Button>
               </div>
             </div>
-            
-            {/* Active Users */}
-            <div className="flex flex-wrap gap-2 mt-2">
-              {activeUsers.map((user) => (
-                <div key={user.id} className="flex items-center space-x-1 text-xs">
-                  <div className={`w-2 h-2 rounded-full ${getStatusColor(user.status)}`} />
-                  <span className="text-muted-foreground">{user.name}</span>
-                </div>
-              ))}
-            </div>
           </CardHeader>
           
-          <CardContent className="flex flex-col h-full p-0">
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-3 space-y-3">
-              {messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`flex ${msg.isMe ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`max-w-[70%] rounded-lg p-2 ${
-                      msg.isMe
-                        ? 'bg-purple-600 text-white'
-                        : 'bg-muted text-foreground'
-                    }`}
-                  >
-                    {!msg.isMe && (
-                      <div className="text-xs font-medium mb-1">{msg.sender}</div>
-                    )}
-                    <div className="text-sm">{msg.message}</div>
-                    <div className="text-xs opacity-70 mt-1">{msg.time}</div>
-                  </div>
+          {!isMinimized && (
+            <CardContent className="flex flex-col h-full p-0">
+              {/* Active Users - Only show when not minimized */}
+              <div className="p-3 border-b bg-muted/50">
+                <div className="flex flex-wrap gap-2">
+                  {activeUsers.slice(0, 4).map((user) => (
+                    <div key={user.id} className="flex items-center space-x-1 text-xs bg-background rounded-full px-2 py-1">
+                      <div className={`w-2 h-2 rounded-full ${getStatusColor(user.status)}`} />
+                      <span className="text-muted-foreground">{user.name.split(' ')[0]}</span>
+                    </div>
+                  ))}
+                  {activeUsers.length > 4 && (
+                    <div className="text-xs text-muted-foreground bg-background rounded-full px-2 py-1">
+                      +{activeUsers.length - 4} autres
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
-            
-            {/* Message Input */}
-            <div className="border-t p-3">
-              <div className="flex space-x-2">
-                <Input
-                  placeholder="Tapez votre message..."
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                  className="flex-1"
-                />
-                <Button onClick={sendMessage} size="sm" className="bg-purple-600 hover:bg-purple-700">
-                  <Send className="h-4 w-4" />
-                </Button>
               </div>
-            </div>
-          </CardContent>
+
+              {/* Messages */}
+              <ScrollArea className="flex-1 p-3">
+                <div className="space-y-3">
+                  {messages.map((msg) => (
+                    <div
+                      key={msg.id}
+                      className={`flex ${msg.isMe ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div
+                        className={`max-w-[75%] rounded-lg p-3 ${
+                          msg.isMe
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-muted text-foreground'
+                        }`}
+                      >
+                        {!msg.isMe && (
+                          <div className="text-xs font-medium mb-1 opacity-70">{msg.sender}</div>
+                        )}
+                        <div className="text-sm">{msg.message}</div>
+                        <div className="text-xs opacity-70 mt-1">{msg.time}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+              
+              {/* Message Input */}
+              <div className="border-t p-3 bg-background">
+                <div className="flex space-x-2">
+                  <Input
+                    placeholder="Tapez votre message..."
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                    className="flex-1"
+                  />
+                  <Button 
+                    onClick={sendMessage} 
+                    size="sm" 
+                    className="bg-primary hover:bg-primary/90"
+                    disabled={!message.trim()}
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                {/* Quick Actions */}
+                <div className="flex space-x-2 mt-2">
+                  <Button variant="outline" size="sm" className="flex-1">
+                    <Phone className="h-3 w-3 mr-1" />
+                    Appel
+                  </Button>
+                  <Button variant="outline" size="sm" className="flex-1">
+                    <Video className="h-3 w-3 mr-1" />
+                    Vidéo
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          )}
         </Card>
       )}
     </>

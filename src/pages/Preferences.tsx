@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,10 +5,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MenuManager } from '@/components/MenuManager';
-import { User, Settings, Layout, Bell, Globe, Shield } from 'lucide-react';
+import { useTheme } from '@/contexts/ThemeContext';
+import { User, Settings, Layout, Bell, Globe, Shield, Palette } from 'lucide-react';
 
 export const Preferences: React.FC = () => {
+  const { theme, toggleTheme } = useTheme();
   const [userSettings, setUserSettings] = useState({
     firstName: 'John',
     lastName: 'Doe',
@@ -21,9 +23,12 @@ export const Preferences: React.FC = () => {
     emailNotifications: true,
     smsNotifications: false,
     desktopNotifications: true,
-    darkMode: false,
+    darkMode: theme === 'dark',
     compactView: false,
-    autoSave: true
+    autoSave: true,
+    primaryColor: '#8B5CF6',
+    accentColor: '#06B6D4',
+    colorScheme: 'purple'
   });
 
   const handleSettingChange = (key: string, value: any) => {
@@ -31,6 +36,38 @@ export const Preferences: React.FC = () => {
       ...prev,
       [key]: value
     }));
+    
+    if (key === 'darkMode' && value !== (theme === 'dark')) {
+      toggleTheme();
+    }
+  };
+
+  const applyColorScheme = (scheme: string) => {
+    const root = document.documentElement;
+    
+    switch (scheme) {
+      case 'blue':
+        root.style.setProperty('--primary', '217 91% 60%');
+        root.style.setProperty('--primary-foreground', '0 0% 98%');
+        break;
+      case 'green':
+        root.style.setProperty('--primary', '142 76% 36%');
+        root.style.setProperty('--primary-foreground', '355.7 100% 97.3%');
+        break;
+      case 'red':
+        root.style.setProperty('--primary', '0 72% 51%');
+        root.style.setProperty('--primary-foreground', '0 0% 98%');
+        break;
+      case 'orange':
+        root.style.setProperty('--primary', '24 95% 53%');
+        root.style.setProperty('--primary-foreground', '60 9.1% 97.8%');
+        break;
+      default: // purple
+        root.style.setProperty('--primary', '262.1 83.3% 57.8%');
+        root.style.setProperty('--primary-foreground', '210 40% 98%');
+    }
+    
+    setUserSettings(prev => ({ ...prev, colorScheme: scheme }));
   };
 
   const savePreferences = () => {
@@ -41,15 +78,19 @@ export const Preferences: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Préférences</h1>
-        <p className="text-gray-600 mt-2">Configurez votre application selon vos besoins.</p>
+        <h1 className="text-3xl font-bold text-foreground">Préférences</h1>
+        <p className="text-muted-foreground mt-2">Configurez votre application selon vos besoins.</p>
       </div>
 
       <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="profile" className="flex items-center space-x-2">
             <User className="h-4 w-4" />
             <span>Profil</span>
+          </TabsTrigger>
+          <TabsTrigger value="appearance" className="flex items-center space-x-2">
+            <Palette className="h-4 w-4" />
+            <span>Apparence</span>
           </TabsTrigger>
           <TabsTrigger value="menu" className="flex items-center space-x-2">
             <Layout className="h-4 w-4" />
@@ -129,6 +170,95 @@ export const Preferences: React.FC = () => {
           </Card>
         </TabsContent>
 
+        <TabsContent value="appearance" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Thème et Couleurs</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>Mode sombre</Label>
+                  <p className="text-sm text-muted-foreground">Utiliser le thème sombre</p>
+                </div>
+                <Switch
+                  checked={userSettings.darkMode}
+                  onCheckedChange={(value) => handleSettingChange('darkMode', value)}
+                />
+              </div>
+
+              <div className="space-y-3">
+                <Label>Schéma de couleurs</Label>
+                <div className="grid grid-cols-5 gap-3">
+                  {[
+                    { name: 'purple', color: '#8B5CF6', label: 'Violet' },
+                    { name: 'blue', color: '#3B82F6', label: 'Bleu' },
+                    { name: 'green', color: '#10B981', label: 'Vert' },
+                    { name: 'red', color: '#EF4444', label: 'Rouge' },
+                    { name: 'orange', color: '#F97316', label: 'Orange' }
+                  ].map((scheme) => (
+                    <button
+                      key={scheme.name}
+                      onClick={() => applyColorScheme(scheme.name)}
+                      className={`p-4 rounded-lg border-2 transition-all hover:scale-105 ${
+                        userSettings.colorScheme === scheme.name 
+                          ? 'border-primary ring-2 ring-primary/20' 
+                          : 'border-border'
+                      }`}
+                    >
+                      <div 
+                        className="w-8 h-8 rounded-full mx-auto mb-2"
+                        style={{ backgroundColor: scheme.color }}
+                      />
+                      <p className="text-xs font-medium">{scheme.label}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <Label>Couleurs personnalisées</Label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="primaryColor">Couleur principale</Label>
+                    <div className="flex space-x-2">
+                      <Input
+                        id="primaryColor"
+                        type="color"
+                        value={userSettings.primaryColor}
+                        onChange={(e) => handleSettingChange('primaryColor', e.target.value)}
+                        className="w-16 h-10 p-1"
+                      />
+                      <Input
+                        value={userSettings.primaryColor}
+                        onChange={(e) => handleSettingChange('primaryColor', e.target.value)}
+                        placeholder="#8B5CF6"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="accentColor">Couleur d'accent</Label>
+                    <div className="flex space-x-2">
+                      <Input
+                        id="accentColor"
+                        type="color"
+                        value={userSettings.accentColor}
+                        onChange={(e) => handleSettingChange('accentColor', e.target.value)}
+                        className="w-16 h-10 p-1"
+                      />
+                      <Input
+                        value={userSettings.accentColor}
+                        onChange={(e) => handleSettingChange('accentColor', e.target.value)}
+                        placeholder="#06B6D4"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="menu" className="space-y-6">
           <MenuManager />
         </TabsContent>
@@ -183,19 +313,8 @@ export const Preferences: React.FC = () => {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <Label>Mode sombre</Label>
-                  <p className="text-sm text-gray-600">Utiliser le thème sombre</p>
-                </div>
-                <Switch
-                  checked={userSettings.darkMode}
-                  onCheckedChange={(value) => handleSettingChange('darkMode', value)}
-                />
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div>
                   <Label>Vue compacte</Label>
-                  <p className="text-sm text-gray-600">Affichage plus dense des informations</p>
+                  <p className="text-sm text-muted-foreground">Affichage plus dense des informations</p>
                 </div>
                 <Switch
                   checked={userSettings.compactView}
@@ -206,7 +325,7 @@ export const Preferences: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <Label>Sauvegarde automatique</Label>
-                  <p className="text-sm text-gray-600">Sauvegarder automatiquement les modifications</p>
+                  <p className="text-sm text-muted-foreground">Sauvegarder automatiquement les modifications</p>
                 </div>
                 <Switch
                   checked={userSettings.autoSave}

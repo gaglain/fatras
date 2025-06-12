@@ -20,7 +20,7 @@ export const Layout: React.FC = () => {
           <Outlet />
         </main>
       </div>
-      {user && <ChatWidget />}
+      <ChatWidget />
     </div>
   );
 };
