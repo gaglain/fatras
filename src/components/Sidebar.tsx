@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { 
@@ -56,7 +55,7 @@ const menuItems = [
   },
   { to: '/agenda', icon: Clock, label: 'Agenda' },
   { to: '/show-bible', icon: Book, label: 'Show Bible' },
-  { to: '/road-show', icon: MapPin, label: 'Road Show' },
+  { to: '/road-show', icon: MapPin, label: 'Feuille de route' },
   { to: '/merchandise', icon: ShoppingBag, label: 'Merchandising' },
   { to: '/opportunities', icon: Target, label: 'Opportunités' },
   { to: '/website', icon: Globe, label: 'Site Web' },

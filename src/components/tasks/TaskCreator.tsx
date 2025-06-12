@@ -6,22 +6,33 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { CheckSquare, Plus, User } from 'lucide-react';
+import { CheckSquare, User, Target, Calendar } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import { toast } from 'sonner';
 
 interface TaskCreatorProps {
   onTaskCreated?: (task: any) => void;
   relatedToId?: string;
-  relatedToType?: 'contact' | 'event' | 'contract';
+  relatedToType?: 'contact' | 'event' | 'contract' | 'opportunity';
 }
 
-// Sample contacts data - in a real app, this would come from a database
+// Sample data - in a real app, this would come from databases
 const sampleContacts = [
   { id: 'contact-1', firstName: 'Jean', lastName: 'Dupont', company: 'Productions Musicales' },
   { id: 'contact-2', firstName: 'Marie', lastName: 'Martin', company: 'Festival d\'été' },
   { id: 'contact-3', firstName: 'Paul', lastName: 'Leroy', company: 'Studio Sound' },
   { id: 'contact-4', firstName: 'Sophie', lastName: 'Bernard', company: 'Event Manager' }
+];
+
+const sampleOpportunities = [
+  { id: 'opp-1', title: 'Festival d\'Été 2024', artist: 'The Midnight Express', estimatedAmount: '50000€' },
+  { id: 'opp-2', title: 'Soirée Acoustique', artist: 'Sarah Mitchell', estimatedAmount: '8500€' },
+  { id: 'opp-3', title: 'Rock Legends Tour', artist: 'Thunder Road', estimatedAmount: '75000€' }
+];
+
+const sampleEvents = [
+  { id: 'event-1', title: 'Concert Central Park', venue: 'Central Park', date: '2024-07-15' },
+  { id: 'event-2', title: 'Soirée Jazz Club', venue: 'Blue Note', date: '2024-06-20' }
 ];
 
 export const TaskCreator: React.FC<TaskCreatorProps> = ({ 
@@ -76,10 +87,35 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
     }
   };
 
-  const getContactName = (contactId: string) => {
-    const contact = sampleContacts.find(c => c.id === contactId);
-    return contact ? `${contact.firstName} ${contact.lastName}` : '';
+  const getRelatedItems = () => {
+    switch (formData.relatedToType) {
+      case 'contact':
+        return sampleContacts.map(item => ({
+          id: item.id,
+          name: `${item.firstName} ${item.lastName}`,
+          subtitle: item.company,
+          icon: User
+        }));
+      case 'opportunity':
+        return sampleOpportunities.map(item => ({
+          id: item.id,
+          name: item.title,
+          subtitle: `${item.artist} - ${item.estimatedAmount}`,
+          icon: Target
+        }));
+      case 'event':
+        return sampleEvents.map(item => ({
+          id: item.id,
+          name: item.title,
+          subtitle: `${item.venue} - ${item.date}`,
+          icon: Calendar
+        }));
+      default:
+        return [];
+    }
   };
+
+  const relatedItems = getRelatedItems();
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -118,25 +154,47 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="relatedContact">Contact lié</Label>
+            <Label htmlFor="relatedType">Type de relation</Label>
             <Select 
-              value={formData.relatedToId} 
-              onValueChange={(value) => setFormData({ ...formData, relatedToId: value, relatedToType: 'contact' })}
+              value={formData.relatedToType} 
+              onValueChange={(value) => setFormData({ ...formData, relatedToType: value as any, relatedToId: '' })}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un contact (optionnel)" />
+                <SelectValue placeholder="Sélectionner le type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Aucun contact</SelectItem>
-                {sampleContacts.map((contact) => (
-                  <SelectItem key={contact.id} value={contact.id}>
-                    <div className="flex items-center space-x-2">
-                      <User className="h-4 w-4" />
-                      <span>{contact.firstName} {contact.lastName}</span>
-                      {contact.company && <span className="text-xs text-muted-foreground">({contact.company})</span>}
-                    </div>
-                  </SelectItem>
-                ))}
+                <SelectItem value="contact">Contact</SelectItem>
+                <SelectItem value="opportunity">Opportunité</SelectItem>
+                <SelectItem value="event">Événement</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="relatedItem">Élément lié</Label>
+            <Select 
+              value={formData.relatedToId} 
+              onValueChange={(value) => setFormData({ ...formData, relatedToId: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner un élément (optionnel)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Aucun élément</SelectItem>
+                {relatedItems.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <SelectItem key={item.id} value={item.id}>
+                      <div className="flex items-center space-x-2">
+                        <Icon className="h-4 w-4" />
+                        <div>
+                          <span>{item.name}</span>
+                          {item.subtitle && <span className="text-xs text-muted-foreground ml-1">({item.subtitle})</span>}
+                        </div>
+                      </div>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>
