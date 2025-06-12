@@ -50,7 +50,8 @@ const menuItems = [
     items: [
       { to: '/email', label: 'Emails' },
       { to: '/email-campaigns', label: 'Campagnes' },
-      { to: '/messagerie', label: 'Messagerie' }
+      { to: '/messagerie', label: 'Messagerie' },
+      { to: '/forms', label: 'Formulaires' }
     ]
   },
   { to: '/agenda', icon: Clock, label: 'Agenda' },

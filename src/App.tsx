@@ -33,6 +33,7 @@ import { FrontEvents } from '@/pages/FrontEvents';
 import { FrontContact } from '@/pages/FrontContact';
 import { UserProvider } from '@/contexts/UserContext';
 import { WebsitePageEditor } from '@/pages/WebsitePageEditor';
+import { Forms } from '@/pages/Forms';
 
 function App() {
   return (
@@ -82,6 +83,7 @@ function App() {
                       <Route path="/website/editor" element={<WebsiteWithEditor />} />
                       <Route path="/website/editor/:pageId" element={<WebsitePageEditor />} />
                       <Route path="/website/backoffice" element={<WebsiteBackoffice />} />
+                      <Route path="/forms" element={<Forms />} />
                       <Route path="/application" element={<Application />} />
                       <Route path="/preferences" element={<Preferences />} />
                     </Routes>
