@@ -18,8 +18,7 @@ import {
   Target, 
   Globe, 
   Settings,
-  UserCog,
-  Forms
+  UserCog
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -41,7 +40,7 @@ const navigation = [
   { name: 'Merchandise', href: '/merchandise', icon: ShoppingBag },
   { name: 'Opportunités', href: '/opportunities', icon: Target },
   { name: 'Site Web', href: '/website', icon: Globe },
-  { name: 'Formulaires', href: '/forms', icon: Forms },
+  { name: 'Formulaires', href: '/forms', icon: FileText },
   { name: 'Gestion Utilisateurs', href: '/user-management', icon: UserCog },
   { name: 'Application', href: '/application', icon: Settings },
   { name: 'Préférences', href: '/preferences', icon: Settings },

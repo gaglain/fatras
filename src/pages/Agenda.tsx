@@ -7,6 +7,34 @@ import { Calendar, Plus, Clock, MapPin, Users, ExternalLink, CalendarDays, Setti
 import { useUser } from '@/contexts/UserContext';
 import { toast } from 'sonner';
 
+// Déclarations TypeScript pour l'API Google
+declare global {
+  interface Window {
+    gapi: {
+      load: (api: string, callback: () => void) => void;
+      client: {
+        init: (config: any) => Promise<void>;
+        calendar: {
+          events: {
+            list: (params: any) => Promise<any>;
+            insert: (params: any) => Promise<any>;
+          };
+        };
+      };
+      auth2: {
+        getAuthInstance: () => GoogleAuth;
+      };
+    };
+  }
+}
+
+interface GoogleAuth {
+  isSignedIn: {
+    get: () => boolean;
+  };
+  signIn: () => Promise<void>;
+}
+
 interface AgendaEvent {
   id: string;
   title: string;
@@ -61,9 +89,9 @@ export const Agenda: React.FC = () => {
   const [isGoogleConnected, setIsGoogleConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
 
-  const initializeGoogleCalendar = () => {
-    return new Promise((resolve) => {
-      if (window.gapi) {
+  const initializeGoogleCalendar = (): Promise<GoogleAuth> => {
+    return new Promise((resolve, reject) => {
+      if (typeof window.gapi !== 'undefined') {
         window.gapi.load('client:auth2', () => {
           window.gapi.client.init({
             apiKey: 'YOUR_API_KEY', // À remplacer par la vraie clé API
@@ -72,7 +100,7 @@ export const Agenda: React.FC = () => {
             scope: 'https://www.googleapis.com/auth/calendar'
           }).then(() => {
             resolve(window.gapi.auth2.getAuthInstance());
-          });
+          }).catch(reject);
         });
       } else {
         // Charger l'API Google si elle n'est pas déjà chargée
@@ -87,9 +115,10 @@ export const Agenda: React.FC = () => {
               scope: 'https://www.googleapis.com/auth/calendar'
             }).then(() => {
               resolve(window.gapi.auth2.getAuthInstance());
-            });
+            }).catch(reject);
           });
         };
+        script.onerror = () => reject(new Error('Failed to load Google API'));
         document.head.appendChild(script);
       }
     });
@@ -120,6 +149,10 @@ export const Agenda: React.FC = () => {
 
   const syncGoogleCalendarEvents = async () => {
     try {
+      if (typeof window.gapi === 'undefined') {
+        throw new Error('Google API not loaded');
+      }
+
       const response = await window.gapi.client.calendar.events.list({
         calendarId: 'primary',
         timeMin: new Date().toISOString(),
@@ -157,7 +190,7 @@ export const Agenda: React.FC = () => {
   };
 
   const createGoogleCalendarEvent = async (eventData: any) => {
-    if (!isGoogleConnected) return;
+    if (!isGoogleConnected || typeof window.gapi === 'undefined') return;
 
     try {
       const event = {
