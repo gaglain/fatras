@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
@@ -21,7 +20,6 @@ import { Agenda } from '@/pages/Agenda';
 import { ShowBible } from '@/pages/ShowBible';
 import { RoadShow } from '@/pages/RoadShow';
 import { Merchandise } from '@/pages/Merchandise';
-import { Opportunities } from '@/pages/Opportunities';
 import { Website } from '@/pages/Website';
 import { WebsiteWithEditor } from '@/pages/WebsiteWithEditor';
 import { WebsiteBackoffice } from '@/pages/WebsiteBackoffice';
@@ -32,6 +30,7 @@ import { FrontArtists } from '@/pages/FrontArtists';
 import { FrontEvents } from '@/pages/FrontEvents';
 import { FrontContact } from '@/pages/FrontContact';
 import { UserProvider } from '@/contexts/UserContext';
+import { WebsitePageEditor } from '@/pages/WebsitePageEditor';
 
 function App() {
   return (
@@ -79,6 +78,7 @@ function App() {
                       <Route path="/opportunities" element={<Opportunities />} />
                       <Route path="/website" element={<Website />} />
                       <Route path="/website/editor" element={<WebsiteWithEditor />} />
+                      <Route path="/website/editor/:pageId" element={<WebsitePageEditor />} />
                       <Route path="/website/backoffice" element={<WebsiteBackoffice />} />
                       <Route path="/application" element={<Application />} />
                       <Route path="/preferences" element={<Preferences />} />

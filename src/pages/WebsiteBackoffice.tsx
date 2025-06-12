@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { useNavigate } from 'react-router-dom';
 import { 
   Plus, 
   Edit, 
@@ -61,7 +62,7 @@ const defaultPages: WebPage[] = [
   {
     id: '2',
     title: 'Nos Artistes',
-    slug: '/artistes',
+    slug: '/artists',
     status: 'published',
     type: 'page',
     content: 'Galerie complète de nos artistes talentueux',
@@ -71,8 +72,8 @@ const defaultPages: WebPage[] = [
   },
   {
     id: '3',
-    title: 'Événements à venir',
-    slug: '/evenements',
+    title: 'Événements',
+    slug: '/events',
     status: 'published',
     type: 'page',
     content: 'Calendrier des prochains événements et concerts',
@@ -82,14 +83,14 @@ const defaultPages: WebPage[] = [
   },
   {
     id: '4',
-    title: 'Festival d\'été 2024',
-    slug: '/blog/festival-ete-2024',
-    status: 'draft',
-    type: 'blog',
-    content: 'Article sur le prochain festival d\'été avec nos meilleurs artistes',
-    metaDescription: 'Tout savoir sur notre festival d\'été 2024',
-    createdAt: '2024-01-22',
-    updatedAt: '2024-01-22'
+    title: 'Contact',
+    slug: '/contact',
+    status: 'published',
+    type: 'page',
+    content: 'Formulaire de contact et informations',
+    metaDescription: 'Contactez-nous pour vos projets musicaux',
+    createdAt: '2024-01-14',
+    updatedAt: '2024-01-21'
   }
 ];
 
@@ -98,7 +99,53 @@ interface WebsiteBackofficeProps {
 }
 
 export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }) => {
-  const [pages, setPages] = useState<WebPage[]>(defaultPages);
+  const navigate = useNavigate();
+  const [pages, setPages] = useState<WebPage[]>([
+    {
+      id: '1',
+      title: 'Accueil',
+      slug: '/',
+      status: 'published',
+      type: 'page',
+      content: 'Page d\'accueil avec les derniers événements et artistes',
+      metaDescription: 'Découvrez nos artistes et événements exceptionnels',
+      createdAt: '2024-01-15',
+      updatedAt: '2024-01-20'
+    },
+    {
+      id: '2',
+      title: 'Nos Artistes',
+      slug: '/artists',
+      status: 'published',
+      type: 'page',
+      content: 'Galerie complète de nos artistes talentueux',
+      metaDescription: 'Parcourez notre sélection d\'artistes exceptionnels',
+      createdAt: '2024-01-10',
+      updatedAt: '2024-01-18'
+    },
+    {
+      id: '3',
+      title: 'Événements',
+      slug: '/events',
+      status: 'published',
+      type: 'page',
+      content: 'Calendrier des prochains événements et concerts',
+      metaDescription: 'Ne manquez aucun de nos événements musicaux',
+      createdAt: '2024-01-12',
+      updatedAt: '2024-01-19'
+    },
+    {
+      id: '4',
+      title: 'Contact',
+      slug: '/contact',
+      status: 'published',
+      type: 'page',
+      content: 'Formulaire de contact et informations',
+      metaDescription: 'Contactez-nous pour vos projets musicaux',
+      createdAt: '2024-01-14',
+      updatedAt: '2024-01-21'
+    }
+  ]);
   const [selectedPage, setSelectedPage] = useState<WebPage | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -136,19 +183,6 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
     setPages([...pages, newPage]);
     setShowCreateDialog(false);
     resetForm();
-  };
-
-  const handleEditPage = (page: WebPage) => {
-    setSelectedPage(page);
-    setFormData({
-      title: page.title,
-      slug: page.slug,
-      type: page.type,
-      content: page.content,
-      metaDescription: page.metaDescription,
-      status: page.status
-    });
-    setShowEditDialog(true);
   };
 
   const handleUpdatePage = () => {
@@ -195,6 +229,11 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
 
   const publishedPages = pages.filter(page => page.status === 'published');
   const draftPages = pages.filter(page => page.status === 'draft');
+
+  const handleEditPage = (page: WebPage) => {
+    // Navigate to the block editor for this page
+    navigate(`/website/editor/${page.id}`);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -395,7 +434,7 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
                           Modifié le {page.updatedAt}
                         </span>
                         <div className="flex space-x-1">
-                          <Button size="sm" variant="outline">
+                          <Button size="sm" variant="outline" onClick={() => window.open(`/front${page.slug}`, '_blank')}>
                             <Eye className="h-4 w-4" />
                           </Button>
                           <Button size="sm" variant="outline" onClick={() => handleEditPage(page)}>
