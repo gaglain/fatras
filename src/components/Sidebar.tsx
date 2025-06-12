@@ -84,7 +84,7 @@ export const Sidebar: React.FC = () => {
         <div key={index}>
           <button
             onClick={() => toggleExpanded(item.label)}
-            className="w-full flex items-center justify-between px-3 py-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground rounded-md text-sm font-medium group transition-colors"
+            className="w-full flex items-center justify-between px-3 py-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-md text-sm font-medium group transition-colors"
           >
             <div className="flex items-center">
               <Icon className="mr-3 h-4 w-4" />
@@ -106,8 +106,8 @@ export const Sidebar: React.FC = () => {
                   className={({ isActive }) =>
                     `flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
                       isActive
-                        ? 'bg-primary/10 text-primary font-medium'
-                        : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                        ? 'bg-sidebar-primary/10 text-sidebar-primary font-medium'
+                        : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
                     }`
                   }
                 >
@@ -125,8 +125,8 @@ export const Sidebar: React.FC = () => {
         key={index}
         to={item.to}
         className={({ isActive }) =>
-          `flex items-center px-3 py-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground rounded-md text-sm font-medium group transition-colors ${
-            isActive ? 'bg-primary/10 text-primary' : ''
+          `flex items-center px-3 py-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-md text-sm font-medium group transition-colors ${
+            isActive ? 'bg-sidebar-primary/10 text-sidebar-primary' : ''
           }`
         }
       >
@@ -139,14 +139,14 @@ export const Sidebar: React.FC = () => {
   return (
     <div className="hidden md:flex md:flex-shrink-0">
       <div className="flex flex-col w-64">
-        <div className="flex flex-col flex-grow pt-5 pb-4 overflow-y-auto bg-card border-r border-border">
+        <div className="flex flex-col flex-grow pt-5 pb-4 overflow-y-auto bg-sidebar-background border-r border-sidebar-border">
           <div className="flex items-center flex-shrink-0 px-4">
             <div className="flex items-center">
-              <div className="flex-shrink-0 w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <Music className="w-5 h-5 text-primary-foreground" />
+              <div className="flex-shrink-0 w-8 h-8 bg-sidebar-primary rounded-lg flex items-center justify-center">
+                <Music className="w-5 h-5 text-sidebar-primary-foreground" />
               </div>
               <div className="ml-3">
-                <p className="text-lg font-semibold text-foreground">MusicCRM</p>
+                <p className="text-lg font-semibold text-sidebar-foreground">MusicCRM</p>
               </div>
             </div>
           </div>

@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { CheckSquare, Plus } from 'lucide-react';
+import { CheckSquare, Plus, User } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import { toast } from 'sonner';
 
@@ -15,6 +15,14 @@ interface TaskCreatorProps {
   relatedToId?: string;
   relatedToType?: 'contact' | 'event' | 'contract';
 }
+
+// Sample contacts data - in a real app, this would come from a database
+const sampleContacts = [
+  { id: 'contact-1', firstName: 'Jean', lastName: 'Dupont', company: 'Productions Musicales' },
+  { id: 'contact-2', firstName: 'Marie', lastName: 'Martin', company: 'Festival d\'été' },
+  { id: 'contact-3', firstName: 'Paul', lastName: 'Leroy', company: 'Studio Sound' },
+  { id: 'contact-4', firstName: 'Sophie', lastName: 'Bernard', company: 'Event Manager' }
+];
 
 export const TaskCreator: React.FC<TaskCreatorProps> = ({ 
   onTaskCreated, 
@@ -30,7 +38,9 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
     assignedTo: currentUser?.id || '',
     dueDate: '',
     priority: 'medium',
-    status: 'todo'
+    status: 'todo',
+    relatedToId: relatedToId || '',
+    relatedToType: relatedToType || 'contact'
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,8 +52,6 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
       const newTask = {
         id: `task-${Date.now()}`,
         ...formData,
-        relatedToId,
-        relatedToType,
         createdAt: new Date().toISOString(),
         createdBy: currentUser?.id || ''
       };
@@ -57,13 +65,20 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
         assignedTo: currentUser?.id || '',
         dueDate: '',
         priority: 'medium',
-        status: 'todo'
+        status: 'todo',
+        relatedToId: '',
+        relatedToType: 'contact'
       });
     } catch (error) {
       toast.error('Erreur lors de la création de la tâche');
     } finally {
       setLoading(false);
     }
+  };
+
+  const getContactName = (contactId: string) => {
+    const contact = sampleContacts.find(c => c.id === contactId);
+    return contact ? `${contact.firstName} ${contact.lastName}` : '';
   };
 
   return (
@@ -100,6 +115,30 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows={3}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="relatedContact">Contact lié</Label>
+            <Select 
+              value={formData.relatedToId} 
+              onValueChange={(value) => setFormData({ ...formData, relatedToId: value, relatedToType: 'contact' })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner un contact (optionnel)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Aucun contact</SelectItem>
+                {sampleContacts.map((contact) => (
+                  <SelectItem key={contact.id} value={contact.id}>
+                    <div className="flex items-center space-x-2">
+                      <User className="h-4 w-4" />
+                      <span>{contact.firstName} {contact.lastName}</span>
+                      {contact.company && <span className="text-xs text-muted-foreground">({contact.company})</span>}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
