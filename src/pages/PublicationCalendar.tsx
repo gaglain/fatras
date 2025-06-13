@@ -5,18 +5,19 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, CalendarDays, Clock, Plus, Edit2, Trash2, Bell, Instagram, Facebook, Twitter, Mail } from 'lucide-react';
+import { Calendar, CalendarDays, Clock, Plus, Edit2, Trash2, Bell, Instagram, Facebook, Twitter, Mail, Linkedin, Video } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 
 interface Publication {
   id: string;
   title: string;
   content: string;
-  platform: 'instagram' | 'facebook' | 'twitter' | 'newsletter';
+  platforms: ('instagram' | 'facebook' | 'twitter' | 'newsletter' | 'linkedin' | 'tiktok' | 'youtube')[];
   scheduledDate: string;
   scheduledTime: string;
   status: 'draft' | 'scheduled' | 'published';
@@ -30,7 +31,7 @@ export const PublicationCalendar: React.FC = () => {
       id: '1',
       title: 'Nouveau single de l\'artiste',
       content: 'Découvrez le nouveau single de notre artiste ! 🎵 #nouveauté #musique',
-      platform: 'instagram',
+      platforms: ['instagram', 'facebook'],
       scheduledDate: '2024-06-15',
       scheduledTime: '18:00',
       status: 'scheduled',
@@ -43,7 +44,7 @@ export const PublicationCalendar: React.FC = () => {
   const [newPublication, setNewPublication] = useState<Partial<Publication>>({
     title: '',
     content: '',
-    platform: 'instagram',
+    platforms: [],
     scheduledDate: '',
     scheduledTime: '',
     status: 'draft',
@@ -51,24 +52,19 @@ export const PublicationCalendar: React.FC = () => {
     tags: []
   });
 
-  const getPlatformIcon = (platform: string) => {
-    switch (platform) {
-      case 'instagram': return <Instagram className="h-4 w-4" />;
-      case 'facebook': return <Facebook className="h-4 w-4" />;
-      case 'twitter': return <Twitter className="h-4 w-4" />;
-      case 'newsletter': return <Mail className="h-4 w-4" />;
-      default: return <Calendar className="h-4 w-4" />;
-    }
-  };
+  const platformOptions = [
+    { value: 'instagram', label: 'Instagram', icon: Instagram, color: 'bg-pink-500' },
+    { value: 'facebook', label: 'Facebook', icon: Facebook, color: 'bg-blue-600' },
+    { value: 'twitter', label: 'Twitter', icon: Twitter, color: 'bg-blue-400' },
+    { value: 'linkedin', label: 'LinkedIn', icon: Linkedin, color: 'bg-blue-700' },
+    { value: 'tiktok', label: 'TikTok', icon: Video, color: 'bg-black' },
+    { value: 'youtube', label: 'YouTube', icon: Video, color: 'bg-red-600' },
+    { value: 'newsletter', label: 'Newsletter', icon: Mail, color: 'bg-green-600' }
+  ];
 
-  const getPlatformColor = (platform: string) => {
-    switch (platform) {
-      case 'instagram': return 'bg-pink-500';
-      case 'facebook': return 'bg-blue-600';
-      case 'twitter': return 'bg-blue-400';
-      case 'newsletter': return 'bg-green-600';
-      default: return 'bg-gray-500';
-    }
+  const getPlatformInfo = (platform: string) => {
+    return platformOptions.find(p => p.value === platform) || 
+           { icon: Calendar, color: 'bg-gray-500' };
   };
 
   const getStatusColor = (status: string) => {
@@ -80,9 +76,24 @@ export const PublicationCalendar: React.FC = () => {
     }
   };
 
+  const togglePlatform = (platform: string) => {
+    const currentPlatforms = newPublication.platforms || [];
+    if (currentPlatforms.includes(platform as any)) {
+      setNewPublication(prev => ({
+        ...prev,
+        platforms: currentPlatforms.filter(p => p !== platform)
+      }));
+    } else {
+      setNewPublication(prev => ({
+        ...prev,
+        platforms: [...currentPlatforms, platform as any]
+      }));
+    }
+  };
+
   const createPublication = () => {
-    if (!newPublication.title || !newPublication.content) {
-      toast.error('Veuillez remplir tous les champs obligatoires');
+    if (!newPublication.title || !newPublication.content || !newPublication.platforms?.length) {
+      toast.error('Veuillez remplir tous les champs obligatoires et sélectionner au moins une plateforme');
       return;
     }
 
@@ -90,7 +101,7 @@ export const PublicationCalendar: React.FC = () => {
       id: Date.now().toString(),
       title: newPublication.title!,
       content: newPublication.content!,
-      platform: newPublication.platform as Publication['platform'] || 'instagram',
+      platforms: newPublication.platforms!,
       scheduledDate: newPublication.scheduledDate || '',
       scheduledTime: newPublication.scheduledTime || '',
       status: newPublication.status as Publication['status'] || 'draft',
@@ -102,7 +113,7 @@ export const PublicationCalendar: React.FC = () => {
     setNewPublication({
       title: '',
       content: '',
-      platform: 'instagram',
+      platforms: [],
       scheduledDate: '',
       scheduledTime: '',
       status: 'draft',
@@ -166,7 +177,7 @@ export const PublicationCalendar: React.FC = () => {
               Nouvelle publication
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Créer une nouvelle publication</DialogTitle>
             </DialogHeader>
@@ -192,40 +203,41 @@ export const PublicationCalendar: React.FC = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="platform">Plateforme</Label>
-                  <Select 
-                    value={newPublication.platform} 
-                    onValueChange={(value) => setNewPublication(prev => ({ ...prev, platform: value as Publication['platform'] }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Choisir une plateforme" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="instagram">Instagram</SelectItem>
-                      <SelectItem value="facebook">Facebook</SelectItem>
-                      <SelectItem value="twitter">Twitter</SelectItem>
-                      <SelectItem value="newsletter">Newsletter</SelectItem>
-                    </SelectContent>
-                  </Select>
+              <div>
+                <Label>Plateformes *</Label>
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  {platformOptions.map((platform) => (
+                    <div key={platform.value} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={platform.value}
+                        checked={(newPublication.platforms || []).includes(platform.value as any)}
+                        onCheckedChange={() => togglePlatform(platform.value)}
+                      />
+                      <Label htmlFor={platform.value} className="flex items-center space-x-2 cursor-pointer">
+                        <div className={`p-1 rounded text-white ${platform.color}`}>
+                          <platform.icon className="h-3 w-3" />
+                        </div>
+                        <span className="text-sm">{platform.label}</span>
+                      </Label>
+                    </div>
+                  ))}
                 </div>
+              </div>
 
-                <div>
-                  <Label htmlFor="status">Statut</Label>
-                  <Select 
-                    value={newPublication.status} 
-                    onValueChange={(value) => setNewPublication(prev => ({ ...prev, status: value as Publication['status'] }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Choisir un statut" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="draft">Brouillon</SelectItem>
-                      <SelectItem value="scheduled">Programmé</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div>
+                <Label htmlFor="status">Statut</Label>
+                <Select 
+                  value={newPublication.status} 
+                  onValueChange={(value) => setNewPublication(prev => ({ ...prev, status: value as Publication['status'] }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choisir un statut" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">Brouillon</SelectItem>
+                    <SelectItem value="scheduled">Programmé</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -286,8 +298,15 @@ export const PublicationCalendar: React.FC = () => {
               {upcomingNotifications.map(pub => (
                 <div key={pub.id} className="flex items-center justify-between p-2 bg-white rounded border">
                   <div className="flex items-center space-x-2">
-                    <div className={`p-1 rounded text-white ${getPlatformColor(pub.platform)}`}>
-                      {getPlatformIcon(pub.platform)}
+                    <div className="flex space-x-1">
+                      {pub.platforms.map(platform => {
+                        const platformInfo = getPlatformInfo(platform);
+                        return (
+                          <div key={platform} className={`p-1 rounded text-white ${platformInfo.color}`}>
+                            <platformInfo.icon className="h-3 w-3" />
+                          </div>
+                        );
+                      })}
                     </div>
                     <span className="font-medium">{pub.title}</span>
                     <span className="text-sm text-muted-foreground">
@@ -308,9 +327,16 @@ export const PublicationCalendar: React.FC = () => {
             <CardContent className="p-4">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <div className={`p-1 rounded text-white ${getPlatformColor(publication.platform)}`}>
-                      {getPlatformIcon(publication.platform)}
+                  <div className="flex items-center space-x-2 mb-2 flex-wrap">
+                    <div className="flex space-x-1">
+                      {publication.platforms.map(platform => {
+                        const platformInfo = getPlatformInfo(platform);
+                        return (
+                          <div key={platform} className={`p-1 rounded text-white ${platformInfo.color}`}>
+                            <platformInfo.icon className="h-4 w-4" />
+                          </div>
+                        );
+                      })}
                     </div>
                     <h3 className="font-semibold">{publication.title}</h3>
                     <Badge className={`text-white ${getStatusColor(publication.status)}`}>

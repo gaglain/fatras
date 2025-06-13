@@ -1,273 +1,226 @@
 
 import jsPDF from 'jspdf';
-import { TourStop } from '@/types/roadshow.types';
 
-export const generateTourStopPDF = async (stop: TourStop, getUserById: (userId: string) => { name: string } | undefined) => {
+export interface TourStop {
+  id: string;
+  city: string;
+  venue: string;
+  address: string;
+  date: string;
+  time: string;
+  capacity: string;
+  ticketsAvailable: string;
+  status: 'pending' | 'confirmed' | 'cancelled';
+  artistLineup: { userId: string; confirmed: boolean }[];
+  crew: string[];
+  checkInTime: string;
+  departureTime: string;
+  transport: string;
+  accommodation: string;
+  accommodationAddress: string;
+  equipment: string[];
+  localContact: string;
+  localContactPhone: string;
+  notes: string;
+}
+
+export const generateTourStopPDF = (tourStop: TourStop, users: any[] = []) => {
   const doc = new jsPDF();
-  
-  // Configuration de base
-  doc.setFont('helvetica');
-  const pageWidth = doc.internal.pageSize.getWidth();
-  let yPosition = 20;
-  
-  // Récupérer les paramètres de l'entreprise
-  const companySettings = JSON.parse(localStorage.getItem('companySettings') || '{"name":"Fatras Booking","logo":"","favicon":""}');
-  
-  // Ajouter le logo si disponible
-  if (companySettings.logo) {
-    try {
-      // Créer une image pour obtenir les dimensions
-      const img = new Image();
-      img.src = companySettings.logo;
-      
-      // Attendre que l'image soit chargée
-      await new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = reject;
-      });
-      
-      // Calculer les dimensions pour que le logo fasse maximum 30mm de haut
-      const maxHeight = 30;
-      const maxWidth = 40;
-      const ratio = Math.min(maxWidth / img.width, maxHeight / img.height);
-      const logoWidth = img.width * ratio;
-      const logoHeight = img.height * ratio;
-      
-      // Ajouter le logo en haut à droite
-      doc.addImage(companySettings.logo, 'JPEG', pageWidth - logoWidth - 20, 10, logoWidth, logoHeight);
-    } catch (error) {
-      console.warn('Impossible de charger le logo dans le PDF:', error);
+  const pageWidth = doc.internal.pageSize.width;
+  const pageHeight = doc.internal.pageSize.height;
+  const margin = 20;
+  let yPosition = margin;
+
+  // Helper function to add text with word wrap
+  const addWrappedText = (text: string, x: number, y: number, maxWidth: number, fontSize: number = 10) => {
+    doc.setFontSize(fontSize);
+    const lines = doc.splitTextToSize(text, maxWidth);
+    doc.text(lines, x, y);
+    return y + (lines.length * fontSize * 0.4);
+  };
+
+  // Helper function to check if we need a new page
+  const checkNewPage = (neededSpace: number) => {
+    if (yPosition + neededSpace > pageHeight - margin) {
+      doc.addPage();
+      yPosition = margin;
     }
-  }
-  
-  // Titre principal avec le nom de l'entreprise
+  };
+
+  // Title
   doc.setFontSize(20);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(51, 51, 51);
-  doc.text(companySettings.name || 'FATRAS BOOKING', 20, yPosition);
-  
-  yPosition += 8;
-  doc.setFontSize(16);
-  doc.setTextColor(102, 102, 102);
-  doc.text('FEUILLE DE ROUTE', 20, yPosition);
-  
+  doc.text('FEUILLE DE ROUTE', pageWidth / 2, yPosition, { align: 'center' });
   yPosition += 15;
-  doc.setFontSize(18);
-  doc.setTextColor(51, 51, 51);
-  doc.setFont('helvetica', 'bold');
-  doc.text(`${stop.city} - ${stop.venue}`, 20, yPosition);
-  
-  // Ligne de séparation colorée
-  yPosition += 10;
-  doc.setLineWidth(2);
-  doc.setDrawColor(59, 130, 246);
-  doc.line(20, yPosition, pageWidth - 20, yPosition);
-  
-  yPosition += 15;
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(51, 51, 51);
-  
-  // Section LIEU ET HORAIRES avec fond coloré
-  doc.setFillColor(249, 250, 251);
-  doc.rect(15, yPosition - 5, pageWidth - 30, 8, 'F');
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(37, 99, 235);
-  doc.text('📍 LIEU ET HORAIRES', 20, yPosition);
-  yPosition += 10;
-  
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(51, 51, 51);
-  doc.text(`Lieu: ${stop.venue}`, 25, yPosition);
-  yPosition += 6;
-  doc.text(`Adresse: ${stop.address}`, 25, yPosition);
-  yPosition += 6;
-  doc.text(`Date: ${new Date(stop.date).toLocaleDateString('fr-FR', { 
-    weekday: 'long', 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
-  })}`, 25, yPosition);
-  yPosition += 6;
-  doc.text(`Heure spectacle: ${stop.time}`, 25, yPosition);
-  yPosition += 6;
-  
-  if (stop.checkInTime) {
-    doc.text(`Arrivée équipe: ${stop.checkInTime}`, 25, yPosition);
-    yPosition += 6;
-  }
-  if (stop.departureTime) {
-    doc.text(`Départ: ${stop.departureTime}`, 25, yPosition);
-    yPosition += 6;
-  }
-  
-  yPosition += 10;
-  
-  // Section CASTING
-  doc.setFillColor(254, 243, 199);
-  doc.rect(15, yPosition - 5, pageWidth - 30, 8, 'F');
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(180, 83, 9);
-  doc.text('🎭 CASTING', 20, yPosition);
-  yPosition += 10;
-  
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(51, 51, 51);
-  
-  if (stop.artistLineup && stop.artistLineup.length > 0) {
-    stop.artistLineup.forEach(artist => {
-      const user = getUserById(artist.userId);
-      const status = artist.confirmed ? '✅ Confirmé' : '⏳ En attente';
-      const artistName = user?.name || 'Artiste inconnu';
-      doc.text(`• ${artistName} - ${status}`, 25, yPosition);
-      yPosition += 6;
-    });
-  } else {
-    doc.text('• Aucun artiste assigné', 25, yPosition);
-    yPosition += 6;
-  }
-  
-  yPosition += 10;
-  
-  // Section CAPACITÉ
-  doc.setFillColor(219, 234, 254);
-  doc.rect(15, yPosition - 5, pageWidth - 30, 8, 'F');
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(37, 99, 235);
-  doc.text('👥 CAPACITÉ', 20, yPosition);
-  yPosition += 10;
-  
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(51, 51, 51);
-  doc.text(`Capacité totale: ${stop.capacity} personnes`, 25, yPosition);
-  yPosition += 6;
-  if (stop.ticketsAvailable) {
-    doc.text(`Billets disponibles: ${stop.ticketsAvailable}`, 25, yPosition);
-    yPosition += 6;
-  }
-  
-  // Contact local
-  if (stop.localContact) {
-    yPosition += 10;
-    doc.setFillColor(240, 253, 244);
-    doc.rect(15, yPosition - 5, pageWidth - 30, 8, 'F');
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(22, 163, 74);
-    doc.text('📞 CONTACT LOCAL', 20, yPosition);
-    yPosition += 10;
-    
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(51, 51, 51);
-    doc.text(`Contact: ${stop.localContact}`, 25, yPosition);
-    yPosition += 6;
-    if (stop.localContactPhone) {
-      doc.text(`Téléphone: ${stop.localContactPhone}`, 25, yPosition);
-      yPosition += 6;
-    }
-  }
-  
-  // Hébergement
-  if (stop.accommodation) {
-    yPosition += 10;
-    doc.setFillColor(252, 231, 243);
-    doc.rect(15, yPosition - 5, pageWidth - 30, 8, 'F');
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(157, 23, 77);
-    doc.text('🏨 HÉBERGEMENT', 20, yPosition);
-    yPosition += 10;
-    
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(51, 51, 51);
-    doc.text(`Hébergement: ${stop.accommodation}`, 25, yPosition);
-    yPosition += 6;
-    if (stop.accommodationAddress) {
-      doc.text(`Adresse: ${stop.accommodationAddress}`, 25, yPosition);
-      yPosition += 6;
-    }
-  }
-  
-  // Transport
-  if (stop.transport) {
-    yPosition += 10;
-    doc.setFillColor(233, 213, 255);
-    doc.rect(15, yPosition - 5, pageWidth - 30, 8, 'F');
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(107, 33, 168);
-    doc.text('🚐 TRANSPORT', 20, yPosition);
-    yPosition += 10;
-    
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(51, 51, 51);
-    doc.text(`Transport: ${stop.transport}`, 25, yPosition);
-    yPosition += 6;
-  }
-  
-  // Notes
-  if (stop.notes) {
-    yPosition += 10;
-    doc.setFillColor(254, 242, 242);
-    doc.rect(15, yPosition - 5, pageWidth - 30, 8, 'F');
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(185, 28, 28);
-    doc.text('📝 NOTES IMPORTANTES', 20, yPosition);
-    yPosition += 10;
-    
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(51, 51, 51);
-    
-    // Diviser les notes en lignes
-    const noteLines = doc.splitTextToSize(stop.notes, pageWidth - 50);
-    noteLines.forEach((line: string) => {
-      doc.text(line, 25, yPosition);
-      yPosition += 6;
-    });
-  }
-  
-  // Statut en bas avec couleur selon le statut
-  yPosition = doc.internal.pageSize.getHeight() - 40;
-  
-  // Fond coloré selon le statut
-  let statusColor, statusBg, statusText;
-  const statusValue = stop.status || 'unknown';
-  
-  switch (statusValue) {
-    case 'confirmed':
-      statusColor = [22, 163, 74];
-      statusBg = [240, 253, 244];
-      statusText = '✅ CONFIRMÉ';
-      break;
-    case 'pending':
-      statusColor = [245, 158, 11];
-      statusBg = [254, 243, 199];
-      statusText = '⏳ EN ATTENTE';
-      break;
-    case 'cancelled':
-      statusColor = [220, 38, 38];
-      statusBg = [254, 242, 242];
-      statusText = '❌ ANNULÉ';
-      break;
-    default:
-      statusColor = [107, 114, 128];
-      statusBg = [249, 250, 251];
-      statusText = '📋 ' + String(statusValue).toUpperCase();
-  }
-  
-  doc.setFillColor(statusBg[0], statusBg[1], statusBg[2]);
-  doc.rect(20, yPosition - 10, pageWidth - 40, 15, 'F');
-  
-  doc.setFont('helvetica', 'bold');
+
+  // Event details section
+  checkNewPage(40);
   doc.setFontSize(14);
-  doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
-  doc.text(`STATUT: ${statusText}`, pageWidth / 2, yPosition - 2, { align: 'center' });
-  
-  // Date de génération
-  yPosition += 15;
-  doc.setFontSize(8);
+  doc.setFont('helvetica', 'bold');
+  doc.text('DÉTAILS DE L\'ÉVÉNEMENT', margin, yPosition);
+  yPosition += 10;
+
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(107, 114, 128);
-  doc.text(`Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')} - ${companySettings.name}`, 
-           pageWidth / 2, yPosition, { align: 'center' });
+  doc.setFontSize(10);
   
-  // Télécharger le PDF
-  doc.save(`feuille-route-${stop.city}-${stop.date}.pdf`);
+  const eventDetails = [
+    ['Ville:', tourStop.city || 'Non spécifié'],
+    ['Lieu:', tourStop.venue || 'Non spécifié'],
+    ['Adresse:', tourStop.address || 'Non spécifiée'],
+    ['Date:', tourStop.date ? new Date(tourStop.date).toLocaleDateString('fr-FR') : 'Non spécifiée'],
+    ['Heure:', tourStop.time || 'Non spécifiée'],
+    ['Capacité:', tourStop.capacity || 'Non spécifiée'],
+    ['Billets disponibles:', tourStop.ticketsAvailable || 'Non spécifié'],
+    ['Statut:', tourStop.status === 'confirmed' ? 'Confirmé' : tourStop.status === 'pending' ? 'En attente' : 'Annulé']
+  ];
+
+  eventDetails.forEach(([label, value]) => {
+    checkNewPage(8);
+    doc.setFont('helvetica', 'bold');
+    doc.text(label, margin, yPosition);
+    doc.setFont('helvetica', 'normal');
+    yPosition = addWrappedText(value, margin + 40, yPosition, pageWidth - margin - 60);
+    yPosition += 2;
+  });
+
+  yPosition += 10;
+
+  // Artist lineup section
+  if (tourStop.artistLineup && tourStop.artistLineup.length > 0) {
+    checkNewPage(30);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('LINEUP ARTISTES', margin, yPosition);
+    yPosition += 10;
+
+    doc.setFontSize(10);
+    tourStop.artistLineup.forEach((artist) => {
+      checkNewPage(8);
+      const user = users.find(u => u.id === artist.userId);
+      const artistName = user?.name || `Artiste ${artist.userId}`;
+      const status = artist.confirmed ? '✓ Confirmé' : '⚠ En attente';
+      
+      doc.setFont('helvetica', 'normal');
+      doc.text(`• ${artistName}`, margin, yPosition);
+      doc.setFont('helvetica', 'bold');
+      doc.text(status, margin + 80, yPosition);
+      yPosition += 6;
+    });
+    yPosition += 10;
+  }
+
+  // Logistics section
+  checkNewPage(50);
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.text('LOGISTIQUE', margin, yPosition);
+  yPosition += 10;
+
+  doc.setFontSize(10);
+  const logisticsDetails = [
+    ['Check-in:', tourStop.checkInTime || 'Non spécifié'],
+    ['Départ prévu:', tourStop.departureTime || 'Non spécifié'],
+    ['Transport:', tourStop.transport || 'Non spécifié'],
+    ['Logement:', tourStop.accommodation || 'Non spécifié'],
+    ['Adresse logement:', tourStop.accommodationAddress || 'Non spécifiée']
+  ];
+
+  logisticsDetails.forEach(([label, value]) => {
+    checkNewPage(8);
+    doc.setFont('helvetica', 'bold');
+    doc.text(label, margin, yPosition);
+    doc.setFont('helvetica', 'normal');
+    yPosition = addWrappedText(value, margin + 50, yPosition, pageWidth - margin - 70);
+    yPosition += 2;
+  });
+
+  yPosition += 10;
+
+  // Equipment section
+  if (tourStop.equipment && tourStop.equipment.length > 0 && tourStop.equipment[0]) {
+    checkNewPage(30);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('ÉQUIPEMENT', margin, yPosition);
+    yPosition += 10;
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    tourStop.equipment.forEach((item) => {
+      if (item.trim()) {
+        checkNewPage(6);
+        doc.text(`• ${item.trim()}`, margin, yPosition);
+        yPosition += 6;
+      }
+    });
+    yPosition += 10;
+  }
+
+  // Crew section
+  if (tourStop.crew && tourStop.crew.length > 0) {
+    checkNewPage(30);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('ÉQUIPE TECHNIQUE', margin, yPosition);
+    yPosition += 10;
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    tourStop.crew.forEach((crewId) => {
+      checkNewPage(6);
+      const user = users.find(u => u.id === crewId);
+      const crewName = user?.name || `Membre ${crewId}`;
+      doc.text(`• ${crewName}`, margin, yPosition);
+      yPosition += 6;
+    });
+    yPosition += 10;
+  }
+
+  // Contact section
+  checkNewPage(20);
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.text('CONTACT SUR PLACE', margin, yPosition);
+  yPosition += 10;
+
+  doc.setFontSize(10);
+  const contactDetails = [
+    ['Contact:', tourStop.localContact || 'Non spécifié'],
+    ['Téléphone:', tourStop.localContactPhone || 'Non spécifié']
+  ];
+
+  contactDetails.forEach(([label, value]) => {
+    checkNewPage(8);
+    doc.setFont('helvetica', 'bold');
+    doc.text(label, margin, yPosition);
+    doc.setFont('helvetica', 'normal');
+    yPosition = addWrappedText(value, margin + 30, yPosition, pageWidth - margin - 50);
+    yPosition += 2;
+  });
+
+  // Notes section
+  if (tourStop.notes && tourStop.notes.trim()) {
+    yPosition += 10;
+    checkNewPage(30);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('NOTES', margin, yPosition);
+    yPosition += 10;
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    yPosition = addWrappedText(tourStop.notes, margin, yPosition, pageWidth - 2 * margin);
+  }
+
+  // Footer with generation date
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'italic');
+  doc.text(
+    `Document généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}`,
+    pageWidth / 2,
+    pageHeight - 10,
+    { align: 'center' }
+  );
+
+  return doc;
 };

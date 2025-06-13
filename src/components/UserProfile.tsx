@@ -23,9 +23,9 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
   });
 
   const handleSave = () => {
-    updateUser(formData);
+    // Fix: Pass the user ID and the form data
+    updateUser(currentUser?.id || 'current', formData);
     setIsEditing(false);
-    // Vous pouvez ajouter ici une notification de succès
   };
 
   const handleCancel = () => {
