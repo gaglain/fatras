@@ -21,10 +21,12 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       <SidebarProvider>
         <div className="min-h-screen flex w-full">
           <AppSidebar />
-          <SidebarInset className="flex-1">
+          <SidebarInset className="flex-1 min-w-0">
             <Header />
-            <main className="flex-1 p-6 overflow-auto bg-background text-foreground">
-              {children}
+            <main className="flex-1 p-4 lg:p-6 overflow-auto bg-background text-foreground">
+              <div className="max-w-full">
+                {children}
+              </div>
             </main>
           </SidebarInset>
         </div>

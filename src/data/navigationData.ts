@@ -71,7 +71,8 @@ export const navigationData: MenuItem[] = [
     children: [
       { name: 'Opportunités', href: '/opportunities', icon: Target, visible: true },
       { name: 'Contrats', href: '/contracts', icon: FileText, visible: true },
-      { name: 'Tâches', href: '/tasks', icon: CheckSquare, visible: true }
+      { name: 'Tâches', href: '/tasks', icon: CheckSquare, visible: true },
+      { name: 'Feuille de route', href: '/road-show', icon: Route, visible: true }
     ]
   },
   { 
@@ -94,14 +95,10 @@ export const navigationData: MenuItem[] = [
     visible: true 
   },
   { 
-    name: 'Production & Ventes', 
-    href: '/road-show', 
-    icon: Route, 
-    visible: true,
-    children: [
-      { name: 'Feuille de route', href: '/road-show', icon: Route, visible: true },
-      { name: 'Boutique', href: '/merchandise', icon: ShoppingBag, visible: true }
-    ]
+    name: 'Boutique', 
+    href: '/merchandise', 
+    icon: ShoppingBag, 
+    visible: true 
   },
   { 
     name: 'Site Web', 
@@ -127,6 +124,5 @@ export const defaultOpenSections = [
   'Événements & Agenda', 
   'Booking', 
   'Communication', 
-  'Production & Ventes', 
   'Administration'
 ];

@@ -32,13 +32,13 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar className="bg-sidebar-background border-r border-sidebar-border">
-      <SidebarHeader className="border-b border-sidebar-border bg-sidebar-background">
-        <div className="flex items-center px-4 py-4">
-          <h2 className="text-lg font-semibold text-sidebar-foreground">Navigation</h2>
+    <Sidebar className="bg-background border-r border-border">
+      <SidebarHeader className="border-b border-border bg-background px-4 py-4">
+        <div className="flex items-center">
+          <h2 className="text-base lg:text-lg font-semibold text-foreground truncate">Navigation</h2>
         </div>
       </SidebarHeader>
-      <SidebarContent className="bg-sidebar-background">
+      <SidebarContent className="bg-background">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -55,18 +55,18 @@ export function AppSidebar() {
                       <SidebarMenuItem>
                         <CollapsibleTrigger asChild>
                           <SidebarMenuButton
-                            className={`w-full justify-between text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground ${
-                              isActive ? 'bg-sidebar-accent text-sidebar-accent-foreground' : ''
+                            className={`w-full justify-between text-foreground hover:bg-accent hover:text-accent-foreground transition-colors ${
+                              isActive ? 'bg-accent text-accent-foreground font-medium' : ''
                             }`}
                           >
-                            <div className="flex items-center">
-                              <item.icon className="mr-3 h-4 w-4" />
-                              <span>{item.name}</span>
+                            <div className="flex items-center min-w-0">
+                              <item.icon className="mr-3 h-4 w-4 flex-shrink-0" />
+                              <span className="truncate text-sm">{item.name}</span>
                             </div>
                             {isOpen ? (
-                              <ChevronDown className="h-4 w-4" />
+                              <ChevronDown className="h-4 w-4 flex-shrink-0" />
                             ) : (
-                              <ChevronRight className="h-4 w-4" />
+                              <ChevronRight className="h-4 w-4 flex-shrink-0" />
                             )}
                           </SidebarMenuButton>
                         </CollapsibleTrigger>
@@ -76,13 +76,13 @@ export function AppSidebar() {
                               <SidebarMenuSubItem key={child.name}>
                                 <SidebarMenuSubButton 
                                   asChild 
-                                  className={`text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground ${
-                                    isActiveItem(child.href) ? 'bg-sidebar-accent text-sidebar-accent-foreground' : ''
+                                  className={`text-foreground hover:bg-accent hover:text-accent-foreground transition-colors ${
+                                    isActiveItem(child.href) ? 'bg-accent text-accent-foreground font-medium' : ''
                                   }`}
                                 >
-                                  <Link to={child.href}>
-                                    <child.icon className="mr-3 h-4 w-4" />
-                                    <span>{child.name}</span>
+                                  <Link to={child.href} className="flex items-center min-w-0">
+                                    <child.icon className="mr-3 h-4 w-4 flex-shrink-0" />
+                                    <span className="truncate text-sm">{child.name}</span>
                                   </Link>
                                 </SidebarMenuSubButton>
                               </SidebarMenuSubItem>
@@ -99,13 +99,13 @@ export function AppSidebar() {
                   <SidebarMenuItem key={item.name}>
                     <SidebarMenuButton 
                       asChild 
-                      className={`text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground ${
-                        isActiveItem(item.href) ? 'bg-sidebar-accent text-sidebar-accent-foreground' : ''
+                      className={`text-foreground hover:bg-accent hover:text-accent-foreground transition-colors ${
+                        isActiveItem(item.href) ? 'bg-accent text-accent-foreground font-medium' : ''
                       }`}
                     >
-                      <Link to={item.href}>
-                        <item.icon className="mr-3 h-4 w-4" />
-                        <span>{item.name}</span>
+                      <Link to={item.href} className="flex items-center min-w-0">
+                        <item.icon className="mr-3 h-4 w-4 flex-shrink-0" />
+                        <span className="truncate text-sm">{item.name}</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
