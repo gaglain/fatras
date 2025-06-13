@@ -14,10 +14,8 @@ import {
   SidebarMenuSubItem,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
 } from '@/components/ui/sidebar';
 import { useNavigation } from '@/hooks/useNavigation';
-import { cn } from '@/lib/utils';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 export function AppSidebar() {
@@ -34,11 +32,13 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar>
-      <SidebarHeader className="border-b">
-        <h2 className="text-lg font-semibold px-4 py-2">Navigation</h2>
+    <Sidebar className="bg-sidebar-background border-r border-sidebar-border">
+      <SidebarHeader className="border-b border-sidebar-border bg-sidebar-background">
+        <div className="flex items-center px-4 py-4">
+          <h2 className="text-lg font-semibold text-sidebar-foreground">Navigation</h2>
+        </div>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="bg-sidebar-background">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -55,11 +55,12 @@ export function AppSidebar() {
                       <SidebarMenuItem>
                         <CollapsibleTrigger asChild>
                           <SidebarMenuButton
-                            className="w-full justify-between"
-                            isActive={isActive}
+                            className={`w-full justify-between text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground ${
+                              isActive ? 'bg-sidebar-accent text-sidebar-accent-foreground' : ''
+                            }`}
                           >
                             <div className="flex items-center">
-                              <item.icon className="mr-2 h-4 w-4" />
+                              <item.icon className="mr-3 h-4 w-4" />
                               <span>{item.name}</span>
                             </div>
                             {isOpen ? (
@@ -73,9 +74,14 @@ export function AppSidebar() {
                           <SidebarMenuSub>
                             {item.children.map((child) => (
                               <SidebarMenuSubItem key={child.name}>
-                                <SidebarMenuSubButton asChild isActive={isActiveItem(child.href)}>
+                                <SidebarMenuSubButton 
+                                  asChild 
+                                  className={`text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground ${
+                                    isActiveItem(child.href) ? 'bg-sidebar-accent text-sidebar-accent-foreground' : ''
+                                  }`}
+                                >
                                   <Link to={child.href}>
-                                    <child.icon className="mr-2 h-4 w-4" />
+                                    <child.icon className="mr-3 h-4 w-4" />
                                     <span>{child.name}</span>
                                   </Link>
                                 </SidebarMenuSubButton>
@@ -91,9 +97,14 @@ export function AppSidebar() {
                 // Élément de menu simple
                 return (
                   <SidebarMenuItem key={item.name}>
-                    <SidebarMenuButton asChild isActive={isActiveItem(item.href)}>
+                    <SidebarMenuButton 
+                      asChild 
+                      className={`text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground ${
+                        isActiveItem(item.href) ? 'bg-sidebar-accent text-sidebar-accent-foreground' : ''
+                      }`}
+                    >
                       <Link to={item.href}>
-                        <item.icon className="mr-2 h-4 w-4" />
+                        <item.icon className="mr-3 h-4 w-4" />
                         <span>{item.name}</span>
                       </Link>
                     </SidebarMenuButton>

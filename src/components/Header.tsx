@@ -5,10 +5,12 @@ import { Badge } from '@/components/ui/badge';
 import { Bell, Search, User, Settings, LogOut, MessageSquare } from 'lucide-react';
 import { NotificationCenter } from './NotificationCenter';
 import { UserProfile } from './UserProfile';
+import { ThemeToggle } from './ThemeToggle';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useUser } from '@/contexts/UserContext';
 import { Link } from 'react-router-dom';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 
 export const Header: React.FC = () => {
   const { currentUser } = useUser();
@@ -62,6 +64,7 @@ export const Header: React.FC = () => {
     <div className="border-b border-border bg-background">
       <div className="flex h-16 items-center justify-between px-6">
         <div className="flex items-center space-x-4">
+          <SidebarTrigger />
           {companySettings.logo ? (
             <img 
               src={companySettings.logo} 
@@ -89,6 +92,8 @@ export const Header: React.FC = () => {
             <Button variant="ghost" size="sm">
               <Search className="h-4 w-4" />
             </Button>
+            
+            <ThemeToggle />
             
             <div className="relative">
               <Button
