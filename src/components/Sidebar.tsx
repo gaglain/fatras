@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
@@ -20,7 +21,8 @@ import {
   UserCog,
   ChevronDown,
   ChevronRight,
-  Briefcase
+  Briefcase,
+  CalendarCheck
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -77,7 +79,8 @@ const defaultNavigation: MenuItem[] = [
       { name: 'Email', href: '/email', icon: Mail, visible: true },
       { name: 'Campagnes email', href: '/email-campaigns', icon: Mail, visible: true },
       { name: 'Messagerie', href: '/messagerie', icon: MessageSquare, visible: true },
-      { name: 'Formulaires', href: '/forms', icon: FileText, visible: true }
+      { name: 'Formulaires', href: '/forms', icon: FileText, visible: true },
+      { name: 'Calendrier de publication', href: '/publication-calendar', icon: CalendarCheck, visible: true }
     ]
   },
   { name: 'Ressources', href: '/show-bible', icon: FileStack, visible: true },
@@ -88,7 +91,7 @@ const defaultNavigation: MenuItem[] = [
     visible: true,
     children: [
       { name: 'Feuille de route', href: '/road-show', icon: Route, visible: true },
-      { name: 'Merchandise', href: '/merchandise', icon: ShoppingBag, visible: true }
+      { name: 'Boutique', href: '/merchandise', icon: ShoppingBag, visible: true }
     ]
   },
   { name: 'Site Web', href: '/website', icon: Globe, visible: true },

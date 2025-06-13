@@ -1,3 +1,4 @@
+
 import jsPDF from 'jspdf';
 import { TourStop } from '@/types/roadshow.types';
 
@@ -113,7 +114,7 @@ export const generateTourStopPDF = async (stop: TourStop, getUserById: (userId: 
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(51, 51, 51);
   
-  if (stop.artistLineup.length > 0) {
+  if (stop.artistLineup && stop.artistLineup.length > 0) {
     stop.artistLineup.forEach(artist => {
       const user = getUserById(artist.userId);
       const status = artist.confirmed ? '✅ Confirmé' : '⏳ En attente';
@@ -247,7 +248,7 @@ export const generateTourStopPDF = async (stop: TourStop, getUserById: (userId: 
     default:
       statusColor = [107, 114, 128];
       statusBg = [249, 250, 251];
-      statusText = statusValue.toString().toUpperCase();
+      statusText = String(statusValue).toUpperCase();
   }
   
   doc.setFillColor(statusBg[0], statusBg[1], statusBg[2]);
