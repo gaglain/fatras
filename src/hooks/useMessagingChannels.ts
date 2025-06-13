@@ -18,7 +18,7 @@ export interface Message {
 }
 
 export const useMessagingChannels = () => {
-  const [channels] = useState<Channel[]>([
+  const [channels, setChannels] = useState<Channel[]>([
     { id: 'general', name: 'Général', type: 'channel', unread: 3 },
     { id: 'booking', name: 'Booking', type: 'channel', unread: 1 },
     { id: 'production', name: 'Production', type: 'channel', unread: 0 },
@@ -92,9 +92,28 @@ export const useMessagingChannels = () => {
     }));
   };
 
+  const createChannel = (name: string) => {
+    const channelId = name.toLowerCase().replace(/\s+/g, '-');
+    const newChannel: Channel = {
+      id: channelId,
+      name,
+      type: 'channel',
+      unread: 0
+    };
+
+    setChannels(prev => [...prev, newChannel]);
+    setMessages(prev => ({
+      ...prev,
+      [channelId]: []
+    }));
+
+    return channelId;
+  };
+
   return {
     channels,
     messages,
-    addMessage
+    addMessage,
+    createChannel
   };
 };

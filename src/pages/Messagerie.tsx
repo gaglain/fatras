@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Send, Hash, MessageSquare, Users, Phone, Video, Plus } from 'lucide-react';
 import { DirectMessage } from '@/components/messaging/DirectMessage';
 import { PollCreator } from '@/components/messaging/PollCreator';
+import { ChannelCreator } from '@/components/messaging/ChannelCreator';
 import { useMessagingChannels } from '@/hooks/useMessagingChannels';
 
 export const Messagerie: React.FC = () => {
@@ -18,7 +18,7 @@ export const Messagerie: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [showPollCreator, setShowPollCreator] = useState(false);
 
-  const { channels, messages, addMessage } = useMessagingChannels();
+  const { channels, messages, addMessage, createChannel } = useMessagingChannels();
 
   const [users] = useState([
     { id: 'marie-martin', name: 'Marie Martin', email: 'marie@example.com', status: 'online' },
@@ -57,6 +57,11 @@ export const Messagerie: React.FC = () => {
     setShowDirectMessage(true);
   };
 
+  const handleCreateChannel = (name: string) => {
+    const newChannelId = createChannel(name);
+    setSelectedChannel(newChannelId);
+  };
+
   if (showDirectMessage && selectedUser) {
     return (
       <DirectMessage
@@ -93,7 +98,10 @@ export const Messagerie: React.FC = () => {
           <div className="p-2">
             {/* Channels */}
             <div className="mb-4">
-              <h3 className="text-xs font-medium text-muted-foreground px-2 py-1 uppercase">Channels</h3>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-xs font-medium text-muted-foreground px-2 py-1 uppercase">Channels</h3>
+                <ChannelCreator onCreateChannel={handleCreateChannel} />
+              </div>
               {channels.filter(c => c.type === 'channel').map((channel) => (
                 <button
                   key={channel.id}

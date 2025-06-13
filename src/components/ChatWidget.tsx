@@ -5,8 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MessageCircle, Send, X, Users, Phone, Video, Minimize2, Maximize2, Hash, MessageSquare } from 'lucide-react';
+import { MessageCircle, Send, X, Users, Phone, Video, Minimize2, Maximize2, Hash, MessageSquare, Plus } from 'lucide-react';
 import { useMessagingChannels } from '@/hooks/useMessagingChannels';
+import { ChannelCreator } from '@/components/messaging/ChannelCreator';
 
 export const ChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -14,7 +15,7 @@ export const ChatWidget: React.FC = () => {
   const [message, setMessage] = useState('');
   const [selectedChannel, setSelectedChannel] = useState('general');
 
-  const { channels, messages, addMessage } = useMessagingChannels();
+  const { channels, messages, addMessage, createChannel } = useMessagingChannels();
 
   const [activeUsers] = useState([
     { id: 1, name: 'Marie Martin', status: 'online' },
@@ -47,6 +48,11 @@ export const ChatWidget: React.FC = () => {
       default:
         return 'bg-gray-400';
     }
+  };
+
+  const handleCreateChannel = (name: string) => {
+    const newChannelId = createChannel(name);
+    setSelectedChannel(newChannelId);
   };
 
   const onlineUsersCount = activeUsers.filter(u => u.status === 'online').length;
@@ -111,45 +117,50 @@ export const ChatWidget: React.FC = () => {
             <CardContent className="flex flex-col h-full p-0">
               {/* Channel/Topic Selection */}
               <div className="p-3 border-b bg-muted/50">
-                <Select value={selectedChannel} onValueChange={setSelectedChannel}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <div className="text-xs font-medium text-muted-foreground px-2 py-1">CHANNELS</div>
-                    {channels.filter(c => c.type === 'channel').map((channel) => (
-                      <SelectItem key={channel.id} value={channel.id}>
-                        <div className="flex items-center justify-between w-full">
-                          <div className="flex items-center">
-                            <Hash className="h-3 w-3 mr-1" />
-                            {channel.name}
+                <div className="flex items-center justify-between mb-2">
+                  <Select value={selectedChannel} onValueChange={setSelectedChannel}>
+                    <SelectTrigger className="flex-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <div className="text-xs font-medium text-muted-foreground px-2 py-1">CHANNELS</div>
+                      {channels.filter(c => c.type === 'channel').map((channel) => (
+                        <SelectItem key={channel.id} value={channel.id}>
+                          <div className="flex items-center justify-between w-full">
+                            <div className="flex items-center">
+                              <Hash className="h-3 w-3 mr-1" />
+                              {channel.name}
+                            </div>
+                            {channel.unread > 0 && (
+                              <Badge className="ml-2 h-4 w-4 p-0 text-xs bg-red-500 text-white rounded-full flex items-center justify-center">
+                                {channel.unread}
+                              </Badge>
+                            )}
                           </div>
-                          {channel.unread > 0 && (
-                            <Badge className="ml-2 h-4 w-4 p-0 text-xs bg-red-500 text-white rounded-full flex items-center justify-center">
-                              {channel.unread}
-                            </Badge>
-                          )}
-                        </div>
-                      </SelectItem>
-                    ))}
-                    <div className="text-xs font-medium text-muted-foreground px-2 py-1 mt-2">MESSAGES PRIVÉS</div>
-                    {channels.filter(c => c.type === 'dm').map((channel) => (
-                      <SelectItem key={channel.id} value={channel.id}>
-                        <div className="flex items-center justify-between w-full">
-                          <div className="flex items-center">
-                            <MessageSquare className="h-3 w-3 mr-1" />
-                            {channel.name}
+                        </SelectItem>
+                      ))}
+                      <div className="text-xs font-medium text-muted-foreground px-2 py-1 mt-2">MESSAGES PRIVÉS</div>
+                      {channels.filter(c => c.type === 'dm').map((channel) => (
+                        <SelectItem key={channel.id} value={channel.id}>
+                          <div className="flex items-center justify-between w-full">
+                            <div className="flex items-center">
+                              <MessageSquare className="h-3 w-3 mr-1" />
+                              {channel.name}
+                            </div>
+                            {channel.unread > 0 && (
+                              <Badge className="ml-2 h-4 w-4 p-0 text-xs bg-red-500 text-white rounded-full flex items-center justify-center">
+                                {channel.unread}
+                              </Badge>
+                            )}
                           </div>
-                          {channel.unread > 0 && (
-                            <Badge className="ml-2 h-4 w-4 p-0 text-xs bg-red-500 text-white rounded-full flex items-center justify-center">
-                              {channel.unread}
-                            </Badge>
-                          )}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <div className="ml-2">
+                    <ChannelCreator onCreateChannel={handleCreateChannel} />
+                  </div>
+                </div>
               </div>
 
               {/* Messages */}
