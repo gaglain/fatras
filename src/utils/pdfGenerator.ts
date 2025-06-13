@@ -1,30 +1,8 @@
 
 import jsPDF from 'jspdf';
+import { TourStop } from '@/types/roadshow.types';
 
-export interface TourStop {
-  id: string;
-  city: string;
-  venue: string;
-  address: string;
-  date: string;
-  time: string;
-  capacity: string;
-  ticketsAvailable: string;
-  status: 'pending' | 'confirmed' | 'cancelled';
-  artistLineup: { userId: string; confirmed: boolean }[];
-  crew: string[];
-  checkInTime: string;
-  departureTime: string;
-  transport: string;
-  accommodation: string;
-  accommodationAddress: string;
-  equipment: string[];
-  localContact: string;
-  localContactPhone: string;
-  notes: string;
-}
-
-export const generateTourStopPDF = (tourStop: TourStop, users: any[] = []) => {
+export const generateTourStopPDF = (tourStop: TourStop, getUserById: (userId: string) => { name: string } | undefined) => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.width;
   const pageHeight = doc.internal.pageSize.height;
@@ -69,8 +47,8 @@ export const generateTourStopPDF = (tourStop: TourStop, users: any[] = []) => {
     ['Adresse:', tourStop.address || 'Non spécifiée'],
     ['Date:', tourStop.date ? new Date(tourStop.date).toLocaleDateString('fr-FR') : 'Non spécifiée'],
     ['Heure:', tourStop.time || 'Non spécifiée'],
-    ['Capacité:', tourStop.capacity || 'Non spécifiée'],
-    ['Billets disponibles:', tourStop.ticketsAvailable || 'Non spécifié'],
+    ['Capacité:', tourStop.capacity ? tourStop.capacity.toString() : 'Non spécifiée'],
+    ['Billets disponibles:', tourStop.ticketsAvailable ? tourStop.ticketsAvailable.toString() : 'Non spécifié'],
     ['Statut:', tourStop.status === 'confirmed' ? 'Confirmé' : tourStop.status === 'pending' ? 'En attente' : 'Annulé']
   ];
 
@@ -96,7 +74,7 @@ export const generateTourStopPDF = (tourStop: TourStop, users: any[] = []) => {
     doc.setFontSize(10);
     tourStop.artistLineup.forEach((artist) => {
       checkNewPage(8);
-      const user = users.find(u => u.id === artist.userId);
+      const user = getUserById(artist.userId);
       const artistName = user?.name || `Artiste ${artist.userId}`;
       const status = artist.confirmed ? '✓ Confirmé' : '⚠ En attente';
       
@@ -168,7 +146,7 @@ export const generateTourStopPDF = (tourStop: TourStop, users: any[] = []) => {
     doc.setFont('helvetica', 'normal');
     tourStop.crew.forEach((crewId) => {
       checkNewPage(6);
-      const user = users.find(u => u.id === crewId);
+      const user = getUserById(crewId);
       const crewName = user?.name || `Membre ${crewId}`;
       doc.text(`• ${crewName}`, margin, yPosition);
       yPosition += 6;
@@ -221,6 +199,9 @@ export const generateTourStopPDF = (tourStop: TourStop, users: any[] = []) => {
     pageHeight - 10,
     { align: 'center' }
   );
+
+  // Save the PDF
+  doc.save(`feuille-de-route-${tourStop.city}-${tourStop.date}.pdf`);
 
   return doc;
 };
