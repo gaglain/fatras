@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MessageCircle, Send, X, Users, Phone, Video, Minimize2, Maximize2, Hash, MessageSquare } from 'lucide-react';
+import { useMessagingChannels } from '@/hooks/useMessagingChannels';
 
 export const ChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -14,62 +14,7 @@ export const ChatWidget: React.FC = () => {
   const [message, setMessage] = useState('');
   const [selectedChannel, setSelectedChannel] = useState('general');
 
-  const [channels] = useState([
-    { id: 'general', name: 'Général', type: 'channel', unread: 3 },
-    { id: 'booking', name: 'Booking', type: 'channel', unread: 1 },
-    { id: 'production', name: 'Production', type: 'channel', unread: 0 },
-    { id: 'tech', name: 'Technique', type: 'channel', unread: 2 },
-    { id: 'marie-martin', name: 'Marie Martin', type: 'dm', unread: 1 },
-    { id: 'jean-dupont', name: 'Jean Dupont', type: 'dm', unread: 0 }
-  ]);
-
-  const [messages, setMessages] = useState({
-    general: [
-      {
-        id: 1,
-        sender: 'Marie Martin',
-        message: 'Salut ! As-tu les détails pour le contrat de demain ?',
-        time: '14:30',
-        isMe: false
-      },
-      {
-        id: 2,
-        sender: 'Moi',
-        message: 'Oui, je viens de l\'envoyer par email.',
-        time: '14:32',
-        isMe: true
-      }
-    ],
-    booking: [
-      {
-        id: 1,
-        sender: 'Jean Dupont',
-        message: 'Nouveau contrat signé pour la tournée d\'été !',
-        time: '15:15',
-        isMe: false
-      }
-    ],
-    production: [],
-    tech: [
-      {
-        id: 1,
-        sender: 'Sophie Tech',
-        message: 'Le matériel son est prêt pour ce soir',
-        time: '16:00',
-        isMe: false
-      }
-    ],
-    'marie-martin': [
-      {
-        id: 1,
-        sender: 'Marie Martin',
-        message: 'Peux-tu me rappeler demain ?',
-        time: '17:30',
-        isMe: false
-      }
-    ],
-    'jean-dupont': []
-  });
+  const { channels, messages, addMessage } = useMessagingChannels();
 
   const [activeUsers] = useState([
     { id: 1, name: 'Marie Martin', status: 'online' },
@@ -81,18 +26,13 @@ export const ChatWidget: React.FC = () => {
   const sendMessage = () => {
     if (!message.trim()) return;
     
-    const newMessage = {
-      id: Date.now(),
+    addMessage(selectedChannel, {
+      senderId: 'me',
       sender: 'Moi',
       message: message.trim(),
       time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
       isMe: true
-    };
-    
-    setMessages(prev => ({
-      ...prev,
-      [selectedChannel]: [...(prev[selectedChannel] || []), newMessage]
-    }));
+    });
     setMessage('');
   };
 

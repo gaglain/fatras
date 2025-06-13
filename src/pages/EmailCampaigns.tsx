@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Mail, Send, Users, Calendar, Edit, Trash2, Eye } from 'lucide-react';
+import { Plus, Mail, Send, Users, Calendar, Edit, Trash2, Eye, BarChart3, MousePointer } from 'lucide-react';
 import { EmailEditor } from '@/components/EmailEditor/EmailEditor';
 import { EmailBlock } from '@/components/EmailEditor/types';
 import { toast } from 'sonner';
@@ -31,6 +30,8 @@ interface EmailCampaign {
     sent: number;
     opened: number;
     clicked: number;
+    bounced: number;
+    unsubscribed: number;
   };
 }
 
@@ -51,7 +52,7 @@ const sampleCampaigns: EmailCampaign[] = [
     status: 'sent',
     sentDate: '2024-06-01',
     createdAt: '2024-05-25',
-    stats: { sent: 112, opened: 89, clicked: 23 }
+    stats: { sent: 112, opened: 89, clicked: 23, bounced: 2, unsubscribed: 1 }
   },
   {
     id: '2',
@@ -157,6 +158,29 @@ export const EmailCampaigns: React.FC = () => {
         return <Badge variant="outline">{status}</Badge>;
     }
   };
+
+  const getTotalStats = () => {
+    const sentCampaigns = campaigns.filter(c => c.stats);
+    return {
+      sent: sentCampaigns.reduce((sum, c) => sum + (c.stats?.sent || 0), 0),
+      opened: sentCampaigns.reduce((sum, c) => sum + (c.stats?.opened || 0), 0),
+      clicked: sentCampaigns.reduce((sum, c) => sum + (c.stats?.clicked || 0), 0),
+      avgOpenRate: sentCampaigns.length > 0 
+        ? Math.round(sentCampaigns.reduce((sum, c) => {
+            const openRate = c.stats ? (c.stats.opened / c.stats.sent) * 100 : 0;
+            return sum + openRate;
+          }, 0) / sentCampaigns.length)
+        : 0,
+      avgClickRate: sentCampaigns.length > 0 
+        ? Math.round(sentCampaigns.reduce((sum, c) => {
+            const clickRate = c.stats ? (c.stats.clicked / c.stats.sent) * 100 : 0;
+            return sum + clickRate;
+          }, 0) / sentCampaigns.length)
+        : 0
+    };
+  };
+
+  const totalStats = getTotalStats();
 
   if (showEditor && editingCampaign) {
     return (
@@ -269,7 +293,7 @@ export const EmailCampaigns: React.FC = () => {
       </div>
 
       {/* Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
@@ -287,9 +311,7 @@ export const EmailCampaigns: React.FC = () => {
               <Send className="h-8 w-8 text-green-600" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Emails envoyés</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {campaigns.reduce((total, c) => total + (c.stats?.sent || 0), 0)}
-                </p>
+                <p className="text-2xl font-bold text-gray-900">{totalStats.sent}</p>
               </div>
             </div>
           </CardContent>
@@ -299,8 +321,8 @@ export const EmailCampaigns: React.FC = () => {
             <div className="flex items-center">
               <Eye className="h-8 w-8 text-blue-600" />
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Taux d'ouverture moyen</p>
-                <p className="text-2xl font-bold text-gray-900">79%</p>
+                <p className="text-sm font-medium text-gray-600">Taux d'ouverture</p>
+                <p className="text-2xl font-bold text-gray-900">{totalStats.avgOpenRate}%</p>
               </div>
             </div>
           </CardContent>
@@ -308,7 +330,18 @@ export const EmailCampaigns: React.FC = () => {
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
-              <Users className="h-8 w-8 text-orange-600" />
+              <MousePointer className="h-8 w-8 text-orange-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Taux de clic</p>
+                <p className="text-2xl font-bold text-gray-900">{totalStats.avgClickRate}%</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <Users className="h-8 w-8 text-indigo-600" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total contacts</p>
                 <p className="text-2xl font-bold text-gray-900">
@@ -346,9 +379,16 @@ export const EmailCampaigns: React.FC = () => {
                         Créée le {new Date(campaign.createdAt).toLocaleDateString('fr-FR')}
                       </span>
                       {campaign.stats && (
-                        <span>
-                          Ouvertures: {Math.round((campaign.stats.opened / campaign.stats.sent) * 100)}%
-                        </span>
+                        <>
+                          <span>
+                            <Eye className="h-4 w-4 inline mr-1" />
+                            {Math.round((campaign.stats.opened / campaign.stats.sent) * 100)}% ouvertures
+                          </span>
+                          <span>
+                            <MousePointer className="h-4 w-4 inline mr-1" />
+                            {Math.round((campaign.stats.clicked / campaign.stats.sent) * 100)}% clics
+                          </span>
+                        </>
                       )}
                     </div>
                     <div className="mt-2">
@@ -358,6 +398,16 @@ export const EmailCampaigns: React.FC = () => {
                     </div>
                   </div>
                   <div className="flex space-x-2">
+                    {campaign.stats && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => console.log('Voir statistiques détaillées')}
+                      >
+                        <BarChart3 className="h-4 w-4 mr-1" />
+                        Stats
+                      </Button>
+                    )}
                     <Button
                       size="sm"
                       variant="outline"
