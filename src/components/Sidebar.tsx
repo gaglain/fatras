@@ -113,7 +113,6 @@ export const Sidebar: React.FC = () => {
   const [navigation, setNavigation] = useState<MenuItem[]>(defaultNavigation);
   const [openSections, setOpenSections] = useState<string[]>(['Contacts & Relations', 'Événements & Agenda', 'Booking', 'Communication', 'Production & Ventes', 'Administration']);
 
-  
   useEffect(() => {
     const saved = localStorage.getItem('menuConfiguration');
     if (saved) {
