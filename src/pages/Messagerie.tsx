@@ -9,7 +9,7 @@ import { Send, Hash, MessageSquare, Users, Phone, Video, Plus } from 'lucide-rea
 import { DirectMessage } from '@/components/messaging/DirectMessage';
 import { PollCreator } from '@/components/messaging/PollCreator';
 import { ChannelCreator } from '@/components/messaging/ChannelCreator';
-import { useMessagingChannels } from '@/hooks/useMessagingChannels';
+import { useMessaging } from '@/contexts/MessagingContext';
 
 export const Messagerie: React.FC = () => {
   const [selectedChannel, setSelectedChannel] = useState('general');
@@ -18,7 +18,7 @@ export const Messagerie: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [showPollCreator, setShowPollCreator] = useState(false);
 
-  const { channels, messages, addMessage, createChannel } = useMessagingChannels();
+  const { channels, messages, addMessage, createChannel } = useMessaging();
 
   const [users] = useState([
     { id: 'marie-martin', name: 'Marie Martin', email: 'marie@example.com', status: 'online' },

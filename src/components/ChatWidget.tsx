@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MessageCircle, Send, X, Users, Phone, Video, Minimize2, Maximize2, Hash, MessageSquare, Plus } from 'lucide-react';
-import { useMessagingChannels } from '@/hooks/useMessagingChannels';
+import { useMessaging } from '@/contexts/MessagingContext';
 import { ChannelCreator } from '@/components/messaging/ChannelCreator';
 
 export const ChatWidget: React.FC = () => {
@@ -15,7 +15,7 @@ export const ChatWidget: React.FC = () => {
   const [message, setMessage] = useState('');
   const [selectedChannel, setSelectedChannel] = useState('general');
 
-  const { channels, messages, addMessage, createChannel } = useMessagingChannels();
+  const { channels, messages, addMessage, createChannel } = useMessaging();
 
   const [activeUsers] = useState([
     { id: 1, name: 'Marie Martin', status: 'online' },
