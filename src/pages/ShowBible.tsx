@@ -203,7 +203,7 @@ export const ShowBible: React.FC = () => {
       doc.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
       doc.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesCategory = selectedCategory === 'all' || doc.category === selectedCategory;
-    const matchesArtist = selectedArtist === 'all' || doc.artistId === selectedArtist;
+    const matchesArtist = selectedArtist === 'all' || selectedArtist === 'no-artist' || doc.artistId === selectedArtist;
     const matchesFavorites = !showFavoritesOnly || doc.isFavorite;
     return matchesSearch && matchesCategory && matchesArtist && matchesFavorites;
   });
@@ -472,7 +472,7 @@ export const ShowBible: React.FC = () => {
                         <SelectValue placeholder="Sélectionner un artiste" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Aucun artiste</SelectItem>
+                        <SelectItem value="no-artist">Aucun artiste</SelectItem>
                         {artists.map((artist) => (
                           <SelectItem key={artist.id} value={artist.id}>
                             {artist.name} ({artist.genre})
@@ -548,6 +548,7 @@ export const ShowBible: React.FC = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tous les artistes</SelectItem>
+              <SelectItem value="no-artist">Sans artiste assigné</SelectItem>
               {artists.map((artist) => (
                 <SelectItem key={artist.id} value={artist.id}>
                   {artist.name}
