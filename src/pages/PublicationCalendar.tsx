@@ -1,129 +1,55 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Calendar, CalendarDays, Clock, Plus, Edit2, Trash2, Bell, Instagram, Facebook, Twitter, Mail } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { Plus, Edit, Trash2, Calendar as CalendarIcon, Instagram, Facebook, Twitter, Mail, Bell } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Publication {
   id: string;
   title: string;
   content: string;
   platform: 'instagram' | 'facebook' | 'twitter' | 'newsletter';
-  scheduledDate: Date;
+  scheduledDate: string;
+  scheduledTime: string;
   status: 'draft' | 'scheduled' | 'published';
-  imageUrl?: string;
-  tags: string[];
-  createdAt: Date;
-}
-
-interface PublicationFormData {
-  title: string;
-  content: string;
-  platform: 'instagram' | 'facebook' | 'twitter' | 'newsletter';
-  scheduledDate: Date;
+  notificationEnabled: boolean;
   tags: string[];
 }
-
-const defaultPublications: Publication[] = [
-  {
-    id: '1',
-    title: 'Nouvelle chanson en préparation',
-    content: 'Nous travaillons sur une nouvelle chanson qui sortira bientôt ! 🎵 #musique #nouveauté',
-    platform: 'instagram',
-    scheduledDate: new Date(2024, 5, 15, 14, 0),
-    status: 'scheduled',
-    tags: ['musique', 'nouveauté'],
-    createdAt: new Date(2024, 5, 10)
-  },
-  {
-    id: '2',
-    title: 'Newsletter mensuelle',
-    content: 'Notre newsletter mensuelle avec toutes les actualités du mois !',
-    platform: 'newsletter',
-    scheduledDate: new Date(2024, 5, 20, 10, 0),
-    status: 'draft',
-    tags: ['newsletter', 'actualités'],
-    createdAt: new Date(2024, 5, 12)
-  }
-];
 
 export const PublicationCalendar: React.FC = () => {
-  const [publications, setPublications] = useState<Publication[]>(defaultPublications);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [showEditDialog, setShowEditDialog] = useState(false);
-  const [selectedPublication, setSelectedPublication] = useState<Publication | null>(null);
-  const [view, setView] = useState<'calendar' | 'list'>('calendar');
+  const [publications, setPublications] = useState<Publication[]>([
+    {
+      id: '1',
+      title: 'Nouveau single de l\'artiste',
+      content: 'Découvrez le nouveau single de notre artiste ! 🎵 #nouveauté #musique',
+      platform: 'instagram',
+      scheduledDate: '2024-06-15',
+      scheduledTime: '18:00',
+      status: 'scheduled',
+      notificationEnabled: true,
+      tags: ['musique', 'nouveauté']
+    }
+  ]);
 
-  const [formData, setFormData] = useState<PublicationFormData>({
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [newPublication, setNewPublication] = useState<Partial<Publication>>({
     title: '',
     content: '',
     platform: 'instagram',
-    scheduledDate: new Date(),
+    scheduledDate: '',
+    scheduledTime: '',
+    status: 'draft',
+    notificationEnabled: true,
     tags: []
   });
-
-  const resetForm = () => {
-    setFormData({
-      title: '',
-      content: '',
-      platform: 'instagram',
-      scheduledDate: new Date(),
-      tags: []
-    });
-  };
-
-  const handleCreatePublication = () => {
-    const newPublication: Publication = {
-      id: Date.now().toString(),
-      ...formData,
-      status: 'draft',
-      createdAt: new Date()
-    };
-    
-    setPublications([...publications, newPublication]);
-    setShowCreateDialog(false);
-    resetForm();
-  };
-
-  const handleEditPublication = (publication: Publication) => {
-    setSelectedPublication(publication);
-    setFormData({
-      title: publication.title,
-      content: publication.content,
-      platform: publication.platform,
-      scheduledDate: publication.scheduledDate,
-      tags: publication.tags
-    });
-    setShowEditDialog(true);
-  };
-
-  const handleUpdatePublication = () => {
-    if (!selectedPublication) return;
-    
-    const updatedPublications = publications.map(publication => 
-      publication.id === selectedPublication.id 
-        ? { ...publication, ...formData }
-        : publication
-    );
-    
-    setPublications(updatedPublications);
-    setShowEditDialog(false);
-    setSelectedPublication(null);
-    resetForm();
-  };
-
-  const handleDeletePublication = (publicationId: string) => {
-    setPublications(publications.filter(publication => publication.id !== publicationId));
-  };
 
   const getPlatformIcon = (platform: string) => {
     switch (platform) {
@@ -131,155 +57,243 @@ export const PublicationCalendar: React.FC = () => {
       case 'facebook': return <Facebook className="h-4 w-4" />;
       case 'twitter': return <Twitter className="h-4 w-4" />;
       case 'newsletter': return <Mail className="h-4 w-4" />;
-      default: return <CalendarIcon className="h-4 w-4" />;
+      default: return <Calendar className="h-4 w-4" />;
     }
   };
 
   const getPlatformColor = (platform: string) => {
     switch (platform) {
-      case 'instagram': return 'bg-gradient-to-br from-purple-500 to-pink-500 text-white';
-      case 'facebook': return 'bg-blue-600 text-white';
-      case 'twitter': return 'bg-sky-500 text-white';
-      case 'newsletter': return 'bg-green-600 text-white';
-      default: return 'bg-gray-500 text-white';
+      case 'instagram': return 'bg-pink-500';
+      case 'facebook': return 'bg-blue-600';
+      case 'twitter': return 'bg-blue-400';
+      case 'newsletter': return 'bg-green-600';
+      default: return 'bg-gray-500';
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'published': return 'bg-green-100 text-green-800';
-      case 'scheduled': return 'bg-blue-100 text-blue-800';
-      case 'draft': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'draft': return 'bg-gray-500';
+      case 'scheduled': return 'bg-orange-500';
+      case 'published': return 'bg-green-500';
+      default: return 'bg-gray-500';
     }
   };
 
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'published': return 'Publié';
-      case 'scheduled': return 'Programmé';
-      case 'draft': return 'Brouillon';
-      default: return status;
+  const createPublication = () => {
+    if (!newPublication.title || !newPublication.content) {
+      toast.error('Veuillez remplir tous les champs obligatoires');
+      return;
     }
+
+    const publication: Publication = {
+      id: Date.now().toString(),
+      title: newPublication.title!,
+      content: newPublication.content!,
+      platform: newPublication.platform as Publication['platform'] || 'instagram',
+      scheduledDate: newPublication.scheduledDate || '',
+      scheduledTime: newPublication.scheduledTime || '',
+      status: newPublication.status as Publication['status'] || 'draft',
+      notificationEnabled: newPublication.notificationEnabled || false,
+      tags: newPublication.tags || []
+    };
+
+    setPublications(prev => [...prev, publication]);
+    setNewPublication({
+      title: '',
+      content: '',
+      platform: 'instagram',
+      scheduledDate: '',
+      scheduledTime: '',
+      status: 'draft',
+      notificationEnabled: true,
+      tags: []
+    });
+    setIsCreateDialogOpen(false);
+    toast.success('Publication créée avec succès');
   };
 
-  const todayPublications = publications.filter(pub => 
-    format(pub.scheduledDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
-  );
+  const deletePublication = (id: string) => {
+    setPublications(prev => prev.filter(p => p.id !== id));
+    toast.success('Publication supprimée');
+  };
 
-  const upcomingPublications = publications.filter(pub => 
-    pub.scheduledDate > new Date() && pub.status === 'scheduled'
-  ).sort((a, b) => a.scheduledDate.getTime() - b.scheduledDate.getTime());
+  const duplicatePublication = (publication: Publication) => {
+    const duplicate: Publication = {
+      ...publication,
+      id: Date.now().toString(),
+      title: `${publication.title} (Copie)`,
+      status: 'draft'
+    };
+    setPublications(prev => [...prev, duplicate]);
+    toast.success('Publication dupliquée');
+  };
+
+  const schedulePublication = (id: string) => {
+    setPublications(prev => prev.map(p => 
+      p.id === id ? { ...p, status: 'scheduled' as const } : p
+    ));
+    toast.success('Publication programmée');
+  };
+
+  const getUpcomingNotifications = () => {
+    const now = new Date();
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    return publications.filter(p => {
+      if (!p.notificationEnabled || p.status !== 'scheduled') return false;
+      const pubDate = new Date(`${p.scheduledDate} ${p.scheduledTime}`);
+      return pubDate <= tomorrow && pubDate > now;
+    });
+  };
+
+  const upcomingNotifications = getUpcomingNotifications();
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Calendrier de Publication</h1>
-          <p className="text-muted-foreground mt-2">Gérez vos publications sur les réseaux sociaux et newsletters</p>
+          <h1 className="text-3xl font-bold text-foreground">Calendrier de publication</h1>
+          <p className="text-muted-foreground mt-2">
+            Planifiez et gérez vos publications sur les réseaux sociaux et newsletters
+          </p>
         </div>
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" onClick={() => setView(view === 'calendar' ? 'list' : 'calendar')}>
-            {view === 'calendar' ? 'Vue Liste' : 'Vue Calendrier'}
-          </Button>
-          <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Nouvelle Publication
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Créer une nouvelle publication</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Nouvelle publication
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Créer une nouvelle publication</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="title">Titre *</Label>
+                <Input
+                  id="title"
+                  value={newPublication.title || ''}
+                  onChange={(e) => setNewPublication(prev => ({ ...prev, title: e.target.value }))}
+                  placeholder="Titre de la publication"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="content">Contenu *</Label>
+                <Textarea
+                  id="content"
+                  value={newPublication.content || ''}
+                  onChange={(e) => setNewPublication(prev => ({ ...prev, content: e.target.value }))}
+                  placeholder="Contenu de la publication..."
+                  rows={4}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Titre</label>
-                  <Input
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    placeholder="Titre de la publication"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Contenu</label>
-                  <Textarea
-                    value={formData.content}
-                    onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                    placeholder="Contenu de la publication..."
-                    rows={4}
-                  />
+                  <Label htmlFor="platform">Plateforme</Label>
+                  <Select 
+                    value={newPublication.platform} 
+                    onValueChange={(value) => setNewPublication(prev => ({ ...prev, platform: value as Publication['platform'] }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choisir une plateforme" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="instagram">Instagram</SelectItem>
+                      <SelectItem value="facebook">Facebook</SelectItem>
+                      <SelectItem value="twitter">Twitter</SelectItem>
+                      <SelectItem value="newsletter">Newsletter</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Plateforme</label>
-                    <Select value={formData.platform} onValueChange={(value: any) => setFormData({ ...formData, platform: value })}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="instagram">Instagram</SelectItem>
-                        <SelectItem value="facebook">Facebook</SelectItem>
-                        <SelectItem value="twitter">Twitter</SelectItem>
-                        <SelectItem value="newsletter">Newsletter</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Date de publication</label>
-                    <Input
-                      type="datetime-local"
-                      value={format(formData.scheduledDate, "yyyy-MM-dd'T'HH:mm")}
-                      onChange={(e) => setFormData({ ...formData, scheduledDate: new Date(e.target.value) })}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex justify-end space-x-2">
-                  <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
-                    Annuler
-                  </Button>
-                  <Button onClick={handleCreatePublication}>
-                    Créer la publication
-                  </Button>
+                <div>
+                  <Label htmlFor="status">Statut</Label>
+                  <Select 
+                    value={newPublication.status} 
+                    onValueChange={(value) => setNewPublication(prev => ({ ...prev, status: value as Publication['status'] }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choisir un statut" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="draft">Brouillon</SelectItem>
+                      <SelectItem value="scheduled">Programmé</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
-            </DialogContent>
-          </Dialog>
-        </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="date">Date de publication</Label>
+                  <Input
+                    id="date"
+                    type="date"
+                    value={newPublication.scheduledDate || ''}
+                    onChange={(e) => setNewPublication(prev => ({ ...prev, scheduledDate: e.target.value }))}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="time">Heure de publication</Label>
+                  <Input
+                    id="time"
+                    type="time"
+                    value={newPublication.scheduledTime || ''}
+                    onChange={(e) => setNewPublication(prev => ({ ...prev, scheduledTime: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label htmlFor="notifications">Activer les notifications de rappel</Label>
+                <Switch
+                  id="notifications"
+                  checked={newPublication.notificationEnabled || false}
+                  onCheckedChange={(checked) => setNewPublication(prev => ({ ...prev, notificationEnabled: checked }))}
+                />
+              </div>
+
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                  Annuler
+                </Button>
+                <Button onClick={createPublication}>
+                  Créer la publication
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      {/* Notifications du jour */}
-      {todayPublications.length > 0 && (
+      {/* Notifications urgentes */}
+      {upcomingNotifications.length > 0 && (
         <Card className="border-orange-200 bg-orange-50">
           <CardHeader>
             <CardTitle className="flex items-center text-orange-800">
               <Bell className="h-5 w-5 mr-2" />
-              Publications d'aujourd'hui
+              Publications à préparer bientôt
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {todayPublications.map((pub) => (
+              {upcomingNotifications.map(pub => (
                 <div key={pub.id} className="flex items-center justify-between p-2 bg-white rounded border">
-                  <div className="flex items-center space-x-3">
-                    <div className={`p-2 rounded ${getPlatformColor(pub.platform)}`}>
+                  <div className="flex items-center space-x-2">
+                    <div className={`p-1 rounded text-white ${getPlatformColor(pub.platform)}`}>
                       {getPlatformIcon(pub.platform)}
                     </div>
-                    <div>
-                      <div className="font-medium">{pub.title}</div>
-                      <div className="text-sm text-gray-600">
-                        {format(pub.scheduledDate, 'HH:mm', { locale: fr })}
-                      </div>
-                    </div>
+                    <span className="font-medium">{pub.title}</span>
+                    <span className="text-sm text-muted-foreground">
+                      le {new Date(pub.scheduledDate).toLocaleDateString('fr-FR')} à {pub.scheduledTime}
+                    </span>
                   </div>
-                  <Badge className={getStatusColor(pub.status)}>
-                    {getStatusLabel(pub.status)}
-                  </Badge>
                 </div>
               ))}
             </div>
@@ -287,150 +301,65 @@ export const PublicationCalendar: React.FC = () => {
         </Card>
       )}
 
-      {view === 'calendar' ? (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle>Calendrier</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={(date) => date && setSelectedDate(date)}
-                locale={fr}
-                className="rounded-md border"
-              />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Publications programmées</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {upcomingPublications.slice(0, 5).map((pub) => (
-                  <div key={pub.id} className="flex items-center space-x-3 p-2 border rounded">
-                    <div className={`p-1 rounded ${getPlatformColor(pub.platform)}`}>
-                      {getPlatformIcon(pub.platform)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm truncate">{pub.title}</div>
-                      <div className="text-xs text-gray-500">
-                        {format(pub.scheduledDate, 'dd MMM à HH:mm', { locale: fr })}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>Toutes les publications</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {publications.map((publication) => (
-                <div key={publication.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                  <div className="flex items-center space-x-4">
-                    <div className={`p-3 rounded ${getPlatformColor(publication.platform)}`}>
+      {/* Liste des publications */}
+      <div className="grid gap-4">
+        {publications.map(publication => (
+          <Card key={publication.id}>
+            <CardContent className="p-4">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <div className={`p-1 rounded text-white ${getPlatformColor(publication.platform)}`}>
                       {getPlatformIcon(publication.platform)}
                     </div>
-                    <div>
-                      <h3 className="font-medium">{publication.title}</h3>
-                      <p className="text-sm text-gray-600 mt-1">{publication.content.substring(0, 100)}...</p>
-                      <div className="flex items-center space-x-2 mt-2">
-                        <span className="text-sm text-gray-500">
-                          {format(publication.scheduledDate, 'dd MMM yyyy à HH:mm', { locale: fr })}
-                        </span>
-                        <Badge className={getStatusColor(publication.status)}>
-                          {getStatusLabel(publication.status)}
-                        </Badge>
+                    <h3 className="font-semibold">{publication.title}</h3>
+                    <Badge className={`text-white ${getStatusColor(publication.status)}`}>
+                      {publication.status === 'draft' && 'Brouillon'}
+                      {publication.status === 'scheduled' && 'Programmé'}
+                      {publication.status === 'published' && 'Publié'}
+                    </Badge>
+                    {publication.notificationEnabled && <Bell className="h-4 w-4 text-orange-500" />}
+                  </div>
+                  
+                  <p className="text-muted-foreground mb-2 line-clamp-2">{publication.content}</p>
+                  
+                  {publication.scheduledDate && (
+                    <div className="flex items-center text-sm text-muted-foreground space-x-4">
+                      <div className="flex items-center">
+                        <CalendarDays className="h-4 w-4 mr-1" />
+                        {new Date(publication.scheduledDate).toLocaleDateString('fr-FR')}
                       </div>
+                      {publication.scheduledTime && (
+                        <div className="flex items-center">
+                          <Clock className="h-4 w-4 mr-1" />
+                          {publication.scheduledTime}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                  <div className="flex space-x-1">
-                    <Button size="sm" variant="outline" onClick={() => handleEditPublication(publication)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => handleDeletePublication(publication.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  )}
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
-      {/* Edit Dialog */}
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Modifier la publication</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Titre</label>
-              <Input
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder="Titre de la publication"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Contenu</label>
-              <Textarea
-                value={formData.content}
-                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                placeholder="Contenu de la publication..."
-                rows={4}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Plateforme</label>
-                <Select value={formData.platform} onValueChange={(value: any) => setFormData({ ...formData, platform: value })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="instagram">Instagram</SelectItem>
-                    <SelectItem value="facebook">Facebook</SelectItem>
-                    <SelectItem value="twitter">Twitter</SelectItem>
-                    <SelectItem value="newsletter">Newsletter</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="flex items-center space-x-2 ml-4">
+                  <Button variant="outline" size="sm" onClick={() => duplicatePublication(publication)}>
+                    Dupliquer
+                  </Button>
+                  {publication.status === 'draft' && (
+                    <Button size="sm" onClick={() => schedulePublication(publication.id)}>
+                      Programmer
+                    </Button>
+                  )}
+                  <Button variant="ghost" size="sm">
+                    <Edit2 className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => deletePublication(publication.id)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Date de publication</label>
-                <Input
-                  type="datetime-local"
-                  value={format(formData.scheduledDate, "yyyy-MM-dd'T'HH:mm")}
-                  onChange={(e) => setFormData({ ...formData, scheduledDate: new Date(e.target.value) })}
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={() => setShowEditDialog(false)}>
-                Annuler
-              </Button>
-              <Button onClick={handleUpdatePublication}>
-                Sauvegarder
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 };

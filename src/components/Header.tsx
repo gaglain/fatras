@@ -22,16 +22,33 @@ export const Header: React.FC = () => {
   });
 
   useEffect(() => {
-    const saved = localStorage.getItem('companySettings');
-    if (saved) {
-      try {
-        const settings = JSON.parse(saved);
-        setCompanySettings(settings);
-        console.log('Paramètres de l\'entreprise chargés dans Header:', settings);
-      } catch (error) {
-        console.error('Erreur lors du chargement des paramètres de l\'entreprise:', error);
+    const loadCompanySettings = () => {
+      const saved = localStorage.getItem('companySettings');
+      if (saved) {
+        try {
+          const settings = JSON.parse(saved);
+          setCompanySettings(settings);
+          console.log('Paramètres de l\'entreprise chargés dans Header:', settings);
+        } catch (error) {
+          console.error('Erreur lors du chargement des paramètres de l\'entreprise:', error);
+        }
       }
-    }
+    };
+
+    // Charger au montage
+    loadCompanySettings();
+
+    // Écouter les changements
+    const handleCompanySettingsChange = (event: CustomEvent) => {
+      console.log('Header: paramètres entreprise mis à jour', event.detail);
+      setCompanySettings(event.detail);
+    };
+
+    window.addEventListener('companySettingsChanged', handleCompanySettingsChange as EventListener);
+
+    return () => {
+      window.removeEventListener('companySettingsChanged', handleCompanySettingsChange as EventListener);
+    };
   }, []);
 
   const handleNotificationClick = () => {
@@ -49,7 +66,7 @@ export const Header: React.FC = () => {
             <img 
               src={companySettings.logo} 
               alt="Logo entreprise" 
-              className="h-8 w-auto"
+              className="h-8 w-auto max-w-[120px] object-contain"
               onError={(e) => {
                 console.error('Erreur de chargement du logo:', e);
                 e.currentTarget.style.display = 'none';

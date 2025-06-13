@@ -118,7 +118,8 @@ export const generateTourStopPDF = async (stop: TourStop, getUserById: (userId: 
     stop.artistLineup.forEach(artist => {
       const user = getUserById(artist.userId);
       const status = artist.confirmed ? '✅ Confirmé' : '⏳ En attente';
-      doc.text(`• ${user?.name || 'Artiste inconnu'} - ${status}`, 25, yPosition);
+      const artistName = user?.name || artist.name || 'Artiste inconnu';
+      doc.text(`• ${artistName} - ${status}`, 25, yPosition);
       yPosition += 6;
     });
   } else {
@@ -248,7 +249,7 @@ export const generateTourStopPDF = async (stop: TourStop, getUserById: (userId: 
     default:
       statusColor = [107, 114, 128];
       statusBg = [249, 250, 251];
-      statusText = String(statusValue).toUpperCase();
+      statusText = '📋 ' + String(statusValue).toUpperCase();
   }
   
   doc.setFillColor(statusBg[0], statusBg[1], statusBg[2]);
