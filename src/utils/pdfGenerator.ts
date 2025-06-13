@@ -118,7 +118,7 @@ export const generateTourStopPDF = async (stop: TourStop, getUserById: (userId: 
     stop.artistLineup.forEach(artist => {
       const user = getUserById(artist.userId);
       const status = artist.confirmed ? '✅ Confirmé' : '⏳ En attente';
-      const artistName = user?.name || artist.name || 'Artiste inconnu';
+      const artistName = user?.name || 'Artiste inconnu';
       doc.text(`• ${artistName} - ${status}`, 25, yPosition);
       yPosition += 6;
     });
