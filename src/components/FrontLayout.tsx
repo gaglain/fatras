@@ -1,9 +1,10 @@
 
 import React from 'react';
+import { Outlet } from 'react-router-dom';
 import { FrontNavigation } from './FrontNavigation';
 
 interface FrontLayoutProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
@@ -11,7 +12,7 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
     <div className="min-h-screen bg-gray-50">
       <FrontNavigation />
       <main className="flex-1">
-        {children}
+        {children || <Outlet />}
       </main>
       <footer className="bg-gray-800 text-white py-8 mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -25,10 +26,10 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
             <div>
               <h3 className="text-lg font-semibold mb-4">Liens rapides</h3>
               <ul className="space-y-2 text-gray-300">
-                <li><a href="/front" className="hover:text-white">Accueil</a></li>
-                <li><a href="/front/artists" className="hover:text-white">Artistes</a></li>
-                <li><a href="/front/events" className="hover:text-white">Événements</a></li>
-                <li><a href="/front/contact" className="hover:text-white">Contact</a></li>
+                <li><a href="/" className="hover:text-white">Accueil</a></li>
+                <li><a href="/artists" className="hover:text-white">Artistes</a></li>
+                <li><a href="/events" className="hover:text-white">Événements</a></li>
+                <li><a href="/contact" className="hover:text-white">Contact</a></li>
               </ul>
             </div>
             <div>
