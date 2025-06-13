@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,7 +39,9 @@ export const Preferences: React.FC = () => {
 
     if (savedCompany) {
       try {
-        setCompanySettings(JSON.parse(savedCompany));
+        const settings = JSON.parse(savedCompany);
+        setCompanySettings(settings);
+        console.log('Paramètres entreprise chargés:', settings);
       } catch (error) {
         console.error('Erreur chargement paramètres entreprise:', error);
       }
@@ -64,21 +65,38 @@ export const Preferences: React.FC = () => {
   }, []);
 
   const saveCompanySettings = () => {
+    console.log('Sauvegarde des paramètres:', companySettings);
     localStorage.setItem('companySettings', JSON.stringify(companySettings));
     
     // Mettre à jour le favicon si fourni
     if (companySettings.favicon) {
-      const link = document.querySelector("link[rel*='icon']") as HTMLLinkElement || document.createElement('link');
-      (link as HTMLLinkElement).type = 'image/x-icon';
-      (link as HTMLLinkElement).rel = 'shortcut icon';
-      (link as HTMLLinkElement).href = companySettings.favicon;
-      if (!document.querySelector("link[rel*='icon']")) {
+      console.log('Mise à jour du favicon:', companySettings.favicon);
+      let link = document.querySelector("link[rel*='icon']") as HTMLLinkElement;
+      
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = 'shortcut icon';
         document.getElementsByTagName('head')[0].appendChild(link);
+        console.log('Nouvel élément link créé pour le favicon');
       }
+      
+      link.type = 'image/x-icon';
+      link.href = companySettings.favicon;
+      console.log('Favicon mis à jour:', link.href);
+    }
+
+    // Mettre à jour le titre
+    if (companySettings.name) {
+      document.title = companySettings.name;
+      console.log('Titre mis à jour:', companySettings.name);
     }
 
     // Déclencher un événement pour notifier les autres composants
-    window.dispatchEvent(new Event('companySettingsChanged'));
+    const event = new CustomEvent('companySettingsChanged', { 
+      detail: companySettings 
+    });
+    window.dispatchEvent(event);
+    console.log('Événement companySettingsChanged déclenché');
     
     toast.success('Paramètres de l\'entreprise sauvegardés');
   };
@@ -96,13 +114,20 @@ export const Preferences: React.FC = () => {
   const handleFileUpload = (type: 'logo' | 'favicon', event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      console.log(`Upload ${type}:`, file.name, file.type, file.size);
       const reader = new FileReader();
       reader.onload = (e) => {
         const result = e.target?.result as string;
+        console.log(`${type} converti en base64, taille:`, result.length);
         setCompanySettings(prev => ({
           ...prev,
           [type]: result
         }));
+        toast.success(`${type === 'logo' ? 'Logo' : 'Icône'} chargé avec succès`);
+      };
+      reader.onerror = (error) => {
+        console.error(`Erreur lecture ${type}:`, error);
+        toast.error(`Erreur lors du chargement du ${type === 'logo' ? 'logo' : 'favicon'}`);
       };
       reader.readAsDataURL(file);
     }
@@ -154,13 +179,23 @@ export const Preferences: React.FC = () => {
                     />
                   </div>
                   {companySettings.logo && (
-                    <img
-                      src={companySettings.logo}
-                      alt="Logo"
-                      className="h-12 w-12 object-contain border rounded"
-                    />
+                    <div className="flex flex-col items-center space-y-2">
+                      <img
+                        src={companySettings.logo}
+                        alt="Logo"
+                        className="h-12 w-12 object-contain border rounded"
+                        onError={(e) => {
+                          console.error('Erreur affichage logo:', companySettings.logo);
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                      <Badge variant="secondary" className="text-xs">Logo chargé</Badge>
+                    </div>
                   )}
                 </div>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Ce logo apparaîtra dans l'en-tête et sur les documents PDF
+                </p>
               </div>
 
               <div>
@@ -175,11 +210,18 @@ export const Preferences: React.FC = () => {
                     />
                   </div>
                   {companySettings.favicon && (
-                    <img
-                      src={companySettings.favicon}
-                      alt="Favicon"
-                      className="h-8 w-8 object-contain border rounded"
-                    />
+                    <div className="flex flex-col items-center space-y-2">
+                      <img
+                        src={companySettings.favicon}
+                        alt="Favicon"
+                        className="h-8 w-8 object-contain border rounded"
+                        onError={(e) => {
+                          console.error('Erreur affichage favicon:', companySettings.favicon);
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                      <Badge variant="secondary" className="text-xs">Icône chargée</Badge>
+                    </div>
                   )}
                 </div>
                 <p className="text-sm text-muted-foreground mt-1">

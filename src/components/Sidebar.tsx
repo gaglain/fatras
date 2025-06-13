@@ -87,7 +87,7 @@ const defaultNavigation: MenuItem[] = [
     icon: Route, 
     visible: true,
     children: [
-      { name: 'Road Show', href: '/road-show', icon: Route, visible: true },
+      { name: 'Feuille de route', href: '/road-show', icon: Route, visible: true },
       { name: 'Merchandise', href: '/merchandise', icon: ShoppingBag, visible: true }
     ]
   },
@@ -110,7 +110,7 @@ export const Sidebar: React.FC = () => {
   const [navigation, setNavigation] = useState<MenuItem[]>(defaultNavigation);
   const [openSections, setOpenSections] = useState<string[]>(['Contacts & Relations', 'Événements & Agenda', 'Booking', 'Communication', 'Production & Ventes', 'Administration']);
 
-  // Charger la configuration sauvegardée
+  
   useEffect(() => {
     const saved = localStorage.getItem('menuConfiguration');
     if (saved) {

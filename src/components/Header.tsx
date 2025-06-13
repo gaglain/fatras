@@ -27,7 +27,11 @@ export const Header: React.FC = () => {
       if (savedSettings) {
         try {
           const settings = JSON.parse(savedSettings);
-          setCompanySettings(settings);
+          setCompanySettings(prev => ({
+            ...prev,
+            ...settings
+          }));
+          console.log('Paramètres chargés:', settings);
         } catch (error) {
           console.error('Erreur lors du chargement des paramètres:', error);
         }
@@ -39,6 +43,7 @@ export const Header: React.FC = () => {
 
     // Écouter les changements de paramètres
     const handleSettingsChange = () => {
+      console.log('Événement de changement de paramètres détecté');
       loadSettings();
     };
 
@@ -52,15 +57,26 @@ export const Header: React.FC = () => {
   // Mettre à jour le favicon quand les paramètres changent
   useEffect(() => {
     if (companySettings.favicon) {
-      const link = document.querySelector("link[rel*='icon']") as HTMLLinkElement || document.createElement('link');
-      link.type = 'image/x-icon';
-      link.rel = 'shortcut icon';
-      link.href = companySettings.favicon;
-      if (!document.querySelector("link[rel*='icon']")) {
+      console.log('Mise à jour du favicon:', companySettings.favicon);
+      let link = document.querySelector("link[rel*='icon']") as HTMLLinkElement;
+      
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = 'shortcut icon';
         document.getElementsByTagName('head')[0].appendChild(link);
       }
+      
+      link.type = 'image/x-icon';
+      link.href = companySettings.favicon;
     }
   }, [companySettings.favicon]);
+
+  // Mettre à jour le titre de la page
+  useEffect(() => {
+    if (companySettings.name) {
+      document.title = companySettings.name;
+    }
+  }, [companySettings.name]);
 
   const getUserDisplayName = () => {
     if (user?.user_metadata?.name) return user.user_metadata.name;
@@ -85,6 +101,10 @@ export const Header: React.FC = () => {
                 src={companySettings.logo} 
                 alt={companySettings.name}
                 className="h-8 w-8 object-contain"
+                onError={(e) => {
+                  console.error('Erreur de chargement du logo:', companySettings.logo);
+                  e.currentTarget.style.display = 'none';
+                }}
               />
             )}
             <h1 className="text-xl font-bold text-foreground">
@@ -104,15 +124,23 @@ export const Header: React.FC = () => {
 
           <ThemeToggle />
 
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowNotifications(!showNotifications)}
-            className="relative"
-          >
-            <Bell className="h-4 w-4" />
-            <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full"></span>
-          </Button>
+          <div className="relative">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="relative"
+            >
+              <Bell className="h-4 w-4" />
+              <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full"></span>
+            </Button>
+
+            {showNotifications && (
+              <div className="absolute top-full right-0 mt-2 z-50">
+                <NotificationCenter onClose={() => setShowNotifications(false)} />
+              </div>
+            )}
+          </div>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -130,7 +158,7 @@ export const Header: React.FC = () => {
                 <User className="mr-2 h-4 w-4" />
                 <span>Profil</span>
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => window.location.href = '/preferences'}>
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Paramètres</span>
               </DropdownMenuItem>
@@ -143,12 +171,8 @@ export const Header: React.FC = () => {
         </div>
       </div>
 
-      {showNotifications && (
-        <NotificationCenter />
-      )}
-
       {showProfile && (
-        <UserProfile />
+        <UserProfile onClose={() => setShowProfile(false)} />
       )}
     </header>
   );
