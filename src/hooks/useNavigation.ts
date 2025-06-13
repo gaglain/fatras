@@ -7,38 +7,10 @@ export const useNavigation = () => {
   const [openSections, setOpenSections] = useState<string[]>(defaultOpenSections);
 
   useEffect(() => {
-    const loadMenuConfiguration = () => {
-      try {
-        const saved = localStorage.getItem('menuConfiguration');
-        if (saved) {
-          const config = JSON.parse(saved);
-          if (config.menuItems && Array.isArray(config.menuItems)) {
-            setNavigation(config.menuItems);
-            console.log('Configuration du menu chargée depuis localStorage');
-          }
-        } else {
-          // Si pas de configuration sauvée, utiliser les données par défaut
-          setNavigation(navigationData);
-        }
-      } catch (error) {
-        console.error('Erreur lors du chargement de la configuration du menu:', error);
-        // En cas d'erreur, on utilise la configuration par défaut
-        setNavigation(navigationData);
-      }
-    };
-
-    loadMenuConfiguration();
-
-    // Écouter les changements de configuration
-    const handleMenuConfigUpdate = () => {
-      loadMenuConfiguration();
-    };
-
-    window.addEventListener('menuConfigUpdated', handleMenuConfigUpdate);
-
-    return () => {
-      window.removeEventListener('menuConfigUpdated', handleMenuConfigUpdate);
-    };
+    // Forcer l'utilisation des nouvelles données et effacer l'ancien cache
+    localStorage.removeItem('menuConfiguration');
+    setNavigation(navigationData);
+    console.log('Menu forcé avec les nouvelles données:', navigationData);
   }, []);
 
   const toggleSection = (sectionName: string) => {
