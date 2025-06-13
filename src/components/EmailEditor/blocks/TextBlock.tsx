@@ -17,12 +17,13 @@ export const TextBlock: React.FC<TextBlockProps> = ({ content, onChange }) => {
         placeholder="Tapez votre texte ici..."
         style={{
           fontSize: content.fontSize,
-          fontWeight: content.fontWeight,
-          textAlign: content.textAlign,
+          fontWeight: content.bold ? 'bold' : 'normal',
+          textAlign: content.alignment,
           color: content.color,
           border: 'none',
           resize: 'none',
-          background: 'transparent'
+          background: 'transparent',
+          fontStyle: content.italic ? 'italic' : 'normal'
         }}
       />
     </div>

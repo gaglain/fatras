@@ -186,15 +186,11 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
 
   if (showPreview) {
     return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">Aperçu de l'email</h2>
-          <Button onClick={() => setShowPreview(false)}>
-            Retour à l'éditeur
-          </Button>
-        </div>
-        <EmailPreview blocks={blocks} />
-      </div>
+      <EmailPreview 
+        blocks={blocks} 
+        onClose={() => setShowPreview(false)}
+        onSave={handleSave}
+      />
     );
   }
 
@@ -365,7 +361,6 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
                           onClick={() => setSelectedBlockId(block.id)}
                         >
                           <BlockToolbar
-                            dragHandleProps={provided.dragHandleProps}
                             onDelete={() => deleteBlock(block.id)}
                           />
                           {renderBlock(block)}

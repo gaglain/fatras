@@ -12,6 +12,8 @@ export interface TextBlockContent {
   alignment: 'left' | 'center' | 'right';
   bold: boolean;
   italic: boolean;
+  fontWeight?: string;
+  textAlign?: 'left' | 'center' | 'right';
 }
 
 export interface HeadingBlockContent {
@@ -19,11 +21,13 @@ export interface HeadingBlockContent {
   level: 1 | 2 | 3;
   color: string;
   alignment: 'left' | 'center' | 'right';
+  textAlign?: 'left' | 'center' | 'right';
 }
 
 export interface ButtonBlockContent {
   text: string;
   url: string;
+  link?: string;
   backgroundColor: string;
   textColor: string;
   alignment: 'left' | 'center' | 'right';
@@ -33,7 +37,7 @@ export interface ButtonBlockContent {
     bottom: number;
     left: number;
     right: number;
-  };
+  } | string;
 }
 
 export interface DividerBlockContent {

@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Send } from 'lucide-react';
-import { EmailBlock } from './types';
+import { EmailBlock, TextBlockContent, HeadingBlockContent, ButtonBlockContent, DividerBlockContent, SpacerBlockContent, ImageBlockContent } from './types';
 
 interface EmailPreviewProps {
   blocks: EmailBlock[];
@@ -15,71 +15,83 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({ blocks, onClose, onS
   const renderBlockForPreview = (block: EmailBlock) => {
     switch (block.type) {
       case 'text':
+        const textContent = block.content as TextBlockContent;
         return (
           <p
             style={{
-              fontSize: block.content.fontSize,
-              fontWeight: block.content.fontWeight,
-              textAlign: block.content.textAlign,
-              color: block.content.color,
-              margin: '10px 0'
+              fontSize: textContent.fontSize,
+              fontWeight: textContent.bold ? 'bold' : 'normal',
+              textAlign: textContent.alignment,
+              color: textContent.color,
+              margin: '10px 0',
+              fontStyle: textContent.italic ? 'italic' : 'normal'
             }}
           >
-            {block.content.text}
+            {textContent.text}
           </p>
         );
       case 'heading':
-        const HeadingTag = `h${block.content.level}` as keyof JSX.IntrinsicElements;
+        const headingContent = block.content as HeadingBlockContent;
+        const HeadingTag = `h${headingContent.level}` as keyof JSX.IntrinsicElements;
         return (
           <HeadingTag
             style={{
-              textAlign: block.content.textAlign,
-              color: block.content.color,
+              textAlign: headingContent.alignment,
+              color: headingContent.color,
               margin: '20px 0 10px 0'
             }}
           >
-            {block.content.text}
+            {headingContent.text}
           </HeadingTag>
         );
       case 'image':
-        return block.content.src ? (
-          <div style={{ textAlign: block.content.alignment, margin: '10px 0' }}>
+        const imageContent = block.content as ImageBlockContent;
+        return imageContent.src ? (
+          <div style={{ textAlign: imageContent.alignment, margin: '10px 0' }}>
             <img
-              src={block.content.src}
-              alt={block.content.alt}
+              src={imageContent.src}
+              alt={imageContent.alt}
               style={{
-                maxWidth: `${block.content.width}%`,
-                height: block.content.height || 'auto'
+                maxWidth: `${imageContent.width}%`,
+                height: imageContent.height || 'auto',
+                borderRadius: imageContent.borderRadius ? `${imageContent.borderRadius}px` : '0'
               }}
             />
           </div>
         ) : null;
       case 'button':
+        const buttonContent = block.content as ButtonBlockContent;
+        const paddingStyle = typeof buttonContent.padding === 'string' 
+          ? buttonContent.padding 
+          : `${buttonContent.padding.top}px ${buttonContent.padding.right}px ${buttonContent.padding.bottom}px ${buttonContent.padding.left}px`;
+        
         return (
-          <div style={{ textAlign: block.content.alignment, margin: '20px 0' }}>
+          <div style={{ textAlign: buttonContent.alignment, margin: '20px 0' }}>
             <a
-              href={block.content.link}
+              href={buttonContent.url || buttonContent.link}
               style={{
                 display: 'inline-block',
-                backgroundColor: block.content.backgroundColor,
-                color: block.content.textColor,
-                padding: block.content.padding,
-                borderRadius: block.content.borderRadius,
+                backgroundColor: buttonContent.backgroundColor,
+                color: buttonContent.textColor,
+                padding: paddingStyle,
+                borderRadius: `${buttonContent.borderRadius}px`,
                 textDecoration: 'none'
               }}
             >
-              {block.content.text}
+              {buttonContent.text}
             </a>
           </div>
         );
       case 'spacer':
-        return <div style={{ height: block.content.height, margin: '5px 0' }} />;
+        const spacerContent = block.content as SpacerBlockContent;
+        return <div style={{ height: spacerContent.height, margin: '5px 0' }} />;
       case 'divider':
+        const dividerContent = block.content as DividerBlockContent;
         return (
           <hr
             style={{
               border: 'none',
-              borderTop: `${block.content.thickness}px ${block.content.style} ${block.content.color}`,
+              borderTop: `${dividerContent.thickness}px ${dividerContent.style} ${dividerContent.color}`,
               margin: '20px 0'
             }}
           />

@@ -14,7 +14,7 @@ export const HeadingBlock: React.FC<HeadingBlockProps> = ({ content, onChange })
   return (
     <HeadingTag
       style={{
-        textAlign: content.textAlign,
+        textAlign: content.alignment,
         color: content.color,
         margin: 0,
         padding: 0
@@ -29,7 +29,7 @@ export const HeadingBlock: React.FC<HeadingBlockProps> = ({ content, onChange })
           background: 'transparent',
           fontSize: 'inherit',
           fontWeight: 'inherit',
-          textAlign: content.textAlign,
+          textAlign: content.alignment,
           color: content.color,
           padding: 0
         }}

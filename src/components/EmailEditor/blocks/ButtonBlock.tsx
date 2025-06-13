@@ -9,6 +9,10 @@ interface ButtonBlockProps {
 }
 
 export const ButtonBlock: React.FC<ButtonBlockProps> = ({ content, onChange }) => {
+  const paddingStyle = typeof content.padding === 'string' 
+    ? content.padding 
+    : `${content.padding.top}px ${content.padding.right}px ${content.padding.bottom}px ${content.padding.left}px`;
+
   return (
     <div style={{ textAlign: content.alignment }}>
       <div
@@ -16,8 +20,8 @@ export const ButtonBlock: React.FC<ButtonBlockProps> = ({ content, onChange }) =
           display: 'inline-block',
           backgroundColor: content.backgroundColor,
           color: content.textColor,
-          padding: content.padding,
-          borderRadius: content.borderRadius,
+          padding: paddingStyle,
+          borderRadius: `${content.borderRadius}px`,
           textDecoration: 'none',
           cursor: 'pointer'
         }}

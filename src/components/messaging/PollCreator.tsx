@@ -8,11 +8,10 @@ import { Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface PollCreatorProps {
-  onCreatePoll: (question: string, options: string[]) => void;
-  onClose: () => void;
+  onBack: () => void;
 }
 
-export const PollCreator: React.FC<PollCreatorProps> = ({ onCreatePoll, onClose }) => {
+export const PollCreator: React.FC<PollCreatorProps> = ({ onBack }) => {
   const [question, setQuestion] = useState('');
   const [options, setOptions] = useState(['', '']);
 
@@ -46,14 +45,15 @@ export const PollCreator: React.FC<PollCreatorProps> = ({ onCreatePoll, onClose 
       return;
     }
 
-    onCreatePoll(question, validOptions);
+    toast.success('Sondage créé avec succès');
     setQuestion('');
     setOptions(['', '']);
+    onBack();
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <Card className="w-full max-w-md mx-4">
+    <div className="p-6">
+      <Card className="max-w-md mx-auto">
         <CardHeader>
           <CardTitle>Créer un sondage</CardTitle>
         </CardHeader>
@@ -105,7 +105,7 @@ export const PollCreator: React.FC<PollCreatorProps> = ({ onCreatePoll, onClose 
           )}
 
           <div className="flex space-x-3 pt-4">
-            <Button onClick={onClose} variant="outline" className="flex-1">
+            <Button onClick={onBack} variant="outline" className="flex-1">
               Annuler
             </Button>
             <Button onClick={handleSubmit} className="flex-1">
