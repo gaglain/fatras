@@ -1,4 +1,3 @@
-
 import jsPDF from 'jspdf';
 import { TourStop } from '@/types/roadshow.types';
 
@@ -43,12 +42,12 @@ export const generateTourStopPDF = async (stop: TourStop, getUserById: (userId: 
   // Titre principal avec le nom de l'entreprise
   doc.setFontSize(20);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(51, 51, 51); // Gris foncé
+  doc.setTextColor(51, 51, 51);
   doc.text(companySettings.name || 'FATRAS BOOKING', 20, yPosition);
   
   yPosition += 8;
   doc.setFontSize(16);
-  doc.setTextColor(102, 102, 102); // Gris moyen
+  doc.setTextColor(102, 102, 102);
   doc.text('FEUILLE DE ROUTE', 20, yPosition);
   
   yPosition += 15;
@@ -60,7 +59,7 @@ export const generateTourStopPDF = async (stop: TourStop, getUserById: (userId: 
   // Ligne de séparation colorée
   yPosition += 10;
   doc.setLineWidth(2);
-  doc.setDrawColor(59, 130, 246); // Bleu
+  doc.setDrawColor(59, 130, 246);
   doc.line(20, yPosition, pageWidth - 20, yPosition);
   
   yPosition += 15;
@@ -69,10 +68,10 @@ export const generateTourStopPDF = async (stop: TourStop, getUserById: (userId: 
   doc.setTextColor(51, 51, 51);
   
   // Section LIEU ET HORAIRES avec fond coloré
-  doc.setFillColor(249, 250, 251); // Gris très clair
+  doc.setFillColor(249, 250, 251);
   doc.rect(15, yPosition - 5, pageWidth - 30, 8, 'F');
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(37, 99, 235); // Bleu foncé
+  doc.setTextColor(37, 99, 235);
   doc.text('📍 LIEU ET HORAIRES', 20, yPosition);
   yPosition += 10;
   
@@ -104,10 +103,10 @@ export const generateTourStopPDF = async (stop: TourStop, getUserById: (userId: 
   yPosition += 10;
   
   // Section CASTING
-  doc.setFillColor(254, 243, 199); // Jaune très clair
+  doc.setFillColor(254, 243, 199);
   doc.rect(15, yPosition - 5, pageWidth - 30, 8, 'F');
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(180, 83, 9); // Orange foncé
+  doc.setTextColor(180, 83, 9);
   doc.text('🎭 CASTING', 20, yPosition);
   yPosition += 10;
   
@@ -129,10 +128,10 @@ export const generateTourStopPDF = async (stop: TourStop, getUserById: (userId: 
   yPosition += 10;
   
   // Section CAPACITÉ
-  doc.setFillColor(219, 234, 254); // Bleu très clair
+  doc.setFillColor(219, 234, 254);
   doc.rect(15, yPosition - 5, pageWidth - 30, 8, 'F');
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(37, 99, 235); // Bleu foncé
+  doc.setTextColor(37, 99, 235);
   doc.text('👥 CAPACITÉ', 20, yPosition);
   yPosition += 10;
   
@@ -148,10 +147,10 @@ export const generateTourStopPDF = async (stop: TourStop, getUserById: (userId: 
   // Contact local
   if (stop.localContact) {
     yPosition += 10;
-    doc.setFillColor(240, 253, 244); // Vert très clair
+    doc.setFillColor(240, 253, 244);
     doc.rect(15, yPosition - 5, pageWidth - 30, 8, 'F');
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(22, 163, 74); // Vert foncé
+    doc.setTextColor(22, 163, 74);
     doc.text('📞 CONTACT LOCAL', 20, yPosition);
     yPosition += 10;
     
@@ -168,10 +167,10 @@ export const generateTourStopPDF = async (stop: TourStop, getUserById: (userId: 
   // Hébergement
   if (stop.accommodation) {
     yPosition += 10;
-    doc.setFillColor(252, 231, 243); // Rose très clair
+    doc.setFillColor(252, 231, 243);
     doc.rect(15, yPosition - 5, pageWidth - 30, 8, 'F');
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(157, 23, 77); // Rose foncé
+    doc.setTextColor(157, 23, 77);
     doc.text('🏨 HÉBERGEMENT', 20, yPosition);
     yPosition += 10;
     
@@ -188,10 +187,10 @@ export const generateTourStopPDF = async (stop: TourStop, getUserById: (userId: 
   // Transport
   if (stop.transport) {
     yPosition += 10;
-    doc.setFillColor(233, 213, 255); // Violet très clair
+    doc.setFillColor(233, 213, 255);
     doc.rect(15, yPosition - 5, pageWidth - 30, 8, 'F');
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(107, 33, 168); // Violet foncé
+    doc.setTextColor(107, 33, 168);
     doc.text('🚐 TRANSPORT', 20, yPosition);
     yPosition += 10;
     
@@ -204,10 +203,10 @@ export const generateTourStopPDF = async (stop: TourStop, getUserById: (userId: 
   // Notes
   if (stop.notes) {
     yPosition += 10;
-    doc.setFillColor(254, 242, 242); // Rouge très clair
+    doc.setFillColor(254, 242, 242);
     doc.rect(15, yPosition - 5, pageWidth - 30, 8, 'F');
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(185, 28, 28); // Rouge foncé
+    doc.setTextColor(185, 28, 28);
     doc.text('📝 NOTES IMPORTANTES', 20, yPosition);
     yPosition += 10;
     
@@ -227,26 +226,28 @@ export const generateTourStopPDF = async (stop: TourStop, getUserById: (userId: 
   
   // Fond coloré selon le statut
   let statusColor, statusBg, statusText;
-  switch (stop.status) {
+  const statusValue = stop.status || 'unknown';
+  
+  switch (statusValue) {
     case 'confirmed':
-      statusColor = [22, 163, 74]; // Vert
+      statusColor = [22, 163, 74];
       statusBg = [240, 253, 244];
       statusText = '✅ CONFIRMÉ';
       break;
     case 'pending':
-      statusColor = [245, 158, 11]; // Orange
+      statusColor = [245, 158, 11];
       statusBg = [254, 243, 199];
       statusText = '⏳ EN ATTENTE';
       break;
     case 'cancelled':
-      statusColor = [220, 38, 38]; // Rouge
+      statusColor = [220, 38, 38];
       statusBg = [254, 242, 242];
       statusText = '❌ ANNULÉ';
       break;
     default:
-      statusColor = [107, 114, 128]; // Gris
+      statusColor = [107, 114, 128];
       statusBg = [249, 250, 251];
-      statusText = stop.status.toUpperCase();
+      statusText = statusValue.toString().toUpperCase();
   }
   
   doc.setFillColor(statusBg[0], statusBg[1], statusBg[2]);
