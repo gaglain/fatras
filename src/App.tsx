@@ -1,50 +1,46 @@
 
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { QueryClientProvider } from '@tanstack/react-query';
-import { queryClient } from './utils/queryClient';
-import { UserProvider } from './contexts/UserContext';
-import { ThemeProvider } from './contexts/ThemeContext';
-import { Layout } from './components/Layout';
-import { FrontLayout } from './components/FrontLayout';
-import { ProtectedRoute } from './components/ProtectedRoute';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ThemeProvider } from '@/contexts/ThemeContext';
+import { UserProvider } from '@/contexts/UserContext';
 import { Toaster } from '@/components/ui/sonner';
+import { Index } from '@/pages/Index';
+import { Dashboard } from '@/pages/Dashboard';
+import { Contacts } from '@/pages/Contacts';
+import { ContactLists } from '@/pages/ContactLists';
+import { Artists } from '@/pages/Artists';
+import { ArtistDetail } from '@/pages/ArtistDetail';
+import { Events } from '@/pages/Events';
+import { EventTypes } from '@/pages/EventTypes';
+import { Agenda } from '@/pages/Agenda';
+import { Opportunities } from '@/pages/Opportunities';
+import { Contracts } from '@/pages/Contracts';
+import { Tasks } from '@/pages/Tasks';
+import { Email } from '@/pages/Email';
+import { EmailCampaigns } from '@/pages/EmailCampaigns';
+import { Messagerie } from '@/pages/Messagerie';
+import { Forms } from '@/pages/Forms';
+import { PublicationCalendar } from '@/pages/PublicationCalendar';
+import { ShowBible } from '@/pages/ShowBible';
+import { RoadShow } from '@/pages/RoadShow';
+import { Merchandise } from '@/pages/Merchandise';
+import { Website } from '@/pages/Website';
+import { UserManagement } from '@/pages/UserManagement';
+import { Application } from '@/pages/Application';
+import { Preferences } from '@/pages/Preferences';
+import { WebsiteBackoffice } from '@/pages/WebsiteBackoffice';
+import { WebsitePageEditor } from '@/pages/WebsitePageEditor';
+import { WebsiteWithEditor } from '@/pages/WebsiteWithEditor';
+import { FrontHome } from '@/pages/FrontHome';
+import { FrontArtists } from '@/pages/FrontArtists';
+import { FrontEvents } from '@/pages/FrontEvents';
+import { FrontContact } from '@/pages/FrontContact';
+import { NotFound } from '@/pages/NotFound';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { Layout } from '@/components/Layout';
+import { FrontLayout } from '@/components/FrontLayout';
 
-// Pages
-import { Index } from './pages/Index';
-import { Dashboard } from './pages/Dashboard';
-import { Contacts } from './pages/Contacts';
-import { ContactLists } from './pages/ContactLists';
-import { Artists } from './pages/Artists';
-import { ArtistDetail } from './pages/ArtistDetail';
-import { Events } from './pages/Events';
-import { EventTypes } from './pages/EventTypes';
-import { Agenda } from './pages/Agenda';
-import { Opportunities } from './pages/Opportunities';
-import { Contracts } from './pages/Contracts';
-import { Tasks } from './pages/Tasks';
-import { Email } from './pages/Email';
-import { EmailCampaigns } from './pages/EmailCampaigns';
-import { Messagerie } from './pages/Messagerie';
-import { Forms } from './pages/Forms';
-import { PublicationCalendar } from './pages/PublicationCalendar';
-import { ShowBible } from './pages/ShowBible';
-import { RoadShow } from './pages/RoadShow';
-import { Merchandise } from './pages/Merchandise';
-import { Website } from './pages/Website';
-import { WebsiteBackoffice } from './pages/WebsiteBackoffice';
-import { WebsitePageEditor } from './pages/WebsitePageEditor';
-import { WebsiteWithEditor } from './pages/WebsiteWithEditor';
-import { UserManagement } from './pages/UserManagement';
-import { Application } from './pages/Application';
-import { Preferences } from './pages/Preferences';
-import { NotFound } from './pages/NotFound';
-
-// Front pages
-import { FrontHome } from './pages/FrontHome';
-import { FrontArtists } from './pages/FrontArtists';
-import { FrontEvents } from './pages/FrontEvents';
-import { FrontContact } from './pages/FrontContact';
+const queryClient = new QueryClient();
 
 function App() {
   return (
@@ -53,21 +49,22 @@ function App() {
         <UserProvider>
           <Router>
             <Routes>
-              {/* Front-end routes */}
-              <Route path="/" element={<FrontLayout />}>
-                <Route index element={<FrontHome />} />
-                <Route path="artists" element={<FrontArtists />} />
-                <Route path="events" element={<FrontEvents />} />
-                <Route path="contact" element={<FrontContact />} />
-              </Route>
+              {/* Public routes with FrontLayout */}
+              <Route path="/" element={<FrontLayout><Index /></FrontLayout>} />
+              <Route path="/front" element={<FrontLayout><FrontHome /></FrontLayout>} />
+              <Route path="/front/artists" element={<FrontLayout><FrontArtists /></FrontLayout>} />
+              <Route path="/front/events" element={<FrontLayout><FrontEvents /></FrontLayout>} />
+              <Route path="/front/contact" element={<FrontLayout><FrontContact /></FrontLayout>} />
 
-              {/* Back-office routes */}
+              {/* Admin route */}
               <Route path="/admin" element={<Index />} />
+
+              {/* Protected routes with Layout */}
               <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
               <Route path="/contacts" element={<ProtectedRoute><Layout><Contacts /></Layout></ProtectedRoute>} />
               <Route path="/contact-lists" element={<ProtectedRoute><Layout><ContactLists /></Layout></ProtectedRoute>} />
               <Route path="/artists" element={<ProtectedRoute><Layout><Artists /></Layout></ProtectedRoute>} />
-              <Route path="/artist/:id" element={<ProtectedRoute><Layout><ArtistDetail /></Layout></ProtectedRoute>} />
+              <Route path="/artists/:id" element={<ProtectedRoute><Layout><ArtistDetail /></Layout></ProtectedRoute>} />
               <Route path="/events" element={<ProtectedRoute><Layout><Events /></Layout></ProtectedRoute>} />
               <Route path="/event-types" element={<ProtectedRoute><Layout><EventTypes /></Layout></ProtectedRoute>} />
               <Route path="/agenda" element={<ProtectedRoute><Layout><Agenda /></Layout></ProtectedRoute>} />
@@ -83,16 +80,18 @@ function App() {
               <Route path="/road-show" element={<ProtectedRoute><Layout><RoadShow /></Layout></ProtectedRoute>} />
               <Route path="/merchandise" element={<ProtectedRoute><Layout><Merchandise /></Layout></ProtectedRoute>} />
               <Route path="/website" element={<ProtectedRoute><Layout><Website /></Layout></ProtectedRoute>} />
-              <Route path="/website-backoffice" element={<ProtectedRoute><Layout><WebsiteBackoffice /></Layout></ProtectedRoute>} />
-              <Route path="/website-page-editor/:pageId" element={<ProtectedRoute><Layout><WebsitePageEditor /></Layout></ProtectedRoute>} />
-              <Route path="/website-with-editor" element={<ProtectedRoute><Layout><WebsiteWithEditor /></Layout></ProtectedRoute>} />
               <Route path="/user-management" element={<ProtectedRoute><Layout><UserManagement /></Layout></ProtectedRoute>} />
               <Route path="/application" element={<ProtectedRoute><Layout><Application /></Layout></ProtectedRoute>} />
               <Route path="/preferences" element={<ProtectedRoute><Layout><Preferences /></Layout></ProtectedRoute>} />
+              <Route path="/website-backoffice" element={<ProtectedRoute><Layout><WebsiteBackoffice /></Layout></ProtectedRoute>} />
+              <Route path="/website-editor/:pageId" element={<ProtectedRoute><Layout><WebsitePageEditor /></Layout></ProtectedRoute>} />
+              <Route path="/website-with-editor" element={<ProtectedRoute><Layout><WebsiteWithEditor /></Layout></ProtectedRoute>} />
+
+              {/* 404 route */}
               <Route path="*" element={<NotFound />} />
             </Routes>
-            <Toaster />
           </Router>
+          <Toaster />
         </UserProvider>
       </ThemeProvider>
     </QueryClientProvider>
