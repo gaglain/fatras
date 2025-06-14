@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -119,6 +119,40 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
   const [logoUrl, setLogoUrl] = useState('/placeholder.svg');
   const [siteName, setSiteName] = useState('MusiConnect');
   const [siteDescription, setSiteDescription] = useState('Plateforme de booking d\'artistes et gestion d\'événements musicaux');
+  const [uploadedMediaFiles, setUploadedMediaFiles] = useState([
+    { type: 'image', name: 'hero-banner.jpg', size: '2.4 MB', url: '/placeholder.svg' },
+    { type: 'image', name: 'artist-photo.jpg', size: '1.8 MB', url: '/placeholder.svg' },
+    { type: 'video', name: 'promo-video.mp4', size: '15.2 MB', url: '/placeholder.svg' },
+    { type: 'image', name: 'event-poster.png', size: '3.1 MB', url: '/placeholder.svg' },
+  ]);
+
+  useEffect(() => {
+    // Load saved settings from localStorage
+    const savedSettings = localStorage.getItem('websiteSettings');
+    if (savedSettings) {
+      try {
+        const settings = JSON.parse(savedSettings);
+        if (settings.logoUrl) setLogoUrl(settings.logoUrl);
+        if (settings.siteName) setSiteName(settings.siteName);
+        if (settings.siteDescription) setSiteDescription(settings.siteDescription);
+      } catch (e) {
+        console.error('Error loading saved website settings:', e);
+      }
+    }
+    
+    // Load media files from localStorage
+    const savedMedia = localStorage.getItem('mediaFiles');
+    if (savedMedia) {
+      try {
+        const media = JSON.parse(savedMedia);
+        if (Array.isArray(media)) {
+          setUploadedMediaFiles(media);
+        }
+      } catch (e) {
+        console.error('Error loading saved media files:', e);
+      }
+    }
+  }, []);
 
   const [formData, setFormData] = useState<FormData>({
     title: '',
@@ -214,12 +248,74 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
     const file = event.target.files?.[0];
     if (file) {
       try {
-        const publicUrl = await uploadFile(file, 'website-assets', `logo-${Date.now()}`);
-        setLogoUrl(publicUrl);
-        toast.success('Logo mis à jour avec succès');
+        // Use FileReader to provide immediate feedback
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const dataUrl = e.target?.result as string;
+          setLogoUrl(dataUrl);
+          
+          // Save to localStorage
+          const settings = {
+            logoUrl: dataUrl,
+            siteName,
+            siteDescription
+          };
+          localStorage.setItem('websiteSettings', JSON.stringify(settings));
+          
+          toast.success('Logo mis à jour avec succès');
+        };
+        
+        reader.readAsDataURL(file);
+        
+        // Optionally upload to Supabase (commented out for now as we're using localStorage)
+        // const publicUrl = await uploadFile(file, 'website-assets', `logo-${Date.now()}`);
+        // setLogoUrl(publicUrl);
       } catch (error) {
         console.error('Erreur lors de l\'upload du logo:', error);
         toast.error('Erreur lors de l\'upload du logo');
+      }
+    }
+  };
+
+  const handleMediaUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    const newMediaFiles = [...uploadedMediaFiles];
+    
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      try {
+        // Use FileReader to provide immediate feedback
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const dataUrl = e.target?.result as string;
+          
+          const newMediaFile = {
+            type: file.type.startsWith('image/') ? 'image' : 
+                  file.type.startsWith('video/') ? 'video' :
+                  file.type.startsWith('audio/') ? 'audio' : 'file',
+            name: file.name,
+            size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
+            url: dataUrl
+          };
+          
+          newMediaFiles.unshift(newMediaFile);
+          setUploadedMediaFiles([...newMediaFiles]);
+          
+          // Save to localStorage
+          localStorage.setItem('mediaFiles', JSON.stringify(newMediaFiles));
+          
+          toast.success(`${file.name} téléchargé avec succès`);
+        };
+        
+        reader.readAsDataURL(file);
+        
+        // Optionally upload to Supabase (commented out for now as we're using localStorage)
+        // const publicUrl = await uploadFile(file, 'website-assets', `media-${Date.now()}-${file.name}`);
+      } catch (error) {
+        console.error('Erreur lors de l\'upload du media:', error);
+        toast.error(`Erreur lors de l\'upload de ${file.name}`);
       }
     }
   };
@@ -247,6 +343,13 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
   };
 
   const handleSiteSettingsSave = () => {
+    // Save settings to localStorage
+    const settings = {
+      logoUrl,
+      siteName,
+      siteDescription
+    };
+    localStorage.setItem('websiteSettings', JSON.stringify(settings));
     toast.success('Paramètres du site sauvegardés');
   };
 
@@ -290,7 +393,7 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
           </div>
           <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
             <DialogTrigger asChild>
-              <Button className="bg-blue-600 text-white hover:bg-blue-700">
+              <Button className="bg-[#1632f4] text-white hover:bg-[#1632f4]/90">
                 <Plus className="h-4 w-4 mr-2" />
                 Nouvelle Page
               </Button>
@@ -375,7 +478,7 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
                   <Button type="button" variant="outline" onClick={() => setShowCreateDialog(false)}>
                     Annuler
                   </Button>
-                  <Button type="submit" className="bg-blue-600 text-white hover:bg-blue-700">
+                  <Button type="submit" className="bg-[#1632f4] text-white hover:bg-[#1632f4]/90">
                     Créer la page
                   </Button>
                 </div>
@@ -640,7 +743,7 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
                 </div>
 
                 <div className="flex justify-end">
-                  <Button onClick={handleSiteSettingsSave} className="bg-blue-600 text-white hover:bg-blue-700">
+                  <Button onClick={handleSiteSettingsSave} className="bg-[#1632f4] text-white hover:bg-[#1632f4]/90">
                     Sauvegarder les paramètres
                   </Button>
                 </div>
@@ -650,31 +753,70 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
 
           <TabsContent value="media" className="mt-6">
             <Card className="bg-white">
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-gray-900">Médiathèque</CardTitle>
+                <div>
+                  <input
+                    type="file"
+                    id="media-upload"
+                    multiple
+                    accept="image/*,video/*,audio/*"
+                    onChange={handleMediaUpload}
+                    className="hidden"
+                  />
+                  <label htmlFor="media-upload">
+                    <Button variant="outline" className="cursor-pointer" asChild>
+                      <span>
+                        <Upload className="h-4 w-4 mr-2" />
+                        Ajouter des médias
+                      </span>
+                    </Button>
+                  </label>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {[
-                    { type: 'image', name: 'hero-banner.jpg', size: '2.4 MB' },
-                    { type: 'image', name: 'artist-photo.jpg', size: '1.8 MB' },
-                    { type: 'video', name: 'promo-video.mp4', size: '15.2 MB' },
-                    { type: 'image', name: 'event-poster.png', size: '3.1 MB' },
-                  ].map((media, index) => (
-                    <div key={index} className="border border-gray-200 rounded-lg p-4 text-center bg-white">
+                  {uploadedMediaFiles.map((media, index) => (
+                    <div key={index} className="border border-gray-200 rounded-lg p-4 bg-white">
                       {media.type === 'image' ? (
-                        <Image className="h-12 w-12 mx-auto text-gray-400 mb-2" />
+                        <div className="flex flex-col items-center">
+                          <div className="h-32 w-full mb-2 flex items-center justify-center overflow-hidden bg-gray-100 rounded">
+                            <img src={media.url} alt={media.name} className="max-h-full max-w-full object-contain" />
+                          </div>
+                          <p className="text-sm font-medium text-gray-900">{media.name}</p>
+                          <p className="text-xs text-gray-500">{media.size}</p>
+                        </div>
+                      ) : media.type === 'video' ? (
+                        <div className="flex flex-col items-center">
+                          <div className="h-32 w-full mb-2 flex items-center justify-center bg-gray-100 rounded">
+                            <Video className="h-16 w-16 text-gray-400" />
+                          </div>
+                          <p className="text-sm font-medium text-gray-900">{media.name}</p>
+                          <p className="text-xs text-gray-500">{media.size}</p>
+                        </div>
+                      ) : media.type === 'audio' ? (
+                        <div className="flex flex-col items-center">
+                          <div className="h-32 w-full mb-2 flex items-center justify-center bg-gray-100 rounded">
+                            <Music className="h-16 w-16 text-gray-400" />
+                          </div>
+                          <p className="text-sm font-medium text-gray-900">{media.name}</p>
+                          <p className="text-xs text-gray-500">{media.size}</p>
+                        </div>
                       ) : (
-                        <Video className="h-12 w-12 mx-auto text-gray-400 mb-2" />
+                        <div className="flex flex-col items-center">
+                          <div className="h-32 w-full mb-2 flex items-center justify-center bg-gray-100 rounded">
+                            <FileText className="h-16 w-16 text-gray-400" />
+                          </div>
+                          <p className="text-sm font-medium text-gray-900">{media.name}</p>
+                          <p className="text-xs text-gray-500">{media.size}</p>
+                        </div>
                       )}
-                      <p className="text-sm font-medium text-gray-900">{media.name}</p>
-                      <p className="text-xs text-gray-500">{media.size}</p>
                     </div>
                   ))}
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center bg-white hover:border-gray-400 cursor-pointer">
+                  <label htmlFor="media-upload" className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center bg-white hover:border-gray-400 cursor-pointer">
                     <Plus className="h-8 w-8 mx-auto text-gray-400 mb-2" />
                     <p className="text-sm text-gray-500">Ajouter un média</p>
-                  </div>
+                  </label>
                 </div>
               </CardContent>
             </Card>

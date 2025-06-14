@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation, Navigate } from 'react-router-dom';
 import { Header } from './Header';
 import { ChatWidget } from './ChatWidget';
 import { useAuth } from '@/hooks/useAuth';
@@ -16,6 +16,15 @@ interface LayoutProps {
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { user } = useAuth();
   const { theme } = useTheme();
+  const location = useLocation();
+  
+  // Check if the current path is the dedicated back office URL
+  const isBackOfficeURL = location.pathname.startsWith('/fatras-admin') || location.pathname.startsWith('/website/backoffice');
+  
+  // If it's not the back office URL and we're trying to access admin routes, redirect to the front page
+  if (!isBackOfficeURL && location.pathname.includes('/admin')) {
+    return <Navigate to="/front" replace />;
+  }
   
   return (
     <div className={`min-h-screen ${theme === 'dark' ? 'dark' : ''}`}>

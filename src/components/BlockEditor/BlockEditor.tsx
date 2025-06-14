@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, Settings, Eye, Edit3 } from 'lucide-react';
@@ -9,6 +9,7 @@ import { TextBlock } from './blocks/TextBlock';
 import { ImageBlock } from './blocks/ImageBlock';
 import { HeroBlock } from './blocks/HeroBlock';
 import { ArtistGridBlock } from './blocks/ArtistGridBlock';
+import { toast } from 'sonner';
 
 interface BlockEditorProps {
   initialBlocks: Block[];
@@ -16,9 +17,17 @@ interface BlockEditorProps {
 }
 
 export const BlockEditor: React.FC<BlockEditorProps> = ({ initialBlocks, onSave }) => {
-  const [blocks, setBlocks] = useState<Block[]>(initialBlocks);
-  const [isEditing, setIsEditing] = useState(false);
+  const [blocks, setBlocks] = useState<Block[]>(initialBlocks || []);
+  const [isEditing, setIsEditing] = useState(true); // Default to editing mode
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
+  
+  // Ensure we have the latest blocks when initialBlocks changes
+  useEffect(() => {
+    if (initialBlocks && initialBlocks.length > 0) {
+      setBlocks(initialBlocks);
+      console.log('BlockEditor: Received initial blocks', initialBlocks);
+    }
+  }, [initialBlocks]);
 
   const addBlock = (type: BlockType) => {
     const newBlock: Block = {
@@ -28,17 +37,22 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({ initialBlocks, onSave 
       order: blocks.length
     };
     setBlocks([...blocks, newBlock]);
+    toast.success(`Bloc ${type} ajouté`);
+    console.log('Added new block:', newBlock);
   };
 
   const updateBlock = (id: string, content: any) => {
     setBlocks(blocks.map(block => 
       block.id === id ? { ...block, content } : block
     ));
+    console.log('Updated block:', id, content);
   };
 
   const deleteBlock = (id: string) => {
     setBlocks(blocks.filter(block => block.id !== id));
     setSelectedBlockId(null);
+    toast.success('Bloc supprimé');
+    console.log('Deleted block:', id);
   };
 
   const moveBlock = (id: string, direction: 'up' | 'down') => {
@@ -51,6 +65,8 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({ initialBlocks, onSave 
     if (targetIndex >= 0 && targetIndex < blocks.length) {
       [newBlocks[blockIndex], newBlocks[targetIndex]] = [newBlocks[targetIndex], newBlocks[blockIndex]];
       setBlocks(newBlocks);
+      toast.success(`Bloc déplacé ${direction === 'up' ? 'vers le haut' : 'vers le bas'}`);
+      console.log('Moved block:', id, direction);
     }
   };
 
@@ -72,13 +88,14 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({ initialBlocks, onSave 
         BlockComponent = ArtistGridBlock;
         break;
       default:
+        console.error('Unknown block type:', block.type);
         return null;
     }
 
     return (
       <div
         key={block.id}
-        className={`relative group ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
+        className={`relative group ${isSelected ? 'ring-2 ring-[#1632f4]' : ''}`}
         onClick={() => isEditing && setSelectedBlockId(block.id)}
       >
         {isEditing && (
@@ -99,6 +116,12 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({ initialBlocks, onSave 
     );
   };
 
+  const handleSave = () => {
+    onSave(blocks);
+    toast.success('Page sauvegardée avec succès');
+    console.log('Saving blocks:', blocks);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Barre d'outils principale */}
@@ -108,7 +131,7 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({ initialBlocks, onSave 
             <Button
               onClick={() => setIsEditing(!isEditing)}
               variant={isEditing ? "default" : "outline"}
-              className="flex items-center"
+              className={`flex items-center ${isEditing ? 'bg-[#1632f4] text-white hover:bg-[#1632f4]/90' : ''}`}
             >
               {isEditing ? <Eye className="h-4 w-4 mr-2" /> : <Edit3 className="h-4 w-4 mr-2" />}
               {isEditing ? 'Aperçu' : 'Modifier'}
@@ -154,8 +177,8 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({ initialBlocks, onSave 
           
           {isEditing && (
             <Button
-              onClick={() => onSave(blocks)}
-              className="bg-green-600 hover:bg-green-700"
+              onClick={handleSave}
+              className="bg-[#1632f4] hover:bg-[#1632f4]/90 text-white"
             >
               Sauvegarder
             </Button>
@@ -170,7 +193,7 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({ initialBlocks, onSave 
         {isEditing && blocks.length === 0 && (
           <div className="py-20 text-center">
             <p className="text-gray-500 mb-4">Aucun bloc ajouté. Commencez par ajouter du contenu !</p>
-            <Button onClick={() => addBlock('hero')}>
+            <Button onClick={() => addBlock('hero')} className="bg-[#1632f4] hover:bg-[#1632f4]/90 text-white">
               <Plus className="h-4 w-4 mr-2" />
               Ajouter un bloc Hero
             </Button>
@@ -185,7 +208,7 @@ const getDefaultContent = (type: BlockType) => {
   switch (type) {
     case 'text':
       return {
-        content: '<p>Nouveau bloc de texte. Cliquez pour éditer.</p>',
+        text: '<p>Nouveau bloc de texte. Cliquez pour éditer.</p>',
         alignment: 'left'
       };
     case 'image':

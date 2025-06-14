@@ -1,4 +1,3 @@
-
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 @tailwind base;
 @tailwind components;
@@ -258,14 +257,14 @@
 
   /* Styles spécifiques pour les boutons du back-office */
   .back-office-button {
-    background: white;
-    color: #1632f4;
-    border: 1px solid #e5e7eb;
+    background: white !important;
+    color: #1632f4 !important;
+    border: 1px solid #e5e7eb !important;
   }
 
   .back-office-button:hover {
-    background: #f9fafb;
-    color: #1632f4;
+    background: #f9fafb !important;
+    color: #1632f4 !important;
   }
 
   /* Correction pour tous les boutons outline */
@@ -278,6 +277,33 @@
   .button-outline-corrected:hover {
     background: #f9fafb !important;
     color: #1632f4 !important;
+  }
+  
+  /* Update all purple elements to blue in back office */
+  button[class*="bg-purple"], .bg-purple-600, .hover\:bg-purple-700, .bg-purple-500, .hover\:bg-purple-600 {
+    background-color: #1632f4 !important;
+  }
+  
+  button[class*="text-purple"], .text-purple-600, .text-purple-700, .text-purple-500 {
+    color: #1632f4 !important;
+  }
+  
+  button[class*="border-purple"], .border-purple-500, .border-purple-600, .border-purple-700 {
+    border-color: #1632f4 !important;
+  }
+  
+  /* Ensure all white buttons have blue text */
+  button.bg-white, button[class*="bg-white"], [type="button"].bg-white {
+    color: #1632f4 !important;
+  }
+  
+  /* Make sure buttons in the website editor are properly styled */
+  .bg-green-600, .hover\:bg-green-700, .bg-blue-600, .hover\:bg-blue-700 {
+    background-color: #1632f4 !important;
+  }
+  
+  .bg-green-600:hover, .hover\:bg-green-700:hover, .bg-blue-600:hover, .hover\:bg-blue-700:hover {
+    background-color: #1225d3 !important;
   }
 }
 

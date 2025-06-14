@@ -122,11 +122,34 @@ export const WebsitePageEditor: React.FC = () => {
   useEffect(() => {
     // Load page data
     const loadPage = () => {
-      const foundPage = defaultPages.find(p => p.id === pageId);
-      if (foundPage) {
-        setPage(foundPage);
-        setBlocks(foundPage.blocks);
+      console.log('Loading page data for ID:', pageId);
+      
+      // Try to load from localStorage first
+      const savedPages = localStorage.getItem('websitePages');
+      let pagesData = defaultPages;
+      
+      if (savedPages) {
+        try {
+          const parsed = JSON.parse(savedPages);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            pagesData = parsed;
+          }
+        } catch (e) {
+          console.error('Error parsing saved pages:', e);
+        }
       }
+      
+      const foundPage = pagesData.find(p => p.id === pageId);
+      
+      if (foundPage) {
+        console.log('Found page:', foundPage);
+        setPage(foundPage);
+        setBlocks(foundPage.blocks || []);
+      } else {
+        console.error('Page not found for ID:', pageId);
+        toast.error('Page non trouvée');
+      }
+      
       setIsLoading(false);
     };
 
@@ -134,14 +157,42 @@ export const WebsitePageEditor: React.FC = () => {
   }, [pageId]);
 
   const handleSave = (newBlocks: Block[]) => {
-    if (!page) return;
+    if (!page) {
+      toast.error('Impossible de sauvegarder : page non trouvée');
+      return;
+    }
+
+    console.log('Saving blocks:', newBlocks);
 
     // Update the page with new blocks
     const updatedPage = { ...page, blocks: newBlocks };
     setPage(updatedPage);
     setBlocks(newBlocks);
     
-    // Here you would normally save to your backend
+    // Save to localStorage
+    const savedPages = localStorage.getItem('websitePages');
+    let pagesData = defaultPages;
+    
+    if (savedPages) {
+      try {
+        const parsed = JSON.parse(savedPages);
+        if (Array.isArray(parsed)) {
+          pagesData = parsed;
+        }
+      } catch (e) {
+        console.error('Error parsing saved pages:', e);
+      }
+    }
+    
+    // Update the page in the array
+    const updatedPages = pagesData.map(p => 
+      p.id === pageId ? updatedPage : p
+    );
+    
+    // Save back to localStorage
+    localStorage.setItem('websitePages', JSON.stringify(updatedPages));
+    
+    // Here you would normally save to your backend as well
     console.log('Saving page:', updatedPage);
     
     toast.success('Page sauvegardée avec succès');
@@ -162,7 +213,7 @@ export const WebsitePageEditor: React.FC = () => {
       <div className="p-6">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Page non trouvée</h1>
-          <Button onClick={() => navigate('/website/backoffice')}>
+          <Button onClick={() => navigate('/website/backoffice')} className="bg-[#1632f4] hover:bg-[#1632f4]/90 text-white">
             Retour à la gestion des pages
           </Button>
         </div>
