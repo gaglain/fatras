@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -68,9 +69,9 @@ export const ChatWidget: React.FC = () => {
           setIsOpen(!isOpen);
           if (!isOpen) setIsMinimized(false);
         }}
-        className="h-14 w-14 rounded-full bg-primary hover:bg-primary/90 shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-110"
+        className="h-14 w-14 rounded-full bg-[#ec5f65] hover:bg-[#ec5f65]/90 shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-110"
       >
-        <MessageCircle className="h-6 w-6 text-primary-foreground" />
+        <MessageCircle className="h-6 w-6 text-white" />
         {totalUnread > 0 && (
           <Badge className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-red-500 text-white text-xs p-0 flex items-center justify-center animate-pulse">
             {totalUnread}
@@ -83,12 +84,12 @@ export const ChatWidget: React.FC = () => {
         <Card className={`absolute bottom-20 right-0 shadow-2xl transition-all duration-300 ${
           isMinimized ? 'w-80 h-16' : 'w-96 h-[600px]'
         }`}>
-          <CardHeader className="pb-3 border-b bg-primary text-primary-foreground rounded-t-lg">
+          <CardHeader className="pb-3 border-b bg-[#ec5f65] text-white rounded-t-lg">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm flex items-center">
                 {currentChannel?.type === 'channel' ? <Hash className="h-4 w-4 mr-2" /> : <MessageSquare className="h-4 w-4 mr-2" />}
                 {currentChannel?.name || 'Messagerie'}
-                <Badge variant="secondary" className="ml-2 text-xs bg-primary-foreground/20 text-primary-foreground">
+                <Badge variant="secondary" className="ml-2 text-xs bg-white/20 text-white">
                   {onlineUsersCount} en ligne
                 </Badge>
               </CardTitle>
@@ -96,7 +97,7 @@ export const ChatWidget: React.FC = () => {
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="h-6 w-6 p-0 text-primary-foreground hover:bg-primary-foreground/20"
+                  className="h-6 w-6 p-0 text-white hover:bg-white/20"
                   onClick={() => setIsMinimized(!isMinimized)}
                 >
                   {isMinimized ? <Maximize2 className="h-3 w-3" /> : <Minimize2 className="h-3 w-3" />}
@@ -104,7 +105,7 @@ export const ChatWidget: React.FC = () => {
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="h-6 w-6 p-0 text-primary-foreground hover:bg-primary-foreground/20" 
+                  className="h-6 w-6 p-0 text-white hover:bg-white/20" 
                   onClick={() => setIsOpen(false)}
                 >
                   <X className="h-3 w-3" />
@@ -174,7 +175,7 @@ export const ChatWidget: React.FC = () => {
                       <div
                         className={`max-w-[75%] rounded-lg p-3 ${
                           msg.isMe
-                            ? 'bg-primary text-primary-foreground'
+                            ? 'bg-[#ec5f65] text-white'
                             : 'bg-muted text-foreground'
                         }`}
                       >
@@ -202,7 +203,7 @@ export const ChatWidget: React.FC = () => {
                   <Button 
                     onClick={sendMessage} 
                     size="sm" 
-                    className="bg-primary hover:bg-primary/90"
+                    className="bg-[#ec5f65] hover:bg-[#ec5f65]/90"
                     disabled={!message.trim()}
                   >
                     <Send className="h-4 w-4" />
