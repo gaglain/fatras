@@ -58,27 +58,53 @@ export const RecentActivityCard: React.FC = () => {
   };
 
   return (
-    <Card className="xl:col-span-1 bg-white border border-gray-200 hover:shadow-md transition-shadow">
+    <Card className="xl:col-span-1 hover:shadow-md transition-shadow" style={{
+      background: 'var(--custom-cardBg, #ffffff)',
+      color: 'var(--custom-cardText, #18181b)',
+      border: '1px solid rgba(0,0,0,0.1)'
+    }}>
       <CardHeader>
-        <CardTitle className="flex items-center text-gray-900">
-          <Activity className="h-5 w-5 mr-2" />
+        <CardTitle className="flex items-center" style={{
+          color: 'var(--custom-cardText, #18181b)'
+        }}>
+          <Activity className="h-5 w-5 mr-2" style={{
+            color: 'var(--custom-buttonBg, #1632f4)'
+          }} />
           Activité Récente
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
           {recentActivities.map((activity, index) => (
-            <div key={index} className="flex items-start space-x-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
-              <div className="w-2 h-2 bg-brand-primary rounded-full mt-2"></div>
+            <div key={index} className="flex items-start space-x-3 p-2 rounded-lg transition-colors" style={{
+              ':hover': {
+                background: 'rgba(0,0,0,0.02)'
+              }
+            }}>
+              <div className="w-2 h-2 rounded-full mt-2" style={{
+                background: 'var(--custom-buttonBg, #1632f4)'
+              }}></div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-1">
-                  <p className="text-sm font-medium text-gray-900 truncate">{activity.title}</p>
+                  <p className="text-sm font-medium truncate" style={{
+                    color: 'var(--custom-cardText, #18181b)'
+                  }}>
+                    {activity.title}
+                  </p>
                   <Badge className={getPriorityColor(activity.priority)}>
                     {activity.priority}
                   </Badge>
                 </div>
-                <p className="text-xs text-gray-600 mb-1">{activity.message}</p>
-                <p className="text-xs text-gray-500">Il y a {activity.time}</p>
+                <p className="text-xs mb-1" style={{
+                  color: 'var(--custom-text, #666666)'
+                }}>
+                  {activity.message}
+                </p>
+                <p className="text-xs" style={{
+                  color: 'var(--custom-text, #999999)'
+                }}>
+                  Il y a {activity.time}
+                </p>
               </div>
             </div>
           ))}

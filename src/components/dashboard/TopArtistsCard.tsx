@@ -11,28 +11,53 @@ const topArtists = [
 
 export const TopArtistsCard: React.FC = () => {
   return (
-    <Card className="bg-white border border-gray-200 hover:shadow-md transition-shadow">
+    <Card className="hover:shadow-md transition-shadow" style={{
+      background: 'var(--custom-cardBg, #ffffff)',
+      color: 'var(--custom-cardText, #18181b)',
+      border: '1px solid rgba(0,0,0,0.1)'
+    }}>
       <CardHeader>
-        <CardTitle className="flex items-center text-gray-900">
-          <Star className="h-5 w-5 mr-2" />
+        <CardTitle className="flex items-center" style={{
+          color: 'var(--custom-cardText, #18181b)'
+        }}>
+          <Star className="h-5 w-5 mr-2" style={{
+            color: 'var(--custom-buttonBg, #1632f4)'
+          }} />
           Top Artistes - Performance
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {topArtists.map((artist, index) => (
-            <div key={index} className="p-4 border border-gray-200 rounded-lg hover:border-brand-primary/30 hover:shadow-sm transition-all">
+            <div key={index} className="p-4 rounded-lg hover:shadow-sm transition-all" style={{
+              border: '1px solid rgba(0,0,0,0.1)',
+              borderColor: 'rgba(0,0,0,0.1)'
+            }}>
               <div className="flex items-center justify-between mb-3">
-                <h4 className="font-medium text-gray-900">{artist.name}</h4>
+                <h4 className="font-medium" style={{
+                  color: 'var(--custom-cardText, #18181b)'
+                }}>
+                  {artist.name}
+                </h4>
                 <div className="flex items-center">
                   <Star className="h-4 w-4 text-yellow-400 mr-1" />
-                  <span className="text-sm text-gray-600">{artist.rating}</span>
+                  <span className="text-sm" style={{
+                    color: 'var(--custom-text, #666666)'
+                  }}>
+                    {artist.rating}
+                  </span>
                 </div>
               </div>
-              <div className="space-y-2 text-sm text-gray-600">
+              <div className="space-y-2 text-sm" style={{
+                color: 'var(--custom-text, #666666)'
+              }}>
                 <div className="flex justify-between">
                   <span>Spectacles:</span>
-                  <span className="font-medium text-gray-900">{artist.shows}</span>
+                  <span className="font-medium" style={{
+                    color: 'var(--custom-cardText, #18181b)'
+                  }}>
+                    {artist.shows}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span>Revenus:</span>

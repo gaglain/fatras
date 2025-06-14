@@ -22,24 +22,40 @@ export const PendingTasksCard: React.FC = () => {
   };
 
   return (
-    <Card className="xl:col-span-1 bg-white border border-gray-200 hover:shadow-md transition-shadow">
+    <Card className="xl:col-span-1 hover:shadow-md transition-shadow" style={{
+      background: 'var(--custom-cardBg, #ffffff)',
+      color: 'var(--custom-cardText, #18181b)',
+      border: '1px solid rgba(0,0,0,0.1)'
+    }}>
       <CardHeader>
-        <CardTitle className="flex items-center text-gray-900">
-          <CheckSquare className="h-5 w-5 mr-2" />
+        <CardTitle className="flex items-center" style={{
+          color: 'var(--custom-cardText, #18181b)'
+        }}>
+          <CheckSquare className="h-5 w-5 mr-2" style={{
+            color: 'var(--custom-buttonBg, #1632f4)'
+          }} />
           Tâches Prioritaires
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
           {pendingTasks.map((task) => (
-            <div key={task.id} className="p-3 border border-gray-200 rounded-lg hover:border-brand-primary/30 transition-colors">
+            <div key={task.id} className="p-3 rounded-lg transition-colors" style={{
+              border: '1px solid rgba(0,0,0,0.1)'
+            }}>
               <div className="flex items-center justify-between mb-2">
-                <h4 className="text-sm font-medium text-gray-900">{task.title}</h4>
+                <h4 className="text-sm font-medium" style={{
+                  color: 'var(--custom-cardText, #18181b)'
+                }}>
+                  {task.title}
+                </h4>
                 <Badge className={getPriorityColor(task.priority)}>
                   {task.priority}
                 </Badge>
               </div>
-              <div className="flex items-center text-xs text-gray-600">
+              <div className="flex items-center text-xs" style={{
+                color: 'var(--custom-text, #666666)'
+              }}>
                 <Clock className="h-3 w-3 mr-1" />
                 Échéance: {new Date(task.deadline).toLocaleDateString('fr-FR')}
               </div>

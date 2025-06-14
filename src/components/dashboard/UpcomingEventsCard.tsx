@@ -45,24 +45,40 @@ export const UpcomingEventsCard: React.FC = () => {
   };
 
   return (
-    <Card className="xl:col-span-1 bg-white border border-gray-200 hover:shadow-md transition-shadow">
+    <Card className="xl:col-span-1 hover:shadow-md transition-shadow" style={{
+      background: 'var(--custom-cardBg, #ffffff)',
+      color: 'var(--custom-cardText, #18181b)',
+      border: '1px solid rgba(0,0,0,0.1)'
+    }}>
       <CardHeader>
-        <CardTitle className="flex items-center text-gray-900">
-          <Calendar className="h-5 w-5 mr-2" />
+        <CardTitle className="flex items-center" style={{
+          color: 'var(--custom-cardText, #18181b)'
+        }}>
+          <Calendar className="h-5 w-5 mr-2" style={{
+            color: 'var(--custom-buttonBg, #1632f4)'
+          }} />
           Prochains Événements
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
           {upcomingEvents.map((event) => (
-            <div key={event.id} className="p-3 border border-gray-200 rounded-lg hover:border-brand-primary/30 transition-colors">
+            <div key={event.id} className="p-3 rounded-lg transition-colors" style={{
+              border: '1px solid rgba(0,0,0,0.1)'
+            }}>
               <div className="flex items-center justify-between mb-2">
-                <h4 className="text-sm font-medium truncate text-gray-900">{event.title}</h4>
+                <h4 className="text-sm font-medium truncate" style={{
+                  color: 'var(--custom-cardText, #18181b)'
+                }}>
+                  {event.title}
+                </h4>
                 <Badge className={getStatusColor(event.status)}>
                   {event.status}
                 </Badge>
               </div>
-              <div className="space-y-1 text-xs text-gray-600">
+              <div className="space-y-1 text-xs" style={{
+                color: 'var(--custom-text, #666666)'
+              }}>
                 <div className="flex items-center">
                   <Calendar className="h-3 w-3 mr-1" />
                   {new Date(event.date).toLocaleDateString('fr-FR')}
