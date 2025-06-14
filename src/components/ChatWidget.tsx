@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,7 +11,7 @@ import { ChannelCreator } from '@/components/messaging/ChannelCreator';
 
 export const ChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(isMinimized);
   const [message, setMessage] = useState('');
   const [selectedChannel, setSelectedChannel] = useState('general');
 
@@ -69,7 +68,11 @@ export const ChatWidget: React.FC = () => {
           setIsOpen(!isOpen);
           if (!isOpen) setIsMinimized(false);
         }}
-        className="h-14 w-14 rounded-full bg-[#ec5f65] hover:bg-[#ec5f65]/90 shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-110"
+        className="h-14 w-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-110"
+        style={{
+          backgroundColor: "var(--custom-secondary, #ec5f65)",
+          color: "#fff",
+        }}
       >
         <MessageCircle className="h-6 w-6 text-white" />
         {totalUnread > 0 && (
@@ -84,7 +87,12 @@ export const ChatWidget: React.FC = () => {
         <Card className={`absolute bottom-20 right-0 shadow-2xl transition-all duration-300 ${
           isMinimized ? 'w-80 h-16' : 'w-96 h-[600px]'
         }`}>
-          <CardHeader className="pb-3 border-b bg-[#ec5f65] text-white rounded-t-lg">
+          <CardHeader className="pb-3 border-b rounded-t-lg"
+            style={{
+              backgroundColor: "var(--custom-secondary, #ec5f65)",
+              color: "#fff"
+            }}
+          >
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm flex items-center">
                 {currentChannel?.type === 'channel' ? <Hash className="h-4 w-4 mr-2" /> : <MessageSquare className="h-4 w-4 mr-2" />}
