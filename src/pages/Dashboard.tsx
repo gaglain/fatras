@@ -22,11 +22,11 @@ export const Dashboard: React.FC = () => {
         <p className="mt-2" style={{
           color: 'var(--custom-text, #666666)'
         }}>
-          Bienvenue ! Voici un résumé de vos activités.
+          Bienvenue ! Voici un résumé de vos activités en temps réel.
         </p>
       </div>
 
-      {/* Stats Grid with hover animations */}
+      {/* Stats Grid with real data */}
       <DashboardStatsCards />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
