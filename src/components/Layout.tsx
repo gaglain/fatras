@@ -21,7 +21,9 @@ export const Layout: React.FC = () => {
   const { theme } = useTheme();
 
   // Vérifier si on est sur une route back-office
-  const isAdminRoute = adminRoutes.some(route => location.pathname === route || location.pathname.startsWith(route + '/'));
+  const isAdminRoute = adminRoutes.some(route =>
+    location.pathname === route || location.pathname.startsWith(route + '/')
+  );
 
   // Gère les redirections historiques
   if (location.pathname === '/website/backoffice') {
@@ -40,38 +42,46 @@ export const Layout: React.FC = () => {
     }
   }
 
-  // Styles selon les thèmes pour le back-office
+  // Couleurs personnalisées du back-office
+  // Sidebar doit être bleue en sombre, blanche en clair
+  // On force les classes sur le sidebar via un wrapper dédié au back-office
   const backBg = theme === 'dark' ? "bg-[#1632f4]" : "bg-white";
   const backText = theme === 'dark' ? "text-white" : "text-[#1632f4]";
+  const sidebarBg = theme === 'dark' ? "bg-[#1632f4]" : "bg-white";
+  const sidebarText = theme === 'dark' ? "text-white" : "text-[#1632f4]";
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${
       isAdminRoute ? `${backBg} ${backText}` : "bg-background"
     }`}>
-    {isAdminRoute ? (
-      <SidebarProvider>
-        <div className="flex h-screen w-full">
-          <AppSidebar />
-          <div className="flex-1 flex flex-col overflow-hidden">
-            <BackOfficeHeader />
-            {/* Ajout de l'espace : padding plus important */}
-            <main className="flex-1 overflow-auto p-6 sm:p-8 lg:p-12">
-              <Outlet />
-            </main>
-            {/* Notifications Toaster et Widget Chat toujours présents */}
-            <Toaster />
-            <ChatWidget />
+      {isAdminRoute ? (
+        <SidebarProvider>
+          <div className="flex h-screen w-full">
+            <div className={`h-full ${sidebarBg} ${sidebarText} transition-colors duration-300`}>
+              {/* On passe la couleur à AppSidebar via une classe personnalisée */}
+              <AppSidebar />
+            </div>
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <BackOfficeHeader />
+              {/* Espace important partout */}
+              <main className="flex-1 overflow-auto p-6 sm:p-8 lg:p-12">
+                <Outlet />
+              </main>
+              {/* Notifications et chat back-office */}
+              <Toaster />
+              <ChatWidget />
+            </div>
           </div>
-        </div>
-      </SidebarProvider>
-    ) : (
-      <>
-        {/* Padding renforcé côté front aussi */}
-        <main className="flex-1 min-h-screen p-6 sm:p-10">
-          <Outlet />
-        </main>
-      </>
-    )}
+        </SidebarProvider>
+      ) : (
+        <>
+          {/* Padding renforcé côté front aussi */}
+          <main className="flex-1 min-h-screen p-6 sm:p-10">
+            <Outlet />
+          </main>
+          {/* Toaster si besoin sur les routes front (optionnel) */}
+        </>
+      )}
     </div>
   );
 };
