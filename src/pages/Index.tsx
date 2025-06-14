@@ -9,14 +9,17 @@ const Index = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen flex items-center justify-center transition-colors duration-300" style={{
+      background: 'var(--custom-background, #ffffff)',
+      color: 'var(--custom-text, #18181b)'
+    }}>
       <div className="w-full max-w-md p-6">
         <Card className="shadow-xl">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-gray-800">
+            <CardTitle className="text-2xl font-bold">
               Fatras Booking
             </CardTitle>
-            <CardDescription className="text-gray-600">
+            <CardDescription>
               Système de gestion pour bookers professionnels
             </CardDescription>
           </CardHeader>
@@ -26,7 +29,7 @@ const Index = () => {
               <Button 
                 variant="outline" 
                 onClick={() => navigate('/front')}
-                className="w-full"
+                className="w-full back-office-button"
               >
                 Voir le site public
               </Button>

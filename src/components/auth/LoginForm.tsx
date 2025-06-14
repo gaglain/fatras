@@ -97,7 +97,7 @@ export const LoginForm = () => {
               required
             />
           </div>
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button type="submit" className="w-full back-office-button" disabled={isLoading}>
             {isLoading ? 'Chargement...' : (isSignUp ? 'Créer le compte' : 'Se connecter')}
           </Button>
         </form>
@@ -106,6 +106,7 @@ export const LoginForm = () => {
             variant="link"
             onClick={() => setIsSignUp(!isSignUp)}
             className="text-sm"
+            style={{ color: 'var(--custom-buttonBg, #1632f4)' }}
           >
             {isSignUp 
               ? 'Déjà un compte ? Se connecter' 
