@@ -77,8 +77,9 @@ export const Header: React.FC = () => {
               }}
             />
           ) : (
-            <div className="h-6 w-6 lg:h-8 lg:w-8 rounded flex items-center justify-center hidden sm:flex" style={{
-              background: 'var(--custom-buttonBg, #1632f4)'
+            <div className="h-6 w-6 lg:h-8 lg:w-8 flex items-center justify-center hidden sm:flex" style={{
+              background: 'var(--custom-buttonBg, #1632f4)',
+              borderRadius: '4px'
             }}>
               <span className="font-bold text-xs lg:text-sm" style={{
                 color: 'var(--custom-buttonText, #ffffff)'
@@ -96,8 +97,9 @@ export const Header: React.FC = () => {
 
         <div className="flex items-center space-x-2 lg:space-x-4">
           <div className="flex items-center space-x-1 lg:space-x-2">
-            <Button variant="ghost" size="sm" className="hidden sm:flex hover:bg-opacity-10" style={{
-              color: 'var(--custom-text, #666666)'
+            <Button variant="ghost" size="sm" className="hidden sm:flex border-0" style={{
+              color: 'var(--custom-text, #666666)',
+              borderRadius: '0'
             }}>
               <Search className="h-4 w-4" />
             </Button>
@@ -109,9 +111,10 @@ export const Header: React.FC = () => {
                 variant="ghost"
                 size="sm"
                 onClick={handleNotificationClick}
-                className="relative hover:bg-opacity-10"
+                className="relative border-0"
                 style={{
-                  color: 'var(--custom-text, #666666)'
+                  color: 'var(--custom-text, #666666)',
+                  borderRadius: '0'
                 }}
               >
                 <Bell className="h-4 w-4" />
@@ -135,14 +138,16 @@ export const Header: React.FC = () => {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center space-x-2 h-8 px-2 lg:px-3 hover:bg-opacity-10" style={{
-                color: 'var(--custom-text, #666666)'
+              <Button variant="ghost" className="flex items-center space-x-2 h-8 px-2 lg:px-3 border-0" style={{
+                color: 'var(--custom-text, #666666)',
+                borderRadius: '0'
               }}>
-                <Avatar className="h-6 w-6 lg:h-8 lg:w-8">
+                <Avatar className="h-6 w-6 lg:h-8 lg:w-8" style={{ borderRadius: '4px' }}>
                   <AvatarImage src={currentUser?.avatar} alt={currentUser?.name} />
                   <AvatarFallback className="text-xs" style={{
                     background: 'var(--custom-buttonBg, #1632f4)',
-                    color: 'var(--custom-buttonText, #ffffff)'
+                    color: 'var(--custom-buttonText, #ffffff)',
+                    borderRadius: '4px'
                   }}>
                     {currentUser?.name?.split(' ').map(n => n[0]).join('') || 'U'}
                   </AvatarFallback>
@@ -157,9 +162,10 @@ export const Header: React.FC = () => {
                 }} />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" forceMount style={{
+            <DropdownMenuContent className="w-56 border-0" align="end" forceMount style={{
               background: 'var(--custom-cardBg, #ffffff)',
-              border: '1px solid rgba(0,0,0,0.1)'
+              border: '1px solid rgba(0,0,0,0.1)',
+              borderRadius: '4px'
             }}>
               <div className="px-3 py-2 border-b" style={{
                 borderColor: 'rgba(0,0,0,0.1)'
@@ -175,22 +181,25 @@ export const Header: React.FC = () => {
                   {currentUser?.email || 'email@exemple.com'}
                 </p>
               </div>
-              <DropdownMenuItem onClick={() => setShowUserProfile(true)} className="hover:bg-opacity-10" style={{
-                color: 'var(--custom-text, #666666)'
+              <DropdownMenuItem onClick={() => setShowUserProfile(true)} className="border-0" style={{
+                color: 'var(--custom-text, #666666)',
+                borderRadius: '0'
               }}>
                 <User className="mr-2 h-4 w-4" />
                 <span>Profil & Préférences</span>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild className="hover:bg-opacity-10" style={{
-                color: 'var(--custom-text, #666666)'
+              <DropdownMenuItem asChild className="border-0" style={{
+                color: 'var(--custom-text, #666666)',
+                borderRadius: '0'
               }}>
                 <Link to="/messagerie">
                   <MessageSquare className="mr-2 h-4 w-4" />
                   <span>Messages</span>
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild className="hover:bg-opacity-10" style={{
-                color: 'var(--custom-text, #666666)'
+              <DropdownMenuItem asChild className="border-0" style={{
+                color: 'var(--custom-text, #666666)',
+                borderRadius: '0'
               }}>
                 <Link to="/preferences">
                   <Settings className="mr-2 h-4 w-4" />
@@ -198,8 +207,9 @@ export const Header: React.FC = () => {
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="hover:bg-opacity-10" style={{
-                color: 'var(--custom-text, #666666)'
+              <DropdownMenuItem className="border-0" style={{
+                color: 'var(--custom-text, #666666)',
+                borderRadius: '0'
               }}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Déconnexion</span>

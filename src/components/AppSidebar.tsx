@@ -24,10 +24,7 @@ export function AppSidebar() {
   const location = useLocation();
   const { theme } = useTheme();
 
-  // Couleur d'icône paramétrable par l'utilisateur (préférences couleurs)
-  // Récupération des variables CSS custom
   function getSidebarIconColor(): string {
-    // Les variables CSS sont stockées en "--custom-sidebarIconLight" et "--custom-sidebarIconDark"
     const root = document.documentElement;
     if (theme === "dark") {
       return getComputedStyle(root).getPropertyValue("--custom-sidebarIconDark")?.trim() || "#ffffff";
@@ -37,15 +34,7 @@ export function AppSidebar() {
   }
 
   const sidebarIconColor = getSidebarIconColor();
-
-  // Définir les couleurs dynamiques selon le thème
   const isDark = theme === 'dark';
-  const sidebarBg = isDark ? 'bg-[#1632f4]' : 'bg-white';
-  const sidebarText = isDark ? 'text-white' : 'text-[#1632f4]';
-  // Trait gauche rose dans le back office (ex: #ec5f65)
-  const sidebarBorder = isDark
-    ? 'border-l-4 border-[#ec5f65]'
-    : 'border-l-4 border-[#1632f4]';
 
   const isActiveItem = (href: string) => location.pathname === href;
   
@@ -57,20 +46,32 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar className={`${sidebarBg} ${sidebarText} ${sidebarBorder} h-full transition-colors duration-300`}>
-      <SidebarHeader className={`border-b border-border ${sidebarBg} px-4 py-4`}>
+    <Sidebar className="h-full transition-colors duration-300" style={{
+      background: 'var(--custom-cardBg, #ffffff)',
+      color: 'var(--custom-cardText, #18181b)',
+      borderRight: `1px solid var(--custom-buttonBg, #1632f4)`
+    }}>
+      <SidebarHeader className="border-b px-4 py-4" style={{
+        borderColor: 'var(--custom-buttonBg, #1632f4)',
+        background: 'var(--custom-cardBg, #ffffff)'
+      }}>
         <div className="flex items-center">
-          <h2 className={`text-base lg:text-lg font-semibold truncate ${sidebarText}`}>Navigation</h2>
+          <h2 className="text-base lg:text-lg font-semibold truncate" style={{
+            color: 'var(--custom-cardText, #18181b)'
+          }}>
+            Navigation
+          </h2>
         </div>
       </SidebarHeader>
-      <SidebarContent className={`${sidebarBg}`}>
+      <SidebarContent style={{
+        background: 'var(--custom-cardBg, #ffffff)'
+      }}>
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
               {navigation.map((item) => {
                 if (!item.visible) return null;
 
-                // Élément avec enfants = menu avec sous-menus
                 if (item.children) {
                   const isOpen = openSections.includes(item.name);
                   const isActive = isActiveSection(item);
@@ -80,18 +81,25 @@ export function AppSidebar() {
                       <SidebarMenuItem>
                         <CollapsibleTrigger asChild>
                           <SidebarMenuButton
-                            className={`w-full justify-between ${sidebarText} hover:bg-accent hover:text-[#1632f4] transition-colors rounded-none ${
-                              isActive ? 'bg-accent text-[#1632f4] font-medium' : ''
-                            }`}
+                            className="w-full justify-between transition-colors border-0 rounded-none"
+                            style={{
+                              color: 'var(--custom-cardText, #18181b)',
+                              backgroundColor: isActive ? 'var(--custom-buttonBg, #1632f4)' : 'transparent',
+                              '--tw-text-opacity': isActive ? '1' : '0.8'
+                            }}
                           >
                             <div className="flex items-center min-w-0">
-                              <item.icon className={`mr-3 h-4 w-4 flex-shrink-0`} color={sidebarIconColor} />
-                              <span className={`truncate text-sm ${sidebarText}`}>{item.name}</span>
+                              <item.icon className="mr-3 h-4 w-4 flex-shrink-0" color={isActive ? '#ffffff' : sidebarIconColor} />
+                              <span className="truncate text-sm" style={{
+                                color: isActive ? '#ffffff' : 'var(--custom-cardText, #18181b)'
+                              }}>
+                                {item.name}
+                              </span>
                             </div>
                             {isOpen ? (
-                              <ChevronDown className={`h-4 w-4 flex-shrink-0`} color={sidebarIconColor} />
+                              <ChevronDown className="h-4 w-4 flex-shrink-0" color={isActive ? '#ffffff' : sidebarIconColor} />
                             ) : (
-                              <ChevronRight className={`h-4 w-4 flex-shrink-0`} color={sidebarIconColor} />
+                              <ChevronRight className="h-4 w-4 flex-shrink-0" color={isActive ? '#ffffff' : sidebarIconColor} />
                             )}
                           </SidebarMenuButton>
                         </CollapsibleTrigger>
@@ -101,14 +109,18 @@ export function AppSidebar() {
                               <SidebarMenuSubItem key={child.name}>
                                 <SidebarMenuSubButton 
                                   asChild 
-                                  className={`hover:bg-accent transition-colors rounded-none ${
-                                    isActiveItem(child.href) ? 'bg-accent text-[#1632f4] font-medium' : 'text-[#1632f4]'
-                                  }`}
+                                  className="transition-colors border-0 rounded-none"
+                                  style={{
+                                    backgroundColor: isActiveItem(child.href) ? 'var(--custom-buttonBg, #1632f4)' : 'transparent'
+                                  }}
                                 >
                                   <Link to={child.href} className="flex items-center min-w-0">
-                                    {/* Ici couleur dynamique icône sous-menu */}
-                                    <child.icon className="mr-3 h-4 w-4 flex-shrink-0" color={sidebarIconColor} />
-                                    <span className="truncate text-sm" style={{ color: theme === 'dark' ? '#fff' : '#1632f4' }}>{child.name}</span>
+                                    <child.icon className="mr-3 h-4 w-4 flex-shrink-0" color={isActiveItem(child.href) ? '#ffffff' : sidebarIconColor} />
+                                    <span className="truncate text-sm" style={{
+                                      color: isActiveItem(child.href) ? '#ffffff' : 'var(--custom-cardText, #18181b)'
+                                    }}>
+                                      {child.name}
+                                    </span>
                                   </Link>
                                 </SidebarMenuSubButton>
                               </SidebarMenuSubItem>
@@ -120,19 +132,23 @@ export function AppSidebar() {
                   );
                 }
 
-                // Élément de menu simple
                 return (
                   <SidebarMenuItem key={item.name}>
                     <SidebarMenuButton 
                       asChild 
-                      className={`${sidebarText} hover:bg-accent hover:text-[#1632f4] transition-colors rounded-none ${
-                        isActiveItem(item.href) ? 'bg-accent text-[#1632f4] font-medium' : ''
-                      }`}
+                      className="transition-colors border-0 rounded-none"
+                      style={{
+                        color: 'var(--custom-cardText, #18181b)',
+                        backgroundColor: isActiveItem(item.href) ? 'var(--custom-buttonBg, #1632f4)' : 'transparent'
+                      }}
                     >
                       <Link to={item.href} className="flex items-center min-w-0">
-                        {/* Ici couleur dynamique pour icônes des menus principaux aussi */}
-                        <item.icon className={`mr-3 h-4 w-4 flex-shrink-0`} color={sidebarIconColor} />
-                        <span className={`truncate text-sm ${sidebarText}`}>{item.name}</span>
+                        <item.icon className="mr-3 h-4 w-4 flex-shrink-0" color={isActiveItem(item.href) ? '#ffffff' : sidebarIconColor} />
+                        <span className="truncate text-sm" style={{
+                          color: isActiveItem(item.href) ? '#ffffff' : 'var(--custom-cardText, #18181b)'
+                        }}>
+                          {item.name}
+                        </span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

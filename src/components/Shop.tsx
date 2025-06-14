@@ -107,13 +107,19 @@ export const Shop: React.FC = () => {
   };
 
   return (
-    <div className="pt-20 min-h-screen bg-gray-50">
+    <div className="pt-20 min-h-screen" style={{
+      background: 'var(--custom-background, #f5f5f5)'
+    }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-center mb-12">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <h1 className="text-3xl md:text-4xl font-bold mb-4" style={{
+            color: 'var(--custom-text, #18181b)'
+          }}>
             Boutique Officielle
           </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-lg max-w-2xl mx-auto" style={{
+            color: 'var(--custom-text, #666666)'
+          }}>
             Découvrez notre collection exclusive de produits dérivés et souvenirs
           </p>
         </div>
@@ -124,7 +130,10 @@ export const Shop: React.FC = () => {
             const hasVariations = product.variations.length > 1;
             
             return (
-              <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow group">
+              <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow group border-0" style={{
+                background: 'var(--custom-cardBg, #ffffff)',
+                borderRadius: '8px'
+              }}>
                 <div className="aspect-square overflow-hidden">
                   <img 
                     src={product.image} 
@@ -134,16 +143,23 @@ export const Shop: React.FC = () => {
                 </div>
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <Badge variant="secondary" className="text-xs">
+                    <Badge variant="secondary" className="text-xs border-0" style={{
+                      background: 'var(--custom-buttonBg, #1632f4)',
+                      color: 'var(--custom-buttonText, #ffffff)'
+                    }}>
                       {product.category}
                     </Badge>
                     <div className="flex items-center text-yellow-500">
                       <Star className="h-3 w-3 fill-current" />
-                      <span className="ml-1 text-xs text-gray-600">{product.rating}</span>
+                      <span className="ml-1 text-xs" style={{
+                        color: 'var(--custom-text, #666666)'
+                      }}>{product.rating}</span>
                     </div>
                   </div>
                   
-                  <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
+                  <h3 className="font-semibold mb-2 line-clamp-2" style={{
+                    color: 'var(--custom-cardText, #18181b)'
+                  }}>
                     {product.name}
                   </h3>
                   
@@ -153,12 +169,22 @@ export const Shop: React.FC = () => {
                         value={selectedVariations[product.id] || product.variations[0].id}
                         onValueChange={(value) => handleVariationSelect(product.id, value)}
                       >
-                        <SelectTrigger className="w-full text-xs">
+                        <SelectTrigger className="w-full text-xs border-0" style={{
+                          background: 'var(--custom-background, #f5f5f5)',
+                          color: 'var(--custom-text, #18181b)',
+                          borderRadius: '4px'
+                        }}>
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent style={{
+                          background: 'var(--custom-cardBg, #ffffff)',
+                          border: '1px solid rgba(0,0,0,0.1)',
+                          borderRadius: '4px'
+                        }}>
                           {product.variations.map((variation) => (
-                            <SelectItem key={variation.id} value={variation.id}>
+                            <SelectItem key={variation.id} value={variation.id} style={{
+                              color: 'var(--custom-cardText, #18181b)'
+                            }}>
                               <div className="flex items-center justify-between w-full">
                                 <span>
                                   {variation.size && `${variation.size} `}
@@ -176,16 +202,24 @@ export const Shop: React.FC = () => {
                   
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-lg font-bold text-gray-900">
+                      <span className="text-lg font-bold" style={{
+                        color: 'var(--custom-cardText, #18181b)'
+                      }}>
                         {getDisplayPrice(product)}€
                       </span>
                       {selectedVariation && (
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs" style={{
+                          color: 'var(--custom-text, #666666)'
+                        }}>
                           Stock: {selectedVariation.stock}
                         </div>
                       )}
                     </div>
-                    <Button size="sm" disabled={!selectedVariation || selectedVariation.stock === 0}>
+                    <Button size="sm" disabled={!selectedVariation || selectedVariation.stock === 0} className="border-0" style={{
+                      backgroundColor: selectedVariation && selectedVariation.stock > 0 ? 'var(--custom-buttonBg, #1632f4)' : 'var(--custom-text, #999999)',
+                      color: 'var(--custom-buttonText, #ffffff)',
+                      borderRadius: '4px'
+                    }}>
                       <ShoppingBag className="h-4 w-4 mr-1" />
                       {selectedVariation && selectedVariation.stock > 0 ? 'Ajouter' : 'Rupture'}
                     </Button>
@@ -197,7 +231,12 @@ export const Shop: React.FC = () => {
         </div>
 
         <div className="text-center mt-12">
-          <Button size="lg" variant="outline">
+          <Button size="lg" variant="outline" className="border-0" style={{
+            color: 'var(--custom-buttonBg, #1632f4)',
+            borderColor: 'var(--custom-buttonBg, #1632f4)',
+            background: 'transparent',
+            borderRadius: '4px'
+          }}>
             Voir Plus de Produits
           </Button>
         </div>

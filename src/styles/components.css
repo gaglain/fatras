@@ -22,7 +22,7 @@
     transition: all 0.2s ease;
     font-weight: 500;
     position: relative;
-    border-radius: 8px;
+    border-radius: 0;
   }
 
   .arc-nav-link:hover {
@@ -40,7 +40,7 @@
     background: linear-gradient(90deg, rgb(var(--color-accent-red)), rgb(var(--color-accent-pink)));
     transition: all 0.3s ease;
     transform: translateX(-50%);
-    border-radius: 1px;
+    border-radius: 0;
   }
 
   .arc-nav-link:hover::after {
@@ -60,7 +60,7 @@
     color: rgb(var(--color-primary));
     font-weight: 600;
     padding: 0.75rem 1.5rem;
-    border-radius: 12px;
+    border-radius: 4px;
     transition: all 0.2s ease;
     border: 0;
     box-shadow: 0 4px 20px rgba(22, 50, 244, 0.15);
@@ -78,7 +78,7 @@
     color: rgb(var(--color-primary));
     font-weight: 500;
     padding: 0.5rem 1.25rem;
-    border-radius: 10px;
+    border-radius: 4px;
     transition: all 0.2s ease;
     border: 2px solid white;
     backdrop-filter: blur(10px);
@@ -111,7 +111,7 @@
   .arc-card {
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 16px;
+    border-radius: 8px;
     backdrop-filter: blur(20px);
     transition: all 0.3s ease;
   }
@@ -177,61 +177,149 @@
     border: 1px solid rgb(var(--color-accent-pink));
   }
 
-  /* Support couleurs custom pour texte, fond, boutons… */
-  body, .arc-content {
+  /* CORRECTION GLOBALE - Application universelle du thème */
+  
+  /* Corps et arrière-plan global */
+  body, 
+  .arc-content,
+  html,
+  #root,
+  main,
+  div,
+  section,
+  article,
+  aside {
     background: var(--custom-background, #fff) !important;
     color: var(--custom-text, #18181b) !important;
-    transition: background 0.1s, color 0.1s;
+    transition: background 0.3s, color 0.3s;
   }
-  .dark body, .dark .arc-content {
+  
+  .dark body, 
+  .dark .arc-content,
+  .dark html,
+  .dark #root,
+  .dark main,
+  .dark div,
+  .dark section,
+  .dark article,
+  .dark aside {
     background: var(--custom-backgroundDark, #18181b) !important;
     color: var(--custom-textDark, #fff) !important;
   }
 
-  /* Cartes avec fond et texte personnalisables */
-  .arc-card, .card {
-    background: var(--custom-cardBg, #18181b) !important;
-    color: var(--custom-cardText, #fff) !important;
-    border: 1px solid rgba(255,255,255,0.15);
-    border-radius: 16px;
+  /* Textes et titres - FORCE l'application */
+  h1, h2, h3, h4, h5, h6,
+  p, span, div, 
+  .text-gray-900,
+  .text-gray-800,
+  .text-gray-700,
+  .text-gray-600,
+  .text-black,
+  [class*="text-"],
+  label,
+  .card-title,
+  .font-semibold,
+  .font-bold,
+  .font-medium {
+    color: var(--custom-text, #18181b) !important;
+  }
+
+  .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6,
+  .dark p, .dark span, .dark div,
+  .dark .text-gray-900,
+  .dark .text-gray-800,
+  .dark .text-gray-700,
+  .dark .text-gray-600,
+  .dark .text-black,
+  .dark [class*="text-"],
+  .dark label,
+  .dark .card-title,
+  .dark .font-semibold,
+  .dark .font-bold,
+  .dark .font-medium {
+    color: var(--custom-textDark, #fff) !important;
+  }
+
+  /* Cartes avec couleurs personnalisées - SUPPRESSION des bordures arrondies */
+  .arc-card, 
+  .card,
+  [class*="card"],
+  .bg-white,
+  .bg-gray-50,
+  .border {
+    background: var(--custom-cardBg, #ffffff) !important;
+    color: var(--custom-cardText, #18181b) !important;
+    border: 1px solid rgba(0,0,0,0.1) !important;
+    border-radius: 4px !important;
     box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     transition: background 0.2s, color 0.2s;
   }
-  .dark .arc-card, .dark .card {
+  
+  .dark .arc-card, 
+  .dark .card,
+  .dark [class*="card"],
+  .dark .bg-white,
+  .dark .bg-gray-50,
+  .dark .border {
     background: var(--custom-cardBgDark, #22223a) !important;
     color: var(--custom-cardTextDark, #fff) !important;
   }
 
-  /* CORRECTION MAJEURE - Tous les boutons du back-office */
+  /* SUPPRESSION GLOBALE des border-radius */
+  *, *::before, *::after {
+    border-radius: 0 !important;
+  }
+
+  /* Exceptions pour certains éléments qui doivent rester ronds */
+  .rounded-full,
+  [class*="rounded-full"],
+  .avatar,
+  .badge,
+  .notification-dot,
+  .status-indicator {
+    border-radius: 50% !important;
+  }
+
+  /* Boutons carrés */
+  .rounded-md,
+  .rounded-lg,
+  .rounded,
+  [class*="rounded-"] {
+    border-radius: 4px !important;
+  }
+
+  /* TOUS LES BOUTONS - Application forcée du thème */
   button, 
   .back-office-button,
   [role="button"],
   .button,
-  button[type="button"],
-  button[type="submit"],
+  input[type="button"],
   input[type="submit"],
-  .bg-green-600, 
-  .bg-blue-600, 
-  .bg-primary,
+  .btn,
+  [class*="bg-blue"],
+  [class*="bg-green"], 
+  [class*="bg-purple"],
+  [class*="bg-primary"],
   [data-state="checked"],
   [data-state="on"] {
     background-color: var(--custom-buttonBg, #1632f4) !important;
     color: var(--custom-buttonText, #fff) !important;
     border: 1px solid var(--custom-buttonBg, #1632f4) !important;
+    border-radius: 4px !important;
     transition: all 0.2s ease !important;
   }
 
-  /* Mode sombre pour tous les boutons */
   .dark button, 
   .dark .back-office-button,
   .dark [role="button"],
   .dark .button,
-  .dark button[type="button"],
-  .dark button[type="submit"],
+  .dark input[type="button"],
   .dark input[type="submit"],
-  .dark .bg-green-600, 
-  .dark .bg-blue-600, 
-  .dark .bg-primary,
+  .dark .btn,
+  .dark [class*="bg-blue"],
+  .dark [class*="bg-green"], 
+  .dark [class*="bg-purple"],
+  .dark [class*="bg-primary"],
   .dark [data-state="checked"],
   .dark [data-state="on"] {
     background-color: var(--custom-buttonBgDark, #fff) !important;
@@ -239,60 +327,49 @@
     border: 1px solid var(--custom-buttonBgDark, #fff) !important;
   }
 
-  /* Boutons outline - fond transparent avec bordure colorée */
-  button[data-variant="outline"],
-  .button-outline,
-  button.variant-outline,
-  [class*="variant-outline"],
-  button[class*="outline"] {
+  /* Boutons outline */
+  [data-variant="outline"],
+  .variant-outline,
+  [class*="outline"],
+  button[class*="border-"] {
     background-color: transparent !important;
     color: var(--custom-buttonBg, #1632f4) !important;
     border: 1px solid var(--custom-buttonBg, #1632f4) !important;
   }
 
-  .dark button[data-variant="outline"],
-  .dark .button-outline,
-  .dark button.variant-outline,
-  .dark [class*="variant-outline"],
-  .dark button[class*="outline"] {
+  .dark [data-variant="outline"],
+  .dark .variant-outline,
+  .dark [class*="outline"],
+  .dark button[class*="border-"] {
     background-color: transparent !important;
     color: var(--custom-buttonBgDark, #fff) !important;
     border: 1px solid var(--custom-buttonBgDark, #fff) !important;
   }
 
-  /* Hover states pour tous les boutons */
-  button:hover, 
-  .back-office-button:hover,
-  [role="button"]:hover,
-  .button:hover,
-  button[type="button"]:hover,
-  button[type="submit"]:hover,
-  input[type="submit"]:hover {
-    opacity: 0.9 !important;
-    transform: translateY(-1px) !important;
-  }
-
-  /* Champs de saisie avec couleurs personnalisées */
+  /* Champs de saisie */
   input, 
   textarea, 
   select,
-  .arc-input {
+  .input,
+  [class*="input"] {
     color: var(--custom-text, #18181b) !important;
     background: var(--custom-background, #fff) !important;
-    border-color: var(--custom-buttonBg, #1632f4) !important;
+    border: 1px solid var(--custom-buttonBg, #1632f4) !important;
+    border-radius: 4px !important;
     transition: all 0.2s ease !important;
   }
 
   .dark input, 
   .dark textarea, 
   .dark select,
-  .dark .arc-input {
+  .dark .input,
+  .dark [class*="input"] {
     color: var(--custom-textDark, #fff) !important;
     background: var(--custom-backgroundDark, #18181b) !important;
-    border-color: var(--custom-buttonBgDark, #fff) !important;
+    border: 1px solid var(--custom-buttonBgDark, #fff) !important;
   }
 
-  /* Couleurs personnalisées pour le widget de messagerie */
+  /* Widget de messagerie - Couleurs personnalisées */
   :root {
     --custom-chatWidgetBg: #ec5f65;
     --custom-chatWidgetBgDark: #ec5f65;
@@ -300,83 +377,42 @@
     --custom-chatWidgetIconDark: #ffffff;
   }
 
-  /* Widget de messagerie - bouton principal */
-  .chat-widget-button {
-    background-color: var(--custom-chatWidgetBg, #ec5f65) !important;
-    color: var(--custom-chatWidgetIcon, #ffffff) !important;
-  }
-  .dark .chat-widget-button {
-    background-color: var(--custom-chatWidgetBgDark, #ec5f65) !important;
-    color: var(--custom-chatWidgetIconDark, #ffffff) !important;
-  }
-
-  /* Widget de messagerie - icônes */
-  .chat-widget-icon {
-    color: var(--custom-chatWidgetIcon, #ffffff) !important;
-  }
-  .dark .chat-widget-icon {
-    color: var(--custom-chatWidgetIconDark, #ffffff) !important;
+  /* Dropdowns et menus */
+  .dropdown-menu,
+  .select-content,
+  .popover-content,
+  [role="menu"],
+  [role="listbox"] {
+    background: var(--custom-cardBg, #ffffff) !important;
+    color: var(--custom-cardText, #18181b) !important;
+    border: 1px solid rgba(0,0,0,0.1) !important;
+    border-radius: 4px !important;
   }
 
-  /* Widget de messagerie - header */
-  .chat-widget-header {
-    background-color: var(--custom-chatWidgetBg, #ec5f65) !important;
-  }
-  .dark .chat-widget-header {
-    background-color: var(--custom-chatWidgetBgDark, #ec5f65) !important;
-  }
-
-  /* Widget de messagerie - texte dans header */
-  .chat-widget-text {
-    color: var(--custom-chatWidgetIcon, #ffffff) !important;
-  }
-  .dark .chat-widget-text {
-    color: var(--custom-chatWidgetIconDark, #ffffff) !important;
+  .dark .dropdown-menu,
+  .dark .select-content,
+  .dark .popover-content,
+  .dark [role="menu"],
+  .dark [role="listbox"] {
+    background: var(--custom-cardBgDark, #22223a) !important;
+    color: var(--custom-cardTextDark, #fff) !important;
   }
 
-  /* Widget de messagerie - messages envoyés */
-  .chat-widget-message-sent {
-    background-color: var(--custom-chatWidgetBg, #ec5f65) !important;
-    color: var(--custom-chatWidgetIcon, #ffffff) !important;
-  }
-  .dark .chat-widget-message-sent {
-    background-color: var(--custom-chatWidgetBgDark, #ec5f65) !important;
-    color: var(--custom-chatWidgetIconDark, #ffffff) !important;
+  /* Suppression des styles par défaut qui interfèrent */
+  .text-muted-foreground,
+  .text-secondary,
+  .muted {
+    color: var(--custom-text, #666666) !important;
   }
 
-  /* Widget de messagerie - bouton envoyer */
-  .chat-widget-send-button {
-    background-color: var(--custom-chatWidgetBg, #ec5f65) !important;
-    color: var(--custom-chatWidgetIcon, #ffffff) !important;
-  }
-  .dark .chat-widget-send-button {
-    background-color: var(--custom-chatWidgetBgDark, #ec5f65) !important;
-    color: var(--custom-chatWidgetIconDark, #ffffff) !important;
+  .dark .text-muted-foreground,
+  .dark .text-secondary,
+  .dark .muted {
+    color: var(--custom-textDark, #999999) !important;
   }
 
-  /* Forcer l'application des styles sur tous les éléments interactifs */
-  [class*="bg-purple"], 
-  [class*="purple"],
-  .bg-purple-600, 
-  .hover\:bg-purple-700, 
-  .bg-purple-500, 
-  .hover\:bg-purple-600 {
-    background-color: var(--custom-buttonBg, #1632f4) !important;
-    color: var(--custom-buttonText, #fff) !important;
-  }
-
-  .dark [class*="bg-purple"], 
-  .dark [class*="purple"],
-  .dark .bg-purple-600, 
-  .dark .hover\:bg-purple-700, 
-  .dark .bg-purple-500, 
-  .dark .hover\:bg-purple-600 {
-    background-color: var(--custom-buttonBgDark, #fff) !important;
-    color: var(--custom-buttonTextDark, #1632f4) !important;
-  }
-
-  /* Ajout d'une transition douce pour les changements de thème */
+  /* Forcer l'application des transitions douces */
   *, *::before, *::after {
-    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease !important;
   }
 }
