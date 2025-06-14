@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { SEOManager } from '@/components/SEOManager';
 import { useNavigate } from 'react-router-dom';
+import { useFileUpload } from '@/hooks/useFileUpload';
+import { toast } from 'sonner';
 import { 
   Plus, 
   Edit, 
@@ -106,6 +109,7 @@ interface WebsiteBackofficeProps {
 
 export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }) => {
   const navigate = useNavigate();
+  const { uploadFile, uploading } = useFileUpload();
   const [pages, setPages] = useState<WebPage[]>(defaultPages);
   const [selectedPage, setSelectedPage] = useState<WebPage | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -113,6 +117,8 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
   const [showSEODialog, setShowSEODialog] = useState(false);
   const [activeTab, setActiveTab] = useState('pages');
   const [logoUrl, setLogoUrl] = useState('/placeholder.svg');
+  const [siteName, setSiteName] = useState('MusiConnect');
+  const [siteDescription, setSiteDescription] = useState('Plateforme de booking d\'artistes et gestion d\'événements musicaux');
 
   const [formData, setFormData] = useState<FormData>({
     title: '',
@@ -134,7 +140,8 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
     });
   };
 
-  const handleCreatePage = () => {
+  const handleCreatePage = (e: React.FormEvent) => {
+    e.preventDefault();
     const newPage: WebPage = {
       id: Date.now().toString(),
       ...formData,
@@ -146,9 +153,11 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
     setPages([...pages, newPage]);
     setShowCreateDialog(false);
     resetForm();
+    toast.success('Page créée avec succès');
   };
 
-  const handleUpdatePage = () => {
+  const handleUpdatePage = (e: React.FormEvent) => {
+    e.preventDefault();
     if (!selectedPage) return;
     
     const updatedPages = pages.map(page => 
@@ -165,10 +174,14 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
     setShowEditDialog(false);
     setSelectedPage(null);
     resetForm();
+    toast.success('Page mise à jour avec succès');
   };
 
   const handleDeletePage = (pageId: string) => {
-    setPages(pages.filter(page => page.id !== pageId));
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette page ?')) {
+      setPages(pages.filter(page => page.id !== pageId));
+      toast.success('Page supprimée avec succès');
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -197,14 +210,17 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
     navigate(`/website/editor/${page.id}`);
   };
 
-  const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setLogoUrl(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+      try {
+        const publicUrl = await uploadFile(file, 'website-assets', `logo-${Date.now()}`);
+        setLogoUrl(publicUrl);
+        toast.success('Logo mis à jour avec succès');
+      } catch (error) {
+        console.error('Erreur lors de l\'upload du logo:', error);
+        toast.error('Erreur lors de l\'upload du logo');
+      }
     }
   };
 
@@ -227,10 +243,33 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
     setPages(updatedPages);
     setShowSEODialog(false);
     setSelectedPage(null);
+    toast.success('SEO mis à jour avec succès');
+  };
+
+  const handleSiteSettingsSave = () => {
+    toast.success('Paramètres du site sauvegardés');
+  };
+
+  const openSEODialog = (page: WebPage) => {
+    setSelectedPage(page);
+    setShowSEODialog(true);
+  };
+
+  const openEditDialog = (page: WebPage) => {
+    setSelectedPage(page);
+    setFormData({
+      title: page.title,
+      slug: page.slug,
+      type: page.type,
+      content: page.content,
+      metaDescription: page.metaDescription,
+      status: page.status
+    });
+    setShowEditDialog(true);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 back-office-context">
+    <div className="min-h-screen bg-gray-50">
       <div className="bg-white border-b px-6 py-4 flex items-center justify-between">
         <div className="flex items-center space-x-4">
           {onReturn && (
@@ -251,7 +290,7 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
           </div>
           <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
             <DialogTrigger asChild>
-              <Button className="bg-brand-primary text-white hover:bg-brand-dark">
+              <Button className="bg-blue-600 text-white hover:bg-blue-700">
                 <Plus className="h-4 w-4 mr-2" />
                 Nouvelle Page
               </Button>
@@ -260,7 +299,7 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
               <DialogHeader>
                 <DialogTitle>Créer une nouvelle page</DialogTitle>
               </DialogHeader>
-              <div className="space-y-4">
+              <form onSubmit={handleCreatePage} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Titre</label>
@@ -268,6 +307,7 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
                       value={formData.title}
                       onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                       placeholder="Titre de la page"
+                      required
                     />
                   </div>
                   <div>
@@ -276,6 +316,7 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
                       value={formData.slug}
                       onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
                       placeholder="/ma-page"
+                      required
                     />
                   </div>
                 </div>
@@ -331,14 +372,14 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
                 </div>
 
                 <div className="flex justify-end space-x-2">
-                  <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+                  <Button type="button" variant="outline" onClick={() => setShowCreateDialog(false)}>
                     Annuler
                   </Button>
-                  <Button onClick={handleCreatePage} className="bg-brand-primary text-white hover:bg-brand-dark">
+                  <Button type="submit" className="bg-blue-600 text-white hover:bg-blue-700">
                     Créer la page
                   </Button>
                 </div>
-              </div>
+              </form>
             </DialogContent>
           </Dialog>
         </div>
@@ -413,7 +454,7 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
               <CardContent>
                 <div className="space-y-4">
                   {pages.map((page) => (
-                    <div key={page.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                    <div key={page.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-white">
                       <div className="flex items-center space-x-4">
                         {getTypeIcon(page.type)}
                         <div>
@@ -433,16 +474,13 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
                           <Button size="sm" variant="outline" onClick={() => window.open(`/front${page.slug}`, '_blank')}>
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button size="sm" variant="outline" onClick={() => handleEditPage(page)}>
+                          <Button size="sm" variant="outline" onClick={() => openEditDialog(page)}>
                             <Edit className="h-4 w-4" />
                           </Button>
                           <Button 
                             size="sm" 
                             variant="outline" 
-                            onClick={() => {
-                              setSelectedPage(page);
-                              setShowSEODialog(true);
-                            }}
+                            onClick={() => openSEODialog(page)}
                           >
                             <Search className="h-4 w-4" />
                           </Button>
@@ -466,7 +504,7 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
               <CardContent>
                 <div className="space-y-4">
                   {publishedPages.map((page) => (
-                    <div key={page.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                    <div key={page.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-white">
                       <div className="flex items-center space-x-4">
                         {getTypeIcon(page.type)}
                         <div>
@@ -476,10 +514,10 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
                       </div>
                       <div className="flex items-center space-x-3">
                         <Badge className="bg-green-100 text-green-800">En ligne</Badge>
-                        <Button size="sm" variant="outline">
+                        <Button size="sm" variant="outline" onClick={() => window.open(`/front${page.slug}`, '_blank')}>
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button size="sm" variant="outline" onClick={() => handleEditPage(page)}>
+                        <Button size="sm" variant="outline" onClick={() => openEditDialog(page)}>
                           <Edit className="h-4 w-4" />
                         </Button>
                       </div>
@@ -498,7 +536,7 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
               <CardContent>
                 <div className="space-y-4">
                   {draftPages.map((page) => (
-                    <div key={page.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                    <div key={page.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-white">
                       <div className="flex items-center space-x-4">
                         {getTypeIcon(page.type)}
                         <div>
@@ -508,7 +546,7 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
                       </div>
                       <div className="flex items-center space-x-3">
                         <Badge className="bg-yellow-100 text-yellow-800">Brouillon</Badge>
-                        <Button size="sm" variant="outline" onClick={() => handleEditPage(page)}>
+                        <Button size="sm" variant="outline" onClick={() => openEditDialog(page)}>
                           <Edit className="h-4 w-4" />
                         </Button>
                         <Button size="sm" variant="outline" onClick={() => handleDeletePage(page.id)}>
@@ -537,6 +575,7 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
                   }}
                   onSave={(data) => {
                     console.log('SEO global sauvegardé:', data);
+                    toast.success('SEO global sauvegardé');
                   }}
                 />
               </CardContent>
@@ -564,12 +603,13 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
                         onChange={handleLogoUpload}
                         className="hidden"
                         id="logo-upload"
+                        disabled={uploading}
                       />
                       <label htmlFor="logo-upload">
-                        <Button variant="outline" className="cursor-pointer" asChild>
+                        <Button variant="outline" className="cursor-pointer" asChild disabled={uploading}>
                           <span>
                             <Upload className="h-4 w-4 mr-2" />
-                            Changer le logo
+                            {uploading ? 'Upload en cours...' : 'Changer le logo'}
                           </span>
                         </Button>
                       </label>
@@ -582,20 +622,25 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Nom du Site</label>
-                  <Input defaultValue="MusiConnect" placeholder="Nom de votre site" />
+                  <Input 
+                    value={siteName}
+                    onChange={(e) => setSiteName(e.target.value)}
+                    placeholder="Nom de votre site" 
+                  />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Description du Site</label>
                   <Textarea 
-                    defaultValue="Plateforme de booking d'artistes et gestion d'événements musicaux"
+                    value={siteDescription}
+                    onChange={(e) => setSiteDescription(e.target.value)}
                     placeholder="Description de votre site"
                     rows={3}
                   />
                 </div>
 
                 <div className="flex justify-end">
-                  <Button className="bg-brand-primary text-white hover:bg-brand-dark">
+                  <Button onClick={handleSiteSettingsSave} className="bg-blue-600 text-white hover:bg-blue-700">
                     Sauvegarder les paramètres
                   </Button>
                 </div>
@@ -616,7 +661,7 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
                     { type: 'video', name: 'promo-video.mp4', size: '15.2 MB' },
                     { type: 'image', name: 'event-poster.png', size: '3.1 MB' },
                   ].map((media, index) => (
-                    <div key={index} className="border border-gray-200 rounded-lg p-4 text-center">
+                    <div key={index} className="border border-gray-200 rounded-lg p-4 text-center bg-white">
                       {media.type === 'image' ? (
                         <Image className="h-12 w-12 mx-auto text-gray-400 mb-2" />
                       ) : (
@@ -626,7 +671,7 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
                       <p className="text-xs text-gray-500">{media.size}</p>
                     </div>
                   ))}
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center bg-white hover:border-gray-400 cursor-pointer">
                     <Plus className="h-8 w-8 mx-auto text-gray-400 mb-2" />
                     <p className="text-sm text-gray-500">Ajouter un média</p>
                   </div>
@@ -635,6 +680,96 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Edit Dialog */}
+        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Modifier la page</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleUpdatePage} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Titre</label>
+                  <Input
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    placeholder="Titre de la page"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">URL (slug)</label>
+                  <Input
+                    value={formData.slug}
+                    onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                    placeholder="/ma-page"
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
+                  <Select value={formData.type} onValueChange={(value: any) => setFormData({ ...formData, type: value })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="page">Page</SelectItem>
+                      <SelectItem value="blog">Article de blog</SelectItem>
+                      <SelectItem value="event">Événement</SelectItem>
+                      <SelectItem value="artist">Artiste</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Statut</label>
+                  <Select value={formData.status} onValueChange={(value: any) => setFormData({ ...formData, status: value })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="draft">Brouillon</SelectItem>
+                      <SelectItem value="published">Publié</SelectItem>
+                      <SelectItem value="archived">Archivé</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Description SEO</label>
+                <Textarea
+                  value={formData.metaDescription}
+                  onChange={(e) => setFormData({ ...formData, metaDescription: e.target.value })}
+                  placeholder="Description pour les moteurs de recherche..."
+                  rows={2}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Contenu</label>
+                <Textarea
+                  value={formData.content}
+                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                  placeholder="Contenu de la page..."
+                  rows={4}
+                />
+              </div>
+
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="outline" onClick={() => setShowEditDialog(false)}>
+                  Annuler
+                </Button>
+                <Button type="submit" className="bg-blue-600 text-white hover:bg-blue-700">
+                  Mettre à jour
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
 
         {/* SEO Dialog */}
         <Dialog open={showSEODialog} onOpenChange={setShowSEODialog}>
