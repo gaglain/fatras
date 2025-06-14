@@ -13,22 +13,12 @@ export const ThemeToggle: React.FC = () => {
       size="sm"
       onClick={toggleTheme}
       className="h-8 w-8 p-0"
-      style={{
-        background: 'var(--custom-cardBg, #ffffff)',
-        color: 'var(--custom-text, #666666)',
-        border: '1px solid var(--custom-buttonBg, #1632f4)',
-        borderRadius: '0'
-      }}
       title={`Basculer vers le mode ${theme === 'light' ? 'sombre' : 'clair'}`}
     >
       {theme === 'light' ? (
-        <Moon className="h-4 w-4" style={{
-          color: 'var(--custom-text, #666666)'
-        }} />
+        <Moon className="h-4 w-4" />
       ) : (
-        <Sun className="h-4 w-4" style={{
-          color: 'var(--custom-text, #666666)'
-        }} />
+        <Sun className="h-4 w-4" />
       )}
       <span className="sr-only">Basculer le thème</span>
     </Button>

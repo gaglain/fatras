@@ -1,380 +1,80 @@
 
 @layer components {
-  /* Header avec fond granulé style Arc.net */
-  .arc-front-header {
-    @apply relative overflow-hidden;
-    background: rgb(var(--color-primary));
-    border-bottom: 1px solid rgb(var(--color-primary-dark));
-    /* Fond granulé subtil */
-    background-image: 
-      radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.15) 1px, transparent 0);
-    background-size: 20px 20px;
-  }
-
-  .arc-nav {
-    background: transparent;
-    backdrop-filter: blur(20px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  .arc-nav-link {
-    color: white;
-    transition: all 0.2s ease;
-    font-weight: 500;
-    position: relative;
-    border-radius: 0;
-  }
-
-  .arc-nav-link:hover {
-    color: rgb(var(--color-accent-pink));
-    background: rgba(255, 255, 255, 0.1);
-  }
-
-  .arc-nav-link::after {
-    content: '';
-    position: absolute;
-    bottom: -2px;
-    left: 50%;
-    width: 0;
-    height: 2px;
-    background: linear-gradient(90deg, rgb(var(--color-accent-red)), rgb(var(--color-accent-pink)));
-    transition: all 0.3s ease;
-    transform: translateX(-50%);
-    border-radius: 0;
-  }
-
-  .arc-nav-link:hover::after {
-    width: 80%;
-  }
-
-  .arc-logo {
-    color: white;
-    font-weight: 700;
-    font-size: 1.25rem;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  }
-
-  /* Boutons avec fond blanc et texte principal */
-  .arc-button {
-    background: white;
-    color: rgb(var(--color-primary));
-    font-weight: 600;
-    padding: 0.75rem 1.5rem;
-    border-radius: 4px;
-    transition: all 0.2s ease;
-    border: 0;
-    box-shadow: 0 4px 20px rgba(22, 50, 244, 0.15);
-  }
-
-  .arc-button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 8px 25px rgba(22, 50, 244, 0.25);
-    background: rgb(var(--color-accent-pink));
-    color: white;
-  }
-
-  .arc-button-secondary {
-    background: white;
-    color: rgb(var(--color-primary));
-    font-weight: 500;
-    padding: 0.5rem 1.25rem;
-    border-radius: 4px;
-    transition: all 0.2s ease;
-    border: 2px solid white;
-    backdrop-filter: blur(10px);
-  }
-
-  .arc-button-secondary:hover {
-    background: rgb(var(--color-accent-red));
-    color: white;
-    border-color: rgb(var(--color-accent-red));
-    transform: translateY(-1px);
-  }
-
-  /* Mode sombre pour le front */
-  .dark .arc-front-header {
-    background: rgb(var(--color-primary-dark));
-  }
-
-  .dark .arc-button {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-  }
-
-  .dark .arc-button:hover {
-    background: rgb(var(--color-accent-red));
-    color: white;
-  }
-
-  /* Cartes avec couleurs d'accent */
-  .arc-card {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 8px;
-    backdrop-filter: blur(20px);
-    transition: all 0.3s ease;
-  }
-
-  .arc-card:hover {
-    border-color: rgb(var(--color-accent-pink));
-    box-shadow: 0 8px 32px rgba(236, 95, 101, 0.2);
-    transform: translateY(-2px);
-    background: rgba(255, 255, 255, 0.15);
-  }
-
-  .dark .arc-card {
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  /* Zones de contenu */
-  .arc-content {
-    @apply bg-background text-foreground;
-  }
-
-  .arc-front-bg {
-    background: rgb(var(--color-primary));
-    background-image: 
-      radial-gradient(circle at 2px 2px, rgba(255, 255, 255, 0.08) 1px, transparent 0);
-    background-size: 40px 40px;
-  }
-
-  .dark .arc-front-bg {
-    background: rgb(var(--color-primary-dark));
-  }
-
-  /* Section hero avec gradient */
-  .arc-hero-gradient {
-    background: linear-gradient(135deg, 
-      rgb(var(--color-primary)) 0%, 
-      rgb(var(--color-primary-dark)) 35%, 
-      rgb(var(--color-accent-red)) 100%);
-  }
-
-  .arc-hero-overlay {
-    background: rgba(22, 50, 244, 0.1);
-    backdrop-filter: blur(1px);
-  }
-
-  /* Footer */
-  .arc-footer {
-    background: linear-gradient(135deg, 
-      rgb(var(--color-primary-dark)) 0%, 
-      rgb(var(--color-primary)) 100%);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  /* Surface pour les modales et overlays */
-  .arc-surface {
-    background: rgb(var(--color-primary-dark));
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  /* Surface alternative avec couleur d'accent */
-  .arc-surface-accent {
-    background: rgb(var(--color-accent-red));
-    border: 1px solid rgb(var(--color-accent-pink));
-  }
-
-  /* CORRECTION GLOBALE - Application universelle du thème */
+  /* Application universelle du thème personnalisé */
   
-  /* Corps et arrière-plan global */
+  /* Corps et éléments de base */
   body, 
-  .arc-content,
-  html,
-  #root,
   main,
   div,
   section,
   article,
-  aside {
-    background: var(--custom-background, #fff) !important;
-    color: var(--custom-text, #18181b) !important;
-    transition: background 0.3s, color 0.3s;
-  }
-  
-  .dark body, 
-  .dark .arc-content,
-  .dark html,
-  .dark #root,
-  .dark main,
-  .dark div,
-  .dark section,
-  .dark article,
-  .dark aside {
-    background: var(--custom-backgroundDark, #18181b) !important;
-    color: var(--custom-textDark, #fff) !important;
+  aside,
+  #root {
+    background: var(--custom-background) !important;
+    color: var(--custom-text) !important;
+    transition: background 0.3s ease, color 0.3s ease;
   }
 
-  /* Textes et titres - FORCE l'application */
+  /* Textes et titres */
   h1, h2, h3, h4, h5, h6,
-  p, span, div, 
-  .text-gray-900,
-  .text-gray-800,
-  .text-gray-700,
-  .text-gray-600,
-  .text-black,
-  [class*="text-"],
+  p, span, 
   label,
-  .card-title,
   .font-semibold,
   .font-bold,
   .font-medium {
-    color: var(--custom-text, #18181b) !important;
+    color: var(--custom-text) !important;
   }
 
-  .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6,
-  .dark p, .dark span, .dark div,
-  .dark .text-gray-900,
-  .dark .text-gray-800,
-  .dark .text-gray-700,
-  .dark .text-gray-600,
-  .dark .text-black,
-  .dark [class*="text-"],
-  .dark label,
-  .dark .card-title,
-  .dark .font-semibold,
-  .dark .font-bold,
-  .dark .font-medium {
-    color: var(--custom-textDark, #fff) !important;
-  }
-
-  /* Cartes avec couleurs personnalisées - SUPPRESSION des bordures arrondies */
-  .arc-card, 
+  /* Cartes */
   .card,
   [class*="card"],
   .bg-white,
-  .bg-gray-50,
-  .border {
-    background: var(--custom-cardBg, #ffffff) !important;
-    color: var(--custom-cardText, #18181b) !important;
+  .bg-gray-50 {
+    background: var(--custom-cardBg) !important;
+    color: var(--custom-cardText) !important;
     border: 1px solid rgba(0,0,0,0.1) !important;
-    border-radius: 4px !important;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    transition: background 0.2s, color 0.2s;
-  }
-  
-  .dark .arc-card, 
-  .dark .card,
-  .dark [class*="card"],
-  .dark .bg-white,
-  .dark .bg-gray-50,
-  .dark .border {
-    background: var(--custom-cardBgDark, #22223a) !important;
-    color: var(--custom-cardTextDark, #fff) !important;
-  }
-
-  /* SUPPRESSION GLOBALE des border-radius */
-  *, *::before, *::after {
     border-radius: 0 !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
   }
 
-  /* Exceptions pour certains éléments qui doivent rester ronds */
-  .rounded-full,
-  [class*="rounded-full"],
-  .avatar,
-  .badge,
-  .notification-dot,
-  .status-indicator {
-    border-radius: 50% !important;
-  }
-
-  /* Boutons carrés */
-  .rounded-md,
-  .rounded-lg,
-  .rounded,
-  [class*="rounded-"] {
-    border-radius: 4px !important;
-  }
-
-  /* TOUS LES BOUTONS - Application forcée du thème */
+  /* Boutons - Application forcée du thème */
   button, 
-  .back-office-button,
+  .btn,
   [role="button"],
-  .button,
   input[type="button"],
   input[type="submit"],
-  .btn,
   [class*="bg-blue"],
-  [class*="bg-green"], 
-  [class*="bg-purple"],
-  [class*="bg-primary"],
-  [data-state="checked"],
-  [data-state="on"] {
-    background-color: var(--custom-buttonBg, #1632f4) !important;
-    color: var(--custom-buttonText, #fff) !important;
-    border: 1px solid var(--custom-buttonBg, #1632f4) !important;
-    border-radius: 4px !important;
+  [class*="bg-primary"] {
+    background: var(--custom-buttonBg) !important;
+    color: var(--custom-buttonText) !important;
+    border: 1px solid var(--custom-buttonBg) !important;
+    border-radius: 0 !important;
     transition: all 0.2s ease !important;
   }
 
-  .dark button, 
-  .dark .back-office-button,
-  .dark [role="button"],
-  .dark .button,
-  .dark input[type="button"],
-  .dark input[type="submit"],
-  .dark .btn,
-  .dark [class*="bg-blue"],
-  .dark [class*="bg-green"], 
-  .dark [class*="bg-purple"],
-  .dark [class*="bg-primary"],
-  .dark [data-state="checked"],
-  .dark [data-state="on"] {
-    background-color: var(--custom-buttonBgDark, #fff) !important;
-    color: var(--custom-buttonTextDark, #1632f4) !important;
-    border: 1px solid var(--custom-buttonBgDark, #fff) !important;
-  }
-
-  /* Boutons outline */
+  /* Boutons outline et ghost */
   [data-variant="outline"],
+  [data-variant="ghost"],
   .variant-outline,
-  [class*="outline"],
-  button[class*="border-"] {
-    background-color: transparent !important;
-    color: var(--custom-buttonBg, #1632f4) !important;
-    border: 1px solid var(--custom-buttonBg, #1632f4) !important;
+  .variant-ghost {
+    background: transparent !important;
+    color: var(--custom-buttonBg) !important;
+    border: 1px solid var(--custom-buttonBg) !important;
   }
 
-  .dark [data-variant="outline"],
-  .dark .variant-outline,
-  .dark [class*="outline"],
-  .dark button[class*="border-"] {
-    background-color: transparent !important;
-    color: var(--custom-buttonBgDark, #fff) !important;
-    border: 1px solid var(--custom-buttonBgDark, #fff) !important;
+  [data-variant="ghost"]:hover,
+  .variant-ghost:hover {
+    background: rgba(var(--custom-buttonBg), 0.1) !important;
   }
 
   /* Champs de saisie */
   input, 
   textarea, 
-  select,
-  .input,
-  [class*="input"] {
-    color: var(--custom-text, #18181b) !important;
-    background: var(--custom-background, #fff) !important;
-    border: 1px solid var(--custom-buttonBg, #1632f4) !important;
-    border-radius: 4px !important;
-    transition: all 0.2s ease !important;
-  }
-
-  .dark input, 
-  .dark textarea, 
-  .dark select,
-  .dark .input,
-  .dark [class*="input"] {
-    color: var(--custom-textDark, #fff) !important;
-    background: var(--custom-backgroundDark, #18181b) !important;
-    border: 1px solid var(--custom-buttonBgDark, #fff) !important;
-  }
-
-  /* Widget de messagerie - Couleurs personnalisées */
-  :root {
-    --custom-chatWidgetBg: #ec5f65;
-    --custom-chatWidgetBgDark: #ec5f65;
-    --custom-chatWidgetIcon: #ffffff;
-    --custom-chatWidgetIconDark: #ffffff;
+  select {
+    background: var(--custom-background) !important;
+    color: var(--custom-text) !important;
+    border: 1px solid var(--custom-buttonBg) !important;
+    border-radius: 0 !important;
   }
 
   /* Dropdowns et menus */
@@ -382,37 +82,44 @@
   .select-content,
   .popover-content,
   [role="menu"],
-  [role="listbox"] {
-    background: var(--custom-cardBg, #ffffff) !important;
-    color: var(--custom-cardText, #18181b) !important;
+  [role="listbox"],
+  [data-radix-popper-content-wrapper] {
+    background: var(--custom-cardBg) !important;
+    color: var(--custom-cardText) !important;
     border: 1px solid rgba(0,0,0,0.1) !important;
-    border-radius: 4px !important;
+    border-radius: 0 !important;
+    z-index: 50 !important;
   }
 
-  .dark .dropdown-menu,
-  .dark .select-content,
-  .dark .popover-content,
-  .dark [role="menu"],
-  .dark [role="listbox"] {
-    background: var(--custom-cardBgDark, #22223a) !important;
-    color: var(--custom-cardTextDark, #fff) !important;
+  /* Chat widget couleurs */
+  .chat-widget-button {
+    background: var(--custom-chatWidgetBg) !important;
+    color: var(--custom-chatWidgetIcon) !important;
   }
 
-  /* Suppression des styles par défaut qui interfèrent */
+  /* Suppression des bordures arrondies globalement */
+  *, *::before, *::after {
+    border-radius: 0 !important;
+  }
+
+  /* Exceptions pour éléments qui doivent rester ronds */
+  .rounded-full,
+  [class*="rounded-full"],
+  .avatar,
+  .badge,
+  .notification-dot {
+    border-radius: 50% !important;
+  }
+
+  /* Transitions douces */
+  * {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease !important;
+  }
+  
+  /* Couleurs de texte secondaire */
   .text-muted-foreground,
   .text-secondary,
   .muted {
-    color: var(--custom-text, #666666) !important;
-  }
-
-  .dark .text-muted-foreground,
-  .dark .text-secondary,
-  .dark .muted {
-    color: var(--custom-textDark, #999999) !important;
-  }
-
-  /* Forcer l'application des transitions douces */
-  *, *::before, *::after {
-    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease !important;
+    color: rgba(var(--custom-text), 0.7) !important;
   }
 }

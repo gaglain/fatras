@@ -16,7 +16,7 @@ export const Header: React.FC = () => {
   const { currentUser } = useUser();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserProfile, setShowUserProfile] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0); // Pas de notifications par défaut
+  const [unreadCount, setUnreadCount] = useState(0);
   const [companySettings, setCompanySettings] = useState({
     name: 'Fatras Booking',
     logo: '',
@@ -57,10 +57,7 @@ export const Header: React.FC = () => {
   };
 
   return (
-    <div className="border-b shadow-sm" style={{
-      background: 'var(--custom-background, #ffffff)',
-      borderColor: 'var(--custom-buttonBg, #1632f4)'
-    }}>
+    <div className="border-b shadow-sm">
       <div className="flex h-16 items-center justify-between px-4 lg:px-6">
         <div className="flex items-center space-x-2 lg:space-x-4 min-w-0">
           <SidebarTrigger />
@@ -74,40 +71,21 @@ export const Header: React.FC = () => {
               }}
             />
           ) : (
-            <div className="h-6 w-6 lg:h-8 lg:w-8 flex items-center justify-center hidden sm:flex" style={{
-              background: 'var(--custom-buttonBg, #1632f4)',
-              borderRadius: '0'
-            }}>
-              <span className="font-bold text-xs lg:text-sm" style={{
-                color: 'var(--custom-buttonText, #ffffff)'
-              }}>
+            <div className="h-6 w-6 lg:h-8 lg:w-8 flex items-center justify-center hidden sm:flex">
+              <span className="font-bold text-xs lg:text-sm">
                 {companySettings.name.charAt(0)}
               </span>
             </div>
           )}
-          <h1 className="text-base lg:text-xl font-semibold truncate" style={{
-            color: 'var(--custom-text, #18181b)'
-          }}>
+          <h1 className="text-base lg:text-xl font-semibold truncate">
             {companySettings.name}
           </h1>
         </div>
 
         <div className="flex items-center space-x-2 lg:space-x-4">
           <div className="flex items-center space-x-1 lg:space-x-2">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="hidden sm:flex"
-              style={{
-                background: 'var(--custom-cardBg, #ffffff)',
-                color: 'var(--custom-text, #666666)',
-                border: 'none',
-                borderRadius: '0'
-              }}
-            >
-              <Search className="h-4 w-4" style={{
-                color: 'var(--custom-text, #666666)'
-              }} />
+            <Button variant="ghost" size="sm" className="hidden sm:flex">
+              <Search className="h-4 w-4" />
             </Button>
             
             <ThemeToggle />
@@ -118,25 +96,12 @@ export const Header: React.FC = () => {
                 size="sm"
                 onClick={handleNotificationClick}
                 className="relative"
-                style={{
-                  background: 'var(--custom-cardBg, #ffffff)',
-                  color: 'var(--custom-text, #666666)',
-                  border: 'none',
-                  borderRadius: '0'
-                }}
               >
-                <Bell className="h-4 w-4" style={{
-                  color: 'var(--custom-text, #666666)'
-                }} />
+                <Bell className="h-4 w-4" />
                 {unreadCount > 0 && (
                   <Badge 
                     variant="destructive" 
                     className="absolute -top-1 -right-1 h-4 w-4 lg:h-5 lg:w-5 flex items-center justify-center text-xs p-0"
-                    style={{ 
-                      borderRadius: '50%',
-                      background: '#ef4444',
-                      color: '#ffffff'
-                    }}
                   >
                     {unreadCount}
                   </Badge>
@@ -153,85 +118,46 @@ export const Header: React.FC = () => {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button 
-                variant="ghost" 
-                className="flex items-center space-x-2 h-8 px-2 lg:px-3"
-                style={{
-                  background: 'var(--custom-cardBg, #ffffff)',
-                  color: 'var(--custom-text, #666666)',
-                  border: 'none',
-                  borderRadius: '0'
-                }}
-              >
-                <Avatar className="h-6 w-6 lg:h-8 lg:w-8" style={{ borderRadius: '0' }}>
+              <Button variant="ghost" className="flex items-center space-x-2 h-8 px-2 lg:px-3">
+                <Avatar className="h-6 w-6 lg:h-8 lg:w-8">
                   <AvatarImage src={currentUser?.avatar} alt={currentUser?.name} />
-                  <AvatarFallback className="text-xs" style={{
-                    background: 'var(--custom-buttonBg, #1632f4)',
-                    color: 'var(--custom-buttonText, #ffffff)',
-                    borderRadius: '0'
-                  }}>
+                  <AvatarFallback className="text-xs">
                     {currentUser?.name?.split(' ').map(n => n[0]).join('') || 'U'}
                   </AvatarFallback>
                 </Avatar>
-                <span className="hidden md:block text-sm font-medium truncate max-w-[100px] lg:max-w-[150px]" style={{
-                  color: 'var(--custom-text, #18181b)'
-                }}>
+                <span className="hidden md:block text-sm font-medium truncate max-w-[100px] lg:max-w-[150px]">
                   {currentUser?.name || 'Utilisateur'}
                 </span>
-                <ChevronDown className="h-3 w-3 lg:h-4 lg:w-4" style={{
-                  color: 'var(--custom-text, #666666)'
-                }} />
+                <ChevronDown className="h-3 w-3 lg:h-4 lg:w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" forceMount style={{
-              background: 'var(--custom-cardBg, #ffffff)',
-              border: '1px solid rgba(0,0,0,0.1)',
-              borderRadius: '0'
-            }}>
-              <div className="px-3 py-2 border-b" style={{
-                borderColor: 'rgba(0,0,0,0.1)'
-              }}>
-                <p className="text-sm font-medium" style={{
-                  color: 'var(--custom-cardText, #18181b)'
-                }}>
+            <DropdownMenuContent className="w-56" align="end" forceMount>
+              <div className="px-3 py-2 border-b">
+                <p className="text-sm font-medium">
                   {currentUser?.name || 'Utilisateur'}
                 </p>
-                <p className="text-xs" style={{
-                  color: 'var(--custom-text, #666666)'
-                }}>
+                <p className="text-xs opacity-70">
                   {currentUser?.email || 'email@exemple.com'}
                 </p>
               </div>
-              <DropdownMenuItem onClick={() => setShowUserProfile(true)} style={{
-                color: 'var(--custom-text, #666666)',
-                borderRadius: '0'
-              }}>
+              <DropdownMenuItem onClick={() => setShowUserProfile(true)}>
                 <User className="mr-2 h-4 w-4" />
                 <span>Profil & Préférences</span>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild style={{
-                color: 'var(--custom-text, #666666)',
-                borderRadius: '0'
-              }}>
+              <DropdownMenuItem asChild>
                 <Link to="/messagerie">
                   <MessageSquare className="mr-2 h-4 w-4" />
                   <span>Messages</span>
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild style={{
-                color: 'var(--custom-text, #666666)',
-                borderRadius: '0'
-              }}>
+              <DropdownMenuItem asChild>
                 <Link to="/preferences">
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Paramètres</span>
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem style={{
-                color: 'var(--custom-text, #666666)',
-                borderRadius: '0'
-              }}>
+              <DropdownMenuItem>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Déconnexion</span>
               </DropdownMenuItem>
