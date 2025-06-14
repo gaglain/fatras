@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { X, User, Save, Camera } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/hooks/useAuth';
 
 interface UserProfileProps {
   onClose: () => void;
@@ -14,28 +15,53 @@ interface UserProfileProps {
 
 export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
   const { currentUser, updateUser } = useUser();
+  const { user: authUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: currentUser?.name || '',
+    lastName: currentUser?.lastName || '',
     email: currentUser?.email || '',
     phone: currentUser?.phone || '',
     bio: currentUser?.bio || ''
   });
 
+  // S'assurer que les données sont à jour avec l'utilisateur connecté
+  React.useEffect(() => {
+    if (currentUser) {
+      setFormData({
+        name: currentUser.name || '',
+        lastName: currentUser.lastName || '',
+        email: currentUser.email || '',
+        phone: currentUser.phone || '',
+        bio: currentUser.bio || ''
+      });
+    }
+  }, [currentUser]);
+
   const handleSave = () => {
-    // Fix: Pass the user ID and the form data
-    updateUser(currentUser?.id || 'current', formData);
-    setIsEditing(false);
+    if (currentUser?.id) {
+      updateUser(currentUser.id, formData);
+      setIsEditing(false);
+    }
   };
 
   const handleCancel = () => {
     setFormData({
       name: currentUser?.name || '',
+      lastName: currentUser?.lastName || '',
       email: currentUser?.email || '',
       phone: currentUser?.phone || '',
       bio: currentUser?.bio || ''
     });
     setIsEditing(false);
+  };
+
+  // Afficher les informations de l'utilisateur authentifié
+  const displayUser = currentUser || {
+    name: authUser?.user_metadata?.first_name || 'Utilisateur',
+    lastName: authUser?.user_metadata?.last_name || '',
+    email: authUser?.email || '',
+    avatar: authUser?.user_metadata?.avatar_url || ''
   };
 
   return (
@@ -55,9 +81,9 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
           <div className="flex flex-col items-center space-y-4">
             <div className="relative">
               <Avatar className="h-20 w-20">
-                <AvatarImage src={currentUser?.avatar} alt={currentUser?.name} />
+                <AvatarImage src={displayUser.avatar} alt={displayUser.name} />
                 <AvatarFallback className="text-lg">
-                  {currentUser?.name?.split(' ').map(n => n[0]).join('') || 'U'}
+                  {(displayUser.name?.charAt(0) || '') + (displayUser.lastName?.charAt(0) || '')}
                 </AvatarFallback>
               </Avatar>
               <Button
@@ -74,13 +100,24 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
           {/* Form Fields */}
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Nom complet</Label>
+              <Label htmlFor="name">Prénom</Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 disabled={!isEditing}
-                placeholder="Votre nom complet"
+                placeholder="Votre prénom"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="lastName">Nom</Label>
+              <Input
+                id="lastName"
+                value={formData.lastName}
+                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                disabled={!isEditing}
+                placeholder="Votre nom"
               />
             </div>
 

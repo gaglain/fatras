@@ -1,5 +1,6 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 
 export type UserRole = 'admin' | 'manager' | 'user';
 
@@ -90,7 +91,48 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [users, setUsers] = useState<User[]>(defaultUsers);
-  const [currentUser, setCurrentUser] = useState<User | null>(defaultUsers[0]);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const { user: authUser, loading } = useAuth();
+
+  // Synchroniser l'utilisateur authentifié avec le contexte utilisateur
+  useEffect(() => {
+    console.log('Auth user changed:', authUser);
+    if (authUser && !loading) {
+      // Créer ou mettre à jour l'utilisateur basé sur les données Supabase
+      const supabaseUser: User = {
+        id: authUser.id,
+        name: authUser.user_metadata?.first_name || 'Utilisateur',
+        lastName: authUser.user_metadata?.last_name || '',
+        email: authUser.email || '',
+        role: 'admin', // Vous pouvez ajuster selon votre logique
+        isActive: true,
+        username: authUser.email?.split('@')[0] || '',
+        avatar: authUser.user_metadata?.avatar_url || '',
+        phone: authUser.phone || '',
+        department: 'Direction',
+        bio: 'Utilisateur connecté via Supabase',
+        googleCalendarConnected: false,
+        gmailConnected: false
+      };
+
+      // Vérifier si l'utilisateur existe déjà dans la liste
+      const existingUserIndex = users.findIndex(u => u.id === authUser.id);
+      if (existingUserIndex >= 0) {
+        // Mettre à jour l'utilisateur existant
+        setUsers(prev => prev.map(u => u.id === authUser.id ? supabaseUser : u));
+      } else {
+        // Ajouter le nouvel utilisateur
+        setUsers(prev => [...prev, supabaseUser]);
+      }
+
+      setCurrentUser(supabaseUser);
+      console.log('Current user set to:', supabaseUser);
+    } else if (!authUser && !loading) {
+      // Utilisateur déconnecté
+      setCurrentUser(null);
+      console.log('User logged out, current user set to null');
+    }
+  }, [authUser, loading]);
 
   const getUserById = (id: string): User | undefined => {
     return users.find(user => user.id === id);
