@@ -31,16 +31,15 @@ export const FrontHome: React.FC = () => {
 
   return (
     <div className="flex flex-col">
-      {/* Hero Section with Arc-style gradient and texture */}
+      {/* Hero Section with Arc-style gradient and static texture */}
       <section className="relative py-24 lg:py-32 overflow-hidden">
-        {/* Background with grain texture */}
+        {/* Background with static grain texture */}
         <div className="absolute inset-0 bg-gradient-to-br from-purple-600 via-purple-700 to-cyan-600"></div>
         <div 
           className="absolute inset-0 opacity-20"
           style={{
             backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255, 255, 255, 0.3) 1px, transparent 0)',
-            backgroundSize: '40px 40px',
-            animation: 'grain 15s steps(8) infinite'
+            backgroundSize: '40px 40px'
           }}
         ></div>
         
