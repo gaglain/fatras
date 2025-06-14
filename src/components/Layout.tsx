@@ -38,11 +38,6 @@ export const Layout: React.FC = () => {
     return <Navigate to="/roadshow" replace />;
   }
 
-  // Vérifier si on est sur une route back-office
-  const isAdminRoute = adminRoutes.some(route =>
-    location.pathname === route || location.pathname.startsWith(route + '/')
-  );
-
   // Simuler une authentification back-office
   if (isAdminRoute) {
     const isAuthenticated = true;
