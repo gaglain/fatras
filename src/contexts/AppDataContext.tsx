@@ -66,30 +66,12 @@ interface AppData {
 
 const AppDataContext = createContext<AppData | undefined>(undefined);
 
-// Données d'exemple réalistes
-const initialContacts: Contact[] = [
-  { id: '1', name: 'Marie Dubois', email: 'marie@electropop.fr', phone: '06 12 34 56 78', type: 'artist', status: 'active', createdAt: '2024-12-01' },
-  { id: '2', name: 'Le Bataclan', email: 'booking@bataclan.fr', phone: '01 43 14 00 30', type: 'venue', status: 'active', createdAt: '2024-11-28' },
-  { id: '3', name: 'Thomas Martin', email: 'thomas@soundpromo.com', type: 'promoter', status: 'active', createdAt: '2024-11-25' },
-];
-
-const initialEvents: Event[] = [
-  { id: '1', title: 'Concert Marie Dubois', date: '2024-12-20', venue: 'Le Bataclan', status: 'confirmed', artistId: '1', type: 'Concert' },
-  { id: '2', title: 'Festival Summer Vibes', date: '2024-12-25', venue: 'Parc des Expositions', status: 'planned', type: 'Festival' },
-];
-
-const initialTasks: Task[] = [
-  { id: '1', title: 'Finaliser contrat Marie Dubois', description: 'Réviser les clauses techniques', status: 'pending', priority: 'high', dueDate: '2024-12-18' },
-  { id: '2', title: 'Préparer rider technique', description: 'Listing matériel concert Bataclan', status: 'in_progress', priority: 'medium', dueDate: '2024-12-19' },
-];
-
-const initialContracts: Contract[] = [
-  { id: '1', title: 'Contrat Marie Dubois - Bataclan', clientName: 'Le Bataclan', amount: 15000, status: 'sent', createdAt: '2024-12-10' },
-];
-
-const initialEmailCampaigns: EmailCampaign[] = [
-  { id: '1', name: 'Newsletter Décembre', subject: 'Nos concerts de fin d\'année', status: 'sent', recipients: 1200, sentAt: '2024-12-01' },
-];
+// Toutes les données sont vides par défaut
+const initialContacts: Contact[] = [];
+const initialEvents: Event[] = [];
+const initialTasks: Task[] = [];
+const initialContracts: Contract[] = [];
+const initialEmailCampaigns: EmailCampaign[] = [];
 
 export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [contacts, setContacts] = useState<Contact[]>(initialContacts);
@@ -97,7 +79,7 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [contracts, setContracts] = useState<Contract[]>(initialContracts);
   const [emailCampaigns, setEmailCampaigns] = useState<EmailCampaign[]>(initialEmailCampaigns);
-  const [revenue, setRevenue] = useState(48500);
+  const [revenue, setRevenue] = useState(0);
 
   // Sauvegarder dans localStorage
   useEffect(() => {
@@ -117,7 +99,7 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setTasks(data.tasks || initialTasks);
         setContracts(data.contracts || initialContracts);
         setEmailCampaigns(data.emailCampaigns || initialEmailCampaigns);
-        setRevenue(data.revenue || 48500);
+        setRevenue(data.revenue || 0);
       } catch (error) {
         console.error('Erreur lors du chargement des données:', error);
       }

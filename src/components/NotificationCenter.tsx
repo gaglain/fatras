@@ -14,51 +14,11 @@ interface Notification {
   timestamp: string;
   isRead: boolean;
   priority: 'low' | 'medium' | 'high';
-  linkTo?: string; // Nouveau champ pour la navigation
+  linkTo?: string;
 }
 
-const sampleNotifications: Notification[] = [
-  {
-    id: '1',
-    type: 'task',
-    title: 'Nouvelle tâche assignée',
-    message: 'Préparer le matériel pour le concert de demain',
-    timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-    isRead: false,
-    priority: 'high',
-    linkTo: '/tasks'
-  },
-  {
-    id: '2',
-    type: 'email',
-    title: 'Nouveau mail reçu',
-    message: 'Confirmation de réservation pour la salle',
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-    isRead: false,
-    priority: 'medium',
-    linkTo: '/email'
-  },
-  {
-    id: '3',
-    type: 'contact',
-    title: 'Nouveau contact',
-    message: 'Un nouvel artiste s\'est inscrit',
-    timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-    isRead: true,
-    priority: 'low',
-    linkTo: '/contacts'
-  },
-  {
-    id: '4',
-    type: 'message',
-    title: 'Message interne',
-    message: 'L\'équipe technique demande une réunion',
-    timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
-    isRead: false,
-    priority: 'medium',
-    linkTo: '/messagerie'
-  }
-];
+// Aucune notification par défaut
+const sampleNotifications: Notification[] = [];
 
 interface NotificationCenterProps {
   onClose: () => void;
@@ -125,19 +85,42 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
   };
 
   return (
-    <Card className="w-96 shadow-lg border">
+    <Card className="w-96 shadow-lg" style={{
+      background: 'var(--custom-cardBg, #ffffff)',
+      color: 'var(--custom-cardText, #18181b)',
+      border: '1px solid rgba(0,0,0,0.1)',
+      borderRadius: '0'
+    }}>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg flex items-center">
-            <Bell className="h-5 w-5 mr-2" />
+          <CardTitle className="text-lg flex items-center" style={{
+            color: 'var(--custom-cardText, #18181b)'
+          }}>
+            <Bell className="h-5 w-5 mr-2" style={{
+              color: 'var(--custom-text, #666666)'
+            }} />
             Notifications
             {unreadCount > 0 && (
-              <Badge className="ml-2 bg-red-500 text-white">
+              <Badge className="ml-2" style={{
+                background: '#ef4444',
+                color: '#ffffff',
+                borderRadius: '0'
+              }}>
                 {unreadCount}
               </Badge>
             )}
           </CardTitle>
-          <Button variant="ghost" size="sm" onClick={onClose}>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={onClose}
+            style={{
+              background: 'transparent',
+              color: 'var(--custom-text, #666666)',
+              border: 'none',
+              borderRadius: '0'
+            }}
+          >
             <X className="h-4 w-4" />
           </Button>
         </div>
@@ -147,6 +130,12 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
             size="sm" 
             onClick={markAllAsRead}
             className="self-end"
+            style={{
+              background: 'transparent',
+              color: 'var(--custom-buttonBg, #1632f4)',
+              border: '1px solid var(--custom-buttonBg, #1632f4)',
+              borderRadius: '0'
+            }}
           >
             Tout marquer comme lu
           </Button>
@@ -154,8 +143,13 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
       </CardHeader>
       <CardContent className="max-h-96 overflow-y-auto">
         {notifications.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            <Bell className="h-12 w-12 mx-auto mb-3 text-muted-foreground/50" />
+          <div className="text-center py-8" style={{
+            color: 'var(--custom-text, #666666)'
+          }}>
+            <Bell className="h-12 w-12 mx-auto mb-3" style={{
+              color: 'var(--custom-text, #666666)',
+              opacity: 0.5
+            }} />
             <p>Aucune notification</p>
           </div>
         ) : (
@@ -163,33 +157,51 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
             {notifications.map((notification) => (
               <div
                 key={notification.id}
-                className={`p-3 rounded-lg border transition-colors cursor-pointer hover:bg-accent ${
+                className={`p-3 border transition-colors cursor-pointer hover:bg-accent ${
                   !notification.isRead ? 'bg-blue-50 border-blue-200 dark:bg-blue-950/20' : 'border-border'
                 }`}
+                style={{
+                  background: !notification.isRead 
+                    ? 'rgba(var(--custom-buttonBg, 22, 50, 244), 0.05)' 
+                    : 'var(--custom-cardBg, #ffffff)',
+                  border: '1px solid rgba(0,0,0,0.1)',
+                  borderRadius: '0'
+                }}
                 onClick={() => handleNotificationClick(notification)}
               >
                 <div className="flex items-start space-x-3">
-                  <div className="text-muted-foreground mt-1">
+                  <div style={{ color: 'var(--custom-text, #666666)' }} className="mt-1">
                     {getIcon(notification.type)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
-                      <p className="text-sm font-medium text-foreground truncate">
+                      <p className="text-sm font-medium truncate" style={{
+                        color: 'var(--custom-cardText, #18181b)'
+                      }}>
                         {notification.title}
                       </p>
                       <div className="flex items-center space-x-2">
-                        <Badge className={getPriorityColor(notification.priority)}>
+                        <Badge className={getPriorityColor(notification.priority)} style={{
+                          borderRadius: '0'
+                        }}>
                           {notification.priority}
                         </Badge>
                         {!notification.isRead && (
-                          <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                          <div className="w-2 h-2 rounded-full" style={{
+                            background: 'var(--custom-buttonBg, #1632f4)',
+                            borderRadius: '50%'
+                          }}></div>
                         )}
                       </div>
                     </div>
-                    <p className="text-sm text-muted-foreground line-clamp-2">
+                    <p className="text-sm line-clamp-2" style={{
+                      color: 'var(--custom-text, #666666)'
+                    }}>
                       {notification.message}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="text-xs mt-1" style={{
+                      color: 'var(--custom-text, #666666)'
+                    }}>
                       {formatTime(notification.timestamp)}
                     </p>
                   </div>
