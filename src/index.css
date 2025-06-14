@@ -212,8 +212,8 @@
 
   /* Zones de contenu */
   .arc-content {
-    background: rgb(var(--color-primary));
-    color: white;
+    background: white;
+    color: #1e293b;
   }
 
   .arc-front-bg {
@@ -254,6 +254,30 @@
   .arc-surface-accent {
     background: rgb(var(--color-accent-red));
     border: 1px solid rgb(var(--color-accent-pink));
+  }
+
+  /* Styles spécifiques pour les boutons du back-office */
+  .back-office-button {
+    background: white;
+    color: #1632f4;
+    border: 1px solid #e5e7eb;
+  }
+
+  .back-office-button:hover {
+    background: #f9fafb;
+    color: #1632f4;
+  }
+
+  /* Correction pour tous les boutons outline */
+  .button-outline-corrected {
+    background: white !important;
+    color: #1632f4 !important;
+    border: 1px solid #e5e7eb !important;
+  }
+
+  .button-outline-corrected:hover {
+    background: #f9fafb !important;
+    color: #1632f4 !important;
   }
 }
 

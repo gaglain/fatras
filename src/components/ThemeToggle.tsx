@@ -12,7 +12,7 @@ export const ThemeToggle: React.FC = () => {
       variant="ghost"
       size="sm"
       onClick={toggleTheme}
-      className="h-8 w-8 p-0 text-[#1632f4] hover:bg-gray-100 hover:text-[#1632f4]"
+      className="h-8 w-8 p-0 bg-white text-[#1632f4] hover:bg-gray-100 hover:text-[#1632f4] border border-gray-200"
       title={`Basculer vers le mode ${theme === 'light' ? 'sombre' : 'clair'}`}
     >
       {theme === 'light' ? (
