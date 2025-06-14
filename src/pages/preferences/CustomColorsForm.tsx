@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Save } from "lucide-react";
+import { toast } from "sonner";
 
 const colorFields: { key: string, label: string, default: string }[] = [
   { key: "primary", label: "Primaire", default: "#1632f4" },
@@ -60,8 +61,13 @@ export const CustomColorsForm: React.FC = () => {
   }
 
   function handleSave() {
-    localStorage.setItem("customColors", JSON.stringify(colors));
-    applyColors(colors);
+    try {
+      localStorage.setItem("customColors", JSON.stringify(colors));
+      applyColors(colors);
+      toast.success("Couleurs sauvegardées avec succès !");
+    } catch (error) {
+      toast.error("Erreur lors de la sauvegarde des couleurs");
+    }
   }
 
   function handleReset() {
@@ -72,6 +78,7 @@ export const CustomColorsForm: React.FC = () => {
     setColors(resetColors);
     applyColors(resetColors);
     localStorage.setItem("customColors", JSON.stringify(resetColors));
+    toast.success("Couleurs réinitialisées avec succès !");
   }
 
   return (
@@ -80,7 +87,7 @@ export const CustomColorsForm: React.FC = () => {
         <CardTitle>Couleurs personnalisées</CardTitle>
       </CardHeader>
       <CardContent>
-        <form className="space-y-6" onSubmit={e => { e.preventDefault(); handleSave(); }}>
+        <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {colorFields.map(({ key, label }) => (
               <div key={key} className="flex flex-col gap-1">
@@ -103,7 +110,7 @@ export const CustomColorsForm: React.FC = () => {
             ))}
           </div>
           <div className="flex gap-3">
-            <Button type="submit" style={{
+            <Button onClick={handleSave} style={{
               backgroundColor: colors.buttonBg || "#1632f4",
               color: colors.buttonText || "#fff"
             }}>
@@ -114,7 +121,7 @@ export const CustomColorsForm: React.FC = () => {
               Réinitialiser
             </Button>
           </div>
-        </form>
+        </div>
       </CardContent>
     </Card>
   );
