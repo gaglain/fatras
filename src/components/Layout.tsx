@@ -18,18 +18,20 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { theme } = useTheme();
   
   return (
-    <div className={`min-h-screen ${theme === 'dark' ? 'dark' : ''}`}>
+    <div className={`min-h-screen ${theme === 'dark' ? 'dark' : ''}`} style={{ background: 'hsl(var(--arc-content))' }}>
       <MessagingProvider>
         <SidebarProvider>
           <div className="min-h-screen flex w-full">
             <AppSidebar />
             <SidebarInset className="flex-1 min-w-0">
-              <Header />
-              <main className="flex-1 p-4 lg:p-6 overflow-auto bg-background text-foreground">
-                <div className="max-w-full">
-                  {children}
-                </div>
-              </main>
+              <div className="arc-content h-full">
+                <Header />
+                <main className="flex-1 p-6 overflow-auto">
+                  <div className="max-w-full">
+                    {children}
+                  </div>
+                </main>
+              </div>
             </SidebarInset>
           </div>
           <ChatWidget />
