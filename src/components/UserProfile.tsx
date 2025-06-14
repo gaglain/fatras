@@ -46,10 +46,10 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
 
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file || !currentUser?.id) return;
+    if (!file || !authUser?.id) return;
 
     try {
-      const imageUrl = await uploadFile(file, 'avatars', `${currentUser.id}/profile`);
+      const imageUrl = await uploadFile(file, 'avatars', `${authUser.id}/profile`);
       setFormData(prev => ({ ...prev, avatar: imageUrl }));
       toast.success('Photo de profil téléchargée avec succès');
     } catch (error) {
