@@ -94,16 +94,21 @@
 }
 
 @layer components {
-  /* Header avec couleur principale */
+  /* Header avec fond granulé style Arc.net */
   .arc-front-header {
     @apply relative overflow-hidden;
     background: rgb(var(--color-primary));
     border-bottom: 1px solid rgb(var(--color-primary-dark));
+    /* Fond granulé subtil */
+    background-image: 
+      radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.15) 1px, transparent 0);
+    background-size: 20px 20px;
   }
 
   .arc-nav {
-    background: rgb(var(--color-primary));
-    border-bottom: 1px solid rgb(var(--color-primary-dark));
+    background: transparent;
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   .arc-nav-link {
@@ -111,32 +116,36 @@
     transition: all 0.2s ease;
     font-weight: 500;
     position: relative;
+    border-radius: 8px;
   }
 
   .arc-nav-link:hover {
     color: rgb(var(--color-accent-pink));
+    background: rgba(255, 255, 255, 0.1);
   }
 
   .arc-nav-link::after {
     content: '';
     position: absolute;
-    bottom: -8px;
+    bottom: -2px;
     left: 50%;
     width: 0;
     height: 2px;
     background: linear-gradient(90deg, rgb(var(--color-accent-red)), rgb(var(--color-accent-pink)));
     transition: all 0.3s ease;
     transform: translateX(-50%);
+    border-radius: 1px;
   }
 
   .arc-nav-link:hover::after {
-    width: 100%;
+    width: 80%;
   }
 
   .arc-logo {
     color: white;
     font-weight: 700;
     font-size: 1.25rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   }
 
   /* Boutons avec fond blanc et texte principal */
@@ -145,15 +154,15 @@
     color: rgb(var(--color-primary));
     font-weight: 600;
     padding: 0.75rem 1.5rem;
-    border-radius: 0.75rem;
+    border-radius: 12px;
     transition: all 0.2s ease;
     border: 0;
-    box-shadow: 0 4px 20px rgba(22, 50, 244, 0.25);
+    box-shadow: 0 4px 20px rgba(22, 50, 244, 0.15);
   }
 
   .arc-button:hover {
     transform: translateY(-1px);
-    box-shadow: 0 8px 25px rgba(22, 50, 244, 0.35);
+    box-shadow: 0 8px 25px rgba(22, 50, 244, 0.25);
     background: rgb(var(--color-accent-pink));
     color: white;
   }
@@ -162,23 +171,25 @@
     background: white;
     color: rgb(var(--color-primary));
     font-weight: 500;
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.75rem;
+    padding: 0.5rem 1.25rem;
+    border-radius: 10px;
     transition: all 0.2s ease;
     border: 2px solid white;
+    backdrop-filter: blur(10px);
   }
 
   .arc-button-secondary:hover {
     background: rgb(var(--color-accent-red));
     color: white;
     border-color: rgb(var(--color-accent-red));
+    transform: translateY(-1px);
   }
 
   /* Cartes avec couleurs d'accent */
   .arc-card {
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 1rem;
+    border-radius: 16px;
     backdrop-filter: blur(20px);
     transition: all 0.3s ease;
   }
@@ -199,7 +210,7 @@
   .arc-front-bg {
     background: rgb(var(--color-primary));
     background-image: 
-      radial-gradient(circle at 2px 2px, rgba(255, 255, 255, 0.05) 1px, transparent 0);
+      radial-gradient(circle at 2px 2px, rgba(255, 255, 255, 0.08) 1px, transparent 0);
     background-size: 40px 40px;
   }
 
