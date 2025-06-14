@@ -61,8 +61,7 @@ export const Header: React.FC = () => {
   return (
     <div className="border-b shadow-sm" style={{
       background: 'var(--custom-background, #ffffff)',
-      borderColor: 'var(--custom-buttonBg, #1632f4)',
-      borderOpacity: 0.2
+      borderColor: 'var(--custom-buttonBg, #1632f4)'
     }}>
       <div className="flex h-16 items-center justify-between px-4 lg:px-6">
         <div className="flex items-center space-x-2 lg:space-x-4 min-w-0">
