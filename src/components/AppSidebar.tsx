@@ -60,13 +60,13 @@ export function AppSidebar() {
                             }`}
                           >
                             <div className="flex items-center min-w-0">
-                              <item.icon className="mr-3 h-4 w-4 flex-shrink-0 text-[#1632f4]" />
+                              <item.icon className="mr-3 h-4 w-4 flex-shrink-0" style={{ color: '#1632f4' }} />
                               <span className="truncate text-sm text-[#1632f4]">{item.name}</span>
                             </div>
                             {isOpen ? (
-                              <ChevronDown className="h-4 w-4 flex-shrink-0 text-[#1632f4]" />
+                              <ChevronDown className="h-4 w-4 flex-shrink-0" style={{ color: '#1632f4' }} />
                             ) : (
-                              <ChevronRight className="h-4 w-4 flex-shrink-0 text-[#1632f4]" />
+                              <ChevronRight className="h-4 w-4 flex-shrink-0" style={{ color: '#1632f4' }} />
                             )}
                           </SidebarMenuButton>
                         </CollapsibleTrigger>
@@ -81,7 +81,7 @@ export function AppSidebar() {
                                   }`}
                                 >
                                   <Link to={child.href} className="flex items-center min-w-0">
-                                    <child.icon className="mr-3 h-4 w-4 flex-shrink-0 text-[#1632f4]" />
+                                    <child.icon className="mr-3 h-4 w-4 flex-shrink-0" style={{ color: '#1632f4' }} />
                                     <span className="truncate text-sm text-[#1632f4]">{child.name}</span>
                                   </Link>
                                 </SidebarMenuSubButton>
@@ -104,7 +104,7 @@ export function AppSidebar() {
                       }`}
                     >
                       <Link to={item.href} className="flex items-center min-w-0">
-                        <item.icon className="mr-3 h-4 w-4 flex-shrink-0 text-[#1632f4]" />
+                        <item.icon className="mr-3 h-4 w-4 flex-shrink-0" style={{ color: '#1632f4' }} />
                         <span className="truncate text-sm text-[#1632f4]">{item.name}</span>
                       </Link>
                     </SidebarMenuButton>
