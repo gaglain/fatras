@@ -1,121 +1,51 @@
 
-import React, { useState } from 'react';
-import { Menu, X } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { FrontThemeToggle } from './FrontThemeToggle';
 
 export const FrontNavigation: React.FC = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const location = useLocation();
 
-  const navigationItems = [
-    { label: 'Accueil', href: '/front' },
-    { label: 'Artistes', href: '/front/artists' },
-    { label: 'Événements', href: '/front/events' },
-    { label: 'Boutique', href: '/front/shop' },
+  const navItems = [
+    { path: '/front', label: 'Accueil' },
+    { path: '/front/artists', label: 'Artistes' },
+    { path: '/front/events', label: 'Événements' },
+    { path: '/front/shop', label: 'Boutique' },
+    { path: '/front/contact', label: 'Contact' },
   ];
 
   return (
-    <header className="arc-front-header fixed top-0 left-0 right-0 z-50">
-      <nav className="arc-nav relative z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-            {/* Logo avec image */}
-            <div className="flex items-center space-x-3">
-              <img 
-                src="/placeholder.svg" 
-                alt="MusiConnect" 
-                className="h-10 w-10 rounded-lg object-cover"
-              />
-              <Link to="/front" className="arc-logo text-2xl font-bold tracking-tight text-white">
-                MusiConnect
-              </Link>
-            </div>
+    <nav className="arc-front-header fixed top-0 left-0 right-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-20">
+          {/* Logo */}
+          <Link to="/front" className="arc-logo">
+            MusiConnect
+          </Link>
 
-            {/* Desktop Navigation - Menu centré */}
-            <div className="hidden md:flex items-center space-x-8">
-              {navigationItems.map((item) => (
-                <Link
-                  key={item.href}
-                  to={item.href}
-                  className="arc-nav-link px-4 py-2 text-sm font-medium text-white hover:text-accent-pink transition-all duration-200"
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-
-            {/* Boutons à droite */}
-            <div className="hidden md:flex items-center space-x-4">
-              <Link to="/front/contact">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="arc-button-secondary bg-white text-brand-primary border-white hover:bg-accent-red hover:text-white hover:border-accent-red"
-                >
-                  Contact
-                </Button>
-              </Link>
-              <Link to="/dashboard">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="arc-button-secondary bg-white text-brand-primary border-white hover:bg-accent-pink hover:text-white hover:border-accent-pink"
-                >
-                  Back-Office
-                </Button>
-              </Link>
-            </div>
-
-            {/* Mobile menu button */}
-            <div className="md:hidden">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="text-white hover:bg-white/10"
+          {/* Navigation Links */}
+          <div className="hidden md:flex items-center space-x-8">
+            {navItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`arc-nav-link px-4 py-2 ${
+                  location.pathname === item.path 
+                    ? 'text-white bg-white/10' 
+                    : 'text-white/90 hover:text-white'
+                }`}
               >
-                {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-              </Button>
-            </div>
+                {item.label}
+              </Link>
+            ))}
           </div>
 
-          {/* Mobile Navigation */}
-          {isMenuOpen && (
-            <div className="md:hidden">
-              <div className="px-2 pt-2 pb-6 space-y-1 sm:px-3 bg-brand-dark rounded-2xl mt-4 border border-white/20 backdrop-blur-xl">
-                {navigationItems.map((item) => (
-                  <Link
-                    key={item.href}
-                    to={item.href}
-                    className="text-white block px-4 py-3 rounded-xl text-base font-medium hover:bg-white/10 hover:text-accent-pink transition-all duration-200"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-                <Link to="/front/contact" onClick={() => setIsMenuOpen(false)}>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="arc-button-secondary mt-3 ml-4 bg-white text-brand-primary border-white hover:bg-accent-red hover:text-white"
-                  >
-                    Contact
-                  </Button>
-                </Link>
-                <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="arc-button-secondary mt-2 ml-4 bg-white text-brand-primary border-white hover:bg-accent-pink hover:text-white"
-                  >
-                    Back-Office
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          )}
+          {/* Theme Toggle */}
+          <div className="flex items-center space-x-4">
+            <FrontThemeToggle variant="front" />
+          </div>
         </div>
-      </nav>
-    </header>
+      </div>
+    </nav>
   );
 };

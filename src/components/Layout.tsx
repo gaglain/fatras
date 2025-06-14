@@ -1,51 +1,57 @@
 
 import React from 'react';
 import { Outlet, useLocation, Navigate } from 'react-router-dom';
-import { Header } from './Header';
-import { ChatWidget } from './ChatWidget';
-import { useAuth } from '@/hooks/useAuth';
-import { useTheme } from '@/contexts/ThemeContext';
-import { MessagingProvider } from '@/contexts/MessagingContext';
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
-import { AppSidebar } from './AppSidebar';
+import { SidebarProvider } from '@/components/ui/sidebar';
+import { AppSidebar } from '@/components/AppSidebar';
+import { BackOfficeHeader } from '@/components/BackOfficeHeader';
+import { Toaster } from '@/components/ui/sonner';
 
-interface LayoutProps {
-  children: React.ReactNode;
-}
-
-export const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { user } = useAuth();
-  const { theme } = useTheme();
+export const Layout: React.FC = () => {
   const location = useLocation();
   
-  // Check if the current path is the dedicated back office URL
-  const isBackOfficeURL = location.pathname.startsWith('/fatras-admin') || location.pathname.startsWith('/website/backoffice');
+  // Routes qui nécessitent l'authentification admin
+  const adminRoutes = ['/admin', '/website/backoffice'];
+  const isAdminRoute = adminRoutes.some(route => location.pathname.startsWith(route));
   
-  // If it's not the back office URL and we're trying to access admin routes, redirect to the front page
-  if (!isBackOfficeURL && location.pathname.includes('/admin')) {
-    return <Navigate to="/front" replace />;
+  // Redirection pour les anciennes URLs du back-office
+  if (location.pathname === '/website/backoffice') {
+    return <Navigate to="/admin" replace />;
   }
   
+  if (location.pathname.startsWith('/website/editor/')) {
+    const pageId = location.pathname.split('/').pop();
+    return <Navigate to={`/admin/editor/${pageId}`} replace />;
+  }
+
+  // Pour les routes admin, vérifier l'authentification (simulation)
+  if (isAdminRoute) {
+    // Ici vous pourriez ajouter une vraie vérification d'authentification
+    // Pour l'instant, on simule un accès autorisé
+    const isAuthenticated = true; // À remplacer par votre logique d'auth
+    
+    if (!isAuthenticated) {
+      return <Navigate to="/" replace />;
+    }
+  }
+
   return (
-    <div className={`min-h-screen ${theme === 'dark' ? 'dark' : ''}`}>
-      <MessagingProvider>
+    <div className="min-h-screen bg-background">
+      {isAdminRoute ? (
         <SidebarProvider>
-          <div className="min-h-screen flex w-full bg-background">
+          <div className="flex h-screen w-full">
             <AppSidebar />
-            <SidebarInset className="flex-1 min-w-0">
-              <div className="h-full bg-background">
-                <Header />
-                <main className="flex-1 p-6 overflow-auto bg-background">
-                  <div className="max-w-full">
-                    {children}
-                  </div>
-                </main>
-              </div>
-            </SidebarInset>
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <BackOfficeHeader />
+              <main className="flex-1 overflow-auto">
+                <Outlet />
+              </main>
+            </div>
           </div>
-          <ChatWidget />
         </SidebarProvider>
-      </MessagingProvider>
+      ) : (
+        <Outlet />
+      )}
+      <Toaster />
     </div>
   );
 };

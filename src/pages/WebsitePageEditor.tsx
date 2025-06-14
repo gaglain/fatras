@@ -213,7 +213,7 @@ export const WebsitePageEditor: React.FC = () => {
       <div className="p-6">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Page non trouvée</h1>
-          <Button onClick={() => navigate('/website/backoffice')} className="bg-[#1632f4] hover:bg-[#1632f4]/90 text-white">
+          <Button onClick={() => navigate('/admin')} className="bg-[#1632f4] hover:bg-[#1632f4]/90 text-white">
             Retour à la gestion des pages
           </Button>
         </div>
@@ -226,7 +226,7 @@ export const WebsitePageEditor: React.FC = () => {
       <div className="bg-white border-b px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" onClick={() => navigate('/website/backoffice')}>
+            <Button variant="ghost" onClick={() => navigate('/admin')}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Retour
             </Button>

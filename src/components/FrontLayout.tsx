@@ -1,21 +1,37 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { FrontNavigation } from './FrontNavigation';
+import { SiteCustomizer } from './SiteCustomizer';
+import { Button } from '@/components/ui/button';
+import { Palette } from 'lucide-react';
 
 interface FrontLayoutProps {
   children?: React.ReactNode;
 }
 
 export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
+  const [showCustomizer, setShowCustomizer] = useState(false);
+
   return (
     <HelmetProvider>
       <div className="min-h-screen arc-front-bg">
         <FrontNavigation />
+        
+        {/* Bouton de personnalisation flottant */}
+        <Button
+          onClick={() => setShowCustomizer(true)}
+          className="fixed bottom-6 right-6 z-40 rounded-full w-12 h-12 p-0 arc-button shadow-lg"
+          title="Personnaliser les couleurs"
+        >
+          <Palette className="h-5 w-5" />
+        </Button>
+
         <main className="flex-1 pt-20">
           {children || <Outlet />}
         </main>
+        
         <footer className="arc-footer text-white py-12 mt-16 relative overflow-hidden">
           <div className="absolute inset-0 opacity-30">
             <div 
@@ -59,6 +75,11 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
             </div>
           </div>
         </footer>
+
+        <SiteCustomizer 
+          isOpen={showCustomizer} 
+          onClose={() => setShowCustomizer(false)} 
+        />
       </div>
     </HelmetProvider>
   );
