@@ -217,12 +217,12 @@ export const Contacts: React.FC = () => {
             <Button 
               onClick={() => setShowCSVImporter(true)} 
               variant="outline"
-              className="border-purple-200 text-purple-600 hover:bg-purple-50"
+              className="back-office-button"
             >
               <Upload className="h-4 w-4 mr-2" />
               Importer CSV
             </Button>
-            <Button onClick={() => setShowAddForm(true)} className="bg-purple-600 hover:bg-purple-700">
+            <Button onClick={() => setShowAddForm(true)} className="back-office-button">
               <Plus className="h-4 w-4 mr-2" />
               Ajouter Contact
             </Button>
@@ -240,7 +240,7 @@ export const Contacts: React.FC = () => {
             className="pl-10"
           />
         </div>
-        <Button variant="outline">Exporter</Button>
+        <Button variant="outline" className="back-office-button">Exporter</Button>
       </div>
 
       {filteredContacts.length === 0 ? (
@@ -249,7 +249,7 @@ export const Contacts: React.FC = () => {
             <User className="h-12 w-12 mx-auto text-gray-400 mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun contact trouvé</h3>
             <p className="text-gray-500 mb-4">Commencez par ajouter votre premier contact</p>
-            <Button onClick={() => setShowAddForm(true)} className="bg-purple-600 hover:bg-purple-700">
+            <Button onClick={() => setShowAddForm(true)} className="back-office-button">
               <Plus className="h-4 w-4 mr-2" />
               Ajouter Contact
             </Button>
@@ -261,8 +261,8 @@ export const Contacts: React.FC = () => {
             <Card key={contact.id} className="hover:shadow-lg transition-shadow">
               <CardHeader className="pb-3">
                 <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                    <User className="h-6 w-6 text-purple-600" />
+                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                    <User className="h-6 w-6 text-blue-600" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center space-x-2">
@@ -305,7 +305,7 @@ export const Contacts: React.FC = () => {
               </CardHeader>
               <CardContent className="space-y-3">
                 <div 
-                  className="flex items-center text-sm text-gray-600 cursor-pointer hover:text-purple-600"
+                  className="flex items-center text-sm text-gray-600 cursor-pointer hover:text-blue-600"
                   onClick={() => handleEmailClick(contact.email, `${contact.firstName} ${contact.lastName}`)}
                 >
                   <Mail className="h-4 w-4 mr-2" />
@@ -352,7 +352,7 @@ export const Contacts: React.FC = () => {
                   <Button 
                     size="sm" 
                     variant="outline" 
-                    className="flex-1"
+                    className="flex-1 back-office-button"
                     onClick={() => handleEmailClick(contact.email, `${contact.firstName} ${contact.lastName}`)}
                   >
                     <Mail className="h-3 w-3 mr-1" />
@@ -430,10 +430,10 @@ export const Contacts: React.FC = () => {
               </div>
               
               <div className="flex space-x-3 pt-4">
-                <Button onClick={() => setShowAddForm(false)} variant="outline" className="flex-1">
+                <Button onClick={() => setShowAddForm(false)} variant="outline" className="flex-1 back-office-button">
                   Annuler
                 </Button>
-                <Button onClick={handleAddContact} className="flex-1 bg-purple-600 hover:bg-purple-700">
+                <Button onClick={handleAddContact} className="flex-1 back-office-button">
                   Sauvegarder Contact
                 </Button>
               </div>
