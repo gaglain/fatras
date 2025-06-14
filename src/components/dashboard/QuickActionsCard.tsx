@@ -36,13 +36,13 @@ export const QuickActionsCard: React.FC = () => {
 
   return (
     <Card className="hover:shadow-md transition-shadow" style={{
-      background: 'var(--custom-cardBg, #ffffff)',
-      color: 'var(--custom-cardText, #18181b)',
-      border: '1px solid rgba(0,0,0,0.1)'
+      background: `rgb(var(--custom-cardBg))`,
+      color: `rgb(var(--custom-cardText))`,
+      border: `1px solid rgba(var(--custom-buttonBg), 0.2)`
     }}>
       <CardHeader>
         <CardTitle style={{
-          color: 'var(--custom-cardText, #18181b)'
+          color: `rgb(var(--custom-cardText))`
         }}>
           Actions Rapides
         </CardTitle>
@@ -51,76 +51,76 @@ export const QuickActionsCard: React.FC = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Button 
             variant="outline" 
-            className="h-20 flex flex-col items-center justify-center hover:scale-105 transition-all"
+            className="h-20 flex flex-col items-center justify-center hover:scale-105 transition-all cursor-pointer"
             style={{
-              border: '1px solid rgba(0,0,0,0.1)',
-              color: 'var(--custom-buttonBg, #1632f4)',
+              border: `1px solid rgb(var(--custom-buttonBg))`,
+              color: `rgb(var(--custom-buttonBg))`,
               background: 'transparent'
             }}
             onClick={() => handleQuickAction('nouveau-contact')}
           >
             <Users className="h-6 w-6 mb-2" style={{
-              color: 'var(--custom-buttonBg, #1632f4)'
+              color: `rgb(var(--custom-buttonBg))`
             }} />
             <span style={{
-              color: 'var(--custom-buttonBg, #1632f4)'
+              color: `rgb(var(--custom-buttonBg))`
             }}>
               Nouveau Contact
             </span>
           </Button>
           <Button 
             variant="outline" 
-            className="h-20 flex flex-col items-center justify-center hover:scale-105 transition-all"
+            className="h-20 flex flex-col items-center justify-center hover:scale-105 transition-all cursor-pointer"
             style={{
-              border: '1px solid rgba(0,0,0,0.1)',
-              color: 'var(--custom-buttonBg, #1632f4)',
+              border: `1px solid rgb(var(--custom-buttonBg))`,
+              color: `rgb(var(--custom-buttonBg))`,
               background: 'transparent'
             }}
             onClick={() => handleQuickAction('planifier-evenement')}
           >
             <Calendar className="h-6 w-6 mb-2" style={{
-              color: 'var(--custom-buttonBg, #1632f4)'
+              color: `rgb(var(--custom-buttonBg))`
             }} />
             <span style={{
-              color: 'var(--custom-buttonBg, #1632f4)'
+              color: `rgb(var(--custom-buttonBg))`
             }}>
               Planifier Événement
             </span>
           </Button>
           <Button 
             variant="outline" 
-            className="h-20 flex flex-col items-center justify-center hover:scale-105 transition-all"
+            className="h-20 flex flex-col items-center justify-center hover:scale-105 transition-all cursor-pointer"
             style={{
-              border: '1px solid rgba(0,0,0,0.1)',
-              color: 'var(--custom-buttonBg, #1632f4)',
+              border: `1px solid rgb(var(--custom-buttonBg))`,
+              color: `rgb(var(--custom-buttonBg))`,
               background: 'transparent'
             }}
             onClick={() => handleQuickAction('creer-tache')}
           >
             <CheckSquare className="h-6 w-6 mb-2" style={{
-              color: 'var(--custom-buttonBg, #1632f4)'
+              color: `rgb(var(--custom-buttonBg))`
             }} />
             <span style={{
-              color: 'var(--custom-buttonBg, #1632f4)'
+              color: `rgb(var(--custom-buttonBg))`
             }}>
               Créer Tâche
             </span>
           </Button>
           <Button 
             variant="outline" 
-            className="h-20 flex flex-col items-center justify-center hover:scale-105 transition-all"
+            className="h-20 flex flex-col items-center justify-center hover:scale-105 transition-all cursor-pointer"
             style={{
-              border: '1px solid rgba(0,0,0,0.1)',
-              color: 'var(--custom-buttonBg, #1632f4)',
+              border: `1px solid rgb(var(--custom-buttonBg))`,
+              color: `rgb(var(--custom-buttonBg))`,
               background: 'transparent'
             }}
             onClick={() => handleQuickAction('envoyer-email')}
           >
             <Mail className="h-6 w-6 mb-2" style={{
-              color: 'var(--custom-buttonBg, #1632f4)'
+              color: `rgb(var(--custom-buttonBg))`
             }} />
             <span style={{
-              color: 'var(--custom-buttonBg, #1632f4)'
+              color: `rgb(var(--custom-buttonBg))`
             }}>
               Envoyer Email
             </span>

@@ -50,10 +50,19 @@ export const ChatWidget: React.FC = () => {
   return (
     <div className="fixed bottom-4 right-4 z-50">
       {isOpen && (
-        <Card className="w-80 h-96 mb-4 shadow-lg">
-          <CardHeader className="pb-2 bg-blue-600 text-white">
+        <Card className="w-80 h-96 mb-4 shadow-lg" style={{
+          background: `rgb(var(--custom-cardBg))`,
+          color: `rgb(var(--custom-cardText))`,
+          border: `1px solid rgba(var(--custom-buttonBg), 0.2)`
+        }}>
+          <CardHeader className="pb-2" style={{
+            background: `rgb(var(--custom-buttonBg))`,
+            color: `rgb(var(--custom-buttonText))`
+          }}>
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm flex items-center text-white">
+              <CardTitle className="text-sm flex items-center" style={{
+                color: `rgb(var(--custom-buttonText))`
+              }}>
                 <MessageSquare className="h-4 w-4 mr-2" />
                 Support
               </CardTitle>
@@ -61,7 +70,12 @@ export const ChatWidget: React.FC = () => {
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsOpen(false)}
-                className="text-white hover:bg-white/20"
+                style={{
+                  background: 'transparent',
+                  color: `rgb(var(--custom-buttonText))`,
+                  border: 'none'
+                }}
+                className="hover:bg-white/20"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -85,19 +99,31 @@ export const ChatWidget: React.FC = () => {
                         message.sender === 'user' ? 'flex-row-reverse space-x-reverse' : ''
                       }`}
                     >
-                      <div className={`w-6 h-6 flex items-center justify-center text-xs ${
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
                         message.sender === 'user' 
-                          ? 'bg-blue-600 text-white' 
-                          : 'bg-gray-200 text-gray-600'
-                      }`}>
+                          ? 'text-white' 
+                          : 'text-gray-600'
+                      }`} style={{
+                        background: message.sender === 'user' 
+                          ? `rgb(var(--custom-buttonBg))` 
+                          : `rgb(var(--custom-background))`
+                      }}>
                         {message.sender === 'user' ? <User className="h-3 w-3" /> : <Bot className="h-3 w-3" />}
                       </div>
                       <div
-                        className={`px-3 py-2 text-sm ${
+                        className={`px-3 py-2 rounded-lg text-sm ${
                           message.sender === 'user'
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-gray-100 text-gray-900'
+                            ? 'text-white'
+                            : ''
                         }`}
+                        style={{
+                          background: message.sender === 'user'
+                            ? `rgb(var(--custom-buttonBg))`
+                            : `rgba(var(--custom-text), 0.1)`,
+                          color: message.sender === 'user'
+                            ? `rgb(var(--custom-buttonText))`
+                            : `rgb(var(--custom-text))`
+                        }}
                       >
                         {message.text}
                       </div>
@@ -106,7 +132,9 @@ export const ChatWidget: React.FC = () => {
                 ))
               )}
             </div>
-            <div className="p-3 border-t">
+            <div className="p-3 border-t" style={{
+              borderColor: `rgba(var(--custom-text), 0.1)`
+            }}>
               <div className="flex space-x-2">
                 <input
                   type="text"
@@ -114,13 +142,22 @@ export const ChatWidget: React.FC = () => {
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="Tapez votre message..."
-                  className="flex-1 px-3 py-2 text-sm border"
+                  className="flex-1 px-3 py-2 text-sm border rounded-md"
+                  style={{
+                    background: `rgb(var(--custom-background))`,
+                    color: `rgb(var(--custom-text))`,
+                    border: `1px solid rgba(var(--custom-text), 0.2)`
+                  }}
                 />
                 <Button
                   onClick={handleSendMessage}
                   disabled={!inputValue.trim()}
                   size="sm"
-                  className="chat-widget-button"
+                  style={{
+                    background: `rgb(var(--custom-chatWidgetBg))`,
+                    color: `rgb(var(--custom-chatWidgetIcon))`,
+                    border: 'none'
+                  }}
                 >
                   <Send className="h-4 w-4" />
                 </Button>
@@ -132,7 +169,12 @@ export const ChatWidget: React.FC = () => {
       
       <Button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-12 h-12 shadow-lg chat-widget-button"
+        className="w-12 h-12 rounded-full shadow-lg"
+        style={{
+          background: `rgb(var(--custom-chatWidgetBg))`,
+          color: `rgb(var(--custom-chatWidgetIcon))`,
+          border: 'none'
+        }}
       >
         <MessageSquare className="h-6 w-6" />
       </Button>

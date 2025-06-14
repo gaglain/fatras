@@ -9,7 +9,7 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 22 50 244;
+    --primary: 221 83% 53%;
     --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96%;
     --secondary-foreground: 222.2 84% 4.9%;
@@ -21,7 +21,7 @@
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 22 50 244;
+    --ring: 221 83% 53%;
     --radius: 0.75rem;
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
@@ -29,15 +29,15 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     
-    /* Variables personnalisées pour le thème */
-    --custom-background: #ffffff;
-    --custom-text: #18181b;
-    --custom-cardBg: #ffffff;
-    --custom-cardText: #18181b;
-    --custom-buttonBg: #1632f4;
-    --custom-buttonText: #ffffff;
-    --custom-chatWidgetBg: #ec5f65;
-    --custom-chatWidgetIcon: #ffffff;
+    /* Variables personnalisées pour le thème CLAIR */
+    --custom-background: 255, 255, 255;
+    --custom-text: 24, 24, 27;
+    --custom-cardBg: 255, 255, 255;
+    --custom-cardText: 24, 24, 27;
+    --custom-buttonBg: 22, 50, 244;
+    --custom-buttonText: 255, 255, 255;
+    --custom-chatWidgetBg: 236, 95, 101;
+    --custom-chatWidgetIcon: 255, 255, 255;
     
     /* Sidebar tokens */
     --sidebar-background: 22 50 244;
@@ -57,7 +57,7 @@
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 22 50 244;
+    --primary: 221 83% 53%;
     --primary-foreground: 255 255 255;
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
@@ -69,42 +69,41 @@
     --destructive-foreground: 210 40% 98%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 22 50 244;
+    --ring: 221 83% 53%;
     
-    /* Variables personnalisées pour le mode sombre */
-    --custom-background: #18181b;
-    --custom-text: #ffffff;
-    --custom-cardBg: #22223a;
-    --custom-cardText: #ffffff;
-    --custom-buttonBg: #ffffff;
-    --custom-buttonText: #1632f4;
-    --custom-chatWidgetBg: #ec5f65;
-    --custom-chatWidgetIcon: #ffffff;
+    /* Variables personnalisées pour le mode SOMBRE */
+    --custom-background: 24, 24, 27;
+    --custom-text: 255, 255, 255;
+    --custom-cardBg: 34, 34, 58;
+    --custom-cardText: 255, 255, 255;
+    --custom-buttonBg: 255, 255, 255;
+    --custom-buttonText: 22, 50, 244;
+    --custom-chatWidgetBg: 236, 95, 101;
+    --custom-chatWidgetIcon: 255, 255, 255;
     
     /* Sidebar en mode sombre */
     --sidebar-background: 217.2 32.6% 17.5%;
     --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 22 50 244;
+    --sidebar-primary: 221 83% 53%;
     --sidebar-primary-foreground: 255 255 255;
     --sidebar-accent: 217.2 32.6% 20%;
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 217.2 32.6% 20%;
-    --sidebar-ring: 22 50 244;
+    --sidebar-ring: 221 83% 53%;
   }
 }
 
 @layer base {
   * {
     @apply border-border;
-    border-radius: 0 !important;
   }
   
   body {
     @apply bg-background text-foreground;
     font-family: "Inter", sans-serif;
     font-display: swap;
-    background: var(--custom-background) !important;
-    color: var(--custom-text) !important;
+    background: rgb(var(--custom-background)) !important;
+    color: rgb(var(--custom-text)) !important;
   }
   
   html {
@@ -113,16 +112,6 @@
   
   html.dark {
     color-scheme: dark;
-  }
-  
-  /* Exceptions pour les éléments ronds */
-  .rounded-full,
-  [class*="rounded-full"],
-  .avatar,
-  .badge,
-  .notification-dot,
-  .status-indicator {
-    border-radius: 50% !important;
   }
   
   /* Optimisations éco-conception */

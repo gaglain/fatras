@@ -33,7 +33,6 @@
     background: var(--custom-cardBg) !important;
     color: var(--custom-cardText) !important;
     border: 1px solid rgba(0,0,0,0.1) !important;
-    border-radius: 0 !important;
     box-shadow: 0 2px 8px rgba(0,0,0,0.04);
   }
 
@@ -48,7 +47,6 @@
     background: var(--custom-buttonBg) !important;
     color: var(--custom-buttonText) !important;
     border: 1px solid var(--custom-buttonBg) !important;
-    border-radius: 0 !important;
     transition: all 0.2s ease !important;
   }
 
@@ -64,7 +62,8 @@
 
   [data-variant="ghost"]:hover,
   .variant-ghost:hover {
-    background: rgba(var(--custom-buttonBg), 0.1) !important;
+    background: var(--custom-buttonBg) !important;
+    color: var(--custom-buttonText) !important;
   }
 
   /* Champs de saisie */
@@ -74,7 +73,6 @@
     background: var(--custom-background) !important;
     color: var(--custom-text) !important;
     border: 1px solid var(--custom-buttonBg) !important;
-    border-radius: 0 !important;
   }
 
   /* Dropdowns et menus */
@@ -87,27 +85,13 @@
     background: var(--custom-cardBg) !important;
     color: var(--custom-cardText) !important;
     border: 1px solid rgba(0,0,0,0.1) !important;
-    border-radius: 0 !important;
     z-index: 50 !important;
   }
 
-  /* Chat widget couleurs */
+  /* Chat widget couleurs ET forme ronde */
   .chat-widget-button {
     background: var(--custom-chatWidgetBg) !important;
     color: var(--custom-chatWidgetIcon) !important;
-  }
-
-  /* Suppression des bordures arrondies globalement */
-  *, *::before, *::after {
-    border-radius: 0 !important;
-  }
-
-  /* Exceptions pour éléments qui doivent rester ronds */
-  .rounded-full,
-  [class*="rounded-full"],
-  .avatar,
-  .badge,
-  .notification-dot {
     border-radius: 50% !important;
   }
 
@@ -121,5 +105,14 @@
   .text-secondary,
   .muted {
     color: rgba(var(--custom-text), 0.7) !important;
+  }
+
+  /* Hover effects pour les cartes */
+  .hover\:shadow-md:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+  }
+
+  .hover\:scale-105:hover {
+    transform: scale(1.05) !important;
   }
 }
