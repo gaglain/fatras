@@ -80,12 +80,21 @@
   body {
     @apply bg-background text-foreground;
     font-family: "Inter", sans-serif;
+  }
+  
+  /* Application différenciée selon le contexte */
+  .front-context {
     background: rgb(var(--color-primary));
     color: white;
   }
   
+  .back-office-context {
+    background: #f8fafc;
+    color: #1e293b;
+  }
+  
   html {
-    color-scheme: dark;
+    color-scheme: light;
   }
   
   html.dark {

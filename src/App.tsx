@@ -83,8 +83,10 @@ function App() {
               <Route path="/user-management" element={<ProtectedRoute><Layout><UserManagement /></Layout></ProtectedRoute>} />
               <Route path="/application" element={<ProtectedRoute><Layout><Application /></Layout></ProtectedRoute>} />
               <Route path="/preferences" element={<ProtectedRoute><Layout><Preferences /></Layout></ProtectedRoute>} />
-              <Route path="/website-backoffice" element={<ProtectedRoute><Layout><WebsiteBackoffice /></Layout></ProtectedRoute>} />
-              <Route path="/website-editor/:pageId" element={<ProtectedRoute><Layout><WebsitePageEditor /></Layout></ProtectedRoute>} />
+              
+              {/* Website management routes */}
+              <Route path="/website/backoffice" element={<ProtectedRoute><Layout><WebsiteBackoffice /></Layout></ProtectedRoute>} />
+              <Route path="/website/editor/:pageId" element={<ProtectedRoute><Layout><WebsitePageEditor /></Layout></ProtectedRoute>} />
               <Route path="/website-with-editor" element={<ProtectedRoute><Layout><WebsiteWithEditor /></Layout></ProtectedRoute>} />
 
               {/* 404 route */}

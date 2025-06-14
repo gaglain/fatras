@@ -22,7 +22,8 @@ import {
   Music,
   Calendar,
   Users,
-  ArrowLeft
+  ArrowLeft,
+  Upload
 } from 'lucide-react';
 
 interface WebPage {
@@ -100,56 +101,12 @@ interface WebsiteBackofficeProps {
 
 export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }) => {
   const navigate = useNavigate();
-  const [pages, setPages] = useState<WebPage[]>([
-    {
-      id: '1',
-      title: 'Accueil',
-      slug: '/',
-      status: 'published',
-      type: 'page',
-      content: 'Page d\'accueil avec les derniers événements et artistes',
-      metaDescription: 'Découvrez nos artistes et événements exceptionnels',
-      createdAt: '2024-01-15',
-      updatedAt: '2024-01-20'
-    },
-    {
-      id: '2',
-      title: 'Nos Artistes',
-      slug: '/artists',
-      status: 'published',
-      type: 'page',
-      content: 'Galerie complète de nos artistes talentueux',
-      metaDescription: 'Parcourez notre sélection d\'artistes exceptionnels',
-      createdAt: '2024-01-10',
-      updatedAt: '2024-01-18'
-    },
-    {
-      id: '3',
-      title: 'Événements',
-      slug: '/events',
-      status: 'published',
-      type: 'page',
-      content: 'Calendrier des prochains événements et concerts',
-      metaDescription: 'Ne manquez aucun de nos événements musicaux',
-      createdAt: '2024-01-12',
-      updatedAt: '2024-01-19'
-    },
-    {
-      id: '4',
-      title: 'Contact',
-      slug: '/contact',
-      status: 'published',
-      type: 'page',
-      content: 'Formulaire de contact et informations',
-      metaDescription: 'Contactez-nous pour vos projets musicaux',
-      createdAt: '2024-01-14',
-      updatedAt: '2024-01-21'
-    }
-  ]);
+  const [pages, setPages] = useState<WebPage[]>(defaultPages);
   const [selectedPage, setSelectedPage] = useState<WebPage | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [activeTab, setActiveTab] = useState('pages');
+  const [logoUrl, setLogoUrl] = useState('/placeholder.svg');
 
   const [formData, setFormData] = useState<FormData>({
     title: '',
@@ -231,21 +188,31 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
   const draftPages = pages.filter(page => page.status === 'draft');
 
   const handleEditPage = (page: WebPage) => {
-    // Navigate to the block editor for this page
     navigate(`/website/editor/${page.id}`);
   };
 
+  const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setLogoUrl(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 back-office-context">
       <div className="bg-white border-b px-6 py-4 flex items-center justify-between">
         <div className="flex items-center space-x-4">
           {onReturn && (
-            <Button variant="ghost" onClick={onReturn}>
+            <Button variant="ghost" onClick={onReturn} className="text-gray-700 hover:text-gray-900">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Retour au site
             </Button>
           )}
-          <h1 className="text-lg font-semibold">Back Office - Site Web</h1>
+          <h1 className="text-lg font-semibold text-gray-900">Back Office - Site Web</h1>
         </div>
       </div>
       
@@ -257,7 +224,7 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
           </div>
           <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="bg-brand-primary text-white hover:bg-brand-dark">
                 <Plus className="h-4 w-4 mr-2" />
                 Nouvelle Page
               </Button>
@@ -340,7 +307,7 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
                   <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
                     Annuler
                   </Button>
-                  <Button onClick={handleCreatePage}>
+                  <Button onClick={handleCreatePage} className="bg-brand-primary text-white hover:bg-brand-dark">
                     Créer la page
                   </Button>
                 </div>
@@ -351,7 +318,7 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card>
+          <Card className="bg-white">
             <CardContent className="p-6">
               <div className="flex items-center">
                 <Globe className="h-8 w-8 text-blue-600" />
@@ -363,7 +330,7 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-white">
             <CardContent className="p-6">
               <div className="flex items-center">
                 <Eye className="h-8 w-8 text-green-600" />
@@ -375,7 +342,7 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-white">
             <CardContent className="p-6">
               <div className="flex items-center">
                 <Edit className="h-8 w-8 text-yellow-600" />
@@ -387,7 +354,7 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-white">
             <CardContent className="p-6">
               <div className="flex items-center">
                 <Settings className="h-8 w-8 text-purple-600" />
@@ -406,13 +373,14 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
             <TabsTrigger value="pages">Toutes les Pages</TabsTrigger>
             <TabsTrigger value="published">Publiées</TabsTrigger>
             <TabsTrigger value="drafts">Brouillons</TabsTrigger>
+            <TabsTrigger value="settings">Paramètres</TabsTrigger>
             <TabsTrigger value="media">Médias</TabsTrigger>
           </TabsList>
 
           <TabsContent value="pages" className="mt-6">
-            <Card>
+            <Card className="bg-white">
               <CardHeader>
-                <CardTitle>Gestion des Pages</CardTitle>
+                <CardTitle className="text-gray-900">Gestion des Pages</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -421,7 +389,7 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
                       <div className="flex items-center space-x-4">
                         {getTypeIcon(page.type)}
                         <div>
-                          <h3 className="font-medium">{page.title}</h3>
+                          <h3 className="font-medium text-gray-900">{page.title}</h3>
                           <p className="text-sm text-gray-600">{page.slug}</p>
                           <p className="text-xs text-gray-500 mt-1">{page.content.substring(0, 100)}...</p>
                         </div>
@@ -453,9 +421,9 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
           </TabsContent>
 
           <TabsContent value="published" className="mt-6">
-            <Card>
+            <Card className="bg-white">
               <CardHeader>
-                <CardTitle>Pages Publiées ({publishedPages.length})</CardTitle>
+                <CardTitle className="text-gray-900">Pages Publiées ({publishedPages.length})</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -464,7 +432,7 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
                       <div className="flex items-center space-x-4">
                         {getTypeIcon(page.type)}
                         <div>
-                          <h3 className="font-medium">{page.title}</h3>
+                          <h3 className="font-medium text-gray-900">{page.title}</h3>
                           <p className="text-sm text-gray-600">{page.slug}</p>
                         </div>
                       </div>
@@ -485,9 +453,9 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
           </TabsContent>
 
           <TabsContent value="drafts" className="mt-6">
-            <Card>
+            <Card className="bg-white">
               <CardHeader>
-                <CardTitle>Brouillons ({draftPages.length})</CardTitle>
+                <CardTitle className="text-gray-900">Brouillons ({draftPages.length})</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -496,7 +464,7 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
                       <div className="flex items-center space-x-4">
                         {getTypeIcon(page.type)}
                         <div>
-                          <h3 className="font-medium">{page.title}</h3>
+                          <h3 className="font-medium text-gray-900">{page.title}</h3>
                           <p className="text-sm text-gray-600">{page.slug}</p>
                         </div>
                       </div>
@@ -516,10 +484,70 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
             </Card>
           </TabsContent>
 
-          <TabsContent value="media" className="mt-6">
-            <Card>
+          <TabsContent value="settings" className="mt-6">
+            <Card className="bg-white">
               <CardHeader>
-                <CardTitle>Médiathèque</CardTitle>
+                <CardTitle className="text-gray-900">Paramètres du Site</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Logo du Site</label>
+                  <div className="flex items-center space-x-4">
+                    <img 
+                      src={logoUrl} 
+                      alt="Logo actuel" 
+                      className="h-16 w-16 object-cover rounded-lg border border-gray-200"
+                    />
+                    <div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleLogoUpload}
+                        className="hidden"
+                        id="logo-upload"
+                      />
+                      <label htmlFor="logo-upload">
+                        <Button variant="outline" className="cursor-pointer" asChild>
+                          <span>
+                            <Upload className="h-4 w-4 mr-2" />
+                            Changer le logo
+                          </span>
+                        </Button>
+                      </label>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Formats acceptés: JPG, PNG, SVG. Taille recommandée: 200x200px
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Nom du Site</label>
+                  <Input defaultValue="MusiConnect" placeholder="Nom de votre site" />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Description du Site</label>
+                  <Textarea 
+                    defaultValue="Plateforme de booking d'artistes et gestion d'événements musicaux"
+                    placeholder="Description de votre site"
+                    rows={3}
+                  />
+                </div>
+
+                <div className="flex justify-end">
+                  <Button className="bg-brand-primary text-white hover:bg-brand-dark">
+                    Sauvegarder les paramètres
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="media" className="mt-6">
+            <Card className="bg-white">
+              <CardHeader>
+                <CardTitle className="text-gray-900">Médiathèque</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -535,7 +563,7 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
                       ) : (
                         <Video className="h-12 w-12 mx-auto text-gray-400 mb-2" />
                       )}
-                      <p className="text-sm font-medium">{media.name}</p>
+                      <p className="text-sm font-medium text-gray-900">{media.name}</p>
                       <p className="text-xs text-gray-500">{media.size}</p>
                     </div>
                   ))}
@@ -548,94 +576,6 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
             </Card>
           </TabsContent>
         </Tabs>
-
-        {/* Edit Dialog */}
-        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Modifier la page</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Titre</label>
-                  <Input
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    placeholder="Titre de la page"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">URL (slug)</label>
-                  <Input
-                    value={formData.slug}
-                    onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                    placeholder="/ma-page"
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
-                  <Select value={formData.type} onValueChange={(value: any) => setFormData({ ...formData, type: value })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="page">Page</SelectItem>
-                      <SelectItem value="blog">Article de blog</SelectItem>
-                      <SelectItem value="event">Événement</SelectItem>
-                      <SelectItem value="artist">Artiste</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Statut</label>
-                  <Select value={formData.status} onValueChange={(value: any) => setFormData({ ...formData, status: value })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="draft">Brouillon</SelectItem>
-                      <SelectItem value="published">Publié</SelectItem>
-                      <SelectItem value="archived">Archivé</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Description SEO</label>
-                <Textarea
-                  value={formData.metaDescription}
-                  onChange={(e) => setFormData({ ...formData, metaDescription: e.target.value })}
-                  placeholder="Description pour les moteurs de recherche..."
-                  rows={2}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Contenu</label>
-                <Textarea
-                  value={formData.content}
-                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                  placeholder="Contenu de la page..."
-                  rows={4}
-                />
-              </div>
-
-              <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setShowEditDialog(false)}>
-                  Annuler
-                </Button>
-                <Button onClick={handleUpdatePage}>
-                  Sauvegarder
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
       </div>
     </div>
   );
