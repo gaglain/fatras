@@ -138,7 +138,19 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return users.find(user => user.id === id);
   };
 
-  const getUserPermissions = (user: User): UserPermissions => {
+  const getUserPermissions = (user: User | null): UserPermissions => {
+    // Gérer le cas où user est null
+    if (!user) {
+      return {
+        canCreateContacts: false,
+        canEditAllContacts: false,
+        canDeleteContacts: false,
+        canViewAllTasks: false,
+        canAssignTasks: false,
+        canManageUsers: false
+      };
+    }
+
     switch (user.role) {
       case 'admin':
         return {

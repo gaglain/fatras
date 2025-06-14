@@ -102,7 +102,16 @@ export const Tasks: React.FC = () => {
     relatedToType: 'contact' as 'contact' | 'event' | 'contract'
   });
 
-  const permissions = getUserPermissions(currentUser!);
+  // Ne pas rendre le composant si currentUser n'est pas encore chargé
+  if (!currentUser) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-gray-500">Chargement...</div>
+      </div>
+    );
+  }
+
+  const permissions = getUserPermissions(currentUser);
 
   const filteredTasks = tasks.filter(task => {
     const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
