@@ -1,13 +1,15 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { X, User, Save, Camera } from 'lucide-react';
+import { X, User, Save, Camera, Upload } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useUser } from '@/contexts/UserContext';
 import { useAuth } from '@/hooks/useAuth';
+import { useFileUpload } from '@/hooks/useFileUpload';
+import { toast } from 'sonner';
 
 interface UserProfileProps {
   onClose: () => void;
@@ -16,13 +18,16 @@ interface UserProfileProps {
 export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
   const { currentUser, updateUser } = useUser();
   const { user: authUser } = useAuth();
+  const { uploadFile, uploading } = useFileUpload();
   const [isEditing, setIsEditing] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     name: currentUser?.name || '',
     lastName: currentUser?.lastName || '',
     email: currentUser?.email || '',
     phone: currentUser?.phone || '',
-    bio: currentUser?.bio || ''
+    bio: currentUser?.bio || '',
+    avatar: currentUser?.avatar || ''
   });
 
   // S'assurer que les données sont à jour avec l'utilisateur connecté
@@ -33,15 +38,30 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
         lastName: currentUser.lastName || '',
         email: currentUser.email || '',
         phone: currentUser.phone || '',
-        bio: currentUser.bio || ''
+        bio: currentUser.bio || '',
+        avatar: currentUser.avatar || ''
       });
     }
   }, [currentUser]);
+
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !currentUser?.id) return;
+
+    try {
+      const imageUrl = await uploadFile(file, 'avatars', `${currentUser.id}/profile`);
+      setFormData(prev => ({ ...prev, avatar: imageUrl }));
+      toast.success('Photo de profil téléchargée avec succès');
+    } catch (error) {
+      console.error('Erreur lors du téléchargement:', error);
+    }
+  };
 
   const handleSave = () => {
     if (currentUser?.id) {
       updateUser(currentUser.id, formData);
       setIsEditing(false);
+      toast.success('Profil mis à jour avec succès');
     }
   };
 
@@ -51,7 +71,8 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
       lastName: currentUser?.lastName || '',
       email: currentUser?.email || '',
       phone: currentUser?.phone || '',
-      bio: currentUser?.bio || ''
+      bio: currentUser?.bio || '',
+      avatar: currentUser?.avatar || ''
     });
     setIsEditing(false);
   };
@@ -81,19 +102,27 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
           <div className="flex flex-col items-center space-y-4">
             <div className="relative">
               <Avatar className="h-20 w-20">
-                <AvatarImage src={displayUser.avatar} alt={displayUser.name} />
+                <AvatarImage src={formData.avatar || displayUser.avatar} alt={formData.name || displayUser.name} />
                 <AvatarFallback className="text-lg">
-                  {(displayUser.name?.charAt(0) || '') + (displayUser.lastName?.charAt(0) || '')}
+                  {((formData.name || displayUser.name)?.charAt(0) || '') + ((formData.lastName || displayUser.lastName)?.charAt(0) || '')}
                 </AvatarFallback>
               </Avatar>
               <Button
                 variant="outline"
                 size="sm"
                 className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full"
-                disabled={!isEditing}
+                disabled={!isEditing || uploading}
+                onClick={() => fileInputRef.current?.click()}
               >
-                <Camera className="h-4 w-4" />
+                {uploading ? <Upload className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
               </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarUpload}
+                className="hidden"
+              />
             </div>
           </div>
 
@@ -168,7 +197,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
                 <Button variant="outline" onClick={handleCancel} className="flex-1">
                   Annuler
                 </Button>
-                <Button onClick={handleSave} className="flex-1">
+                <Button onClick={handleSave} className="flex-1" disabled={uploading}>
                   <Save className="h-4 w-4 mr-2" />
                   Sauvegarder
                 </Button>

@@ -4,7 +4,9 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { X, Send, Paperclip, FileText, Image, Video, Music, Upload } from 'lucide-react';
+import { X, Send, Paperclip, FileText, Image, Video, Music, Upload, Signature } from 'lucide-react';
+import { useUser } from '@/contexts/UserContext';
+import { generateEmailSignature, getPlainTextSignature } from '@/utils/emailSignature';
 
 interface EmailHistory {
   id: string;
@@ -74,6 +76,7 @@ const emailTemplates: EmailTemplate[] = [
 ];
 
 export const EmailPopup: React.FC<EmailPopupProps> = ({ isOpen, onClose, email, contactName }) => {
+  const { currentUser } = useUser();
   const [showCompose, setShowCompose] = useState(false);
   const [showBibleFiles, setShowBibleFiles] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
@@ -82,6 +85,7 @@ export const EmailPopup: React.FC<EmailPopupProps> = ({ isOpen, onClose, email, 
   const [emailContent, setEmailContent] = useState('');
   const [attachedBibleFiles, setAttachedBibleFiles] = useState<string[]>([]);
   const [externalFiles, setExternalFiles] = useState<File[]>([]);
+  const [includeSignature, setIncludeSignature] = useState(true);
 
   const bibleFiles = [
     { id: '1', name: 'Technical Rider - The Midnight Express.pdf', type: 'pdf', size: '2.3 MB' },
@@ -124,6 +128,31 @@ export const EmailPopup: React.FC<EmailPopupProps> = ({ isOpen, onClose, email, 
   const handleExternalFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
     setExternalFiles(prev => [...prev, ...files]);
+  };
+
+  const handleSendEmail = () => {
+    let finalContent = emailContent;
+    
+    if (includeSignature && currentUser) {
+      finalContent += '\n\n' + getPlainTextSignature(currentUser);
+    }
+    
+    // Ici, vous pourriez intégrer avec votre service d'envoi d'email
+    console.log('Envoi d\'email:', {
+      to: email,
+      subject: emailSubject,
+      content: finalContent,
+      attachments: [...attachedBibleFiles, ...externalFiles.map(f => f.name)],
+      signature: includeSignature ? generateEmailSignature(currentUser) : null
+    });
+    
+    // Simuler l'envoi
+    alert('Email envoyé avec succès !');
+    setShowCompose(false);
+    setEmailSubject('');
+    setEmailContent('');
+    setAttachedBibleFiles([]);
+    setExternalFiles([]);
   };
 
   if (!isOpen) return null;
@@ -195,6 +224,14 @@ export const EmailPopup: React.FC<EmailPopupProps> = ({ isOpen, onClose, email, 
                     <FileText className="h-3 w-3 mr-1" />
                     Modèles
                   </Button>
+                  <Button 
+                    variant={includeSignature ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setIncludeSignature(!includeSignature)}
+                  >
+                    <Signature className="h-3 w-3 mr-1" />
+                    Signature
+                  </Button>
                 </div>
 
                 {showTemplates && (
@@ -227,6 +264,19 @@ export const EmailPopup: React.FC<EmailPopupProps> = ({ isOpen, onClose, email, 
                   value={emailContent}
                   onChange={(e) => setEmailContent(e.target.value)}
                 />
+                
+                {includeSignature && currentUser && (
+                  <div className="border border-purple-200 bg-purple-50 rounded-md p-3">
+                    <div className="flex items-center mb-2">
+                      <Signature className="h-4 w-4 text-purple-600 mr-2" />
+                      <span className="text-sm font-medium text-purple-800">Aperçu de la signature</span>
+                    </div>
+                    <div 
+                      className="text-xs"
+                      dangerouslySetInnerHTML={{ __html: generateEmailSignature(currentUser) }}
+                    />
+                  </div>
+                )}
                 
                 <div className="flex items-center space-x-2">
                   <Button 
@@ -302,7 +352,7 @@ export const EmailPopup: React.FC<EmailPopupProps> = ({ isOpen, onClose, email, 
                   <Button variant="outline" size="sm" className="flex-1">
                     Brouillon
                   </Button>
-                  <Button size="sm" className="flex-1 bg-purple-600 hover:bg-purple-700">
+                  <Button size="sm" className="flex-1 bg-purple-600 hover:bg-purple-700" onClick={handleSendEmail}>
                     <Send className="h-3 w-3 mr-1" />
                     Envoyer
                   </Button>
