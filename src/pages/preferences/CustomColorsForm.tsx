@@ -24,6 +24,10 @@ const colorFields: { key: string, label: string, default: string }[] = [
   { key: "cardTextDark", label: "Texte carte (sombre)", default: "#ffffff" },
   { key: "sidebarIconLight", label: "Couleur icônes menu (clair)", default: "#1632f4" },
   { key: "sidebarIconDark", label: "Couleur icônes menu (sombre)", default: "#ffffff" },
+  { key: "chatWidgetBg", label: "Widget messagerie fond (clair)", default: "#ec5f65" },
+  { key: "chatWidgetBgDark", label: "Widget messagerie fond (sombre)", default: "#ec5f65" },
+  { key: "chatWidgetIcon", label: "Widget messagerie icône (clair)", default: "#ffffff" },
+  { key: "chatWidgetIconDark", label: "Widget messagerie icône (sombre)", default: "#ffffff" },
 ];
 
 type ColorSettings = Record<string, string>;

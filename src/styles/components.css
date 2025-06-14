@@ -1,3 +1,4 @@
+
 @layer components {
   /* Header avec fond granulé style Arc.net */
   .arc-front-header {
@@ -295,7 +296,7 @@
     color: var(--custom-buttonTextDark, #fff) !important;
   }
 
-  /* Support pour inputs : fond custom */
+  /* Support pour inputs : fond custom */
   input, .arc-input {
     color: var(--custom-text, #18181b);
     background: var(--custom-background, #fff);
@@ -303,6 +304,14 @@
   .dark input, .dark .arc-input {
     color: var(--custom-textDark, #fff);
     background: var(--custom-backgroundDark, #18181b);
+  }
+
+  /* Couleurs personnalisées pour le widget de messagerie */
+  :root {
+    --custom-chatWidgetBg: #ec5f65;
+    --custom-chatWidgetBgDark: #ec5f65;
+    --custom-chatWidgetIcon: #ffffff;
+    --custom-chatWidgetIconDark: #ffffff;
   }
 
   /* Ajout d'une transition douce pour les changements de thème */
