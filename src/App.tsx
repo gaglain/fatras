@@ -57,6 +57,9 @@ function App() {
           <MessagingProvider>
             <Router>
               <Routes>
+                {/* Redirection pour /road-show vers /roadshow */}
+                <Route path="/road-show" element={<Navigate to="/roadshow" replace />} />
+                
                 {/* Routes principales avec Layout */}
                 <Route path="/" element={<Layout />}>
                   <Route index element={<Index />} />
