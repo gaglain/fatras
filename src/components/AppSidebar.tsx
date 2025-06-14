@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ChevronDown, ChevronRight } from 'lucide-react';
@@ -23,6 +22,20 @@ export function AppSidebar() {
   const { navigation, openSections, toggleSection } = useNavigation();
   const location = useLocation();
   const { theme } = useTheme();
+
+  // Couleur d'icône paramétrable par l'utilisateur (préférences couleurs)
+  // Récupération des variables CSS custom
+  function getSidebarIconColor(): string {
+    // Les variables CSS sont stockées en "--custom-sidebarIconLight" et "--custom-sidebarIconDark"
+    const root = document.documentElement;
+    if (theme === "dark") {
+      return getComputedStyle(root).getPropertyValue("--custom-sidebarIconDark")?.trim() || "#ffffff";
+    } else {
+      return getComputedStyle(root).getPropertyValue("--custom-sidebarIconLight")?.trim() || "#1632f4";
+    }
+  }
+
+  const sidebarIconColor = getSidebarIconColor();
 
   // Définir les couleurs dynamiques selon le thème
   const isDark = theme === 'dark';
@@ -71,13 +84,13 @@ export function AppSidebar() {
                             }`}
                           >
                             <div className="flex items-center min-w-0">
-                              <item.icon className={`mr-3 h-4 w-4 flex-shrink-0 ${sidebarText}`} />
+                              <item.icon className={`mr-3 h-4 w-4 flex-shrink-0`} color={sidebarIconColor} />
                               <span className={`truncate text-sm ${sidebarText}`}>{item.name}</span>
                             </div>
                             {isOpen ? (
-                              <ChevronDown className={`h-4 w-4 flex-shrink-0 ${sidebarText}`} />
+                              <ChevronDown className={`h-4 w-4 flex-shrink-0`} color={sidebarIconColor} />
                             ) : (
-                              <ChevronRight className={`h-4 w-4 flex-shrink-0 ${sidebarText}`} />
+                              <ChevronRight className={`h-4 w-4 flex-shrink-0`} color={sidebarIconColor} />
                             )}
                           </SidebarMenuButton>
                         </CollapsibleTrigger>
@@ -92,8 +105,9 @@ export function AppSidebar() {
                                   }`}
                                 >
                                   <Link to={child.href} className="flex items-center min-w-0">
-                                    <child.icon className="mr-3 h-4 w-4 flex-shrink-0 text-[#1632f4]" />
-                                    <span className="truncate text-sm">{child.name}</span>
+                                    {/* Ici couleur dynamique icône sous-menu */}
+                                    <child.icon className="mr-3 h-4 w-4 flex-shrink-0" color={sidebarIconColor} />
+                                    <span className="truncate text-sm" style={{ color: theme === 'dark' ? '#fff' : '#1632f4' }}>{child.name}</span>
                                   </Link>
                                 </SidebarMenuSubButton>
                               </SidebarMenuSubItem>
@@ -115,7 +129,8 @@ export function AppSidebar() {
                       }`}
                     >
                       <Link to={item.href} className="flex items-center min-w-0">
-                        <item.icon className={`mr-3 h-4 w-4 flex-shrink-0 ${sidebarText}`} />
+                        {/* Ici couleur dynamique pour icônes des menus principaux aussi */}
+                        <item.icon className={`mr-3 h-4 w-4 flex-shrink-0`} color={sidebarIconColor} />
                         <span className={`truncate text-sm ${sidebarText}`}>{item.name}</span>
                       </Link>
                     </SidebarMenuButton>
@@ -129,4 +144,3 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
-
