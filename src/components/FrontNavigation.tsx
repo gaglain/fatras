@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -18,7 +19,7 @@ export const FrontNavigation: React.FC = () => {
       <nav className="arc-nav relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
-            {/* Logo - Position Arc style */}
+            {/* Logo - Arc style */}
             <div className="flex-shrink-0">
               <Link to="/front" className="arc-logo text-2xl font-bold tracking-tight">
                 MusiConnect
@@ -41,7 +42,7 @@ export const FrontNavigation: React.FC = () => {
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="arc-button-secondary border-white/30 text-white hover:bg-white/20 hover:text-white"
+                    className="arc-button-secondary"
                   >
                     Back-Office
                   </Button>
@@ -55,7 +56,7 @@ export const FrontNavigation: React.FC = () => {
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="text-white hover:bg-white/20"
+                className="arc-text-primary hover:bg-gray-800/50"
               >
                 {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
               </Button>
@@ -65,12 +66,12 @@ export const FrontNavigation: React.FC = () => {
           {/* Mobile Navigation */}
           {isMenuOpen && (
             <div className="md:hidden">
-              <div className="px-2 pt-2 pb-6 space-y-1 sm:px-3 bg-black/20 backdrop-blur-xl rounded-2xl mt-4 border border-white/10">
+              <div className="px-2 pt-2 pb-6 space-y-1 sm:px-3 arc-surface rounded-2xl mt-4 border border-gray-700/50">
                 {navigationItems.map((item) => (
                   <Link
                     key={item.href}
                     to={item.href}
-                    className="arc-nav-link block px-4 py-3 rounded-xl text-base font-medium hover:bg-white/10"
+                    className="arc-nav-link block px-4 py-3 rounded-xl text-base font-medium hover:bg-gray-800/50"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     {item.label}
@@ -80,7 +81,7 @@ export const FrontNavigation: React.FC = () => {
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="arc-button-secondary mt-3 ml-4 border-white/30 text-white hover:bg-white/20"
+                    className="arc-button-secondary mt-3 ml-4"
                   >
                     Back-Office
                   </Button>
