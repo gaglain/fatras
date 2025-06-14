@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -82,12 +83,12 @@ export const Messagerie: React.FC = () => {
       {/* Sidebar */}
       <div className="w-80 border-r bg-muted/30">
         <div className="p-4 border-b">
-          <h2 className="font-semibold text-lg">Messagerie</h2>
+          <h2 className="font-semibold text-lg text-[#1632f4]">Messagerie</h2>
           <div className="flex items-center justify-between mt-2">
-            <Badge variant="secondary" className="text-xs">
+            <Badge variant="secondary" className="text-xs bg-[#1632f4] text-white">
               {users.filter(u => u.status === 'online').length} en ligne
             </Badge>
-            <Button size="sm" variant="outline" onClick={() => setShowPollCreator(true)}>
+            <Button size="sm" variant="outline" onClick={() => setShowPollCreator(true)} className="border-[#1632f4] text-[#1632f4] hover:bg-[#1632f4] hover:text-white">
               <Plus className="h-3 w-3 mr-1" />
               Sondage
             </Button>
@@ -99,7 +100,7 @@ export const Messagerie: React.FC = () => {
             {/* Channels */}
             <div className="mb-4">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-xs font-medium text-muted-foreground px-2 py-1 uppercase">Channels</h3>
+                <h3 className="text-xs font-medium text-[#1632f4] px-2 py-1 uppercase">Channels</h3>
                 <ChannelCreator onCreateChannel={handleCreateChannel} />
               </div>
               {channels.filter(c => c.type === 'channel').map((channel) => (
@@ -111,8 +112,8 @@ export const Messagerie: React.FC = () => {
                   }`}
                 >
                   <div className="flex items-center">
-                    <Hash className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <span className="text-sm">{channel.name}</span>
+                    <Hash className="h-4 w-4 mr-2 text-[#1632f4]" />
+                    <span className="text-sm text-[#1632f4]">{channel.name}</span>
                   </div>
                   {channel.unread > 0 && (
                     <Badge className="h-5 w-5 p-0 text-xs bg-red-500 text-white rounded-full flex items-center justify-center">
@@ -125,7 +126,7 @@ export const Messagerie: React.FC = () => {
 
             {/* Direct Messages */}
             <div className="mb-4">
-              <h3 className="text-xs font-medium text-muted-foreground px-2 py-1 uppercase">Messages privés</h3>
+              <h3 className="text-xs font-medium text-[#1632f4] px-2 py-1 uppercase">Messages privés</h3>
               {channels.filter(c => c.type === 'dm').map((channel) => (
                 <button
                   key={channel.id}
@@ -135,8 +136,8 @@ export const Messagerie: React.FC = () => {
                   }`}
                 >
                   <div className="flex items-center">
-                    <MessageSquare className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <span className="text-sm">{channel.name}</span>
+                    <MessageSquare className="h-4 w-4 mr-2 text-[#1632f4]" />
+                    <span className="text-sm text-[#1632f4]">{channel.name}</span>
                   </div>
                   {channel.unread > 0 && (
                     <Badge className="h-5 w-5 p-0 text-xs bg-red-500 text-white rounded-full flex items-center justify-center">
@@ -149,7 +150,7 @@ export const Messagerie: React.FC = () => {
 
             {/* Users List */}
             <div>
-              <h3 className="text-xs font-medium text-muted-foreground px-2 py-1 uppercase">
+              <h3 className="text-xs font-medium text-[#1632f4] px-2 py-1 uppercase">
                 <Users className="h-3 w-3 inline mr-1" />
                 Équipe ({users.length})
               </h3>
@@ -162,15 +163,15 @@ export const Messagerie: React.FC = () => {
                   <div className="relative mr-3">
                     <Avatar className="h-6 w-6">
                       <AvatarImage src="" alt={user.name} />
-                      <AvatarFallback className="bg-purple-600 text-white text-xs">
+                      <AvatarFallback className="bg-[#1632f4] text-white text-xs">
                         {user.name.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
                     <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-background ${getStatusColor(user.status)}`} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{user.name}</p>
-                    <p className="text-xs text-muted-foreground capitalize">{user.status}</p>
+                    <p className="text-sm font-medium truncate text-[#1632f4]">{user.name}</p>
+                    <p className="text-xs text-[#1632f4]/70 capitalize">{user.status}</p>
                   </div>
                 </button>
               ))}
@@ -186,19 +187,19 @@ export const Messagerie: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               {currentChannel?.type === 'channel' ? (
-                <Hash className="h-5 w-5 mr-2 text-muted-foreground" />
+                <Hash className="h-5 w-5 mr-2 text-[#1632f4]" />
               ) : (
-                <MessageSquare className="h-5 w-5 mr-2 text-muted-foreground" />
+                <MessageSquare className="h-5 w-5 mr-2 text-[#1632f4]" />
               )}
-              <h1 className="text-xl font-semibold">{currentChannel?.name}</h1>
+              <h1 className="text-xl font-semibold text-[#1632f4]">{currentChannel?.name}</h1>
             </div>
             {currentChannel?.type === 'dm' && (
               <div className="flex space-x-2">
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="border-[#1632f4] text-[#1632f4] hover:bg-[#1632f4] hover:text-white">
                   <Phone className="h-4 w-4 mr-1" />
                   Appel
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="border-[#1632f4] text-[#1632f4] hover:bg-[#1632f4] hover:text-white">
                   <Video className="h-4 w-4 mr-1" />
                   Vidéo
                 </Button>
@@ -218,7 +219,7 @@ export const Messagerie: React.FC = () => {
                 <div
                   className={`max-w-[75%] rounded-lg p-3 ${
                     msg.isMe
-                      ? 'bg-primary text-primary-foreground'
+                      ? 'bg-[#1632f4] text-white'
                       : 'bg-muted text-foreground'
                   }`}
                 >
@@ -226,7 +227,7 @@ export const Messagerie: React.FC = () => {
                     <div className="text-xs font-medium mb-1 opacity-70">{msg.sender}</div>
                   )}
                   <div className="text-sm">{msg.message}</div>
-                  <div className={`text-xs mt-1 ${msg.isMe ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+                  <div className={`text-xs mt-1 ${msg.isMe ? 'text-white/70' : 'text-muted-foreground'}`}>
                     {msg.time}
                   </div>
                 </div>
@@ -243,9 +244,9 @@ export const Messagerie: React.FC = () => {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-              className="flex-1"
+              className="flex-1 border-[#1632f4] focus:border-[#1632f4] focus:ring-[#1632f4]"
             />
-            <Button onClick={sendMessage} disabled={!message.trim()}>
+            <Button onClick={sendMessage} disabled={!message.trim()} className="bg-[#1632f4] hover:bg-[#1632f4]/80 text-white">
               <Send className="h-4 w-4" />
             </Button>
           </div>
