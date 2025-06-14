@@ -1,4 +1,3 @@
-
 @layer components {
   /* Header avec fond granulé style Arc.net */
   .arc-front-header {
@@ -240,5 +239,60 @@
   .dark .back-office-button:hover {
     background: rgba(255, 255, 255, 0.2) !important;
     color: #1632f4 !important;
+  }
+
+  /* Ajout support couleurs custom pour texte, fond, boutons… */
+  body, .arc-content {
+    background: var(--custom-background, #fff) !important;
+    color: var(--custom-text, #18181b) !important;
+    transition: background 0.1s, color 0.1s;
+  }
+  .dark body, .dark .arc-content {
+    background: var(--custom-backgroundDark, #18181b) !important;
+    color: var(--custom-textDark, #fff) !important;
+  }
+
+  /* Boutons */
+  .arc-button,
+  .back-office-button,
+  button, .button-outline-corrected, .bg-green-600, .bg-blue-600, .bg-green-600:hover, .bg-blue-600:hover, .arc-button-secondary {
+    background-color: var(--custom-buttonBg, #1632f4) !important;
+    color: var(--custom-buttonText, #fff) !important;
+    border: 1px solid var(--custom-buttonBg, #1632f4) !important;
+    transition: background .15s, color .15s;
+  }
+  .dark .arc-button,
+  .dark .back-office-button,
+  .dark button, .dark .button-outline-corrected, .dark .bg-green-600, .dark .bg-blue-600, .dark .bg-green-600:hover, .dark .bg-blue-600:hover, .dark .arc-button-secondary {
+    background-color: var(--custom-buttonBgDark, #fff) !important;
+    color: var(--custom-buttonTextDark, #1632f4) !important;
+    border: 1px solid var(--custom-buttonBgDark, #fff) !important;
+  }
+
+  /* Champs outline et hover sur boutons */
+  button[variant~="outline"], .button-outline-corrected, .arc-button-secondary  {
+    border: 1px solid var(--custom-buttonBg, #1632f4) !important;
+    background: transparent !important;
+    color: var(--custom-buttonText, #1632f4) !important;
+  }
+  .dark button[variant~="outline"], .dark .button-outline-corrected, .dark .arc-button-secondary {
+    border: 1px solid var(--custom-buttonBgDark, #fff) !important;
+    background: transparent !important;
+    color: var(--custom-buttonTextDark, #fff) !important;
+  }
+
+  /* Support pour inputs : fond custom */
+  input, .arc-input {
+    color: var(--custom-text, #18181b);
+    background: var(--custom-background, #fff);
+  }
+  .dark input, .dark .arc-input {
+    color: var(--custom-textDark, #fff);
+    background: var(--custom-backgroundDark, #18181b);
+  }
+
+  /* Ajout d'une transition douce pour les changements de thème */
+  .dark, body, .arc-content, .arc-button, .back-office-button, button, .button-outline-corrected, .bg-green-600, .bg-blue-600, .arc-button-secondary, input, .arc-input {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
   }
 }

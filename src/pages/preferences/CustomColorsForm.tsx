@@ -5,14 +5,19 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Save } from "lucide-react";
 
-// Nouveaux champs pour les couleurs des icônes menu
+// Champs personnalisés supplémentaires pour texte/fond/boutons clair & sombre
 const colorFields: { key: string, label: string, default: string }[] = [
   { key: "primary", label: "Primaire", default: "#1632f4" },
   { key: "secondary", label: "Secondaire", default: "#ec5f65" },
   { key: "accent", label: "Accent", default: "#f5a623" },
-  { key: "background", label: "Fond", default: "#ffffff" },
-  { key: "text", label: "Texte principal", default: "#1632f4" },
-  { key: "textInverse", label: "Texte inverse", default: "#ffffff" },
+  { key: "background", label: "Fond (clair)", default: "#ffffff" },
+  { key: "backgroundDark", label: "Fond (sombre)", default: "#18181b" },
+  { key: "text", label: "Texte principal (clair)", default: "#18181b" },
+  { key: "textDark", label: "Texte principal (sombre)", default: "#ffffff" },
+  { key: "buttonBg", label: "Bouton fond (clair)", default: "#1632f4" },
+  { key: "buttonBgDark", label: "Bouton fond (sombre)", default: "#ffffff" },
+  { key: "buttonText", label: "Bouton texte (clair)", default: "#ffffff" },
+  { key: "buttonTextDark", label: "Bouton texte (sombre)", default: "#1632f4" },
   { key: "sidebarIconLight", label: "Couleur icônes menu (clair)", default: "#1632f4" },
   { key: "sidebarIconDark", label: "Couleur icônes menu (sombre)", default: "#ffffff" },
 ];
@@ -42,8 +47,6 @@ export const CustomColorsForm: React.FC = () => {
     Object.entries(colorsObj).forEach(([key, value]) => {
       document.documentElement.style.setProperty(`--custom-${key}`, value);
     });
-    // Application spécifique pour l'icône de sidebar : mode clair et sombre
-    // (le code ci-dessus gère déjà la déclaration des variables, il suffit de les utiliser côté sidebar)
   }
 
   function handleChange(key: string, value: string) {
@@ -98,7 +101,10 @@ export const CustomColorsForm: React.FC = () => {
             ))}
           </div>
           <div className="flex gap-3">
-            <Button type="submit" className="bg-[#1632f4] text-white">
+            <Button type="submit" style={{
+              backgroundColor: colors.buttonBg || "#1632f4",
+              color: colors.buttonText || "#fff"
+            }}>
               <Save className="h-4 w-4 mr-2" />
               Sauvegarder
             </Button>
