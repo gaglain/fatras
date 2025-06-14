@@ -56,7 +56,7 @@ export function AppSidebar() {
               {navigation.map((item) => {
                 if (!item.visible) return null;
 
-                // Si l'élément a des enfants
+                // Élément avec enfants = menu avec sous-menus
                 if (item.children) {
                   const isOpen = openSections.includes(item.name);
                   const isActive = isActiveSection(item);
@@ -87,13 +87,13 @@ export function AppSidebar() {
                               <SidebarMenuSubItem key={child.name}>
                                 <SidebarMenuSubButton 
                                   asChild 
-                                  className={`${sidebarText} hover:bg-accent hover:text-[#1632f4] transition-colors ${
-                                    isActiveItem(child.href) ? 'bg-accent text-[#1632f4] font-medium' : ''
+                                  className={`hover:bg-accent transition-colors ${
+                                    isActiveItem(child.href) ? 'bg-accent text-[#1632f4] font-medium' : 'text-[#1632f4]'
                                   }`}
                                 >
                                   <Link to={child.href} className="flex items-center min-w-0">
-                                    <child.icon className={`mr-3 h-4 w-4 flex-shrink-0 ${sidebarText}`} />
-                                    <span className={`truncate text-sm ${sidebarText}`}>{child.name}</span>
+                                    <child.icon className="mr-3 h-4 w-4 flex-shrink-0 text-[#1632f4]" />
+                                    <span className="truncate text-sm">{child.name}</span>
                                   </Link>
                                 </SidebarMenuSubButton>
                               </SidebarMenuSubItem>

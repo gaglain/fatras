@@ -8,6 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Upload, Save, Palette, Bell, Globe, Smartphone, Download } from 'lucide-react';
 import { toast } from 'sonner';
+import { CustomColorsForm } from "@/components/CustomColorsForm";
 
 export const Preferences: React.FC = () => {
   const [companySettings, setCompanySettings] = useState({
@@ -141,11 +142,12 @@ export const Preferences: React.FC = () => {
       </div>
 
       <Tabs defaultValue="company" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="company">Entreprise</TabsTrigger>
           <TabsTrigger value="appearance">Apparence</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="mobile">Mobile</TabsTrigger>
+          <TabsTrigger value="colors">Couleurs</TabsTrigger>
         </TabsList>
 
         <TabsContent value="company" className="space-y-4">
@@ -377,6 +379,14 @@ export const Preferences: React.FC = () => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="colors" className="space-y-4">
+          <CustomColorsForm />
+          <div className="text-xs text-muted-foreground mt-4">
+            Les couleurs s'appliquent immédiatement partout. <br />
+            Si certains éléments semblent ne pas réagir, rechargez la page, ou contactez le support.
+          </div>
         </TabsContent>
       </Tabs>
     </div>
