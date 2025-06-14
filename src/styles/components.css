@@ -34,6 +34,7 @@
     color: var(--custom-cardText) !important;
     border: 1px solid rgba(0,0,0,0.1) !important;
     box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    border-radius: 0.75rem !important;
   }
 
   /* Boutons - Application forcée du thème */
@@ -47,6 +48,7 @@
     background: var(--custom-buttonBg) !important;
     color: var(--custom-buttonText) !important;
     border: 1px solid var(--custom-buttonBg) !important;
+    border-radius: 0.5rem !important;
     transition: all 0.2s ease !important;
   }
 
@@ -58,6 +60,7 @@
     background: transparent !important;
     color: var(--custom-buttonBg) !important;
     border: 1px solid var(--custom-buttonBg) !important;
+    border-radius: 0.5rem !important;
   }
 
   [data-variant="ghost"]:hover,
@@ -73,6 +76,7 @@
     background: var(--custom-background) !important;
     color: var(--custom-text) !important;
     border: 1px solid var(--custom-buttonBg) !important;
+    border-radius: 0.5rem !important;
   }
 
   /* Dropdowns et menus */
@@ -85,6 +89,7 @@
     background: var(--custom-cardBg) !important;
     color: var(--custom-cardText) !important;
     border: 1px solid rgba(0,0,0,0.1) !important;
+    border-radius: 0.5rem !important;
     z-index: 50 !important;
   }
 
@@ -114,5 +119,21 @@
 
   .hover\:scale-105:hover {
     transform: scale(1.05) !important;
+  }
+
+  /* Sidebar personnalisée */
+  .sidebar {
+    background: var(--sidebar-background) !important;
+    color: var(--sidebar-foreground) !important;
+    border-color: var(--sidebar-border) !important;
+  }
+
+  .sidebar-nav-item {
+    color: var(--sidebar-foreground) !important;
+  }
+
+  .sidebar-nav-item:hover {
+    background: var(--sidebar-accent) !important;
+    color: var(--sidebar-accent-foreground) !important;
   }
 }

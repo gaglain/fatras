@@ -30,24 +30,24 @@
     --chart-5: 27 87% 67%;
     
     /* Variables personnalisées pour le thème CLAIR */
-    --custom-background: 255, 255, 255;
-    --custom-text: 24, 24, 27;
-    --custom-cardBg: 255, 255, 255;
-    --custom-cardText: 24, 24, 27;
-    --custom-buttonBg: 22, 50, 244;
-    --custom-buttonText: 255, 255, 255;
-    --custom-chatWidgetBg: 236, 95, 101;
-    --custom-chatWidgetIcon: 255, 255, 255;
+    --custom-background: #ffffff;
+    --custom-text: #18181b;
+    --custom-cardBg: #ffffff;
+    --custom-cardText: #18181b;
+    --custom-buttonBg: #1632f4;
+    --custom-buttonText: #ffffff;
+    --custom-chatWidgetBg: #ec5f65;
+    --custom-chatWidgetIcon: #ffffff;
     
     /* Sidebar tokens */
-    --sidebar-background: 22 50 244;
-    --sidebar-foreground: 255 255 255;
-    --sidebar-primary: 22 50 244;
-    --sidebar-primary-foreground: 255 255 255;
-    --sidebar-accent: 32 6 163;
-    --sidebar-accent-foreground: 255 255 255;
-    --sidebar-border: 32 6 163;
-    --sidebar-ring: 22 50 244;
+    --sidebar-background: #ffffff;
+    --sidebar-foreground: #1632f4;
+    --sidebar-primary: #1632f4;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #f1f5f9;
+    --sidebar-accent-foreground: #1632f4;
+    --sidebar-border: #e2e8f0;
+    --sidebar-ring: #1632f4;
   }
 
   .dark {
@@ -72,24 +72,24 @@
     --ring: 221 83% 53%;
     
     /* Variables personnalisées pour le mode SOMBRE */
-    --custom-background: 24, 24, 27;
-    --custom-text: 255, 255, 255;
-    --custom-cardBg: 34, 34, 58;
-    --custom-cardText: 255, 255, 255;
-    --custom-buttonBg: 255, 255, 255;
-    --custom-buttonText: 22, 50, 244;
-    --custom-chatWidgetBg: 236, 95, 101;
-    --custom-chatWidgetIcon: 255, 255, 255;
+    --custom-background: #18181b;
+    --custom-text: #ffffff;
+    --custom-cardBg: #22223a;
+    --custom-cardText: #ffffff;
+    --custom-buttonBg: #ffffff;
+    --custom-buttonText: #1632f4;
+    --custom-chatWidgetBg: #ec5f65;
+    --custom-chatWidgetIcon: #ffffff;
     
     /* Sidebar en mode sombre */
-    --sidebar-background: 217.2 32.6% 17.5%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 221 83% 53%;
-    --sidebar-primary-foreground: 255 255 255;
-    --sidebar-accent: 217.2 32.6% 20%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217.2 32.6% 20%;
-    --sidebar-ring: 221 83% 53%;
+    --sidebar-background: #22223a;
+    --sidebar-foreground: #ffffff;
+    --sidebar-primary: #ffffff;
+    --sidebar-primary-foreground: #1632f4;
+    --sidebar-accent: #2d2d4a;
+    --sidebar-accent-foreground: #ffffff;
+    --sidebar-border: #2d2d4a;
+    --sidebar-ring: #ffffff;
   }
 }
 
@@ -102,8 +102,8 @@
     @apply bg-background text-foreground;
     font-family: "Inter", sans-serif;
     font-display: swap;
-    background: rgb(var(--custom-background)) !important;
-    color: rgb(var(--custom-text)) !important;
+    background: var(--custom-background) !important;
+    color: var(--custom-text) !important;
   }
   
   html {
