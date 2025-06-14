@@ -17,10 +17,21 @@ import {
 } from '@/components/ui/sidebar';
 import { useNavigation } from '@/hooks/useNavigation';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export function AppSidebar() {
   const { navigation, openSections, toggleSection } = useNavigation();
   const location = useLocation();
+  const { theme } = useTheme();
+
+  // Définir les couleurs dynamiques selon le thème
+  const isDark = theme === 'dark';
+  const sidebarBg = isDark ? 'bg-[#1632f4]' : 'bg-white';
+  const sidebarText = isDark ? 'text-white' : 'text-[#1632f4]';
+  // Trait gauche rose dans le back office (ex: #ec5f65)
+  const sidebarBorder = isDark
+    ? 'border-l-4 border-[#ec5f65]'
+    : 'border-l-4 border-[#1632f4]';
 
   const isActiveItem = (href: string) => location.pathname === href;
   
@@ -32,13 +43,13 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar className="bg-background border-r border-border">
-      <SidebarHeader className="border-b border-border bg-background px-4 py-4">
+    <Sidebar className={`${sidebarBg} ${sidebarText} ${sidebarBorder} h-full transition-colors duration-300`}>
+      <SidebarHeader className={`border-b border-border ${sidebarBg} px-4 py-4`}>
         <div className="flex items-center">
-          <h2 className="text-base lg:text-lg font-semibold text-[#1632f4] truncate">Navigation</h2>
+          <h2 className={`text-base lg:text-lg font-semibold truncate ${sidebarText}`}>Navigation</h2>
         </div>
       </SidebarHeader>
-      <SidebarContent className="bg-background">
+      <SidebarContent className={`${sidebarBg}`}>
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -55,18 +66,18 @@ export function AppSidebar() {
                       <SidebarMenuItem>
                         <CollapsibleTrigger asChild>
                           <SidebarMenuButton
-                            className={`w-full justify-between text-[#1632f4] hover:bg-accent hover:text-[#1632f4] transition-colors ${
+                            className={`w-full justify-between ${sidebarText} hover:bg-accent hover:text-[#1632f4] transition-colors ${
                               isActive ? 'bg-accent text-[#1632f4] font-medium' : ''
                             }`}
                           >
                             <div className="flex items-center min-w-0">
-                              <item.icon className="mr-3 h-4 w-4 flex-shrink-0" style={{ color: '#1632f4' }} />
-                              <span className="truncate text-sm text-[#1632f4]">{item.name}</span>
+                              <item.icon className={`mr-3 h-4 w-4 flex-shrink-0 ${sidebarText}`} />
+                              <span className={`truncate text-sm ${sidebarText}`}>{item.name}</span>
                             </div>
                             {isOpen ? (
-                              <ChevronDown className="h-4 w-4 flex-shrink-0" style={{ color: '#1632f4' }} />
+                              <ChevronDown className={`h-4 w-4 flex-shrink-0 ${sidebarText}`} />
                             ) : (
-                              <ChevronRight className="h-4 w-4 flex-shrink-0" style={{ color: '#1632f4' }} />
+                              <ChevronRight className={`h-4 w-4 flex-shrink-0 ${sidebarText}`} />
                             )}
                           </SidebarMenuButton>
                         </CollapsibleTrigger>
@@ -76,13 +87,13 @@ export function AppSidebar() {
                               <SidebarMenuSubItem key={child.name}>
                                 <SidebarMenuSubButton 
                                   asChild 
-                                  className={`text-[#1632f4] hover:bg-accent hover:text-[#1632f4] transition-colors ${
+                                  className={`${sidebarText} hover:bg-accent hover:text-[#1632f4] transition-colors ${
                                     isActiveItem(child.href) ? 'bg-accent text-[#1632f4] font-medium' : ''
                                   }`}
                                 >
                                   <Link to={child.href} className="flex items-center min-w-0">
-                                    <child.icon className="mr-3 h-4 w-4 flex-shrink-0" style={{ color: '#1632f4' }} />
-                                    <span className="truncate text-sm text-[#1632f4]">{child.name}</span>
+                                    <child.icon className={`mr-3 h-4 w-4 flex-shrink-0 ${sidebarText}`} />
+                                    <span className={`truncate text-sm ${sidebarText}`}>{child.name}</span>
                                   </Link>
                                 </SidebarMenuSubButton>
                               </SidebarMenuSubItem>
@@ -99,13 +110,13 @@ export function AppSidebar() {
                   <SidebarMenuItem key={item.name}>
                     <SidebarMenuButton 
                       asChild 
-                      className={`text-[#1632f4] hover:bg-accent hover:text-[#1632f4] transition-colors ${
+                      className={`${sidebarText} hover:bg-accent hover:text-[#1632f4] transition-colors ${
                         isActiveItem(item.href) ? 'bg-accent text-[#1632f4] font-medium' : ''
                       }`}
                     >
                       <Link to={item.href} className="flex items-center min-w-0">
-                        <item.icon className="mr-3 h-4 w-4 flex-shrink-0" style={{ color: '#1632f4' }} />
-                        <span className="truncate text-sm text-[#1632f4]">{item.name}</span>
+                        <item.icon className={`mr-3 h-4 w-4 flex-shrink-0 ${sidebarText}`} />
+                        <span className={`truncate text-sm ${sidebarText}`}>{item.name}</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -118,3 +129,4 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
+
