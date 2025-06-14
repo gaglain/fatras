@@ -23,12 +23,9 @@ export const Layout: React.FC = () => {
     return <Navigate to={`/admin/editor/${pageId}`} replace />;
   }
 
-  // Pour les routes admin, vérifier l'authentification (simulation)
+  // Pour les routes admin, check l'auth (simulé ici)
   if (isAdminRoute) {
-    // Ici vous pourriez ajouter une vraie vérification d'authentification
-    // Pour l'instant, on simule un accès autorisé
-    const isAuthenticated = true; // À remplacer par votre logique d'auth
-    
+    const isAuthenticated = true;
     if (!isAuthenticated) {
       return <Navigate to="/" replace />;
     }
@@ -45,13 +42,16 @@ export const Layout: React.FC = () => {
               <main className="flex-1 overflow-auto">
                 <Outlet />
               </main>
+              <Toaster />
             </div>
           </div>
         </SidebarProvider>
       ) : (
-        <Outlet />
+        <>
+          <Outlet />
+          <Toaster />
+        </>
       )}
-      <Toaster />
     </div>
   );
 };
