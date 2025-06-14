@@ -10,34 +10,38 @@ export const FrontHome: React.FC = () => {
     {
       icon: Music,
       title: 'Gestion d\'Artistes',
-      description: 'Gérez facilement vos artistes et leurs informations.'
+      description: 'Gérez facilement vos artistes et leurs informations.',
+      color: 'text-accent-red'
     },
     {
       icon: Calendar,
       title: 'Événements',
-      description: 'Organisez et suivez tous vos événements musicaux.'
+      description: 'Organisez et suivez tous vos événements musicaux.',
+      color: 'text-accent-pink'
     },
     {
       icon: Users,
       title: 'Contacts',
-      description: 'Maintenez un carnet d\'adresses professionnel.'
+      description: 'Maintenez un carnet d\'adresses professionnel.',
+      color: 'text-accent-red'
     },
     {
       icon: Star,
       title: 'Suivi Performance',
-      description: 'Analysez les performances de vos artistes.'
+      description: 'Analysez les performances de vos artistes.',
+      color: 'text-accent-pink'
     }
   ];
 
   return (
     <div className="flex flex-col">
-      {/* Hero Section with Arc-style dark gradient */}
+      {/* Hero Section */}
       <section className="relative py-24 lg:py-32 overflow-hidden">
-        {/* Arc-style gradient background */}
+        {/* Gradient background avec les nouvelles couleurs */}
         <div className="absolute inset-0 arc-hero-gradient"></div>
         <div className="absolute inset-0 arc-hero-overlay"></div>
         
-        {/* Subtle texture overlay */}
+        {/* Texture overlay */}
         <div 
           className="absolute inset-0 opacity-20"
           style={{
@@ -49,8 +53,8 @@ export const FrontHome: React.FC = () => {
         {/* Content */}
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-8 arc-text-primary">
-              <span className="bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent">
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-8 text-white">
+              <span className="bg-gradient-to-r from-white via-pink-200 to-red-200 bg-clip-text text-transparent">
                 MusiConnect
               </span>
             </h1>
@@ -59,7 +63,7 @@ export const FrontHome: React.FC = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <Link to="/front/artists">
-                <Button size="lg" className="arc-button text-lg px-8 py-4 w-full sm:w-auto">
+                <Button size="lg" className="arc-button text-lg px-8 py-4 w-full sm:w-auto bg-white text-brand-primary hover:bg-accent-pink hover:text-white">
                   Découvrir les Artistes
                 </Button>
               </Link>
@@ -67,7 +71,7 @@ export const FrontHome: React.FC = () => {
                 <Button 
                   size="lg" 
                   variant="outline" 
-                  className="arc-button-secondary text-lg px-8 py-4 w-full sm:w-auto"
+                  className="arc-button-secondary text-lg px-8 py-4 w-full sm:w-auto bg-white text-brand-primary border-white hover:bg-accent-red hover:text-white hover:border-accent-red"
                 >
                   Voir les Événements
                 </Button>
@@ -77,29 +81,29 @@ export const FrontHome: React.FC = () => {
         </div>
       </section>
 
-      {/* Features Section with Arc cards */}
-      <section className="py-20 lg:py-24 relative">
+      {/* Features Section */}
+      <section className="py-20 lg:py-24 relative bg-brand-primary">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl lg:text-5xl font-bold arc-text-primary mb-6">
+            <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">
               Fonctionnalités Principales
             </h2>
-            <p className="text-xl lg:text-2xl arc-text-secondary max-w-3xl mx-auto leading-relaxed">
+            <p className="text-xl lg:text-2xl text-white/80 max-w-3xl mx-auto leading-relaxed">
               Tout ce dont vous avez besoin pour gérer efficacement votre activité musicale
             </p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {features.map((feature, index) => (
-              <Card key={index} className="arc-card text-center hover:scale-105 transition-all duration-500 group">
+              <Card key={index} className="arc-card text-center hover:scale-105 transition-all duration-500 group bg-white/10 border-white/20 hover:border-accent-pink">
                 <CardHeader className="pb-4">
-                  <div className="mx-auto bg-gradient-to-br from-purple-500/20 to-blue-500/20 w-20 h-20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 border border-purple-500/20">
-                    <feature.icon className="h-10 w-10 text-purple-400" />
+                  <div className="mx-auto bg-white/20 w-20 h-20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 border border-white/20">
+                    <feature.icon className={`h-10 w-10 ${feature.color}`} />
                   </div>
-                  <CardTitle className="text-xl lg:text-2xl arc-text-primary">{feature.title}</CardTitle>
+                  <CardTitle className="text-xl lg:text-2xl text-white">{feature.title}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="arc-text-secondary leading-relaxed">{feature.description}</p>
+                  <p className="text-white/80 leading-relaxed">{feature.description}</p>
                 </CardContent>
               </Card>
             ))}
@@ -107,26 +111,25 @@ export const FrontHome: React.FC = () => {
         </div>
       </section>
 
-      {/* CTA Section with Arc-style background */}
-      <section className="relative py-20 lg:py-24 overflow-hidden">
-        <div className="absolute inset-0 arc-surface"></div>
+      {/* CTA Section */}
+      <section className="relative py-20 lg:py-24 overflow-hidden bg-brand-dark">
         <div 
           className="absolute inset-0 opacity-30"
           style={{
-            backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(147, 51, 234, 0.1) 1px, transparent 0)',
+            backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(241, 158, 156, 0.1) 1px, transparent 0)',
             backgroundSize: '30px 30px'
           }}
         ></div>
         
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl lg:text-5xl font-bold arc-text-primary mb-6">
+          <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">
             Prêt à commencer ?
           </h2>
-          <p className="text-xl lg:text-2xl arc-text-secondary mb-12 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl lg:text-2xl text-white/80 mb-12 max-w-3xl mx-auto leading-relaxed">
             Rejoignez des milliers d'artistes et de professionnels de la musique qui utilisent MusiConnect
           </p>
           <Link to="/dashboard">
-            <Button size="lg" className="arc-button text-lg px-8 py-4">
+            <Button size="lg" className="arc-button text-lg px-8 py-4 bg-white text-brand-primary hover:bg-accent-pink hover:text-white">
               Accéder au Back-Office
             </Button>
           </Link>

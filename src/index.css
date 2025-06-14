@@ -32,24 +32,22 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     
-    /* Arc-inspired sidebar tokens */
-    --sidebar-background: 220 13% 8%;
-    --sidebar-foreground: 220 10% 85%;
-    --sidebar-primary: 262.1 83.3% 57.8%;
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 220 13% 12%;
-    --sidebar-accent-foreground: 220 10% 90%;
-    --sidebar-border: 220 13% 15%;
-    --sidebar-ring: 262.1 83.3% 57.8%;
+    /* Custom color palette */
+    --color-primary: 22 50 244;    /* #1632f4 */
+    --color-primary-dark: 32 6 163; /* #2006a3 */
+    --color-accent-red: 236 95 101; /* #ec5f65 */
+    --color-accent-pink: 241 158 156; /* #f19e9c */
+    --color-white: 255 255 255;
     
-    /* Arc-style colors - Dark theme like Arc */
-    --arc-dark-bg: 16 16 20;
-    --arc-dark-surface: 24 24 27;
-    --arc-dark-border: 39 39 42;
-    --arc-text-primary: 250 250 250;
-    --arc-text-secondary: 161 161 170;
-    --arc-accent-purple: 147 51 234;
-    --arc-accent-blue: 59 130 246;
+    /* Arc-inspired sidebar tokens */
+    --sidebar-background: 22 50 244;
+    --sidebar-foreground: 255 255 255;
+    --sidebar-primary: 22 50 244;
+    --sidebar-primary-foreground: 255 255 255;
+    --sidebar-accent: 32 6 163;
+    --sidebar-accent-foreground: 255 255 255;
+    --sidebar-border: 32 6 163;
+    --sidebar-ring: 22 50 244;
   }
 
   .dark {
@@ -59,8 +57,8 @@
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 262.1 83.3% 57.8%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 22 50 244;
+    --primary-foreground: 255 255 255;
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
@@ -71,17 +69,7 @@
     --destructive-foreground: 210 40% 98%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 262.1 83.3% 57.8%;
-    
-    /* Dark Arc sidebar tokens */
-    --sidebar-background: 220 13% 8%;
-    --sidebar-foreground: 210 20% 98%;
-    --sidebar-primary: 262.1 83.3% 57.8%;
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 216 12.2% 15.9%;
-    --sidebar-accent-foreground: 210 20% 98%;
-    --sidebar-border: 216 12.2% 15.9%;
-    --sidebar-ring: 262.1 83.3% 57.8%;
+    --ring: 22 50 244;
   }
 }
 
@@ -92,12 +80,10 @@
   body {
     @apply bg-background text-foreground;
     font-family: "Inter", sans-serif;
-    /* Arc-style dark background */
-    background: rgb(var(--arc-dark-bg));
-    color: rgb(var(--arc-text-primary));
+    background: rgb(var(--color-primary));
+    color: white;
   }
   
-  /* Force proper theme application */
   html {
     color-scheme: dark;
   }
@@ -108,29 +94,27 @@
 }
 
 @layer components {
-  /* Arc-inspired navigation - Dark style like Arc.net */
+  /* Header avec couleur principale */
   .arc-front-header {
     @apply relative overflow-hidden;
-    background: rgb(var(--arc-dark-surface));
-    border-bottom: 1px solid rgb(var(--arc-dark-border));
-    backdrop-filter: blur(20px);
+    background: rgb(var(--color-primary));
+    border-bottom: 1px solid rgb(var(--color-primary-dark));
   }
 
   .arc-nav {
-    @apply backdrop-blur-xl;
-    background: rgba(24, 24, 27, 0.95);
-    border-bottom: 1px solid rgba(39, 39, 42, 0.8);
+    background: rgb(var(--color-primary));
+    border-bottom: 1px solid rgb(var(--color-primary-dark));
   }
 
   .arc-nav-link {
-    color: rgb(var(--arc-text-secondary));
+    color: white;
     transition: all 0.2s ease;
     font-weight: 500;
     position: relative;
   }
 
   .arc-nav-link:hover {
-    color: rgb(var(--arc-text-primary));
+    color: rgb(var(--color-accent-pink));
   }
 
   .arc-nav-link::after {
@@ -140,7 +124,7 @@
     left: 50%;
     width: 0;
     height: 2px;
-    background: linear-gradient(90deg, rgb(var(--arc-accent-purple)), rgb(var(--arc-accent-blue)));
+    background: linear-gradient(90deg, rgb(var(--color-accent-red)), rgb(var(--color-accent-pink)));
     transition: all 0.3s ease;
     transform: translateX(-50%);
   }
@@ -150,95 +134,106 @@
   }
 
   .arc-logo {
-    color: rgb(var(--arc-text-primary));
+    color: white;
     font-weight: 700;
     font-size: 1.25rem;
-    background: linear-gradient(135deg, rgb(var(--arc-text-primary)) 0%, rgb(var(--arc-accent-blue)) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
   }
 
-  /* Arc-style buttons */
+  /* Boutons avec fond blanc et texte principal */
   .arc-button {
-    background: linear-gradient(135deg, rgb(var(--arc-accent-purple)), rgb(var(--arc-accent-blue)));
-    color: white;
+    background: white;
+    color: rgb(var(--color-primary));
     font-weight: 600;
     padding: 0.75rem 1.5rem;
     border-radius: 0.75rem;
     transition: all 0.2s ease;
     border: 0;
-    box-shadow: 0 4px 20px rgba(147, 51, 234, 0.25);
+    box-shadow: 0 4px 20px rgba(22, 50, 244, 0.25);
   }
 
   .arc-button:hover {
     transform: translateY(-1px);
-    box-shadow: 0 8px 25px rgba(147, 51, 234, 0.35);
+    box-shadow: 0 8px 25px rgba(22, 50, 244, 0.35);
+    background: rgb(var(--color-accent-pink));
+    color: white;
   }
 
   .arc-button-secondary {
-    background: rgba(39, 39, 42, 0.8);
-    color: rgb(var(--arc-text-primary));
+    background: white;
+    color: rgb(var(--color-primary));
     font-weight: 500;
     padding: 0.75rem 1.5rem;
     border-radius: 0.75rem;
     transition: all 0.2s ease;
-    border: 1px solid rgba(63, 63, 70, 0.8);
-    backdrop-filter: blur(10px);
+    border: 2px solid white;
   }
 
   .arc-button-secondary:hover {
-    background: rgba(63, 63, 70, 0.8);
-    border-color: rgba(82, 82, 91, 0.8);
+    background: rgb(var(--color-accent-red));
+    color: white;
+    border-color: rgb(var(--color-accent-red));
   }
 
-  /* Arc-style cards */
+  /* Cartes avec couleurs d'accent */
   .arc-card {
-    background: rgba(24, 24, 27, 0.8);
-    border: 1px solid rgba(39, 39, 42, 0.8);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 1rem;
     backdrop-filter: blur(20px);
     transition: all 0.3s ease;
   }
 
   .arc-card:hover {
-    border-color: rgba(147, 51, 234, 0.3);
-    box-shadow: 0 8px 32px rgba(147, 51, 234, 0.1);
+    border-color: rgb(var(--color-accent-pink));
+    box-shadow: 0 8px 32px rgba(236, 95, 101, 0.2);
     transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.15);
   }
 
-  /* Arc-style content areas */
+  /* Zones de contenu */
   .arc-content {
-    background: rgb(var(--arc-dark-bg));
-    color: rgb(var(--arc-text-primary));
+    background: rgb(var(--color-primary));
+    color: white;
   }
 
   .arc-front-bg {
-    background: rgb(var(--arc-dark-bg));
+    background: rgb(var(--color-primary));
     background-image: 
-      radial-gradient(circle at 2px 2px, rgba(147, 51, 234, 0.03) 1px, transparent 0);
+      radial-gradient(circle at 2px 2px, rgba(255, 255, 255, 0.05) 1px, transparent 0);
     background-size: 40px 40px;
   }
 
-  /* Arc-style hero section */
+  /* Section hero avec gradient */
   .arc-hero-gradient {
     background: linear-gradient(135deg, 
-      rgba(147, 51, 234, 0.9) 0%, 
-      rgba(79, 70, 229, 0.8) 35%, 
-      rgba(59, 130, 246, 0.7) 100%);
+      rgb(var(--color-primary)) 0%, 
+      rgb(var(--color-primary-dark)) 35%, 
+      rgb(var(--color-accent-red)) 100%);
   }
 
   .arc-hero-overlay {
-    background: rgba(16, 16, 20, 0.3);
+    background: rgba(22, 50, 244, 0.1);
     backdrop-filter: blur(1px);
   }
 
-  /* Arc-style footer */
+  /* Footer */
   .arc-footer {
     background: linear-gradient(135deg, 
-      rgba(24, 24, 27, 0.95) 0%, 
-      rgba(16, 16, 20, 0.98) 100%);
-    border-top: 1px solid rgba(39, 39, 42, 0.8);
+      rgb(var(--color-primary-dark)) 0%, 
+      rgb(var(--color-primary)) 100%);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Surface pour les modales et overlays */
+  .arc-surface {
+    background: rgb(var(--color-primary-dark));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Surface alternative avec couleur d'accent */
+  .arc-surface-accent {
+    background: rgb(var(--color-accent-red));
+    border: 1px solid rgb(var(--color-accent-pink));
   }
 }
 
@@ -253,27 +248,54 @@
     content: counter(step);
   }
   
-  /* Arc-specific utilities */
+  /* Utilitaires pour les couleurs personnalisées */
   .arc-gradient {
-    background: linear-gradient(135deg, rgb(var(--arc-accent-purple)) 0%, rgb(var(--arc-accent-blue)) 100%);
+    background: linear-gradient(135deg, rgb(var(--color-primary)) 0%, rgb(var(--color-accent-red)) 100%);
   }
   
   .arc-glass {
-    background: rgba(24, 24, 27, 0.8);
+    background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(20px);
-    border: 1px solid rgba(39, 39, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.2);
   }
 
   .arc-text-primary {
-    color: rgb(var(--arc-text-primary));
+    color: white;
   }
 
   .arc-text-secondary {
-    color: rgb(var(--arc-text-secondary));
+    color: rgba(255, 255, 255, 0.8);
   }
 
-  .arc-surface {
-    background: rgb(var(--arc-dark-surface));
-    border: 1px solid rgb(var(--arc-dark-border));
+  .text-brand-primary {
+    color: rgb(var(--color-primary));
+  }
+
+  .text-brand-dark {
+    color: rgb(var(--color-primary-dark));
+  }
+
+  .text-accent-red {
+    color: rgb(var(--color-accent-red));
+  }
+
+  .text-accent-pink {
+    color: rgb(var(--color-accent-pink));
+  }
+
+  .bg-brand-primary {
+    background-color: rgb(var(--color-primary));
+  }
+
+  .bg-brand-dark {
+    background-color: rgb(var(--color-primary-dark));
+  }
+
+  .bg-accent-red {
+    background-color: rgb(var(--color-accent-red));
+  }
+
+  .bg-accent-pink {
+    background-color: rgb(var(--color-accent-pink));
   }
 }
