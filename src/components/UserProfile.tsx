@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -208,7 +207,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
                 <Button variant="outline" onClick={handleCancel} className="flex-1 border-[#1632f4] text-[#1632f4] hover:bg-[#1632f4] hover:text-white">
                   Annuler
                 </Button>
-                <Button onClick={handleSave} className="flex-1 bg-[#1632f4] hover:bg-[#1632f4]/80 text-white" disabled={uploading}>
+                <Button onClick={handleSave} className="flex-1 bg-[#ec5f65] hover:bg-[#ec5f65]/80 text-white" disabled={uploading}>
                   <Save className="h-4 w-4 mr-2" />
                   Sauvegarder
                 </Button>

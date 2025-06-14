@@ -229,7 +229,7 @@ export const Preferences: React.FC = () => {
                 </p>
               </div>
 
-              <Button onClick={saveCompanySettings} className="w-full">
+              <Button onClick={saveCompanySettings} className="w-full bg-[#ec5f65] hover:bg-[#ec5f65]/90 text-white">
                 <Save className="h-4 w-4 mr-2" />
                 Sauvegarder les paramètres
               </Button>
@@ -273,7 +273,7 @@ export const Preferences: React.FC = () => {
                 />
               </div>
 
-              <Button onClick={saveAppearanceSettings} className="w-full">
+              <Button onClick={saveAppearanceSettings} className="w-full bg-[#ec5f65] hover:bg-[#ec5f65]/90 text-white">
                 <Save className="h-4 w-4 mr-2" />
                 Sauvegarder l'apparence
               </Button>
@@ -338,7 +338,7 @@ export const Preferences: React.FC = () => {
                 />
               </div>
 
-              <Button onClick={saveNotificationSettings} className="w-full">
+              <Button onClick={saveNotificationSettings} className="w-full bg-[#ec5f65] hover:bg-[#ec5f65]/90 text-white">
                 <Save className="h-4 w-4 mr-2" />
                 Sauvegarder les notifications
               </Button>
