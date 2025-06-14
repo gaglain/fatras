@@ -11,7 +11,7 @@ import { ChannelCreator } from '@/components/messaging/ChannelCreator';
 
 export const ChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(isMinimized);
+  const [isMinimized, setIsMinimized] = useState(false);
   const [message, setMessage] = useState('');
   const [selectedChannel, setSelectedChannel] = useState('general');
 
