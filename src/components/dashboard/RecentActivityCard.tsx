@@ -76,10 +76,8 @@ export const RecentActivityCard: React.FC = () => {
       <CardContent>
         <div className="space-y-3">
           {recentActivities.map((activity, index) => (
-            <div key={index} className="flex items-start space-x-3 p-2 rounded-lg transition-colors" style={{
-              ':hover': {
-                background: 'rgba(0,0,0,0.02)'
-              }
+            <div key={index} className="flex items-start space-x-3 p-2 rounded-lg transition-colors hover:bg-black hover:bg-opacity-5" style={{
+              border: '1px solid rgba(0,0,0,0.1)'
             }}>
               <div className="w-2 h-2 rounded-full mt-2" style={{
                 background: 'var(--custom-buttonBg, #1632f4)'

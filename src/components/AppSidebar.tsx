@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ChevronDown, ChevronRight } from 'lucide-react';
@@ -79,7 +80,7 @@ export function AppSidebar() {
                       <SidebarMenuItem>
                         <CollapsibleTrigger asChild>
                           <SidebarMenuButton
-                            className={`w-full justify-between ${sidebarText} hover:bg-accent hover:text-[#1632f4] transition-colors ${
+                            className={`w-full justify-between ${sidebarText} hover:bg-accent hover:text-[#1632f4] transition-colors rounded-none ${
                               isActive ? 'bg-accent text-[#1632f4] font-medium' : ''
                             }`}
                           >
@@ -100,7 +101,7 @@ export function AppSidebar() {
                               <SidebarMenuSubItem key={child.name}>
                                 <SidebarMenuSubButton 
                                   asChild 
-                                  className={`hover:bg-accent transition-colors ${
+                                  className={`hover:bg-accent transition-colors rounded-none ${
                                     isActiveItem(child.href) ? 'bg-accent text-[#1632f4] font-medium' : 'text-[#1632f4]'
                                   }`}
                                 >
@@ -124,7 +125,7 @@ export function AppSidebar() {
                   <SidebarMenuItem key={item.name}>
                     <SidebarMenuButton 
                       asChild 
-                      className={`${sidebarText} hover:bg-accent hover:text-[#1632f4] transition-colors ${
+                      className={`${sidebarText} hover:bg-accent hover:text-[#1632f4] transition-colors rounded-none ${
                         isActiveItem(item.href) ? 'bg-accent text-[#1632f4] font-medium' : ''
                       }`}
                     >
