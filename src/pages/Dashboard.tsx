@@ -126,12 +126,12 @@ export const Dashboard: React.FC = () => {
         <p className="text-gray-600 mt-2">Bienvenue ! Voici un résumé de vos activités.</p>
       </div>
 
-      {/* Stats Grid */}
+      {/* Stats Grid with hover animations */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
-            <Card key={stat.name} className="bg-white border border-gray-200">
+            <Card key={stat.name} className="bg-white border border-gray-200 hover:shadow-lg hover:scale-105 transition-all duration-200 cursor-pointer">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
@@ -153,7 +153,7 @@ export const Dashboard: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {/* Recent Activity */}
-        <Card className="xl:col-span-1 bg-white border border-gray-200">
+        <Card className="xl:col-span-1 bg-white border border-gray-200 hover:shadow-md transition-shadow">
           <CardHeader>
             <CardTitle className="flex items-center text-gray-900">
               <Activity className="h-5 w-5 mr-2" />
@@ -182,7 +182,7 @@ export const Dashboard: React.FC = () => {
         </Card>
 
         {/* Upcoming Events */}
-        <Card className="xl:col-span-1 bg-white border border-gray-200">
+        <Card className="xl:col-span-1 bg-white border border-gray-200 hover:shadow-md transition-shadow">
           <CardHeader>
             <CardTitle className="flex items-center text-gray-900">
               <Calendar className="h-5 w-5 mr-2" />
@@ -220,7 +220,7 @@ export const Dashboard: React.FC = () => {
         </Card>
 
         {/* Pending Tasks */}
-        <Card className="xl:col-span-1 bg-white border border-gray-200">
+        <Card className="xl:col-span-1 bg-white border border-gray-200 hover:shadow-md transition-shadow">
           <CardHeader>
             <CardTitle className="flex items-center text-gray-900">
               <CheckSquare className="h-5 w-5 mr-2" />
@@ -249,7 +249,7 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* Top Artists Performance */}
-      <Card className="bg-white border border-gray-200">
+      <Card className="bg-white border border-gray-200 hover:shadow-md transition-shadow">
         <CardHeader>
           <CardTitle className="flex items-center text-gray-900">
             <Star className="h-5 w-5 mr-2" />
@@ -259,7 +259,7 @@ export const Dashboard: React.FC = () => {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {topArtists.map((artist, index) => (
-              <div key={index} className="p-4 border border-gray-200 rounded-lg hover:border-brand-primary/30 transition-colors">
+              <div key={index} className="p-4 border border-gray-200 rounded-lg hover:border-brand-primary/30 hover:shadow-sm transition-all">
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="font-medium text-gray-900">{artist.name}</h4>
                   <div className="flex items-center">
@@ -284,25 +284,25 @@ export const Dashboard: React.FC = () => {
       </Card>
 
       {/* Quick Actions */}
-      <Card className="bg-white border border-gray-200">
+      <Card className="bg-white border border-gray-200 hover:shadow-md transition-shadow">
         <CardHeader>
           <CardTitle className="text-gray-900">Actions Rapides</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Button variant="outline" className="h-20 flex flex-col items-center justify-center border-gray-200 hover:border-brand-primary hover:bg-brand-primary/5">
+            <Button variant="outline" className="h-20 flex flex-col items-center justify-center border-gray-200 hover:border-brand-primary hover:bg-brand-primary/5 hover:scale-105 transition-all">
               <Users className="h-6 w-6 text-brand-primary mb-2" />
               <span className="text-gray-900">Nouveau Contact</span>
             </Button>
-            <Button variant="outline" className="h-20 flex flex-col items-center justify-center border-gray-200 hover:border-brand-primary hover:bg-brand-primary/5">
+            <Button variant="outline" className="h-20 flex flex-col items-center justify-center border-gray-200 hover:border-brand-primary hover:bg-brand-primary/5 hover:scale-105 transition-all">
               <Calendar className="h-6 w-6 text-brand-primary mb-2" />
               <span className="text-gray-900">Planifier Événement</span>
             </Button>
-            <Button variant="outline" className="h-20 flex flex-col items-center justify-center border-gray-200 hover:border-brand-primary hover:bg-brand-primary/5">
+            <Button variant="outline" className="h-20 flex flex-col items-center justify-center border-gray-200 hover:border-brand-primary hover:bg-brand-primary/5 hover:scale-105 transition-all">
               <CheckSquare className="h-6 w-6 text-brand-primary mb-2" />
               <span className="text-gray-900">Créer Tâche</span>
             </Button>
-            <Button variant="outline" className="h-20 flex flex-col items-center justify-center border-gray-200 hover:border-brand-primary hover:bg-brand-primary/5">
+            <Button variant="outline" className="h-20 flex flex-col items-center justify-center border-gray-200 hover:border-brand-primary hover:bg-brand-primary/5 hover:scale-105 transition-all">
               <Mail className="h-6 w-6 text-brand-primary mb-2" />
               <span className="text-gray-900">Envoyer Email</span>
             </Button>

@@ -35,6 +35,7 @@ import { FrontHome } from '@/pages/FrontHome';
 import { FrontArtists } from '@/pages/FrontArtists';
 import { FrontEvents } from '@/pages/FrontEvents';
 import { FrontContact } from '@/pages/FrontContact';
+import { FrontShop } from '@/pages/FrontShop';
 import { NotFound } from '@/pages/NotFound';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Layout } from '@/components/Layout';
@@ -55,6 +56,7 @@ function App() {
               <Route path="/front/artists" element={<FrontLayout><FrontArtists /></FrontLayout>} />
               <Route path="/front/events" element={<FrontLayout><FrontEvents /></FrontLayout>} />
               <Route path="/front/contact" element={<FrontLayout><FrontContact /></FrontLayout>} />
+              <Route path="/front/shop" element={<FrontLayout><FrontShop /></FrontLayout>} />
 
               {/* Admin route */}
               <Route path="/admin" element={<Index />} />
