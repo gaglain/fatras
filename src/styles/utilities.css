@@ -1,0 +1,88 @@
+
+@layer utilities {
+  .step {
+    counter-increment: step;
+  }
+
+  .step:before {
+    @apply absolute w-9 h-9 bg-muted rounded-full font-mono font-medium text-center text-base inline-flex items-center justify-center -indent-px border-4 border-background;
+    @apply ml-[-50px] mt-[-4px];
+    content: counter(step);
+  }
+  
+  /* Utilitaires pour les couleurs personnalisées */
+  .arc-gradient {
+    background: linear-gradient(135deg, rgb(var(--color-primary)) 0%, rgb(var(--color-accent-red)) 100%);
+  }
+  
+  .arc-glass {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .arc-text-primary {
+    color: white;
+  }
+
+  .arc-text-secondary {
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .text-brand-primary {
+    color: rgb(var(--color-primary));
+  }
+
+  .text-brand-dark {
+    color: rgb(var(--color-primary-dark));
+  }
+
+  .text-accent-red {
+    color: rgb(var(--color-accent-red));
+  }
+
+  .text-accent-pink {
+    color: rgb(var(--color-accent-pink));
+  }
+
+  .bg-brand-primary {
+    background-color: rgb(var(--color-primary));
+  }
+
+  .bg-brand-dark {
+    background-color: rgb(var(--color-primary-dark));
+  }
+
+  .bg-accent-red {
+    background-color: rgb(var(--color-accent-red));
+  }
+
+  .bg-accent-pink {
+    background-color: rgb(var(--color-accent-pink));
+  }
+
+  /* Optimisations éco-conception */
+  .eco-optimized {
+    will-change: auto;
+    contain: layout style paint;
+  }
+
+  .reduce-motion {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* Optimisation des images pour l'éco-conception */
+  .eco-image {
+    content-visibility: auto;
+    contain-intrinsic-size: 300px 200px;
+  }
+}
