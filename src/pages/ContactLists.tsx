@@ -120,7 +120,7 @@ export const ContactLists: React.FC = () => {
     setContactLists([...contactLists, newList]);
     setShowCreateDialog(false);
     resetForm();
-    toast.success("Liste de contacts créée avec succès !");
+    toast({ title: "Liste de contacts créée avec succès !" });
   };
 
   const handleEditList = (list: ContactList) => {
@@ -158,13 +158,13 @@ export const ContactLists: React.FC = () => {
     setShowEditDialog(false);
     setSelectedList(null);
     resetForm();
-    toast.success("Liste de contacts mise à jour !");
+    toast({ title: "Liste de contacts mise à jour !" });
   };
 
   const handleDeleteList = (listId: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette liste ?')) {
       setContactLists(contactLists.filter(list => list.id !== listId));
-      toast.success("Liste supprimée !");
+      toast({ title: "Liste supprimée !" });
     }
   };
 
