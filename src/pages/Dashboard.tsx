@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -117,6 +116,11 @@ export const Dashboard: React.FC = () => {
       case 'low': return 'bg-green-100 text-green-800';
       default: return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  const handleQuickAction = (action: string) => {
+    console.log(`Action rapide: ${action}`);
+    // Logique à implémenter selon l'action
   };
 
   return (
@@ -283,26 +287,42 @@ export const Dashboard: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Quick Actions */}
+      {/* Quick Actions with clickable buttons */}
       <Card className="bg-white border border-gray-200 hover:shadow-md transition-shadow">
         <CardHeader>
           <CardTitle className="text-gray-900">Actions Rapides</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Button variant="outline" className="h-20 flex flex-col items-center justify-center border-gray-200 hover:border-brand-primary hover:bg-brand-primary/5 hover:scale-105 transition-all">
+            <Button 
+              variant="outline" 
+              className="h-20 flex flex-col items-center justify-center border-gray-200 hover:border-brand-primary hover:bg-brand-primary/5 hover:scale-105 transition-all"
+              onClick={() => handleQuickAction('nouveau-contact')}
+            >
               <Users className="h-6 w-6 text-brand-primary mb-2" />
               <span className="text-gray-900">Nouveau Contact</span>
             </Button>
-            <Button variant="outline" className="h-20 flex flex-col items-center justify-center border-gray-200 hover:border-brand-primary hover:bg-brand-primary/5 hover:scale-105 transition-all">
+            <Button 
+              variant="outline" 
+              className="h-20 flex flex-col items-center justify-center border-gray-200 hover:border-brand-primary hover:bg-brand-primary/5 hover:scale-105 transition-all"
+              onClick={() => handleQuickAction('planifier-evenement')}
+            >
               <Calendar className="h-6 w-6 text-brand-primary mb-2" />
               <span className="text-gray-900">Planifier Événement</span>
             </Button>
-            <Button variant="outline" className="h-20 flex flex-col items-center justify-center border-gray-200 hover:border-brand-primary hover:bg-brand-primary/5 hover:scale-105 transition-all">
+            <Button 
+              variant="outline" 
+              className="h-20 flex flex-col items-center justify-center border-gray-200 hover:border-brand-primary hover:bg-brand-primary/5 hover:scale-105 transition-all"
+              onClick={() => handleQuickAction('creer-tache')}
+            >
               <CheckSquare className="h-6 w-6 text-brand-primary mb-2" />
               <span className="text-gray-900">Créer Tâche</span>
             </Button>
-            <Button variant="outline" className="h-20 flex flex-col items-center justify-center border-gray-200 hover:border-brand-primary hover:bg-brand-primary/5 hover:scale-105 transition-all">
+            <Button 
+              variant="outline" 
+              className="h-20 flex flex-col items-center justify-center border-gray-200 hover:border-brand-primary hover:bg-brand-primary/5 hover:scale-105 transition-all"
+              onClick={() => handleQuickAction('envoyer-email')}
+            >
               <Mail className="h-6 w-6 text-brand-primary mb-2" />
               <span className="text-gray-900">Envoyer Email</span>
             </Button>

@@ -59,7 +59,7 @@ export const Header: React.FC = () => {
   };
 
   return (
-    <div className="border-b border-border bg-background">
+    <div className="border-b border-gray-200 bg-white shadow-sm">
       <div className="flex h-16 items-center justify-between px-4 lg:px-6">
         <div className="flex items-center space-x-2 lg:space-x-4 min-w-0">
           <SidebarTrigger />
@@ -74,20 +74,20 @@ export const Header: React.FC = () => {
               }}
             />
           ) : (
-            <div className="h-6 w-6 lg:h-8 lg:w-8 bg-primary rounded flex items-center justify-center hidden sm:flex">
-              <span className="text-primary-foreground font-bold text-xs lg:text-sm">
+            <div className="h-6 w-6 lg:h-8 lg:w-8 bg-brand-primary rounded flex items-center justify-center hidden sm:flex">
+              <span className="text-white font-bold text-xs lg:text-sm">
                 {companySettings.name.charAt(0)}
               </span>
             </div>
           )}
-          <h1 className="text-base lg:text-xl font-semibold text-foreground truncate">
+          <h1 className="text-base lg:text-xl font-semibold text-gray-900 truncate">
             {companySettings.name}
           </h1>
         </div>
 
         <div className="flex items-center space-x-2 lg:space-x-4">
           <div className="flex items-center space-x-1 lg:space-x-2">
-            <Button variant="ghost" size="sm" className="hidden sm:flex">
+            <Button variant="ghost" size="sm" className="hidden sm:flex text-gray-700 hover:text-gray-900 hover:bg-gray-100">
               <Search className="h-4 w-4" />
             </Button>
             
@@ -98,7 +98,7 @@ export const Header: React.FC = () => {
                 variant="ghost"
                 size="sm"
                 onClick={handleNotificationClick}
-                className="relative"
+                className="relative text-gray-700 hover:text-gray-900 hover:bg-gray-100"
               >
                 <Bell className="h-4 w-4" />
                 {unreadCount > 0 && (
@@ -121,42 +121,42 @@ export const Header: React.FC = () => {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center space-x-2 h-8 px-2 lg:px-3">
+              <Button variant="ghost" className="flex items-center space-x-2 h-8 px-2 lg:px-3 text-gray-700 hover:text-gray-900 hover:bg-gray-100">
                 <Avatar className="h-6 w-6 lg:h-8 lg:w-8">
                   <AvatarImage src={currentUser?.avatar} alt={currentUser?.name} />
-                  <AvatarFallback className="text-xs">
+                  <AvatarFallback className="text-xs bg-brand-primary text-white">
                     {currentUser?.name?.split(' ').map(n => n[0]).join('') || 'U'}
                   </AvatarFallback>
                 </Avatar>
-                <span className="hidden md:block text-sm font-medium truncate max-w-[100px] lg:max-w-[150px]">
+                <span className="hidden md:block text-sm font-medium truncate max-w-[100px] lg:max-w-[150px] text-gray-900">
                   {currentUser?.name || 'Utilisateur'}
                 </span>
-                <ChevronDown className="h-3 w-3 lg:h-4 lg:w-4" />
+                <ChevronDown className="h-3 w-3 lg:h-4 lg:w-4 text-gray-700" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" forceMount>
-              <div className="px-3 py-2 border-b">
-                <p className="text-sm font-medium">{currentUser?.name || 'Utilisateur'}</p>
-                <p className="text-xs text-muted-foreground">{currentUser?.email || 'email@exemple.com'}</p>
+            <DropdownMenuContent className="w-56 bg-white border border-gray-200" align="end" forceMount>
+              <div className="px-3 py-2 border-b border-gray-200">
+                <p className="text-sm font-medium text-gray-900">{currentUser?.name || 'Utilisateur'}</p>
+                <p className="text-xs text-gray-600">{currentUser?.email || 'email@exemple.com'}</p>
               </div>
-              <DropdownMenuItem onClick={() => setShowUserProfile(true)}>
+              <DropdownMenuItem onClick={() => setShowUserProfile(true)} className="text-gray-700 hover:bg-gray-100">
                 <User className="mr-2 h-4 w-4" />
                 <span>Profil & Préférences</span>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
+              <DropdownMenuItem asChild className="text-gray-700 hover:bg-gray-100">
                 <Link to="/messagerie">
                   <MessageSquare className="mr-2 h-4 w-4" />
                   <span>Messages</span>
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
+              <DropdownMenuItem asChild className="text-gray-700 hover:bg-gray-100">
                 <Link to="/preferences">
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Paramètres</span>
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem className="text-gray-700 hover:bg-gray-100">
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Déconnexion</span>
               </DropdownMenuItem>
