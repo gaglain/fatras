@@ -177,72 +177,7 @@
     border: 1px solid rgb(var(--color-accent-pink));
   }
 
-  /* Styles spécifiques pour les boutons du back-office */
-  .back-office-button {
-    background: white !important;
-    color: #1632f4 !important;
-    border: 1px solid #e5e7eb !important;
-  }
-
-  .back-office-button:hover {
-    background: #f9fafb !important;
-    color: #1632f4 !important;
-  }
-
-  /* Correction pour tous les boutons outline */
-  .button-outline-corrected {
-    background: white !important;
-    color: #1632f4 !important;
-    border: 1px solid #e5e7eb !important;
-  }
-
-  .button-outline-corrected:hover {
-    background: #f9fafb !important;
-    color: #1632f4 !important;
-  }
-  
-  /* Forcer tous les éléments violets à devenir bleus dans le back office */
-  button[class*="bg-purple"], .bg-purple-600, .hover\:bg-purple-700, .bg-purple-500, .hover\:bg-purple-600,
-  [data-state="checked"], [data-state="on"] {
-    background-color: #1632f4 !important;
-  }
-  
-  button[class*="text-purple"], .text-purple-600, .text-purple-700, .text-purple-500 {
-    color: #1632f4 !important;
-  }
-  
-  button[class*="border-purple"], .border-purple-500, .border-purple-600, .border-purple-700,
-  [data-state="checked"], [data-state="on"] {
-    border-color: #1632f4 !important;
-  }
-  
-  /* Assurons que tous les boutons blancs ont du texte bleu */
-  button.bg-white, button[class*="bg-white"], [type="button"].bg-white {
-    color: #1632f4 !important;
-  }
-  
-  /* S'assurer que les boutons dans l'éditeur de site web sont correctement stylés */
-  .bg-green-600, .hover\:bg-green-700, .bg-blue-600, .hover\:bg-blue-700 {
-    background-color: #1632f4 !important;
-  }
-  
-  .bg-green-600:hover, .hover\:bg-green-700:hover, .bg-blue-600:hover, .hover\:bg-blue-700:hover {
-    background-color: #1225d3 !important;
-  }
-
-  /* Mode sombre pour le back-office */
-  .dark .back-office-button {
-    background: rgba(255, 255, 255, 0.1) !important;
-    color: #1632f4 !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  }
-
-  .dark .back-office-button:hover {
-    background: rgba(255, 255, 255, 0.2) !important;
-    color: #1632f4 !important;
-  }
-
-  /* Ajout support couleurs custom pour texte, fond, boutons… */
+  /* Support couleurs custom pour texte, fond, boutons… */
   body, .arc-content {
     background: var(--custom-background, #fff) !important;
     color: var(--custom-text, #18181b) !important;
@@ -267,43 +202,94 @@
     color: var(--custom-cardTextDark, #fff) !important;
   }
 
-  /* Boutons */
-  .arc-button,
+  /* CORRECTION MAJEURE - Tous les boutons du back-office */
+  button, 
   .back-office-button,
-  button, .button-outline-corrected, .bg-green-600, .bg-blue-600, .bg-green-600:hover, .bg-blue-600:hover, .arc-button-secondary {
+  [role="button"],
+  .button,
+  button[type="button"],
+  button[type="submit"],
+  input[type="submit"],
+  .bg-green-600, 
+  .bg-blue-600, 
+  .bg-primary,
+  [data-state="checked"],
+  [data-state="on"] {
     background-color: var(--custom-buttonBg, #1632f4) !important;
     color: var(--custom-buttonText, #fff) !important;
     border: 1px solid var(--custom-buttonBg, #1632f4) !important;
-    transition: background .15s, color .15s;
+    transition: all 0.2s ease !important;
   }
-  .dark .arc-button,
+
+  /* Mode sombre pour tous les boutons */
+  .dark button, 
   .dark .back-office-button,
-  .dark button, .dark .button-outline-corrected, .dark .bg-green-600, .dark .bg-blue-600, .dark .bg-green-600:hover, .dark .bg-blue-600:hover, .dark .arc-button-secondary {
+  .dark [role="button"],
+  .dark .button,
+  .dark button[type="button"],
+  .dark button[type="submit"],
+  .dark input[type="submit"],
+  .dark .bg-green-600, 
+  .dark .bg-blue-600, 
+  .dark .bg-primary,
+  .dark [data-state="checked"],
+  .dark [data-state="on"] {
     background-color: var(--custom-buttonBgDark, #fff) !important;
     color: var(--custom-buttonTextDark, #1632f4) !important;
     border: 1px solid var(--custom-buttonBgDark, #fff) !important;
   }
 
-  /* Champs outline et hover sur boutons */
-  button[variant~="outline"], .button-outline-corrected, .arc-button-secondary  {
+  /* Boutons outline - fond transparent avec bordure colorée */
+  button[data-variant="outline"],
+  .button-outline,
+  button.variant-outline,
+  [class*="variant-outline"],
+  button[class*="outline"] {
+    background-color: transparent !important;
+    color: var(--custom-buttonBg, #1632f4) !important;
     border: 1px solid var(--custom-buttonBg, #1632f4) !important;
-    background: transparent !important;
-    color: var(--custom-buttonText, #1632f4) !important;
-  }
-  .dark button[variant~="outline"], .dark .button-outline-corrected, .dark .arc-button-secondary {
-    border: 1px solid var(--custom-buttonBgDark, #fff) !important;
-    background: transparent !important;
-    color: var(--custom-buttonTextDark, #fff) !important;
   }
 
-  /* Support pour inputs : fond custom */
-  input, .arc-input {
-    color: var(--custom-text, #18181b);
-    background: var(--custom-background, #fff);
+  .dark button[data-variant="outline"],
+  .dark .button-outline,
+  .dark button.variant-outline,
+  .dark [class*="variant-outline"],
+  .dark button[class*="outline"] {
+    background-color: transparent !important;
+    color: var(--custom-buttonBgDark, #fff) !important;
+    border: 1px solid var(--custom-buttonBgDark, #fff) !important;
   }
-  .dark input, .dark .arc-input {
-    color: var(--custom-textDark, #fff);
-    background: var(--custom-backgroundDark, #18181b);
+
+  /* Hover states pour tous les boutons */
+  button:hover, 
+  .back-office-button:hover,
+  [role="button"]:hover,
+  .button:hover,
+  button[type="button"]:hover,
+  button[type="submit"]:hover,
+  input[type="submit"]:hover {
+    opacity: 0.9 !important;
+    transform: translateY(-1px) !important;
+  }
+
+  /* Champs de saisie avec couleurs personnalisées */
+  input, 
+  textarea, 
+  select,
+  .arc-input {
+    color: var(--custom-text, #18181b) !important;
+    background: var(--custom-background, #fff) !important;
+    border-color: var(--custom-buttonBg, #1632f4) !important;
+    transition: all 0.2s ease !important;
+  }
+
+  .dark input, 
+  .dark textarea, 
+  .dark select,
+  .dark .arc-input {
+    color: var(--custom-textDark, #fff) !important;
+    background: var(--custom-backgroundDark, #18181b) !important;
+    border-color: var(--custom-buttonBgDark, #fff) !important;
   }
 
   /* Couleurs personnalisées pour le widget de messagerie */
@@ -368,8 +354,29 @@
     color: var(--custom-chatWidgetIconDark, #ffffff) !important;
   }
 
+  /* Forcer l'application des styles sur tous les éléments interactifs */
+  [class*="bg-purple"], 
+  [class*="purple"],
+  .bg-purple-600, 
+  .hover\:bg-purple-700, 
+  .bg-purple-500, 
+  .hover\:bg-purple-600 {
+    background-color: var(--custom-buttonBg, #1632f4) !important;
+    color: var(--custom-buttonText, #fff) !important;
+  }
+
+  .dark [class*="bg-purple"], 
+  .dark [class*="purple"],
+  .dark .bg-purple-600, 
+  .dark .hover\:bg-purple-700, 
+  .dark .bg-purple-500, 
+  .dark .hover\:bg-purple-600 {
+    background-color: var(--custom-buttonBgDark, #fff) !important;
+    color: var(--custom-buttonTextDark, #1632f4) !important;
+  }
+
   /* Ajout d'une transition douce pour les changements de thème */
-  .dark, body, .arc-content, .arc-button, .back-office-button, button, .button-outline-corrected, .bg-green-600, .bg-blue-600, .arc-button-secondary, input, .arc-input, .chat-widget-button, .chat-widget-icon, .chat-widget-header, .chat-widget-text, .chat-widget-message-sent, .chat-widget-send-button {
+  *, *::before, *::after {
     transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
   }
 }
