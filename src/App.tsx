@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { UserProvider } from '@/contexts/UserContext';
@@ -55,61 +55,59 @@ function App() {
       <ThemeProvider>
         <UserProvider>
           <MessagingProvider>
-            <Router>
-              <Routes>
-                {/* Redirection pour /road-show vers /roadshow */}
-                <Route path="/road-show" element={<Navigate to="/roadshow" replace />} />
+            <Routes>
+              {/* Redirection pour /road-show vers /roadshow */}
+              <Route path="/road-show" element={<Navigate to="/roadshow" replace />} />
+              
+              {/* Routes principales avec Layout */}
+              <Route path="/" element={<Layout />}>
+                <Route index element={<Index />} />
+                <Route path="dashboard" element={<Dashboard />} />
+                <Route path="artists" element={<Artists />} />
+                <Route path="artists/:id" element={<ArtistDetail />} />
+                <Route path="events" element={<Events />} />
+                <Route path="agenda" element={<Agenda />} />
+                <Route path="contacts" element={<Contacts />} />
+                <Route path="contact-lists" element={<ContactLists />} />
+                <Route path="contracts" element={<Contracts />} />
+                <Route path="tasks" element={<Tasks />} />
+                <Route path="roadshow" element={<RoadShow />} />
+                <Route path="email" element={<Email />} />
+                <Route path="email-campaigns" element={<EmailCampaigns />} />
+                <Route path="messagerie" element={<Messagerie />} />
+                <Route path="forms" element={<Forms />} />
+                <Route path="merchandise" element={<Merchandise />} />
+                <Route path="show-bible" element={<ShowBible />} />
+                <Route path="opportunities" element={<Opportunities />} />
+                <Route path="event-types" element={<EventTypes />} />
+                <Route path="user-management" element={<UserManagement />} />
+                <Route path="preferences" element={<Preferences />} />
+                <Route path="application" element={<Application />} />
+                <Route path="publication-calendar" element={<PublicationCalendar />} />
+                <Route path="website" element={<Website />} />
+                <Route path="website-editor" element={<WebsiteWithEditor />} />
                 
-                {/* Routes principales avec Layout */}
-                <Route path="/" element={<Layout />}>
-                  <Route index element={<Index />} />
-                  <Route path="dashboard" element={<Dashboard />} />
-                  <Route path="artists" element={<Artists />} />
-                  <Route path="artists/:id" element={<ArtistDetail />} />
-                  <Route path="events" element={<Events />} />
-                  <Route path="agenda" element={<Agenda />} />
-                  <Route path="contacts" element={<Contacts />} />
-                  <Route path="contact-lists" element={<ContactLists />} />
-                  <Route path="contracts" element={<Contracts />} />
-                  <Route path="tasks" element={<Tasks />} />
-                  <Route path="roadshow" element={<RoadShow />} />
-                  <Route path="email" element={<Email />} />
-                  <Route path="email-campaigns" element={<EmailCampaigns />} />
-                  <Route path="messagerie" element={<Messagerie />} />
-                  <Route path="forms" element={<Forms />} />
-                  <Route path="merchandise" element={<Merchandise />} />
-                  <Route path="show-bible" element={<ShowBible />} />
-                  <Route path="opportunities" element={<Opportunities />} />
-                  <Route path="event-types" element={<EventTypes />} />
-                  <Route path="user-management" element={<UserManagement />} />
-                  <Route path="preferences" element={<Preferences />} />
-                  <Route path="application" element={<Application />} />
-                  <Route path="publication-calendar" element={<PublicationCalendar />} />
-                  <Route path="website" element={<Website />} />
-                  <Route path="website-editor" element={<WebsiteWithEditor />} />
-                  
-                  {/* Routes admin (back-office) */}
-                  <Route path="admin" element={<WebsiteBackoffice />} />
-                  <Route path="admin/editor/:pageId" element={<WebsitePageEditor />} />
-                </Route>
+                {/* Routes admin (back-office) */}
+                <Route path="admin" element={<WebsiteBackoffice />} />
+                <Route path="admin/editor/:pageId" element={<WebsitePageEditor />} />
+              </Route>
 
-                {/* Routes front-office avec FrontLayout */}
-                <Route path="/front" element={<FrontLayout />}>
-                  <Route index element={<FrontHome />} />
-                  <Route path="artists" element={<FrontArtists />} />
-                  <Route path="events" element={<FrontEvents />} />
-                  <Route path="contact" element={<FrontContact />} />
-                  <Route path="shop" element={<FrontShop />} />
-                </Route>
+              {/* Routes front-office avec FrontLayout */}
+              <Route path="/front" element={<FrontLayout />}>
+                <Route index element={<FrontHome />} />
+                <Route path="artists" element={<FrontArtists />} />
+                <Route path="events" element={<FrontEvents />} />
+                <Route path="contact" element={<FrontContact />} />
+                <Route path="shop" element={<FrontShop />} />
+              </Route>
 
-                {/* Redirections pour compatibilité */}
-                <Route path="/website/backoffice" element={<Navigate to="/admin" replace />} />
-                <Route path="/website/editor/:pageId" element={<Navigate to="/admin/editor/:pageId" replace />} />
+              {/* Redirections pour compatibilité */}
+              <Route path="/website/backoffice" element={<Navigate to="/admin" replace />} />
+              <Route path="/website/editor/:pageId" element={<Navigate to="/admin/editor/:pageId" replace />} />
 
-                {/* Page 404 */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Router>
+              {/* Page 404 */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
           </MessagingProvider>
         </UserProvider>
       </ThemeProvider>
