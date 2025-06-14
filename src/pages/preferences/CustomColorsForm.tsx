@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Save } from "lucide-react";
 
-// Champs personnalisés supplémentaires pour texte/fond/boutons clair & sombre
 const colorFields: { key: string, label: string, default: string }[] = [
   { key: "primary", label: "Primaire", default: "#1632f4" },
   { key: "secondary", label: "Secondaire", default: "#ec5f65" },
@@ -18,6 +17,10 @@ const colorFields: { key: string, label: string, default: string }[] = [
   { key: "buttonBgDark", label: "Bouton fond (sombre)", default: "#ffffff" },
   { key: "buttonText", label: "Bouton texte (clair)", default: "#ffffff" },
   { key: "buttonTextDark", label: "Bouton texte (sombre)", default: "#1632f4" },
+  { key: "cardBg", label: "Fond carte (clair)", default: "#18181b" },
+  { key: "cardBgDark", label: "Fond carte (sombre)", default: "#22223a" },
+  { key: "cardText", label: "Texte carte (clair)", default: "#ffffff" },
+  { key: "cardTextDark", label: "Texte carte (sombre)", default: "#ffffff" },
   { key: "sidebarIconLight", label: "Couleur icônes menu (clair)", default: "#1632f4" },
   { key: "sidebarIconDark", label: "Couleur icônes menu (sombre)", default: "#ffffff" },
 ];
@@ -27,7 +30,6 @@ type ColorSettings = Record<string, string>;
 export const CustomColorsForm: React.FC = () => {
   const [colors, setColors] = useState<ColorSettings>({});
 
-  // Charger depuis localStorage + appliquer initialement
   useEffect(() => {
     const saved = localStorage.getItem("customColors");
     let initial: ColorSettings = {};

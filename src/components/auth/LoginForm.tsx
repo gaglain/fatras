@@ -41,7 +41,7 @@ export const LoginForm = () => {
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
+    <Card className="w-full max-w-md mx-auto card">
       <CardHeader>
         <CardTitle>{isSignUp ? 'Créer un compte' : 'Connexion'}</CardTitle>
         <CardDescription>

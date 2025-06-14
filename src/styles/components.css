@@ -252,6 +252,20 @@
     color: var(--custom-textDark, #fff) !important;
   }
 
+  /* Cartes avec fond et texte personnalisables */
+  .arc-card, .card {
+    background: var(--custom-cardBg, #18181b) !important;
+    color: var(--custom-cardText, #fff) !important;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    transition: background 0.2s, color 0.2s;
+  }
+  .dark .arc-card, .dark .card {
+    background: var(--custom-cardBgDark, #22223a) !important;
+    color: var(--custom-cardTextDark, #fff) !important;
+  }
+
   /* Boutons */
   .arc-button,
   .back-office-button,
