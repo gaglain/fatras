@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { SEOManager } from '@/components/SEOManager';
 import { useNavigate } from 'react-router-dom';
 import { 
   Plus, 
@@ -23,7 +24,8 @@ import {
   Calendar,
   Users,
   ArrowLeft,
-  Upload
+  Upload,
+  Search
 } from 'lucide-react';
 
 interface WebPage {
@@ -37,6 +39,9 @@ interface WebPage {
   featuredImage?: string;
   createdAt: string;
   updatedAt: string;
+  seoTitle?: string;
+  keywords?: string;
+  focusKeyword?: string;
 }
 
 interface FormData {
@@ -105,6 +110,7 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
   const [selectedPage, setSelectedPage] = useState<WebPage | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showSEODialog, setShowSEODialog] = useState(false);
   const [activeTab, setActiveTab] = useState('pages');
   const [logoUrl, setLogoUrl] = useState('/placeholder.svg');
 
@@ -200,6 +206,27 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleSEOSave = (seoData: any) => {
+    if (!selectedPage) return;
+    
+    const updatedPages = pages.map(page => 
+      page.id === selectedPage.id 
+        ? { 
+            ...page, 
+            metaDescription: seoData.description,
+            seoTitle: seoData.title,
+            keywords: seoData.keywords,
+            focusKeyword: seoData.focusKeyword,
+            updatedAt: new Date().toISOString().split('T')[0] 
+          }
+        : page
+    );
+    
+    setPages(updatedPages);
+    setShowSEODialog(false);
+    setSelectedPage(null);
   };
 
   return (
@@ -373,6 +400,7 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
             <TabsTrigger value="pages">Toutes les Pages</TabsTrigger>
             <TabsTrigger value="published">Publiées</TabsTrigger>
             <TabsTrigger value="drafts">Brouillons</TabsTrigger>
+            <TabsTrigger value="seo">SEO Global</TabsTrigger>
             <TabsTrigger value="settings">Paramètres</TabsTrigger>
             <TabsTrigger value="media">Médias</TabsTrigger>
           </TabsList>
@@ -407,6 +435,16 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
                           </Button>
                           <Button size="sm" variant="outline" onClick={() => handleEditPage(page)}>
                             <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            onClick={() => {
+                              setSelectedPage(page);
+                              setShowSEODialog(true);
+                            }}
+                          >
+                            <Search className="h-4 w-4" />
                           </Button>
                           <Button size="sm" variant="outline" onClick={() => handleDeletePage(page.id)}>
                             <Trash2 className="h-4 w-4" />
@@ -480,6 +518,27 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
                     </div>
                   ))}
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="seo" className="mt-6">
+            <Card className="bg-white">
+              <CardHeader>
+                <CardTitle className="text-gray-900">SEO Global du Site</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <SEOManager
+                  initialData={{
+                    title: "MusiConnect - Plateforme de booking d'artistes",
+                    description: "Découvrez notre plateforme de booking d'artistes et créons ensemble des expériences musicales exceptionnelles pour vos événements.",
+                    keywords: "booking, artistes, musique, événements, concerts, spectacles",
+                    focusKeyword: "booking artiste"
+                  }}
+                  onSave={(data) => {
+                    console.log('SEO global sauvegardé:', data);
+                  }}
+                />
               </CardContent>
             </Card>
           </TabsContent>
@@ -576,6 +635,26 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* SEO Dialog */}
+        <Dialog open={showSEODialog} onOpenChange={setShowSEODialog}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Optimisation SEO - {selectedPage?.title}</DialogTitle>
+            </DialogHeader>
+            {selectedPage && (
+              <SEOManager
+                initialData={{
+                  title: selectedPage.seoTitle || selectedPage.title,
+                  description: selectedPage.metaDescription || '',
+                  keywords: selectedPage.keywords || '',
+                  focusKeyword: selectedPage.focusKeyword || ''
+                }}
+                onSave={handleSEOSave}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

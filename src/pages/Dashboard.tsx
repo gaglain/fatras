@@ -103,27 +103,27 @@ const topArtists = [
 export const Dashboard: React.FC = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'confirmed': return 'bg-green-500/20 text-green-400 border-green-500/30';
-      case 'pending': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-      case 'cancelled': return 'bg-red-500/20 text-red-400 border-red-500/30';
-      default: return 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30';
+      case 'confirmed': return 'bg-green-100 text-green-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'cancelled': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'high': return 'bg-red-500/20 text-red-400 border-red-500/30';
-      case 'medium': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-      case 'low': return 'bg-green-500/20 text-green-400 border-green-500/30';
-      default: return 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30';
+      case 'high': return 'bg-red-100 text-red-800';
+      case 'medium': return 'bg-yellow-100 text-yellow-800';
+      case 'low': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   return (
-    <div className="space-y-6 arc-content text-white">
+    <div className="space-y-6 bg-gray-50 min-h-screen p-6">
       <div>
-        <h1 className="text-3xl font-bold arc-text-primary">Tableau de Bord</h1>
-        <p className="arc-text-secondary mt-2">Bienvenue ! Voici un résumé de vos activités.</p>
+        <h1 className="text-3xl font-bold text-gray-900">Tableau de Bord</h1>
+        <p className="text-gray-600 mt-2">Bienvenue ! Voici un résumé de vos activités.</p>
       </div>
 
       {/* Stats Grid */}
@@ -131,18 +131,18 @@ export const Dashboard: React.FC = () => {
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
-            <Card key={stat.name} className="arc-card">
+            <Card key={stat.name} className="bg-white border border-gray-200">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <p className="text-xs font-medium arc-text-secondary mb-1">{stat.name}</p>
-                    <p className="text-lg font-bold arc-text-primary">{stat.value}</p>
-                    <p className={`text-xs ${stat.changeType === 'positive' ? 'text-green-400' : 'text-red-400'}`}>
+                    <p className="text-xs font-medium text-gray-600 mb-1">{stat.name}</p>
+                    <p className="text-lg font-bold text-gray-900">{stat.value}</p>
+                    <p className={`text-xs ${stat.changeType === 'positive' ? 'text-green-600' : 'text-red-600'}`}>
                       {stat.change}
                     </p>
                   </div>
-                  <div className="bg-purple-500/20 p-2 rounded-lg">
-                    <Icon className="h-4 w-4 text-purple-400" />
+                  <div className="bg-brand-primary/10 p-2 rounded-lg">
+                    <Icon className="h-4 w-4 text-brand-primary" />
                   </div>
                 </div>
               </CardContent>
@@ -153,9 +153,9 @@ export const Dashboard: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {/* Recent Activity */}
-        <Card className="xl:col-span-1 arc-card">
+        <Card className="xl:col-span-1 bg-white border border-gray-200">
           <CardHeader>
-            <CardTitle className="flex items-center arc-text-primary">
+            <CardTitle className="flex items-center text-gray-900">
               <Activity className="h-5 w-5 mr-2" />
               Activité Récente
             </CardTitle>
@@ -163,17 +163,17 @@ export const Dashboard: React.FC = () => {
           <CardContent>
             <div className="space-y-3">
               {recentActivities.map((activity, index) => (
-                <div key={index} className="flex items-start space-x-3 p-2 rounded-lg hover:bg-zinc-800/50 transition-colors">
-                  <div className="w-2 h-2 bg-purple-400 rounded-full mt-2"></div>
+                <div key={index} className="flex items-start space-x-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                  <div className="w-2 h-2 bg-brand-primary rounded-full mt-2"></div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
-                      <p className="text-sm font-medium arc-text-primary truncate">{activity.title}</p>
-                      <Badge variant="outline" className={getPriorityColor(activity.priority)}>
+                      <p className="text-sm font-medium text-gray-900 truncate">{activity.title}</p>
+                      <Badge className={getPriorityColor(activity.priority)}>
                         {activity.priority}
                       </Badge>
                     </div>
-                    <p className="text-xs arc-text-secondary mb-1">{activity.message}</p>
-                    <p className="text-xs text-zinc-500">Il y a {activity.time}</p>
+                    <p className="text-xs text-gray-600 mb-1">{activity.message}</p>
+                    <p className="text-xs text-gray-500">Il y a {activity.time}</p>
                   </div>
                 </div>
               ))}
@@ -182,9 +182,9 @@ export const Dashboard: React.FC = () => {
         </Card>
 
         {/* Upcoming Events */}
-        <Card className="xl:col-span-1 arc-card">
+        <Card className="xl:col-span-1 bg-white border border-gray-200">
           <CardHeader>
-            <CardTitle className="flex items-center arc-text-primary">
+            <CardTitle className="flex items-center text-gray-900">
               <Calendar className="h-5 w-5 mr-2" />
               Prochains Événements
             </CardTitle>
@@ -192,14 +192,14 @@ export const Dashboard: React.FC = () => {
           <CardContent>
             <div className="space-y-3">
               {upcomingEvents.map((event) => (
-                <div key={event.id} className="p-3 border border-zinc-700/50 rounded-lg hover:border-purple-500/30 transition-colors">
+                <div key={event.id} className="p-3 border border-gray-200 rounded-lg hover:border-brand-primary/30 transition-colors">
                   <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-sm font-medium truncate arc-text-primary">{event.title}</h4>
+                    <h4 className="text-sm font-medium truncate text-gray-900">{event.title}</h4>
                     <Badge className={getStatusColor(event.status)}>
                       {event.status}
                     </Badge>
                   </div>
-                  <div className="space-y-1 text-xs arc-text-secondary">
+                  <div className="space-y-1 text-xs text-gray-600">
                     <div className="flex items-center">
                       <Calendar className="h-3 w-3 mr-1" />
                       {new Date(event.date).toLocaleDateString('fr-FR')}
@@ -220,9 +220,9 @@ export const Dashboard: React.FC = () => {
         </Card>
 
         {/* Pending Tasks */}
-        <Card className="xl:col-span-1 arc-card">
+        <Card className="xl:col-span-1 bg-white border border-gray-200">
           <CardHeader>
-            <CardTitle className="flex items-center arc-text-primary">
+            <CardTitle className="flex items-center text-gray-900">
               <CheckSquare className="h-5 w-5 mr-2" />
               Tâches Prioritaires
             </CardTitle>
@@ -230,14 +230,14 @@ export const Dashboard: React.FC = () => {
           <CardContent>
             <div className="space-y-3">
               {pendingTasks.map((task) => (
-                <div key={task.id} className="p-3 border border-zinc-700/50 rounded-lg hover:border-purple-500/30 transition-colors">
+                <div key={task.id} className="p-3 border border-gray-200 rounded-lg hover:border-brand-primary/30 transition-colors">
                   <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-sm font-medium arc-text-primary">{task.title}</h4>
+                    <h4 className="text-sm font-medium text-gray-900">{task.title}</h4>
                     <Badge className={getPriorityColor(task.priority)}>
                       {task.priority}
                     </Badge>
                   </div>
-                  <div className="flex items-center text-xs arc-text-secondary">
+                  <div className="flex items-center text-xs text-gray-600">
                     <Clock className="h-3 w-3 mr-1" />
                     Échéance: {new Date(task.deadline).toLocaleDateString('fr-FR')}
                   </div>
@@ -249,9 +249,9 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* Top Artists Performance */}
-      <Card className="arc-card">
+      <Card className="bg-white border border-gray-200">
         <CardHeader>
-          <CardTitle className="flex items-center arc-text-primary">
+          <CardTitle className="flex items-center text-gray-900">
             <Star className="h-5 w-5 mr-2" />
             Top Artistes - Performance
           </CardTitle>
@@ -259,22 +259,22 @@ export const Dashboard: React.FC = () => {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {topArtists.map((artist, index) => (
-              <div key={index} className="p-4 border border-zinc-700/50 rounded-lg hover:border-purple-500/30 transition-colors">
+              <div key={index} className="p-4 border border-gray-200 rounded-lg hover:border-brand-primary/30 transition-colors">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-medium arc-text-primary">{artist.name}</h4>
+                  <h4 className="font-medium text-gray-900">{artist.name}</h4>
                   <div className="flex items-center">
                     <Star className="h-4 w-4 text-yellow-400 mr-1" />
-                    <span className="text-sm arc-text-secondary">{artist.rating}</span>
+                    <span className="text-sm text-gray-600">{artist.rating}</span>
                   </div>
                 </div>
-                <div className="space-y-2 text-sm arc-text-secondary">
+                <div className="space-y-2 text-sm text-gray-600">
                   <div className="flex justify-between">
                     <span>Spectacles:</span>
-                    <span className="font-medium arc-text-primary">{artist.shows}</span>
+                    <span className="font-medium text-gray-900">{artist.shows}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Revenus:</span>
-                    <span className="font-medium text-green-400">{artist.revenue}</span>
+                    <span className="font-medium text-green-600">{artist.revenue}</span>
                   </div>
                 </div>
               </div>
@@ -284,27 +284,27 @@ export const Dashboard: React.FC = () => {
       </Card>
 
       {/* Quick Actions */}
-      <Card className="arc-card">
+      <Card className="bg-white border border-gray-200">
         <CardHeader>
-          <CardTitle className="arc-text-primary">Actions Rapides</CardTitle>
+          <CardTitle className="text-gray-900">Actions Rapides</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Button variant="outline" className="h-20 flex flex-col items-center justify-center arc-button-secondary">
-              <Users className="h-6 w-6 text-purple-400 mb-2" />
-              <span>Nouveau Contact</span>
+            <Button variant="outline" className="h-20 flex flex-col items-center justify-center border-gray-200 hover:border-brand-primary hover:bg-brand-primary/5">
+              <Users className="h-6 w-6 text-brand-primary mb-2" />
+              <span className="text-gray-900">Nouveau Contact</span>
             </Button>
-            <Button variant="outline" className="h-20 flex flex-col items-center justify-center arc-button-secondary">
-              <Calendar className="h-6 w-6 text-purple-400 mb-2" />
-              <span>Planifier Événement</span>
+            <Button variant="outline" className="h-20 flex flex-col items-center justify-center border-gray-200 hover:border-brand-primary hover:bg-brand-primary/5">
+              <Calendar className="h-6 w-6 text-brand-primary mb-2" />
+              <span className="text-gray-900">Planifier Événement</span>
             </Button>
-            <Button variant="outline" className="h-20 flex flex-col items-center justify-center arc-button-secondary">
-              <CheckSquare className="h-6 w-6 text-purple-400 mb-2" />
-              <span>Créer Tâche</span>
+            <Button variant="outline" className="h-20 flex flex-col items-center justify-center border-gray-200 hover:border-brand-primary hover:bg-brand-primary/5">
+              <CheckSquare className="h-6 w-6 text-brand-primary mb-2" />
+              <span className="text-gray-900">Créer Tâche</span>
             </Button>
-            <Button variant="outline" className="h-20 flex flex-col items-center justify-center arc-button-secondary">
-              <Mail className="h-6 w-6 text-purple-400 mb-2" />
-              <span>Envoyer Email</span>
+            <Button variant="outline" className="h-20 flex flex-col items-center justify-center border-gray-200 hover:border-brand-primary hover:bg-brand-primary/5">
+              <Mail className="h-6 w-6 text-brand-primary mb-2" />
+              <span className="text-gray-900">Envoyer Email</span>
             </Button>
           </div>
         </CardContent>
