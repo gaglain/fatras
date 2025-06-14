@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Users, Edit, Trash2, Search, Filter } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
 interface Contact {
   id: string;
@@ -116,10 +117,10 @@ export const ContactLists: React.FC = () => {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
-    
     setContactLists([...contactLists, newList]);
     setShowCreateDialog(false);
     resetForm();
+    toast.success("Liste de contacts créée avec succès !");
   };
 
   const handleEditList = (list: ContactList) => {
@@ -137,7 +138,6 @@ export const ContactLists: React.FC = () => {
 
   const handleUpdateList = () => {
     if (!selectedList) return;
-    
     const updatedLists = contactLists.map(list => 
       list.id === selectedList.id 
         ? { 
@@ -154,16 +154,17 @@ export const ContactLists: React.FC = () => {
           }
         : list
     );
-    
     setContactLists(updatedLists);
     setShowEditDialog(false);
     setSelectedList(null);
     resetForm();
+    toast.success("Liste de contacts mise à jour !");
   };
 
   const handleDeleteList = (listId: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette liste ?')) {
       setContactLists(contactLists.filter(list => list.id !== listId));
+      toast.success("Liste supprimée !");
     }
   };
 
