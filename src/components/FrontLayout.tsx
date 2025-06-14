@@ -11,7 +11,7 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen arc-front-bg">
       <FrontNavigation />
-      <main className="flex-1">
+      <main className="flex-1 pt-20">
         {children || <Outlet />}
       </main>
       <footer className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-12 mt-16 relative overflow-hidden">
