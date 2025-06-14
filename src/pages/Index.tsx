@@ -14,12 +14,20 @@ const Index = () => {
       color: 'var(--custom-text, #18181b)'
     }}>
       <div className="w-full max-w-md p-6">
-        <Card className="shadow-xl">
+        <Card className="shadow-xl" style={{
+          background: 'var(--custom-cardBg, #ffffff)',
+          color: 'var(--custom-cardText, #18181b)',
+          border: '1px solid rgba(0,0,0,0.1)'
+        }}>
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold">
+            <CardTitle className="text-2xl font-bold" style={{
+              color: 'var(--custom-text, #18181b)'
+            }}>
               Fatras Booking
             </CardTitle>
-            <CardDescription>
+            <CardDescription style={{
+              color: 'var(--custom-text, #666666)'
+            }}>
               Système de gestion pour bookers professionnels
             </CardDescription>
           </CardHeader>

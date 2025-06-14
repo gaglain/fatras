@@ -41,80 +41,120 @@ export const LoginForm = () => {
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto card">
-      <CardHeader>
-        <CardTitle>{isSignUp ? 'Créer un compte' : 'Connexion'}</CardTitle>
-        <CardDescription>
+    <div className="w-full">
+      <div className="mb-4">
+        <h2 className="text-xl font-semibold" style={{
+          color: 'var(--custom-text, #18181b)'
+        }}>
+          {isSignUp ? 'Créer un compte' : 'Connexion'}
+        </h2>
+        <p className="text-sm mt-1" style={{
+          color: 'var(--custom-text, #666666)'
+        }}>
           {isSignUp 
             ? 'Créez votre compte Fatras Booking' 
             : 'Connectez-vous à votre compte Fatras Booking'
           }
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {isSignUp && (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="firstName">Prénom</Label>
-                <Input
-                  id="firstName"
-                  type="text"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Nom</Label>
-                <Input
-                  id="lastName"
-                  type="text"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  required
-                />
-              </div>
-            </>
-          )}
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Mot de passe</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          <Button type="submit" className="w-full back-office-button" disabled={isLoading}>
-            {isLoading ? 'Chargement...' : (isSignUp ? 'Créer le compte' : 'Se connecter')}
-          </Button>
-        </form>
-        <div className="mt-4 text-center">
-          <Button
-            variant="link"
-            onClick={() => setIsSignUp(!isSignUp)}
-            className="text-sm"
-            style={{ color: 'var(--custom-buttonBg, #1632f4)' }}
-          >
-            {isSignUp 
-              ? 'Déjà un compte ? Se connecter' 
-              : 'Pas de compte ? Créer un compte'
-            }
-          </Button>
+        </p>
+      </div>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {isSignUp && (
+          <>
+            <div className="space-y-2">
+              <Label htmlFor="firstName" style={{
+                color: 'var(--custom-text, #18181b)'
+              }}>
+                Prénom
+              </Label>
+              <Input
+                id="firstName"
+                type="text"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                required
+                style={{
+                  background: 'var(--custom-background, #ffffff)',
+                  color: 'var(--custom-text, #18181b)',
+                  borderColor: 'var(--custom-buttonBg, #1632f4)'
+                }}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lastName" style={{
+                color: 'var(--custom-text, #18181b)'
+              }}>
+                Nom
+              </Label>
+              <Input
+                id="lastName"
+                type="text"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                required
+                style={{
+                  background: 'var(--custom-background, #ffffff)',
+                  color: 'var(--custom-text, #18181b)',
+                  borderColor: 'var(--custom-buttonBg, #1632f4)'
+                }}
+              />
+            </div>
+          </>
+        )}
+        <div className="space-y-2">
+          <Label htmlFor="email" style={{
+            color: 'var(--custom-text, #18181b)'
+          }}>
+            Email
+          </Label>
+          <Input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            style={{
+              background: 'var(--custom-background, #ffffff)',
+              color: 'var(--custom-text, #18181b)',
+              borderColor: 'var(--custom-buttonBg, #1632f4)'
+            }}
+          />
         </div>
-      </CardContent>
-    </Card>
+        <div className="space-y-2">
+          <Label htmlFor="password" style={{
+            color: 'var(--custom-text, #18181b)'
+          }}>
+            Mot de passe
+          </Label>
+          <Input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            style={{
+              background: 'var(--custom-background, #ffffff)',
+              color: 'var(--custom-text, #18181b)',
+              borderColor: 'var(--custom-buttonBg, #1632f4)'
+            }}
+          />
+        </div>
+        <Button type="submit" className="w-full back-office-button" disabled={isLoading}>
+          {isLoading ? 'Chargement...' : (isSignUp ? 'Créer le compte' : 'Se connecter')}
+        </Button>
+      </form>
+      <div className="mt-4 text-center">
+        <Button
+          variant="link"
+          onClick={() => setIsSignUp(!isSignUp)}
+          className="text-sm"
+          style={{ color: 'var(--custom-buttonBg, #1632f4)' }}
+        >
+          {isSignUp 
+            ? 'Déjà un compte ? Se connecter' 
+            : 'Pas de compte ? Créer un compte'
+          }
+        </Button>
+      </div>
+    </div>
   );
 };
