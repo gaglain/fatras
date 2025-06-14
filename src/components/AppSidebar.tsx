@@ -34,7 +34,6 @@ export function AppSidebar() {
   }
 
   const sidebarIconColor = getSidebarIconColor();
-  const isDark = theme === 'dark';
 
   const isActiveItem = (href: string) => location.pathname === href;
   
@@ -81,11 +80,11 @@ export function AppSidebar() {
                       <SidebarMenuItem>
                         <CollapsibleTrigger asChild>
                           <SidebarMenuButton
-                            className="w-full justify-between transition-colors border-0 rounded-none"
+                            className="w-full justify-between transition-colors border-0"
                             style={{
                               color: 'var(--custom-cardText, #18181b)',
                               backgroundColor: isActive ? 'var(--custom-buttonBg, #1632f4)' : 'transparent',
-                              '--tw-text-opacity': isActive ? '1' : '0.8'
+                              borderRadius: '0'
                             }}
                           >
                             <div className="flex items-center min-w-0">
@@ -109,9 +108,10 @@ export function AppSidebar() {
                               <SidebarMenuSubItem key={child.name}>
                                 <SidebarMenuSubButton 
                                   asChild 
-                                  className="transition-colors border-0 rounded-none"
+                                  className="transition-colors border-0"
                                   style={{
-                                    backgroundColor: isActiveItem(child.href) ? 'var(--custom-buttonBg, #1632f4)' : 'transparent'
+                                    backgroundColor: isActiveItem(child.href) ? 'var(--custom-buttonBg, #1632f4)' : 'transparent',
+                                    borderRadius: '0'
                                   }}
                                 >
                                   <Link to={child.href} className="flex items-center min-w-0">
@@ -136,10 +136,11 @@ export function AppSidebar() {
                   <SidebarMenuItem key={item.name}>
                     <SidebarMenuButton 
                       asChild 
-                      className="transition-colors border-0 rounded-none"
+                      className="transition-colors border-0"
                       style={{
                         color: 'var(--custom-cardText, #18181b)',
-                        backgroundColor: isActiveItem(item.href) ? 'var(--custom-buttonBg, #1632f4)' : 'transparent'
+                        backgroundColor: isActiveItem(item.href) ? 'var(--custom-buttonBg, #1632f4)' : 'transparent',
+                        borderRadius: '0'
                       }}
                     >
                       <Link to={item.href} className="flex items-center min-w-0">
