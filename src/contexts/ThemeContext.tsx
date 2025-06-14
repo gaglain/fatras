@@ -50,6 +50,13 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     // Save to localStorage
     localStorage.setItem('theme', theme);
     
+    // Optimisation éco-conception : réduire les animations en mode sombre pour économiser l'énergie
+    if (theme === 'dark') {
+      root.style.setProperty('--animation-reduce-factor', '0.5');
+    } else {
+      root.style.removeProperty('--animation-reduce-factor');
+    }
+    
     console.log('Theme applied:', theme, 'Classes on html:', root.className);
   }, [theme]);
 

@@ -30,12 +30,12 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     <div className={`min-h-screen ${theme === 'dark' ? 'dark' : ''}`}>
       <MessagingProvider>
         <SidebarProvider>
-          <div className="min-h-screen flex w-full bg-gray-50">
+          <div className="min-h-screen flex w-full bg-background">
             <AppSidebar />
             <SidebarInset className="flex-1 min-w-0">
-              <div className="h-full bg-white">
+              <div className="h-full bg-background">
                 <Header />
-                <main className="flex-1 p-6 overflow-auto bg-gray-50">
+                <main className="flex-1 p-6 overflow-auto bg-background">
                   <div className="max-w-full">
                     {children}
                   </div>
