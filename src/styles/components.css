@@ -314,8 +314,62 @@
     --custom-chatWidgetIconDark: #ffffff;
   }
 
+  /* Widget de messagerie - bouton principal */
+  .chat-widget-button {
+    background-color: var(--custom-chatWidgetBg, #ec5f65) !important;
+    color: var(--custom-chatWidgetIcon, #ffffff) !important;
+  }
+  .dark .chat-widget-button {
+    background-color: var(--custom-chatWidgetBgDark, #ec5f65) !important;
+    color: var(--custom-chatWidgetIconDark, #ffffff) !important;
+  }
+
+  /* Widget de messagerie - icônes */
+  .chat-widget-icon {
+    color: var(--custom-chatWidgetIcon, #ffffff) !important;
+  }
+  .dark .chat-widget-icon {
+    color: var(--custom-chatWidgetIconDark, #ffffff) !important;
+  }
+
+  /* Widget de messagerie - header */
+  .chat-widget-header {
+    background-color: var(--custom-chatWidgetBg, #ec5f65) !important;
+  }
+  .dark .chat-widget-header {
+    background-color: var(--custom-chatWidgetBgDark, #ec5f65) !important;
+  }
+
+  /* Widget de messagerie - texte dans header */
+  .chat-widget-text {
+    color: var(--custom-chatWidgetIcon, #ffffff) !important;
+  }
+  .dark .chat-widget-text {
+    color: var(--custom-chatWidgetIconDark, #ffffff) !important;
+  }
+
+  /* Widget de messagerie - messages envoyés */
+  .chat-widget-message-sent {
+    background-color: var(--custom-chatWidgetBg, #ec5f65) !important;
+    color: var(--custom-chatWidgetIcon, #ffffff) !important;
+  }
+  .dark .chat-widget-message-sent {
+    background-color: var(--custom-chatWidgetBgDark, #ec5f65) !important;
+    color: var(--custom-chatWidgetIconDark, #ffffff) !important;
+  }
+
+  /* Widget de messagerie - bouton envoyer */
+  .chat-widget-send-button {
+    background-color: var(--custom-chatWidgetBg, #ec5f65) !important;
+    color: var(--custom-chatWidgetIcon, #ffffff) !important;
+  }
+  .dark .chat-widget-send-button {
+    background-color: var(--custom-chatWidgetBgDark, #ec5f65) !important;
+    color: var(--custom-chatWidgetIconDark, #ffffff) !important;
+  }
+
   /* Ajout d'une transition douce pour les changements de thème */
-  .dark, body, .arc-content, .arc-button, .back-office-button, button, .button-outline-corrected, .bg-green-600, .bg-blue-600, .arc-button-secondary, input, .arc-input {
+  .dark, body, .arc-content, .arc-button, .back-office-button, button, .button-outline-corrected, .bg-green-600, .bg-blue-600, .arc-button-secondary, input, .arc-input, .chat-widget-button, .chat-widget-icon, .chat-widget-header, .chat-widget-text, .chat-widget-message-sent, .chat-widget-send-button {
     transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
   }
 }

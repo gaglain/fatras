@@ -69,16 +69,9 @@ export const ChatWidget: React.FC = () => {
           setIsOpen(!isOpen);
           if (!isOpen) setIsMinimized(false);
         }}
-        className="h-14 w-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-110"
-        style={{
-          backgroundColor: "var(--custom-chatWidgetBg, #ec5f65)",
-          color: "var(--custom-chatWidgetIcon, #ffffff)",
-        }}
+        className="h-14 w-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-110 chat-widget-button"
       >
-        <MessageCircle 
-          className="h-6 w-6" 
-          style={{ color: "var(--custom-chatWidgetIcon, #ffffff)" }}
-        />
+        <MessageCircle className="h-6 w-6 chat-widget-icon" />
         {totalUnread > 0 && (
           <Badge className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-red-500 text-white text-xs p-0 flex items-center justify-center animate-pulse">
             {totalUnread}
@@ -91,21 +84,16 @@ export const ChatWidget: React.FC = () => {
         <Card className={`absolute bottom-20 right-0 shadow-2xl transition-all duration-300 ${
           isMinimized ? 'w-80 h-16' : 'w-96 h-[600px]'
         }`}>
-          <CardHeader className="pb-3 border-b rounded-t-lg"
-            style={{
-              backgroundColor: "var(--custom-chatWidgetBg, #ec5f65)",
-              color: "var(--custom-chatWidgetIcon, #ffffff)"
-            }}
-          >
+          <CardHeader className="pb-3 border-b rounded-t-lg chat-widget-header">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm flex items-center" style={{ color: "var(--custom-chatWidgetIcon, #ffffff)" }}>
+              <CardTitle className="text-sm flex items-center chat-widget-text">
                 {currentChannel?.type === 'channel' ? (
-                  <Hash className="h-4 w-4 mr-2" style={{ color: "var(--custom-chatWidgetIcon, #ffffff)" }} />
+                  <Hash className="h-4 w-4 mr-2 chat-widget-icon" />
                 ) : (
-                  <MessageSquare className="h-4 w-4 mr-2" style={{ color: "var(--custom-chatWidgetIcon, #ffffff)" }} />
+                  <MessageSquare className="h-4 w-4 mr-2 chat-widget-icon" />
                 )}
                 {currentChannel?.name || 'Messagerie'}
-                <Badge variant="secondary" className="ml-2 text-xs bg-white/20" style={{ color: "var(--custom-chatWidgetIcon, #ffffff)" }}>
+                <Badge variant="secondary" className="ml-2 text-xs bg-white/20 chat-widget-text">
                   {onlineUsersCount} en ligne
                 </Badge>
               </CardTitle>
@@ -113,8 +101,7 @@ export const ChatWidget: React.FC = () => {
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="h-6 w-6 p-0 hover:bg-white/20"
-                  style={{ color: "var(--custom-chatWidgetIcon, #ffffff)" }}
+                  className="h-6 w-6 p-0 hover:bg-white/20 chat-widget-icon"
                   onClick={() => setIsMinimized(!isMinimized)}
                 >
                   {isMinimized ? <Maximize2 className="h-3 w-3" /> : <Minimize2 className="h-3 w-3" />}
@@ -122,8 +109,7 @@ export const ChatWidget: React.FC = () => {
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="h-6 w-6 p-0 hover:bg-white/20" 
-                  style={{ color: "var(--custom-chatWidgetIcon, #ffffff)" }}
+                  className="h-6 w-6 p-0 hover:bg-white/20 chat-widget-icon" 
                   onClick={() => setIsOpen(false)}
                 >
                   <X className="h-3 w-3" />
@@ -193,13 +179,9 @@ export const ChatWidget: React.FC = () => {
                       <div
                         className={`max-w-[75%] rounded-lg p-3 ${
                           msg.isMe
-                            ? 'text-white'
+                            ? 'chat-widget-message-sent'
                             : 'bg-muted text-foreground'
                         }`}
-                        style={msg.isMe ? {
-                          backgroundColor: "var(--custom-chatWidgetBg, #ec5f65)",
-                          color: "var(--custom-chatWidgetIcon, #ffffff)"
-                        } : {}}
                       >
                         {!msg.isMe && (
                           <div className="text-xs font-medium mb-1 opacity-70">{msg.sender}</div>
@@ -226,11 +208,7 @@ export const ChatWidget: React.FC = () => {
                     onClick={sendMessage} 
                     size="sm" 
                     disabled={!message.trim()}
-                    style={{
-                      backgroundColor: "var(--custom-chatWidgetBg, #ec5f65)",
-                      color: "var(--custom-chatWidgetIcon, #ffffff)"
-                    }}
-                    className="hover:opacity-90"
+                    className="chat-widget-send-button hover:opacity-90"
                   >
                     <Send className="h-4 w-4" />
                   </Button>
