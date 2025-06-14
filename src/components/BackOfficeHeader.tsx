@@ -1,15 +1,20 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Settings, User, Bell, Search, HelpCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { FrontThemeToggle } from './FrontThemeToggle';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useCompanySettings } from '@/hooks/useCompanySettings';
+import { useUser } from '@/contexts/UserContext';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { UserProfile } from './UserProfile';
 
 export const BackOfficeHeader: React.FC = () => {
   const { theme } = useTheme();
   const { name, logo } = useCompanySettings();
+  const { currentUser } = useUser();
+  const [showUserProfile, setShowUserProfile] = useState(false);
 
   // Couleurs : fond blanc et texte bleu en clair, fond bleu/texte blanc en sombre
   const isDark = theme === "dark";
@@ -60,12 +65,29 @@ export const BackOfficeHeader: React.FC = () => {
                 Paramètres
               </Button>
             </Link>
-            <Button variant="ghost" size="sm" className={`${isDark ? "text-white" : "text-[#1632f4]"}`}>
-              <User className="h-4 w-4 mr-2" />
-              Profil
-            </Button>
+            {/* Avatar utilisateur dans le header back-office */}
+            <button
+              className="flex items-center space-x-2 focus:outline-none group"
+              onClick={() => setShowUserProfile(true)}
+              aria-label="Voir le profil"
+            >
+              <Avatar className="h-8 w-8 border-2 border-[#ec5f65]">
+                <AvatarImage src={currentUser?.avatar} alt={currentUser?.name} />
+                <AvatarFallback className="text-base bg-[#ec5f65] text-white">
+                  {currentUser?.name?.charAt(0)}
+                  {currentUser?.lastName?.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
+              <span className={`hidden md:block text-sm font-medium ${isDark ? 'text-white' : 'text-[#1632f4]'}`}>
+                {currentUser?.name}
+              </span>
+            </button>
           </div>
         </div>
+        {/* Modale de profil utilisateur (UserProfile) */}
+        {showUserProfile && (
+          <UserProfile onClose={() => setShowUserProfile(false)} />
+        )}
       </div>
     </header>
   );
