@@ -65,19 +65,33 @@
     border-radius: 0.75rem !important;
   }
 
-  /* BOUTONS - FORCE ABSOLUE SAUF THEME TOGGLE */
+  /* BOUTONS - FORCE ABSOLUE SAUF THEME TOGGLE ET NOTIFICATION */
   button:not(.chat-widget-button):not(.notification-button):not([data-dialog-close]):not(.theme-toggle-button), 
   .btn,
-  [role="button"]:not(.chat-widget-button):not(.theme-toggle-button),
+  [role="button"]:not(.chat-widget-button):not(.theme-toggle-button):not(.notification-button),
   input[type="button"],
   input[type="submit"],
-  .bg-primary:not(.chat-widget-button):not(.theme-toggle-button),
-  [class*="bg-blue"]:not(.chat-widget-button):not(.theme-toggle-button) {
+  .bg-primary:not(.chat-widget-button):not(.theme-toggle-button):not(.notification-button),
+  [class*="bg-blue"]:not(.chat-widget-button):not(.theme-toggle-button):not(.notification-button) {
     background: var(--app-button-bg) !important;
     color: var(--app-button-text) !important;
     border: 1px solid var(--app-button-bg) !important;
     border-radius: 0.5rem !important;
     transition: all 0.2s ease !important;
+  }
+
+  /* NOTIFICATION BUTTON - FORCE SPÉCIALE */
+  .notification-button {
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: var(--app-text) !important;
+  }
+
+  .notification-button:hover {
+    background: rgba(0,0,0,0.05) !important;
+    background-color: rgba(0,0,0,0.05) !important;
   }
 
   /* THEME TOGGLE BUTTON - FORCE ABSOLUE */
@@ -117,7 +131,7 @@
     border-radius: 0.5rem !important;
   }
 
-  /* NOTIFICATION POPUP - POSITION RELATIVE À HEADER */
+  /* NOTIFICATION POPUP - FORCE ABSOLUE AVEC POSITIONNEMENT CORRECT */
   .notification-popup {
     background: var(--app-card-bg) !important;
     color: var(--app-card-text) !important;
@@ -131,6 +145,21 @@
     width: 400px !important;
     max-width: 90vw !important;
     margin-top: 8px !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  .notification-popup * {
+    background: inherit !important;
+    color: inherit !important;
+  }
+
+  .notification-popup .card {
+    background: var(--app-card-bg) !important;
+    color: var(--app-card-text) !important;
+    border: none !important;
+    box-shadow: none !important;
   }
 
   /* CHAT WIDGET - FIXE ET ROSE */

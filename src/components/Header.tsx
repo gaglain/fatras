@@ -104,28 +104,46 @@ export const Header: React.FC = () => {
             <div className="flex items-center space-x-1 lg:space-x-2">
               <ThemeToggle />
               
-              {/* NOTIFICATION BUTTON */}
+              {/* NOTIFICATION BUTTON AVEC POPUP CORRIGÉE */}
               <div className="relative">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={handleNotificationClick}
                   className="relative notification-button text-foreground"
+                  style={{
+                    background: 'transparent !important',
+                    backgroundColor: 'transparent !important'
+                  }}
                 >
                   <Bell className="h-4 w-4" />
                   {unreadCount > 0 && (
                     <Badge 
-                      className="absolute -top-1 -right-1 h-4 w-4 lg:h-5 lg:w-5 flex items-center justify-center text-xs p-0 bg-red-500 text-white"
+                      className="absolute -top-1 -right-1 h-4 w-4 lg:h-5 lg:w-5 flex items-center justify-center text-xs p-0"
+                      style={{
+                        backgroundColor: '#ec5f65 !important',
+                        color: '#ffffff !important',
+                        border: 'none !important'
+                      }}
                     >
                       {unreadCount}
                     </Badge>
                   )}
                 </Button>
 
-                {/* NOTIFICATION POPUP - POSITION ABSOLUE */}
+                {/* POPUP DE NOTIFICATIONS AVEC POSITIONNEMENT FIXE */}
                 {showNotifications && (
                   <div 
-                    className="notification-popup absolute top-full right-0 mt-2 z-[9999] w-96 max-w-[90vw]"
+                    className="notification-popup"
+                    style={{
+                      position: 'absolute',
+                      top: '100%',
+                      right: '0',
+                      marginTop: '8px',
+                      zIndex: 99999,
+                      width: '400px',
+                      maxWidth: '90vw'
+                    }}
                   >
                     <NotificationCenter onClose={() => setShowNotifications(false)} />
                   </div>
