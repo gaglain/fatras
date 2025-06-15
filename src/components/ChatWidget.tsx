@@ -66,12 +66,12 @@ export const ChatWidget: React.FC = () => {
       right: '20px',
       zIndex: 1000
     }}>
-      {/* CHAT POPUP */}
+      {/* CHAT POPUP AVEC CLASSE SPÉCIFIQUE */}
       {isOpen && (
         <div 
-          className="mb-4 shadow-lg rounded-xl overflow-hidden" 
+          className="mb-4 shadow-lg rounded-xl overflow-hidden chat-widget-popup" 
           style={{
-            background: 'var(--custom-cardBg)',
+            background: 'var(--app-card-bg)',
             border: '1px solid rgba(0,0,0,0.1)',
             width: '400px',
             height: '500px',
@@ -83,19 +83,19 @@ export const ChatWidget: React.FC = () => {
         >
           {/* Header avec sélecteurs EN HAUT */}
           <div className="p-4 border-b" style={{
-            background: 'var(--custom-cardBg)',
+            background: 'var(--app-card-bg)',
             borderColor: 'rgba(0,0,0,0.1)'
           }}>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center space-x-2">
                 <MessageSquare className="h-5 w-5" style={{ color: '#ec5f65' }} />
-                <span className="font-medium" style={{ color: 'var(--custom-cardText)' }}>Chat</span>
+                <span className="font-medium" style={{ color: 'var(--app-card-text)' }}>Chat</span>
               </div>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsOpen(false)}
-                style={{ color: 'var(--custom-cardText)' }}
+                style={{ color: 'var(--app-card-text)' }}
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -105,15 +105,15 @@ export const ChatWidget: React.FC = () => {
             <div className="flex space-x-2">
               <Select value={selectedChannel} onValueChange={setSelectedChannel}>
                 <SelectTrigger className="flex-1 h-8 text-xs" style={{
-                  background: 'var(--custom-background)',
-                  color: 'var(--custom-text)',
+                  background: 'var(--app-background)',
+                  color: 'var(--app-text)',
                   borderColor: '#ec5f65'
                 }}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent style={{
-                  background: 'var(--custom-cardBg)',
-                  color: 'var(--custom-cardText)',
+                  background: 'var(--app-card-bg)',
+                  color: 'var(--app-card-text)',
                   border: '1px solid rgba(0,0,0,0.1)',
                   zIndex: 10000
                 }}>
@@ -130,15 +130,15 @@ export const ChatWidget: React.FC = () => {
               
               <Select value={selectedTeam} onValueChange={setSelectedTeam}>
                 <SelectTrigger className="flex-1 h-8 text-xs" style={{
-                  background: 'var(--custom-background)',
-                  color: 'var(--custom-text)',
+                  background: 'var(--app-background)',
+                  color: 'var(--app-text)',
                   borderColor: '#ec5f65'
                 }}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent style={{
-                  background: 'var(--custom-cardBg)',
-                  color: 'var(--custom-cardText)',
+                  background: 'var(--app-card-bg)',
+                  color: 'var(--app-card-text)',
                   border: '1px solid rgba(0,0,0,0.1)',
                   zIndex: 10000
                 }}>
@@ -159,12 +159,12 @@ export const ChatWidget: React.FC = () => {
           </div>
 
           {/* Messages */}
-          <ScrollArea className="h-80 p-4" style={{ background: 'var(--custom-background)' }}>
+          <ScrollArea className="h-80 p-4" style={{ background: 'var(--app-background)' }}>
             <div className="space-y-3">
               {messages.length === 0 ? (
                 <div className="text-center py-8 opacity-50">
-                  <MessageSquare className="h-8 w-8 mx-auto mb-3" style={{ color: 'var(--custom-text)' }} />
-                  <p className="text-sm" style={{ color: 'var(--custom-text)' }}>
+                  <MessageSquare className="h-8 w-8 mx-auto mb-3" style={{ color: 'var(--app-text)' }} />
+                  <p className="text-sm" style={{ color: 'var(--app-text)' }}>
                     Commencez une conversation
                   </p>
                 </div>
@@ -180,16 +180,16 @@ export const ChatWidget: React.FC = () => {
                       }`}
                     >
                       <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs" style={{
-                        background: message.sender === 'user' ? '#ec5f65' : 'var(--custom-cardBg)',
-                        color: message.sender === 'user' ? '#ffffff' : 'var(--custom-text)'
+                        background: message.sender === 'user' ? '#ec5f65' : 'var(--app-card-bg)',
+                        color: message.sender === 'user' ? '#ffffff' : 'var(--app-text)'
                       }}>
                         {message.sender === 'user' ? <User className="h-3 w-3" /> : <Bot className="h-3 w-3" />}
                       </div>
                       <div
                         className="px-3 py-2 rounded-lg text-sm"
                         style={{
-                          background: message.sender === 'user' ? '#ec5f65' : 'var(--custom-cardBg)',
-                          color: message.sender === 'user' ? '#ffffff' : 'var(--custom-cardText)',
+                          background: message.sender === 'user' ? '#ec5f65' : 'var(--app-card-bg)',
+                          color: message.sender === 'user' ? '#ffffff' : 'var(--app-card-text)',
                           border: message.sender === 'user' ? 'none' : '1px solid rgba(0,0,0,0.1)'
                         }}
                       >
@@ -213,8 +213,8 @@ export const ChatWidget: React.FC = () => {
                 placeholder="Tapez votre message..."
                 className="flex-1 px-3 py-2 text-sm border rounded-md"
                 style={{
-                  background: 'var(--custom-background)',
-                  color: 'var(--custom-text)',
+                  background: 'var(--app-background)',
+                  color: 'var(--app-text)',
                   borderColor: '#ec5f65'
                 }}
               />
@@ -222,10 +222,15 @@ export const ChatWidget: React.FC = () => {
                 onClick={handleSendMessage}
                 disabled={!inputValue.trim()}
                 size="sm"
-                className="w-10 h-10 p-0 rounded-full"
+                className="w-10 h-10 p-0 rounded-full chat-widget-button"
                 style={{
                   background: '#ec5f65',
-                  color: '#ffffff'
+                  color: '#ffffff',
+                  minWidth: 'auto',
+                  minHeight: 'auto',
+                  width: '40px',
+                  height: '40px',
+                  position: 'relative'
                 }}
               >
                 <Send className="h-4 w-4" />
@@ -235,30 +240,10 @@ export const ChatWidget: React.FC = () => {
         </div>
       )}
       
-      {/* BOUTON WIDGET - FIXE, ROND ET ROSE */}
+      {/* BOUTON WIDGET - FIXE, ROND ET ROSE (RESTAURÉ) */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="chat-widget-button"
-        style={{
-          background: '#ec5f65',
-          color: '#ffffff',
-          border: 'none',
-          borderRadius: '50%',
-          width: '56px',
-          height: '56px',
-          minWidth: '56px',
-          minHeight: '56px',
-          position: 'fixed',
-          bottom: '20px',
-          right: '20px',
-          zIndex: 1000,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 4px 12px rgba(236, 95, 101, 0.3)',
-          transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-          cursor: 'pointer'
-        }}
       >
         <MessageSquare className="h-6 w-6" />
       </button>
