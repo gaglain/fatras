@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -51,7 +52,7 @@ export const Header: React.FC = () => {
   const handleNotificationClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('🔔 Notification button clicked!');
+    console.log('🔔 Notification button clicked - FIXED VERSION!');
     console.log('🔔 Current showNotifications state:', showNotifications);
     
     setShowNotifications(prev => {
@@ -77,7 +78,7 @@ export const Header: React.FC = () => {
       
       if (showNotifications && 
           !target.closest('[data-notification-popup]') && 
-          !target.closest('[data-notification-button]')) {
+          !target.closest('.notification-btn')) {
         console.log('🔔 Closing notifications popup due to outside click');
         setShowNotifications(false);
       }
@@ -125,18 +126,16 @@ export const Header: React.FC = () => {
             <div className="flex items-center space-x-1 lg:space-x-2">
               <ThemeToggle />
               
-              {/* NOTIFICATION BUTTON */}
+              {/* NOTIFICATION BUTTON - VERSION CORRIGÉE */}
               <div className="relative">
-                <Button
-                  variant="ghost"
-                  size="sm"
+                <button
                   onClick={handleNotificationClick}
-                  className="relative"
-                  data-notification-button
+                  className="notification-btn relative h-8 w-8 flex items-center justify-center rounded-md hover:bg-accent transition-colors"
                   style={{
                     background: 'transparent',
                     border: 'none',
-                    color: 'var(--foreground)'
+                    color: 'var(--foreground)',
+                    cursor: 'pointer'
                   }}
                 >
                   <Bell className="h-4 w-4" />
@@ -147,12 +146,12 @@ export const Header: React.FC = () => {
                       {unreadCount}
                     </Badge>
                   )}
-                </Button>
+                </button>
 
-                {/* POPUP DE NOTIFICATIONS */}
+                {/* POPUP DE NOTIFICATIONS - VERSION SIMPLIFIÉE */}
                 {showNotifications && (
                   <div 
-                    className="absolute right-0 mt-2 z-[9999] pointer-events-auto"
+                    className="absolute top-full right-0 mt-2 z-[9999]"
                     style={{
                       position: 'absolute',
                       top: '100%',
@@ -160,7 +159,6 @@ export const Header: React.FC = () => {
                       marginTop: '8px',
                       zIndex: 9999
                     }}
-                    data-notification-popup
                   >
                     <NotificationCenter 
                       onClose={() => {

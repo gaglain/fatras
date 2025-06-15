@@ -1,5 +1,4 @@
 
-
 @layer components {
   /* APPLICATION FORCÉE DU THÈME SUR TOUTE L'APPLICATION */
   
@@ -66,14 +65,14 @@
     border-radius: 0.75rem !important;
   }
 
-  /* BOUTONS - FORCE ABSOLUE SAUF THEME TOGGLE, NOTIFICATION ET CHAT */
-  button:not(.chat-widget-button):not(.notification-button):not([data-dialog-close]):not(.theme-toggle-button), 
-  .btn:not(.chat-widget-button):not(.notification-button):not(.theme-toggle-button),
-  [role="button"]:not(.chat-widget-button):not(.theme-toggle-button):not(.notification-button),
+  /* BOUTONS - FORCE ABSOLUE SAUF NOTIFICATION ET CHAT */
+  button:not(.chat-widget-button):not(.notification-btn):not([data-dialog-close]):not(.theme-toggle-button), 
+  .btn:not(.chat-widget-button):not(.notification-btn):not(.theme-toggle-button),
+  [role="button"]:not(.chat-widget-button):not(.theme-toggle-button):not(.notification-btn),
   input[type="button"]:not(.chat-widget-button),
   input[type="submit"]:not(.chat-widget-button),
-  .bg-primary:not(.chat-widget-button):not(.theme-toggle-button):not(.notification-button),
-  [class*="bg-blue"]:not(.chat-widget-button):not(.theme-toggle-button):not(.notification-button) {
+  .bg-primary:not(.chat-widget-button):not(.theme-toggle-button):not(.notification-btn),
+  [class*="bg-blue"]:not(.chat-widget-button):not(.theme-toggle-button):not(.notification-btn) {
     background: var(--app-button-bg) !important;
     color: var(--app-button-text) !important;
     border: 1px solid var(--app-button-bg) !important;
@@ -81,18 +80,25 @@
     transition: all 0.2s ease !important;
   }
 
-  /* NOTIFICATION BUTTON - RESTE TRANSPARENT */
-  .notification-button {
+  /* NOTIFICATION BUTTON - STYLE SPÉCIFIQUE ET FONCTIONNEL */
+  .notification-btn {
     background: transparent !important;
     background-color: transparent !important;
     border: none !important;
     box-shadow: none !important;
     color: var(--app-text) !important;
+    cursor: pointer !important;
+    outline: none !important;
   }
 
-  .notification-button:hover {
+  .notification-btn:hover {
     background: rgba(0,0,0,0.05) !important;
     background-color: rgba(0,0,0,0.05) !important;
+  }
+
+  .notification-btn:focus {
+    outline: none !important;
+    box-shadow: none !important;
   }
 
   /* THEME TOGGLE BUTTON - FORCE ABSOLUE */
@@ -132,22 +138,16 @@
     border-radius: 0.5rem !important;
   }
 
-  /* NOTIFICATION POPUP - STYLES SPÉCIFIQUES ET FORCÉS */
+  /* NOTIFICATION POPUP - STYLES SPÉCIFIQUES SIMPLIFIÉS */
   [data-notification-popup] {
-    position: absolute !important;
-    top: 100% !important;
-    right: 0 !important;
-    z-index: 9999 !important;
-    width: 400px !important;
-    max-width: 90vw !important;
-    margin-top: 8px !important;
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
     background: white !important;
     border: 1px solid #e5e7eb !important;
     border-radius: 12px !important;
     box-shadow: 0 20px 50px rgba(0,0,0,0.25) !important;
+    position: relative !important;
+    z-index: 9999 !important;
+    width: 400px !important;
+    max-width: 90vw !important;
     pointer-events: auto !important;
   }
 
@@ -250,7 +250,7 @@
   }
 
   /* TRANSITIONS DOUCES */
-  *:not([data-notification-popup]):not(.chat-widget-button):not(.chat-widget-popup):not(.theme-toggle-button) {
+  *:not([data-notification-popup]):not(.chat-widget-button):not(.chat-widget-popup):not(.theme-toggle-button):not(.notification-btn) {
     transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease !important;
   }
 
@@ -267,4 +267,3 @@
     color: var(--app-text) !important;
   }
 }
-
