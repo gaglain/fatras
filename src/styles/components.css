@@ -90,7 +90,7 @@
     border-radius: 0.5rem !important;
   }
 
-  /* NOTIFICATION POPUP - POSITION FIXE */
+  /* NOTIFICATION POPUP - POSITION FIXE ABSOLUE */
   .notification-popup {
     background: var(--app-card-bg) !important;
     color: var(--app-card-text) !important;
@@ -167,6 +167,17 @@
     border-radius: 0.5rem !important;
     z-index: 50 !important;
     box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
+  }
+
+  /* SWITCHES SPÉCIAUX POUR NOTIFICATIONS */
+  [data-state="checked"] {
+    background-color: var(--app-button-bg) !important;
+    border-color: var(--app-button-bg) !important;
+  }
+
+  [data-state="unchecked"] {
+    background-color: #e5e7eb !important;
+    border-color: #e5e7eb !important;
   }
 
   /* TRANSITIONS DOUCES */
