@@ -131,18 +131,25 @@ export const Header: React.FC = () => {
                   )}
                 </Button>
                 
-                {/* Notification Popup - Positioned absolutely */}
+                {/* Notification Popup - Utilisation d'un portail avec z-index très élevé */}
                 {showNotifications && (
                   <div 
-                    className="absolute top-full right-0 mt-2 z-[200]"
-                    style={{ position: 'absolute', zIndex: 200 }}
+                    className="fixed top-16 right-4 z-[9999]"
+                    style={{ 
+                      position: 'fixed',
+                      top: '64px',
+                      right: '16px',
+                      zIndex: 9999
+                    }}
                   >
-                    <NotificationCenter 
-                      onClose={() => {
-                        console.log('🔔 NotificationCenter onClose called');
-                        setShowNotifications(false);
-                      }} 
-                    />
+                    <div className="animate-in slide-in-from-top-2 duration-200">
+                      <NotificationCenter 
+                        onClose={() => {
+                          console.log('🔔 NotificationCenter onClose called');
+                          setShowNotifications(false);
+                        }} 
+                      />
+                    </div>
                   </div>
                 )}
               </div>

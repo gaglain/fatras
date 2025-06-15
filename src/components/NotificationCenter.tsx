@@ -117,7 +117,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
   };
 
   return (
-    <Card className="w-96 max-w-[90vw] shadow-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 z-[200]">
+    <Card className="w-96 max-w-[90vw] shadow-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
       <CardHeader className="pb-2 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center text-gray-900 dark:text-white">
