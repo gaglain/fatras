@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Bell, Search, User, Settings, LogOut, MessageSquare, ChevronDown } from 'lucide-react';
+import { Bell, User, LogOut, MessageSquare, ChevronDown } from 'lucide-react';
 import { NotificationCenter } from './NotificationCenter';
 import { UserProfile } from './UserProfile';
 import { ThemeToggle } from './ThemeToggle';
@@ -110,12 +110,6 @@ export const Header: React.FC = () => {
 
         <div className="flex items-center space-x-2 lg:space-x-4">
           <div className="flex items-center space-x-1 lg:space-x-2">
-            <Button variant="ghost" size="sm" className="hidden sm:flex" style={{
-              color: 'var(--custom-text)'
-            }}>
-              <Search className="h-4 w-4" />
-            </Button>
-            
             <ThemeToggle />
             
             <div className="relative">
@@ -143,7 +137,7 @@ export const Header: React.FC = () => {
               </Button>
               
               {showNotifications && (
-                <div className="absolute right-0 top-full mt-2 z-50 notification-popup">
+                <div className="absolute right-0 top-full mt-2 notification-popup" style={{ zIndex: 9999 }}>
                   <NotificationCenter onClose={() => setShowNotifications(false)} />
                 </div>
               )}
@@ -194,12 +188,6 @@ export const Header: React.FC = () => {
                 <Link to="/messagerie" style={{ color: 'var(--custom-cardText)' }}>
                   <MessageSquare className="mr-2 h-4 w-4" />
                   <span>Messages</span>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/preferences" style={{ color: 'var(--custom-cardText)' }}>
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Paramètres</span>
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator style={{ borderColor: 'rgba(0,0,0,0.1)' }} />

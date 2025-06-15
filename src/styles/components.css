@@ -1,5 +1,4 @@
 
-
 @layer components {
   /* Application universelle du thème personnalisé */
   
@@ -39,13 +38,13 @@
   }
 
   /* Boutons - Application forcée du thème */
-  button, 
+  button:not(.chat-widget-button), 
   .btn,
-  [role="button"],
+  [role="button"]:not(.chat-widget-button),
   input[type="button"],
   input[type="submit"],
-  [class*="bg-blue"],
-  [class*="bg-primary"] {
+  [class*="bg-blue"]:not(.chat-widget-button),
+  [class*="bg-primary"]:not(.chat-widget-button) {
     background: var(--custom-buttonBg) !important;
     color: var(--custom-buttonText) !important;
     border: 1px solid var(--custom-buttonBg) !important;
@@ -94,15 +93,41 @@
     z-index: 50 !important;
   }
 
-  /* Chat widget couleurs ET forme ronde */
-  .chat-widget-button {
-    background: var(--custom-chatWidgetBg) !important;
-    color: var(--custom-chatWidgetIcon) !important;
+  /* Chat widget couleurs ET forme ronde - EXCEPTIONS IMPORTANTES */
+  .chat-widget-button,
+  .chat-widget-button:hover,
+  .chat-widget-button:focus {
+    background: #ec5f65 !important;
+    color: #ffffff !important;
+    border: none !important;
     border-radius: 50% !important;
     width: 56px !important;
     height: 56px !important;
     min-width: 56px !important;
     min-height: 56px !important;
+  }
+
+  /* Sidebar personnalisée avec thème */
+  .sidebar {
+    background: var(--sidebar-background) !important;
+    color: var(--sidebar-foreground) !important;
+    border-color: var(--sidebar-border) !important;
+  }
+
+  .sidebar-nav-item {
+    color: var(--sidebar-foreground) !important;
+  }
+
+  .sidebar-nav-item:hover {
+    background: var(--sidebar-accent) !important;
+    color: var(--sidebar-accent-foreground) !important;
+  }
+
+  /* Application automatique du thème sur toutes les pages back-office */
+  .min-h-screen,
+  .back-office-page {
+    background: var(--custom-background) !important;
+    color: var(--custom-text) !important;
   }
 
   /* Transitions douces */
@@ -125,21 +150,4 @@
   .hover\:scale-105:hover {
     transform: scale(1.05) !important;
   }
-
-  /* Sidebar personnalisée */
-  .sidebar {
-    background: var(--sidebar-background) !important;
-    color: var(--sidebar-foreground) !important;
-    border-color: var(--sidebar-border) !important;
-  }
-
-  .sidebar-nav-item {
-    color: var(--sidebar-foreground) !important;
-  }
-
-  .sidebar-nav-item:hover {
-    background: var(--sidebar-accent) !important;
-    color: var(--sidebar-accent-foreground) !important;
-  }
 }
-

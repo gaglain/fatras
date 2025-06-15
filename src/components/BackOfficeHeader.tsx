@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Settings, User, Bell, Search, HelpCircle } from 'lucide-react';
+import { User, Bell, HelpCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { FrontThemeToggle } from './FrontThemeToggle';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -16,7 +16,6 @@ export const BackOfficeHeader: React.FC = () => {
   const { currentUser } = useUser();
   const [showUserProfile, setShowUserProfile] = useState(false);
 
-  // Couleurs : fond blanc et texte bleu en clair, fond bleu/texte blanc en sombre
   const isDark = theme === "dark";
   const headerClasses = isDark
     ? "bg-[#1632f4] text-white"
@@ -29,7 +28,6 @@ export const BackOfficeHeader: React.FC = () => {
     <header className={`${headerClasses} ${borderClasses} shadow-sm`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Logo et nom entreprise dynamiques */}
           <div className="flex items-center space-x-4">
             <Link to="/dashboard" className="flex items-center space-x-2 group">
               <img
@@ -44,12 +42,8 @@ export const BackOfficeHeader: React.FC = () => {
               </span>
             </Link>
           </div>
-          {/* Actions à droite */}
+          
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="sm" className={`${isDark ? "text-white" : "text-[#1632f4]"}`}>
-              <Search className="h-4 w-4" />
-              <span className="sr-only">Rechercher</span>
-            </Button>
             <Button variant="ghost" size="sm" className={`${isDark ? "text-white" : "text-[#1632f4]"}`}>
               <Bell className="h-4 w-4" />
               <span className="sr-only">Notifications</span>
@@ -59,13 +53,7 @@ export const BackOfficeHeader: React.FC = () => {
               <span className="sr-only">Aide</span>
             </Button>
             <FrontThemeToggle variant="back-office" />
-            <Link to="/preferences">
-              <Button variant="ghost" size="sm" className={`${isDark ? "text-white" : "text-[#1632f4]"}`}>
-                <Settings className="h-4 w-4 mr-2" />
-                Paramètres
-              </Button>
-            </Link>
-            {/* Avatar utilisateur dans le header back-office */}
+            
             <button
               className="flex items-center space-x-2 focus:outline-none group"
               onClick={() => setShowUserProfile(true)}
@@ -84,7 +72,7 @@ export const BackOfficeHeader: React.FC = () => {
             </button>
           </div>
         </div>
-        {/* Modale de profil utilisateur (UserProfile) */}
+        
         {showUserProfile && (
           <UserProfile onClose={() => setShowUserProfile(false)} />
         )}
