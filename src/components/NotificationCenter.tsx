@@ -55,6 +55,8 @@ interface NotificationCenterProps {
 }
 
 export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose }) => {
+  console.log('NotificationCenter component rendered');
+  
   const [notifications, setNotifications] = useState<Notification[]>(sampleNotifications);
   const navigate = useNavigate();
 
@@ -115,7 +117,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
   };
 
   return (
-    <Card className="w-96 max-w-[90vw] shadow-xl bg-background border">
+    <Card className="w-96 max-w-[90vw] shadow-xl bg-background border z-[100]">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center">
@@ -127,7 +129,10 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
               </Badge>
             )}
           </CardTitle>
-          <Button variant="ghost" size="sm" onClick={onClose}>
+          <Button variant="ghost" size="sm" onClick={() => {
+            console.log('Close button clicked in NotificationCenter');
+            onClose();
+          }}>
             <X className="h-4 w-4" />
           </Button>
         </div>
