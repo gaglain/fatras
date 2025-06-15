@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -62,6 +61,7 @@ export const Header: React.FC = () => {
   };
 
   console.log('Header render - showNotifications:', showNotifications);
+  console.log('Rendering notification popup area, showNotifications:', showNotifications);
 
   return (
     <>
@@ -111,9 +111,6 @@ export const Header: React.FC = () => {
                     </Badge>
                   )}
                 </Button>
-
-                {/* Debug - show current state */}
-                {console.log('Rendering notification popup area, showNotifications:', showNotifications)}
                 
                 {/* Notification Popup */}
                 {showNotifications && (
