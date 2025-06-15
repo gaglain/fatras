@@ -49,7 +49,10 @@ export const Header: React.FC = () => {
     };
   }, []);
 
-  const handleNotificationClick = () => {
+  const handleNotificationClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Notification clicked, current state:', showNotifications);
     setShowNotifications(!showNotifications);
     if (!showNotifications) {
       setUnreadCount(0);
@@ -60,12 +63,15 @@ export const Header: React.FC = () => {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;
-      if (showNotifications && !target.closest('.notification-popup') && !target.closest('[data-notification-trigger]')) {
+      if (showNotifications && !target.closest('.notification-popup') && !target.closest('.notification-button')) {
         setShowNotifications(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    if (showNotifications) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showNotifications]);
 
@@ -117,8 +123,7 @@ export const Header: React.FC = () => {
                 variant="ghost"
                 size="sm"
                 onClick={handleNotificationClick}
-                className="relative"
-                data-notification-trigger
+                className="relative notification-button"
                 style={{
                   color: 'var(--custom-text)'
                 }}
@@ -126,7 +131,11 @@ export const Header: React.FC = () => {
                 <Bell className="h-4 w-4" />
                 {unreadCount > 0 && (
                   <Badge 
-                    className="absolute -top-1 -right-1 h-4 w-4 lg:h-5 lg:w-5 flex items-center justify-center text-xs p-0 bg-red-500 text-white"
+                    className="absolute -top-1 -right-1 h-4 w-4 lg:h-5 lg:w-5 flex items-center justify-center text-xs p-0"
+                    style={{
+                      background: '#ec5f65',
+                      color: '#ffffff'
+                    }}
                   >
                     {unreadCount}
                   </Badge>
