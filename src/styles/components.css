@@ -1,26 +1,39 @@
 
 @layer components {
-  /* Application universelle du thème personnalisé sur TOUTES les pages back-office */
+  /* FORCE l'application du thème sur TOUTES les pages back-office */
   
-  /* Corps et éléments de base */
+  /* Application universelle du thème sur le corps et éléments principaux */
   body, 
+  html,
+  #root,
+  .min-h-screen,
   main,
   div,
   section,
   article,
-  aside,
-  #root,
-  .min-h-screen,
-  .back-office-page,
-  [data-admin-route] {
+  aside {
     background: var(--custom-background) !important;
     color: var(--custom-text) !important;
-    transition: background 0.3s ease, color 0.3s ease;
   }
 
-  /* Forcer l'application du thème sur toutes les routes admin */
+  /* FORCE sur toutes les routes admin spécifiquement */
+  [data-route="/dashboard"],
+  [data-route="/admin"],
+  [data-route="/artists"],
+  [data-route="/events"],
+  [data-route="/contacts"],
+  [data-route="/messagerie"],
+  [data-route="/publication-calendar"],
+  [data-route="/tasks"],
+  [data-route="/preferences"],
+  [data-route="/application"] {
+    background: var(--custom-background) !important;
+    color: var(--custom-text) !important;
+  }
+
+  /* Force sur les layouts admin */
   .admin-layout,
-  .admin-layout * {
+  .admin-layout *:not(.chat-widget-button):not(.notification-popup) {
     background: var(--custom-background) !important;
     color: var(--custom-text) !important;
   }
@@ -35,7 +48,7 @@
     color: var(--custom-text) !important;
   }
 
-  /* Cartes */
+  /* Cartes avec force */
   .card,
   [class*="card"],
   .bg-white,
@@ -43,12 +56,12 @@
     background: var(--custom-cardBg) !important;
     color: var(--custom-cardText) !important;
     border: 1px solid rgba(0,0,0,0.1) !important;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
     border-radius: 0.75rem !important;
   }
 
-  /* Boutons - Application forcée du thème */
-  button:not(.chat-widget-button), 
+  /* Boutons - Application FORCÉE du thème */
+  button:not(.chat-widget-button):not(.notification-button), 
   .btn,
   [role="button"]:not(.chat-widget-button),
   input[type="button"],
@@ -62,23 +75,6 @@
     transition: all 0.2s ease !important;
   }
 
-  /* Boutons outline et ghost */
-  [data-variant="outline"],
-  [data-variant="ghost"],
-  .variant-outline,
-  .variant-ghost {
-    background: transparent !important;
-    color: var(--custom-buttonBg) !important;
-    border: 1px solid var(--custom-buttonBg) !important;
-    border-radius: 0.5rem !important;
-  }
-
-  [data-variant="ghost"]:hover,
-  .variant-ghost:hover {
-    background: var(--custom-buttonBg) !important;
-    color: var(--custom-buttonText) !important;
-  }
-
   /* Champs de saisie */
   input, 
   textarea, 
@@ -89,26 +85,25 @@
     border-radius: 0.5rem !important;
   }
 
-  /* Dropdowns et menus - Z-INDEX ÉLEVÉ */
+  /* NOTIFICATIONS POPUP - Z-INDEX TRÈS ÉLEVÉ */
+  .notification-popup,
   .dropdown-menu,
   .select-content,
   .popover-content,
   [role="menu"],
   [role="listbox"],
-  [data-radix-popper-content-wrapper],
-  .notification-popup {
+  [data-radix-popper-content-wrapper] {
     background: var(--custom-cardBg) !important;
     color: var(--custom-cardText) !important;
     border: 1px solid rgba(0,0,0,0.1) !important;
     border-radius: 0.5rem !important;
-    z-index: 9999 !important;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
+    z-index: 99999 !important;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.25) !important;
+    position: fixed !important;
   }
 
-  /* Chat widget couleurs ET forme ronde - EXCEPTIONS IMPORTANTES */
-  .chat-widget-button,
-  .chat-widget-button:hover,
-  .chat-widget-button:focus {
+  /* CHAT WIDGET - BOUTON FIXE ET ROSE */
+  .chat-widget-button {
     background: #ec5f65 !important;
     color: #ffffff !important;
     border: none !important;
@@ -117,9 +112,24 @@
     height: 56px !important;
     min-width: 56px !important;
     min-height: 56px !important;
+    position: fixed !important;
+    bottom: 20px !important;
+    right: 20px !important;
+    z-index: 1000 !important;
+    box-shadow: 0 4px 12px rgba(236, 95, 101, 0.3) !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
   }
 
-  /* Sidebar personnalisée avec thème */
+  .chat-widget-button:hover {
+    transform: scale(1.05) !important;
+    box-shadow: 0 6px 20px rgba(236, 95, 101, 0.4) !important;
+  }
+
+  .chat-widget-button:active {
+    transform: scale(0.98) !important;
+  }
+
+  /* Sidebar personnalisée */
   .sidebar {
     background: var(--sidebar-background) !important;
     color: var(--sidebar-foreground) !important;
@@ -135,52 +145,8 @@
     color: var(--sidebar-accent-foreground) !important;
   }
 
-  /* Application automatique du thème sur toutes les pages back-office */
-  .min-h-screen,
-  .back-office-page,
-  .admin-layout {
-    background: var(--custom-background) !important;
-    color: var(--custom-text) !important;
-  }
-
-  /* Forcer le thème sur les routes spécifiques */
-  [data-route="/dashboard"],
-  [data-route="/admin"],
-  [data-route="/artists"],
-  [data-route="/events"],
-  [data-route="/contacts"],
-  [data-route="/messagerie"] {
-    background: var(--custom-background) !important;
-    color: var(--custom-text) !important;
-  }
-
   /* Transitions douces */
   * {
     transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease !important;
-  }
-  
-  /* Couleurs de texte secondaire */
-  .text-muted-foreground,
-  .text-secondary,
-  .muted {
-    color: rgba(var(--custom-text), 0.7) !important;
-  }
-
-  /* Hover effects pour les cartes */
-  .hover\:shadow-md:hover {
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
-  }
-
-  .hover\:scale-105:hover {
-    transform: scale(1.05) !important;
-  }
-
-  /* Force l'application du thème même sur les éléments avec des classes Tailwind */
-  .bg-background {
-    background: var(--custom-background) !important;
-  }
-
-  .text-foreground {
-    color: var(--custom-text) !important;
   }
 }

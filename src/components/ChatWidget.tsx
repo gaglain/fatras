@@ -60,15 +60,28 @@ export const ChatWidget: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-4 right-4 z-50">
+    <div style={{
+      position: 'fixed',
+      bottom: '20px',
+      right: '20px',
+      zIndex: 1000
+    }}>
+      {/* CHAT POPUP */}
       {isOpen && (
-        <div className="mb-4 shadow-lg rounded-xl overflow-hidden" style={{
-          background: 'var(--custom-cardBg)',
-          border: '1px solid rgba(0,0,0,0.1)',
-          width: '400px',
-          height: '500px'
-        }}>
-          {/* Header avec sélecteurs en haut */}
+        <div 
+          className="mb-4 shadow-lg rounded-xl overflow-hidden" 
+          style={{
+            background: 'var(--custom-cardBg)',
+            border: '1px solid rgba(0,0,0,0.1)',
+            width: '400px',
+            height: '500px',
+            position: 'fixed',
+            bottom: '80px',
+            right: '20px',
+            zIndex: 999
+          }}
+        >
+          {/* Header avec sélecteurs EN HAUT */}
           <div className="p-4 border-b" style={{
             background: 'var(--custom-cardBg)',
             borderColor: 'rgba(0,0,0,0.1)'
@@ -88,7 +101,7 @@ export const ChatWidget: React.FC = () => {
               </Button>
             </div>
             
-            {/* Sélecteurs en ligne */}
+            {/* SÉLECTEURS EN LIGNE (EN HAUT) */}
             <div className="flex space-x-2">
               <Select value={selectedChannel} onValueChange={setSelectedChannel}>
                 <SelectTrigger className="flex-1 h-8 text-xs" style={{
@@ -222,10 +235,10 @@ export const ChatWidget: React.FC = () => {
         </div>
       )}
       
-      {/* Widget button - ROND et ROSE */}
+      {/* BOUTON WIDGET - FIXE, ROND ET ROSE */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="chat-widget-button rounded-full shadow-lg hover:scale-105 transition-all duration-200 flex items-center justify-center"
+        className="chat-widget-button"
         style={{
           background: '#ec5f65',
           color: '#ffffff',
@@ -234,7 +247,17 @@ export const ChatWidget: React.FC = () => {
           width: '56px',
           height: '56px',
           minWidth: '56px',
-          minHeight: '56px'
+          minHeight: '56px',
+          position: 'fixed',
+          bottom: '20px',
+          right: '20px',
+          zIndex: 1000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 4px 12px rgba(236, 95, 101, 0.3)',
+          transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+          cursor: 'pointer'
         }}
       >
         <MessageSquare className="h-6 w-6" />
