@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -49,10 +50,10 @@ export const Header: React.FC = () => {
   }, []);
 
   const toggleNotifications = () => {
-    console.log('toggleNotifications clicked, current state:', showNotifications);
+    console.log('🔔 Toggle notifications clicked! Current state:', showNotifications);
     setShowNotifications(prev => {
       const newState = !prev;
-      console.log('Setting showNotifications to:', newState);
+      console.log('🔔 Setting showNotifications to:', newState);
       return newState;
     });
     if (!showNotifications) {
@@ -60,8 +61,26 @@ export const Header: React.FC = () => {
     }
   };
 
-  console.log('Header render - showNotifications:', showNotifications);
-  console.log('Rendering notification popup area, showNotifications:', showNotifications);
+  // Close notifications when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (showNotifications && !target.closest('.notification-container')) {
+        console.log('🔔 Closing notifications - clicked outside');
+        setShowNotifications(false);
+      }
+    };
+
+    if (showNotifications) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showNotifications]);
+
+  console.log('🔔 Header render - showNotifications:', showNotifications);
 
   return (
     <>
@@ -94,8 +113,8 @@ export const Header: React.FC = () => {
             <div className="flex items-center space-x-1 lg:space-x-2">
               <ThemeToggle />
               
-              {/* Notification Button */}
-              <div className="relative">
+              {/* Notification Button Container */}
+              <div className="relative notification-container">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -112,13 +131,18 @@ export const Header: React.FC = () => {
                   )}
                 </Button>
                 
-                {/* Notification Popup */}
+                {/* Notification Popup - Positioned absolutely */}
                 {showNotifications && (
-                  <div className="absolute top-full right-0 mt-2 z-[100]">
-                    <NotificationCenter onClose={() => {
-                      console.log('NotificationCenter onClose called');
-                      setShowNotifications(false);
-                    }} />
+                  <div 
+                    className="absolute top-full right-0 mt-2 z-[200]"
+                    style={{ position: 'absolute', zIndex: 200 }}
+                  >
+                    <NotificationCenter 
+                      onClose={() => {
+                        console.log('🔔 NotificationCenter onClose called');
+                        setShowNotifications(false);
+                      }} 
+                    />
                   </div>
                 )}
               </div>
