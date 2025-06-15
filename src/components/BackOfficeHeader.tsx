@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { User, Bell, HelpCircle } from 'lucide-react';
+import { User, Bell } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { FrontThemeToggle } from './FrontThemeToggle';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -47,10 +47,6 @@ export const BackOfficeHeader: React.FC = () => {
             <Button variant="ghost" size="sm" className={`${isDark ? "text-white" : "text-[#1632f4]"}`}>
               <Bell className="h-4 w-4" />
               <span className="sr-only">Notifications</span>
-            </Button>
-            <Button variant="ghost" size="sm" className={`${isDark ? "text-white" : "text-[#1632f4]"}`}>
-              <HelpCircle className="h-4 w-4" />
-              <span className="sr-only">Aide</span>
             </Button>
             <FrontThemeToggle variant="back-office" />
             

@@ -52,14 +52,12 @@ export const Header: React.FC = () => {
   const handleNotificationClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('Notification clicked, current state:', showNotifications);
     setShowNotifications(prev => !prev);
     if (!showNotifications) {
       setUnreadCount(0);
     }
   };
 
-  // Close notifications when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;

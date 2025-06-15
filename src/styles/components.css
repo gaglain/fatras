@@ -1,6 +1,6 @@
 
 @layer components {
-  /* Application universelle du thème personnalisé */
+  /* Application universelle du thème personnalisé sur TOUTES les pages back-office */
   
   /* Corps et éléments de base */
   body, 
@@ -9,10 +9,20 @@
   section,
   article,
   aside,
-  #root {
+  #root,
+  .min-h-screen,
+  .back-office-page,
+  [data-admin-route] {
     background: var(--custom-background) !important;
     color: var(--custom-text) !important;
     transition: background 0.3s ease, color 0.3s ease;
+  }
+
+  /* Forcer l'application du thème sur toutes les routes admin */
+  .admin-layout,
+  .admin-layout * {
+    background: var(--custom-background) !important;
+    color: var(--custom-text) !important;
   }
 
   /* Textes et titres */
@@ -79,18 +89,20 @@
     border-radius: 0.5rem !important;
   }
 
-  /* Dropdowns et menus */
+  /* Dropdowns et menus - Z-INDEX ÉLEVÉ */
   .dropdown-menu,
   .select-content,
   .popover-content,
   [role="menu"],
   [role="listbox"],
-  [data-radix-popper-content-wrapper] {
+  [data-radix-popper-content-wrapper],
+  .notification-popup {
     background: var(--custom-cardBg) !important;
     color: var(--custom-cardText) !important;
     border: 1px solid rgba(0,0,0,0.1) !important;
     border-radius: 0.5rem !important;
-    z-index: 50 !important;
+    z-index: 9999 !important;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
   }
 
   /* Chat widget couleurs ET forme ronde - EXCEPTIONS IMPORTANTES */
@@ -125,7 +137,19 @@
 
   /* Application automatique du thème sur toutes les pages back-office */
   .min-h-screen,
-  .back-office-page {
+  .back-office-page,
+  .admin-layout {
+    background: var(--custom-background) !important;
+    color: var(--custom-text) !important;
+  }
+
+  /* Forcer le thème sur les routes spécifiques */
+  [data-route="/dashboard"],
+  [data-route="/admin"],
+  [data-route="/artists"],
+  [data-route="/events"],
+  [data-route="/contacts"],
+  [data-route="/messagerie"] {
     background: var(--custom-background) !important;
     color: var(--custom-text) !important;
   }
@@ -149,5 +173,14 @@
 
   .hover\:scale-105:hover {
     transform: scale(1.05) !important;
+  }
+
+  /* Force l'application du thème même sur les éléments avec des classes Tailwind */
+  .bg-background {
+    background: var(--custom-background) !important;
+  }
+
+  .text-foreground {
+    color: var(--custom-text) !important;
   }
 }

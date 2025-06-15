@@ -1,10 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MessageSquare, X, Send, User, Bot, Hash, Users } from 'lucide-react';
 import { useMessaging } from '@/contexts/MessagingContext';
@@ -19,19 +16,18 @@ interface Message {
 export const ChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedChannel, setSelectedChannel] = useState('general');
+  const [selectedTeam, setSelectedTeam] = useState('all');
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
 
   const { channels } = useMessaging();
 
-  const [users] = useState([
-    { id: 'marie-martin', name: 'Marie Martin', email: 'marie@example.com', status: 'online' },
-    { id: 'jean-dupont', name: 'Jean Dupont', email: 'jean@example.com', status: 'away' },
-    { id: 'paul-leroy', name: 'Paul Leroy', email: 'paul@example.com', status: 'online' },
-    { id: 'sophie-tech', name: 'Sophie Tech', email: 'sophie@example.com', status: 'busy' }
+  const [teams] = useState([
+    { id: 'all', name: 'Toute l\'équipe', count: 12 },
+    { id: 'dev', name: 'Développement', count: 5 },
+    { id: 'marketing', name: 'Marketing', count: 4 },
+    { id: 'support', name: 'Support', count: 3 }
   ]);
-
-  const currentChannel = channels.find(c => c.id === selectedChannel);
 
   const handleSendMessage = () => {
     if (!inputValue.trim()) return;
@@ -63,79 +59,94 @@ export const ChatWidget: React.FC = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'online': return 'bg-green-500';
-      case 'away': return 'bg-yellow-500';
-      case 'busy': return 'bg-red-500';
-      default: return 'bg-gray-400';
-    }
-  };
-
   return (
     <div className="fixed bottom-4 right-4 z-50">
       {isOpen && (
         <div className="mb-4 shadow-lg rounded-xl overflow-hidden" style={{
-          background: 'var(--custom-background)',
+          background: 'var(--custom-cardBg)',
           border: '1px solid rgba(0,0,0,0.1)',
-          width: '480px',
-          height: '600px'
+          width: '400px',
+          height: '500px'
         }}>
           {/* Header avec sélecteurs en haut */}
-          <div className="p-4 border-b flex items-center justify-between" style={{
+          <div className="p-4 border-b" style={{
             background: 'var(--custom-cardBg)',
             borderColor: 'rgba(0,0,0,0.1)'
           }}>
-            <div className="flex items-center space-x-3">
-              <MessageSquare className="h-5 w-5" style={{ color: '#ec5f65' }} />
+            <div className="flex items-center justify-between mb-3">
               <div className="flex items-center space-x-2">
-                <Select value={selectedChannel} onValueChange={setSelectedChannel}>
-                  <SelectTrigger className="w-32 h-8 text-xs" style={{
-                    background: 'var(--custom-background)',
-                    color: 'var(--custom-text)',
-                    borderColor: '#ec5f65'
-                  }}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent style={{
-                    background: 'var(--custom-cardBg)',
-                    color: 'var(--custom-cardText)',
-                    border: '1px solid rgba(0,0,0,0.1)',
-                    zIndex: 10000
-                  }}>
-                    {channels.filter(c => c.type === 'channel').map((channel) => (
-                      <SelectItem key={channel.id} value={channel.id}>
-                        <div className="flex items-center">
-                          <Hash className="h-3 w-3 mr-1" />
-                          {channel.name}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                
-                <Badge variant="secondary" className="text-xs" style={{
-                  background: '#ec5f65',
-                  color: '#ffffff'
-                }}>
-                  <Users className="h-3 w-3 mr-1" />
-                  {users.filter(u => u.status === 'online').length}
-                </Badge>
+                <MessageSquare className="h-5 w-5" style={{ color: '#ec5f65' }} />
+                <span className="font-medium" style={{ color: 'var(--custom-cardText)' }}>Chat</span>
               </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsOpen(false)}
+                style={{ color: 'var(--custom-cardText)' }}
+              >
+                <X className="h-4 w-4" />
+              </Button>
             </div>
             
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsOpen(false)}
-              style={{ color: 'var(--custom-cardText)' }}
-            >
-              <X className="h-4 w-4" />
-            </Button>
+            {/* Sélecteurs en ligne */}
+            <div className="flex space-x-2">
+              <Select value={selectedChannel} onValueChange={setSelectedChannel}>
+                <SelectTrigger className="flex-1 h-8 text-xs" style={{
+                  background: 'var(--custom-background)',
+                  color: 'var(--custom-text)',
+                  borderColor: '#ec5f65'
+                }}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent style={{
+                  background: 'var(--custom-cardBg)',
+                  color: 'var(--custom-cardText)',
+                  border: '1px solid rgba(0,0,0,0.1)',
+                  zIndex: 10000
+                }}>
+                  {channels.filter(c => c.type === 'channel').map((channel) => (
+                    <SelectItem key={channel.id} value={channel.id}>
+                      <div className="flex items-center">
+                        <Hash className="h-3 w-3 mr-1" />
+                        {channel.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              <Select value={selectedTeam} onValueChange={setSelectedTeam}>
+                <SelectTrigger className="flex-1 h-8 text-xs" style={{
+                  background: 'var(--custom-background)',
+                  color: 'var(--custom-text)',
+                  borderColor: '#ec5f65'
+                }}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent style={{
+                  background: 'var(--custom-cardBg)',
+                  color: 'var(--custom-cardText)',
+                  border: '1px solid rgba(0,0,0,0.1)',
+                  zIndex: 10000
+                }}>
+                  {teams.map((team) => (
+                    <SelectItem key={team.id} value={team.id}>
+                      <div className="flex items-center justify-between w-full">
+                        <div className="flex items-center">
+                          <Users className="h-3 w-3 mr-1" />
+                          {team.name}
+                        </div>
+                        <span className="text-xs opacity-70">({team.count})</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Messages */}
-          <ScrollArea className="h-96 p-4" style={{ background: 'var(--custom-background)' }}>
+          <ScrollArea className="h-80 p-4" style={{ background: 'var(--custom-background)' }}>
             <div className="space-y-3">
               {messages.length === 0 ? (
                 <div className="text-center py-8 opacity-50">
@@ -214,7 +225,7 @@ export const ChatWidget: React.FC = () => {
       {/* Widget button - ROND et ROSE */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="rounded-full shadow-lg hover:scale-105 transition-all duration-200 flex items-center justify-center"
+        className="chat-widget-button rounded-full shadow-lg hover:scale-105 transition-all duration-200 flex items-center justify-center"
         style={{
           background: '#ec5f65',
           color: '#ffffff',
