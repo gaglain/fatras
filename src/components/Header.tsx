@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -52,25 +51,47 @@ export const Header: React.FC = () => {
   const handleNotificationClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setShowNotifications(prev => !prev);
+    console.log('🔔 Notification button clicked!');
+    console.log('🔔 Current showNotifications state:', showNotifications);
+    
+    setShowNotifications(prev => {
+      const newState = !prev;
+      console.log('🔔 Setting showNotifications to:', newState);
+      return newState;
+    });
+    
     if (!showNotifications) {
+      console.log('🔔 Resetting unread count to 0');
       setUnreadCount(0);
     }
   };
 
   useEffect(() => {
+    console.log('🔔 showNotifications changed to:', showNotifications);
+  }, [showNotifications]);
+
+  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;
-      if (showNotifications && !target.closest('[data-notification-popup]') && !target.closest('[data-notification-button]')) {
+      console.log('🔔 Click outside detected, target:', target);
+      
+      if (showNotifications && 
+          !target.closest('[data-notification-popup]') && 
+          !target.closest('[data-notification-button]')) {
+        console.log('🔔 Closing notifications popup due to outside click');
         setShowNotifications(false);
       }
     };
 
     if (showNotifications) {
+      console.log('🔔 Adding click outside listener');
       document.addEventListener('mousedown', handleClickOutside);
     }
     
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    return () => {
+      console.log('🔔 Removing click outside listener');
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, [showNotifications]);
 
   return (
@@ -104,19 +125,24 @@ export const Header: React.FC = () => {
             <div className="flex items-center space-x-1 lg:space-x-2">
               <ThemeToggle />
               
-              {/* NOTIFICATION BUTTON AVEC POPUP */}
+              {/* NOTIFICATION BUTTON */}
               <div className="relative">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={handleNotificationClick}
-                  className="relative notification-button"
+                  className="relative"
                   data-notification-button
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'var(--foreground)'
+                  }}
                 >
                   <Bell className="h-4 w-4" />
                   {unreadCount > 0 && (
                     <Badge 
-                      className="absolute -top-1 -right-1 h-4 w-4 lg:h-5 lg:w-5 flex items-center justify-center text-xs p-0 bg-red-500 text-white"
+                      className="absolute -top-1 -right-1 h-4 w-4 lg:h-5 lg:w-5 flex items-center justify-center text-xs p-0 bg-red-500 text-white border-0"
                     >
                       {unreadCount}
                     </Badge>
@@ -126,8 +152,7 @@ export const Header: React.FC = () => {
                 {/* POPUP DE NOTIFICATIONS */}
                 {showNotifications && (
                   <div 
-                    className="absolute top-full right-0 mt-2 z-[9999]"
-                    data-notification-popup
+                    className="absolute right-0 mt-2 z-[9999] pointer-events-auto"
                     style={{
                       position: 'absolute',
                       top: '100%',
@@ -135,8 +160,14 @@ export const Header: React.FC = () => {
                       marginTop: '8px',
                       zIndex: 9999
                     }}
+                    data-notification-popup
                   >
-                    <NotificationCenter onClose={() => setShowNotifications(false)} />
+                    <NotificationCenter 
+                      onClose={() => {
+                        console.log('🔔 NotificationCenter onClose called');
+                        setShowNotifications(false);
+                      }} 
+                    />
                   </div>
                 )}
               </div>

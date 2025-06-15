@@ -1,5 +1,4 @@
 
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -56,12 +55,15 @@ interface NotificationCenterProps {
 }
 
 export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose }) => {
+  console.log('🔔 NotificationCenter component rendered');
+  
   const [notifications, setNotifications] = useState<Notification[]>(sampleNotifications);
   const navigate = useNavigate();
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   const markAsRead = (id: string) => {
+    console.log('🔔 Marking notification as read:', id);
     setNotifications(prev => 
       prev.map(notification => 
         notification.id === id 
@@ -72,17 +74,24 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
   };
 
   const markAllAsRead = () => {
+    console.log('🔔 Marking all notifications as read');
     setNotifications(prev => 
       prev.map(notification => ({ ...notification, isRead: true }))
     );
   };
 
   const handleNotificationClick = (notification: Notification) => {
+    console.log('🔔 Notification clicked:', notification);
     markAsRead(notification.id);
     if (notification.linkTo) {
       navigate(notification.linkTo);
       onClose();
     }
+  };
+
+  const handleCloseClick = () => {
+    console.log('🔔 Close button clicked');
+    onClose();
   };
 
   const getIcon = (type: string) => {
@@ -98,10 +107,10 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'high': return 'bg-red-100 text-red-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'low': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'high': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+      case 'medium': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+      case 'low': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
     }
   };
 
@@ -117,26 +126,21 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
 
   return (
     <Card 
-      className="w-96 shadow-xl border-0"
+      className="w-96 max-w-[90vw] shadow-xl bg-background text-foreground border"
       data-notification-popup
       style={{
-        background: 'white',
-        color: '#1f2937',
-        borderRadius: '12px',
-        boxShadow: '0 20px 50px rgba(0,0,0,0.25)',
-        zIndex: 9999,
-        border: '1px solid #e5e7eb'
+        minWidth: '350px',
+        maxWidth: '400px'
       }}
     >
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg flex items-center" style={{ color: '#1f2937' }}>
+          <CardTitle className="text-lg flex items-center text-foreground">
             <Bell className="h-5 w-5 mr-2" />
             Notifications
             {unreadCount > 0 && (
               <Badge 
-                className="ml-2 text-white"
-                style={{ background: '#ec5f65' }}
+                className="ml-2 bg-red-500 text-white border-0"
               >
                 {unreadCount}
               </Badge>
@@ -145,8 +149,8 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
           <Button 
             variant="ghost" 
             size="sm" 
-            onClick={onClose} 
-            style={{ color: '#1f2937' }}
+            onClick={handleCloseClick} 
+            className="text-foreground hover:bg-accent"
           >
             <X className="h-4 w-4" />
           </Button>
@@ -156,12 +160,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
             variant="outline" 
             size="sm" 
             onClick={markAllAsRead} 
-            className="self-end"
-            style={{
-              borderColor: '#1632f4',
-              color: '#1632f4',
-              background: 'transparent'
-            }}
+            className="self-end border-primary text-primary hover:bg-primary hover:text-primary-foreground"
           >
             Tout marquer comme lu
           </Button>
@@ -169,7 +168,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
       </CardHeader>
       <CardContent className="max-h-96 overflow-y-auto">
         {notifications.length === 0 ? (
-          <div className="text-center py-8 opacity-50">
+          <div className="text-center py-8 text-muted-foreground">
             <Bell className="h-12 w-12 mx-auto mb-3" />
             <p>Aucune notification</p>
           </div>
@@ -179,26 +178,19 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
               <div
                 key={notification.id}
                 className={`p-3 border transition-all duration-200 cursor-pointer hover:shadow-md rounded-lg ${
-                  !notification.isRead ? 'border-blue-200' : 'border-gray-200'
+                  !notification.isRead 
+                    ? 'border-primary bg-primary/5' 
+                    : 'border-border bg-card hover:bg-accent'
                 }`}
                 onClick={() => handleNotificationClick(notification)}
-                style={{
-                  background: !notification.isRead 
-                    ? 'rgba(22, 50, 244, 0.05)' 
-                    : 'white',
-                  borderColor: !notification.isRead 
-                    ? '#1632f4' 
-                    : '#e5e7eb',
-                  color: '#1f2937'
-                }}
               >
                 <div className="flex items-start space-x-3">
-                  <div className="mt-1 opacity-70" style={{ color: '#1f2937' }}>
+                  <div className="mt-1 text-muted-foreground">
                     {getIcon(notification.type)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
-                      <p className="text-sm font-medium truncate" style={{ color: '#1f2937' }}>
+                      <p className="text-sm font-medium truncate text-foreground">
                         {notification.title}
                       </p>
                       <div className="flex items-center space-x-2">
@@ -206,17 +198,14 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
                           {notification.priority}
                         </Badge>
                         {!notification.isRead && (
-                          <div 
-                            className="w-2 h-2 rounded-full" 
-                            style={{ background: '#1632f4' }}
-                          ></div>
+                          <div className="w-2 h-2 bg-primary rounded-full"></div>
                         )}
                       </div>
                     </div>
-                    <p className="text-sm line-clamp-2 opacity-70" style={{ color: '#1f2937' }}>
+                    <p className="text-sm line-clamp-2 text-muted-foreground">
                       {notification.message}
                     </p>
-                    <p className="text-xs mt-1 opacity-50" style={{ color: '#1f2937' }}>
+                    <p className="text-xs mt-1 text-muted-foreground">
                       {formatTime(notification.timestamp)}
                     </p>
                   </div>
@@ -229,4 +218,3 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
     </Card>
   );
 };
-
