@@ -29,15 +29,15 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     
-    /* Variables personnalisées pour le thème CLAIR */
-    --custom-background: #ffffff;
-    --custom-text: #18181b;
-    --custom-cardBg: #ffffff;
-    --custom-cardText: #18181b;
-    --custom-buttonBg: #1632f4;
-    --custom-buttonText: #ffffff;
-    --custom-chatWidgetBg: #ec5f65;
-    --custom-chatWidgetIcon: #ffffff;
+    /* VARIABLES PERSONNALISÉES FORCÉES */
+    --app-background: #ffffff;
+    --app-text: #18181b;
+    --app-card-bg: #ffffff;
+    --app-card-text: #18181b;
+    --app-button-bg: #1632f4;
+    --app-button-text: #ffffff;
+    --app-chat-widget-bg: #ec5f65;
+    --app-chat-widget-icon: #ffffff;
     
     /* Sidebar tokens */
     --sidebar-background: #ffffff;
@@ -71,15 +71,15 @@
     --input: 217.2 32.6% 17.5%;
     --ring: 221 83% 53%;
     
-    /* Variables personnalisées pour le mode SOMBRE */
-    --custom-background: #18181b;
-    --custom-text: #ffffff;
-    --custom-cardBg: #22223a;
-    --custom-cardText: #ffffff;
-    --custom-buttonBg: #ffffff;
-    --custom-buttonText: #1632f4;
-    --custom-chatWidgetBg: #ec5f65;
-    --custom-chatWidgetIcon: #ffffff;
+    /* VARIABLES PERSONNALISÉES MODE SOMBRE */
+    --app-background: #18181b;
+    --app-text: #ffffff;
+    --app-card-bg: #22223a;
+    --app-card-text: #ffffff;
+    --app-button-bg: #ffffff;
+    --app-button-text: #1632f4;
+    --app-chat-widget-bg: #ec5f65;
+    --app-chat-widget-icon: #ffffff;
     
     /* Sidebar en mode sombre */
     --sidebar-background: #22223a;
@@ -98,12 +98,17 @@
     @apply border-border;
   }
   
+  html,
+  body,
+  #root {
+    background: var(--app-background) !important;
+    color: var(--app-text) !important;
+    min-height: 100vh;
+  }
+  
   body {
-    @apply bg-background text-foreground;
     font-family: "Inter", sans-serif;
     font-display: swap;
-    background: var(--custom-background) !important;
-    color: var(--custom-text) !important;
   }
   
   html {

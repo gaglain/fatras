@@ -1,116 +1,114 @@
 
 @layer components {
-  /* FORCE l'application du thème sur TOUTES les pages back-office */
+  /* APPLICATION FORCÉE DU THÈME SUR TOUTE L'APPLICATION */
   
-  /* Application universelle du thème sur le corps et éléments principaux */
-  body, 
+  /* CORPS DE L'APPLICATION - FORCE ABSOLUE */
   html,
+  body,
   #root,
   .min-h-screen,
   main,
-  div:not(.notification-popup):not(.chat-widget-button),
+  div:not(.notification-popup):not(.chat-widget-button):not([role="dialog"]):not([data-radix-portal]),
   section,
   article,
-  aside {
-    background: var(--custom-background) !important;
-    color: var(--custom-text) !important;
+  aside,
+  [data-testid] {
+    background: var(--app-background) !important;
+    color: var(--app-text) !important;
   }
 
-  /* FORCE sur toutes les routes admin spécifiquement */
-  [data-route="/dashboard"],
-  [data-route="/admin"],
-  [data-route="/artists"],
-  [data-route="/events"],
-  [data-route="/contacts"],
-  [data-route="/messagerie"],
-  [data-route="/publication-calendar"],
-  [data-route="/tasks"],
-  [data-route="/preferences"],
-  [data-route="/application"] {
-    background: var(--custom-background) !important;
-    color: var(--custom-text) !important;
+  /* PAGES SPÉCIFIQUES - FORCE MAXIMALE */
+  [data-route="/dashboard"] *:not(.notification-popup):not(.chat-widget-button),
+  [data-route="/admin"] *:not(.notification-popup):not(.chat-widget-button),
+  [data-route="/artists"] *:not(.notification-popup):not(.chat-widget-button),
+  [data-route="/events"] *:not(.notification-popup):not(.chat-widget-button),
+  [data-route="/contacts"] *:not(.notification-popup):not(.chat-widget-button),
+  [data-route="/messagerie"] *:not(.notification-popup):not(.chat-widget-button),
+  [data-route="/publication-calendar"] *:not(.notification-popup):not(.chat-widget-button),
+  [data-route="/tasks"] *:not(.notification-popup):not(.chat-widget-button),
+  [data-route="/preferences"] *:not(.notification-popup):not(.chat-widget-button),
+  [data-route="/application"] *:not(.notification-popup):not(.chat-widget-button) {
+    background: var(--app-background) !important;
+    color: var(--app-text) !important;
   }
 
-  /* Force sur les layouts admin */
+  /* LAYOUTS ADMIN - FORCE */
   .admin-layout,
-  .admin-layout *:not(.chat-widget-button):not(.notification-popup) {
-    background: var(--custom-background) !important;
-    color: var(--custom-text) !important;
+  .admin-layout *:not(.chat-widget-button):not(.notification-popup):not([role="dialog"]) {
+    background: var(--app-background) !important;
+    color: var(--app-text) !important;
   }
 
-  /* Pages de préférences spécifiques */
-  [data-route="/preferences"] *:not(.notification-popup):not(.chat-widget-button) {
-    background: var(--custom-background) !important;
-    color: var(--custom-text) !important;
-  }
-
-  /* Textes et titres */
+  /* TEXTES ET TITRES - FORCE */
   h1, h2, h3, h4, h5, h6,
   p, span, 
   label,
   .font-semibold,
   .font-bold,
-  .font-medium {
-    color: var(--custom-text) !important;
+  .font-medium,
+  .text-foreground,
+  .text-muted-foreground {
+    color: var(--app-text) !important;
   }
 
-  /* Cartes avec force */
+  /* CARTES - FORCE COMPLÈTE */
   .card,
-  [class*="card"]:not(.notification-popup),
-  .bg-white:not(.notification-popup),
-  .bg-gray-50:not(.notification-popup) {
-    background: var(--custom-cardBg) !important;
-    color: var(--custom-cardText) !important;
+  [class*="card"]:not(.notification-popup):not(.chat-widget-button),
+  .bg-white:not(.notification-popup):not(.chat-widget-button),
+  .bg-gray-50:not(.notification-popup):not(.chat-widget-button),
+  .bg-card:not(.notification-popup):not(.chat-widget-button),
+  [data-testid*="card"]:not(.notification-popup) {
+    background: var(--app-card-bg) !important;
+    color: var(--app-card-text) !important;
     border: 1px solid rgba(0,0,0,0.1) !important;
     box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
     border-radius: 0.75rem !important;
   }
 
-  /* Boutons - Application FORCÉE du thème */
-  button:not(.chat-widget-button):not(.notification-button), 
+  /* BOUTONS - FORCE ABSOLUE */
+  button:not(.chat-widget-button):not(.notification-button):not([data-dialog-close]), 
   .btn,
   [role="button"]:not(.chat-widget-button),
   input[type="button"],
   input[type="submit"],
-  [class*="bg-blue"]:not(.chat-widget-button),
-  [class*="bg-primary"]:not(.chat-widget-button) {
-    background: var(--custom-buttonBg) !important;
-    color: var(--custom-buttonText) !important;
-    border: 1px solid var(--custom-buttonBg) !important;
+  .bg-primary:not(.chat-widget-button),
+  [class*="bg-blue"]:not(.chat-widget-button) {
+    background: var(--app-button-bg) !important;
+    color: var(--app-button-text) !important;
+    border: 1px solid var(--app-button-bg) !important;
     border-radius: 0.5rem !important;
     transition: all 0.2s ease !important;
   }
 
-  /* Champs de saisie */
-  input:not([type="color"]), 
-  textarea, 
-  select {
-    background: var(--custom-background) !important;
-    color: var(--custom-text) !important;
-    border: 1px solid var(--custom-buttonBg) !important;
+  /* CHAMPS DE SAISIE - FORCE */
+  input:not([type="color"]):not(.chat-widget-button), 
+  textarea:not(.chat-widget-button), 
+  select:not(.chat-widget-button) {
+    background: var(--app-background) !important;
+    color: var(--app-text) !important;
+    border: 1px solid var(--app-button-bg) !important;
     border-radius: 0.5rem !important;
   }
 
-  /* NOTIFICATIONS POPUP - POSITION ABSOLUE FIXE */
+  /* NOTIFICATION POPUP - POSITION FIXE */
   .notification-popup {
-    background: var(--custom-cardBg) !important;
-    color: var(--custom-cardText) !important;
+    background: var(--app-card-bg) !important;
+    color: var(--app-card-text) !important;
     border: 1px solid rgba(0,0,0,0.1) !important;
     border-radius: 0.75rem !important;
     box-shadow: 0 20px 50px rgba(0,0,0,0.25) !important;
-    position: absolute !important;
-    top: 100% !important;
-    right: 0 !important;
-    margin-top: 0.5rem !important;
-    z-index: 9999 !important;
+    position: fixed !important;
+    top: 80px !important;
+    right: 20px !important;
+    z-index: 99999 !important;
     width: 400px !important;
     max-width: 90vw !important;
   }
 
-  /* CHAT WIDGET - BOUTON FIXE ET ROSE */
+  /* CHAT WIDGET - FIXE ET ROSE */
   .chat-widget-button {
-    background: #ec5f65 !important;
-    color: #ffffff !important;
+    background: var(--app-chat-widget-bg) !important;
+    color: var(--app-chat-widget-icon) !important;
     border: none !important;
     border-radius: 50% !important;
     width: 56px !important;
@@ -127,18 +125,20 @@
     align-items: center !important;
     justify-content: center !important;
     cursor: pointer !important;
+    transform: none !important;
   }
 
   .chat-widget-button:hover {
     background: #d54c52 !important;
     box-shadow: 0 6px 20px rgba(236, 95, 101, 0.4) !important;
+    transform: scale(1.05) !important;
   }
 
   .chat-widget-button:active {
     transform: scale(0.98) !important;
   }
 
-  /* Sidebar personnalisée */
+  /* SIDEBAR PERSONNALISÉE */
   .sidebar {
     background: var(--sidebar-background) !important;
     color: var(--sidebar-foreground) !important;
@@ -154,23 +154,36 @@
     color: var(--sidebar-accent-foreground) !important;
   }
 
-  /* Dropdowns et menus */
+  /* DROPDOWNS ET MENUS */
   .dropdown-menu,
   .select-content,
   .popover-content,
   [role="menu"]:not(.notification-popup),
   [role="listbox"]:not(.notification-popup),
   [data-radix-popper-content-wrapper]:not(.notification-popup) {
-    background: var(--custom-cardBg) !important;
-    color: var(--custom-cardText) !important;
+    background: var(--app-card-bg) !important;
+    color: var(--app-card-text) !important;
     border: 1px solid rgba(0,0,0,0.1) !important;
     border-radius: 0.5rem !important;
     z-index: 50 !important;
     box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
   }
 
-  /* Transitions douces */
+  /* TRANSITIONS DOUCES */
   *:not(.notification-popup):not(.chat-widget-button) {
     transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease !important;
+  }
+
+  /* FORCE SPÉCIALE POUR LES PRÉFÉRENCES */
+  [data-route="/preferences"] {
+    background: var(--app-background) !important;
+    color: var(--app-text) !important;
+  }
+
+  [data-route="/preferences"] .space-y-6,
+  [data-route="/preferences"] .space-y-4,
+  [data-route="/preferences"] .w-full {
+    background: var(--app-background) !important;
+    color: var(--app-text) !important;
   }
 }

@@ -50,24 +50,31 @@ export const CustomColorsForm: React.FC = () => {
 
   function applyColors(colorsObj: ColorSettings) {
     const root = document.documentElement;
-    
-    // Détection du thème actuel
     const isDark = root.classList.contains('dark');
     
-    // Application immédiate des couleurs selon le thème
-    root.style.setProperty('--custom-background', isDark ? colorsObj.backgroundDark : colorsObj.background);
-    root.style.setProperty('--custom-text', isDark ? colorsObj.textDark : colorsObj.text);
-    root.style.setProperty('--custom-cardBg', isDark ? colorsObj.cardBgDark : colorsObj.cardBg);
-    root.style.setProperty('--custom-cardText', isDark ? colorsObj.cardTextDark : colorsObj.cardText);
-    root.style.setProperty('--custom-buttonBg', isDark ? colorsObj.buttonBgDark : colorsObj.buttonBg);
-    root.style.setProperty('--custom-buttonText', isDark ? colorsObj.buttonTextDark : colorsObj.buttonText);
-    root.style.setProperty('--custom-chatWidgetBg', colorsObj.chatWidgetBg);
-    root.style.setProperty('--custom-chatWidgetIcon', colorsObj.chatWidgetIcon);
+    console.log('🎨 Applying colors IMMEDIATELY:', { isDark, colorsObj });
     
-    // Forcer la re-application des styles
+    // Application IMMÉDIATE et FORCÉE des couleurs
+    root.style.setProperty('--app-background', isDark ? colorsObj.backgroundDark : colorsObj.background);
+    root.style.setProperty('--app-text', isDark ? colorsObj.textDark : colorsObj.text);
+    root.style.setProperty('--app-card-bg', isDark ? colorsObj.cardBgDark : colorsObj.cardBg);
+    root.style.setProperty('--app-card-text', isDark ? colorsObj.cardTextDark : colorsObj.cardText);
+    root.style.setProperty('--app-button-bg', isDark ? colorsObj.buttonBgDark : colorsObj.buttonBg);
+    root.style.setProperty('--app-button-text', isDark ? colorsObj.buttonTextDark : colorsObj.buttonText);
+    root.style.setProperty('--app-chat-widget-bg', colorsObj.chatWidgetBg);
+    root.style.setProperty('--app-chat-widget-icon', colorsObj.chatWidgetIcon);
+    
+    // FORCER un reflow/repaint
     root.style.setProperty('--force-update', Date.now().toString());
     
-    console.log('Colors applied:', { isDark, colorsObj });
+    // FORCER une mise à jour du DOM
+    setTimeout(() => {
+      document.body.style.display = 'none';
+      document.body.offsetHeight; // trigger reflow
+      document.body.style.display = '';
+    }, 0);
+    
+    console.log('✅ Colors applied and forced update triggered');
   }
 
   function handleChange(key: string, value: string) {
@@ -83,13 +90,14 @@ export const CustomColorsForm: React.FC = () => {
       localStorage.setItem("customColors", JSON.stringify(colors));
       applyColors(colors);
       
-      // Déclencher un événement global pour que les autres composants se mettent à jour
+      // Déclencher un événement global
       window.dispatchEvent(new CustomEvent('colorsChanged', { detail: colors }));
       
-      toast.success("Couleurs sauvegardées et appliquées avec succès !");
+      toast.success("✅ Couleurs sauvegardées et appliquées avec succès !");
+      console.log('💾 Colors saved:', colors);
     } catch (error) {
-      toast.error("Erreur lors de la sauvegarde des couleurs");
-      console.error('Save error:', error);
+      toast.error("❌ Erreur lors de la sauvegarde des couleurs");
+      console.error('❌ Save error:', error);
     }
   }
 
@@ -102,20 +110,20 @@ export const CustomColorsForm: React.FC = () => {
     applyColors(resetColors);
     localStorage.setItem("customColors", JSON.stringify(resetColors));
     
-    // Déclencher un événement global
     window.dispatchEvent(new CustomEvent('colorsChanged', { detail: resetColors }));
     
-    toast.success("Couleurs réinitialisées avec succès !");
+    toast.success("🔄 Couleurs réinitialisées avec succès !");
+    console.log('🔄 Colors reset to defaults');
   }
 
   return (
     <Card style={{
-      background: 'var(--custom-cardBg)',
-      color: 'var(--custom-cardText)',
+      background: 'var(--app-card-bg)',
+      color: 'var(--app-card-text)',
       border: '1px solid rgba(0,0,0,0.1)'
     }}>
       <CardHeader>
-        <CardTitle style={{ color: 'var(--custom-cardText)' }}>
+        <CardTitle style={{ color: 'var(--app-card-text)' }}>
           Couleurs personnalisées
         </CardTitle>
       </CardHeader>
@@ -124,7 +132,7 @@ export const CustomColorsForm: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {colorFields.map(({ key, label }) => (
               <div key={key} className="flex flex-col gap-1">
-                <label className="font-medium" style={{ color: 'var(--custom-cardText)' }}>
+                <label className="font-medium" style={{ color: 'var(--app-card-text)' }}>
                   {label}
                 </label>
                 <div className="flex items-center gap-2">
@@ -133,9 +141,7 @@ export const CustomColorsForm: React.FC = () => {
                     value={colors[key] || ""}
                     onChange={e => handleChange(key, e.target.value)}
                     className="h-10 w-16 p-1 border-none cursor-pointer"
-                    style={{
-                      background: 'transparent'
-                    }}
+                    style={{ background: 'transparent' }}
                   />
                   <Input
                     type="text"
@@ -143,9 +149,9 @@ export const CustomColorsForm: React.FC = () => {
                     onChange={e => handleChange(key, e.target.value)}
                     className="flex-1"
                     style={{
-                      background: 'var(--custom-background)',
-                      color: 'var(--custom-text)',
-                      border: '1px solid var(--custom-buttonBg)'
+                      background: 'var(--app-background)',
+                      color: 'var(--app-text)',
+                      border: '1px solid var(--app-button-bg)'
                     }}
                   />
                 </div>
@@ -156,9 +162,9 @@ export const CustomColorsForm: React.FC = () => {
             <Button 
               onClick={handleSave}
               style={{
-                background: 'var(--custom-buttonBg)',
-                color: 'var(--custom-buttonText)',
-                border: '1px solid var(--custom-buttonBg)'
+                background: 'var(--app-button-bg)',
+                color: 'var(--app-button-text)',
+                border: '1px solid var(--app-button-bg)'
               }}
             >
               <Save className="h-4 w-4 mr-2" />
@@ -170,8 +176,8 @@ export const CustomColorsForm: React.FC = () => {
               onClick={handleReset}
               style={{
                 background: 'transparent',
-                color: 'var(--custom-text)',
-                border: '1px solid var(--custom-buttonBg)'
+                color: 'var(--app-text)',
+                border: '1px solid var(--app-button-bg)'
               }}
             >
               <RotateCcw className="h-4 w-4 mr-2" />

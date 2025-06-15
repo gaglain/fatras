@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -74,7 +75,7 @@ export const Header: React.FC = () => {
 
   return (
     <div className="border-b shadow-sm" style={{
-      background: 'var(--custom-background)',
+      background: 'var(--app-background)',
       borderColor: 'rgba(0,0,0,0.1)'
     }}>
       <div className="flex h-16 items-center justify-between px-4 lg:px-6">
@@ -91,7 +92,7 @@ export const Header: React.FC = () => {
             />
           ) : (
             <div className="h-6 w-6 lg:h-8 lg:w-8 flex items-center justify-center hidden sm:flex" style={{
-              color: 'var(--custom-text)'
+              color: 'var(--app-text)'
             }}>
               <span className="font-bold text-xs lg:text-sm">
                 {companySettings.name.charAt(0)}
@@ -99,7 +100,7 @@ export const Header: React.FC = () => {
             </div>
           )}
           <h1 className="text-base lg:text-xl font-semibold truncate" style={{
-            color: 'var(--custom-text)'
+            color: 'var(--app-text)'
           }}>
             {companySettings.name}
           </h1>
@@ -109,7 +110,7 @@ export const Header: React.FC = () => {
           <div className="flex items-center space-x-1 lg:space-x-2">
             <ThemeToggle />
             
-            {/* NOTIFICATION BUTTON - POPUP RELATIF */}
+            {/* NOTIFICATION BUTTON - POPUP FIXE EN HAUT À DROITE */}
             <div className="relative">
               <Button
                 variant="ghost"
@@ -117,7 +118,7 @@ export const Header: React.FC = () => {
                 onClick={handleNotificationClick}
                 className="relative notification-button"
                 style={{
-                  color: 'var(--custom-text)',
+                  color: 'var(--app-text)',
                   background: 'transparent'
                 }}
               >
@@ -134,13 +135,6 @@ export const Header: React.FC = () => {
                   </Badge>
                 )}
               </Button>
-              
-              {/* NOTIFICATION POPUP - POSITION RELATIVE AU BOUTON */}
-              {showNotifications && (
-                <div className="notification-popup">
-                  <NotificationCenter onClose={() => setShowNotifications(false)} />
-                </div>
-              )}
             </div>
           </div>
 
@@ -148,13 +142,13 @@ export const Header: React.FC = () => {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="flex items-center space-x-2 h-8 px-2 lg:px-3" style={{
-                color: 'var(--custom-text)'
+                color: 'var(--app-text)'
               }}>
                 <Avatar className="h-6 w-6 lg:h-8 lg:w-8">
                   <AvatarImage src={currentUser?.avatar} alt={currentUser?.name} />
                   <AvatarFallback className="text-xs" style={{
-                    background: 'var(--custom-buttonBg)',
-                    color: 'var(--custom-buttonText)'
+                    background: 'var(--app-button-bg)',
+                    color: 'var(--app-button-text)'
                   }}>
                     {currentUser?.name?.split(' ').map(n => n[0]).join('') || 'U'}
                   </AvatarFallback>
@@ -166,39 +160,46 @@ export const Header: React.FC = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end" forceMount style={{
-              background: 'var(--custom-cardBg)',
-              color: 'var(--custom-cardText)',
+              background: 'var(--app-card-bg)',
+              color: 'var(--app-card-text)',
               border: '1px solid rgba(0,0,0,0.1)',
               zIndex: 9999
             }}>
               <div className="px-3 py-2 border-b" style={{ borderColor: 'rgba(0,0,0,0.1)' }}>
-                <p className="text-sm font-medium" style={{ color: 'var(--custom-cardText)' }}>
+                <p className="text-sm font-medium" style={{ color: 'var(--app-card-text)' }}>
                   {currentUser?.name || 'Utilisateur'}
                 </p>
-                <p className="text-xs opacity-70" style={{ color: 'var(--custom-cardText)' }}>
+                <p className="text-xs opacity-70" style={{ color: 'var(--app-card-text)' }}>
                   {currentUser?.email || 'email@exemple.com'}
                 </p>
               </div>
               <DropdownMenuItem onClick={() => setShowUserProfile(true)} style={{
-                color: 'var(--custom-cardText)'
+                color: 'var(--app-card-text)'
               }}>
                 <User className="mr-2 h-4 w-4" />
                 <span>Profil & Préférences</span>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link to="/messagerie" style={{ color: 'var(--custom-cardText)' }}>
+                <Link to="/messagerie" style={{ color: 'var(--app-card-text)' }}>
                   <MessageSquare className="mr-2 h-4 w-4" />
                   <span>Messages</span>
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator style={{ borderColor: 'rgba(0,0,0,0.1)' }} />
-              <DropdownMenuItem style={{ color: 'var(--custom-cardText)' }}>
+              <DropdownMenuItem style={{ color: 'var(--app-card-text)' }}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Déconnexion</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+
+        {/* NOTIFICATION POPUP EN POSITION FIXE */}
+        {showNotifications && (
+          <div className="notification-popup">
+            <NotificationCenter onClose={() => setShowNotifications(false)} />
+          </div>
+        )}
 
         {showUserProfile && (
           <UserProfile onClose={() => setShowUserProfile(false)} />

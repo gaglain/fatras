@@ -24,13 +24,11 @@ interface ThemeProviderProps {
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const [theme, setTheme] = useState<Theme>(() => {
-    // Check localStorage first, then system preference
     const savedTheme = localStorage.getItem('theme') as Theme;
     if (savedTheme) {
       return savedTheme;
     }
     
-    // Check system preference
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
       return 'dark';
     }
@@ -38,71 +36,85 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     return 'light';
   });
 
-  // Fonction pour appliquer les couleurs personnalisées
+  // Fonction pour appliquer les couleurs personnalisées IMMÉDIATEMENT
   const applyCustomColors = (currentTheme: Theme) => {
     const savedColors = localStorage.getItem('customColors');
+    const root = document.documentElement;
+    
     if (savedColors) {
       try {
         const colors = JSON.parse(savedColors);
-        const root = document.documentElement;
-        
-        // Appliquer les couleurs selon le thème
         const isDark = currentTheme === 'dark';
-        root.style.setProperty('--custom-background', isDark ? colors.backgroundDark : colors.background);
-        root.style.setProperty('--custom-text', isDark ? colors.textDark : colors.text);
-        root.style.setProperty('--custom-cardBg', isDark ? colors.cardBgDark : colors.cardBg);
-        root.style.setProperty('--custom-cardText', isDark ? colors.cardTextDark : colors.cardText);
-        root.style.setProperty('--custom-buttonBg', isDark ? colors.buttonBgDark : colors.buttonBg);
-        root.style.setProperty('--custom-buttonText', isDark ? colors.buttonTextDark : colors.buttonText);
-        root.style.setProperty('--custom-chatWidgetBg', colors.chatWidgetBg);
-        root.style.setProperty('--custom-chatWidgetIcon', colors.chatWidgetIcon);
         
-        console.log('Custom colors applied for theme:', currentTheme);
+        // Application IMMÉDIATE et FORCÉE des couleurs
+        root.style.setProperty('--app-background', isDark ? colors.backgroundDark : colors.background);
+        root.style.setProperty('--app-text', isDark ? colors.textDark : colors.text);
+        root.style.setProperty('--app-card-bg', isDark ? colors.cardBgDark : colors.cardBg);
+        root.style.setProperty('--app-card-text', isDark ? colors.cardTextDark : colors.cardText);
+        root.style.setProperty('--app-button-bg', isDark ? colors.buttonBgDark : colors.buttonBg);
+        root.style.setProperty('--app-button-text', isDark ? colors.buttonTextDark : colors.buttonText);
+        root.style.setProperty('--app-chat-widget-bg', colors.chatWidgetBg);
+        root.style.setProperty('--app-chat-widget-icon', colors.chatWidgetIcon);
+        
+        console.log('✅ Custom colors applied IMMEDIATELY for theme:', currentTheme, colors);
       } catch (error) {
-        console.error('Error applying custom colors:', error);
+        console.error('❌ Error applying custom colors:', error);
       }
+    } else {
+      // Appliquer les couleurs par défaut selon le thème
+      const isDark = currentTheme === 'dark';
+      root.style.setProperty('--app-background', isDark ? '#18181b' : '#ffffff');
+      root.style.setProperty('--app-text', isDark ? '#ffffff' : '#18181b');
+      root.style.setProperty('--app-card-bg', isDark ? '#22223a' : '#ffffff');
+      root.style.setProperty('--app-card-text', isDark ? '#ffffff' : '#18181b');
+      root.style.setProperty('--app-button-bg', isDark ? '#ffffff' : '#1632f4');
+      root.style.setProperty('--app-button-text', isDark ? '#1632f4' : '#ffffff');
+      root.style.setProperty('--app-chat-widget-bg', '#ec5f65');
+      root.style.setProperty('--app-chat-widget-icon', '#ffffff');
+      
+      console.log('✅ Default colors applied for theme:', currentTheme);
     }
+    
+    // FORCER la re-application des styles
+    root.style.setProperty('--force-update', Date.now().toString());
   };
 
   useEffect(() => {
     const root = window.document.documentElement;
     
-    // Remove previous theme classes
+    // SUPPRIMER toutes les classes de thème
     root.classList.remove('light', 'dark');
     
-    // Add current theme class
+    // AJOUTER la classe du thème actuel
     root.classList.add(theme);
     
-    // Save to localStorage
+    // SAUVEGARDER en localStorage
     localStorage.setItem('theme', theme);
     
-    // Appliquer les couleurs personnalisées
+    // APPLIQUER les couleurs personnalisées IMMÉDIATEMENT
     applyCustomColors(theme);
     
-    // Optimisation éco-conception : réduire les animations en mode sombre pour économiser l'énergie
-    if (theme === 'dark') {
-      root.style.setProperty('--animation-reduce-factor', '0.5');
-    } else {
-      root.style.removeProperty('--animation-reduce-factor');
-    }
+    // AJOUTER l'attribut data-theme pour forcer l'application CSS
+    root.setAttribute('data-theme', theme);
     
-    console.log('Theme applied:', theme, 'Classes on html:', root.className);
+    console.log('🎨 Theme applied:', theme, 'HTML classes:', root.className);
   }, [theme]);
 
   // Écouter les changements de couleurs personnalisées
   useEffect(() => {
-    const handleColorsChanged = (event: CustomEvent) => {
+    const handleColorsChanged = () => {
+      console.log('🔄 Colors changed event detected, reapplying...');
       applyCustomColors(theme);
     };
 
-    window.addEventListener('colorsChanged', handleColorsChanged as EventListener);
-    return () => window.removeEventListener('colorsChanged', handleColorsChanged as EventListener);
+    window.addEventListener('colorsChanged', handleColorsChanged);
+    return () => window.removeEventListener('colorsChanged', handleColorsChanged);
   }, [theme]);
 
   const toggleTheme = () => {
     setTheme(prevTheme => {
       const newTheme = prevTheme === 'light' ? 'dark' : 'light';
-      console.log('Toggling theme from', prevTheme, 'to', newTheme);
+      console.log('🔄 Toggling theme from', prevTheme, 'to', newTheme);
       return newTheme;
     });
   };
