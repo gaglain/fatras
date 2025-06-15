@@ -291,17 +291,20 @@ export const ChatWidget: React.FC = () => {
         </div>
       )}
       
-      {/* Widget button - ROND et ROSE */}
+      {/* Widget button - ROND et ROSE OBLIGATOIRE */}
       <Button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-14 h-14 rounded-full shadow-lg hover:scale-105 transition-all duration-200"
+        className="rounded-full shadow-lg hover:scale-105 transition-all duration-200"
         style={{
-          background: '#ec5f65',
-          color: '#ffffff',
-          border: 'none',
-          borderRadius: '50%',
-          minWidth: '56px',
-          minHeight: '56px'
+          background: '#ec5f65 !important',
+          color: '#ffffff !important',
+          border: 'none !important',
+          borderRadius: '50% !important',
+          width: '56px !important',
+          height: '56px !important',
+          minWidth: '56px !important',
+          minHeight: '56px !important',
+          padding: '0 !important'
         }}
       >
         <MessageSquare className="h-6 w-6" />

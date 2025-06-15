@@ -121,7 +121,8 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
         background: 'var(--custom-cardBg)',
         color: 'var(--custom-cardText)',
         borderRadius: '12px',
-        boxShadow: '0 10px 25px rgba(0,0,0,0.15)'
+        boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
+        zIndex: 9999
       }}
     >
       <CardHeader className="pb-2">

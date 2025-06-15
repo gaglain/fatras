@@ -53,7 +53,7 @@ export const Header: React.FC = () => {
     e.preventDefault();
     e.stopPropagation();
     console.log('Notification clicked, current state:', showNotifications);
-    setShowNotifications(!showNotifications);
+    setShowNotifications(prev => !prev);
     if (!showNotifications) {
       setUnreadCount(0);
     }
@@ -173,7 +173,8 @@ export const Header: React.FC = () => {
             <DropdownMenuContent className="w-56" align="end" forceMount style={{
               background: 'var(--custom-cardBg)',
               color: 'var(--custom-cardText)',
-              border: '1px solid rgba(0,0,0,0.1)'
+              border: '1px solid rgba(0,0,0,0.1)',
+              zIndex: 9999
             }}>
               <div className="px-3 py-2 border-b" style={{ borderColor: 'rgba(0,0,0,0.1)' }}>
                 <p className="text-sm font-medium" style={{ color: 'var(--custom-cardText)' }}>
