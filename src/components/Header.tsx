@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -74,7 +75,7 @@ export const Header: React.FC = () => {
 
   return (
     <>
-      <div className="border-b shadow-sm bg-background">
+      <div className="border-b shadow-sm bg-background relative">
         <div className="flex h-16 items-center justify-between px-4 lg:px-6">
           <div className="flex items-center space-x-2 lg:space-x-4 min-w-0">
             <SidebarTrigger />
@@ -120,6 +121,15 @@ export const Header: React.FC = () => {
                     </Badge>
                   )}
                 </Button>
+
+                {/* NOTIFICATION POPUP - POSITION ABSOLUE */}
+                {showNotifications && (
+                  <div 
+                    className="notification-popup absolute top-full right-0 mt-2 z-[9999] w-96 max-w-[90vw]"
+                  >
+                    <NotificationCenter onClose={() => setShowNotifications(false)} />
+                  </div>
+                )}
               </div>
             </div>
 
@@ -172,15 +182,6 @@ export const Header: React.FC = () => {
           )}
         </div>
       </div>
-
-      {/* NOTIFICATION POPUP - POSITION FIXE */}
-      {showNotifications && (
-        <div 
-          className="notification-popup fixed top-20 right-4 z-[9999] w-96 max-w-[90vw]"
-        >
-          <NotificationCenter onClose={() => setShowNotifications(false)} />
-        </div>
-      )}
     </>
   );
 };

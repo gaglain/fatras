@@ -16,9 +16,9 @@ export const ThemeToggle: React.FC = () => {
       title={`Basculer vers le mode ${theme === 'light' ? 'sombre' : 'clair'}`}
     >
       {theme === 'light' ? (
-        <Moon className="h-4 w-4 text-gray-700 dark:text-gray-300" />
+        <Moon className="h-4 w-4 text-gray-700" />
       ) : (
-        <Sun className="h-4 w-4 text-yellow-500" />
+        <Sun className="h-4 w-4 text-white" />
       )}
       <span className="sr-only">Basculer le thème</span>
     </Button>
