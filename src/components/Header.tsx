@@ -50,14 +50,16 @@ export const Header: React.FC = () => {
   }, []);
 
   const toggleNotifications = () => {
-    console.log('🔔 Toggle notifications clicked! Current state:', showNotifications);
-    setShowNotifications(prev => {
-      const newState = !prev;
-      console.log('🔔 Setting showNotifications to:', newState);
-      return newState;
-    });
-    if (!showNotifications) {
+    console.log('🔔 CLICK DETECTED! Current showNotifications state:', showNotifications);
+    const newState = !showNotifications;
+    console.log('🔔 Setting showNotifications to:', newState);
+    setShowNotifications(newState);
+    
+    if (newState) {
+      console.log('🔔 Notifications should now be VISIBLE');
       setUnreadCount(0);
+    } else {
+      console.log('🔔 Notifications should now be HIDDEN');
     }
   };
 
@@ -80,7 +82,7 @@ export const Header: React.FC = () => {
     };
   }, [showNotifications]);
 
-  console.log('🔔 Header render - showNotifications:', showNotifications);
+  console.log('🔔 Header RENDER - showNotifications state is:', showNotifications);
 
   return (
     <>
@@ -130,28 +132,6 @@ export const Header: React.FC = () => {
                     </Badge>
                   )}
                 </Button>
-                
-                {/* Notification Popup - Utilisation d'un portail avec z-index très élevé */}
-                {showNotifications && (
-                  <div 
-                    className="fixed top-16 right-4 z-[9999]"
-                    style={{ 
-                      position: 'fixed',
-                      top: '64px',
-                      right: '16px',
-                      zIndex: 9999
-                    }}
-                  >
-                    <div className="animate-in slide-in-from-top-2 duration-200">
-                      <NotificationCenter 
-                        onClose={() => {
-                          console.log('🔔 NotificationCenter onClose called');
-                          setShowNotifications(false);
-                        }} 
-                      />
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
 
@@ -204,6 +184,29 @@ export const Header: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Notification Popup - EN DEHORS DU HEADER POUR ÉVITER LES CONFLITS */}
+      {showNotifications && (
+        <div 
+          className="notification-container fixed top-16 right-4 z-[9999] pointer-events-auto"
+          style={{ 
+            position: 'fixed',
+            top: '64px',
+            right: '16px',
+            zIndex: 9999,
+            pointerEvents: 'auto'
+          }}
+        >
+          <div className="animate-in slide-in-from-top-2 duration-200">
+            <NotificationCenter 
+              onClose={() => {
+                console.log('🔔 NotificationCenter onClose called from Header');
+                setShowNotifications(false);
+              }} 
+            />
+          </div>
+        </div>
+      )}
     </>
   );
 };

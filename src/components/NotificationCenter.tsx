@@ -55,7 +55,7 @@ interface NotificationCenterProps {
 }
 
 export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose }) => {
-  console.log('🔔 NotificationCenter component rendered');
+  console.log('🔔 NotificationCenter component is RENDERING NOW!');
   
   const [notifications, setNotifications] = useState<Notification[]>(sampleNotifications);
   const navigate = useNavigate();
@@ -117,10 +117,10 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
   };
 
   return (
-    <Card className="w-96 max-w-[90vw] shadow-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-      <CardHeader className="pb-2 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
+    <div className="w-96 max-w-[90vw] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-2xl">
+      <div className="p-4 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 rounded-t-lg">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg flex items-center text-gray-900 dark:text-white">
+          <div className="text-lg flex items-center text-gray-900 dark:text-white font-semibold">
             <Bell className="h-5 w-5 mr-2" />
             Notifications
             {unreadCount > 0 && (
@@ -128,7 +128,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
                 {unreadCount}
               </Badge>
             )}
-          </CardTitle>
+          </div>
           <Button 
             variant="ghost" 
             size="sm" 
@@ -146,13 +146,13 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
             variant="outline" 
             size="sm" 
             onClick={markAllAsRead}
-            className="self-end mt-2"
+            className="mt-2"
           >
             Tout marquer comme lu
           </Button>
         )}
-      </CardHeader>
-      <CardContent className="max-h-96 overflow-y-auto bg-white dark:bg-gray-800 p-4">
+      </div>
+      <div className="max-h-96 overflow-y-auto bg-white dark:bg-gray-800 p-4 rounded-b-lg">
         {notifications.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <Bell className="h-12 w-12 mx-auto mb-3" />
@@ -200,7 +200,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
             ))}
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
