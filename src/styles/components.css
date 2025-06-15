@@ -1,4 +1,5 @@
 
+
 @layer components {
   /* Application universelle du thème personnalisé */
   
@@ -98,6 +99,10 @@
     background: var(--custom-chatWidgetBg) !important;
     color: var(--custom-chatWidgetIcon) !important;
     border-radius: 50% !important;
+    width: 56px !important;
+    height: 56px !important;
+    min-width: 56px !important;
+    min-height: 56px !important;
   }
 
   /* Transitions douces */
@@ -137,3 +142,4 @@
     color: var(--sidebar-accent-foreground) !important;
   }
 }
+
