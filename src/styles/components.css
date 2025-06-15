@@ -8,7 +8,7 @@
   #root,
   .min-h-screen,
   main,
-  div:not([data-notification-popup]):not(.chat-widget-button):not(.chat-widget-popup):not([role="dialog"]):not([data-radix-portal]),
+  div:not(.chat-widget-button):not(.chat-widget-popup):not([role="dialog"]):not([data-radix-portal]),
   section,
   article,
   aside,
@@ -18,23 +18,23 @@
   }
 
   /* PAGES SPÉCIFIQUES - FORCE MAXIMALE */
-  [data-route="/dashboard"] *:not([data-notification-popup]):not(.chat-widget-button):not(.chat-widget-popup),
-  [data-route="/admin"] *:not([data-notification-popup]):not(.chat-widget-button):not(.chat-widget-popup),
-  [data-route="/artists"] *:not([data-notification-popup]):not(.chat-widget-button):not(.chat-widget-popup),
-  [data-route="/events"] *:not([data-notification-popup]):not(.chat-widget-button):not(.chat-widget-popup),
-  [data-route="/contacts"] *:not([data-notification-popup]):not(.chat-widget-button):not(.chat-widget-popup),
-  [data-route="/messagerie"] *:not([data-notification-popup]):not(.chat-widget-button):not(.chat-widget-popup),
-  [data-route="/publication-calendar"] *:not([data-notification-popup]):not(.chat-widget-button):not(.chat-widget-popup),
-  [data-route="/tasks"] *:not([data-notification-popup]):not(.chat-widget-button):not(.chat-widget-popup),
-  [data-route="/preferences"] *:not([data-notification-popup]):not(.chat-widget-button):not(.chat-widget-popup),
-  [data-route="/application"] *:not([data-notification-popup]):not(.chat-widget-button):not(.chat-widget-popup) {
+  [data-route="/dashboard"] *:not(.chat-widget-button):not(.chat-widget-popup),
+  [data-route="/admin"] *:not(.chat-widget-button):not(.chat-widget-popup),
+  [data-route="/artists"] *:not(.chat-widget-button):not(.chat-widget-popup),
+  [data-route="/events"] *:not(.chat-widget-button):not(.chat-widget-popup),
+  [data-route="/contacts"] *:not(.chat-widget-button):not(.chat-widget-popup),
+  [data-route="/messagerie"] *:not(.chat-widget-button):not(.chat-widget-popup),
+  [data-route="/publication-calendar"] *:not(.chat-widget-button):not(.chat-widget-popup),
+  [data-route="/tasks"] *:not(.chat-widget-button):not(.chat-widget-popup),
+  [data-route="/preferences"] *:not(.chat-widget-button):not(.chat-widget-popup),
+  [data-route="/application"] *:not(.chat-widget-button):not(.chat-widget-popup) {
     background: var(--app-background) !important;
     color: var(--app-text) !important;
   }
 
   /* LAYOUTS ADMIN - FORCE */
   .admin-layout,
-  .admin-layout *:not(.chat-widget-button):not(.chat-widget-popup):not([data-notification-popup]):not([role="dialog"]) {
+  .admin-layout *:not(.chat-widget-button):not(.chat-widget-popup):not([role="dialog"]) {
     background: var(--app-background) !important;
     color: var(--app-text) !important;
   }
@@ -51,13 +51,13 @@
     color: var(--app-text) !important;
   }
 
-  /* CARTES - FORCE COMPLÈTE SAUF NOTIFICATIONS ET CHAT */
-  .card:not([data-notification-popup]):not(.chat-widget-popup),
-  [class*="card"]:not([data-notification-popup]):not(.chat-widget-button):not(.chat-widget-popup),
-  .bg-white:not([data-notification-popup]):not(.chat-widget-button):not(.chat-widget-popup),
-  .bg-gray-50:not([data-notification-popup]):not(.chat-widget-button):not(.chat-widget-popup),
-  .bg-card:not([data-notification-popup]):not(.chat-widget-button):not(.chat-widget-popup),
-  [data-testid*="card"]:not([data-notification-popup]):not(.chat-widget-popup) {
+  /* CARTES - FORCE COMPLÈTE SAUF CHAT */
+  .card:not(.chat-widget-popup),
+  [class*="card"]:not(.chat-widget-button):not(.chat-widget-popup),
+  .bg-white:not(.chat-widget-button):not(.chat-widget-popup),
+  .bg-gray-50:not(.chat-widget-button):not(.chat-widget-popup),
+  .bg-card:not(.chat-widget-button):not(.chat-widget-popup),
+  [data-testid*="card"]:not(.chat-widget-popup) {
     background: var(--app-card-bg) !important;
     color: var(--app-card-text) !important;
     border: 1px solid rgba(0,0,0,0.1) !important;
@@ -65,40 +65,19 @@
     border-radius: 0.75rem !important;
   }
 
-  /* BOUTONS - FORCE ABSOLUE SAUF NOTIFICATION ET CHAT */
-  button:not(.chat-widget-button):not(.notification-btn):not([data-dialog-close]):not(.theme-toggle-button), 
-  .btn:not(.chat-widget-button):not(.notification-btn):not(.theme-toggle-button),
-  [role="button"]:not(.chat-widget-button):not(.theme-toggle-button):not(.notification-btn),
+  /* BOUTONS - FORCE ABSOLUE SAUF CHAT */
+  button:not(.chat-widget-button):not(.theme-toggle-button), 
+  .btn:not(.chat-widget-button):not(.theme-toggle-button),
+  [role="button"]:not(.chat-widget-button):not(.theme-toggle-button),
   input[type="button"]:not(.chat-widget-button),
   input[type="submit"]:not(.chat-widget-button),
-  .bg-primary:not(.chat-widget-button):not(.theme-toggle-button):not(.notification-btn),
-  [class*="bg-blue"]:not(.chat-widget-button):not(.theme-toggle-button):not(.notification-btn) {
+  .bg-primary:not(.chat-widget-button):not(.theme-toggle-button),
+  [class*="bg-blue"]:not(.chat-widget-button):not(.theme-toggle-button) {
     background: var(--app-button-bg) !important;
     color: var(--app-button-text) !important;
     border: 1px solid var(--app-button-bg) !important;
     border-radius: 0.5rem !important;
     transition: all 0.2s ease !important;
-  }
-
-  /* NOTIFICATION BUTTON - STYLE SPÉCIFIQUE ET FONCTIONNEL */
-  .notification-btn {
-    background: transparent !important;
-    background-color: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    color: var(--app-text) !important;
-    cursor: pointer !important;
-    outline: none !important;
-  }
-
-  .notification-btn:hover {
-    background: rgba(0,0,0,0.05) !important;
-    background-color: rgba(0,0,0,0.05) !important;
-  }
-
-  .notification-btn:focus {
-    outline: none !important;
-    box-shadow: none !important;
   }
 
   /* THEME TOGGLE BUTTON - FORCE ABSOLUE */
@@ -136,34 +115,6 @@
     color: var(--app-text) !important;
     border: 1px solid var(--app-button-bg) !important;
     border-radius: 0.5rem !important;
-  }
-
-  /* NOTIFICATION POPUP - STYLES SPÉCIFIQUES SIMPLIFIÉS */
-  [data-notification-popup] {
-    background: white !important;
-    border: 1px solid #e5e7eb !important;
-    border-radius: 12px !important;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.25) !important;
-    position: relative !important;
-    z-index: 9999 !important;
-    width: 400px !important;
-    max-width: 90vw !important;
-    pointer-events: auto !important;
-  }
-
-  /* NOTIFICATION POPUP EN MODE SOMBRE */
-  .dark [data-notification-popup] {
-    background: #1f2937 !important;
-    border-color: #374151 !important;
-  }
-
-  /* TOUT LE CONTENU DE LA NOTIFICATION POPUP */
-  [data-notification-popup] * {
-    color: #1f2937 !important;
-  }
-
-  .dark [data-notification-popup] * {
-    color: #ffffff !important;
   }
 
   /* CHAT WIDGET - FIXE ET ROSE */
@@ -227,9 +178,9 @@
   .dropdown-menu,
   .select-content,
   .popover-content,
-  [role="menu"]:not([data-notification-popup]),
-  [role="listbox"]:not([data-notification-popup]),
-  [data-radix-popper-content-wrapper]:not([data-notification-popup]) {
+  [role="menu"],
+  [role="listbox"],
+  [data-radix-popper-content-wrapper] {
     background: var(--app-card-bg) !important;
     color: var(--app-card-text) !important;
     border: 1px solid rgba(0,0,0,0.1) !important;
@@ -250,7 +201,7 @@
   }
 
   /* TRANSITIONS DOUCES */
-  *:not([data-notification-popup]):not(.chat-widget-button):not(.chat-widget-popup):not(.theme-toggle-button):not(.notification-btn) {
+  *:not(.chat-widget-button):not(.chat-widget-popup):not(.theme-toggle-button) {
     transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease !important;
   }
 

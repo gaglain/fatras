@@ -55,15 +55,12 @@ interface NotificationCenterProps {
 }
 
 export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose }) => {
-  console.log('🔔 NotificationCenter component rendered');
-  
   const [notifications, setNotifications] = useState<Notification[]>(sampleNotifications);
   const navigate = useNavigate();
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   const markAsRead = (id: string) => {
-    console.log('🔔 Marking notification as read:', id);
     setNotifications(prev => 
       prev.map(notification => 
         notification.id === id 
@@ -74,24 +71,17 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
   };
 
   const markAllAsRead = () => {
-    console.log('🔔 Marking all notifications as read');
     setNotifications(prev => 
       prev.map(notification => ({ ...notification, isRead: true }))
     );
   };
 
   const handleNotificationClick = (notification: Notification) => {
-    console.log('🔔 Notification clicked:', notification);
     markAsRead(notification.id);
     if (notification.linkTo) {
       navigate(notification.linkTo);
       onClose();
     }
-  };
-
-  const handleCloseClick = () => {
-    console.log('🔔 Close button clicked');
-    onClose();
   };
 
   const getIcon = (type: string) => {
@@ -125,33 +115,19 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
   };
 
   return (
-    <Card 
-      className="w-96 max-w-[90vw] shadow-xl bg-background text-foreground border"
-      data-notification-popup
-      style={{
-        minWidth: '350px',
-        maxWidth: '400px'
-      }}
-    >
+    <Card className="w-96 max-w-[90vw] shadow-xl bg-background border">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg flex items-center text-foreground">
+          <CardTitle className="text-lg flex items-center">
             <Bell className="h-5 w-5 mr-2" />
             Notifications
             {unreadCount > 0 && (
-              <Badge 
-                className="ml-2 bg-red-500 text-white border-0"
-              >
+              <Badge className="ml-2 bg-red-500 text-white">
                 {unreadCount}
               </Badge>
             )}
           </CardTitle>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={handleCloseClick} 
-            className="text-foreground hover:bg-accent"
-          >
+          <Button variant="ghost" size="sm" onClick={onClose}>
             <X className="h-4 w-4" />
           </Button>
         </div>
@@ -159,8 +135,8 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={markAllAsRead} 
-            className="self-end border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+            onClick={markAllAsRead}
+            className="self-end"
           >
             Tout marquer comme lu
           </Button>
@@ -177,7 +153,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
             {notifications.map((notification) => (
               <div
                 key={notification.id}
-                className={`p-3 border transition-all duration-200 cursor-pointer hover:shadow-md rounded-lg ${
+                className={`p-3 border rounded-lg transition-all duration-200 cursor-pointer hover:shadow-md ${
                   !notification.isRead 
                     ? 'border-primary bg-primary/5' 
                     : 'border-border bg-card hover:bg-accent'
@@ -190,7 +166,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
-                      <p className="text-sm font-medium truncate text-foreground">
+                      <p className="text-sm font-medium truncate">
                         {notification.title}
                       </p>
                       <div className="flex items-center space-x-2">

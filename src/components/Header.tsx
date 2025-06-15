@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -49,51 +48,12 @@ export const Header: React.FC = () => {
     };
   }, []);
 
-  const handleNotificationClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log('🔔 Notification button clicked - FIXED VERSION!');
-    console.log('🔔 Current showNotifications state:', showNotifications);
-    
-    setShowNotifications(prev => {
-      const newState = !prev;
-      console.log('🔔 Setting showNotifications to:', newState);
-      return newState;
-    });
-    
+  const toggleNotifications = () => {
+    setShowNotifications(prev => !prev);
     if (!showNotifications) {
-      console.log('🔔 Resetting unread count to 0');
       setUnreadCount(0);
     }
   };
-
-  useEffect(() => {
-    console.log('🔔 showNotifications changed to:', showNotifications);
-  }, [showNotifications]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Element;
-      console.log('🔔 Click outside detected, target:', target);
-      
-      if (showNotifications && 
-          !target.closest('[data-notification-popup]') && 
-          !target.closest('.notification-btn')) {
-        console.log('🔔 Closing notifications popup due to outside click');
-        setShowNotifications(false);
-      }
-    };
-
-    if (showNotifications) {
-      console.log('🔔 Adding click outside listener');
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    
-    return () => {
-      console.log('🔔 Removing click outside listener');
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showNotifications]);
 
   return (
     <>
@@ -126,17 +86,13 @@ export const Header: React.FC = () => {
             <div className="flex items-center space-x-1 lg:space-x-2">
               <ThemeToggle />
               
-              {/* NOTIFICATION BUTTON - VERSION CORRIGÉE */}
+              {/* Notification Button - Version simplifiée */}
               <div className="relative">
-                <button
-                  onClick={handleNotificationClick}
-                  className="notification-btn relative h-8 w-8 flex items-center justify-center rounded-md hover:bg-accent transition-colors"
-                  style={{
-                    background: 'transparent',
-                    border: 'none',
-                    color: 'var(--foreground)',
-                    cursor: 'pointer'
-                  }}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={toggleNotifications}
+                  className="relative h-8 w-8 p-0"
                 >
                   <Bell className="h-4 w-4" />
                   {unreadCount > 0 && (
@@ -146,26 +102,12 @@ export const Header: React.FC = () => {
                       {unreadCount}
                     </Badge>
                   )}
-                </button>
+                </Button>
 
-                {/* POPUP DE NOTIFICATIONS - VERSION SIMPLIFIÉE */}
+                {/* Popup de notifications */}
                 {showNotifications && (
-                  <div 
-                    className="absolute top-full right-0 mt-2 z-[9999]"
-                    style={{
-                      position: 'absolute',
-                      top: '100%',
-                      right: '0',
-                      marginTop: '8px',
-                      zIndex: 9999
-                    }}
-                  >
-                    <NotificationCenter 
-                      onClose={() => {
-                        console.log('🔔 NotificationCenter onClose called');
-                        setShowNotifications(false);
-                      }} 
-                    />
+                  <div className="absolute top-full right-0 mt-2 z-50">
+                    <NotificationCenter onClose={() => setShowNotifications(false)} />
                   </div>
                 )}
               </div>
