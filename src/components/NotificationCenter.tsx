@@ -17,7 +17,38 @@ interface Notification {
   linkTo?: string;
 }
 
-const sampleNotifications: Notification[] = [];
+const sampleNotifications: Notification[] = [
+  {
+    id: '1',
+    type: 'message',
+    title: 'Nouveau message',
+    message: 'Marie Martin vous a envoyé un message',
+    timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+    isRead: false,
+    priority: 'medium',
+    linkTo: '/messagerie'
+  },
+  {
+    id: '2',
+    type: 'task',
+    title: 'Tâche en retard',
+    message: 'Finaliser le contrat pour la tournée d\'été',
+    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    isRead: false,
+    priority: 'high',
+    linkTo: '/tasks'
+  },
+  {
+    id: '3',
+    type: 'event',
+    title: 'Événement à venir',
+    message: 'Concert prévu demain à 20h',
+    timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+    isRead: true,
+    priority: 'medium',
+    linkTo: '/events'
+  }
+];
 
 interface NotificationCenterProps {
   onClose: () => void;
@@ -84,10 +115,19 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
   };
 
   return (
-    <Card className="w-96 shadow-lg">
-      <CardHeader className="pb-3">
+    <Card className="w-96 shadow-lg" style={{
+      background: 'var(--custom-cardBg)',
+      color: 'var(--custom-cardText)',
+      border: '1px solid rgba(0,0,0,0.1)'
+    }}>
+      <CardHeader className="pb-2" style={{
+        background: 'var(--custom-cardBg)',
+        color: 'var(--custom-cardText)'
+      }}>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg flex items-center">
+          <CardTitle className="text-lg flex items-center" style={{
+            color: 'var(--custom-cardText)'
+          }}>
             <Bell className="h-5 w-5 mr-2" />
             Notifications
             {unreadCount > 0 && (
@@ -96,12 +136,23 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
               </Badge>
             )}
           </CardTitle>
-          <Button variant="ghost" size="sm" onClick={onClose}>
+          <Button variant="ghost" size="sm" onClick={onClose} style={{
+            color: 'var(--custom-cardText)'
+          }}>
             <X className="h-4 w-4" />
           </Button>
         </div>
         {notifications.length > 0 && (
-          <Button variant="outline" size="sm" onClick={markAllAsRead} className="self-end">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={markAllAsRead} 
+            className="self-end"
+            style={{
+              borderColor: 'var(--custom-buttonBg)',
+              color: 'var(--custom-buttonBg)'
+            }}
+          >
             Tout marquer comme lu
           </Button>
         )}
@@ -117,18 +168,26 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
             {notifications.map((notification) => (
               <div
                 key={notification.id}
-                className={`p-3 border transition-colors cursor-pointer hover:bg-accent ${
-                  !notification.isRead ? 'bg-blue-50 border-blue-200' : 'border-border'
+                className={`p-3 border transition-colors cursor-pointer hover:opacity-80 rounded-lg ${
+                  !notification.isRead ? 'border-blue-200' : 'border-border'
                 }`}
                 onClick={() => handleNotificationClick(notification)}
+                style={{
+                  background: !notification.isRead 
+                    ? 'rgba(var(--custom-buttonBg), 0.05)' 
+                    : 'var(--custom-cardBg)',
+                  borderColor: !notification.isRead 
+                    ? 'var(--custom-buttonBg)' 
+                    : 'rgba(0,0,0,0.1)'
+                }}
               >
                 <div className="flex items-start space-x-3">
-                  <div className="mt-1 opacity-70">
+                  <div className="mt-1 opacity-70" style={{ color: 'var(--custom-cardText)' }}>
                     {getIcon(notification.type)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
-                      <p className="text-sm font-medium truncate">
+                      <p className="text-sm font-medium truncate" style={{ color: 'var(--custom-cardText)' }}>
                         {notification.title}
                       </p>
                       <div className="flex items-center space-x-2">
@@ -136,14 +195,14 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
                           {notification.priority}
                         </Badge>
                         {!notification.isRead && (
-                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                          <div className="w-2 h-2 rounded-full" style={{ background: 'var(--custom-buttonBg)' }}></div>
                         )}
                       </div>
                     </div>
-                    <p className="text-sm line-clamp-2 opacity-70">
+                    <p className="text-sm line-clamp-2 opacity-70" style={{ color: 'var(--custom-cardText)' }}>
                       {notification.message}
                     </p>
-                    <p className="text-xs mt-1 opacity-50">
+                    <p className="text-xs mt-1 opacity-50" style={{ color: 'var(--custom-cardText)' }}>
                       {formatTime(notification.timestamp)}
                     </p>
                   </div>
