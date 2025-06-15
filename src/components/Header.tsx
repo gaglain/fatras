@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -60,7 +61,7 @@ export const Header: React.FC = () => {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;
-      if (showNotifications && !target.closest('.notification-popup') && !target.closest('.notification-button')) {
+      if (showNotifications && !target.closest('[data-notification-popup]') && !target.closest('[data-notification-button]')) {
         setShowNotifications(false);
       }
     };
@@ -103,13 +104,14 @@ export const Header: React.FC = () => {
             <div className="flex items-center space-x-1 lg:space-x-2">
               <ThemeToggle />
               
-              {/* NOTIFICATION BUTTON AVEC POPUP SIMPLIFIÉE */}
+              {/* NOTIFICATION BUTTON AVEC POPUP */}
               <div className="relative">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={handleNotificationClick}
                   className="relative notification-button"
+                  data-notification-button
                 >
                   <Bell className="h-4 w-4" />
                   {unreadCount > 0 && (
@@ -121,9 +123,19 @@ export const Header: React.FC = () => {
                   )}
                 </Button>
 
-                {/* POPUP DE NOTIFICATIONS - SIMPLE ET DIRECT */}
+                {/* POPUP DE NOTIFICATIONS */}
                 {showNotifications && (
-                  <div className="notification-popup">
+                  <div 
+                    className="absolute top-full right-0 mt-2 z-[9999]"
+                    data-notification-popup
+                    style={{
+                      position: 'absolute',
+                      top: '100%',
+                      right: '0',
+                      marginTop: '8px',
+                      zIndex: 9999
+                    }}
+                  >
                     <NotificationCenter onClose={() => setShowNotifications(false)} />
                   </div>
                 )}

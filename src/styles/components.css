@@ -1,4 +1,5 @@
 
+
 @layer components {
   /* APPLICATION FORCÉE DU THÈME SUR TOUTE L'APPLICATION */
   
@@ -8,7 +9,7 @@
   #root,
   .min-h-screen,
   main,
-  div:not(.notification-popup):not(.chat-widget-button):not(.chat-widget-popup):not([role="dialog"]):not([data-radix-portal]),
+  div:not([data-notification-popup]):not(.chat-widget-button):not(.chat-widget-popup):not([role="dialog"]):not([data-radix-portal]),
   section,
   article,
   aside,
@@ -18,23 +19,23 @@
   }
 
   /* PAGES SPÉCIFIQUES - FORCE MAXIMALE */
-  [data-route="/dashboard"] *:not(.notification-popup):not(.chat-widget-button):not(.chat-widget-popup),
-  [data-route="/admin"] *:not(.notification-popup):not(.chat-widget-button):not(.chat-widget-popup),
-  [data-route="/artists"] *:not(.notification-popup):not(.chat-widget-button):not(.chat-widget-popup),
-  [data-route="/events"] *:not(.notification-popup):not(.chat-widget-button):not(.chat-widget-popup),
-  [data-route="/contacts"] *:not(.notification-popup):not(.chat-widget-button):not(.chat-widget-popup),
-  [data-route="/messagerie"] *:not(.notification-popup):not(.chat-widget-button):not(.chat-widget-popup),
-  [data-route="/publication-calendar"] *:not(.notification-popup):not(.chat-widget-button):not(.chat-widget-popup),
-  [data-route="/tasks"] *:not(.notification-popup):not(.chat-widget-button):not(.chat-widget-popup),
-  [data-route="/preferences"] *:not(.notification-popup):not(.chat-widget-button):not(.chat-widget-popup),
-  [data-route="/application"] *:not(.notification-popup):not(.chat-widget-button):not(.chat-widget-popup) {
+  [data-route="/dashboard"] *:not([data-notification-popup]):not(.chat-widget-button):not(.chat-widget-popup),
+  [data-route="/admin"] *:not([data-notification-popup]):not(.chat-widget-button):not(.chat-widget-popup),
+  [data-route="/artists"] *:not([data-notification-popup]):not(.chat-widget-button):not(.chat-widget-popup),
+  [data-route="/events"] *:not([data-notification-popup]):not(.chat-widget-button):not(.chat-widget-popup),
+  [data-route="/contacts"] *:not([data-notification-popup]):not(.chat-widget-button):not(.chat-widget-popup),
+  [data-route="/messagerie"] *:not([data-notification-popup]):not(.chat-widget-button):not(.chat-widget-popup),
+  [data-route="/publication-calendar"] *:not([data-notification-popup]):not(.chat-widget-button):not(.chat-widget-popup),
+  [data-route="/tasks"] *:not([data-notification-popup]):not(.chat-widget-button):not(.chat-widget-popup),
+  [data-route="/preferences"] *:not([data-notification-popup]):not(.chat-widget-button):not(.chat-widget-popup),
+  [data-route="/application"] *:not([data-notification-popup]):not(.chat-widget-button):not(.chat-widget-popup) {
     background: var(--app-background) !important;
     color: var(--app-text) !important;
   }
 
   /* LAYOUTS ADMIN - FORCE */
   .admin-layout,
-  .admin-layout *:not(.chat-widget-button):not(.chat-widget-popup):not(.notification-popup):not([role="dialog"]) {
+  .admin-layout *:not(.chat-widget-button):not(.chat-widget-popup):not([data-notification-popup]):not([role="dialog"]) {
     background: var(--app-background) !important;
     color: var(--app-text) !important;
   }
@@ -52,12 +53,12 @@
   }
 
   /* CARTES - FORCE COMPLÈTE SAUF NOTIFICATIONS ET CHAT */
-  .card:not(.notification-popup):not(.chat-widget-popup),
-  [class*="card"]:not(.notification-popup):not(.chat-widget-button):not(.chat-widget-popup),
-  .bg-white:not(.notification-popup):not(.chat-widget-button):not(.chat-widget-popup),
-  .bg-gray-50:not(.notification-popup):not(.chat-widget-button):not(.chat-widget-popup),
-  .bg-card:not(.notification-popup):not(.chat-widget-button):not(.chat-widget-popup),
-  [data-testid*="card"]:not(.notification-popup):not(.chat-widget-popup) {
+  .card:not([data-notification-popup]):not(.chat-widget-popup),
+  [class*="card"]:not([data-notification-popup]):not(.chat-widget-button):not(.chat-widget-popup),
+  .bg-white:not([data-notification-popup]):not(.chat-widget-button):not(.chat-widget-popup),
+  .bg-gray-50:not([data-notification-popup]):not(.chat-widget-button):not(.chat-widget-popup),
+  .bg-card:not([data-notification-popup]):not(.chat-widget-button):not(.chat-widget-popup),
+  [data-testid*="card"]:not([data-notification-popup]):not(.chat-widget-popup) {
     background: var(--app-card-bg) !important;
     color: var(--app-card-text) !important;
     border: 1px solid rgba(0,0,0,0.1) !important;
@@ -131,12 +132,12 @@
     border-radius: 0.5rem !important;
   }
 
-  /* NOTIFICATION POPUP - STYLES SPÉCIFIQUES ET ISOLÉS */
-  .notification-popup {
+  /* NOTIFICATION POPUP - STYLES SPÉCIFIQUES ET FORCÉS */
+  [data-notification-popup] {
     position: absolute !important;
     top: 100% !important;
     right: 0 !important;
-    z-index: 99999 !important;
+    z-index: 9999 !important;
     width: 400px !important;
     max-width: 90vw !important;
     margin-top: 8px !important;
@@ -147,37 +148,25 @@
     border: 1px solid #e5e7eb !important;
     border-radius: 12px !important;
     box-shadow: 0 20px 50px rgba(0,0,0,0.25) !important;
+    pointer-events: auto !important;
   }
 
   /* NOTIFICATION POPUP EN MODE SOMBRE */
-  .dark .notification-popup {
-    background: #22223a !important;
+  .dark [data-notification-popup] {
+    background: #1f2937 !important;
     border-color: #374151 !important;
   }
 
-  /* CONTENU DE LA NOTIFICATION POPUP */
-  .notification-popup .card {
-    background: inherit !important;
-    border: none !important;
-    box-shadow: none !important;
-    border-radius: inherit !important;
-  }
-
-  .notification-popup h2,
-  .notification-popup p,
-  .notification-popup span,
-  .notification-popup div {
+  /* TOUT LE CONTENU DE LA NOTIFICATION POPUP */
+  [data-notification-popup] * {
     color: #1f2937 !important;
   }
 
-  .dark .notification-popup h2,
-  .dark .notification-popup p,
-  .dark .notification-popup span,
-  .dark .notification-popup div {
+  .dark [data-notification-popup] * {
     color: #ffffff !important;
   }
 
-  /* CHAT WIDGET - FIXE ET ROSE (RESTAURÉ) */
+  /* CHAT WIDGET - FIXE ET ROSE */
   .chat-widget-button {
     background: #ec5f65 !important;
     color: #ffffff !important;
@@ -238,9 +227,9 @@
   .dropdown-menu,
   .select-content,
   .popover-content,
-  [role="menu"]:not(.notification-popup),
-  [role="listbox"]:not(.notification-popup),
-  [data-radix-popper-content-wrapper]:not(.notification-popup) {
+  [role="menu"]:not([data-notification-popup]),
+  [role="listbox"]:not([data-notification-popup]),
+  [data-radix-popper-content-wrapper]:not([data-notification-popup]) {
     background: var(--app-card-bg) !important;
     color: var(--app-card-text) !important;
     border: 1px solid rgba(0,0,0,0.1) !important;
@@ -261,7 +250,7 @@
   }
 
   /* TRANSITIONS DOUCES */
-  *:not(.notification-popup):not(.chat-widget-button):not(.chat-widget-popup):not(.theme-toggle-button) {
+  *:not([data-notification-popup]):not(.chat-widget-button):not(.chat-widget-popup):not(.theme-toggle-button) {
     transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease !important;
   }
 
@@ -278,3 +267,4 @@
     color: var(--app-text) !important;
   }
 }
+
