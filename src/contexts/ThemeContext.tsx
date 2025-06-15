@@ -38,6 +38,32 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     return 'light';
   });
 
+  // Fonction pour appliquer les couleurs personnalisées
+  const applyCustomColors = (currentTheme: Theme) => {
+    const savedColors = localStorage.getItem('customColors');
+    if (savedColors) {
+      try {
+        const colors = JSON.parse(savedColors);
+        const root = document.documentElement;
+        
+        // Appliquer les couleurs selon le thème
+        const isDark = currentTheme === 'dark';
+        root.style.setProperty('--custom-background', isDark ? colors.backgroundDark : colors.background);
+        root.style.setProperty('--custom-text', isDark ? colors.textDark : colors.text);
+        root.style.setProperty('--custom-cardBg', isDark ? colors.cardBgDark : colors.cardBg);
+        root.style.setProperty('--custom-cardText', isDark ? colors.cardTextDark : colors.cardText);
+        root.style.setProperty('--custom-buttonBg', isDark ? colors.buttonBgDark : colors.buttonBg);
+        root.style.setProperty('--custom-buttonText', isDark ? colors.buttonTextDark : colors.buttonText);
+        root.style.setProperty('--custom-chatWidgetBg', colors.chatWidgetBg);
+        root.style.setProperty('--custom-chatWidgetIcon', colors.chatWidgetIcon);
+        
+        console.log('Custom colors applied for theme:', currentTheme);
+      } catch (error) {
+        console.error('Error applying custom colors:', error);
+      }
+    }
+  };
+
   useEffect(() => {
     const root = window.document.documentElement;
     
@@ -50,6 +76,9 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     // Save to localStorage
     localStorage.setItem('theme', theme);
     
+    // Appliquer les couleurs personnalisées
+    applyCustomColors(theme);
+    
     // Optimisation éco-conception : réduire les animations en mode sombre pour économiser l'énergie
     if (theme === 'dark') {
       root.style.setProperty('--animation-reduce-factor', '0.5');
@@ -58,6 +87,16 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     }
     
     console.log('Theme applied:', theme, 'Classes on html:', root.className);
+  }, [theme]);
+
+  // Écouter les changements de couleurs personnalisées
+  useEffect(() => {
+    const handleColorsChanged = (event: CustomEvent) => {
+      applyCustomColors(theme);
+    };
+
+    window.addEventListener('colorsChanged', handleColorsChanged as EventListener);
+    return () => window.removeEventListener('colorsChanged', handleColorsChanged as EventListener);
   }, [theme]);
 
   const toggleTheme = () => {

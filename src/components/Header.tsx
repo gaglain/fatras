@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -110,7 +109,7 @@ export const Header: React.FC = () => {
           <div className="flex items-center space-x-1 lg:space-x-2">
             <ThemeToggle />
             
-            {/* NOTIFICATION BUTTON - POPUP FIXE */}
+            {/* NOTIFICATION BUTTON - POPUP RELATIF */}
             <div className="relative">
               <Button
                 variant="ghost"
@@ -136,18 +135,9 @@ export const Header: React.FC = () => {
                 )}
               </Button>
               
-              {/* NOTIFICATION POPUP - POSITION FIXE */}
+              {/* NOTIFICATION POPUP - POSITION RELATIVE AU BOUTON */}
               {showNotifications && (
-                <div 
-                  className="notification-popup"
-                  style={{
-                    position: 'fixed',
-                    top: '60px',
-                    right: '20px',
-                    zIndex: 99999,
-                    width: '400px'
-                  }}
-                >
+                <div className="notification-popup">
                   <NotificationCenter onClose={() => setShowNotifications(false)} />
                 </div>
               )}
@@ -179,7 +169,7 @@ export const Header: React.FC = () => {
               background: 'var(--custom-cardBg)',
               color: 'var(--custom-cardText)',
               border: '1px solid rgba(0,0,0,0.1)',
-              zIndex: 99999
+              zIndex: 9999
             }}>
               <div className="px-3 py-2 border-b" style={{ borderColor: 'rgba(0,0,0,0.1)' }}>
                 <p className="text-sm font-medium" style={{ color: 'var(--custom-cardText)' }}>
