@@ -90,19 +90,20 @@
     border-radius: 0.5rem !important;
   }
 
-  /* NOTIFICATION POPUP - POSITION FIXE ABSOLUE */
+  /* NOTIFICATION POPUP - POSITION RELATIVE À HEADER */
   .notification-popup {
     background: var(--app-card-bg) !important;
     color: var(--app-card-text) !important;
     border: 1px solid rgba(0,0,0,0.1) !important;
     border-radius: 0.75rem !important;
     box-shadow: 0 20px 50px rgba(0,0,0,0.25) !important;
-    position: fixed !important;
-    top: 80px !important;
-    right: 20px !important;
+    position: absolute !important;
+    top: 100% !important;
+    right: 0 !important;
     z-index: 99999 !important;
     width: 400px !important;
     max-width: 90vw !important;
+    margin-top: 8px !important;
   }
 
   /* CHAT WIDGET - FIXE ET ROSE */
@@ -169,15 +170,15 @@
     box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
   }
 
-  /* SWITCHES SPÉCIAUX POUR NOTIFICATIONS */
+  /* SWITCHES SPÉCIAUX POUR NOTIFICATIONS - COULEURS FORCÉES */
   [data-state="checked"] {
-    background-color: var(--app-button-bg) !important;
-    border-color: var(--app-button-bg) !important;
+    background-color: #1632f4 !important;
+    border-color: #1632f4 !important;
   }
 
   [data-state="unchecked"] {
-    background-color: #e5e7eb !important;
-    border-color: #e5e7eb !important;
+    background-color: #d1d5db !important;
+    border-color: #d1d5db !important;
   }
 
   /* TRANSITIONS DOUCES */
