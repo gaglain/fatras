@@ -65,19 +65,46 @@
     border-radius: 0.75rem !important;
   }
 
-  /* BOUTONS - FORCE ABSOLUE */
-  button:not(.chat-widget-button):not(.notification-button):not([data-dialog-close]), 
+  /* BOUTONS - FORCE ABSOLUE SAUF THEME TOGGLE */
+  button:not(.chat-widget-button):not(.notification-button):not([data-dialog-close]):not(.theme-toggle-button), 
   .btn,
-  [role="button"]:not(.chat-widget-button),
+  [role="button"]:not(.chat-widget-button):not(.theme-toggle-button),
   input[type="button"],
   input[type="submit"],
-  .bg-primary:not(.chat-widget-button),
-  [class*="bg-blue"]:not(.chat-widget-button) {
+  .bg-primary:not(.chat-widget-button):not(.theme-toggle-button),
+  [class*="bg-blue"]:not(.chat-widget-button):not(.theme-toggle-button) {
     background: var(--app-button-bg) !important;
     color: var(--app-button-text) !important;
     border: 1px solid var(--app-button-bg) !important;
     border-radius: 0.5rem !important;
     transition: all 0.2s ease !important;
+  }
+
+  /* THEME TOGGLE BUTTON - FORCE ABSOLUE */
+  .theme-toggle-button {
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+  }
+
+  .theme-toggle-button:hover {
+    background: rgba(0,0,0,0.05) !important;
+    background-color: rgba(0,0,0,0.05) !important;
+  }
+
+  .theme-toggle-button:active {
+    background: rgba(0,0,0,0.1) !important;
+    background-color: rgba(0,0,0,0.1) !important;
+  }
+
+  /* THEME TOGGLE ICONS - FORCE MAXIMALE */
+  .theme-toggle-button svg {
+    color: inherit !important;
+    stroke: currentColor !important;
+    fill: none !important;
   }
 
   /* CHAMPS DE SAISIE - FORCE */
@@ -182,7 +209,7 @@
   }
 
   /* TRANSITIONS DOUCES */
-  *:not(.notification-popup):not(.chat-widget-button) {
+  *:not(.notification-popup):not(.chat-widget-button):not(.theme-toggle-button) {
     transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease !important;
   }
 

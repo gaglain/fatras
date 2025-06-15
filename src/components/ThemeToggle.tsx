@@ -12,18 +12,37 @@ export const ThemeToggle: React.FC = () => {
       variant="ghost"
       size="sm"
       onClick={toggleTheme}
-      className="h-8 w-8 p-0"
+      className="h-8 w-8 p-0 theme-toggle-button"
       style={{
-        background: 'transparent',
-        border: 'none',
-        color: theme === 'light' ? '#374151' : '#ffffff'
+        background: 'transparent !important',
+        backgroundColor: 'transparent !important',
+        border: 'none !important',
+        color: theme === 'light' ? '#374151 !important' : '#ffffff !important',
+        minWidth: '32px',
+        minHeight: '32px'
       }}
       title={`Basculer vers le mode ${theme === 'light' ? 'sombre' : 'clair'}`}
     >
       {theme === 'light' ? (
-        <Moon className="h-4 w-4" style={{ color: '#374151' }} />
+        <Moon 
+          className="h-4 w-4" 
+          style={{ 
+            color: '#374151 !important',
+            fill: 'none !important',
+            stroke: '#374151 !important',
+            strokeWidth: '2'
+          }} 
+        />
       ) : (
-        <Sun className="h-4 w-4" style={{ color: '#ffffff' }} />
+        <Sun 
+          className="h-4 w-4" 
+          style={{ 
+            color: '#ffffff !important',
+            fill: 'none !important',
+            stroke: '#ffffff !important',
+            strokeWidth: '2'
+          }} 
+        />
       )}
       <span className="sr-only">Basculer le thème</span>
     </Button>
