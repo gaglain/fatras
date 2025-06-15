@@ -277,10 +277,10 @@ export const ChatWidget: React.FC = () => {
                   onClick={handleSendMessage}
                   disabled={!inputValue.trim()}
                   size="sm"
+                  className="rounded-full w-8 h-8 p-0"
                   style={{
-                    background: 'var(--custom-chatWidgetBg)',
-                    color: 'var(--custom-chatWidgetIcon)',
-                    border: 'none'
+                    background: '#ec5f65',
+                    color: '#ffffff'
                   }}
                 >
                   <Send className="h-3 w-3" />
@@ -291,13 +291,13 @@ export const ChatWidget: React.FC = () => {
         </div>
       )}
       
-      {/* Widget button - ROND */}
+      {/* Widget button - ROND et ROSE */}
       <Button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-14 h-14 rounded-full shadow-lg"
+        className="w-14 h-14 rounded-full shadow-lg hover:scale-105 transition-all duration-200"
         style={{
-          background: 'var(--custom-chatWidgetBg)',
-          color: 'var(--custom-chatWidgetIcon)',
+          background: '#ec5f65',
+          color: '#ffffff',
           border: 'none',
           borderRadius: '50%',
           minWidth: '56px',
