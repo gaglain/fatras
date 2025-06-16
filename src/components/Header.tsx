@@ -50,37 +50,17 @@ export const Header: React.FC = () => {
   }, []);
 
   const toggleNotifications = () => {
-    console.log('🔔 Toggle notifications clicked! Current state:', showNotifications);
-    setShowNotifications(prev => {
-      const newState = !prev;
-      console.log('🔔 Setting showNotifications to:', newState);
-      return newState;
-    });
+    console.log('🔔 Notification button clicked');
+    setShowNotifications(!showNotifications);
     if (!showNotifications) {
       setUnreadCount(0);
     }
   };
 
-  // Close notifications when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (showNotifications && !target.closest('.notification-container')) {
-        console.log('🔔 Closing notifications - clicked outside');
-        setShowNotifications(false);
-      }
-    };
-
-    if (showNotifications) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showNotifications]);
-
-  console.log('🔔 Header render - showNotifications:', showNotifications);
+  const closeNotifications = () => {
+    console.log('🔔 Closing notifications');
+    setShowNotifications(false);
+  };
 
   return (
     <>
@@ -113,8 +93,8 @@ export const Header: React.FC = () => {
             <div className="flex items-center space-x-1 lg:space-x-2">
               <ThemeToggle />
               
-              {/* Notification Button Container */}
-              <div className="relative notification-container">
+              {/* Notification Button */}
+              <div className="relative">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -131,18 +111,10 @@ export const Header: React.FC = () => {
                   )}
                 </Button>
                 
-                {/* Notification Popup - Positioned absolutely */}
+                {/* Notification Popup */}
                 {showNotifications && (
-                  <div 
-                    className="absolute top-full right-0 mt-2 z-[200]"
-                    style={{ position: 'absolute', zIndex: 200 }}
-                  >
-                    <NotificationCenter 
-                      onClose={() => {
-                        console.log('🔔 NotificationCenter onClose called');
-                        setShowNotifications(false);
-                      }} 
-                    />
+                  <div className="absolute top-full right-0 mt-2 z-[200]">
+                    <NotificationCenter onClose={closeNotifications} />
                   </div>
                 )}
               </div>
