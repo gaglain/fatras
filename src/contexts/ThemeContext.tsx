@@ -40,23 +40,36 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const applyCustomColors = (currentTheme: Theme) => {
     const savedColors = localStorage.getItem('customColors');
     const root = document.documentElement;
+    const body = document.body;
     
     if (savedColors) {
       try {
         const colors = JSON.parse(savedColors);
         const isDark = currentTheme === 'dark';
         
-        // Application IMMÉDIATE et FORCÉE des couleurs
-        root.style.setProperty('--app-background', isDark ? colors.backgroundDark : colors.background);
-        root.style.setProperty('--app-text', isDark ? colors.textDark : colors.text);
-        root.style.setProperty('--app-card-bg', isDark ? colors.cardBgDark : colors.cardBg);
-        root.style.setProperty('--app-card-text', isDark ? colors.cardTextDark : colors.cardText);
-        root.style.setProperty('--app-button-bg', isDark ? colors.buttonBgDark : colors.buttonBg);
-        root.style.setProperty('--app-button-text', isDark ? colors.buttonTextDark : colors.buttonText);
+        // Application IMMÉDIATE et FORCÉE des couleurs avec !important via style direct
+        const bgColor = isDark ? colors.backgroundDark : colors.background;
+        const textColor = isDark ? colors.textDark : colors.text;
+        const cardBgColor = isDark ? colors.cardBgDark : colors.cardBg;
+        const cardTextColor = isDark ? colors.cardTextDark : colors.cardText;
+        const buttonBgColor = isDark ? colors.buttonBgDark : colors.buttonBg;
+        const buttonTextColor = isDark ? colors.buttonTextDark : colors.buttonText;
+        
+        // Appliquer directement sur le body ET le root
+        body.style.setProperty('background-color', bgColor, 'important');
+        body.style.setProperty('color', textColor, 'important');
+        
+        // Variables CSS
+        root.style.setProperty('--app-background', bgColor);
+        root.style.setProperty('--app-text', textColor);
+        root.style.setProperty('--app-card-bg', cardBgColor);
+        root.style.setProperty('--app-card-text', cardTextColor);
+        root.style.setProperty('--app-button-bg', buttonBgColor);
+        root.style.setProperty('--app-button-text', buttonTextColor);
         root.style.setProperty('--app-chat-widget-bg', colors.chatWidgetBg);
         root.style.setProperty('--app-chat-widget-icon', colors.chatWidgetIcon);
         
-        // NOUVELLES variables pour la sidebar personnalisable
+        // Variables pour la sidebar personnalisable
         root.style.setProperty('--custom-sidebarBg', isDark ? colors.sidebarBgDark || '#22223a' : colors.sidebarBg || '#ffffff');
         root.style.setProperty('--custom-sidebarText', isDark ? colors.sidebarTextDark || '#ffffff' : colors.sidebarText || '#18181b');
         root.style.setProperty('--custom-sidebarActiveItemBg', isDark ? colors.sidebarActiveItemBgDark || '#1632f4' : colors.sidebarActiveItemBg || '#1632f4');
@@ -64,7 +77,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
         root.style.setProperty('--custom-sidebarIconLight', colors.sidebarIconLight || '#1632f4');
         root.style.setProperty('--custom-sidebarIconDark', colors.sidebarIconDark || '#ffffff');
         
-        // NOUVELLES variables pour les notifications
+        // Variables pour les notifications
         root.style.setProperty('--custom-notificationBg', colors.notificationBg || '#ffffff');
         root.style.setProperty('--custom-notificationText', colors.notificationText || '#18181b');
         root.style.setProperty('--custom-notificationBorder', colors.notificationBorder || '#e5e7eb');
@@ -81,8 +94,15 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     } else {
       // Appliquer les couleurs par défaut selon le thème
       const isDark = currentTheme === 'dark';
-      root.style.setProperty('--app-background', isDark ? '#18181b' : '#ffffff');
-      root.style.setProperty('--app-text', isDark ? '#ffffff' : '#18181b');
+      const defaultBg = isDark ? '#18181b' : '#ffffff';
+      const defaultText = isDark ? '#ffffff' : '#18181b';
+      
+      // Appliquer directement sur le body
+      body.style.setProperty('background-color', defaultBg, 'important');
+      body.style.setProperty('color', defaultText, 'important');
+      
+      root.style.setProperty('--app-background', defaultBg);
+      root.style.setProperty('--app-text', defaultText);
       root.style.setProperty('--app-card-bg', isDark ? '#22223a' : '#ffffff');
       root.style.setProperty('--app-card-text', isDark ? '#ffffff' : '#18181b');
       root.style.setProperty('--app-button-bg', isDark ? '#ffffff' : '#1632f4');

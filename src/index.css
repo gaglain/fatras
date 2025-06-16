@@ -5,3 +5,48 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Forcer l'application des couleurs personnalisées au niveau global */
+:root {
+  /* Couleurs par défaut - mode clair */
+  --app-background: #ffffff;
+  --app-text: #18181b;
+  --app-card-bg: #ffffff;
+  --app-card-text: #18181b;
+  --app-button-bg: #1632f4;
+  --app-button-text: #ffffff;
+  --app-chat-widget-bg: #ec5f65;
+  --app-chat-widget-icon: #ffffff;
+}
+
+/* Application forcée des couleurs personnalisées */
+body {
+  background-color: var(--app-background) !important;
+  color: var(--app-text) !important;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Forcer l'arrière-plan sur le conteneur principal */
+#root {
+  background-color: var(--app-background) !important;
+  color: var(--app-text) !important;
+  min-height: 100vh;
+}
+
+/* S'assurer que tous les éléments héritent des couleurs */
+.bg-background {
+  background-color: var(--app-background) !important;
+}
+
+.text-foreground {
+  color: var(--app-text) !important;
+}
+
+/* Forcer les cartes à utiliser les couleurs personnalisées */
+.bg-card {
+  background-color: var(--app-card-bg) !important;
+}
+
+.text-card-foreground {
+  color: var(--app-card-text) !important;
+}

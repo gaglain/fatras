@@ -21,12 +21,6 @@ export const BackOfficeHeader: React.FC = () => {
   const [unreadCount] = useState(3); // Mock data - vous pouvez connecter à votre système
 
   const isDark = theme === "dark";
-  const headerClasses = isDark
-    ? "bg-[#1632f4] text-white"
-    : "bg-white text-[#1632f4]";
-  const borderClasses = isDark
-    ? "border-b border-[#1632f4]"
-    : "border-b border-gray-200";
 
   const handleNotificationClick = () => {
     setShowNotifications(prev => !prev);
@@ -34,7 +28,14 @@ export const BackOfficeHeader: React.FC = () => {
 
   return (
     <>
-      <header className={`${headerClasses} ${borderClasses} shadow-sm relative`}>
+      <header 
+        className="shadow-sm relative border-b"
+        style={{
+          backgroundColor: 'var(--app-background, #ffffff)',
+          color: 'var(--app-text, #18181b)',
+          borderColor: 'var(--custom-sidebarActiveItemBg, #1632f4)'
+        }}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
@@ -46,7 +47,10 @@ export const BackOfficeHeader: React.FC = () => {
                   style={{ filter: isDark ? "drop-shadow(0 2px 7px #fff9)" : "drop-shadow(0 2px 7px #1632f4)" }}
                   onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                 />
-                <span className={`text-lg font-bold tracking-tight ${isDark ? "text-white" : "text-[#1632f4]"}`}>
+                <span 
+                  className="text-lg font-bold tracking-tight"
+                  style={{ color: 'var(--app-text, #18181b)' }}
+                >
                   {name || "MusiConnect"}
                 </span>
               </Link>
@@ -59,25 +63,33 @@ export const BackOfficeHeader: React.FC = () => {
                   onClick={handleNotificationClick}
                   variant="ghost"
                   size="icon"
-                  className={`relative ${isDark ? 'hover:bg-white/10' : 'hover:bg-[#1632f4]/10'}`}
+                  className="relative hover:opacity-80"
+                  style={{
+                    color: 'var(--app-text, #18181b)',
+                    backgroundColor: 'transparent'
+                  }}
                 >
                   <Bell className="h-5 w-5" />
                   {unreadCount > 0 && (
                     <>
                       {/* Badge avec le chiffre - utilise les variables CSS personnalisables */}
                       <Badge 
-                        className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs p-0 border-2 border-white"
+                        className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs p-0 border-2"
                         style={{
                           backgroundColor: 'var(--custom-notificationBadgeBg, #ef4444)',
-                          color: 'var(--custom-notificationBadgeText, #ffffff)'
+                          color: 'var(--custom-notificationBadgeText, #ffffff)',
+                          borderColor: 'var(--app-background, #ffffff)'
                         }}
                       >
                         {unreadCount}
                       </Badge>
                       {/* Point rouge personnalisable */}
                       <div 
-                        className="absolute -top-1 -right-1 w-3 h-3 rounded-full animate-pulse border-2 border-white"
-                        style={{ backgroundColor: 'var(--custom-notificationRedDot, #ef4444)' }}
+                        className="absolute -top-1 -right-1 w-3 h-3 rounded-full animate-pulse border-2"
+                        style={{ 
+                          backgroundColor: 'var(--custom-notificationRedDot, #ef4444)',
+                          borderColor: 'var(--app-background, #ffffff)'
+                        }}
                       ></div>
                     </>
                   )}
@@ -105,7 +117,10 @@ export const BackOfficeHeader: React.FC = () => {
                     {currentUser?.lastName?.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
-                <span className={`hidden md:block text-sm font-medium ${isDark ? 'text-white' : 'text-[#1632f4]'}`}>
+                <span 
+                  className="hidden md:block text-sm font-medium"
+                  style={{ color: 'var(--app-text, #18181b)' }}
+                >
                   {currentUser?.name}
                 </span>
               </button>
