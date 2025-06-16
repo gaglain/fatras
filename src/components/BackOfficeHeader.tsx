@@ -53,7 +53,7 @@ export const BackOfficeHeader: React.FC = () => {
             </div>
             
             <div className="flex items-center space-x-4">
-              {/* Bouton Notifications avec indicateur amélioré */}
+              {/* Bouton Notifications avec indicateur amélioré - POSITION FIXÉE */}
               <div className="relative">
                 <Button 
                   onClick={handleNotificationClick}
@@ -68,8 +68,8 @@ export const BackOfficeHeader: React.FC = () => {
                       <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs p-0 bg-red-500 text-white border-2 border-white">
                         {unreadCount}
                       </Badge>
-                      {/* Rond rouge en dessous pour plus de visibilité - REPOSITIONNÉ CORRECTEMENT */}
-                      <div className="absolute top-4 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-lg"></div>
+                      {/* Rond rouge REPOSITIONNÉ et VISIBLE */}
+                      <div className="absolute top-5 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse border border-white"></div>
                     </>
                   )}
                 </Button>

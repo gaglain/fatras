@@ -56,6 +56,14 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
         root.style.setProperty('--app-chat-widget-bg', colors.chatWidgetBg);
         root.style.setProperty('--app-chat-widget-icon', colors.chatWidgetIcon);
         
+        // NOUVELLES variables pour la sidebar personnalisable
+        root.style.setProperty('--custom-sidebarBg', isDark ? colors.sidebarBgDark || '#22223a' : colors.sidebarBg || '#ffffff');
+        root.style.setProperty('--custom-sidebarText', isDark ? colors.sidebarTextDark || '#ffffff' : colors.sidebarText || '#18181b');
+        root.style.setProperty('--custom-sidebarActiveItemBg', isDark ? colors.sidebarActiveItemBgDark || '#1632f4' : colors.sidebarActiveItemBg || '#1632f4');
+        root.style.setProperty('--custom-sidebarActiveItemText', isDark ? colors.sidebarActiveItemTextDark || '#ffffff' : colors.sidebarActiveItemText || '#ffffff');
+        root.style.setProperty('--custom-sidebarIconLight', colors.sidebarIconLight || '#1632f4');
+        root.style.setProperty('--custom-sidebarIconDark', colors.sidebarIconDark || '#ffffff');
+        
         console.log('✅ Custom colors applied IMMEDIATELY for theme:', currentTheme, colors);
       } catch (error) {
         console.error('❌ Error applying custom colors:', error);
@@ -71,6 +79,14 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       root.style.setProperty('--app-button-text', isDark ? '#1632f4' : '#ffffff');
       root.style.setProperty('--app-chat-widget-bg', '#ec5f65');
       root.style.setProperty('--app-chat-widget-icon', '#ffffff');
+      
+      // Variables par défaut pour la sidebar
+      root.style.setProperty('--custom-sidebarBg', isDark ? '#22223a' : '#ffffff');
+      root.style.setProperty('--custom-sidebarText', isDark ? '#ffffff' : '#18181b');
+      root.style.setProperty('--custom-sidebarActiveItemBg', '#1632f4');
+      root.style.setProperty('--custom-sidebarActiveItemText', '#ffffff');
+      root.style.setProperty('--custom-sidebarIconLight', '#1632f4');
+      root.style.setProperty('--custom-sidebarIconDark', '#ffffff');
       
       console.log('✅ Default colors applied for theme:', currentTheme);
     }

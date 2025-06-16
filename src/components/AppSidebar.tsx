@@ -46,24 +46,24 @@ export function AppSidebar() {
 
   return (
     <Sidebar className="h-full transition-colors duration-300" style={{
-      background: 'var(--custom-cardBg, #ffffff)',
-      color: 'var(--custom-cardText, #18181b)',
-      borderRight: `1px solid var(--custom-buttonBg, #1632f4)`
+      background: 'var(--custom-sidebarBg, #ffffff)',
+      color: 'var(--custom-sidebarText, #18181b)',
+      borderRight: `1px solid var(--custom-sidebarActiveItemBg, #1632f4)`
     }}>
       <SidebarHeader className="border-b px-4 py-4" style={{
-        borderColor: 'var(--custom-buttonBg, #1632f4)',
-        background: 'var(--custom-cardBg, #ffffff)'
+        borderColor: 'var(--custom-sidebarActiveItemBg, #1632f4)',
+        background: 'var(--custom-sidebarBg, #ffffff)'
       }}>
         <div className="flex items-center">
           <h2 className="text-base lg:text-lg font-semibold truncate" style={{
-            color: 'var(--custom-cardText, #18181b)'
+            color: 'var(--custom-sidebarText, #18181b)'
           }}>
             Navigation
           </h2>
         </div>
       </SidebarHeader>
       <SidebarContent style={{
-        background: 'var(--custom-cardBg, #ffffff)'
+        background: 'var(--custom-sidebarBg, #ffffff)'
       }}>
         <SidebarGroup>
           <SidebarGroupContent>
@@ -82,23 +82,23 @@ export function AppSidebar() {
                           <SidebarMenuButton
                             className="w-full justify-between transition-colors border-0"
                             style={{
-                              color: isActive ? '#ffffff' : 'var(--custom-cardText, #18181b)',
-                              backgroundColor: isActive ? '#1632f4' : 'transparent',
+                              color: isActive ? 'var(--custom-sidebarActiveItemText, #ffffff)' : 'var(--custom-sidebarText, #18181b)',
+                              backgroundColor: isActive ? 'var(--custom-sidebarActiveItemBg, #1632f4)' : 'transparent',
                               borderRadius: '6px',
                               marginBottom: '2px',
                               fontWeight: isActive ? '600' : '400'
                             }}
                           >
                             <div className="flex items-center min-w-0">
-                              <item.icon className="mr-3 h-4 w-4 flex-shrink-0" color={isActive ? '#ffffff' : sidebarIconColor} />
-                              <span className="truncate text-sm" style={{ color: isActive ? '#ffffff' : 'var(--custom-cardText, #18181b)' }}>
+                              <item.icon className="mr-3 h-4 w-4 flex-shrink-0" color={isActive ? 'var(--custom-sidebarActiveItemText, #ffffff)' : sidebarIconColor} />
+                              <span className="truncate text-sm" style={{ color: isActive ? 'var(--custom-sidebarActiveItemText, #ffffff)' : 'var(--custom-sidebarText, #18181b)' }}>
                                 {item.name}
                               </span>
                             </div>
                             {isOpen ? (
-                              <ChevronDown className="h-4 w-4 flex-shrink-0" color={isActive ? '#ffffff' : sidebarIconColor} />
+                              <ChevronDown className="h-4 w-4 flex-shrink-0" color={isActive ? 'var(--custom-sidebarActiveItemText, #ffffff)' : sidebarIconColor} />
                             ) : (
-                              <ChevronRight className="h-4 w-4 flex-shrink-0" color={isActive ? '#ffffff' : sidebarIconColor} />
+                              <ChevronRight className="h-4 w-4 flex-shrink-0" color={isActive ? 'var(--custom-sidebarActiveItemText, #ffffff)' : sidebarIconColor} />
                             )}
                           </SidebarMenuButton>
                         </CollapsibleTrigger>
@@ -110,16 +110,16 @@ export function AppSidebar() {
                                   asChild 
                                   className="transition-colors border-0"
                                   style={{
-                                    backgroundColor: isActiveItem(child.href) ? '#1632f4' : 'transparent',
+                                    backgroundColor: isActiveItem(child.href) ? 'var(--custom-sidebarActiveItemBg, #1632f4)' : 'transparent',
                                     borderRadius: '6px',
                                     marginBottom: '1px',
                                     fontWeight: isActiveItem(child.href) ? '600' : '400'
                                   }}
                                 >
                                   <Link to={child.href} className="flex items-center min-w-0">
-                                    <child.icon className="mr-3 h-4 w-4 flex-shrink-0" color={isActiveItem(child.href) ? '#ffffff' : sidebarIconColor} />
+                                    <child.icon className="mr-3 h-4 w-4 flex-shrink-0" color={isActiveItem(child.href) ? 'var(--custom-sidebarActiveItemText, #ffffff)' : sidebarIconColor} />
                                     <span className="truncate text-sm" style={{
-                                      color: isActiveItem(child.href) ? '#ffffff' : 'var(--custom-cardText, #18181b)'
+                                      color: isActiveItem(child.href) ? 'var(--custom-sidebarActiveItemText, #ffffff)' : 'var(--custom-sidebarText, #18181b)'
                                     }}>
                                       {child.name}
                                     </span>
@@ -140,16 +140,16 @@ export function AppSidebar() {
                       asChild 
                       className="transition-colors border-0"
                       style={{
-                        color: isActiveItem(item.href) ? '#ffffff' : 'var(--custom-cardText, #18181b)',
-                        backgroundColor: isActiveItem(item.href) ? '#1632f4' : 'transparent',
+                        color: isActiveItem(item.href) ? 'var(--custom-sidebarActiveItemText, #ffffff)' : 'var(--custom-sidebarText, #18181b)',
+                        backgroundColor: isActiveItem(item.href) ? 'var(--custom-sidebarActiveItemBg, #1632f4)' : 'transparent',
                         borderRadius: '6px',
                         marginBottom: '2px',
                         fontWeight: isActiveItem(item.href) ? '600' : '400'
                       }}
                     >
                       <Link to={item.href} className="flex items-center min-w-0">
-                        <item.icon className="mr-3 h-4 w-4 flex-shrink-0" color={isActiveItem(item.href) ? '#ffffff' : sidebarIconColor} />
-                        <span className="truncate text-sm" style={{ color: isActiveItem(item.href) ? '#ffffff' : 'var(--custom-cardText, #18181b)' }}>
+                        <item.icon className="mr-3 h-4 w-4 flex-shrink-0" color={isActiveItem(item.href) ? 'var(--custom-sidebarActiveItemText, #ffffff)' : sidebarIconColor} />
+                        <span className="truncate text-sm" style={{ color: isActiveItem(item.href) ? 'var(--custom-sidebarActiveItemText, #ffffff)' : 'var(--custom-sidebarText, #18181b)' }}>
                           {item.name}
                         </span>
                       </Link>

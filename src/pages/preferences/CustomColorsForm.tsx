@@ -1,191 +1,345 @@
 
-import React, { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Save, RotateCcw } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { Save, RotateCcw, Palette } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
 
-const colorFields: { key: string, label: string, default: string }[] = [
-  { key: "primary", label: "Primaire", default: "#1632f4" },
-  { key: "secondary", label: "Secondaire", default: "#ec5f65" },
-  { key: "accent", label: "Accent", default: "#f5a623" },
-  { key: "background", label: "Fond (clair)", default: "#ffffff" },
-  { key: "backgroundDark", label: "Fond (sombre)", default: "#18181b" },
-  { key: "text", label: "Texte principal (clair)", default: "#18181b" },
-  { key: "textDark", label: "Texte principal (sombre)", default: "#ffffff" },
-  { key: "buttonBg", label: "Bouton fond (clair)", default: "#1632f4" },
-  { key: "buttonBgDark", label: "Bouton fond (sombre)", default: "#ffffff" },
-  { key: "buttonText", label: "Bouton texte (clair)", default: "#ffffff" },
-  { key: "buttonTextDark", label: "Bouton texte (sombre)", default: "#1632f4" },
-  { key: "cardBg", label: "Fond carte (clair)", default: "#ffffff" },
-  { key: "cardBgDark", label: "Fond carte (sombre)", default: "#22223a" },
-  { key: "cardText", label: "Texte carte (clair)", default: "#18181b" },
-  { key: "cardTextDark", label: "Texte carte (sombre)", default: "#ffffff" },
-  { key: "sidebarIconLight", label: "Couleur icônes menu (clair)", default: "#1632f4" },
-  { key: "sidebarIconDark", label: "Couleur icônes menu (sombre)", default: "#ffffff" },
-  { key: "chatWidgetBg", label: "Widget messagerie fond", default: "#ec5f65" },
-  { key: "chatWidgetIcon", label: "Widget messagerie icône", default: "#ffffff" },
-];
+interface CustomColors {
+  // Mode clair
+  background: string;
+  text: string;
+  cardBg: string;
+  cardText: string;
+  buttonBg: string;
+  buttonText: string;
+  
+  // Mode sombre
+  backgroundDark: string;
+  textDark: string;
+  cardBgDark: string;
+  cardTextDark: string;
+  buttonBgDark: string;
+  buttonTextDark: string;
+  
+  // Chat widget (même pour les deux modes)
+  chatWidgetBg: string;
+  chatWidgetIcon: string;
+  
+  // NOUVELLES VARIABLES SIDEBAR - Mode clair
+  sidebarBg: string;
+  sidebarText: string;
+  sidebarActiveItemBg: string;
+  sidebarActiveItemText: string;
+  sidebarIconLight: string;
+  
+  // NOUVELLES VARIABLES SIDEBAR - Mode sombre
+  sidebarBgDark: string;
+  sidebarTextDark: string;
+  sidebarActiveItemBgDark: string;
+  sidebarActiveItemTextDark: string;
+  sidebarIconDark: string;
+}
 
-type ColorSettings = Record<string, string>;
+const defaultColors: CustomColors = {
+  // Mode clair
+  background: "#ffffff",
+  text: "#18181b",
+  cardBg: "#ffffff",
+  cardText: "#18181b",
+  buttonBg: "#1632f4",
+  buttonText: "#ffffff",
+  
+  // Mode sombre
+  backgroundDark: "#18181b",
+  textDark: "#ffffff",
+  cardBgDark: "#22223a",
+  cardTextDark: "#ffffff",
+  buttonBgDark: "#ffffff",
+  buttonTextDark: "#1632f4",
+  
+  // Chat widget
+  chatWidgetBg: "#ec5f65",
+  chatWidgetIcon: "#ffffff",
+  
+  // Sidebar - Mode clair
+  sidebarBg: "#ffffff",
+  sidebarText: "#18181b",
+  sidebarActiveItemBg: "#1632f4",
+  sidebarActiveItemText: "#ffffff",
+  sidebarIconLight: "#1632f4",
+  
+  // Sidebar - Mode sombre
+  sidebarBgDark: "#22223a",
+  sidebarTextDark: "#ffffff",
+  sidebarActiveItemBgDark: "#1632f4",
+  sidebarActiveItemTextDark: "#ffffff",
+  sidebarIconDark: "#ffffff",
+};
 
 export const CustomColorsForm: React.FC = () => {
-  const [colors, setColors] = useState<ColorSettings>({});
+  const { theme } = useTheme();
+  const [colors, setColors] = useState<CustomColors>(defaultColors);
+  const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem("customColors");
-    let initial: ColorSettings = {};
-    colorFields.forEach(({ key, default: def }) => {
-      initial[key] = def;
-    });
-    if (saved) {
+    const savedColors = localStorage.getItem("customColors");
+    if (savedColors) {
       try {
-        initial = { ...initial, ...JSON.parse(saved) };
-      } catch {}
+        const parsed = JSON.parse(savedColors);
+        setColors({ ...defaultColors, ...parsed });
+      } catch (error) {
+        console.error("Erreur lors du chargement des couleurs:", error);
+      }
     }
-    setColors(initial);
-    applyColors(initial);
   }, []);
 
-  function applyColors(colorsObj: ColorSettings) {
-    const root = document.documentElement;
-    const isDark = root.classList.contains('dark');
-    
-    console.log('🎨 Applying colors IMMEDIATELY:', { isDark, colorsObj });
-    
-    // Application IMMÉDIATE et FORCÉE des couleurs
-    root.style.setProperty('--app-background', isDark ? colorsObj.backgroundDark : colorsObj.background);
-    root.style.setProperty('--app-text', isDark ? colorsObj.textDark : colorsObj.text);
-    root.style.setProperty('--app-card-bg', isDark ? colorsObj.cardBgDark : colorsObj.cardBg);
-    root.style.setProperty('--app-card-text', isDark ? colorsObj.cardTextDark : colorsObj.cardText);
-    root.style.setProperty('--app-button-bg', isDark ? colorsObj.buttonBgDark : colorsObj.buttonBg);
-    root.style.setProperty('--app-button-text', isDark ? colorsObj.buttonTextDark : colorsObj.buttonText);
-    root.style.setProperty('--app-chat-widget-bg', colorsObj.chatWidgetBg);
-    root.style.setProperty('--app-chat-widget-icon', colorsObj.chatWidgetIcon);
-    
-    // FORCER un reflow/repaint
-    root.style.setProperty('--force-update', Date.now().toString());
-    
-    // FORCER une mise à jour du DOM
-    setTimeout(() => {
-      document.body.style.display = 'none';
-      document.body.offsetHeight; // trigger reflow
-      document.body.style.display = '';
-    }, 0);
-    
-    console.log('✅ Colors applied and forced update triggered');
-  }
+  const handleColorChange = (key: keyof CustomColors, value: string) => {
+    setColors(prev => ({ ...prev, [key]: value }));
+    setHasChanges(true);
+  };
 
-  function handleChange(key: string, value: string) {
-    setColors((prev) => {
-      const next = { ...prev, [key]: value };
-      applyColors(next);
-      return next;
-    });
-  }
-
-  function handleSave() {
-    try {
-      localStorage.setItem("customColors", JSON.stringify(colors));
-      applyColors(colors);
-      
-      // Déclencher un événement global
-      window.dispatchEvent(new CustomEvent('colorsChanged', { detail: colors }));
-      
-      toast.success("✅ Couleurs sauvegardées et appliquées avec succès !");
-      console.log('💾 Colors saved:', colors);
-    } catch (error) {
-      toast.error("❌ Erreur lors de la sauvegarde des couleurs");
-      console.error('❌ Save error:', error);
-    }
-  }
-
-  function handleReset() {
-    const resetColors: ColorSettings = {};
-    colorFields.forEach(({ key, default: def }) => {
-      resetColors[key] = def;
-    });
-    setColors(resetColors);
-    applyColors(resetColors);
-    localStorage.setItem("customColors", JSON.stringify(resetColors));
+  const saveColors = () => {
+    localStorage.setItem("customColors", JSON.stringify(colors));
     
-    window.dispatchEvent(new CustomEvent('colorsChanged', { detail: resetColors }));
+    // Dispatch event pour déclencher l'application immédiate
+    window.dispatchEvent(new CustomEvent('colorsChanged'));
     
-    toast.success("🔄 Couleurs réinitialisées avec succès !");
-    console.log('🔄 Colors reset to defaults');
-  }
+    setHasChanges(false);
+    toast.success("Couleurs sauvegardées avec succès !");
+  };
+
+  const resetColors = () => {
+    setColors(defaultColors);
+    localStorage.removeItem("customColors");
+    
+    // Dispatch event pour appliquer les couleurs par défaut
+    window.dispatchEvent(new CustomEvent('colorsChanged'));
+    
+    setHasChanges(false);
+    toast.success("Couleurs remises par défaut !");
+  };
+
+  const ColorInput = ({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) => (
+    <div className="space-y-2">
+      <Label className="text-sm font-medium">{label}</Label>
+      <div className="flex space-x-2 items-center">
+        <Input
+          type="color"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-16 h-10 p-1 border rounded cursor-pointer"
+        />
+        <Input
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="flex-1 font-mono text-xs"
+          placeholder="#000000"
+        />
+      </div>
+    </div>
+  );
 
   return (
-    <Card style={{
-      background: 'var(--app-card-bg)',
-      color: 'var(--app-card-text)',
-      border: '1px solid rgba(0,0,0,0.1)'
-    }}>
-      <CardHeader>
-        <CardTitle style={{ color: 'var(--app-card-text)' }}>
-          Couleurs personnalisées
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {colorFields.map(({ key, label }) => (
-              <div key={key} className="flex flex-col gap-1">
-                <label className="font-medium" style={{ color: 'var(--app-card-text)' }}>
-                  {label}
-                </label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="color"
-                    value={colors[key] || ""}
-                    onChange={e => handleChange(key, e.target.value)}
-                    className="h-10 w-16 p-1 border-none cursor-pointer"
-                    style={{ background: 'transparent' }}
-                  />
-                  <Input
-                    type="text"
-                    value={colors[key] || ""}
-                    onChange={e => handleChange(key, e.target.value)}
-                    className="flex-1"
-                    style={{
-                      background: 'var(--app-background)',
-                      color: 'var(--app-text)',
-                      border: '1px solid var(--app-button-bg)'
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Palette className="h-5 w-5" />
+            <span>Personnalisation des Couleurs</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Thème Clair */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-foreground border-b pb-2">
+              🌞 Mode Clair
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <ColorInput
+                label="Arrière-plan principal"
+                value={colors.background}
+                onChange={(value) => handleColorChange("background", value)}
+              />
+              <ColorInput
+                label="Texte principal"
+                value={colors.text}
+                onChange={(value) => handleColorChange("text", value)}
+              />
+              <ColorInput
+                label="Arrière-plan des cartes"
+                value={colors.cardBg}
+                onChange={(value) => handleColorChange("cardBg", value)}
+              />
+              <ColorInput
+                label="Texte des cartes"
+                value={colors.cardText}
+                onChange={(value) => handleColorChange("cardText", value)}
+              />
+              <ColorInput
+                label="Arrière-plan des boutons"
+                value={colors.buttonBg}
+                onChange={(value) => handleColorChange("buttonBg", value)}
+              />
+              <ColorInput
+                label="Texte des boutons"
+                value={colors.buttonText}
+                onChange={(value) => handleColorChange("buttonText", value)}
+              />
+            </div>
+
+            {/* Sidebar - Mode Clair */}
+            <h4 className="text-md font-medium text-foreground border-b pb-1 mt-6">
+              Menu Latéral - Mode Clair
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <ColorInput
+                label="Fond sidebar"
+                value={colors.sidebarBg}
+                onChange={(value) => handleColorChange("sidebarBg", value)}
+              />
+              <ColorInput
+                label="Texte sidebar"
+                value={colors.sidebarText}
+                onChange={(value) => handleColorChange("sidebarText", value)}
+              />
+              <ColorInput
+                label="Fond item actif"
+                value={colors.sidebarActiveItemBg}
+                onChange={(value) => handleColorChange("sidebarActiveItemBg", value)}
+              />
+              <ColorInput
+                label="Texte item actif"
+                value={colors.sidebarActiveItemText}
+                onChange={(value) => handleColorChange("sidebarActiveItemText", value)}
+              />
+              <ColorInput
+                label="Couleur des icônes"
+                value={colors.sidebarIconLight}
+                onChange={(value) => handleColorChange("sidebarIconLight", value)}
+              />
+            </div>
           </div>
-          <div className="flex gap-3">
+
+          {/* Thème Sombre */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-foreground border-b pb-2">
+              🌙 Mode Sombre
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <ColorInput
+                label="Arrière-plan principal"
+                value={colors.backgroundDark}
+                onChange={(value) => handleColorChange("backgroundDark", value)}
+              />
+              <ColorInput
+                label="Texte principal"
+                value={colors.textDark}
+                onChange={(value) => handleColorChange("textDark", value)}
+              />
+              <ColorInput
+                label="Arrière-plan des cartes"
+                value={colors.cardBgDark}
+                onChange={(value) => handleColorChange("cardBgDark", value)}
+              />
+              <ColorInput
+                label="Texte des cartes"
+                value={colors.cardTextDark}
+                onChange={(value) => handleColorChange("cardTextDark", value)}
+              />
+              <ColorInput
+                label="Arrière-plan des boutons"
+                value={colors.buttonBgDark}
+                onChange={(value) => handleColorChange("buttonBgDark", value)}
+              />
+              <ColorInput
+                label="Texte des boutons"
+                value={colors.buttonTextDark}
+                onChange={(value) => handleColorChange("buttonTextDark", value)}
+              />
+            </div>
+
+            {/* Sidebar - Mode Sombre */}
+            <h4 className="text-md font-medium text-foreground border-b pb-1 mt-6">
+              Menu Latéral - Mode Sombre
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <ColorInput
+                label="Fond sidebar"
+                value={colors.sidebarBgDark}
+                onChange={(value) => handleColorChange("sidebarBgDark", value)}
+              />
+              <ColorInput
+                label="Texte sidebar"
+                value={colors.sidebarTextDark}
+                onChange={(value) => handleColorChange("sidebarTextDark", value)}
+              />
+              <ColorInput
+                label="Fond item actif"
+                value={colors.sidebarActiveItemBgDark}
+                onChange={(value) => handleColorChange("sidebarActiveItemBgDark", value)}
+              />
+              <ColorInput
+                label="Texte item actif"
+                value={colors.sidebarActiveItemTextDark}
+                onChange={(value) => handleColorChange("sidebarActiveItemTextDark", value)}
+              />
+              <ColorInput
+                label="Couleur des icônes"
+                value={colors.sidebarIconDark}
+                onChange={(value) => handleColorChange("sidebarIconDark", value)}
+              />
+            </div>
+          </div>
+
+          {/* Chat Widget */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-foreground border-b pb-2">
+              💬 Widget de Chat
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <ColorInput
+                label="Arrière-plan du widget"
+                value={colors.chatWidgetBg}
+                onChange={(value) => handleColorChange("chatWidgetBg", value)}
+              />
+              <ColorInput
+                label="Couleur de l'icône"
+                value={colors.chatWidgetIcon}
+                onChange={(value) => handleColorChange("chatWidgetIcon", value)}
+              />
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex space-x-3 pt-4 border-t">
             <Button 
-              onClick={handleSave}
-              style={{
-                background: 'var(--app-button-bg)',
-                color: 'var(--app-button-text)',
-                border: '1px solid var(--app-button-bg)'
-              }}
+              onClick={saveColors} 
+              disabled={!hasChanges}
+              className="flex items-center space-x-2"
             >
-              <Save className="h-4 w-4 mr-2" />
-              Sauvegarder
+              <Save className="h-4 w-4" />
+              <span>Sauvegarder</span>
             </Button>
+            
             <Button 
-              type="button" 
-              variant="outline" 
-              onClick={handleReset}
-              style={{
-                background: 'transparent',
-                color: 'var(--app-text)',
-                border: '1px solid var(--app-button-bg)'
-              }}
+              onClick={resetColors} 
+              variant="outline"
+              className="flex items-center space-x-2"
             >
-              <RotateCcw className="h-4 w-4 mr-2" />
-              Réinitialiser
+              <RotateCcw className="h-4 w-4" />
+              <span>Réinitialiser</span>
             </Button>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
