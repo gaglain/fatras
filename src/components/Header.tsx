@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,9 +21,6 @@ export const Header: React.FC = () => {
     logo: '',
     favicon: ''
   });
-
-  // Debug log pour l'état des notifications
-  console.log('🔔 Header component rendered, showNotifications:', showNotifications);
 
   useEffect(() => {
     const loadCompanySettings = () => {
@@ -53,29 +49,29 @@ export const Header: React.FC = () => {
   }, []);
 
   const toggleNotifications = () => {
-    console.log('🔔 Notification button clicked! Before toggle, showNotifications is:', showNotifications);
-    const newState = !showNotifications;
-    setShowNotifications(newState);
-    console.log('🔔 After toggle, showNotifications will be:', newState);
+    console.log('🔔 AVANT TOGGLE - showNotifications:', showNotifications);
+    setShowNotifications(prev => {
+      const newValue = !prev;
+      console.log('🔔 APRÈS TOGGLE - showNotifications sera:', newValue);
+      return newValue;
+    });
     
     if (!showNotifications) {
       setUnreadCount(0);
-      console.log('🔔 Unread count reset to 0');
     }
   };
 
   const closeNotifications = () => {
-    console.log('🔔 Closing notifications');
+    console.log('🔔 FERMETURE des notifications');
     setShowNotifications(false);
   };
 
-  // Debug: Log quand l'état change
+  // Debug: surveiller les changements d'état
   useEffect(() => {
-    console.log('🔔 showNotifications state changed to:', showNotifications);
+    console.log('🔔 ÉTAT CHANGÉ - showNotifications:', showNotifications);
   }, [showNotifications]);
 
-  // Debug log before render
-  console.log('🔔 About to render, showNotifications is:', showNotifications);
+  console.log('🔔 RENDU - showNotifications actuel:', showNotifications);
 
   return (
     <>
@@ -108,24 +104,22 @@ export const Header: React.FC = () => {
             <div className="flex items-center space-x-1 lg:space-x-2">
               <ThemeToggle />
               
-              {/* Notification Button - CONTAINER RELATIF CRITIQUE */}
-              <div className="relative">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={toggleNotifications}
-                  className="relative h-8 w-8 p-0"
-                >
-                  <Bell className="h-4 w-4" />
-                  {unreadCount > 0 && (
-                    <Badge 
-                      className="absolute -top-1 -right-1 h-4 w-4 lg:h-5 lg:w-5 flex items-center justify-center text-xs p-0 bg-red-500 text-white border-0"
-                    >
-                      {unreadCount}
-                    </Badge>
-                  )}
-                </Button>
-              </div>
+              {/* Bouton Notifications - VERSION SIMPLIFIÉE */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleNotifications}
+                className="relative h-8 w-8 p-0"
+              >
+                <Bell className="h-4 w-4" />
+                {unreadCount > 0 && (
+                  <Badge 
+                    className="absolute -top-1 -right-1 h-4 w-4 lg:h-5 lg:w-5 flex items-center justify-center text-xs p-0 bg-red-500 text-white border-0"
+                  >
+                    {unreadCount}
+                  </Badge>
+                )}
+              </Button>
             </div>
 
             {/* USER DROPDOWN */}
@@ -178,22 +172,19 @@ export const Header: React.FC = () => {
         </div>
       </div>
 
-      {/* NOTIFICATION POPUP - PORTAIL FIXE AU NIVEAU RACINE */}
+      {/* POPUP NOTIFICATIONS - VERSION SUPER VISIBLE POUR DEBUG */}
       {showNotifications && (
         <div 
-          className="fixed inset-0 z-[9999]"
-          style={{ 
-            pointerEvents: 'none',
-            background: 'rgba(0,0,0,0.1)' // Debug: fond semi-transparent pour voir le portail
-          }}
+          className="fixed inset-0 z-[9999] bg-black/20"
+          onClick={closeNotifications}
         >
           <div 
-            className="absolute top-16 right-4 lg:right-6"
-            style={{ 
-              pointerEvents: 'auto',
-              zIndex: 10000 
-            }}
+            className="absolute top-20 right-6 z-[10000]"
+            onClick={(e) => e.stopPropagation()}
           >
+            <div className="bg-red-500 text-white p-4 rounded mb-2">
+              DEBUG: Popup visible! showNotifications = {showNotifications.toString()}
+            </div>
             <NotificationCenter onClose={closeNotifications} />
           </div>
         </div>
