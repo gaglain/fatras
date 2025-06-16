@@ -55,7 +55,7 @@ interface NotificationCenterProps {
 }
 
 export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose }) => {
-  console.log('🔔 NotificationCenter component is RENDERING NOW!');
+  console.log('🔔 NotificationCenter component rendered');
   
   const [notifications, setNotifications] = useState<Notification[]>(sampleNotifications);
   const navigate = useNavigate();
@@ -117,36 +117,18 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
   };
 
   return (
-    <div className="notification-center" style={{
-      position: 'fixed',
-      top: '64px',
-      right: '16px',
-      zIndex: 9999,
-      background: 'white',
-      border: '1px solid #e5e7eb',
-      borderRadius: '0.5rem',
-      boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-      width: '384px',
-      maxWidth: '90vw',
-      color: '#1f2937'
-    }}>
-      <div style={{ 
-        padding: '1rem', 
-        background: 'white', 
-        borderBottom: '1px solid #f3f4f6', 
-        borderTopLeftRadius: '0.5rem',
-        borderTopRightRadius: '0.5rem'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ fontSize: '1.125rem', display: 'flex', alignItems: 'center', color: '#1f2937', fontWeight: '600' }}>
+    <Card className="w-96 max-w-[90vw] shadow-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 z-[200]">
+      <CardHeader className="pb-2 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg flex items-center text-gray-900 dark:text-white">
             <Bell className="h-5 w-5 mr-2" />
             Notifications
             {unreadCount > 0 && (
-              <Badge style={{ marginLeft: '0.5rem', background: '#ef4444', color: 'white' }}>
+              <Badge className="ml-2 bg-red-500 text-white">
                 {unreadCount}
               </Badge>
             )}
-          </div>
+          </CardTitle>
           <Button 
             variant="ghost" 
             size="sm" 
@@ -154,7 +136,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
               console.log('🔔 Close button clicked in NotificationCenter');
               onClose();
             }}
-            style={{ height: '2rem', width: '2rem', padding: '0', background: 'transparent' }}
+            className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-700"
           >
             <X className="h-4 w-4" />
           </Button>
@@ -164,63 +146,52 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
             variant="outline" 
             size="sm" 
             onClick={markAllAsRead}
-            style={{ marginTop: '0.5rem', background: 'transparent', border: '1px solid #d1d5db' }}
+            className="self-end mt-2"
           >
             Tout marquer comme lu
           </Button>
         )}
-      </div>
-      <div style={{ 
-        maxHeight: '24rem', 
-        overflowY: 'auto', 
-        background: 'white', 
-        padding: '1rem', 
-        borderBottomLeftRadius: '0.5rem',
-        borderBottomRightRadius: '0.5rem'
-      }}>
+      </CardHeader>
+      <CardContent className="max-h-96 overflow-y-auto bg-white dark:bg-gray-800 p-4">
         {notifications.length === 0 ? (
-          <div style={{ textAlign: 'center', paddingTop: '2rem', paddingBottom: '2rem', color: '#6b7280' }}>
+          <div className="text-center py-8 text-muted-foreground">
             <Bell className="h-12 w-12 mx-auto mb-3" />
             <p>Aucune notification</p>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div className="space-y-3">
             {notifications.map((notification) => (
               <div
                 key={notification.id}
-                style={{
-                  padding: '0.75rem',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '0.5rem',
-                  transition: 'all 0.2s',
-                  cursor: 'pointer',
-                  background: !notification.isRead ? '#eff6ff' : 'white',
-                  borderColor: !notification.isRead ? '#3b82f6' : '#e5e7eb'
-                }}
+                className={`p-3 border rounded-lg transition-all duration-200 cursor-pointer hover:shadow-md bg-white dark:bg-gray-800 ${
+                  !notification.isRead 
+                    ? 'border-primary bg-primary/5 dark:bg-primary/10' 
+                    : 'border-border bg-card hover:bg-accent dark:border-gray-600 dark:hover:bg-gray-700'
+                }`}
                 onClick={() => handleNotificationClick(notification)}
               >
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
-                  <div style={{ marginTop: '0.25rem', color: '#6b7280' }}>
+                <div className="flex items-start space-x-3">
+                  <div className="mt-1 text-muted-foreground">
                     {getIcon(notification.type)}
                   </div>
-                  <div style={{ flex: '1', minWidth: '0' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-                      <p style={{ fontSize: '0.875rem', fontWeight: '500', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#1f2937' }}>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-sm font-medium truncate text-gray-900 dark:text-white">
                         {notification.title}
                       </p>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <div className="flex items-center space-x-2">
                         <Badge className={getPriorityColor(notification.priority)}>
                           {notification.priority}
                         </Badge>
                         {!notification.isRead && (
-                          <div style={{ width: '0.5rem', height: '0.5rem', background: '#3b82f6', borderRadius: '50%' }}></div>
+                          <div className="w-2 h-2 bg-primary rounded-full"></div>
                         )}
                       </div>
                     </div>
-                    <p style={{ fontSize: '0.875rem', color: '#6b7280', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    <p className="text-sm line-clamp-2 text-muted-foreground">
                       {notification.message}
                     </p>
-                    <p style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: '#6b7280' }}>
+                    <p className="text-xs mt-1 text-muted-foreground">
                       {formatTime(notification.timestamp)}
                     </p>
                   </div>
@@ -229,7 +200,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
             ))}
           </div>
         )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };

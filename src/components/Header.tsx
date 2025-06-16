@@ -50,16 +50,14 @@ export const Header: React.FC = () => {
   }, []);
 
   const toggleNotifications = () => {
-    console.log('🔔 CLICK DETECTED! Current showNotifications state:', showNotifications);
-    const newState = !showNotifications;
-    console.log('🔔 Setting showNotifications to:', newState);
-    setShowNotifications(newState);
-    
-    if (newState) {
-      console.log('🔔 Notifications should now be VISIBLE');
+    console.log('🔔 Toggle notifications clicked! Current state:', showNotifications);
+    setShowNotifications(prev => {
+      const newState = !prev;
+      console.log('🔔 Setting showNotifications to:', newState);
+      return newState;
+    });
+    if (!showNotifications) {
       setUnreadCount(0);
-    } else {
-      console.log('🔔 Notifications should now be HIDDEN');
     }
   };
 
@@ -82,7 +80,7 @@ export const Header: React.FC = () => {
     };
   }, [showNotifications]);
 
-  console.log('🔔 Header RENDER - showNotifications state is:', showNotifications);
+  console.log('🔔 Header render - showNotifications:', showNotifications);
 
   return (
     <>
@@ -132,6 +130,21 @@ export const Header: React.FC = () => {
                     </Badge>
                   )}
                 </Button>
+                
+                {/* Notification Popup - Positioned absolutely */}
+                {showNotifications && (
+                  <div 
+                    className="absolute top-full right-0 mt-2 z-[200]"
+                    style={{ position: 'absolute', zIndex: 200 }}
+                  >
+                    <NotificationCenter 
+                      onClose={() => {
+                        console.log('🔔 NotificationCenter onClose called');
+                        setShowNotifications(false);
+                      }} 
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
@@ -184,29 +197,6 @@ export const Header: React.FC = () => {
           )}
         </div>
       </div>
-
-      {/* Notification Popup - EN DEHORS DU HEADER POUR ÉVITER LES CONFLITS */}
-      {showNotifications && (
-        <div 
-          className="notification-container fixed top-16 right-4 z-[9999] pointer-events-auto"
-          style={{ 
-            position: 'fixed',
-            top: '64px',
-            right: '16px',
-            zIndex: 9999,
-            pointerEvents: 'auto'
-          }}
-        >
-          <div className="animate-in slide-in-from-top-2 duration-200">
-            <NotificationCenter 
-              onClose={() => {
-                console.log('🔔 NotificationCenter onClose called from Header');
-                setShowNotifications(false);
-              }} 
-            />
-          </div>
-        </div>
-      )}
     </>
   );
 };
