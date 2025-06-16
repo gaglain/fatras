@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Bell, User, LogOut, MessageSquare, ChevronDown } from 'lucide-react';
-import { NotificationCenter } from './NotificationCenter';
+import { SimpleNotificationTest } from './SimpleNotificationTest';
 import { UserProfile } from './UserProfile';
 import { ThemeToggle } from './ThemeToggle';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -49,10 +49,10 @@ export const Header: React.FC = () => {
   }, []);
 
   const toggleNotifications = () => {
-    console.log('🔔 AVANT TOGGLE - showNotifications:', showNotifications);
+    console.log('🔔 CLIC SUR NOTIFICATION! Avant:', showNotifications);
     setShowNotifications(prev => {
       const newValue = !prev;
-      console.log('🔔 APRÈS TOGGLE - showNotifications sera:', newValue);
+      console.log('🔔 Nouveau état:', newValue);
       return newValue;
     });
     
@@ -62,16 +62,11 @@ export const Header: React.FC = () => {
   };
 
   const closeNotifications = () => {
-    console.log('🔔 FERMETURE des notifications');
+    console.log('🔔 FERMETURE notifications');
     setShowNotifications(false);
   };
 
-  // Debug: surveiller les changements d'état
-  useEffect(() => {
-    console.log('🔔 ÉTAT CHANGÉ - showNotifications:', showNotifications);
-  }, [showNotifications]);
-
-  console.log('🔔 RENDU - showNotifications actuel:', showNotifications);
+  console.log('🔔 RENDU Header - showNotifications =', showNotifications);
 
   return (
     <>
@@ -104,12 +99,12 @@ export const Header: React.FC = () => {
             <div className="flex items-center space-x-1 lg:space-x-2">
               <ThemeToggle />
               
-              {/* Bouton Notifications - VERSION SIMPLIFIÉE */}
+              {/* BOUTON NOTIFICATIONS SIMPLIFIÉ */}
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={toggleNotifications}
-                className="relative h-8 w-8 p-0"
+                className="relative h-8 w-8 p-0 bg-blue-500 text-white"
               >
                 <Bell className="h-4 w-4" />
                 {unreadCount > 0 && (
@@ -122,7 +117,6 @@ export const Header: React.FC = () => {
               </Button>
             </div>
 
-            {/* USER DROPDOWN */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="flex items-center space-x-2 h-8 px-2 lg:px-3 text-foreground">
@@ -164,28 +158,28 @@ export const Header: React.FC = () => {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          </div>
 
-          {showUserProfile && (
-            <UserProfile onClose={() => setShowUserProfile(false)} />
-          )}
+            {showUserProfile && (
+              <UserProfile onClose={() => setShowUserProfile(false)} />
+            )}
+          </div>
         </div>
       </div>
 
-      {/* POPUP NOTIFICATIONS - VERSION SUPER VISIBLE POUR DEBUG */}
+      {/* POPUP TEST ULTRA VISIBLE */}
       {showNotifications && (
         <div 
-          className="fixed inset-0 z-[9999] bg-black/20"
+          className="fixed top-0 left-0 w-full h-full z-[99999] bg-black bg-opacity-50"
           onClick={closeNotifications}
         >
           <div 
-            className="absolute top-20 right-6 z-[10000]"
+            className="absolute top-20 right-4 z-[100000]"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="bg-red-500 text-white p-4 rounded mb-2">
-              DEBUG: Popup visible! showNotifications = {showNotifications.toString()}
+            <div className="bg-yellow-400 text-black p-4 rounded mb-2 font-bold">
+              ⚠️ POPUP TEST VISIBLE! État: {showNotifications ? 'OUVERT' : 'FERMÉ'}
             </div>
-            <NotificationCenter onClose={closeNotifications} />
+            <SimpleNotificationTest onClose={closeNotifications} />
           </div>
         </div>
       )}
