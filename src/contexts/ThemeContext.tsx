@@ -64,6 +64,16 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
         root.style.setProperty('--custom-sidebarIconLight', colors.sidebarIconLight || '#1632f4');
         root.style.setProperty('--custom-sidebarIconDark', colors.sidebarIconDark || '#ffffff');
         
+        // NOUVELLES variables pour les notifications
+        root.style.setProperty('--custom-notificationBg', colors.notificationBg || '#ffffff');
+        root.style.setProperty('--custom-notificationText', colors.notificationText || '#18181b');
+        root.style.setProperty('--custom-notificationBorder', colors.notificationBorder || '#e5e7eb');
+        root.style.setProperty('--custom-notificationBadgeBg', colors.notificationBadgeBg || '#ef4444');
+        root.style.setProperty('--custom-notificationBadgeText', colors.notificationBadgeText || '#ffffff');
+        root.style.setProperty('--custom-notificationButtonBg', colors.notificationButtonBg || '#f3f4f6');
+        root.style.setProperty('--custom-notificationButtonText', colors.notificationButtonText || '#374151');
+        root.style.setProperty('--custom-notificationRedDot', colors.notificationRedDot || '#ef4444');
+        
         console.log('✅ Custom colors applied IMMEDIATELY for theme:', currentTheme, colors);
       } catch (error) {
         console.error('❌ Error applying custom colors:', error);
@@ -87,6 +97,16 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       root.style.setProperty('--custom-sidebarActiveItemText', '#ffffff');
       root.style.setProperty('--custom-sidebarIconLight', '#1632f4');
       root.style.setProperty('--custom-sidebarIconDark', '#ffffff');
+      
+      // Variables par défaut pour les notifications
+      root.style.setProperty('--custom-notificationBg', '#ffffff');
+      root.style.setProperty('--custom-notificationText', '#18181b');
+      root.style.setProperty('--custom-notificationBorder', '#e5e7eb');
+      root.style.setProperty('--custom-notificationBadgeBg', '#ef4444');
+      root.style.setProperty('--custom-notificationBadgeText', '#ffffff');
+      root.style.setProperty('--custom-notificationButtonBg', '#f3f4f6');
+      root.style.setProperty('--custom-notificationButtonText', '#374151');
+      root.style.setProperty('--custom-notificationRedDot', '#ef4444');
       
       console.log('✅ Default colors applied for theme:', currentTheme);
     }

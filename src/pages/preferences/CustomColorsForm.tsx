@@ -42,6 +42,16 @@ interface CustomColors {
   sidebarActiveItemBgDark: string;
   sidebarActiveItemTextDark: string;
   sidebarIconDark: string;
+  
+  // NOUVELLES VARIABLES NOTIFICATIONS
+  notificationBg: string;
+  notificationText: string;
+  notificationBorder: string;
+  notificationBadgeBg: string;
+  notificationBadgeText: string;
+  notificationButtonBg: string;
+  notificationButtonText: string;
+  notificationRedDot: string;
 }
 
 const defaultColors: CustomColors = {
@@ -78,6 +88,16 @@ const defaultColors: CustomColors = {
   sidebarActiveItemBgDark: "#1632f4",
   sidebarActiveItemTextDark: "#ffffff",
   sidebarIconDark: "#ffffff",
+  
+  // Notifications
+  notificationBg: "#ffffff",
+  notificationText: "#18181b",
+  notificationBorder: "#e5e7eb",
+  notificationBadgeBg: "#ef4444",
+  notificationBadgeText: "#ffffff",
+  notificationButtonBg: "#f3f4f6",
+  notificationButtonText: "#374151",
+  notificationRedDot: "#ef4444",
 };
 
 export const CustomColorsForm: React.FC = () => {
@@ -314,6 +334,56 @@ export const CustomColorsForm: React.FC = () => {
                 label="Couleur de l'icône"
                 value={colors.chatWidgetIcon}
                 onChange={(value) => handleColorChange("chatWidgetIcon", value)}
+              />
+            </div>
+          </div>
+
+          {/* NOUVELLE SECTION NOTIFICATIONS */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-foreground border-b pb-2">
+              🔔 Centre de Notifications
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <ColorInput
+                label="Fond de la popup"
+                value={colors.notificationBg}
+                onChange={(value) => handleColorChange("notificationBg", value)}
+              />
+              <ColorInput
+                label="Texte principal"
+                value={colors.notificationText}
+                onChange={(value) => handleColorChange("notificationText", value)}
+              />
+              <ColorInput
+                label="Bordures"
+                value={colors.notificationBorder}
+                onChange={(value) => handleColorChange("notificationBorder", value)}
+              />
+              <ColorInput
+                label="Badge (nombre)"
+                value={colors.notificationBadgeBg}
+                onChange={(value) => handleColorChange("notificationBadgeBg", value)}
+              />
+              <ColorInput
+                label="Texte du badge"
+                value={colors.notificationBadgeText}
+                onChange={(value) => handleColorChange("notificationBadgeText", value)}
+              />
+              <ColorInput
+                label="Boutons de la popup"
+                value={colors.notificationButtonBg}
+                onChange={(value) => handleColorChange("notificationButtonBg", value)}
+              />
+              <ColorInput
+                label="Texte des boutons"
+                value={colors.notificationButtonText}
+                onChange={(value) => handleColorChange("notificationButtonText", value)}
+              />
+              <ColorInput
+                label="Point rouge (indicateur)"
+                value={colors.notificationRedDot}
+                onChange={(value) => handleColorChange("notificationRedDot", value)}
               />
             </div>
           </div>

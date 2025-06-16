@@ -53,7 +53,7 @@ export const BackOfficeHeader: React.FC = () => {
             </div>
             
             <div className="flex items-center space-x-4">
-              {/* Bouton Notifications avec indicateur amélioré - POSITION FIXÉE */}
+              {/* Bouton Notifications avec les couleurs personnalisables */}
               <div className="relative">
                 <Button 
                   onClick={handleNotificationClick}
@@ -64,12 +64,21 @@ export const BackOfficeHeader: React.FC = () => {
                   <Bell className="h-5 w-5" />
                   {unreadCount > 0 && (
                     <>
-                      {/* Badge avec le chiffre */}
-                      <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs p-0 bg-red-500 text-white border-2 border-white">
+                      {/* Badge avec le chiffre - utilise les variables CSS personnalisables */}
+                      <Badge 
+                        className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs p-0 border-2 border-white"
+                        style={{
+                          backgroundColor: 'var(--custom-notificationBadgeBg, #ef4444)',
+                          color: 'var(--custom-notificationBadgeText, #ffffff)'
+                        }}
+                      >
                         {unreadCount}
                       </Badge>
-                      {/* Rond rouge REPOSITIONNÉ et VISIBLE */}
-                      <div className="absolute top-5 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse border border-white"></div>
+                      {/* Point rouge personnalisable */}
+                      <div 
+                        className="absolute -top-1 -right-1 w-3 h-3 rounded-full animate-pulse border-2 border-white"
+                        style={{ backgroundColor: 'var(--custom-notificationRedDot, #ef4444)' }}
+                      ></div>
                     </>
                   )}
                 </Button>
