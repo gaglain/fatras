@@ -53,7 +53,7 @@ export const BackOfficeHeader: React.FC = () => {
             </div>
             
             <div className="flex items-center space-x-4">
-              {/* Bouton Notifications */}
+              {/* Bouton Notifications avec indicateur amélioré */}
               <div className="relative">
                 <Button 
                   onClick={handleNotificationClick}
@@ -63,9 +63,14 @@ export const BackOfficeHeader: React.FC = () => {
                 >
                   <Bell className="h-5 w-5" />
                   {unreadCount > 0 && (
-                    <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center text-xs p-0 bg-red-500 text-white">
-                      {unreadCount}
-                    </Badge>
+                    <>
+                      {/* Badge avec le chiffre */}
+                      <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center text-xs p-0 bg-red-500 text-white">
+                        {unreadCount}
+                      </Badge>
+                      {/* Rond rouge en dessous pour plus de visibilité */}
+                      <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse"></div>
+                    </>
                   )}
                 </Button>
                 

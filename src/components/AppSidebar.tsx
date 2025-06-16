@@ -82,16 +82,14 @@ export function AppSidebar() {
                           <SidebarMenuButton
                             className="w-full justify-between transition-colors border-0"
                             style={{
-                              color: 'var(--custom-cardText, #18181b)',
+                              color: isActive ? '#ffffff' : 'var(--custom-cardText, #18181b)',
                               backgroundColor: isActive ? 'var(--custom-buttonBg, #1632f4)' : 'transparent',
                               borderRadius: '0'
                             }}
                           >
                             <div className="flex items-center min-w-0">
                               <item.icon className="mr-3 h-4 w-4 flex-shrink-0" color={isActive ? '#ffffff' : sidebarIconColor} />
-                              <span className="truncate text-sm" style={{
-                                color: isActive ? '#ffffff' : 'var(--custom-cardText, #18181b)'
-                              }}>
+                              <span className="truncate text-sm">
                                 {item.name}
                               </span>
                             </div>
@@ -138,16 +136,14 @@ export function AppSidebar() {
                       asChild 
                       className="transition-colors border-0"
                       style={{
-                        color: 'var(--custom-cardText, #18181b)',
+                        color: isActiveItem(item.href) ? '#ffffff' : 'var(--custom-cardText, #18181b)',
                         backgroundColor: isActiveItem(item.href) ? 'var(--custom-buttonBg, #1632f4)' : 'transparent',
                         borderRadius: '0'
                       }}
                     >
                       <Link to={item.href} className="flex items-center min-w-0">
                         <item.icon className="mr-3 h-4 w-4 flex-shrink-0" color={isActiveItem(item.href) ? '#ffffff' : sidebarIconColor} />
-                        <span className="truncate text-sm" style={{
-                          color: isActiveItem(item.href) ? '#ffffff' : 'var(--custom-cardText, #18181b)'
-                        }}>
+                        <span className="truncate text-sm">
                           {item.name}
                         </span>
                       </Link>
