@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -107,7 +108,7 @@ export const Header: React.FC = () => {
             <div className="flex items-center space-x-1 lg:space-x-2">
               <ThemeToggle />
               
-              {/* Notification Button */}
+              {/* Notification Button - CONTAINER RELATIF CRITIQUE */}
               <div className="relative">
                 <Button
                   variant="ghost"
@@ -124,13 +125,6 @@ export const Header: React.FC = () => {
                     </Badge>
                   )}
                 </Button>
-                
-                {/* Notification Popup */}
-                {showNotifications && (
-                  <div className="absolute top-full right-0 mt-2 z-[200]">
-                    <NotificationCenter onClose={closeNotifications} />
-                  </div>
-                )}
               </div>
             </div>
 
@@ -183,6 +177,27 @@ export const Header: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* NOTIFICATION POPUP - PORTAIL FIXE AU NIVEAU RACINE */}
+      {showNotifications && (
+        <div 
+          className="fixed inset-0 z-[9999]"
+          style={{ 
+            pointerEvents: 'none',
+            background: 'rgba(0,0,0,0.1)' // Debug: fond semi-transparent pour voir le portail
+          }}
+        >
+          <div 
+            className="absolute top-16 right-4 lg:right-6"
+            style={{ 
+              pointerEvents: 'auto',
+              zIndex: 10000 
+            }}
+          >
+            <NotificationCenter onClose={closeNotifications} />
+          </div>
+        </div>
+      )}
     </>
   );
 };
