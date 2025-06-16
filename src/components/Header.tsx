@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -51,7 +52,7 @@ export const Header: React.FC = () => {
   const toggleNotifications = () => {
     console.log('🔔 NOTIFICATION CLICK - État actuel:', showNotifications);
     console.log('🔔 NOTIFICATION CLICK - DOM element exists:', document.querySelector('.notification-button'));
-    console.log('🔔 NOTIFICATION CLICK - Popup element exists:', document.querySelector('.notification-popup'));
+    console.log('🔔 NOTIFICATION CLICK - Popup element exists:', document.querySelector('.notification-center'));
     
     const newState = !showNotifications;
     setShowNotifications(newState);
@@ -64,9 +65,9 @@ export const Header: React.FC = () => {
       
       // Vérifier que le popup apparaît après un délai
       setTimeout(() => {
-        const popup = document.querySelector('.notification-popup');
+        const popup = document.querySelector('.notification-center');
         console.log('🔔 POPUP CHECK - Element trouvé:', popup);
-        console.log('🔔 POPUP CHECK - Style display:', popup?.style?.display);
+        console.log('🔔 POPUP CHECK - Style display:', (popup as HTMLElement)?.style?.display);
         console.log('🔔 POPUP CHECK - Computed style:', popup ? window.getComputedStyle(popup).display : 'not found');
       }, 100);
     }
@@ -76,7 +77,7 @@ export const Header: React.FC = () => {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
-      if (showNotifications && !target.closest('.notification-popup') && !target.closest('.notification-button')) {
+      if (showNotifications && !target.closest('.notification-center') && !target.closest('.notification-button')) {
         console.log('🔔 CLOSING - Click outside detected');
         setShowNotifications(false);
       }
@@ -221,7 +222,7 @@ export const Header: React.FC = () => {
       {/* Notification Popup avec debug maximum */}
       {showNotifications && (
         <div 
-          className="notification-popup"
+          className="notification-test-popup"
           style={{
             position: 'fixed',
             top: '0',
@@ -254,6 +255,11 @@ export const Header: React.FC = () => {
             State: {showNotifications ? 'TRUE' : 'FALSE'}
           </div>
         </div>
+      )}
+
+      {/* NotificationCenter component */}
+      {showNotifications && (
+        <NotificationCenter onClose={() => setShowNotifications(false)} />
       )}
     </>
   );
