@@ -73,6 +73,9 @@ export const Header: React.FC = () => {
     console.log('🔔 showNotifications state changed to:', showNotifications);
   }, [showNotifications]);
 
+  // Debug log before render
+  console.log('🔔 About to render, showNotifications is:', showNotifications);
+
   return (
     <>
       <div className="border-b shadow-sm bg-background relative">
@@ -123,14 +126,10 @@ export const Header: React.FC = () => {
                 </Button>
                 
                 {/* Notification Popup */}
-                {console.log('🔔 Rendering condition check - showNotifications:', showNotifications)}
                 {showNotifications && (
-                  <>
-                    {console.log('🔔 Rendering NotificationCenter popup!')}
-                    <div className="absolute top-full right-0 mt-2 z-[200]">
-                      <NotificationCenter onClose={closeNotifications} />
-                    </div>
-                  </>
+                  <div className="absolute top-full right-0 mt-2 z-[200]">
+                    <NotificationCenter onClose={closeNotifications} />
+                  </div>
                 )}
               </div>
             </div>
