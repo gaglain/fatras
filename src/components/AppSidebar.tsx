@@ -83,7 +83,7 @@ export function AppSidebar() {
                             className="w-full justify-between transition-colors border-0"
                             style={{
                               color: isActive ? '#ffffff' : 'var(--custom-cardText, #18181b)',
-                              backgroundColor: isActive ? 'var(--custom-buttonBg, #1632f4)' : 'transparent',
+                              backgroundColor: isActive ? '#1a365d' : 'transparent',
                               borderRadius: '6px',
                               marginBottom: '2px'
                             }}
@@ -109,7 +109,7 @@ export function AppSidebar() {
                                   asChild 
                                   className="transition-colors border-0"
                                   style={{
-                                    backgroundColor: isActiveItem(child.href) ? 'var(--custom-buttonBg, #1632f4)' : 'transparent',
+                                    backgroundColor: isActiveItem(child.href) ? '#1a365d' : 'transparent',
                                     borderRadius: '6px',
                                     marginBottom: '1px'
                                   }}
@@ -139,7 +139,7 @@ export function AppSidebar() {
                       className="transition-colors border-0"
                       style={{
                         color: isActiveItem(item.href) ? '#ffffff' : 'var(--custom-cardText, #18181b)',
-                        backgroundColor: isActiveItem(item.href) ? 'var(--custom-buttonBg, #1632f4)' : 'transparent',
+                        backgroundColor: isActiveItem(item.href) ? '#1a365d' : 'transparent',
                         borderRadius: '6px',
                         marginBottom: '2px'
                       }}

@@ -64,12 +64,12 @@ export const BackOfficeHeader: React.FC = () => {
                   <Bell className="h-5 w-5" />
                   {unreadCount > 0 && (
                     <>
-                      {/* Badge avec le chiffre */}
-                      <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center text-xs p-0 bg-red-500 text-white">
+                      {/* Badge avec le chiffre - positionné plus haut */}
+                      <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs p-0 bg-red-500 text-white border-2 border-white">
                         {unreadCount}
                       </Badge>
-                      {/* Rond rouge en dessous pour plus de visibilité */}
-                      <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse"></div>
+                      {/* Rond rouge en dessous pour plus de visibilité - repositionné */}
+                      <div className="absolute top-6 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse shadow-lg"></div>
                     </>
                   )}
                 </Button>
