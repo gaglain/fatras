@@ -1,7 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { User, LogOut, MessageSquare, ChevronDown } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Bell, User, LogOut, MessageSquare, ChevronDown } from 'lucide-react';
+import { NotificationCenter } from './NotificationCenter';
 import { UserProfile } from './UserProfile';
 import { ThemeToggle } from './ThemeToggle';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -12,7 +14,9 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 
 export const Header: React.FC = () => {
   const { currentUser } = useUser();
+  const [showNotifications, setShowNotifications] = useState(false);
   const [showUserProfile, setShowUserProfile] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(3);
   const [companySettings, setCompanySettings] = useState({
     name: 'Fatras Booking',
     logo: '',
@@ -45,11 +49,45 @@ export const Header: React.FC = () => {
     };
   }, []);
 
+  const toggleNotifications = () => {
+    console.log('🔔 CLICK DETECTED! Current showNotifications state:', showNotifications);
+    const newState = !showNotifications;
+    console.log('🔔 Setting showNotifications to:', newState);
+    setShowNotifications(newState);
+    
+    if (newState) {
+      console.log('🔔 Notifications should now be VISIBLE');
+      setUnreadCount(0);
+    } else {
+      console.log('🔔 Notifications should now be HIDDEN');
+    }
+  };
+
+  // Close notifications when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (showNotifications && !target.closest('.notification-container')) {
+        console.log('🔔 Closing notifications - clicked outside');
+        setShowNotifications(false);
+      }
+    };
+
+    if (showNotifications) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showNotifications]);
+
+  console.log('🔔 Header RENDER - showNotifications state is:', showNotifications);
+
   return (
     <>
       <div className="border-b shadow-sm bg-background relative">
         <div className="flex h-16 items-center justify-between px-4 lg:px-6">
-          
           <div className="flex items-center space-x-2 lg:space-x-4 min-w-0">
             <SidebarTrigger />
             {companySettings.logo ? (
@@ -76,8 +114,28 @@ export const Header: React.FC = () => {
           <div className="flex items-center space-x-2 lg:space-x-4">
             <div className="flex items-center space-x-1 lg:space-x-2">
               <ThemeToggle />
+              
+              {/* Notification Button Container */}
+              <div className="relative notification-container">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={toggleNotifications}
+                  className="relative h-8 w-8 p-0"
+                >
+                  <Bell className="h-4 w-4" />
+                  {unreadCount > 0 && (
+                    <Badge 
+                      className="absolute -top-1 -right-1 h-4 w-4 lg:h-5 lg:w-5 flex items-center justify-center text-xs p-0 bg-red-500 text-white border-0"
+                    >
+                      {unreadCount}
+                    </Badge>
+                  )}
+                </Button>
+              </div>
             </div>
 
+            {/* USER DROPDOWN */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="flex items-center space-x-2 h-8 px-2 lg:px-3 text-foreground">
@@ -126,6 +184,29 @@ export const Header: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Notification Popup - EN DEHORS DU HEADER POUR ÉVITER LES CONFLITS */}
+      {showNotifications && (
+        <div 
+          className="notification-container fixed top-16 right-4 z-[9999] pointer-events-auto"
+          style={{ 
+            position: 'fixed',
+            top: '64px',
+            right: '16px',
+            zIndex: 9999,
+            pointerEvents: 'auto'
+          }}
+        >
+          <div className="animate-in slide-in-from-top-2 duration-200">
+            <NotificationCenter 
+              onClose={() => {
+                console.log('🔔 NotificationCenter onClose called from Header');
+                setShowNotifications(false);
+              }} 
+            />
+          </div>
+        </div>
+      )}
     </>
   );
 };
