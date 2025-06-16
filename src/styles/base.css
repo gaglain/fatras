@@ -29,7 +29,7 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     
-    /* VARIABLES PERSONNALISÉES FORCÉES */
+    /* VARIABLES PERSONNALISÉES FORCÉES - VALEURS PAR DÉFAUT */
     --app-background: #ffffff;
     --app-text: #18181b;
     --app-card-bg: #ffffff;
@@ -38,6 +38,12 @@
     --app-button-text: #ffffff;
     --app-chat-widget-bg: #ec5f65;
     --app-chat-widget-icon: #ffffff;
+    
+    /* Variables de fallback pour compatibilité */
+    --custom-background: #ffffff;
+    --custom-text: #18181b;
+    --custom-cardBg: #ffffff;
+    --custom-cardText: #18181b;
     
     /* Sidebar tokens */
     --sidebar-background: #ffffff;
@@ -71,7 +77,7 @@
     --input: 217.2 32.6% 17.5%;
     --ring: 221 83% 53%;
     
-    /* VARIABLES PERSONNALISÉES MODE SOMBRE */
+    /* VARIABLES PERSONNALISÉES MODE SOMBRE - VALEURS PAR DÉFAUT */
     --app-background: #18181b;
     --app-text: #ffffff;
     --app-card-bg: #22223a;
@@ -80,6 +86,12 @@
     --app-button-text: #1632f4;
     --app-chat-widget-bg: #ec5f65;
     --app-chat-widget-icon: #ffffff;
+    
+    /* Variables de fallback pour compatibilité */
+    --custom-background: #18181b;
+    --custom-text: #ffffff;
+    --custom-cardBg: #22223a;
+    --custom-cardText: #ffffff;
     
     /* Sidebar en mode sombre */
     --sidebar-background: #22223a;
@@ -104,9 +116,6 @@
     background: var(--app-background) !important;
     color: var(--app-text) !important;
     min-height: 100vh;
-  }
-  
-  body {
     font-family: "Inter", sans-serif;
     font-display: swap;
   }
@@ -126,5 +135,11 @@
   
   video {
     preload: metadata;
+  }
+  
+  /* Force l'application des couleurs personnalisées sur tous les éléments principaux */
+  main, section, article, aside, div:not(.chat-widget-button):not(.chat-widget-popup) {
+    background: var(--app-background) !important;
+    color: var(--app-text) !important;
   }
 }
