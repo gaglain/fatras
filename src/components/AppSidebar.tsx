@@ -84,12 +84,13 @@ export function AppSidebar() {
                             style={{
                               color: isActive ? '#ffffff' : 'var(--custom-cardText, #18181b)',
                               backgroundColor: isActive ? 'var(--custom-buttonBg, #1632f4)' : 'transparent',
-                              borderRadius: '0'
+                              borderRadius: '6px',
+                              marginBottom: '2px'
                             }}
                           >
                             <div className="flex items-center min-w-0">
                               <item.icon className="mr-3 h-4 w-4 flex-shrink-0" color={isActive ? '#ffffff' : sidebarIconColor} />
-                              <span className="truncate text-sm">
+                              <span className="truncate text-sm" style={{ color: isActive ? '#ffffff' : 'var(--custom-cardText, #18181b)' }}>
                                 {item.name}
                               </span>
                             </div>
@@ -109,7 +110,8 @@ export function AppSidebar() {
                                   className="transition-colors border-0"
                                   style={{
                                     backgroundColor: isActiveItem(child.href) ? 'var(--custom-buttonBg, #1632f4)' : 'transparent',
-                                    borderRadius: '0'
+                                    borderRadius: '6px',
+                                    marginBottom: '1px'
                                   }}
                                 >
                                   <Link to={child.href} className="flex items-center min-w-0">
@@ -138,12 +140,13 @@ export function AppSidebar() {
                       style={{
                         color: isActiveItem(item.href) ? '#ffffff' : 'var(--custom-cardText, #18181b)',
                         backgroundColor: isActiveItem(item.href) ? 'var(--custom-buttonBg, #1632f4)' : 'transparent',
-                        borderRadius: '0'
+                        borderRadius: '6px',
+                        marginBottom: '2px'
                       }}
                     >
                       <Link to={item.href} className="flex items-center min-w-0">
                         <item.icon className="mr-3 h-4 w-4 flex-shrink-0" color={isActiveItem(item.href) ? '#ffffff' : sidebarIconColor} />
-                        <span className="truncate text-sm">
+                        <span className="truncate text-sm" style={{ color: isActiveItem(item.href) ? '#ffffff' : 'var(--custom-cardText, #18181b)' }}>
                           {item.name}
                         </span>
                       </Link>
