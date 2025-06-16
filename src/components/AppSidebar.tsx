@@ -83,9 +83,10 @@ export function AppSidebar() {
                             className="w-full justify-between transition-colors border-0"
                             style={{
                               color: isActive ? '#ffffff' : 'var(--custom-cardText, #18181b)',
-                              backgroundColor: isActive ? '#1a365d' : 'transparent',
+                              backgroundColor: isActive ? '#1632f4' : 'transparent',
                               borderRadius: '6px',
-                              marginBottom: '2px'
+                              marginBottom: '2px',
+                              fontWeight: isActive ? '600' : '400'
                             }}
                           >
                             <div className="flex items-center min-w-0">
@@ -109,9 +110,10 @@ export function AppSidebar() {
                                   asChild 
                                   className="transition-colors border-0"
                                   style={{
-                                    backgroundColor: isActiveItem(child.href) ? '#1a365d' : 'transparent',
+                                    backgroundColor: isActiveItem(child.href) ? '#1632f4' : 'transparent',
                                     borderRadius: '6px',
-                                    marginBottom: '1px'
+                                    marginBottom: '1px',
+                                    fontWeight: isActiveItem(child.href) ? '600' : '400'
                                   }}
                                 >
                                   <Link to={child.href} className="flex items-center min-w-0">
@@ -139,9 +141,10 @@ export function AppSidebar() {
                       className="transition-colors border-0"
                       style={{
                         color: isActiveItem(item.href) ? '#ffffff' : 'var(--custom-cardText, #18181b)',
-                        backgroundColor: isActiveItem(item.href) ? '#1a365d' : 'transparent',
+                        backgroundColor: isActiveItem(item.href) ? '#1632f4' : 'transparent',
                         borderRadius: '6px',
-                        marginBottom: '2px'
+                        marginBottom: '2px',
+                        fontWeight: isActiveItem(item.href) ? '600' : '400'
                       }}
                     >
                       <Link to={item.href} className="flex items-center min-w-0">
