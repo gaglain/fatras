@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Bell, X, Mail, CheckSquare, Calendar, User, MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -55,8 +54,6 @@ interface NotificationCenterProps {
 }
 
 export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose }) => {
-  console.log('🔔 NotificationCenter component is RENDERING NOW!');
-  
   const [notifications, setNotifications] = useState<Notification[]>(sampleNotifications);
   const navigate = useNavigate();
 
@@ -99,10 +96,10 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'high': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
-      case 'medium': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
-      case 'low': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
+      case 'high': return 'bg-red-500 text-white';
+      case 'medium': return 'bg-yellow-500 text-white';
+      case 'low': return 'bg-green-500 text-white';
+      default: return 'bg-gray-500 text-white';
     }
   };
 
@@ -117,32 +114,29 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
   };
 
   return (
-    <div className="notification-center" style={{
-      position: 'fixed',
-      top: '64px',
-      right: '16px',
-      zIndex: 9999,
-      background: 'white',
-      border: '1px solid #e5e7eb',
-      borderRadius: '0.5rem',
-      boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-      width: '384px',
-      maxWidth: '90vw',
-      color: '#1f2937'
-    }}>
-      <div style={{ 
-        padding: '1rem', 
-        background: 'white', 
-        borderBottom: '1px solid #f3f4f6', 
-        borderTopLeftRadius: '0.5rem',
-        borderTopRightRadius: '0.5rem'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ fontSize: '1.125rem', display: 'flex', alignItems: 'center', color: '#1f2937', fontWeight: '600' }}>
+    <div 
+      className="fixed top-16 right-4 w-96 max-w-[90vw] bg-white border border-gray-200 rounded-lg shadow-xl z-50"
+      style={{
+        position: 'fixed',
+        top: '64px',
+        right: '16px',
+        width: '384px',
+        maxWidth: '90vw',
+        backgroundColor: 'white',
+        border: '1px solid #e5e7eb',
+        borderRadius: '8px',
+        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+        zIndex: 9999
+      }}
+    >
+      {/* Header */}
+      <div className="p-4 border-b border-gray-200">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center text-gray-900 font-semibold">
             <Bell className="h-5 w-5 mr-2" />
             Notifications
             {unreadCount > 0 && (
-              <Badge style={{ marginLeft: '0.5rem', background: '#ef4444', color: 'white' }}>
+              <Badge className="ml-2 bg-red-500 text-white">
                 {unreadCount}
               </Badge>
             )}
@@ -150,11 +144,8 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
           <Button 
             variant="ghost" 
             size="sm" 
-            onClick={() => {
-              console.log('🔔 Close button clicked in NotificationCenter');
-              onClose();
-            }}
-            style={{ height: '2rem', width: '2rem', padding: '0', background: 'transparent' }}
+            onClick={onClose}
+            className="h-8 w-8 p-0"
           >
             <X className="h-4 w-4" />
           </Button>
@@ -164,63 +155,54 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
             variant="outline" 
             size="sm" 
             onClick={markAllAsRead}
-            style={{ marginTop: '0.5rem', background: 'transparent', border: '1px solid #d1d5db' }}
+            className="mt-2"
           >
             Tout marquer comme lu
           </Button>
         )}
       </div>
-      <div style={{ 
-        maxHeight: '24rem', 
-        overflowY: 'auto', 
-        background: 'white', 
-        padding: '1rem', 
-        borderBottomLeftRadius: '0.5rem',
-        borderBottomRightRadius: '0.5rem'
-      }}>
+
+      {/* Content */}
+      <div className="max-h-96 overflow-y-auto p-4">
         {notifications.length === 0 ? (
-          <div style={{ textAlign: 'center', paddingTop: '2rem', paddingBottom: '2rem', color: '#6b7280' }}>
-            <Bell className="h-12 w-12 mx-auto mb-3" />
+          <div className="text-center py-8 text-gray-500">
+            <Bell className="h-12 w-12 mx-auto mb-3 text-gray-300" />
             <p>Aucune notification</p>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div className="space-y-3">
             {notifications.map((notification) => (
               <div
                 key={notification.id}
-                style={{
-                  padding: '0.75rem',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '0.5rem',
-                  transition: 'all 0.2s',
-                  cursor: 'pointer',
-                  background: !notification.isRead ? '#eff6ff' : 'white',
-                  borderColor: !notification.isRead ? '#3b82f6' : '#e5e7eb'
-                }}
+                className={`p-3 rounded-lg border cursor-pointer hover:bg-gray-50 transition-colors ${
+                  !notification.isRead 
+                    ? 'bg-blue-50 border-blue-200' 
+                    : 'bg-white border-gray-200'
+                }`}
                 onClick={() => handleNotificationClick(notification)}
               >
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
-                  <div style={{ marginTop: '0.25rem', color: '#6b7280' }}>
+                <div className="flex items-start gap-3">
+                  <div className="text-gray-500 mt-1">
                     {getIcon(notification.type)}
                   </div>
-                  <div style={{ flex: '1', minWidth: '0' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-                      <p style={{ fontSize: '0.875rem', fontWeight: '500', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#1f2937' }}>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-sm font-medium text-gray-900 truncate">
                         {notification.title}
                       </p>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <div className="flex items-center gap-2">
                         <Badge className={getPriorityColor(notification.priority)}>
                           {notification.priority}
                         </Badge>
                         {!notification.isRead && (
-                          <div style={{ width: '0.5rem', height: '0.5rem', background: '#3b82f6', borderRadius: '50%' }}></div>
+                          <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
                         )}
                       </div>
                     </div>
-                    <p style={{ fontSize: '0.875rem', color: '#6b7280', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    <p className="text-sm text-gray-600 line-clamp-2">
                       {notification.message}
                     </p>
-                    <p style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: '#6b7280' }}>
+                    <p className="text-xs text-gray-500 mt-1">
                       {formatTime(notification.timestamp)}
                     </p>
                   </div>

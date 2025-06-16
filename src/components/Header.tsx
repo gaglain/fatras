@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -50,16 +49,10 @@ export const Header: React.FC = () => {
   }, []);
 
   const toggleNotifications = () => {
-    console.log('🔔 CLICK DETECTED! Current showNotifications state:', showNotifications);
-    const newState = !showNotifications;
-    console.log('🔔 Setting showNotifications to:', newState);
-    setShowNotifications(newState);
-    
-    if (newState) {
-      console.log('🔔 Notifications should now be VISIBLE');
+    console.log('🔔 Notification button clicked, current state:', showNotifications);
+    setShowNotifications(!showNotifications);
+    if (!showNotifications) {
       setUnreadCount(0);
-    } else {
-      console.log('🔔 Notifications should now be HIDDEN');
     }
   };
 
@@ -67,7 +60,7 @@ export const Header: React.FC = () => {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
-      if (showNotifications && !target.closest('.notification-container')) {
+      if (showNotifications && !target.closest('.notification-popup') && !target.closest('.notification-button')) {
         console.log('🔔 Closing notifications - clicked outside');
         setShowNotifications(false);
       }
@@ -82,12 +75,11 @@ export const Header: React.FC = () => {
     };
   }, [showNotifications]);
 
-  console.log('🔔 Header RENDER - showNotifications state is:', showNotifications);
-
   return (
     <>
       <div className="border-b shadow-sm bg-background relative">
         <div className="flex h-16 items-center justify-between px-4 lg:px-6">
+          
           <div className="flex items-center space-x-2 lg:space-x-4 min-w-0">
             <SidebarTrigger />
             {companySettings.logo ? (
@@ -115,13 +107,13 @@ export const Header: React.FC = () => {
             <div className="flex items-center space-x-1 lg:space-x-2">
               <ThemeToggle />
               
-              {/* Notification Button Container */}
-              <div className="relative notification-container">
+              {/* Notification Button */}
+              <div className="relative">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={toggleNotifications}
-                  className="relative h-8 w-8 p-0"
+                  className="relative h-8 w-8 p-0 notification-button"
                 >
                   <Bell className="h-4 w-4" />
                   {unreadCount > 0 && (
@@ -135,7 +127,7 @@ export const Header: React.FC = () => {
               </div>
             </div>
 
-            {/* USER DROPDOWN */}
+            
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="flex items-center space-x-2 h-8 px-2 lg:px-3 text-foreground">
@@ -185,26 +177,12 @@ export const Header: React.FC = () => {
         </div>
       </div>
 
-      {/* Notification Popup - EN DEHORS DU HEADER POUR ÉVITER LES CONFLITS */}
+      {/* Notification Popup */}
       {showNotifications && (
-        <div 
-          className="notification-container fixed top-16 right-4 z-[9999] pointer-events-auto"
-          style={{ 
-            position: 'fixed',
-            top: '64px',
-            right: '16px',
-            zIndex: 9999,
-            pointerEvents: 'auto'
-          }}
-        >
-          <div className="animate-in slide-in-from-top-2 duration-200">
-            <NotificationCenter 
-              onClose={() => {
-                console.log('🔔 NotificationCenter onClose called from Header');
-                setShowNotifications(false);
-              }} 
-            />
-          </div>
+        <div className="notification-popup">
+          <NotificationCenter 
+            onClose={() => setShowNotifications(false)} 
+          />
         </div>
       )}
     </>
