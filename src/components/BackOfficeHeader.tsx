@@ -9,13 +9,16 @@ import { useCompanySettings } from '@/hooks/useCompanySettings';
 import { useUser } from '@/contexts/UserContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { UserProfile } from './UserProfile';
+import { NotificationCenter } from './NotificationCenter';
+import { Badge } from '@/components/ui/badge';
 
 export const BackOfficeHeader: React.FC = () => {
   const { theme } = useTheme();
   const { name, logo } = useCompanySettings();
   const { currentUser } = useUser();
   const [showUserProfile, setShowUserProfile] = useState(false);
-  const [showNotificationTest, setShowNotificationTest] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [unreadCount] = useState(3); // Mock data - vous pouvez connecter à votre système
 
   const isDark = theme === "dark";
   const headerClasses = isDark
@@ -26,17 +29,12 @@ export const BackOfficeHeader: React.FC = () => {
     : "border-b border-gray-200";
 
   const handleNotificationClick = () => {
-    console.log('🔔 BACKOFFICE HEADER - CLIC NOTIFICATION');
-    setShowNotificationTest(prev => {
-      const newVal = !prev;
-      console.log('🔔 BACKOFFICE HEADER - NOUVEAU ÉTAT:', newVal);
-      return newVal;
-    });
+    setShowNotifications(prev => !prev);
   };
 
   return (
     <>
-      <header className={`${headerClasses} ${borderClasses} shadow-sm`}>
+      <header className={`${headerClasses} ${borderClasses} shadow-sm relative`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
@@ -55,14 +53,29 @@ export const BackOfficeHeader: React.FC = () => {
             </div>
             
             <div className="flex items-center space-x-4">
-              {/* TEST BUTTON MEGA VISIBLE */}
-              <Button 
-                onClick={handleNotificationClick}
-                className="relative h-12 w-12 p-0 bg-red-500 hover:bg-red-600 text-white border-4 border-yellow-400"
-                style={{ zIndex: 999999 }}
-              >
-                <Bell className="h-6 w-6" />
-              </Button>
+              {/* Bouton Notifications */}
+              <div className="relative">
+                <Button 
+                  onClick={handleNotificationClick}
+                  variant="ghost"
+                  size="icon"
+                  className={`relative ${isDark ? 'hover:bg-white/10' : 'hover:bg-[#1632f4]/10'}`}
+                >
+                  <Bell className="h-5 w-5" />
+                  {unreadCount > 0 && (
+                    <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center text-xs p-0 bg-red-500 text-white">
+                      {unreadCount}
+                    </Badge>
+                  )}
+                </Button>
+                
+                {/* Centre de notifications */}
+                {showNotifications && (
+                  <div className="absolute top-full right-0 mt-2 z-50">
+                    <NotificationCenter onClose={() => setShowNotifications(false)} />
+                  </div>
+                )}
+              </div>
               
               <FrontThemeToggle variant="back-office" />
               
@@ -90,62 +103,6 @@ export const BackOfficeHeader: React.FC = () => {
           )}
         </div>
       </header>
-
-      {/* POPUP TEST ULTRA VISIBLE */}
-      {showNotificationTest && (
-        <div 
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100vw',
-            height: '100vh',
-            backgroundColor: 'rgba(255, 0, 0, 0.9)',
-            zIndex: 999999,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-          onClick={() => {
-            console.log('🔔 BACKOFFICE - FERMETURE par clic fond');
-            setShowNotificationTest(false);
-          }}
-        >
-          <div 
-            style={{
-              backgroundColor: 'yellow',
-              padding: '50px',
-              border: '10px solid black',
-              borderRadius: '20px',
-              fontSize: '30px',
-              fontWeight: 'bold',
-              color: 'black',
-              textAlign: 'center'
-            }}
-            onClick={e => e.stopPropagation()}
-          >
-            <div>✅ BACKOFFICE POPUP FONCTIONNE !</div>
-            <button 
-              onClick={() => {
-                console.log('🔔 BACKOFFICE - FERMETURE par bouton');
-                setShowNotificationTest(false);
-              }}
-              style={{
-                marginTop: '20px',
-                padding: '15px 30px',
-                backgroundColor: 'red',
-                color: 'white',
-                border: 'none',
-                borderRadius: '10px',
-                fontSize: '18px',
-                cursor: 'pointer'
-              }}
-            >
-              FERMER
-            </button>
-          </div>
-        </div>
-      )}
     </>
   );
 };
