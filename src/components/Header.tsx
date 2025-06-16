@@ -49,10 +49,26 @@ export const Header: React.FC = () => {
   }, []);
 
   const toggleNotifications = () => {
-    console.log('🔔 Notification button clicked, current state:', showNotifications);
-    setShowNotifications(!showNotifications);
-    if (!showNotifications) {
+    console.log('🔔 NOTIFICATION CLICK - État actuel:', showNotifications);
+    console.log('🔔 NOTIFICATION CLICK - DOM element exists:', document.querySelector('.notification-button'));
+    console.log('🔔 NOTIFICATION CLICK - Popup element exists:', document.querySelector('.notification-popup'));
+    
+    const newState = !showNotifications;
+    setShowNotifications(newState);
+    
+    console.log('🔔 NOTIFICATION CLICK - Nouvel état:', newState);
+    
+    if (newState) {
       setUnreadCount(0);
+      console.log('🔔 NOTIFICATION OPENED - Compteur remis à zéro');
+      
+      // Vérifier que le popup apparaît après un délai
+      setTimeout(() => {
+        const popup = document.querySelector('.notification-popup');
+        console.log('🔔 POPUP CHECK - Element trouvé:', popup);
+        console.log('🔔 POPUP CHECK - Style display:', popup?.style?.display);
+        console.log('🔔 POPUP CHECK - Computed style:', popup ? window.getComputedStyle(popup).display : 'not found');
+      }, 100);
     }
   };
 
@@ -61,18 +77,25 @@ export const Header: React.FC = () => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
       if (showNotifications && !target.closest('.notification-popup') && !target.closest('.notification-button')) {
-        console.log('🔔 Closing notifications - clicked outside');
+        console.log('🔔 CLOSING - Click outside detected');
         setShowNotifications(false);
       }
     };
 
     if (showNotifications) {
+      console.log('🔔 EVENT LISTENER - Adding click outside listener');
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
+      console.log('🔔 EVENT LISTENER - Removing click outside listener');
       document.removeEventListener('mousedown', handleClickOutside);
     };
+  }, [showNotifications]);
+
+  // Debug: Log state changes
+  useEffect(() => {
+    console.log('🔔 STATE CHANGE - showNotifications:', showNotifications);
   }, [showNotifications]);
 
   return (
@@ -107,13 +130,17 @@ export const Header: React.FC = () => {
             <div className="flex items-center space-x-1 lg:space-x-2">
               <ThemeToggle />
               
-              {/* Notification Button */}
+              {/* Notification Button avec debug */}
               <div className="relative">
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={toggleNotifications}
+                  onClick={() => {
+                    console.log('🔔 BUTTON CLICKED - Direct click handler');
+                    toggleNotifications();
+                  }}
                   className="relative h-8 w-8 p-0 notification-button"
+                  style={{ zIndex: 10 }}
                 >
                   <Bell className="h-4 w-4" />
                   {unreadCount > 0 && (
@@ -124,6 +151,20 @@ export const Header: React.FC = () => {
                     </Badge>
                   )}
                 </Button>
+                
+                {/* Debug info visible */}
+                <div style={{ 
+                  position: 'absolute', 
+                  top: '40px', 
+                  left: '0', 
+                  fontSize: '10px', 
+                  background: 'yellow', 
+                  padding: '2px',
+                  zIndex: 1000,
+                  color: 'black'
+                }}>
+                  State: {showNotifications ? 'OPEN' : 'CLOSED'}
+                </div>
               </div>
             </div>
 
@@ -177,12 +218,41 @@ export const Header: React.FC = () => {
         </div>
       </div>
 
-      {/* Notification Popup */}
+      {/* Notification Popup avec debug maximum */}
       {showNotifications && (
-        <div className="notification-popup">
-          <NotificationCenter 
-            onClose={() => setShowNotifications(false)} 
-          />
+        <div 
+          className="notification-popup"
+          style={{
+            position: 'fixed',
+            top: '0',
+            left: '0',
+            right: '0',
+            bottom: '0',
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'flex-end',
+            paddingTop: '70px',
+            paddingRight: '20px'
+          }}
+        >
+          <div style={{
+            backgroundColor: 'white',
+            border: '2px solid red',
+            borderRadius: '8px',
+            width: '400px',
+            height: '500px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '24px',
+            color: 'black'
+          }}>
+            POPUP DE TEST VISIBLE
+            <br />
+            State: {showNotifications ? 'TRUE' : 'FALSE'}
+          </div>
         </div>
       )}
     </>
