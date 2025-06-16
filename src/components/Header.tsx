@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +21,9 @@ export const Header: React.FC = () => {
     logo: '',
     favicon: ''
   });
+
+  // Debug log pour l'état des notifications
+  console.log('🔔 Header component rendered, showNotifications:', showNotifications);
 
   useEffect(() => {
     const loadCompanySettings = () => {
@@ -50,10 +52,14 @@ export const Header: React.FC = () => {
   }, []);
 
   const toggleNotifications = () => {
-    console.log('🔔 Notification button clicked');
-    setShowNotifications(!showNotifications);
+    console.log('🔔 Notification button clicked! Before toggle, showNotifications is:', showNotifications);
+    const newState = !showNotifications;
+    setShowNotifications(newState);
+    console.log('🔔 After toggle, showNotifications will be:', newState);
+    
     if (!showNotifications) {
       setUnreadCount(0);
+      console.log('🔔 Unread count reset to 0');
     }
   };
 
@@ -61,6 +67,11 @@ export const Header: React.FC = () => {
     console.log('🔔 Closing notifications');
     setShowNotifications(false);
   };
+
+  // Debug: Log quand l'état change
+  useEffect(() => {
+    console.log('🔔 showNotifications state changed to:', showNotifications);
+  }, [showNotifications]);
 
   return (
     <>
@@ -112,10 +123,14 @@ export const Header: React.FC = () => {
                 </Button>
                 
                 {/* Notification Popup */}
+                {console.log('🔔 Rendering condition check - showNotifications:', showNotifications)}
                 {showNotifications && (
-                  <div className="absolute top-full right-0 mt-2 z-[200]">
-                    <NotificationCenter onClose={closeNotifications} />
-                  </div>
+                  <>
+                    {console.log('🔔 Rendering NotificationCenter popup!')}
+                    <div className="absolute top-full right-0 mt-2 z-[200]">
+                      <NotificationCenter onClose={closeNotifications} />
+                    </div>
+                  </>
                 )}
               </div>
             </div>
