@@ -57,7 +57,7 @@ export const BackOfficeHeader: React.FC = () => {
             </div>
             
             <div className="flex items-center space-x-4">
-              {/* Bouton Notifications avec les couleurs personnalisables */}
+              {/* Bouton Notifications avec le point rouge derrière le badge */}
               <div className="relative">
                 <Button 
                   onClick={handleNotificationClick}
@@ -72,25 +72,26 @@ export const BackOfficeHeader: React.FC = () => {
                   <Bell className="h-5 w-5" />
                   {unreadCount > 0 && (
                     <>
-                      {/* Badge avec le chiffre - utilise les variables CSS personnalisables */}
+                      {/* Point rouge en arrière-plan - derrière le badge */}
+                      <div 
+                        className="absolute -top-1 -right-1 w-6 h-6 rounded-full animate-pulse"
+                        style={{ 
+                          backgroundColor: 'var(--custom-notificationRedDot, #ef4444)',
+                          zIndex: 1
+                        }}
+                      ></div>
+                      {/* Badge avec le chiffre - au premier plan */}
                       <div 
                         className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs rounded-full border-2 font-semibold"
                         style={{
                           backgroundColor: 'var(--custom-notificationBadgeBg, #ef4444)',
                           color: 'var(--custom-notificationBadgeText, #ffffff)',
-                          borderColor: 'var(--app-background, #ffffff)'
+                          borderColor: 'var(--app-background, #ffffff)',
+                          zIndex: 2
                         }}
                       >
                         {unreadCount}
                       </div>
-                      {/* Point rouge personnalisable - positionnement corrigé */}
-                      <div 
-                        className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full animate-pulse border"
-                        style={{ 
-                          backgroundColor: 'var(--custom-notificationRedDot, #ef4444)',
-                          borderColor: 'var(--app-background, #ffffff)'
-                        }}
-                      ></div>
                     </>
                   )}
                 </Button>
