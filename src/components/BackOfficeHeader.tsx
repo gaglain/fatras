@@ -73,8 +73,8 @@ export const BackOfficeHeader: React.FC = () => {
                   {unreadCount > 0 && (
                     <>
                       {/* Badge avec le chiffre - utilise les variables CSS personnalisables */}
-                      <Badge 
-                        className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs p-0 border-2"
+                      <div 
+                        className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs rounded-full border-2 font-semibold"
                         style={{
                           backgroundColor: 'var(--custom-notificationBadgeBg, #ef4444)',
                           color: 'var(--custom-notificationBadgeText, #ffffff)',
@@ -82,10 +82,10 @@ export const BackOfficeHeader: React.FC = () => {
                         }}
                       >
                         {unreadCount}
-                      </Badge>
-                      {/* Point rouge personnalisable */}
+                      </div>
+                      {/* Point rouge personnalisable - positionnement corrigé */}
                       <div 
-                        className="absolute -top-1 -right-1 w-3 h-3 rounded-full animate-pulse border-2"
+                        className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full animate-pulse border"
                         style={{ 
                           backgroundColor: 'var(--custom-notificationRedDot, #ef4444)',
                           borderColor: 'var(--app-background, #ffffff)'
