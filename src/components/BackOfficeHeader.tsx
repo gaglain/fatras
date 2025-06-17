@@ -71,18 +71,20 @@ export const BackOfficeHeader: React.FC = () => {
                 >
                   <Bell className="h-5 w-5" />
                   {unreadCount > 0 && (
-                    <>
-                      {/* Point rouge en arrière-plan - derrière le badge */}
+                    <div className="absolute -top-1 -right-1">
+                      {/* Point rouge en arrière-plan - plus grand et derrière */}
                       <div 
-                        className="absolute -top-1 -right-1 w-6 h-6 rounded-full animate-pulse"
+                        className="absolute w-6 h-6 rounded-full animate-pulse"
                         style={{ 
                           backgroundColor: 'var(--custom-notificationRedDot, #ef4444)',
+                          top: '-1px',
+                          left: '-1px',
                           zIndex: 1
                         }}
                       ></div>
                       {/* Badge avec le chiffre - au premier plan */}
                       <div 
-                        className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs rounded-full border-2 font-semibold"
+                        className="relative h-5 w-5 flex items-center justify-center text-xs rounded-full border-2 font-semibold"
                         style={{
                           backgroundColor: 'var(--custom-notificationBadgeBg, #ef4444)',
                           color: 'var(--custom-notificationBadgeText, #ffffff)',
@@ -92,7 +94,7 @@ export const BackOfficeHeader: React.FC = () => {
                       >
                         {unreadCount}
                       </div>
-                    </>
+                    </div>
                   )}
                 </Button>
                 
