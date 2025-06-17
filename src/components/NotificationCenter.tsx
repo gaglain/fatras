@@ -117,22 +117,23 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
   };
 
   return (
-    <Card 
-      className="w-96 max-w-[90vw] shadow-2xl z-[200] border"
+    <div 
+      className="w-96 max-w-[90vw] shadow-2xl z-[200] border rounded-lg"
       style={{
         backgroundColor: 'var(--custom-notificationBg)',
-        borderColor: 'var(--custom-notificationBorder)'
+        borderColor: 'var(--custom-notificationBorder)',
+        color: 'var(--custom-notificationText)'
       }}
     >
-      <CardHeader 
-        className="pb-2 border-b"
+      <div 
+        className="pb-2 border-b p-4"
         style={{
           borderColor: 'var(--custom-notificationBorder)'
         }}
       >
         <div className="flex items-center justify-between">
-          <CardTitle 
-            className="text-lg flex items-center"
+          <div 
+            className="text-lg flex items-center font-semibold"
             style={{ color: 'var(--custom-notificationText)' }}
           >
             <Bell className="h-5 w-5 mr-2" />
@@ -148,29 +149,25 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
                 {unreadCount}
               </div>
             )}
-          </CardTitle>
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          </div>
+          <button 
             onClick={() => {
               console.log('🔔 Close button clicked in NotificationCenter');
               onClose();
             }}
-            className="h-8 w-8 p-0 hover:opacity-80"
+            className="h-8 w-8 p-0 hover:opacity-80 rounded flex items-center justify-center"
             style={{
               backgroundColor: 'var(--custom-notificationButtonBg)',
               color: 'var(--custom-notificationButtonText)'
             }}
           >
             <X className="h-4 w-4" />
-          </Button>
+          </button>
         </div>
         {notifications.length > 0 && (
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <button 
             onClick={markAllAsRead}
-            className="self-end mt-2 hover:opacity-80"
+            className="self-end mt-2 hover:opacity-80 px-3 py-1 text-sm rounded border"
             style={{
               backgroundColor: 'var(--custom-notificationButtonBg)',
               color: 'var(--custom-notificationButtonText)',
@@ -178,10 +175,10 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
             }}
           >
             Tout marquer comme lu
-          </Button>
+          </button>
         )}
-      </CardHeader>
-      <CardContent 
+      </div>
+      <div 
         className="max-h-96 overflow-y-auto p-4"
         style={{ backgroundColor: 'var(--custom-notificationBg)' }}
       >
@@ -253,7 +250,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
             ))}
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
