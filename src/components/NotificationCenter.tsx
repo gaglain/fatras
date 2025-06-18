@@ -87,13 +87,14 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
   };
 
   const getIcon = (type: string) => {
+    const iconStyle = { color: 'var(--custom-notificationText)' };
     switch (type) {
-      case 'email': return <Mail className="h-4 w-4" />;
-      case 'task': return <CheckSquare className="h-4 w-4" />;
-      case 'event': return <Calendar className="h-4 w-4" />;
-      case 'contact': return <User className="h-4 w-4" />;
-      case 'message': return <MessageSquare className="h-4 w-4" />;
-      default: return <Bell className="h-4 w-4" />;
+      case 'email': return <Mail className="h-4 w-4" style={iconStyle} />;
+      case 'task': return <CheckSquare className="h-4 w-4" style={iconStyle} />;
+      case 'event': return <Calendar className="h-4 w-4" style={iconStyle} />;
+      case 'contact': return <User className="h-4 w-4" style={iconStyle} />;
+      case 'message': return <MessageSquare className="h-4 w-4" style={iconStyle} />;
+      default: return <Bell className="h-4 w-4" style={iconStyle} />;
     }
   };
 
@@ -118,7 +119,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
 
   return (
     <div 
-      className="w-96 max-w-[90vw] shadow-2xl z-[200] border rounded-lg"
+      className="w-96 max-w-[90vw] shadow-2xl z-[200] border rounded-lg transition-all duration-300"
       style={{
         backgroundColor: 'var(--custom-notificationBg)',
         borderColor: 'var(--custom-notificationBorder)',
@@ -136,7 +137,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
             className="text-lg flex items-center font-semibold"
             style={{ color: 'var(--custom-notificationText)' }}
           >
-            <Bell className="h-5 w-5 mr-2" />
+            <Bell className="h-5 w-5 mr-2" style={{ color: 'var(--custom-notificationText)' }} />
             Notifications
             {unreadCount > 0 && (
               <div 
@@ -155,7 +156,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
               console.log('🔔 Close button clicked in NotificationCenter');
               onClose();
             }}
-            className="h-8 w-8 p-0 hover:opacity-80 rounded flex items-center justify-center"
+            className="h-8 w-8 p-0 hover:opacity-80 rounded flex items-center justify-center transition-all duration-300"
             style={{
               backgroundColor: 'var(--custom-notificationButtonBg)',
               color: 'var(--custom-notificationButtonText)'
@@ -167,7 +168,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
         {notifications.length > 0 && (
           <button 
             onClick={markAllAsRead}
-            className="self-end mt-2 hover:opacity-80 px-3 py-1 text-sm rounded border"
+            className="self-end mt-2 hover:opacity-80 px-3 py-1 text-sm rounded border transition-all duration-300"
             style={{
               backgroundColor: 'var(--custom-notificationButtonBg)',
               color: 'var(--custom-notificationButtonText)',
@@ -187,7 +188,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
             className="text-center py-8"
             style={{ color: 'var(--custom-notificationText)' }}
           >
-            <Bell className="h-12 w-12 mx-auto mb-3" />
+            <Bell className="h-12 w-12 mx-auto mb-3" style={{ color: 'var(--custom-notificationText)' }} />
             <p>Aucune notification</p>
           </div>
         ) : (
@@ -206,7 +207,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
                 onClick={() => handleNotificationClick(notification)}
               >
                 <div className="flex items-start space-x-3">
-                  <div style={{ color: 'var(--custom-notificationText)' }}>
+                  <div>
                     {getIcon(notification.type)}
                   </div>
                   <div className="flex-1 min-w-0">

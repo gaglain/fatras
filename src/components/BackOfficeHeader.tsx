@@ -29,11 +29,11 @@ export const BackOfficeHeader: React.FC = () => {
   return (
     <>
       <header 
-        className="shadow-sm relative border-b"
+        className="shadow-sm relative border-b transition-colors duration-300"
         style={{
-          backgroundColor: 'var(--app-background, #ffffff)',
-          color: 'var(--app-text, #18181b)',
-          borderColor: 'var(--custom-sidebarActiveItemBg, #1632f4)'
+          backgroundColor: 'var(--app-background)',
+          color: 'var(--app-text)',
+          borderColor: 'var(--custom-sidebarActiveItemBg)'
         }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -48,8 +48,8 @@ export const BackOfficeHeader: React.FC = () => {
                   onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                 />
                 <span 
-                  className="text-lg font-bold tracking-tight"
-                  style={{ color: 'var(--app-text, #18181b)' }}
+                  className="text-lg font-bold tracking-tight transition-colors duration-300"
+                  style={{ color: 'var(--app-text)' }}
                 >
                   {name || "MusiConnect"}
                 </span>
@@ -63,9 +63,9 @@ export const BackOfficeHeader: React.FC = () => {
                   onClick={handleNotificationClick}
                   variant="ghost"
                   size="icon"
-                  className="relative hover:opacity-80"
+                  className="relative hover:opacity-80 transition-all duration-300"
                   style={{
-                    color: 'var(--app-text, #18181b)',
+                    color: 'var(--app-text)',
                     backgroundColor: 'transparent'
                   }}
                 >
@@ -76,7 +76,7 @@ export const BackOfficeHeader: React.FC = () => {
                       <div 
                         className="absolute w-6 h-6 rounded-full animate-pulse"
                         style={{ 
-                          backgroundColor: 'var(--custom-notificationRedDot, #ef4444)',
+                          backgroundColor: 'var(--custom-notificationRedDot)',
                           top: '-1px',
                           left: '-1px',
                           zIndex: 1
@@ -86,9 +86,9 @@ export const BackOfficeHeader: React.FC = () => {
                       <div 
                         className="relative h-5 w-5 flex items-center justify-center text-xs rounded-full border-2 font-semibold"
                         style={{
-                          backgroundColor: 'var(--custom-notificationBadgeBg, #ef4444)',
-                          color: 'var(--custom-notificationBadgeText, #ffffff)',
-                          borderColor: 'var(--app-background, #ffffff)',
+                          backgroundColor: 'var(--custom-notificationBadgeBg)',
+                          color: 'var(--custom-notificationBadgeText)',
+                          borderColor: 'var(--app-background)',
                           zIndex: 2
                         }}
                       >
@@ -109,7 +109,7 @@ export const BackOfficeHeader: React.FC = () => {
               <FrontThemeToggle variant="back-office" />
               
               <button
-                className="flex items-center space-x-2 focus:outline-none group"
+                className="flex items-center space-x-2 focus:outline-none group transition-all duration-300"
                 onClick={() => setShowUserProfile(true)}
                 aria-label="Voir le profil"
               >
@@ -121,8 +121,8 @@ export const BackOfficeHeader: React.FC = () => {
                   </AvatarFallback>
                 </Avatar>
                 <span 
-                  className="hidden md:block text-sm font-medium"
-                  style={{ color: 'var(--app-text, #18181b)' }}
+                  className="hidden md:block text-sm font-medium transition-colors duration-300"
+                  style={{ color: 'var(--app-text)' }}
                 >
                   {currentUser?.name}
                 </span>
