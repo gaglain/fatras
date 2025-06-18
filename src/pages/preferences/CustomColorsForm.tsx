@@ -29,21 +29,21 @@ interface CustomColors {
   chatWidgetBg: string;
   chatWidgetIcon: string;
   
-  // NOUVELLES VARIABLES SIDEBAR - Mode clair
+  // Sidebar - Mode clair
   sidebarBg: string;
   sidebarText: string;
   sidebarActiveItemBg: string;
   sidebarActiveItemText: string;
   sidebarIconLight: string;
   
-  // NOUVELLES VARIABLES SIDEBAR - Mode sombre
+  // Sidebar - Mode sombre
   sidebarBgDark: string;
   sidebarTextDark: string;
   sidebarActiveItemBgDark: string;
   sidebarActiveItemTextDark: string;
   sidebarIconDark: string;
   
-  // NOUVELLES VARIABLES NOTIFICATIONS
+  // Notifications
   notificationBg: string;
   notificationText: string;
   notificationBorder: string;
@@ -100,44 +100,124 @@ const defaultColors: CustomColors = {
   notificationRedDot: "#ef4444",
 };
 
+// Fonction pour forcer l'application immédiate des couleurs
+const forceApplyColors = (colors: CustomColors, currentTheme: string) => {
+  const root = document.documentElement;
+  const body = document.body;
+  const isDark = currentTheme === 'dark';
+  
+  console.log('🎨 FORCE APPLY - Applying colors for theme:', currentTheme, colors);
+  
+  // Application FORCÉE des couleurs principales
+  const bgColor = isDark ? colors.backgroundDark : colors.background;
+  const textColor = isDark ? colors.textDark : colors.text;
+  
+  // Forcer l'application sur body ET root
+  body.style.setProperty('background-color', bgColor, 'important');
+  body.style.setProperty('color', textColor, 'important');
+  
+  // Variables CSS principales
+  root.style.setProperty('--app-background', bgColor, 'important');
+  root.style.setProperty('--app-text', textColor, 'important');
+  root.style.setProperty('--app-card-bg', isDark ? colors.cardBgDark : colors.cardBg, 'important');
+  root.style.setProperty('--app-card-text', isDark ? colors.cardTextDark : colors.cardText, 'important');
+  root.style.setProperty('--app-button-bg', isDark ? colors.buttonBgDark : colors.buttonBg, 'important');
+  root.style.setProperty('--app-button-text', isDark ? colors.buttonTextDark : colors.buttonText, 'important');
+  root.style.setProperty('--app-chat-widget-bg', colors.chatWidgetBg, 'important');
+  root.style.setProperty('--app-chat-widget-icon', colors.chatWidgetIcon, 'important');
+  
+  // Variables SIDEBAR
+  root.style.setProperty('--custom-sidebarBg', isDark ? colors.sidebarBgDark : colors.sidebarBg, 'important');
+  root.style.setProperty('--custom-sidebarText', isDark ? colors.sidebarTextDark : colors.sidebarText, 'important');
+  root.style.setProperty('--custom-sidebarActiveItemBg', isDark ? colors.sidebarActiveItemBgDark : colors.sidebarActiveItemBg, 'important');
+  root.style.setProperty('--custom-sidebarActiveItemText', isDark ? colors.sidebarActiveItemTextDark : colors.sidebarActiveItemText, 'important');
+  root.style.setProperty('--custom-sidebarIconLight', colors.sidebarIconLight, 'important');
+  root.style.setProperty('--custom-sidebarIconDark', colors.sidebarIconDark, 'important');
+  
+  // Variables NOTIFICATIONS
+  root.style.setProperty('--custom-notificationBg', colors.notificationBg, 'important');
+  root.style.setProperty('--custom-notificationText', colors.notificationText, 'important');
+  root.style.setProperty('--custom-notificationBorder', colors.notificationBorder, 'important');
+  root.style.setProperty('--custom-notificationBadgeBg', colors.notificationBadgeBg, 'important');
+  root.style.setProperty('--custom-notificationBadgeText', colors.notificationBadgeText, 'important');
+  root.style.setProperty('--custom-notificationButtonBg', colors.notificationButtonBg, 'important');
+  root.style.setProperty('--custom-notificationButtonText', colors.notificationButtonText, 'important');
+  root.style.setProperty('--custom-notificationRedDot', colors.notificationRedDot, 'important');
+  
+  // Force un refresh complet des styles
+  const forceValue = Date.now().toString();
+  root.style.setProperty('--force-update', forceValue);
+  
+  // Forcer un reflow du DOM
+  document.body.offsetHeight;
+  
+  console.log('✅ FORCE APPLY - Colors applied successfully');
+};
+
 export const CustomColorsForm: React.FC = () => {
   const { theme } = useTheme();
   const [colors, setColors] = useState<CustomColors>(defaultColors);
   const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
-    const savedColors = localStorage.getItem("customColors");
-    if (savedColors) {
-      try {
-        const parsed = JSON.parse(savedColors);
-        setColors({ ...defaultColors, ...parsed });
-      } catch (error) {
-        console.error("Erreur lors du chargement des couleurs:", error);
+    const loadColors = () => {
+      const savedColors = localStorage.getItem("customColors");
+      if (savedColors) {
+        try {
+          const parsed = JSON.parse(savedColors);
+          const mergedColors = { ...defaultColors, ...parsed };
+          setColors(mergedColors);
+          console.log('🎨 Colors loaded from localStorage:', mergedColors);
+        } catch (error) {
+          console.error("Erreur lors du chargement des couleurs:", error);
+          setColors(defaultColors);
+        }
+      } else {
+        console.log('🎨 No saved colors, using defaults');
+        setColors(defaultColors);
       }
-    }
+    };
+
+    loadColors();
   }, []);
 
   const handleColorChange = (key: keyof CustomColors, value: string) => {
-    setColors(prev => ({ ...prev, [key]: value }));
+    console.log('🎨 Color change:', key, value);
+    
+    const newColors = { ...colors, [key]: value };
+    setColors(newColors);
     setHasChanges(true);
+    
+    // Application immédiate pour preview
+    forceApplyColors(newColors, theme);
   };
 
   const saveColors = () => {
+    console.log('💾 Saving colors:', colors);
+    
     localStorage.setItem("customColors", JSON.stringify(colors));
     
-    // Dispatch event pour déclencher l'application immédiate
-    window.dispatchEvent(new CustomEvent('colorsChanged'));
+    // Application immédiate après sauvegarde
+    forceApplyColors(colors, theme);
+    
+    // Dispatch event pour déclencher l'application dans d'autres composants
+    window.dispatchEvent(new CustomEvent('colorsChanged', { detail: colors }));
     
     setHasChanges(false);
-    toast.success("Couleurs sauvegardées avec succès !");
+    toast.success("Couleurs sauvegardées et appliquées !");
   };
 
   const resetColors = () => {
+    console.log('🔄 Resetting colors to defaults');
+    
     setColors(defaultColors);
     localStorage.removeItem("customColors");
     
-    // Dispatch event pour appliquer les couleurs par défaut
-    window.dispatchEvent(new CustomEvent('colorsChanged'));
+    // Application immédiate des couleurs par défaut
+    forceApplyColors(defaultColors, theme);
+    
+    // Dispatch event pour appliquer les couleurs par défaut partout
+    window.dispatchEvent(new CustomEvent('colorsChanged', { detail: defaultColors }));
     
     setHasChanges(false);
     toast.success("Couleurs remises par défaut !");
@@ -172,6 +252,9 @@ export const CustomColorsForm: React.FC = () => {
             <Palette className="h-5 w-5" />
             <span>Personnalisation des Couleurs</span>
           </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Les changements s'appliquent en temps réel. Cliquez sur "Sauvegarder" pour les conserver.
+          </p>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Thème Clair */}
@@ -338,7 +421,7 @@ export const CustomColorsForm: React.FC = () => {
             </div>
           </div>
 
-          {/* NOUVELLE SECTION NOTIFICATIONS */}
+          {/* Notifications */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-foreground border-b pb-2">
               🔔 Centre de Notifications
@@ -407,6 +490,12 @@ export const CustomColorsForm: React.FC = () => {
               <RotateCcw className="h-4 w-4" />
               <span>Réinitialiser</span>
             </Button>
+            
+            {hasChanges && (
+              <p className="text-sm text-orange-600 flex items-center">
+                ⚠️ Changements non sauvegardés
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>
