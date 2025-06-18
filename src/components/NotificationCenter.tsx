@@ -85,23 +85,22 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
   };
 
   const getIcon = (type: string) => {
-    const iconStyle = { color: 'var(--custom-notificationText)' };
     switch (type) {
-      case 'email': return <Mail className="h-4 w-4" style={iconStyle} />;
-      case 'task': return <CheckSquare className="h-4 w-4" style={iconStyle} />;
-      case 'event': return <Calendar className="h-4 w-4" style={iconStyle} />;
-      case 'contact': return <User className="h-4 w-4" style={iconStyle} />;
-      case 'message': return <MessageSquare className="h-4 w-4" style={iconStyle} />;
-      default: return <Bell className="h-4 w-4" style={iconStyle} />;
+      case 'email': return <Mail className="h-4 w-4" />;
+      case 'task': return <CheckSquare className="h-4 w-4" />;
+      case 'event': return <Calendar className="h-4 w-4" />;
+      case 'contact': return <User className="h-4 w-4" />;
+      case 'message': return <MessageSquare className="h-4 w-4" />;
+      default: return <Bell className="h-4 w-4" />;
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'high': return { backgroundColor: '#fca5a5', color: '#991b1b' };
-      case 'medium': return { backgroundColor: '#fde68a', color: '#92400e' };
-      case 'low': return { backgroundColor: '#bbf7d0', color: '#166534' };
-      default: return { backgroundColor: '#f3f4f6', color: '#374151' };
+      case 'high': return 'bg-red-100 text-red-800';
+      case 'medium': return 'bg-yellow-100 text-yellow-800';
+      case 'low': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -124,7 +123,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
         color: 'var(--custom-notificationText)'
       }}
     >
-      {/* Header avec titre et bouton fermer */}
+      {/* Header */}
       <div 
         className="pb-2 border-b p-4"
         style={{
@@ -137,7 +136,10 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
             className="text-lg flex items-center font-semibold"
             style={{ color: 'var(--custom-notificationText)' }}
           >
-            <Bell className="h-5 w-5 mr-2" style={{ color: 'var(--custom-notificationText)' }} />
+            <Bell 
+              className="h-5 w-5 mr-2" 
+              style={{ color: 'var(--custom-notificationText)' }} 
+            />
             Notifications
             {unreadCount > 0 && (
               <div 
@@ -180,7 +182,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
         )}
       </div>
       
-      {/* Corps avec liste des notifications */}
+      {/* Corps */}
       <div 
         className="max-h-96 overflow-y-auto p-4"
         style={{ backgroundColor: 'var(--custom-notificationBg)' }}
@@ -190,7 +192,10 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
             className="text-center py-8"
             style={{ color: 'var(--custom-notificationText)' }}
           >
-            <Bell className="h-12 w-12 mx-auto mb-3" style={{ color: 'var(--custom-notificationText)' }} />
+            <Bell 
+              className="h-12 w-12 mx-auto mb-3" 
+              style={{ color: 'var(--custom-notificationText)' }} 
+            />
             <p>Aucune notification</p>
           </div>
         ) : (
@@ -209,7 +214,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
                 onClick={() => handleNotificationClick(notification)}
               >
                 <div className="flex items-start space-x-3">
-                  <div>
+                  <div style={{ color: 'var(--custom-notificationText)' }}>
                     {getIcon(notification.type)}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -222,8 +227,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
                       </p>
                       <div className="flex items-center space-x-2">
                         <div 
-                          className="px-2 py-1 rounded text-xs font-semibold"
-                          style={getPriorityColor(notification.priority)}
+                          className={`px-2 py-1 rounded text-xs font-semibold ${getPriorityColor(notification.priority)}`}
                         >
                           {notification.priority}
                         </div>

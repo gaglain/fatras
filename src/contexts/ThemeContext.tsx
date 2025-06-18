@@ -36,7 +36,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     return 'light';
   });
 
-  // Fonction pour appliquer les couleurs personnalisées IMMÉDIATEMENT et FORCÉMENT
+  // Fonction pour appliquer les couleurs personnalisées FORCÉMENT
   const applyCustomColors = (currentTheme: Theme) => {
     const savedColors = localStorage.getItem('customColors');
     const root = document.documentElement;
@@ -49,43 +49,33 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       try {
         const colors = JSON.parse(savedColors);
         
-        // Application FORCÉE des couleurs principales avec setProperty et importance maximale
+        // Application FORCÉE des couleurs principales
         const bgColor = isDark ? (colors.backgroundDark || '#18181b') : (colors.background || '#ffffff');
         const textColor = isDark ? (colors.textDark || '#ffffff') : (colors.text || '#18181b');
-        const cardBgColor = isDark ? (colors.cardBgDark || '#22223a') : (colors.cardBg || '#ffffff');
-        const cardTextColor = isDark ? (colors.cardTextDark || '#ffffff') : (colors.cardText || '#18181b');
-        const buttonBgColor = isDark ? (colors.buttonBgDark || '#ffffff') : (colors.buttonBg || '#1632f4');
-        const buttonTextColor = isDark ? (colors.buttonTextDark || '#1632f4') : (colors.buttonText || '#ffffff');
         
-        // Forcer l'application sur body ET root avec maximum de priorité
+        // Forcer l'application sur body ET root
         body.style.setProperty('background-color', bgColor, 'important');
         body.style.setProperty('color', textColor, 'important');
         
-        // Variables CSS principales - FORCÉES
+        // Variables CSS principales - FORCÉES avec setProperty
         root.style.setProperty('--app-background', bgColor, 'important');
         root.style.setProperty('--app-text', textColor, 'important');
-        root.style.setProperty('--app-card-bg', cardBgColor, 'important');
-        root.style.setProperty('--app-card-text', cardTextColor, 'important');
-        root.style.setProperty('--app-button-bg', buttonBgColor, 'important');
-        root.style.setProperty('--app-button-text', buttonTextColor, 'important');
+        root.style.setProperty('--app-card-bg', isDark ? (colors.cardBgDark || '#22223a') : (colors.cardBg || '#ffffff'), 'important');
+        root.style.setProperty('--app-card-text', isDark ? (colors.cardTextDark || '#ffffff') : (colors.cardText || '#18181b'), 'important');
+        root.style.setProperty('--app-button-bg', isDark ? (colors.buttonBgDark || '#ffffff') : (colors.buttonBg || '#1632f4'), 'important');
+        root.style.setProperty('--app-button-text', isDark ? (colors.buttonTextDark || '#1632f4') : (colors.buttonText || '#ffffff'), 'important');
         root.style.setProperty('--app-chat-widget-bg', colors.chatWidgetBg || '#ec5f65', 'important');
         root.style.setProperty('--app-chat-widget-icon', colors.chatWidgetIcon || '#ffffff', 'important');
         
-        // Variables SIDEBAR avec fallback intelligent selon le thème
-        const sidebarBg = isDark ? (colors.sidebarBgDark || '#22223a') : (colors.sidebarBg || '#ffffff');
-        const sidebarText = isDark ? (colors.sidebarTextDark || '#ffffff') : (colors.sidebarText || '#18181b');
-        const sidebarActiveItemBg = isDark ? (colors.sidebarActiveItemBgDark || '#1632f4') : (colors.sidebarActiveItemBg || '#1632f4');
-        const sidebarActiveItemText = isDark ? (colors.sidebarActiveItemTextDark || '#ffffff') : (colors.sidebarActiveItemText || '#ffffff');
-        const sidebarIcon = isDark ? (colors.sidebarIconDark || '#ffffff') : (colors.sidebarIconLight || '#1632f4');
-        
-        root.style.setProperty('--custom-sidebarBg', sidebarBg, 'important');
-        root.style.setProperty('--custom-sidebarText', sidebarText, 'important');
-        root.style.setProperty('--custom-sidebarActiveItemBg', sidebarActiveItemBg, 'important');
-        root.style.setProperty('--custom-sidebarActiveItemText', sidebarActiveItemText, 'important');
+        // Variables SIDEBAR - TOUTES définies avec fallback
+        root.style.setProperty('--custom-sidebarBg', isDark ? (colors.sidebarBgDark || '#22223a') : (colors.sidebarBg || '#ffffff'), 'important');
+        root.style.setProperty('--custom-sidebarText', isDark ? (colors.sidebarTextDark || '#ffffff') : (colors.sidebarText || '#18181b'), 'important');
+        root.style.setProperty('--custom-sidebarActiveItemBg', isDark ? (colors.sidebarActiveItemBgDark || '#1632f4') : (colors.sidebarActiveItemBg || '#1632f4'), 'important');
+        root.style.setProperty('--custom-sidebarActiveItemText', isDark ? (colors.sidebarActiveItemTextDark || '#ffffff') : (colors.sidebarActiveItemText || '#ffffff'), 'important');
         root.style.setProperty('--custom-sidebarIconLight', colors.sidebarIconLight || '#1632f4', 'important');
         root.style.setProperty('--custom-sidebarIconDark', colors.sidebarIconDark || '#ffffff', 'important');
         
-        // Variables NOTIFICATIONS avec fallback selon le thème - FORCÉES
+        // Variables NOTIFICATIONS - TOUTES définies avec fallback SMART selon le thème
         const notificationBg = colors.notificationBg || bgColor;
         const notificationText = colors.notificationText || textColor;
         const notificationBorder = colors.notificationBorder || (isDark ? '#374151' : '#e5e7eb');
@@ -95,6 +85,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
         const notificationButtonText = colors.notificationButtonText || (isDark ? '#ffffff' : '#374151');
         const notificationRedDot = colors.notificationRedDot || '#ef4444';
         
+        // FORCER toutes les variables de notification
         root.style.setProperty('--custom-notificationBg', notificationBg, 'important');
         root.style.setProperty('--custom-notificationText', notificationText, 'important');
         root.style.setProperty('--custom-notificationBorder', notificationBorder, 'important');
@@ -104,10 +95,13 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
         root.style.setProperty('--custom-notificationButtonText', notificationButtonText, 'important');
         root.style.setProperty('--custom-notificationRedDot', notificationRedDot, 'important');
         
-        console.log('✅ Custom colors applied FORCEFULLY');
-        console.log('🔔 Notification bg applied:', notificationBg);
-        console.log('🔴 Red dot color applied:', notificationRedDot);
-        console.log('🔢 Badge bg applied:', notificationBadgeBg);
+        console.log('✅ Custom colors applied with MAXIMUM FORCE');
+        console.log('🔔 Notification variables:', {
+          bg: notificationBg,
+          text: notificationText,
+          redDot: notificationRedDot,
+          badgeBg: notificationBadgeBg
+        });
         
       } catch (error) {
         console.error('❌ Error applying custom colors:', error);
@@ -117,18 +111,22 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       applyDefaultColors(isDark, root, body);
     }
     
-    // Force un refresh des styles
-    root.style.setProperty('--force-update', Date.now().toString());
+    // Force un refresh complet des styles
+    const forceValue = Date.now().toString();
+    root.style.setProperty('--force-update', forceValue);
+    
+    // Forcer un reflow du DOM
+    document.body.offsetHeight;
   };
 
   const applyDefaultColors = (isDark: boolean, root: HTMLElement, body: HTMLElement) => {
     const defaultBg = isDark ? '#18181b' : '#ffffff';
     const defaultText = isDark ? '#ffffff' : '#18181b';
     
-    // Application forcée des couleurs par défaut
     body.style.setProperty('background-color', defaultBg, 'important');
     body.style.setProperty('color', defaultText, 'important');
     
+    // Variables principales par défaut
     root.style.setProperty('--app-background', defaultBg, 'important');
     root.style.setProperty('--app-text', defaultText, 'important');
     root.style.setProperty('--app-card-bg', isDark ? '#22223a' : '#ffffff', 'important');
@@ -138,7 +136,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     root.style.setProperty('--app-chat-widget-bg', '#ec5f65', 'important');
     root.style.setProperty('--app-chat-widget-icon', '#ffffff', 'important');
     
-    // Variables par défaut pour la sidebar
+    // Variables sidebar par défaut
     root.style.setProperty('--custom-sidebarBg', isDark ? '#22223a' : '#ffffff', 'important');
     root.style.setProperty('--custom-sidebarText', isDark ? '#ffffff' : '#18181b', 'important');
     root.style.setProperty('--custom-sidebarActiveItemBg', '#1632f4', 'important');
@@ -146,7 +144,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     root.style.setProperty('--custom-sidebarIconLight', '#1632f4', 'important');
     root.style.setProperty('--custom-sidebarIconDark', '#ffffff', 'important');
     
-    // Variables par défaut pour les notifications
+    // Variables notifications par défaut
     root.style.setProperty('--custom-notificationBg', defaultBg, 'important');
     root.style.setProperty('--custom-notificationText', defaultText, 'important');
     root.style.setProperty('--custom-notificationBorder', isDark ? '#374151' : '#e5e7eb', 'important');
@@ -156,40 +154,39 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     root.style.setProperty('--custom-notificationButtonText', isDark ? '#ffffff' : '#374151', 'important');
     root.style.setProperty('--custom-notificationRedDot', '#ef4444', 'important');
     
-    console.log('✅ Default colors applied FORCEFULLY for theme:', isDark ? 'dark' : 'light');
+    console.log('✅ Default colors applied for theme:', isDark ? 'dark' : 'light');
   };
 
   useEffect(() => {
     const root = window.document.documentElement;
     
-    // SUPPRIMER toutes les classes de thème
     root.classList.remove('light', 'dark');
-    
-    // AJOUTER la classe du thème actuel
     root.classList.add(theme);
-    
-    // SAUVEGARDER en localStorage
     localStorage.setItem('theme', theme);
-    
-    // DÉLAI pour s'assurer que le DOM est prêt puis appliquer IMMÉDIATEMENT
-    setTimeout(() => {
-      applyCustomColors(theme);
-    }, 0);
-    
-    // AJOUTER l'attribut data-theme pour forcer l'application CSS
     root.setAttribute('data-theme', theme);
     
-    console.log('🎨 Theme applied:', theme, 'HTML classes:', root.className);
+    // Application IMMÉDIATE et RÉPÉTÉE des couleurs
+    applyCustomColors(theme);
+    
+    // Re-application après un délai pour s'assurer que tout est bien pris en compte
+    setTimeout(() => {
+      applyCustomColors(theme);
+    }, 100);
+    
+    console.log('🎨 Theme applied with FORCE:', theme);
   }, [theme]);
 
   // Écouter les changements de couleurs personnalisées
   useEffect(() => {
     const handleColorsChanged = () => {
-      console.log('🔄 Colors changed event detected, reapplying FORCEFULLY...');
-      // Délai court pour s'assurer que localStorage est mis à jour
+      console.log('🔄 Colors changed event - FORCING re-application...');
       setTimeout(() => {
         applyCustomColors(theme);
       }, 50);
+      // Double application pour s'assurer
+      setTimeout(() => {
+        applyCustomColors(theme);
+      }, 200);
     };
 
     window.addEventListener('colorsChanged', handleColorsChanged);
