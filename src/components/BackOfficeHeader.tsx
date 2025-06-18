@@ -18,7 +18,7 @@ export const BackOfficeHeader: React.FC = () => {
   const { currentUser } = useUser();
   const [showUserProfile, setShowUserProfile] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [unreadCount] = useState(3); // Mock data - vous pouvez connecter à votre système
+  const [unreadCount] = useState(3); // Mock data
 
   const isDark = theme === "dark";
 
@@ -57,7 +57,7 @@ export const BackOfficeHeader: React.FC = () => {
             </div>
             
             <div className="flex items-center space-x-4">
-              {/* Bouton Notifications avec le point rouge derrière le badge */}
+              {/* Bouton Notifications avec système de badge personnalisé */}
               <div className="relative">
                 <Button 
                   onClick={handleNotificationClick}
@@ -72,7 +72,7 @@ export const BackOfficeHeader: React.FC = () => {
                   <Bell className="h-5 w-5" />
                   {unreadCount > 0 && (
                     <div className="absolute -top-1 -right-1">
-                      {/* Point rouge en arrière-plan - plus grand et derrière */}
+                      {/* Point rouge en arrière-plan - utilise la variable CSS personnalisée */}
                       <div 
                         className="absolute w-6 h-6 rounded-full animate-pulse"
                         style={{ 
@@ -82,7 +82,7 @@ export const BackOfficeHeader: React.FC = () => {
                           zIndex: 1
                         }}
                       ></div>
-                      {/* Badge avec le chiffre - au premier plan */}
+                      {/* Badge avec le chiffre - utilise les variables CSS personnalisées */}
                       <div 
                         className="relative h-5 w-5 flex items-center justify-center text-xs rounded-full border-2 font-semibold"
                         style={{

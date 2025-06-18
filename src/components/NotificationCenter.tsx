@@ -1,8 +1,6 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Bell, X, Mail, CheckSquare, Calendar, User, MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -126,10 +124,12 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
         color: 'var(--custom-notificationText)'
       }}
     >
+      {/* Header avec titre et bouton fermer */}
       <div 
         className="pb-2 border-b p-4"
         style={{
-          borderColor: 'var(--custom-notificationBorder)'
+          borderColor: 'var(--custom-notificationBorder)',
+          backgroundColor: 'var(--custom-notificationBg)'
         }}
       >
         <div className="flex items-center justify-between">
@@ -179,6 +179,8 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
           </button>
         )}
       </div>
+      
+      {/* Corps avec liste des notifications */}
       <div 
         className="max-h-96 overflow-y-auto p-4"
         style={{ backgroundColor: 'var(--custom-notificationBg)' }}
