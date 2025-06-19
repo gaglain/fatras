@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,15 +64,15 @@ const defaultColors: CustomColors = {
   buttonText: "#ffffff",
   
   // Mode sombre
-  backgroundDark: "#18181b",
+  backgroundDark: "#0f0f0f",
   textDark: "#ffffff",
-  cardBgDark: "#22223a",
+  cardBgDark: "#1a1a1a",
   cardTextDark: "#ffffff",
   buttonBgDark: "#ffffff",
-  buttonTextDark: "#1632f4",
+  buttonTextDark: "#000000",
   
   // Chat widget
-  chatWidgetBg: "#ec5f65",
+  chatWidgetBg: "#1632f4",
   chatWidgetIcon: "#ffffff",
   
   // Sidebar - Mode clair
@@ -82,7 +83,7 @@ const defaultColors: CustomColors = {
   sidebarIconLight: "#1632f4",
   
   // Sidebar - Mode sombre
-  sidebarBgDark: "#22223a",
+  sidebarBgDark: "#1a1a1a",
   sidebarTextDark: "#ffffff",
   sidebarActiveItemBgDark: "#1632f4",
   sidebarActiveItemTextDark: "#ffffff",
@@ -99,12 +100,12 @@ const defaultColors: CustomColors = {
   notificationRedDot: "#ef4444",
 };
 
-// Fonction simple pour appliquer les couleurs IMMÉDIATEMENT
+// Fonction pour appliquer les couleurs immédiatement
 const applyColors = (colors: CustomColors, theme: string) => {
   const root = document.documentElement;
   const isDark = theme === 'dark';
   
-  console.log('🎨 Applying colors immediately:', colors);
+  console.log('🎨 Applying custom colors:', colors);
   
   // Variables CSS principales
   root.style.setProperty('--app-background', isDark ? colors.backgroundDark : colors.background);
@@ -113,26 +114,6 @@ const applyColors = (colors: CustomColors, theme: string) => {
   root.style.setProperty('--app-card-text', isDark ? colors.cardTextDark : colors.cardText);
   root.style.setProperty('--app-button-bg', isDark ? colors.buttonBgDark : colors.buttonBg);
   root.style.setProperty('--app-button-text', isDark ? colors.buttonTextDark : colors.buttonText);
-  
-  // Variables sidebar
-  root.style.setProperty('--custom-sidebarBg', isDark ? colors.sidebarBgDark : colors.sidebarBg);
-  root.style.setProperty('--custom-sidebarText', isDark ? colors.sidebarTextDark : colors.sidebarText);
-  root.style.setProperty('--custom-sidebarActiveItemBg', isDark ? colors.sidebarActiveItemBgDark : colors.sidebarActiveItemBg);
-  root.style.setProperty('--custom-sidebarActiveItemText', isDark ? colors.sidebarActiveItemTextDark : colors.sidebarActiveItemText);
-  root.style.setProperty('--custom-sidebarIconLight', colors.sidebarIconLight);
-  root.style.setProperty('--custom-sidebarIconDark', colors.sidebarIconDark);
-  
-  // Variables notifications
-  root.style.setProperty('--custom-notificationBg', colors.notificationBg);
-  root.style.setProperty('--custom-notificationText', colors.notificationText);
-  root.style.setProperty('--custom-notificationBorder', colors.notificationBorder);
-  root.style.setProperty('--custom-notificationBadgeBg', colors.notificationBadgeBg);
-  root.style.setProperty('--custom-notificationBadgeText', colors.notificationBadgeText);
-  root.style.setProperty('--custom-notificationButtonBg', colors.notificationButtonBg);
-  root.style.setProperty('--custom-notificationButtonText', colors.notificationButtonText);
-  root.style.setProperty('--custom-notificationRedDot', colors.notificationRedDot);
-  
-  // Variables chat
   root.style.setProperty('--app-chat-widget-bg', colors.chatWidgetBg);
   root.style.setProperty('--app-chat-widget-icon', colors.chatWidgetIcon);
   
@@ -143,10 +124,7 @@ const applyColors = (colors: CustomColors, theme: string) => {
   // Sauvegarder
   localStorage.setItem("customColors", JSON.stringify(colors));
   
-  // Event pour notifier les autres composants
-  window.dispatchEvent(new CustomEvent('colorsChanged', { detail: colors }));
-  
-  console.log('✅ Colors applied successfully');
+  console.log('✅ Custom colors applied successfully');
 };
 
 export const CustomColorsForm: React.FC = () => {
@@ -274,37 +252,6 @@ export const CustomColorsForm: React.FC = () => {
                 onChange={(value) => handleColorChange("buttonText", value)}
               />
             </div>
-
-            <h4 className="text-md font-medium text-foreground border-b pb-1 mt-6">
-              Menu Latéral - Mode Clair
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <ColorInput
-                label="Fond sidebar"
-                value={colors.sidebarBg}
-                onChange={(value) => handleColorChange("sidebarBg", value)}
-              />
-              <ColorInput
-                label="Texte sidebar"
-                value={colors.sidebarText}
-                onChange={(value) => handleColorChange("sidebarText", value)}
-              />
-              <ColorInput
-                label="Fond item actif"
-                value={colors.sidebarActiveItemBg}
-                onChange={(value) => handleColorChange("sidebarActiveItemBg", value)}
-              />
-              <ColorInput
-                label="Texte item actif"
-                value={colors.sidebarActiveItemText}
-                onChange={(value) => handleColorChange("sidebarActiveItemText", value)}
-              />
-              <ColorInput
-                label="Couleur des icônes"
-                value={colors.sidebarIconLight}
-                onChange={(value) => handleColorChange("sidebarIconLight", value)}
-              />
-            </div>
           </div>
 
           {/* Mode Sombre */}
@@ -345,37 +292,6 @@ export const CustomColorsForm: React.FC = () => {
                 onChange={(value) => handleColorChange("buttonTextDark", value)}
               />
             </div>
-
-            <h4 className="text-md font-medium text-foreground border-b pb-1 mt-6">
-              Menu Latéral - Mode Sombre
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <ColorInput
-                label="Fond sidebar"
-                value={colors.sidebarBgDark}
-                onChange={(value) => handleColorChange("sidebarBgDark", value)}
-              />
-              <ColorInput
-                label="Texte sidebar"
-                value={colors.sidebarTextDark}
-                onChange={(value) => handleColorChange("sidebarTextDark", value)}
-              />
-              <ColorInput
-                label="Fond item actif"
-                value={colors.sidebarActiveItemBgDark}
-                onChange={(value) => handleColorChange("sidebarActiveItemBgDark", value)}
-              />
-              <ColorInput
-                label="Texte item actif"
-                value={colors.sidebarActiveItemTextDark}
-                onChange={(value) => handleColorChange("sidebarActiveItemTextDark", value)}
-              />
-              <ColorInput
-                label="Couleur des icônes"
-                value={colors.sidebarIconDark}
-                onChange={(value) => handleColorChange("sidebarIconDark", value)}
-              />
-            </div>
           </div>
 
           {/* Chat Widget */}
@@ -394,56 +310,6 @@ export const CustomColorsForm: React.FC = () => {
                 label="Couleur de l'icône"
                 value={colors.chatWidgetIcon}
                 onChange={(value) => handleColorChange("chatWidgetIcon", value)}
-              />
-            </div>
-          </div>
-
-          {/* Notifications */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-foreground border-b pb-2">
-              🔔 Centre de Notifications
-            </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <ColorInput
-                label="Fond de la popup"
-                value={colors.notificationBg}
-                onChange={(value) => handleColorChange("notificationBg", value)}
-              />
-              <ColorInput
-                label="Texte principal"
-                value={colors.notificationText}
-                onChange={(value) => handleColorChange("notificationText", value)}
-              />
-              <ColorInput
-                label="Bordures"
-                value={colors.notificationBorder}
-                onChange={(value) => handleColorChange("notificationBorder", value)}
-              />
-              <ColorInput
-                label="Badge (nombre)"
-                value={colors.notificationBadgeBg}
-                onChange={(value) => handleColorChange("notificationBadgeBg", value)}
-              />
-              <ColorInput
-                label="Texte du badge"
-                value={colors.notificationBadgeText}
-                onChange={(value) => handleColorChange("notificationBadgeText", value)}
-              />
-              <ColorInput
-                label="Boutons de la popup"
-                value={colors.notificationButtonBg}
-                onChange={(value) => handleColorChange("notificationButtonBg", value)}
-              />
-              <ColorInput
-                label="Texte des boutons"
-                value={colors.notificationButtonText}
-                onChange={(value) => handleColorChange("notificationButtonText", value)}
-              />
-              <ColorInput
-                label="Point rouge (indicateur)"
-                value={colors.notificationRedDot}
-                onChange={(value) => handleColorChange("notificationRedDot", value)}
               />
             </div>
           </div>
