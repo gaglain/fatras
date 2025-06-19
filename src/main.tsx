@@ -9,6 +9,7 @@ import { UserProvider } from '@/contexts/UserContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { MessagingProvider } from '@/contexts/MessagingContext';
 import { AppDataProvider } from '@/contexts/AppDataContext';
+import { RealtimeProvider } from '@/contexts/RealtimeContext';
 import App from './App';
 import './index.css';
 
@@ -30,8 +31,10 @@ createRoot(document.getElementById('root')!).render(
             <UserProvider>
               <MessagingProvider>
                 <AppDataProvider>
-                  <App />
-                  <Toaster />
+                  <RealtimeProvider>
+                    <App />
+                    <Toaster />
+                  </RealtimeProvider>
                 </AppDataProvider>
               </MessagingProvider>
             </UserProvider>

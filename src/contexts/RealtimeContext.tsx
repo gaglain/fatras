@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
 
 interface RealtimeContextType {
@@ -9,13 +9,14 @@ interface RealtimeContextType {
 const RealtimeContext = createContext<RealtimeContextType | undefined>(undefined);
 
 export const RealtimeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [isConnected, setIsConnected] = useState(false);
+
   // Configuration des mises à jour temps réel pour les principales tables
   useRealtimeUpdates([
     {
       table: 'contacts',
       onInsert: (payload) => {
         console.log('Nouveau contact ajouté:', payload.new);
-        // Déclencher une mise à jour des données contacts
         window.dispatchEvent(new CustomEvent('contactsChanged', { detail: payload.new }));
       },
       onUpdate: (payload) => {
@@ -59,8 +60,13 @@ export const RealtimeProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
   ]);
 
+  useEffect(() => {
+    // Simuler une connexion temps réel
+    setIsConnected(true);
+  }, []);
+
   return (
-    <RealtimeContext.Provider value={{ isConnected: true }}>
+    <RealtimeContext.Provider value={{ isConnected }}>
       {children}
     </RealtimeContext.Provider>
   );
