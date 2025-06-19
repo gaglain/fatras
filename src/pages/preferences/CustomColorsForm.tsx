@@ -29,20 +29,6 @@ interface CustomColors {
   chatWidgetBg: string;
   chatWidgetIcon: string;
   
-  // Sidebar - Mode clair
-  sidebarBg: string;
-  sidebarText: string;
-  sidebarActiveItemBg: string;
-  sidebarActiveItemText: string;
-  sidebarIconLight: string;
-  
-  // Sidebar - Mode sombre
-  sidebarBgDark: string;
-  sidebarTextDark: string;
-  sidebarActiveItemBgDark: string;
-  sidebarActiveItemTextDark: string;
-  sidebarIconDark: string;
-  
   // Notifications
   notificationBg: string;
   notificationText: string;
@@ -75,20 +61,6 @@ const defaultColors: CustomColors = {
   chatWidgetBg: "#1632f4",
   chatWidgetIcon: "#ffffff",
   
-  // Sidebar - Mode clair
-  sidebarBg: "#ffffff",
-  sidebarText: "#18181b",
-  sidebarActiveItemBg: "#1632f4",
-  sidebarActiveItemText: "#ffffff",
-  sidebarIconLight: "#1632f4",
-  
-  // Sidebar - Mode sombre
-  sidebarBgDark: "#1a1a1a",
-  sidebarTextDark: "#ffffff",
-  sidebarActiveItemBgDark: "#1632f4",
-  sidebarActiveItemTextDark: "#ffffff",
-  sidebarIconDark: "#ffffff",
-  
   // Notifications
   notificationBg: "#ffffff",
   notificationText: "#18181b",
@@ -116,6 +88,16 @@ const applyColors = (colors: CustomColors, theme: string) => {
   root.style.setProperty('--app-button-text', isDark ? colors.buttonTextDark : colors.buttonText);
   root.style.setProperty('--app-chat-widget-bg', colors.chatWidgetBg);
   root.style.setProperty('--app-chat-widget-icon', colors.chatWidgetIcon);
+  
+  // Variables CSS pour les notifications
+  root.style.setProperty('--notification-bg', colors.notificationBg);
+  root.style.setProperty('--notification-text', colors.notificationText);
+  root.style.setProperty('--notification-border', colors.notificationBorder);
+  root.style.setProperty('--notification-badge-bg', colors.notificationBadgeBg);
+  root.style.setProperty('--notification-badge-text', colors.notificationBadgeText);
+  root.style.setProperty('--notification-button-bg', colors.notificationButtonBg);
+  root.style.setProperty('--notification-button-text', colors.notificationButtonText);
+  root.style.setProperty('--notification-red-dot', colors.notificationRedDot);
   
   // Forcer l'application sur body
   document.body.style.backgroundColor = isDark ? colors.backgroundDark : colors.background;
@@ -310,6 +292,56 @@ export const CustomColorsForm: React.FC = () => {
                 label="Couleur de l'icône"
                 value={colors.chatWidgetIcon}
                 onChange={(value) => handleColorChange("chatWidgetIcon", value)}
+              />
+            </div>
+          </div>
+
+          {/* Notifications */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-foreground border-b pb-2">
+              🔔 Notifications
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <ColorInput
+                label="Arrière-plan des notifications"
+                value={colors.notificationBg}
+                onChange={(value) => handleColorChange("notificationBg", value)}
+              />
+              <ColorInput
+                label="Texte des notifications"
+                value={colors.notificationText}
+                onChange={(value) => handleColorChange("notificationText", value)}
+              />
+              <ColorInput
+                label="Bordure des notifications"
+                value={colors.notificationBorder}
+                onChange={(value) => handleColorChange("notificationBorder", value)}
+              />
+              <ColorInput
+                label="Arrière-plan des badges"
+                value={colors.notificationBadgeBg}
+                onChange={(value) => handleColorChange("notificationBadgeBg", value)}
+              />
+              <ColorInput
+                label="Texte des badges"
+                value={colors.notificationBadgeText}
+                onChange={(value) => handleColorChange("notificationBadgeText", value)}
+              />
+              <ColorInput
+                label="Arrière-plan des boutons"
+                value={colors.notificationButtonBg}
+                onChange={(value) => handleColorChange("notificationButtonBg", value)}
+              />
+              <ColorInput
+                label="Texte des boutons"
+                value={colors.notificationButtonText}
+                onChange={(value) => handleColorChange("notificationButtonText", value)}
+              />
+              <ColorInput
+                label="Point rouge (non lu)"
+                value={colors.notificationRedDot}
+                onChange={(value) => handleColorChange("notificationRedDot", value)}
               />
             </div>
           </div>
