@@ -1,65 +1,35 @@
 
 @layer components {
-  /* Application des couleurs personnalisées */
+  /* Composants UI avec transitions fluides */
   
-  /* Corps de l'application */
-  html,
-  body,
-  #root,
-  .min-h-screen,
-  main {
-    background: var(--app-background) !important;
-    color: var(--app-text) !important;
+  .card {
+    background: var(--app-card-bg);
+    color: var(--app-card-text);
+    border: 1px solid rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
   }
 
-  /* Titres et textes */
-  h1, h2, h3, h4, h5, h6,
-  p, span, 
-  label,
-  .text-foreground {
-    color: var(--app-text) !important;
+  .dark .card {
+    border: 1px solid rgba(255,255,255,0.1);
   }
 
-  /* Cartes */
-  .card:not(.chat-widget-popup),
-  .bg-card:not(.chat-widget-popup) {
-    background: var(--app-card-bg) !important;
-    color: var(--app-card-text) !important;
-    border: 1px solid rgba(0,0,0,0.1) !important;
+  button:not(.chat-widget-button) {
+    transition: all 0.3s ease;
   }
 
-  /* Boutons */
-  button:not(.chat-widget-button):not(.theme-toggle-button), 
-  .btn:not(.chat-widget-button):not(.theme-toggle-button),
-  .bg-primary:not(.chat-widget-button):not(.theme-toggle-button) {
-    background: var(--app-button-bg) !important;
-    color: var(--app-button-text) !important;
-    border: 1px solid var(--app-button-bg) !important;
+  input, textarea, select {
+    background: var(--app-background);
+    color: var(--app-text);
+    border: 1px solid rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
   }
 
-  /* Theme toggle button */
-  .theme-toggle-button {
-    background: transparent !important;
-    border: none !important;
+  .dark input, .dark textarea, .dark select {
+    border: 1px solid rgba(255,255,255,0.2);
   }
 
-  /* Champs de saisie */
-  input:not([type="color"]), 
-  textarea, 
-  select {
-    background: var(--app-background) !important;
-    color: var(--app-text) !important;
-    border: 1px solid var(--app-button-bg) !important;
-  }
-
-  /* Chat widget */
-  .chat-widget-button {
-    background: var(--app-chat-widget-bg) !important;
-    color: var(--app-chat-widget-icon) !important;
-  }
-
-  /* Transitions */
+  /* Transitions globales */
   * {
-    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease !important;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
   }
 }

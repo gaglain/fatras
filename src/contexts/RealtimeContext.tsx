@@ -1,0 +1,75 @@
+
+import React, { createContext, useContext, ReactNode } from 'react';
+import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
+
+interface RealtimeContextType {
+  isConnected: boolean;
+}
+
+const RealtimeContext = createContext<RealtimeContextType | undefined>(undefined);
+
+export const RealtimeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  // Configuration des mises à jour temps réel pour les principales tables
+  useRealtimeUpdates([
+    {
+      table: 'contacts',
+      onInsert: (payload) => {
+        console.log('Nouveau contact ajouté:', payload.new);
+        // Déclencher une mise à jour des données contacts
+        window.dispatchEvent(new CustomEvent('contactsChanged', { detail: payload.new }));
+      },
+      onUpdate: (payload) => {
+        console.log('Contact modifié:', payload.new);
+        window.dispatchEvent(new CustomEvent('contactsChanged', { detail: payload.new }));
+      },
+      onDelete: (payload) => {
+        console.log('Contact supprimé:', payload.old);
+        window.dispatchEvent(new CustomEvent('contactsChanged', { detail: payload.old }));
+      }
+    },
+    {
+      table: 'tasks',
+      onInsert: (payload) => {
+        console.log('Nouvelle tâche ajoutée:', payload.new);
+        window.dispatchEvent(new CustomEvent('tasksChanged', { detail: payload.new }));
+      },
+      onUpdate: (payload) => {
+        console.log('Tâche modifiée:', payload.new);
+        window.dispatchEvent(new CustomEvent('tasksChanged', { detail: payload.new }));
+      },
+      onDelete: (payload) => {
+        console.log('Tâche supprimée:', payload.old);
+        window.dispatchEvent(new CustomEvent('tasksChanged', { detail: payload.old }));
+      }
+    },
+    {
+      table: 'events',
+      onInsert: (payload) => {
+        console.log('Nouvel événement ajouté:', payload.new);
+        window.dispatchEvent(new CustomEvent('eventsChanged', { detail: payload.new }));
+      },
+      onUpdate: (payload) => {
+        console.log('Événement modifié:', payload.new);
+        window.dispatchEvent(new CustomEvent('eventsChanged', { detail: payload.new }));
+      },
+      onDelete: (payload) => {
+        console.log('Événement supprimé:', payload.old);
+        window.dispatchEvent(new CustomEvent('eventsChanged', { detail: payload.old }));
+      }
+    }
+  ]);
+
+  return (
+    <RealtimeContext.Provider value={{ isConnected: true }}>
+      {children}
+    </RealtimeContext.Provider>
+  );
+};
+
+export const useRealtime = () => {
+  const context = useContext(RealtimeContext);
+  if (!context) {
+    throw new Error('useRealtime must be used within a RealtimeProvider');
+  }
+  return context;
+};

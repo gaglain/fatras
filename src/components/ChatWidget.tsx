@@ -60,63 +60,43 @@ export const ChatWidget: React.FC = () => {
   };
 
   return (
-    <div style={{
-      position: 'fixed',
-      bottom: '20px',
-      right: '20px',
-      zIndex: 1000
-    }}>
-      {/* CHAT POPUP AVEC CLASSE SPÉCIFIQUE */}
+    <div className="fixed bottom-6 right-6 z-50">
+      {/* POPUP DE CHAT */}
       {isOpen && (
         <div 
-          className="mb-4 shadow-lg rounded-xl overflow-hidden chat-widget-popup" 
+          className="mb-4 bg-white dark:bg-gray-800 shadow-2xl rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700"
           style={{
-            background: 'var(--app-card-bg)',
-            border: '1px solid rgba(0,0,0,0.1)',
             width: '400px',
             height: '500px',
-            position: 'fixed',
+            position: 'absolute',
             bottom: '80px',
-            right: '20px',
-            zIndex: 999
+            right: '0'
           }}
         >
-          {/* Header avec sélecteurs EN HAUT */}
-          <div className="p-4 border-b" style={{
-            background: 'var(--app-card-bg)',
-            borderColor: 'rgba(0,0,0,0.1)'
-          }}>
+          {/* Header */}
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center space-x-2">
-                <MessageSquare className="h-5 w-5" style={{ color: '#ec5f65' }} />
-                <span className="font-medium" style={{ color: 'var(--app-card-text)' }}>Chat</span>
+                <MessageSquare className="h-5 w-5 text-blue-600" />
+                <span className="font-medium text-gray-900 dark:text-white">Chat</span>
               </div>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsOpen(false)}
-                style={{ color: 'var(--app-card-text)' }}
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
               >
                 <X className="h-4 w-4" />
               </Button>
             </div>
             
-            {/* SÉLECTEURS EN LIGNE (EN HAUT) */}
+            {/* Sélecteurs */}
             <div className="flex space-x-2">
               <Select value={selectedChannel} onValueChange={setSelectedChannel}>
-                <SelectTrigger className="flex-1 h-8 text-xs" style={{
-                  background: 'var(--app-background)',
-                  color: 'var(--app-text)',
-                  borderColor: '#ec5f65'
-                }}>
+                <SelectTrigger className="flex-1 h-8 text-xs">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent style={{
-                  background: 'var(--app-card-bg)',
-                  color: 'var(--app-card-text)',
-                  border: '1px solid rgba(0,0,0,0.1)',
-                  zIndex: 10000
-                }}>
+                <SelectContent>
                   {channels.filter(c => c.type === 'channel').map((channel) => (
                     <SelectItem key={channel.id} value={channel.id}>
                       <div className="flex items-center">
@@ -129,19 +109,10 @@ export const ChatWidget: React.FC = () => {
               </Select>
               
               <Select value={selectedTeam} onValueChange={setSelectedTeam}>
-                <SelectTrigger className="flex-1 h-8 text-xs" style={{
-                  background: 'var(--app-background)',
-                  color: 'var(--app-text)',
-                  borderColor: '#ec5f65'
-                }}>
+                <SelectTrigger className="flex-1 h-8 text-xs">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent style={{
-                  background: 'var(--app-card-bg)',
-                  color: 'var(--app-card-text)',
-                  border: '1px solid rgba(0,0,0,0.1)',
-                  zIndex: 10000
-                }}>
+                <SelectContent>
                   {teams.map((team) => (
                     <SelectItem key={team.id} value={team.id}>
                       <div className="flex items-center justify-between w-full">
@@ -159,14 +130,12 @@ export const ChatWidget: React.FC = () => {
           </div>
 
           {/* Messages */}
-          <ScrollArea className="h-80 p-4" style={{ background: 'var(--app-background)' }}>
+          <ScrollArea className="h-80 p-4 bg-gray-50 dark:bg-gray-900">
             <div className="space-y-3">
               {messages.length === 0 ? (
-                <div className="text-center py-8 opacity-50">
-                  <MessageSquare className="h-8 w-8 mx-auto mb-3" style={{ color: 'var(--app-text)' }} />
-                  <p className="text-sm" style={{ color: 'var(--app-text)' }}>
-                    Commencez une conversation
-                  </p>
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  <MessageSquare className="h-8 w-8 mx-auto mb-3" />
+                  <p className="text-sm">Commencez une conversation</p>
                 </div>
               ) : (
                 messages.map((message) => (
@@ -179,19 +148,19 @@ export const ChatWidget: React.FC = () => {
                         message.sender === 'user' ? 'flex-row-reverse space-x-reverse' : ''
                       }`}
                     >
-                      <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs" style={{
-                        background: message.sender === 'user' ? '#ec5f65' : 'var(--app-card-bg)',
-                        color: message.sender === 'user' ? '#ffffff' : 'var(--app-text)'
-                      }}>
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
+                        message.sender === 'user' 
+                          ? 'bg-blue-600 text-white' 
+                          : 'bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200'
+                      }`}>
                         {message.sender === 'user' ? <User className="h-3 w-3" /> : <Bot className="h-3 w-3" />}
                       </div>
                       <div
-                        className="px-3 py-2 rounded-lg text-sm"
-                        style={{
-                          background: message.sender === 'user' ? '#ec5f65' : 'var(--app-card-bg)',
-                          color: message.sender === 'user' ? '#ffffff' : 'var(--app-card-text)',
-                          border: message.sender === 'user' ? 'none' : '1px solid rgba(0,0,0,0.1)'
-                        }}
+                        className={`px-3 py-2 rounded-lg text-sm ${
+                          message.sender === 'user'
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700'
+                        }`}
                       >
                         {message.text}
                       </div>
@@ -203,7 +172,7 @@ export const ChatWidget: React.FC = () => {
           </ScrollArea>
 
           {/* Input */}
-          <div className="p-4 border-t" style={{ borderColor: 'rgba(0,0,0,0.1)' }}>
+          <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
             <div className="flex space-x-2">
               <input
                 type="text"
@@ -211,27 +180,13 @@ export const ChatWidget: React.FC = () => {
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Tapez votre message..."
-                className="flex-1 px-3 py-2 text-sm border rounded-md"
-                style={{
-                  background: 'var(--app-background)',
-                  color: 'var(--app-text)',
-                  borderColor: '#ec5f65'
-                }}
+                className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <Button
                 onClick={handleSendMessage}
                 disabled={!inputValue.trim()}
                 size="sm"
-                className="w-10 h-10 p-0 rounded-full chat-widget-button"
-                style={{
-                  background: '#ec5f65',
-                  color: '#ffffff',
-                  minWidth: 'auto',
-                  minHeight: 'auto',
-                  width: '40px',
-                  height: '40px',
-                  position: 'relative'
-                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4"
               >
                 <Send className="h-4 w-4" />
               </Button>
@@ -240,12 +195,18 @@ export const ChatWidget: React.FC = () => {
         </div>
       )}
       
-      {/* BOUTON WIDGET - FIXE, ROND ET ROSE (RESTAURÉ) */}
+      {/* BOUTON WIDGET ROND - FIXE ET BIEN POSITIONNÉ */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="chat-widget-button"
+        className="w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group"
+        style={{
+          position: 'fixed',
+          bottom: '24px',
+          right: '24px',
+          zIndex: 1000
+        }}
       >
-        <MessageSquare className="h-6 w-6" />
+        <MessageSquare className="h-6 w-6 group-hover:scale-110 transition-transform duration-200" />
       </button>
     </div>
   );

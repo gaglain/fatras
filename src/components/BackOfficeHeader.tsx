@@ -10,7 +10,7 @@ import { useUser } from '@/contexts/UserContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { UserProfile } from './UserProfile';
 import { NotificationCenter } from './NotificationCenter';
-import { Badge } from '@/components/ui/badge';
+import { RealtimeIndicator } from '@/components/ui/realtime-indicator';
 
 export const BackOfficeHeader: React.FC = () => {
   const { theme } = useTheme();
@@ -18,7 +18,7 @@ export const BackOfficeHeader: React.FC = () => {
   const { currentUser } = useUser();
   const [showUserProfile, setShowUserProfile] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [unreadCount] = useState(3); // Mock data
+  const [unreadCount] = useState(3);
 
   const isDark = theme === "dark";
 
@@ -29,12 +29,9 @@ export const BackOfficeHeader: React.FC = () => {
   return (
     <>
       <header 
-        className="shadow-sm relative border-b transition-colors duration-300"
-        style={{
-          backgroundColor: 'var(--app-background)',
-          color: 'var(--app-text)',
-          borderColor: 'var(--custom-sidebarActiveItemBg)'
-        }}
+        className={`shadow-sm relative border-b transition-colors duration-300 ${
+          isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'
+        }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -48,8 +45,9 @@ export const BackOfficeHeader: React.FC = () => {
                   onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                 />
                 <span 
-                  className="text-lg font-bold tracking-tight transition-colors duration-300"
-                  style={{ color: 'var(--app-text)' }}
+                  className={`text-lg font-bold tracking-tight transition-colors duration-300 ${
+                    isDark ? 'text-white' : 'text-gray-900'
+                  }`}
                 >
                   {name || "MusiConnect"}
                 </span>
@@ -57,48 +55,30 @@ export const BackOfficeHeader: React.FC = () => {
             </div>
             
             <div className="flex items-center space-x-4">
-              {/* Bouton Notifications avec système de badge personnalisé */}
+              {/* Indicateur temps réel */}
+              <RealtimeIndicator />
+              
+              {/* Bouton Notifications */}
               <div className="relative">
                 <Button 
                   onClick={handleNotificationClick}
                   variant="ghost"
                   size="icon"
-                  className="relative hover:opacity-80 transition-all duration-300"
-                  style={{
-                    color: 'var(--app-text)',
-                    backgroundColor: 'transparent'
-                  }}
+                  className={`relative hover:opacity-80 transition-all duration-300 ${
+                    isDark ? 'text-white' : 'text-gray-900'
+                  }`}
                 >
                   <Bell className="h-5 w-5" />
                   {unreadCount > 0 && (
                     <div className="absolute -top-1 -right-1">
-                      {/* Point rouge en arrière-plan - utilise la variable CSS personnalisée */}
-                      <div 
-                        className="absolute w-6 h-6 rounded-full animate-pulse"
-                        style={{ 
-                          backgroundColor: 'var(--custom-notificationRedDot)',
-                          top: '-1px',
-                          left: '-1px',
-                          zIndex: 1
-                        }}
-                      ></div>
-                      {/* Badge avec le chiffre - utilise les variables CSS personnalisées */}
-                      <div 
-                        className="relative h-5 w-5 flex items-center justify-center text-xs rounded-full border-2 font-semibold"
-                        style={{
-                          backgroundColor: 'var(--custom-notificationBadgeBg)',
-                          color: 'var(--custom-notificationBadgeText)',
-                          borderColor: 'var(--app-background)',
-                          zIndex: 2
-                        }}
-                      >
+                      <div className="absolute w-6 h-6 bg-red-500 rounded-full animate-pulse -top-px -left-px"></div>
+                      <div className="relative h-5 w-5 bg-red-500 text-white flex items-center justify-center text-xs rounded-full border-2 border-white font-semibold">
                         {unreadCount}
                       </div>
                     </div>
                   )}
                 </Button>
                 
-                {/* Centre de notifications */}
                 {showNotifications && (
                   <div className="absolute top-full right-0 mt-2 z-50">
                     <NotificationCenter onClose={() => setShowNotifications(false)} />
@@ -113,16 +93,17 @@ export const BackOfficeHeader: React.FC = () => {
                 onClick={() => setShowUserProfile(true)}
                 aria-label="Voir le profil"
               >
-                <Avatar className="h-8 w-8 border-2 border-[#ec5f65]">
+                <Avatar className="h-8 w-8 border-2 border-blue-600">
                   <AvatarImage src={currentUser?.avatar} alt={currentUser?.name} />
-                  <AvatarFallback className="text-base bg-[#ec5f65] text-white">
+                  <AvatarFallback className="text-base bg-blue-600 text-white">
                     {currentUser?.name?.charAt(0)}
                     {currentUser?.lastName?.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
                 <span 
-                  className="hidden md:block text-sm font-medium transition-colors duration-300"
-                  style={{ color: 'var(--app-text)' }}
+                  className={`hidden md:block text-sm font-medium transition-colors duration-300 ${
+                    isDark ? 'text-white' : 'text-gray-900'
+                  }`}
                 >
                   {currentUser?.name}
                 </span>

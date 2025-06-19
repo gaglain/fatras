@@ -6,7 +6,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Variables CSS personnalisées */
 :root {
   /* Couleurs par défaut - mode clair */
   --app-background: #ffffff;
@@ -15,37 +14,27 @@
   --app-card-text: #18181b;
   --app-button-bg: #1632f4;
   --app-button-text: #ffffff;
-  --app-chat-widget-bg: #ec5f65;
+  --app-chat-widget-bg: #1632f4;
   --app-chat-widget-icon: #ffffff;
-  
-  /* Sidebar */
-  --custom-sidebarBg: #ffffff;
-  --custom-sidebarText: #18181b;
-  --custom-sidebarActiveItemBg: #1632f4;
-  --custom-sidebarActiveItemText: #ffffff;
-  --custom-sidebarIconLight: #1632f4;
-  --custom-sidebarIconDark: #ffffff;
-  
-  /* Notifications */
-  --custom-notificationBg: #ffffff;
-  --custom-notificationText: #18181b;
-  --custom-notificationBorder: #e5e7eb;
-  --custom-notificationBadgeBg: #ef4444;
-  --custom-notificationBadgeText: #ffffff;
-  --custom-notificationButtonBg: #f3f4f6;
-  --custom-notificationButtonText: #374151;
-  --custom-notificationRedDot: #ef4444;
 }
 
-/* Application des couleurs personnalisées */
+.dark {
+  --app-background: #0f0f0f;
+  --app-text: #ffffff;
+  --app-card-bg: #1a1a1a;
+  --app-card-text: #ffffff;
+  --app-button-bg: #ffffff;
+  --app-button-text: #000000;
+}
+
 body {
-  background-color: var(--app-background) !important;
-  color: var(--app-text) !important;
+  background-color: var(--app-background);
+  color: var(--app-text);
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 #root {
-  background-color: var(--app-background) !important;
-  color: var(--app-text) !important;
+  background-color: var(--app-background);
+  color: var(--app-text);
   min-height: 100vh;
 }
