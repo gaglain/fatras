@@ -1,220 +1,65 @@
 
 @layer components {
-  /* APPLICATION FORCÉE DU THÈME SUR TOUTE L'APPLICATION */
+  /* Application des couleurs personnalisées */
   
-  /* CORPS DE L'APPLICATION - FORCE ABSOLUE */
+  /* Corps de l'application */
   html,
   body,
   #root,
   .min-h-screen,
-  main,
-  div:not(.chat-widget-button):not(.chat-widget-popup):not([role="dialog"]):not([data-radix-portal]),
-  section,
-  article,
-  aside,
-  [data-testid] {
+  main {
     background: var(--app-background) !important;
     color: var(--app-text) !important;
   }
 
-  /* PAGES SPÉCIFIQUES - FORCE MAXIMALE */
-  [data-route="/dashboard"] *:not(.chat-widget-button):not(.chat-widget-popup),
-  [data-route="/admin"] *:not(.chat-widget-button):not(.chat-widget-popup),
-  [data-route="/artists"] *:not(.chat-widget-button):not(.chat-widget-popup),
-  [data-route="/events"] *:not(.chat-widget-button):not(.chat-widget-popup),
-  [data-route="/contacts"] *:not(.chat-widget-button):not(.chat-widget-popup),
-  [data-route="/messagerie"] *:not(.chat-widget-button):not(.chat-widget-popup),
-  [data-route="/publication-calendar"] *:not(.chat-widget-button):not(.chat-widget-popup),
-  [data-route="/tasks"] *:not(.chat-widget-button):not(.chat-widget-popup),
-  [data-route="/preferences"] *:not(.chat-widget-button):not(.chat-widget-popup),
-  [data-route="/application"] *:not(.chat-widget-button):not(.chat-widget-popup) {
-    background: var(--app-background) !important;
-    color: var(--app-text) !important;
-  }
-
-  /* LAYOUTS ADMIN - FORCE */
-  .admin-layout,
-  .admin-layout *:not(.chat-widget-button):not(.chat-widget-popup):not([role="dialog"]) {
-    background: var(--app-background) !important;
-    color: var(--app-text) !important;
-  }
-
-  /* TEXTES ET TITRES - FORCE */
+  /* Titres et textes */
   h1, h2, h3, h4, h5, h6,
   p, span, 
   label,
-  .font-semibold,
-  .font-bold,
-  .font-medium,
-  .text-foreground,
-  .text-muted-foreground {
+  .text-foreground {
     color: var(--app-text) !important;
   }
 
-  /* CARTES - FORCE COMPLÈTE SAUF CHAT */
+  /* Cartes */
   .card:not(.chat-widget-popup),
-  [class*="card"]:not(.chat-widget-button):not(.chat-widget-popup),
-  .bg-white:not(.chat-widget-button):not(.chat-widget-popup),
-  .bg-gray-50:not(.chat-widget-button):not(.chat-widget-popup),
-  .bg-card:not(.chat-widget-button):not(.chat-widget-popup),
-  [data-testid*="card"]:not(.chat-widget-popup) {
+  .bg-card:not(.chat-widget-popup) {
     background: var(--app-card-bg) !important;
     color: var(--app-card-text) !important;
     border: 1px solid rgba(0,0,0,0.1) !important;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
-    border-radius: 0.75rem !important;
   }
 
-  /* BOUTONS - FORCE ABSOLUE SAUF CHAT */
+  /* Boutons */
   button:not(.chat-widget-button):not(.theme-toggle-button), 
   .btn:not(.chat-widget-button):not(.theme-toggle-button),
-  [role="button"]:not(.chat-widget-button):not(.theme-toggle-button),
-  input[type="button"]:not(.chat-widget-button),
-  input[type="submit"]:not(.chat-widget-button),
-  .bg-primary:not(.chat-widget-button):not(.theme-toggle-button),
-  [class*="bg-blue"]:not(.chat-widget-button):not(.theme-toggle-button) {
+  .bg-primary:not(.chat-widget-button):not(.theme-toggle-button) {
     background: var(--app-button-bg) !important;
     color: var(--app-button-text) !important;
     border: 1px solid var(--app-button-bg) !important;
-    border-radius: 0.5rem !important;
-    transition: all 0.2s ease !important;
   }
 
-  /* THEME TOGGLE BUTTON - FORCE ABSOLUE */
+  /* Theme toggle button */
   .theme-toggle-button {
     background: transparent !important;
-    background-color: transparent !important;
     border: none !important;
-    box-shadow: none !important;
-    min-width: 32px !important;
-    min-height: 32px !important;
   }
 
-  .theme-toggle-button:hover {
-    background: rgba(0,0,0,0.05) !important;
-    background-color: rgba(0,0,0,0.05) !important;
-  }
-
-  .theme-toggle-button:active {
-    background: rgba(0,0,0,0.1) !important;
-    background-color: rgba(0,0,0,0.1) !important;
-  }
-
-  /* THEME TOGGLE ICONS - FORCE MAXIMALE */
-  .theme-toggle-button svg {
-    color: inherit !important;
-    stroke: currentColor !important;
-    fill: none !important;
-  }
-
-  /* CHAMPS DE SAISIE - FORCE */
-  input:not([type="color"]):not(.chat-widget-button), 
-  textarea:not(.chat-widget-button), 
-  select:not(.chat-widget-button) {
+  /* Champs de saisie */
+  input:not([type="color"]), 
+  textarea, 
+  select {
     background: var(--app-background) !important;
     color: var(--app-text) !important;
     border: 1px solid var(--app-button-bg) !important;
-    border-radius: 0.5rem !important;
   }
 
-  /* CHAT WIDGET - FIXE ET ROSE */
+  /* Chat widget */
   .chat-widget-button {
-    background: #ec5f65 !important;
-    color: #ffffff !important;
-    border: none !important;
-    border-radius: 50% !important;
-    width: 56px !important;
-    height: 56px !important;
-    min-width: 56px !important;
-    min-height: 56px !important;
-    position: fixed !important;
-    bottom: 20px !important;
-    right: 20px !important;
-    z-index: 1000 !important;
-    box-shadow: 0 4px 12px rgba(236, 95, 101, 0.3) !important;
-    transition: all 0.2s ease !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    cursor: pointer !important;
-    transform: none !important;
+    background: var(--app-chat-widget-bg) !important;
+    color: var(--app-chat-widget-icon) !important;
   }
 
-  .chat-widget-button:hover {
-    background: #d54c52 !important;
-    color: #ffffff !important;
-    box-shadow: 0 6px 20px rgba(236, 95, 101, 0.4) !important;
-    transform: scale(1.05) !important;
-  }
-
-  .chat-widget-button:active {
-    transform: scale(0.98) !important;
-  }
-
-  /* CHAT WIDGET POPUP - STYLES SPÉCIFIQUES */
-  .chat-widget-popup {
-    background: var(--app-card-bg) !important;
-    color: var(--app-card-text) !important;
-    border: 1px solid rgba(0,0,0,0.1) !important;
-  }
-
-  /* SIDEBAR PERSONNALISÉE */
-  .sidebar {
-    background: var(--sidebar-background) !important;
-    color: var(--sidebar-foreground) !important;
-    border-color: var(--sidebar-border) !important;
-  }
-
-  .sidebar-nav-item {
-    color: var(--sidebar-foreground) !important;
-  }
-
-  .sidebar-nav-item:hover {
-    background: var(--sidebar-accent) !important;
-    color: var(--sidebar-accent-foreground) !important;
-  }
-
-  /* DROPDOWNS ET MENUS */
-  .dropdown-menu,
-  .select-content,
-  .popover-content,
-  [role="menu"],
-  [role="listbox"],
-  [data-radix-popper-content-wrapper] {
-    background: var(--app-card-bg) !important;
-    color: var(--app-card-text) !important;
-    border: 1px solid rgba(0,0,0,0.1) !important;
-    border-radius: 0.5rem !important;
-    z-index: 50 !important;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
-  }
-
-  /* SWITCHES SPÉCIAUX POUR NOTIFICATIONS - COULEURS FORCÉES */
-  [data-state="checked"] {
-    background-color: #1632f4 !important;
-    border-color: #1632f4 !important;
-  }
-
-  [data-state="unchecked"] {
-    background-color: #d1d5db !important;
-    border-color: #d1d5db !important;
-  }
-
-  /* TRANSITIONS DOUCES */
-  *:not(.chat-widget-button):not(.chat-widget-popup):not(.theme-toggle-button) {
+  /* Transitions */
+  * {
     transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease !important;
-  }
-
-  /* FORCE SPÉCIALE POUR LES PRÉFÉRENCES */
-  [data-route="/preferences"] {
-    background: var(--app-background) !important;
-    color: var(--app-text) !important;
-  }
-
-  [data-route="/preferences"] .space-y-6,
-  [data-route="/preferences"] .space-y-4,
-  [data-route="/preferences"] .w-full {
-    background: var(--app-background) !important;
-    color: var(--app-text) !important;
   }
 }

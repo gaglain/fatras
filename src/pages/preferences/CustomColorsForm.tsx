@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,7 +24,7 @@ interface CustomColors {
   buttonBgDark: string;
   buttonTextDark: string;
   
-  // Chat widget (même pour les deux modes)
+  // Chat widget
   chatWidgetBg: string;
   chatWidgetIcon: string;
   
@@ -92,78 +91,62 @@ const defaultColors: CustomColors = {
   // Notifications
   notificationBg: "#ffffff",
   notificationText: "#18181b",
-  notificationBorder: "#6681b7",
+  notificationBorder: "#e5e7eb",
   notificationBadgeBg: "#ef4444",
-  notificationBadgeText: "#ce9797",
-  notificationButtonBg: "#858d9d",
+  notificationBadgeText: "#ffffff",
+  notificationButtonBg: "#f3f4f6",
   notificationButtonText: "#374151",
-  notificationRedDot: "#342323",
+  notificationRedDot: "#ef4444",
 };
 
-// Fonction ULTRA FORCE pour appliquer les couleurs IMMÉDIATEMENT
-const applyColorsImmediately = (colors: CustomColors, currentTheme: string) => {
+// Fonction simple pour appliquer les couleurs IMMÉDIATEMENT
+const applyColors = (colors: CustomColors, theme: string) => {
   const root = document.documentElement;
-  const body = document.body;
-  const isDark = currentTheme === 'dark';
+  const isDark = theme === 'dark';
   
-  console.log('🚀 ULTRA FORCE - Applying colors NOW:', colors);
+  console.log('🎨 Applying colors immediately:', colors);
   
-  // FORCER TOUTES les variables CSS avec maximum de priorité
-  const applyVar = (name: string, value: string) => {
-    root.style.setProperty(name, value, 'important');
-    // Double application pour être sûr
-    setTimeout(() => root.style.setProperty(name, value, 'important'), 10);
-  };
-
-  // Variables principales
-  applyVar('--app-background', isDark ? colors.backgroundDark : colors.background);
-  applyVar('--app-text', isDark ? colors.textDark : colors.text);
-  applyVar('--app-card-bg', isDark ? colors.cardBgDark : colors.cardBg);
-  applyVar('--app-card-text', isDark ? colors.cardTextDark : colors.cardText);
-  applyVar('--app-button-bg', isDark ? colors.buttonBgDark : colors.buttonBg);
-  applyVar('--app-button-text', isDark ? colors.buttonTextDark : colors.buttonText);
-  
-  // Variables notifications - FORCE MAXIMALE
-  applyVar('--custom-notificationBg', colors.notificationBg);
-  applyVar('--custom-notificationText', colors.notificationText);
-  applyVar('--custom-notificationBorder', colors.notificationBorder);
-  applyVar('--custom-notificationBadgeBg', colors.notificationBadgeBg);
-  applyVar('--custom-notificationBadgeText', colors.notificationBadgeText);
-  applyVar('--custom-notificationButtonBg', colors.notificationButtonBg);
-  applyVar('--custom-notificationButtonText', colors.notificationButtonText);
-  applyVar('--custom-notificationRedDot', colors.notificationRedDot);
+  // Variables CSS principales
+  root.style.setProperty('--app-background', isDark ? colors.backgroundDark : colors.background);
+  root.style.setProperty('--app-text', isDark ? colors.textDark : colors.text);
+  root.style.setProperty('--app-card-bg', isDark ? colors.cardBgDark : colors.cardBg);
+  root.style.setProperty('--app-card-text', isDark ? colors.cardTextDark : colors.cardText);
+  root.style.setProperty('--app-button-bg', isDark ? colors.buttonBgDark : colors.buttonBg);
+  root.style.setProperty('--app-button-text', isDark ? colors.buttonTextDark : colors.buttonText);
   
   // Variables sidebar
-  applyVar('--custom-sidebarBg', isDark ? colors.sidebarBgDark : colors.sidebarBg);
-  applyVar('--custom-sidebarText', isDark ? colors.sidebarTextDark : colors.sidebarText);
-  applyVar('--custom-sidebarActiveItemBg', isDark ? colors.sidebarActiveItemBgDark : colors.sidebarActiveItemBg);
-  applyVar('--custom-sidebarActiveItemText', isDark ? colors.sidebarActiveItemTextDark : colors.sidebarActiveItemText);
-  applyVar('--custom-sidebarIconLight', colors.sidebarIconLight);
-  applyVar('--custom-sidebarIconDark', colors.sidebarIconDark);
+  root.style.setProperty('--custom-sidebarBg', isDark ? colors.sidebarBgDark : colors.sidebarBg);
+  root.style.setProperty('--custom-sidebarText', isDark ? colors.sidebarTextDark : colors.sidebarText);
+  root.style.setProperty('--custom-sidebarActiveItemBg', isDark ? colors.sidebarActiveItemBgDark : colors.sidebarActiveItemBg);
+  root.style.setProperty('--custom-sidebarActiveItemText', isDark ? colors.sidebarActiveItemTextDark : colors.sidebarActiveItemText);
+  root.style.setProperty('--custom-sidebarIconLight', colors.sidebarIconLight);
+  root.style.setProperty('--custom-sidebarIconDark', colors.sidebarIconDark);
   
-  // Variables chat widget
-  applyVar('--app-chat-widget-bg', colors.chatWidgetBg);
-  applyVar('--app-chat-widget-icon', colors.chatWidgetIcon);
+  // Variables notifications
+  root.style.setProperty('--custom-notificationBg', colors.notificationBg);
+  root.style.setProperty('--custom-notificationText', colors.notificationText);
+  root.style.setProperty('--custom-notificationBorder', colors.notificationBorder);
+  root.style.setProperty('--custom-notificationBadgeBg', colors.notificationBadgeBg);
+  root.style.setProperty('--custom-notificationBadgeText', colors.notificationBadgeText);
+  root.style.setProperty('--custom-notificationButtonBg', colors.notificationButtonBg);
+  root.style.setProperty('--custom-notificationButtonText', colors.notificationButtonText);
+  root.style.setProperty('--custom-notificationRedDot', colors.notificationRedDot);
   
-  // FORCER le body ET root
-  const bgColor = isDark ? colors.backgroundDark : colors.background;
-  const textColor = isDark ? colors.textDark : colors.text;
+  // Variables chat
+  root.style.setProperty('--app-chat-widget-bg', colors.chatWidgetBg);
+  root.style.setProperty('--app-chat-widget-icon', colors.chatWidgetIcon);
   
-  body.style.setProperty('background-color', bgColor, 'important');
-  body.style.setProperty('color', textColor, 'important');
-  root.style.setProperty('background-color', bgColor, 'important');
-  root.style.setProperty('color', textColor, 'important');
+  // Forcer l'application sur body
+  document.body.style.backgroundColor = isDark ? colors.backgroundDark : colors.background;
+  document.body.style.color = isDark ? colors.textDark : colors.text;
   
-  // Forcer un reflow complet
-  body.offsetHeight;
-  
-  // Sauvegarder immédiatement
+  // Sauvegarder
   localStorage.setItem("customColors", JSON.stringify(colors));
   
-  // Event pour forcer la mise à jour partout
+  // Event pour notifier les autres composants
   window.dispatchEvent(new CustomEvent('colorsChanged', { detail: colors }));
   
-  console.log('✅ ULTRA FORCE - Couleurs appliquées avec succès');
+  console.log('✅ Colors applied successfully');
 };
 
 export const CustomColorsForm: React.FC = () => {
@@ -179,18 +162,15 @@ export const CustomColorsForm: React.FC = () => {
           const parsed = JSON.parse(savedColors);
           const mergedColors = { ...defaultColors, ...parsed };
           setColors(mergedColors);
-          // Appliquer immédiatement les couleurs sauvegardées
-          applyColorsImmediately(mergedColors, theme);
-          console.log('🎨 Colors loaded and applied:', mergedColors);
+          applyColors(mergedColors, theme);
         } catch (error) {
           console.error("Erreur lors du chargement des couleurs:", error);
           setColors(defaultColors);
-          applyColorsImmediately(defaultColors, theme);
+          applyColors(defaultColors, theme);
         }
       } else {
-        console.log('🎨 No saved colors, using defaults');
         setColors(defaultColors);
-        applyColorsImmediately(defaultColors, theme);
+        applyColors(defaultColors, theme);
       }
     };
 
@@ -198,33 +178,26 @@ export const CustomColorsForm: React.FC = () => {
   }, [theme]);
 
   const handleColorChange = (key: keyof CustomColors, value: string) => {
-    console.log('🎨 Color change IMMEDIATE:', key, value);
+    console.log('🎨 Color change:', key, value);
     
     const newColors = { ...colors, [key]: value };
     setColors(newColors);
     setHasChanges(true);
     
-    // Application ULTRA IMMÉDIATE
-    applyColorsImmediately(newColors, theme);
+    // Application immédiate
+    applyColors(newColors, theme);
   };
 
   const saveColors = () => {
-    console.log('💾 Saving colors permanently:', colors);
-    
-    // Application finale + sauvegarde
-    applyColorsImmediately(colors, theme);
-    
+    applyColors(colors, theme);
     setHasChanges(false);
-    toast.success("Couleurs sauvegardées et appliquées !");
+    toast.success("Couleurs sauvegardées !");
   };
 
   const resetColors = () => {
-    console.log('🔄 Resetting to defaults');
-    
     setColors(defaultColors);
-    applyColorsImmediately(defaultColors, theme);
+    applyColors(defaultColors, theme);
     localStorage.removeItem("customColors");
-    
     setHasChanges(false);
     toast.success("Couleurs remises par défaut !");
   };
@@ -236,19 +209,13 @@ export const CustomColorsForm: React.FC = () => {
         <Input
           type="color"
           value={value}
-          onChange={(e) => {
-            console.log('🎨 Direct color input change:', label, e.target.value);
-            onChange(e.target.value);
-          }}
+          onChange={(e) => onChange(e.target.value)}
           className="w-16 h-10 p-1 border rounded cursor-pointer"
         />
         <Input
           type="text"
           value={value}
-          onChange={(e) => {
-            console.log('🎨 Text input change:', label, e.target.value);
-            onChange(e.target.value);
-          }}
+          onChange={(e) => onChange(e.target.value)}
           className="flex-1 font-mono text-xs"
           placeholder="#000000"
         />
@@ -265,11 +232,11 @@ export const CustomColorsForm: React.FC = () => {
             <span>Personnalisation des Couleurs</span>
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            ⚡ Les changements s'appliquent IMMÉDIATEMENT. Testez en temps réel !
+            Les changements s'appliquent en temps réel
           </p>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Thème Clair */}
+          {/* Mode Clair */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-foreground border-b pb-2">
               🌞 Mode Clair
@@ -308,7 +275,6 @@ export const CustomColorsForm: React.FC = () => {
               />
             </div>
 
-            {/* Sidebar - Mode Clair */}
             <h4 className="text-md font-medium text-foreground border-b pb-1 mt-6">
               Menu Latéral - Mode Clair
             </h4>
@@ -341,7 +307,7 @@ export const CustomColorsForm: React.FC = () => {
             </div>
           </div>
 
-          {/* Thème Sombre */}
+          {/* Mode Sombre */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-foreground border-b pb-2">
               🌙 Mode Sombre
@@ -380,7 +346,6 @@ export const CustomColorsForm: React.FC = () => {
               />
             </div>
 
-            {/* Sidebar - Mode Sombre */}
             <h4 className="text-md font-medium text-foreground border-b pb-1 mt-6">
               Menu Latéral - Mode Sombre
             </h4>

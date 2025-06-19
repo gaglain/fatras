@@ -6,7 +6,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Forcer l'application des couleurs personnalisées au niveau global */
+/* Variables CSS personnalisées */
 :root {
   /* Couleurs par défaut - mode clair */
   --app-background: #ffffff;
@@ -17,36 +17,35 @@
   --app-button-text: #ffffff;
   --app-chat-widget-bg: #ec5f65;
   --app-chat-widget-icon: #ffffff;
+  
+  /* Sidebar */
+  --custom-sidebarBg: #ffffff;
+  --custom-sidebarText: #18181b;
+  --custom-sidebarActiveItemBg: #1632f4;
+  --custom-sidebarActiveItemText: #ffffff;
+  --custom-sidebarIconLight: #1632f4;
+  --custom-sidebarIconDark: #ffffff;
+  
+  /* Notifications */
+  --custom-notificationBg: #ffffff;
+  --custom-notificationText: #18181b;
+  --custom-notificationBorder: #e5e7eb;
+  --custom-notificationBadgeBg: #ef4444;
+  --custom-notificationBadgeText: #ffffff;
+  --custom-notificationButtonBg: #f3f4f6;
+  --custom-notificationButtonText: #374151;
+  --custom-notificationRedDot: #ef4444;
 }
 
-/* Application forcée des couleurs personnalisées */
+/* Application des couleurs personnalisées */
 body {
   background-color: var(--app-background) !important;
   color: var(--app-text) !important;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Forcer l'arrière-plan sur le conteneur principal */
 #root {
   background-color: var(--app-background) !important;
   color: var(--app-text) !important;
   min-height: 100vh;
-}
-
-/* S'assurer que tous les éléments héritent des couleurs */
-.bg-background {
-  background-color: var(--app-background) !important;
-}
-
-.text-foreground {
-  color: var(--app-text) !important;
-}
-
-/* Forcer les cartes à utiliser les couleurs personnalisées */
-.bg-card {
-  background-color: var(--app-card-bg) !important;
-}
-
-.text-card-foreground {
-  color: var(--app-card-text) !important;
 }
