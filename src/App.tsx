@@ -7,13 +7,13 @@ import { FrontLayout } from '@/components/FrontLayout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { useCustomColors } from '@/hooks/useCustomColors';
 
-// Pages existantes
-const Dashboard = lazy(() => import('@/pages/Dashboard'));
-const Contacts = lazy(() => import('@/pages/Contacts'));
-const Tasks = lazy(() => import('@/pages/Tasks'));
-const Events = lazy(() => import('@/pages/Events'));
-const Messagerie = lazy(() => import('@/pages/Messagerie'));
-const Preferences = lazy(() => import('@/pages/Preferences'));
+// Pages existantes - using named exports
+const Dashboard = lazy(() => import('@/pages/Dashboard').then(module => ({ default: module.Dashboard })));
+const Contacts = lazy(() => import('@/pages/Contacts').then(module => ({ default: module.Contacts })));
+const Tasks = lazy(() => import('@/pages/Tasks').then(module => ({ default: module.Tasks })));
+const Events = lazy(() => import('@/pages/Events').then(module => ({ default: module.Events })));
+const Messagerie = lazy(() => import('@/pages/Messagerie').then(module => ({ default: module.Messagerie })));
+const Preferences = lazy(() => import('@/pages/Preferences').then(module => ({ default: module.Preferences })));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 function App() {
