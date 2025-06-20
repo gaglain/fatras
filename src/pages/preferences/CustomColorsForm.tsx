@@ -72,50 +72,49 @@ const defaultColors: CustomColors = {
   notificationRedDot: "#ef4444",
 };
 
-// Fonction pour appliquer les couleurs immédiatement
-const applyColors = (colors: CustomColors, theme: string) => {
-  const root = document.documentElement;
-  const isDark = theme === 'dark';
-  
-  console.log('🎨 Applying custom colors:', colors);
-  
-  // Variables CSS principales
-  root.style.setProperty('--app-background', isDark ? colors.backgroundDark : colors.background);
-  root.style.setProperty('--app-text', isDark ? colors.textDark : colors.text);
-  root.style.setProperty('--app-card-bg', isDark ? colors.cardBgDark : colors.cardBg);
-  root.style.setProperty('--app-card-text', isDark ? colors.cardTextDark : colors.cardText);
-  root.style.setProperty('--app-button-bg', isDark ? colors.buttonBgDark : colors.buttonBg);
-  root.style.setProperty('--app-button-text', isDark ? colors.buttonTextDark : colors.buttonText);
-  root.style.setProperty('--app-chat-widget-bg', colors.chatWidgetBg);
-  root.style.setProperty('--app-chat-widget-icon', colors.chatWidgetIcon);
-  
-  // Variables CSS pour les notifications
-  root.style.setProperty('--notification-bg', colors.notificationBg);
-  root.style.setProperty('--notification-text', colors.notificationText);
-  root.style.setProperty('--notification-border', colors.notificationBorder);
-  root.style.setProperty('--notification-badge-bg', colors.notificationBadgeBg);
-  root.style.setProperty('--notification-badge-text', colors.notificationBadgeText);
-  root.style.setProperty('--notification-button-bg', colors.notificationButtonBg);
-  root.style.setProperty('--notification-button-text', colors.notificationButtonText);
-  root.style.setProperty('--notification-red-dot', colors.notificationRedDot);
-  
-  // Forcer l'application sur body  
-  document.body.style.backgroundColor = isDark ? colors.backgroundDark : colors.background;
-  document.body.style.color = isDark ? colors.textDark : colors.text;
-  
-  // Sauvegarder
-  localStorage.setItem("customColors", JSON.stringify(colors));
-  
-  // Déclencher un événement pour informer les autres composants
-  window.dispatchEvent(new CustomEvent('customColorsChanged', { detail: colors }));
-  
-  console.log('✅ Custom colors applied and saved successfully');
-};
-
 export const CustomColorsForm: React.FC = () => {
   const { theme } = useTheme();
   const [colors, setColors] = useState<CustomColors>(defaultColors);
   const [hasChanges, setHasChanges] = useState(false);
+
+  // Fonction pour appliquer les couleurs immédiatement
+  const applyColorsImmediately = (newColors: CustomColors) => {
+    const root = document.documentElement;
+    const isDark = theme === 'dark';
+    
+    console.log('🎨 Applying colors immediately:', newColors, 'Theme:', theme);
+    
+    // Variables CSS principales
+    root.style.setProperty('--app-background', isDark ? newColors.backgroundDark : newColors.background);
+    root.style.setProperty('--app-text', isDark ? newColors.textDark : newColors.text);
+    root.style.setProperty('--app-card-bg', isDark ? newColors.cardBgDark : newColors.cardBg);
+    root.style.setProperty('--app-card-text', isDark ? newColors.cardTextDark : newColors.cardText);
+    root.style.setProperty('--app-button-bg', isDark ? newColors.buttonBgDark : newColors.buttonBg);
+    root.style.setProperty('--app-button-text', isDark ? newColors.buttonTextDark : newColors.buttonText);
+    root.style.setProperty('--app-chat-widget-bg', newColors.chatWidgetBg);
+    root.style.setProperty('--app-chat-widget-icon', newColors.chatWidgetIcon);
+    
+    // Variables CSS pour les notifications
+    root.style.setProperty('--notification-bg', newColors.notificationBg);
+    root.style.setProperty('--notification-text', newColors.notificationText);
+    root.style.setProperty('--notification-border', newColors.notificationBorder);
+    root.style.setProperty('--notification-badge-bg', newColors.notificationBadgeBg);
+    root.style.setProperty('--notification-badge-text', newColors.notificationBadgeText);
+    root.style.setProperty('--notification-button-bg', newColors.notificationButtonBg);
+    root.style.setProperty('--notification-button-text', newColors.notificationButtonText);
+    root.style.setProperty('--notification-red-dot', newColors.notificationRedDot);
+    
+    // Forcer l'application sur body et html
+    const bgColor = isDark ? newColors.backgroundDark : newColors.background;
+    const textColor = isDark ? newColors.textDark : newColors.text;
+    
+    document.body.style.backgroundColor = bgColor;
+    document.body.style.color = textColor;
+    document.documentElement.style.backgroundColor = bgColor;
+    
+    // Déclencher un événement pour informer les autres composants
+    window.dispatchEvent(new CustomEvent('customColorsChanged', { detail: newColors }));
+  };
 
   useEffect(() => {
     const loadColors = () => {
@@ -125,17 +124,17 @@ export const CustomColorsForm: React.FC = () => {
           const parsed = JSON.parse(savedColors);
           const mergedColors = { ...defaultColors, ...parsed };
           setColors(mergedColors);
-          applyColors(mergedColors, theme);
+          applyColorsImmediately(mergedColors);
           console.log('🎨 Colors loaded from localStorage:', mergedColors);
         } catch (error) {
           console.error("❌ Error loading colors:", error);
           setColors(defaultColors);
-          applyColors(defaultColors, theme);
+          applyColorsImmediately(defaultColors);
         }
       } else {
         console.log('🎨 No saved colors, using defaults');
         setColors(defaultColors);
-        applyColors(defaultColors, theme);
+        applyColorsImmediately(defaultColors);
       }
     };
 
@@ -149,33 +148,49 @@ export const CustomColorsForm: React.FC = () => {
     setColors(newColors);
     setHasChanges(true);
     
-    // Application immédiate
-    applyColors(newColors, theme);
+    // Application immédiate pour prévisualisation
+    applyColorsImmediately(newColors);
   };
 
   const saveColors = () => {
-    applyColors(colors, theme);
+    localStorage.setItem("customColors", JSON.stringify(colors));
+    applyColorsImmediately(colors);
     setHasChanges(false);
-    toast.success("Couleurs sauvegardées !");
+    toast.success("Couleurs sauvegardées et appliquées !");
+    
+    // Force un rafraîchissement de toute l'application
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
   };
 
   const resetColors = () => {
     setColors(defaultColors);
-    applyColors(defaultColors, theme);
     localStorage.removeItem("customColors");
+    applyColorsImmediately(defaultColors);
     setHasChanges(false);
     toast.success("Couleurs remises par défaut !");
+    
+    // Force un rafraîchissement de toute l'application
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
   };
 
   const ColorInput = ({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) => (
     <div className="space-y-2">
-      <Label className="text-sm font-medium">{label}</Label>
+      <Label className="text-sm font-medium" style={{ color: 'var(--app-text)' }}>{label}</Label>
       <div className="flex space-x-2 items-center">
         <Input
           type="color"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           className="w-16 h-10 p-1 border rounded cursor-pointer"
+          style={{ 
+            backgroundColor: 'var(--app-card-bg)',
+            borderColor: 'var(--notification-border)',
+            color: 'var(--app-card-text)'
+          }}
         />
         <Input
           type="text"
@@ -183,6 +198,11 @@ export const CustomColorsForm: React.FC = () => {
           onChange={(e) => onChange(e.target.value)}
           className="flex-1 font-mono text-xs"
           placeholder="#000000"
+          style={{ 
+            backgroundColor: 'var(--app-card-bg)',
+            borderColor: 'var(--notification-border)',
+            color: 'var(--app-card-text)'
+          }}
         />
       </div>
     </div>
@@ -190,20 +210,20 @@ export const CustomColorsForm: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <Card>
+      <Card style={{ backgroundColor: 'var(--app-card-bg)', borderColor: 'var(--notification-border)' }}>
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
+          <CardTitle className="flex items-center space-x-2" style={{ color: 'var(--app-card-text)' }}>
             <Palette className="h-5 w-5" />
             <span>Personnalisation des Couleurs</span>
           </CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Les changements s'appliquent en temps réel
+          <p className="text-sm" style={{ color: 'var(--app-text)', opacity: 0.7 }}>
+            Les changements s'appliquent en temps réel. Sauvegardez pour les conserver.
           </p>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Mode Clair */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-foreground border-b pb-2">
+            <h3 className="text-lg font-semibold border-b pb-2" style={{ color: 'var(--app-card-text)', borderColor: 'var(--notification-border)' }}>
               🌞 Mode Clair
             </h3>
             
@@ -243,7 +263,7 @@ export const CustomColorsForm: React.FC = () => {
 
           {/* Mode Sombre */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-foreground border-b pb-2">
+            <h3 className="text-lg font-semibold border-b pb-2" style={{ color: 'var(--app-card-text)', borderColor: 'var(--notification-border)' }}>
               🌙 Mode Sombre
             </h3>
             
@@ -283,7 +303,7 @@ export const CustomColorsForm: React.FC = () => {
 
           {/* Chat Widget */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-foreground border-b pb-2">
+            <h3 className="text-lg font-semibold border-b pb-2" style={{ color: 'var(--app-card-text)', borderColor: 'var(--notification-border)' }}>
               💬 Widget de Chat
             </h3>
             
@@ -303,7 +323,7 @@ export const CustomColorsForm: React.FC = () => {
 
           {/* Notifications */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-foreground border-b pb-2">
+            <h3 className="text-lg font-semibold border-b pb-2" style={{ color: 'var(--app-card-text)', borderColor: 'var(--notification-border)' }}>
               🔔 Notifications
             </h3>
             
@@ -352,11 +372,14 @@ export const CustomColorsForm: React.FC = () => {
           </div>
 
           {/* Actions */}
-          <div className="flex space-x-3 pt-4 border-t">
+          <div className="flex space-x-3 pt-4" style={{ borderTop: `1px solid var(--notification-border)` }}>
             <Button 
               onClick={saveColors} 
-              disabled={!hasChanges}
               className="flex items-center space-x-2"
+              style={{ 
+                backgroundColor: 'var(--app-button-bg)',
+                color: 'var(--app-button-text)'
+              }}
             >
               <Save className="h-4 w-4" />
               <span>Sauvegarder</span>
@@ -366,13 +389,18 @@ export const CustomColorsForm: React.FC = () => {
               onClick={resetColors} 
               variant="outline"
               className="flex items-center space-x-2"
+              style={{ 
+                borderColor: 'var(--notification-border)',
+                backgroundColor: 'var(--notification-button-bg)',
+                color: 'var(--notification-button-text)'
+              }}
             >
               <RotateCcw className="h-4 w-4" />
               <span>Réinitialiser</span>
             </Button>
             
             {hasChanges && (
-              <p className="text-sm text-orange-600 flex items-center">
+              <p className="text-sm flex items-center" style={{ color: '#f59e0b' }}>
                 ⚠️ Changements non sauvegardés
               </p>
             )}

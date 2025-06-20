@@ -16,6 +16,16 @@
   --app-button-text: #ffffff;
   --app-chat-widget-bg: #1632f4;
   --app-chat-widget-icon: #ffffff;
+  
+  /* Variables pour les notifications */
+  --notification-bg: #ffffff;
+  --notification-text: #18181b;
+  --notification-border: #e5e7eb;
+  --notification-badge-bg: #ef4444;
+  --notification-badge-text: #ffffff;
+  --notification-button-bg: #f3f4f6;
+  --notification-button-text: #374151;
+  --notification-red-dot: #ef4444;
 }
 
 .dark {
@@ -25,16 +35,41 @@
   --app-card-text: #ffffff;
   --app-button-bg: #ffffff;
   --app-button-text: #000000;
+  
+  /* Variables pour les notifications mode sombre */
+  --notification-bg: #1a1a1a;
+  --notification-text: #ffffff;
+  --notification-border: #374151;
+  --notification-badge-bg: #ef4444;
+  --notification-badge-text: #ffffff;
+  --notification-button-bg: #374151;
+  --notification-button-text: #ffffff;
+  --notification-red-dot: #ef4444;
 }
 
 body {
-  background-color: var(--app-background);
-  color: var(--app-text);
+  background-color: var(--app-background) !important;
+  color: var(--app-text) !important;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+html {
+  background-color: var(--app-background) !important;
+}
+
 #root {
-  background-color: var(--app-background);
-  color: var(--app-text);
+  background-color: var(--app-background) !important;
+  color: var(--app-text) !important;
   min-height: 100vh;
+}
+
+/* Application forcée pour tous les composants */
+.card, [data-testid="card"] {
+  background-color: var(--app-card-bg) !important;
+  color: var(--app-card-text) !important;
+}
+
+.button, [data-testid="button"] {
+  background-color: var(--app-button-bg) !important;
+  color: var(--app-button-text) !important;
 }
