@@ -40,67 +40,72 @@ function App() {
           <Route path="/not-found" element={<FrontLayout><NotFound /></FrontLayout>} />
           <Route path="*" element={<Navigate to="/not-found" replace />} />
 
-          {/* Routes protégées */}
+          {/* Routes protégées avec Layout */}
           <Route
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <Layout>
-                  <Dashboard />
-                </Layout>
+                <Layout />
               </ProtectedRoute>
             }
-          />
+          >
+            <Route index element={<Dashboard />} />
+          </Route>
+          
           <Route
             path="/contacts"
             element={
               <ProtectedRoute>
-                <Layout>
-                  <Contacts />
-                </Layout>
+                <Layout />
               </ProtectedRoute>
             }
-          />
+          >
+            <Route index element={<Contacts />} />
+          </Route>
+          
           <Route
             path="/tasks"
             element={
               <ProtectedRoute>
-                <Layout>
-                  <Tasks />
-                </Layout>
+                <Layout />
               </ProtectedRoute>
             }
-          />
+          >
+            <Route index element={<Tasks />} />
+          </Route>
+          
           <Route
             path="/events"
             element={
               <ProtectedRoute>
-                <Layout>
-                  <Events />
-                </Layout>
+                <Layout />
               </ProtectedRoute>
             }
-          />
+          >
+            <Route index element={<Events />} />
+          </Route>
+          
           <Route
             path="/messagerie"
             element={
               <ProtectedRoute>
-                <Layout>
-                  <Messagerie />
-                </Layout>
+                <Layout />
               </ProtectedRoute>
             }
-          />
+          >
+            <Route index element={<Messagerie />} />
+          </Route>
+          
           <Route
             path="/preferences"
             element={
               <ProtectedRoute>
-                <Layout>
-                  <Preferences />
-                </Layout>
+                <Layout />
               </ProtectedRoute>
             }
-          />
+          >
+            <Route index element={<Preferences />} />
+          </Route>
         </Routes>
       </Suspense>
     </>
