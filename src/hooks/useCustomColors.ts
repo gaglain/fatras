@@ -14,7 +14,9 @@ export const useCustomColors = () => {
           const root = document.documentElement;
           const isDark = theme === 'dark';
           
-          // Appliquer les couleurs personnalisées principales
+          console.log('🎨 Applying custom colors:', colors, 'Theme:', theme);
+          
+          // Appliquer les couleurs principales
           root.style.setProperty('--app-background', isDark ? colors.backgroundDark : colors.background);
           root.style.setProperty('--app-text', isDark ? colors.textDark : colors.text);
           root.style.setProperty('--app-card-bg', isDark ? colors.cardBgDark : colors.cardBg);
@@ -38,13 +40,31 @@ export const useCustomColors = () => {
           document.body.style.backgroundColor = isDark ? colors.backgroundDark : colors.background;
           document.body.style.color = isDark ? colors.textDark : colors.text;
           
-          console.log('🎨 Custom colors applied on theme change');
+          // Déclencher un événement pour informer les autres composants
+          window.dispatchEvent(new CustomEvent('customColorsApplied', { detail: colors }));
+          
+          console.log('✅ Custom colors applied successfully');
         } catch (error) {
-          console.error('Erreur lors de l\'application des couleurs:', error);
+          console.error('❌ Error applying custom colors:', error);
         }
+      } else {
+        console.log('🎨 No custom colors found in localStorage');
       }
     };
 
+    // Appliquer immédiatement
     applyCustomColors();
+    
+    // Écouter les changements de couleurs
+    const handleColorsChange = () => {
+      console.log('🎨 Colors changed event received');
+      applyCustomColors();
+    };
+    
+    window.addEventListener('customColorsChanged', handleColorsChange);
+    
+    return () => {
+      window.removeEventListener('customColorsChanged', handleColorsChange);
+    };
   }, [theme]);
 };

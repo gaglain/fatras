@@ -99,14 +99,17 @@ const applyColors = (colors: CustomColors, theme: string) => {
   root.style.setProperty('--notification-button-text', colors.notificationButtonText);
   root.style.setProperty('--notification-red-dot', colors.notificationRedDot);
   
-  // Forcer l'application sur body
+  // Forcer l'application sur body  
   document.body.style.backgroundColor = isDark ? colors.backgroundDark : colors.background;
   document.body.style.color = isDark ? colors.textDark : colors.text;
   
   // Sauvegarder
   localStorage.setItem("customColors", JSON.stringify(colors));
   
-  console.log('✅ Custom colors applied successfully');
+  // Déclencher un événement pour informer les autres composants
+  window.dispatchEvent(new CustomEvent('customColorsChanged', { detail: colors }));
+  
+  console.log('✅ Custom colors applied and saved successfully');
 };
 
 export const CustomColorsForm: React.FC = () => {
@@ -123,12 +126,14 @@ export const CustomColorsForm: React.FC = () => {
           const mergedColors = { ...defaultColors, ...parsed };
           setColors(mergedColors);
           applyColors(mergedColors, theme);
+          console.log('🎨 Colors loaded from localStorage:', mergedColors);
         } catch (error) {
-          console.error("Erreur lors du chargement des couleurs:", error);
+          console.error("❌ Error loading colors:", error);
           setColors(defaultColors);
           applyColors(defaultColors, theme);
         }
       } else {
+        console.log('🎨 No saved colors, using defaults');
         setColors(defaultColors);
         applyColors(defaultColors, theme);
       }
