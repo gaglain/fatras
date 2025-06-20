@@ -243,8 +243,8 @@ export const ChatWidget: React.FC = () => {
                   backgroundColor: 'var(--app-background)',
                   borderColor: 'var(--notification-border)',
                   color: 'var(--app-text)',
-                  focusRingColor: 'var(--app-chat-widget-bg)'
-                }}
+                  '--tw-ring-color': 'var(--app-chat-widget-bg)'
+                } as React.CSSProperties}
               />
               <Button
                 onClick={handleSendMessage}
