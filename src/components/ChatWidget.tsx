@@ -64,27 +64,46 @@ export const ChatWidget: React.FC = () => {
       {/* POPUP DE CHAT */}
       {isOpen && (
         <div 
-          className="mb-4 bg-white dark:bg-gray-800 shadow-2xl rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700"
+          className="mb-4 shadow-2xl rounded-xl overflow-hidden border"
           style={{
             width: '400px',
             height: '500px',
             position: 'absolute',
             bottom: '80px',
-            right: '0'
+            right: '0',
+            backgroundColor: 'var(--app-card-bg)',
+            borderColor: 'var(--notification-border)'
           }}
         >
           {/* Header */}
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+          <div 
+            className="p-4 border-b" 
+            style={{
+              borderColor: 'var(--notification-border)',
+              backgroundColor: 'var(--app-card-bg)'
+            }}
+          >
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center space-x-2">
-                <MessageSquare className="h-5 w-5 text-blue-600" />
-                <span className="font-medium text-gray-900 dark:text-white">Chat</span>
+                <MessageSquare 
+                  className="h-5 w-5" 
+                  style={{ color: 'var(--app-chat-widget-bg)' }}
+                />
+                <span 
+                  className="font-medium" 
+                  style={{ color: 'var(--app-card-text)' }}
+                >
+                  Chat
+                </span>
               </div>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsOpen(false)}
-                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                style={{
+                  color: 'var(--app-card-text)'
+                }}
+                className="hover:opacity-80"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -93,7 +112,14 @@ export const ChatWidget: React.FC = () => {
             {/* Sélecteurs */}
             <div className="flex space-x-2">
               <Select value={selectedChannel} onValueChange={setSelectedChannel}>
-                <SelectTrigger className="flex-1 h-8 text-xs">
+                <SelectTrigger 
+                  className="flex-1 h-8 text-xs"
+                  style={{
+                    backgroundColor: 'var(--app-background)',
+                    borderColor: 'var(--notification-border)',
+                    color: 'var(--app-text)'
+                  }}
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -109,7 +135,14 @@ export const ChatWidget: React.FC = () => {
               </Select>
               
               <Select value={selectedTeam} onValueChange={setSelectedTeam}>
-                <SelectTrigger className="flex-1 h-8 text-xs">
+                <SelectTrigger 
+                  className="flex-1 h-8 text-xs"
+                  style={{
+                    backgroundColor: 'var(--app-background)',
+                    borderColor: 'var(--notification-border)',
+                    color: 'var(--app-text)'
+                  }}
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -130,10 +163,16 @@ export const ChatWidget: React.FC = () => {
           </div>
 
           {/* Messages */}
-          <ScrollArea className="h-80 p-4 bg-gray-50 dark:bg-gray-900">
+          <ScrollArea 
+            className="h-80 p-4" 
+            style={{ backgroundColor: 'var(--app-background)' }}
+          >
             <div className="space-y-3">
               {messages.length === 0 ? (
-                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                <div 
+                  className="text-center py-8" 
+                  style={{ color: 'var(--app-text)', opacity: 0.7 }}
+                >
                   <MessageSquare className="h-8 w-8 mx-auto mb-3" />
                   <p className="text-sm">Commencez une conversation</p>
                 </div>
@@ -148,19 +187,32 @@ export const ChatWidget: React.FC = () => {
                         message.sender === 'user' ? 'flex-row-reverse space-x-reverse' : ''
                       }`}
                     >
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
-                        message.sender === 'user' 
-                          ? 'bg-blue-600 text-white' 
-                          : 'bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200'
-                      }`}>
+                      <div 
+                        className="w-6 h-6 rounded-full flex items-center justify-center text-xs"
+                        style={{
+                          backgroundColor: message.sender === 'user' 
+                            ? 'var(--app-chat-widget-bg)' 
+                            : 'var(--notification-button-bg)',
+                          color: message.sender === 'user' 
+                            ? 'var(--app-chat-widget-icon)' 
+                            : 'var(--notification-button-text)'
+                        }}
+                      >
                         {message.sender === 'user' ? <User className="h-3 w-3" /> : <Bot className="h-3 w-3" />}
                       </div>
                       <div
-                        className={`px-3 py-2 rounded-lg text-sm ${
-                          message.sender === 'user'
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700'
-                        }`}
+                        className="px-3 py-2 rounded-lg text-sm"
+                        style={{
+                          backgroundColor: message.sender === 'user'
+                            ? 'var(--app-chat-widget-bg)'
+                            : 'var(--app-card-bg)',
+                          color: message.sender === 'user'
+                            ? 'var(--app-chat-widget-icon)'
+                            : 'var(--app-card-text)',
+                          border: message.sender === 'user' 
+                            ? 'none' 
+                            : `1px solid var(--notification-border)`
+                        }}
                       >
                         {message.text}
                       </div>
@@ -172,7 +224,13 @@ export const ChatWidget: React.FC = () => {
           </ScrollArea>
 
           {/* Input */}
-          <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+          <div 
+            className="p-4 border-t" 
+            style={{
+              borderColor: 'var(--notification-border)',
+              backgroundColor: 'var(--app-card-bg)'
+            }}
+          >
             <div className="flex space-x-2">
               <input
                 type="text"
@@ -180,13 +238,23 @@ export const ChatWidget: React.FC = () => {
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Tapez votre message..."
-                className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2"
+                style={{
+                  backgroundColor: 'var(--app-background)',
+                  borderColor: 'var(--notification-border)',
+                  color: 'var(--app-text)',
+                  focusRingColor: 'var(--app-chat-widget-bg)'
+                }}
               />
               <Button
                 onClick={handleSendMessage}
                 disabled={!inputValue.trim()}
                 size="sm"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4"
+                className="px-4"
+                style={{
+                  backgroundColor: 'var(--app-chat-widget-bg)',
+                  color: 'var(--app-chat-widget-icon)'
+                }}
               >
                 <Send className="h-4 w-4" />
               </Button>
@@ -198,12 +266,14 @@ export const ChatWidget: React.FC = () => {
       {/* BOUTON WIDGET ROND - FIXE ET BIEN POSITIONNÉ */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group"
+        className="w-14 h-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group"
         style={{
           position: 'fixed',
           bottom: '24px',
           right: '24px',
-          zIndex: 1000
+          zIndex: 1000,
+          backgroundColor: 'var(--app-chat-widget-bg)',
+          color: 'var(--app-chat-widget-icon)'
         }}
       >
         <MessageSquare className="h-6 w-6 group-hover:scale-110 transition-transform duration-200" />
