@@ -16,6 +16,9 @@ const Messagerie = lazy(() => import('@/pages/Messagerie').then(module => ({ def
 const Preferences = lazy(() => import('@/pages/Preferences').then(module => ({ default: module.Preferences })));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
+// Page de connexion
+const Index = lazy(() => import('@/pages/Index').then(module => ({ default: module.Index })));
+
 function App() {
   // Utiliser le hook pour appliquer les couleurs personnalisées
   useCustomColors();
@@ -29,13 +32,10 @@ function App() {
 
       <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Chargement...</div>}>
         <Routes>
-          {/* Routes publiques simplifiées */}
-          <Route path="/" element={<div className="min-h-screen flex items-center justify-center">
-            <div className="text-center">
-              <h1 className="text-4xl font-bold mb-4">MusiConnect</h1>
-              <p className="text-lg text-gray-600">Plateforme de Booking Musical</p>
-            </div>
-          </div>} />
+          {/* Pages publiques */}
+          <Route path="/" element={<Index />} />
+          <Route path="/admin" element={<Index />} />
+          <Route path="/login" element={<Index />} />
           
           <Route path="/not-found" element={<FrontLayout><NotFound /></FrontLayout>} />
           <Route path="*" element={<Navigate to="/not-found" replace />} />
@@ -45,7 +45,9 @@ function App() {
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <Layout><Dashboard /></Layout>
+                <Layout>
+                  <Dashboard />
+                </Layout>
               </ProtectedRoute>
             }
           />
@@ -53,7 +55,9 @@ function App() {
             path="/contacts"
             element={
               <ProtectedRoute>
-                <Layout><Contacts /></Layout>
+                <Layout>
+                  <Contacts />
+                </Layout>
               </ProtectedRoute>
             }
           />
@@ -61,7 +65,9 @@ function App() {
             path="/tasks"
             element={
               <ProtectedRoute>
-                <Layout><Tasks /></Layout>
+                <Layout>
+                  <Tasks />
+                </Layout>
               </ProtectedRoute>
             }
           />
@@ -69,7 +75,9 @@ function App() {
             path="/events"
             element={
               <ProtectedRoute>
-                <Layout><Events /></Layout>
+                <Layout>
+                  <Events />
+                </Layout>
               </ProtectedRoute>
             }
           />
@@ -77,7 +85,9 @@ function App() {
             path="/messagerie"
             element={
               <ProtectedRoute>
-                <Layout><Messagerie /></Layout>
+                <Layout>
+                  <Messagerie />
+                </Layout>
               </ProtectedRoute>
             }
           />
@@ -85,7 +95,9 @@ function App() {
             path="/preferences"
             element={
               <ProtectedRoute>
-                <Layout><Preferences /></Layout>
+                <Layout>
+                  <Preferences />
+                </Layout>
               </ProtectedRoute>
             }
           />
