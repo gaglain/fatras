@@ -22,7 +22,7 @@ const EmailCampaigns = lazy(() => import('@/pages/EmailCampaigns').then(module =
 const Forms = lazy(() => import('@/pages/Forms').then(module => ({ default: module.Forms })));
 const Messagerie = lazy(() => import('@/pages/Messagerie').then(module => ({ default: module.Messagerie })));
 const ShowBible = lazy(() => import('@/pages/ShowBible').then(module => ({ default: module.ShowBible })));
-const RoadShow = lazy(() => import('@/pages/RoadShow'));
+const RoadShow = lazy(() => import('@/pages/RoadShow').then(module => ({ default: module.RoadShow })));
 const Merchandise = lazy(() => import('@/pages/Merchandise').then(module => ({ default: module.Merchandise })));
 const Opportunities = lazy(() => import('@/pages/Opportunities').then(module => ({ default: module.Opportunities })));
 const Website = lazy(() => import('@/pages/Website').then(module => ({ default: module.Website })));
@@ -182,6 +182,17 @@ function App() {
           
           <Route
             path="/road-show"
+            element={
+              <ProtectedRoute>
+                <Layout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<RoadShow />} />
+          </Route>
+          
+          <Route
+            path="/feuille-de-route"
             element={
               <ProtectedRoute>
                 <Layout />
