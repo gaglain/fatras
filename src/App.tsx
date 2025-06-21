@@ -7,7 +7,7 @@ import { FrontLayout } from '@/components/FrontLayout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { useCustomColors } from '@/hooks/useCustomColors';
 
-// Pages existantes - using named exports
+// Pages existantes - using correct export types
 const Dashboard = lazy(() => import('@/pages/Dashboard').then(module => ({ default: module.Dashboard })));
 const Contacts = lazy(() => import('@/pages/Contacts').then(module => ({ default: module.Contacts })));
 const ContactLists = lazy(() => import('@/pages/ContactLists'));
@@ -296,8 +296,8 @@ function App() {
             <Route index element={<Preferences />} />
           </Route>
           
-          <Route path="/not-found" element={<FrontLayout><NotFound /></FrontLayout>} />
-          <Route path="*" element={<Navigate to="/not-found" replace />} />
+          <Route path="/404" element={<FrontLayout><NotFound /></FrontLayout>} />
+          <Route path="*" element={<Navigate to="/404" replace />} />
         </Routes>
       </Suspense>
     </>
