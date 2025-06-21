@@ -1,4 +1,5 @@
 
+
 import { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
@@ -10,26 +11,26 @@ import { useCustomColors } from '@/hooks/useCustomColors';
 // Pages existantes - using correct export types
 const Dashboard = lazy(() => import('@/pages/Dashboard').then(module => ({ default: module.Dashboard })));
 const Contacts = lazy(() => import('@/pages/Contacts').then(module => ({ default: module.Contacts })));
-const ContactLists = lazy(() => import('@/pages/ContactLists').then(module => ({ default: module.default })));
+const ContactLists = lazy(() => import('@/pages/ContactLists'));
 const Tasks = lazy(() => import('@/pages/Tasks').then(module => ({ default: module.Tasks })));
 const Events = lazy(() => import('@/pages/Events').then(module => ({ default: module.Events })));
 const EventTypes = lazy(() => import('@/pages/EventTypes').then(module => ({ default: module.EventTypes })));
-const Agenda = lazy(() => import('@/pages/Agenda').then(module => ({ default: module.default })));
+const Agenda = lazy(() => import('@/pages/Agenda'));
 const Artists = lazy(() => import('@/pages/Artists').then(module => ({ default: module.Artists })));
 const Contracts = lazy(() => import('@/pages/Contracts').then(module => ({ default: module.Contracts })));
-const Email = lazy(() => import('@/pages/Email').then(module => ({ default: module.default })));
-const EmailCampaigns = lazy(() => import('@/pages/EmailCampaigns').then(module => ({ default: module.default })));
+const Email = lazy(() => import('@/pages/Email').then(module => ({ default: module.Email })));
+const EmailCampaigns = lazy(() => import('@/pages/EmailCampaigns'));
 const Forms = lazy(() => import('@/pages/Forms').then(module => ({ default: module.Forms })));
 const Messagerie = lazy(() => import('@/pages/Messagerie').then(module => ({ default: module.Messagerie })));
-const ShowBible = lazy(() => import('@/pages/ShowBible').then(module => ({ default: module.default })));
+const ShowBible = lazy(() => import('@/pages/ShowBible'));
 const RoadShow = lazy(() => import('@/pages/RoadShow'));
 const Merchandise = lazy(() => import('@/pages/Merchandise').then(module => ({ default: module.Merchandise })));
-const Opportunities = lazy(() => import('@/pages/Opportunities').then(module => ({ default: module.default })));
+const Opportunities = lazy(() => import('@/pages/Opportunities'));
 const Website = lazy(() => import('@/pages/Website').then(module => ({ default: module.Website })));
-const UserManagement = lazy(() => import('@/pages/UserManagement').then(module => ({ default: module.default })));
+const UserManagement = lazy(() => import('@/pages/UserManagement'));
 const Application = lazy(() => import('@/pages/Application').then(module => ({ default: module.Application })));
 const Preferences = lazy(() => import('@/pages/Preferences').then(module => ({ default: module.Preferences })));
-const PublicationCalendar = lazy(() => import('@/pages/PublicationCalendar').then(module => ({ default: module.default })));
+const PublicationCalendar = lazy(() => import('@/pages/PublicationCalendar'));
 const NotFound = lazy(() => import('@/pages/NotFound').then(module => ({ default: module.NotFound })));
 
 // Page de connexion
