@@ -1,4 +1,3 @@
-
 import { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
@@ -43,7 +42,6 @@ const FrontShop = lazy(() => import('@/pages/FrontShop').then(module => ({ defau
 const FrontContact = lazy(() => import('@/pages/FrontContact').then(module => ({ default: module.FrontContact })));
 
 function App() {
-  // Utiliser le hook pour appliquer les couleurs personnalisées
   useCustomColors();
 
   return (
@@ -80,6 +78,7 @@ function App() {
           >
             <Route index element={<Dashboard />} />
           </Route>
+          
           
           <Route
             path="/contacts"
@@ -322,6 +321,7 @@ function App() {
           >
             <Route index element={<Preferences />} />
           </Route>
+          
           
           <Route path="/404" element={<FrontLayout><NotFound /></FrontLayout>} />
           <Route path="*" element={<Navigate to="/404" replace />} />
