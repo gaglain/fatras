@@ -35,6 +35,13 @@ const NotFound = lazy(() => import('@/pages/NotFound').then(module => ({ default
 // Page de connexion
 const Index = lazy(() => import('@/pages/Index').then(module => ({ default: module.Index })));
 
+// Pages front-end
+const FrontHome = lazy(() => import('@/pages/FrontHome').then(module => ({ default: module.FrontHome })));
+const FrontArtists = lazy(() => import('@/pages/FrontArtists').then(module => ({ default: module.FrontArtists })));
+const FrontEvents = lazy(() => import('@/pages/FrontEvents').then(module => ({ default: module.FrontEvents })));
+const FrontShop = lazy(() => import('@/pages/FrontShop').then(module => ({ default: module.FrontShop })));
+const FrontContact = lazy(() => import('@/pages/FrontContact').then(module => ({ default: module.FrontContact })));
+
 function App() {
   // Utiliser le hook pour appliquer les couleurs personnalisées
   useCustomColors();
@@ -52,6 +59,15 @@ function App() {
           <Route path="/" element={<Index />} />
           <Route path="/admin" element={<Index />} />
           <Route path="/login" element={<Index />} />
+          
+          {/* Routes front-end publiques */}
+          <Route path="/front" element={<FrontLayout />}>
+            <Route index element={<FrontHome />} />
+            <Route path="artists" element={<FrontArtists />} />
+            <Route path="events" element={<FrontEvents />} />
+            <Route path="shop" element={<FrontShop />} />
+            <Route path="contact" element={<FrontContact />} />
+          </Route>
           
           {/* Routes protégées avec Layout */}
           <Route
