@@ -1,3 +1,4 @@
+
 import { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
@@ -9,11 +10,11 @@ import { useCustomColors } from '@/hooks/useCustomColors';
 // Pages existantes - using correct export types
 const Dashboard = lazy(() => import('@/pages/Dashboard').then(module => ({ default: module.Dashboard })));
 const Contacts = lazy(() => import('@/pages/Contacts').then(module => ({ default: module.Contacts })));
-const ContactLists = lazy(() => import('@/pages/ContactLists').then(module => ({ default: module.ContactLists || module })));
+const ContactLists = lazy(() => import('@/pages/ContactLists').then(module => ({ default: module.ContactLists })));
 const Tasks = lazy(() => import('@/pages/Tasks').then(module => ({ default: module.Tasks })));
 const Events = lazy(() => import('@/pages/Events').then(module => ({ default: module.Events })));
 const EventTypes = lazy(() => import('@/pages/EventTypes').then(module => ({ default: module.EventTypes })));
-const Agenda = lazy(() => import('@/pages/Agenda').then(module => ({ default: module.Agenda || module })));
+const Agenda = lazy(() => import('@/pages/Agenda').then(module => ({ default: module.Agenda })));
 const Artists = lazy(() => import('@/pages/Artists').then(module => ({ default: module.Artists })));
 const Contracts = lazy(() => import('@/pages/Contracts').then(module => ({ default: module.Contracts })));
 const Email = lazy(() => import('@/pages/Email').then(module => ({ default: module.Email })));
@@ -23,7 +24,7 @@ const Messagerie = lazy(() => import('@/pages/Messagerie').then(module => ({ def
 const ShowBible = lazy(() => import('@/pages/ShowBible').then(module => ({ default: module.ShowBible })));
 const RoadShow = lazy(() => import('@/pages/RoadShow'));
 const Merchandise = lazy(() => import('@/pages/Merchandise').then(module => ({ default: module.Merchandise })));
-const Opportunities = lazy(() => import('@/pages/Opportunities').then(module => ({ default: module.Opportunities || module })));
+const Opportunities = lazy(() => import('@/pages/Opportunities').then(module => ({ default: module.Opportunities })));
 const Website = lazy(() => import('@/pages/Website').then(module => ({ default: module.Website })));
 const UserManagement = lazy(() => import('@/pages/UserManagement').then(module => ({ default: module.UserManagement })));
 const Application = lazy(() => import('@/pages/Application').then(module => ({ default: module.Application })));
