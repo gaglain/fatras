@@ -1,4 +1,3 @@
-
 import { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
@@ -15,7 +14,7 @@ const Tasks = lazy(() => import('@/pages/Tasks').then(module => ({ default: modu
 const Events = lazy(() => import('@/pages/Events').then(module => ({ default: module.Events })));
 const EventTypes = lazy(() => import('@/pages/EventTypes').then(module => ({ default: module.EventTypes })));
 const Agenda = lazy(() => import('@/pages/Agenda'));
-const Artists = lazy(() => import('@/pages/Artists'));
+const Artists = lazy(() => import('@/pages/Artists').then(module => ({ default: module.Artists })));
 const Contracts = lazy(() => import('@/pages/Contracts').then(module => ({ default: module.Contracts })));
 const Email = lazy(() => import('@/pages/Email'));
 const EmailCampaigns = lazy(() => import('@/pages/EmailCampaigns'));
@@ -25,9 +24,9 @@ const ShowBible = lazy(() => import('@/pages/ShowBible'));
 const RoadShow = lazy(() => import('@/pages/RoadShow'));
 const Merchandise = lazy(() => import('@/pages/Merchandise').then(module => ({ default: module.Merchandise })));
 const Opportunities = lazy(() => import('@/pages/Opportunities'));
-const Website = lazy(() => import('@/pages/Website'));
+const Website = lazy(() => import('@/pages/Website').then(module => ({ default: module.Website })));
 const UserManagement = lazy(() => import('@/pages/UserManagement'));
-const Application = lazy(() => import('@/pages/Application'));
+const Application = lazy(() => import('@/pages/Application').then(module => ({ default: module.Application })));
 const Preferences = lazy(() => import('@/pages/Preferences').then(module => ({ default: module.Preferences })));
 const PublicationCalendar = lazy(() => import('@/pages/PublicationCalendar'));
 const NotFound = lazy(() => import('@/pages/NotFound').then(module => ({ default: module.NotFound })));
