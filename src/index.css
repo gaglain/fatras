@@ -26,6 +26,14 @@
   --notification-button-bg: #f3f4f6;
   --notification-button-text: #374151;
   --notification-red-dot: #ef4444;
+  
+  /* Variables pour la sidebar */
+  --custom-sidebarBg: #ffffff;
+  --custom-sidebarText: #18181b;
+  --custom-sidebarActiveItemBg: #1632f4;
+  --custom-sidebarActiveItemText: #ffffff;
+  --custom-sidebarIconLight: #1632f4;
+  --custom-sidebarIconDark: #ffffff;
 }
 
 .dark {
@@ -45,6 +53,14 @@
   --notification-button-bg: #374151;
   --notification-button-text: #ffffff;
   --notification-red-dot: #ef4444;
+  
+  /* Variables pour la sidebar mode sombre */
+  --custom-sidebarBg: #0f0f0f;
+  --custom-sidebarText: #ffffff;
+  --custom-sidebarActiveItemBg: #1632f4;
+  --custom-sidebarActiveItemText: #ffffff;
+  --custom-sidebarIconLight: #1632f4;
+  --custom-sidebarIconDark: #ffffff;
 }
 
 body {

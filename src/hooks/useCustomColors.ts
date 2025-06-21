@@ -36,6 +36,14 @@ export const useCustomColors = () => {
           root.style.setProperty('--notification-button-text', colors.notificationButtonText || (isDark ? '#ffffff' : '#374151'));
           root.style.setProperty('--notification-red-dot', colors.notificationRedDot || '#ef4444');
           
+          // Appliquer les couleurs de la sidebar
+          root.style.setProperty('--custom-sidebarBg', colors.sidebarBg || (isDark ? '#0f0f0f' : '#ffffff'));
+          root.style.setProperty('--custom-sidebarText', colors.sidebarText || (isDark ? '#ffffff' : '#18181b'));
+          root.style.setProperty('--custom-sidebarActiveItemBg', colors.sidebarActiveItemBg || '#1632f4');
+          root.style.setProperty('--custom-sidebarActiveItemText', colors.sidebarActiveItemText || '#ffffff');
+          root.style.setProperty('--custom-sidebarIconLight', colors.sidebarIconLight || '#1632f4');
+          root.style.setProperty('--custom-sidebarIconDark', colors.sidebarIconDark || '#ffffff');
+          
           // Forcer l'application sur body et html
           const bgColor = isDark ? (colors.backgroundDark || '#0f0f0f') : (colors.background || '#ffffff');
           const textColor = isDark ? (colors.textDark || '#ffffff') : (colors.text || '#18181b');
@@ -71,6 +79,8 @@ export const useCustomColors = () => {
           root.style.setProperty('--app-card-text', '#ffffff');
           root.style.setProperty('--app-button-bg', '#ffffff');
           root.style.setProperty('--app-button-text', '#000000');
+          root.style.setProperty('--custom-sidebarBg', '#0f0f0f');
+          root.style.setProperty('--custom-sidebarText', '#ffffff');
           document.body.style.backgroundColor = '#0f0f0f';
           document.body.style.color = '#ffffff';
         } else {
@@ -80,6 +90,8 @@ export const useCustomColors = () => {
           root.style.setProperty('--app-card-text', '#18181b');
           root.style.setProperty('--app-button-bg', '#1632f4');
           root.style.setProperty('--app-button-text', '#ffffff');
+          root.style.setProperty('--custom-sidebarBg', '#ffffff');
+          root.style.setProperty('--custom-sidebarText', '#18181b');
           document.body.style.backgroundColor = '#ffffff';
           document.body.style.color = '#18181b';
         }
