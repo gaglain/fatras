@@ -79,7 +79,6 @@ function App() {
             <Route index element={<Dashboard />} />
           </Route>
           
-          
           <Route
             path="/contacts"
             element={
