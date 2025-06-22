@@ -1,3 +1,4 @@
+
 import { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
@@ -320,7 +321,6 @@ function App() {
           >
             <Route index element={<Preferences />} />
           </Route>
-          
           
           <Route path="/404" element={<FrontLayout><NotFound /></FrontLayout>} />
           <Route path="*" element={<Navigate to="/404" replace />} />
