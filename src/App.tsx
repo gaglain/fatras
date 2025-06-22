@@ -27,6 +27,7 @@ const Merchandise = lazy(() => import('@/pages/Merchandise').then(module => ({ d
 const Opportunities = lazy(() => import('@/pages/Opportunities').then(module => ({ default: module.Opportunities })));
 const Website = lazy(() => import('@/pages/Website').then(module => ({ default: module.Website })));
 const WebsiteBackoffice = lazy(() => import('@/pages/WebsiteBackoffice').then(module => ({ default: module.WebsiteBackoffice })));
+const WebsitePageEditor = lazy(() => import('@/pages/WebsitePageEditor').then(module => ({ default: module.WebsitePageEditor })));
 const UserManagement = lazy(() => import('@/pages/UserManagement').then(module => ({ default: module.UserManagement })));
 const Application = lazy(() => import('@/pages/Application').then(module => ({ default: module.Application })));
 const Preferences = lazy(() => import('@/pages/Preferences').then(module => ({ default: module.Preferences })));
@@ -288,6 +289,7 @@ function App() {
             }
           >
             <Route index element={<WebsiteBackoffice />} />
+            <Route path="editor/:pageId" element={<WebsitePageEditor />} />
           </Route>
           
           <Route

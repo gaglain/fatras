@@ -240,7 +240,7 @@ export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }
   const draftPages = pages.filter(page => page.status === 'draft');
 
   const handleEditPage = (page: WebPage) => {
-    navigate(`/admin/editor/${page.id}`);
+    navigate(`/website/editor/${page.id}`);
   };
 
   const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
