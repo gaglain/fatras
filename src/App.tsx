@@ -26,6 +26,7 @@ const RoadShow = lazy(() => import('@/pages/RoadShow'));
 const Merchandise = lazy(() => import('@/pages/Merchandise').then(module => ({ default: module.Merchandise })));
 const Opportunities = lazy(() => import('@/pages/Opportunities').then(module => ({ default: module.Opportunities })));
 const Website = lazy(() => import('@/pages/Website').then(module => ({ default: module.Website })));
+const WebsiteBackoffice = lazy(() => import('@/pages/WebsiteBackoffice').then(module => ({ default: module.WebsiteBackoffice })));
 const UserManagement = lazy(() => import('@/pages/UserManagement').then(module => ({ default: module.UserManagement })));
 const Application = lazy(() => import('@/pages/Application').then(module => ({ default: module.Application })));
 const Preferences = lazy(() => import('@/pages/Preferences').then(module => ({ default: module.Preferences })));
@@ -286,7 +287,7 @@ function App() {
               </ProtectedRoute>
             }
           >
-            <Route index element={<Website />} />
+            <Route index element={<WebsiteBackoffice />} />
           </Route>
           
           <Route
