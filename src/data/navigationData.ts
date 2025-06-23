@@ -1,3 +1,4 @@
+
 import { 
   LayoutDashboard, 
   Users, 
@@ -71,7 +72,7 @@ export const navigationData: MenuItem[] = [
       { name: 'Opportunités', href: '/opportunities', icon: Target, visible: true },
       { name: 'Contrats', href: '/contracts', icon: FileText, visible: true },
       { name: 'Tâches', href: '/tasks', icon: CheckSquare, visible: true },
-      { name: 'Feuille de route', href: '/feuille-de-route', icon: Route, visible: true }
+      { name: 'Feuille de route', href: '/roadshow', icon: Route, visible: true }
     ]
   },
   { 

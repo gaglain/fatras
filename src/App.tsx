@@ -89,8 +89,9 @@ function App() {
             <Route path="contracts" element={<Contracts />} />
             <Route path="tasks" element={<Tasks />} />
             <Route path="opportunities" element={<Opportunities />} />
-            <Route path="road-show" element={<RoadShow />} />
-            <Route path="feuille-de-route" element={<RoadShow />} />
+            <Route path="roadshow" element={<RoadShow />} />
+            <Route path="feuille-de-route" element={<Navigate to="/roadshow" replace />} />
+            <Route path="road-show" element={<Navigate to="/roadshow" replace />} />
             <Route path="email" element={<Email />} />
             <Route path="email-campaigns" element={<EmailCampaigns />} />
             <Route path="messagerie" element={<Messagerie />} />
