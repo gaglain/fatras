@@ -1,91 +1,110 @@
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Music, MapPin, Calendar } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Block } from '@/components/BlockEditor/types';
+import { TextBlock } from '@/components/BlockEditor/blocks/TextBlock';
+import { ImageBlock } from '@/components/BlockEditor/blocks/ImageBlock';
+import { HeroBlock } from '@/components/BlockEditor/blocks/HeroBlock';
+import { ArtistGridBlock } from '@/components/BlockEditor/blocks/ArtistGridBlock';
+import { SEOHead } from '@/components/SEOHead';
 
-const sampleArtists = [
-  {
-    id: '1',
-    name: 'The Midnight Express',
-    genre: 'Rock',
-    location: 'Paris, France',
-    image: '/placeholder.svg',
-    upcomingShows: 3,
-    description: 'Groupe de rock alternatif formé en 2018, connu pour leurs performances énergiques.'
-  },
-  {
-    id: '2',
-    name: 'Sarah Mitchell',
-    genre: 'Jazz',
-    location: 'Lyon, France',
-    image: '/placeholder.svg',
-    upcomingShows: 1,
-    description: 'Chanteuse de jazz avec une voix unique et un style intemporel.'
-  },
-  {
-    id: '3',
-    name: 'Thunder Road',
-    genre: 'Metal',
-    location: 'Marseille, France',
-    image: '/placeholder.svg',
-    upcomingShows: 5,
-    description: 'Groupe de metal hardcore avec plus de 10 ans d\'expérience sur scène.'
-  }
-];
+interface WebPage {
+  id: string;
+  title: string;
+  slug: string;
+  status: 'published' | 'draft' | 'archived';
+  blocks: Block[];
+  metaDescription: string;
+}
+
+const defaultArtistsPage: WebPage = {
+  id: '2',
+  title: 'Nos Artistes',
+  slug: '/artists',
+  status: 'published',
+  metaDescription: 'Découvrez notre sélection d\'artistes exceptionnels',
+  blocks: [
+    {
+      id: '3',
+      type: 'text',
+      order: 0,
+      content: {
+        text: '<h1>Nos Artistes</h1><p>Découvrez notre sélection d\'artistes talentueux</p>'
+      }
+    },
+    {
+      id: '4',
+      type: 'artist-grid',
+      order: 1,
+      content: {
+        title: 'Tous nos Artistes',
+        showRating: true,
+        showStats: true
+      }
+    }
+  ]
+};
 
 export const FrontArtists: React.FC = () => {
-  return (
-    <div className="py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Nos Artistes</h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Découvrez les talents exceptionnels de notre roster d'artistes
-          </p>
-        </div>
+  const [pageData, setPageData] = useState<WebPage>(defaultArtistsPage);
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {sampleArtists.map((artist) => (
-            <Card key={artist.id} className="hover:shadow-lg transition-shadow overflow-hidden">
-              <div className="aspect-w-16 aspect-h-9">
-                <img 
-                  src={artist.image} 
-                  alt={artist.name}
-                  className="w-full h-48 object-cover"
-                />
-              </div>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-xl">{artist.name}</CardTitle>
-                  <Badge variant="secondary">{artist.genre}</Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-gray-600">{artist.description}</p>
-                
-                <div className="flex items-center space-x-4 text-sm text-gray-500">
-                  <div className="flex items-center">
-                    <MapPin className="h-4 w-4 mr-1" />
-                    {artist.location}
-                  </div>
-                  <div className="flex items-center">
-                    <Calendar className="h-4 w-4 mr-1" />
-                    {artist.upcomingShows} concerts à venir
-                  </div>
-                </div>
+  useEffect(() => {
+    // Charger les données de la page depuis localStorage
+    const savedPages = localStorage.getItem('websitePages');
+    if (savedPages) {
+      try {
+        const pages = JSON.parse(savedPages);
+        const artistsPage = pages.find((page: WebPage) => page.slug === '/artists' || page.id === '2');
+        if (artistsPage) {
+          setPageData(artistsPage);
+        }
+      } catch (e) {
+        console.error('Error loading page data:', e);
+      }
+    }
+  }, []);
 
-                <div className="flex items-center space-x-2 pt-2">
-                  <Music className="h-5 w-5 text-purple-600" />
-                  <span className="text-sm font-medium text-purple-600">
-                    Écouter les extraits
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+  const renderBlock = (block: Block) => {
+    let BlockComponent;
+    switch (block.type) {
+      case 'text':
+        BlockComponent = TextBlock;
+        break;
+      case 'image':
+        BlockComponent = ImageBlock;
+        break;
+      case 'hero':
+        BlockComponent = HeroBlock;
+        break;
+      case 'artist-grid':
+        BlockComponent = ArtistGridBlock;
+        break;
+      default:
+        return null;
+    }
+
+    return (
+      <div key={block.id}>
+        <BlockComponent
+          content={block.content}
+          isEditing={false}
+          onChange={() => {}} // En lecture seule sur le front
+        />
       </div>
-    </div>
+    );
+  };
+
+  return (
+    <>
+      <SEOHead 
+        title={pageData.title + ' - MusiConnect'}
+        description={pageData.metaDescription}
+      />
+      
+      <div className="min-h-screen">
+        {pageData.blocks
+          .sort((a, b) => a.order - b.order)
+          .map(renderBlock)}
+      </div>
+    </>
   );
 };
