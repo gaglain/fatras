@@ -72,257 +72,37 @@ function App() {
           
           {/* Routes protégées avec Layout */}
           <Route
-            path="/dashboard"
+            path="/*"
             element={
               <ProtectedRoute>
                 <Layout />
               </ProtectedRoute>
             }
           >
-            <Route index element={<Dashboard />} />
-          </Route>
-          
-          <Route
-            path="/contacts"
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<Contacts />} />
-          </Route>
-          
-          <Route
-            path="/contact-lists"
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<ContactLists />} />
-          </Route>
-          
-          <Route
-            path="/artists"
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<Artists />} />
-          </Route>
-          
-          <Route
-            path="/events"
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<Events />} />
-          </Route>
-          
-          <Route
-            path="/event-types"
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<EventTypes />} />
-          </Route>
-          
-          <Route
-            path="/agenda"
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<Agenda />} />
-          </Route>
-          
-          <Route
-            path="/contracts"
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<Contracts />} />
-          </Route>
-          
-          <Route
-            path="/tasks"
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<Tasks />} />
-          </Route>
-          
-          <Route
-            path="/opportunities"
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<Opportunities />} />
-          </Route>
-          
-          <Route
-            path="/road-show"
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<RoadShow />} />
-          </Route>
-          
-          <Route
-            path="/feuille-de-route"
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<RoadShow />} />
-          </Route>
-          
-          <Route
-            path="/email"
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<Email />} />
-          </Route>
-          
-          <Route
-            path="/email-campaigns"
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<EmailCampaigns />} />
-          </Route>
-          
-          <Route
-            path="/messagerie"
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<Messagerie />} />
-          </Route>
-          
-          <Route
-            path="/forms"
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<Forms />} />
-          </Route>
-          
-          <Route
-            path="/publication-calendar"
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<PublicationCalendar />} />
-          </Route>
-          
-          <Route
-            path="/show-bible"
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<ShowBible />} />
-          </Route>
-          
-          <Route
-            path="/merchandise"
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<Merchandise />} />
-          </Route>
-          
-          <Route
-            path="/website"
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<WebsiteBackoffice />} />
-            <Route path="editor/:pageId" element={<WebsitePageEditor />} />
-          </Route>
-          
-          <Route
-            path="/user-management"
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<UserManagement />} />
-          </Route>
-          
-          <Route
-            path="/application"
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<Application />} />
-          </Route>
-          
-          <Route
-            path="/preferences"
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<Preferences />} />
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="contacts" element={<Contacts />} />
+            <Route path="contact-lists" element={<ContactLists />} />
+            <Route path="artists" element={<Artists />} />
+            <Route path="events" element={<Events />} />
+            <Route path="event-types" element={<EventTypes />} />
+            <Route path="agenda" element={<Agenda />} />
+            <Route path="contracts" element={<Contracts />} />
+            <Route path="tasks" element={<Tasks />} />
+            <Route path="opportunities" element={<Opportunities />} />
+            <Route path="road-show" element={<RoadShow />} />
+            <Route path="feuille-de-route" element={<RoadShow />} />
+            <Route path="email" element={<Email />} />
+            <Route path="email-campaigns" element={<EmailCampaigns />} />
+            <Route path="messagerie" element={<Messagerie />} />
+            <Route path="forms" element={<Forms />} />
+            <Route path="publication-calendar" element={<PublicationCalendar />} />
+            <Route path="show-bible" element={<ShowBible />} />
+            <Route path="merchandise" element={<Merchandise />} />
+            <Route path="website" element={<WebsiteBackoffice />} />
+            <Route path="website/editor/:pageId" element={<WebsitePageEditor />} />
+            <Route path="user-management" element={<UserManagement />} />
+            <Route path="application" element={<Application />} />
+            <Route path="preferences" element={<Preferences />} />
           </Route>
           
           <Route path="/404" element={<FrontLayout><NotFound /></FrontLayout>} />
