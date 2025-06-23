@@ -101,6 +101,7 @@ function App() {
             <Route path="merchandise" element={<Merchandise />} />
             <Route path="website" element={<WebsiteBackoffice />} />
             <Route path="website/editor/:pageId" element={<WebsitePageEditor />} />
+            <Route path="admin/editor/:pageId" element={<WebsitePageEditor />} />
             <Route path="user-management" element={<UserManagement />} />
             <Route path="application" element={<Application />} />
             <Route path="preferences" element={<Preferences />} />
