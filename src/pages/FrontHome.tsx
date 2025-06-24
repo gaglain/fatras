@@ -6,6 +6,7 @@ import { ImageBlock } from '@/components/BlockEditor/blocks/ImageBlock';
 import { HeroBlock } from '@/components/BlockEditor/blocks/HeroBlock';
 import { ArtistGridBlock } from '@/components/BlockEditor/blocks/ArtistGridBlock';
 import { SEOHead } from '@/components/SEOHead';
+import { useBackofficeArtists } from '@/hooks/useBackofficeData';
 
 interface WebPage {
   id: string;
@@ -51,6 +52,7 @@ const defaultHomePage: WebPage = {
 
 export const FrontHome: React.FC = () => {
   const [pageData, setPageData] = useState<WebPage>(defaultHomePage);
+  const { artists, loading } = useBackofficeArtists();
 
   useEffect(() => {
     // Charger les données de la page depuis localStorage
@@ -87,13 +89,17 @@ export const FrontHome: React.FC = () => {
         return null;
     }
 
+    // Passer les données d'artistes synchronisées au block artist-grid
+    const blockProps = {
+      content: block.content,
+      isEditing: false,
+      onChange: () => {},
+      ...(block.type === 'artist-grid' && { artists, loading })
+    };
+
     return (
       <div key={block.id}>
-        <BlockComponent
-          content={block.content}
-          isEditing={false}
-          onChange={() => {}} // En lecture seule sur le front
-        />
+        <BlockComponent {...blockProps} />
       </div>
     );
   };

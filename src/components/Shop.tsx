@@ -5,88 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ShoppingBag, Star } from 'lucide-react';
-
-interface ProductVariation {
-  id: string;
-  size?: string;
-  color?: string;
-  gender?: string;
-  price: number;
-  stock: number;
-  sku: string;
-}
-
-interface Product {
-  id: string;
-  name: string;
-  description: string;
-  basePrice: number;
-  category: string;
-  image?: string;
-  status: 'active' | 'inactive' | 'out_of_stock';
-  variations: ProductVariation[];
-  rating: number;
-}
-
-const products: Product[] = [
-  {
-    id: '1',
-    name: 'T-shirt Logo Band',
-    description: 'T-shirt officiel avec logo du groupe',
-    basePrice: 25.99,
-    category: 'Vêtements',
-    status: 'active',
-    rating: 4.8,
-    image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400',
-    variations: [
-      { id: '1a', size: 'S', color: 'Noir', gender: 'Unisexe', price: 25.99, stock: 10, sku: 'TSHIRT-S-NOIR' },
-      { id: '1b', size: 'M', color: 'Noir', gender: 'Unisexe', price: 25.99, stock: 15, sku: 'TSHIRT-M-NOIR' },
-      { id: '1c', size: 'L', color: 'Blanc', gender: 'Unisexe', price: 27.99, stock: 8, sku: 'TSHIRT-L-BLANC' }
-    ]
-  },
-  {
-    id: '2',
-    name: 'Album Vinyle Collector',
-    description: 'Edition limitée vinyle collector',
-    basePrice: 35.00,
-    category: 'Musique',
-    status: 'active',
-    rating: 4.9,
-    image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400',
-    variations: [
-      { id: '2a', price: 35.00, stock: 20, sku: 'VINYL-COLLECTOR' }
-    ]
-  },
-  {
-    id: '3',
-    name: 'Casquette Thunder Road',
-    description: 'Casquette officielle de la tournée',
-    basePrice: 20.00,
-    category: 'Accessoires',
-    status: 'active',
-    rating: 4.6,
-    image: 'https://images.unsplash.com/photo-1588099768523-f4e6ee8d3c45?w=400',
-    variations: [
-      { id: '3a', color: 'Noir', price: 20.00, stock: 25, sku: 'CAP-NOIR' },
-      { id: '3b', color: 'Bleu', price: 20.00, stock: 18, sku: 'CAP-BLEU' }
-    ]
-  },
-  {
-    id: '4',
-    name: 'Poster Concert Vintage',
-    description: 'Poster de collection des concerts vintage',
-    basePrice: 15.00,
-    category: 'Décoration',
-    status: 'active',
-    rating: 4.7,
-    image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400',
-    variations: [
-      { id: '4a', price: 15.00, stock: 30, sku: 'POSTER-VINTAGE' }
-    ]
-  }
-];
+import { useBackofficeProducts } from '@/hooks/useBackofficeData';
 
 export const Shop: React.FC = () => {
+  const { products, loading } = useBackofficeProducts();
   const [selectedVariations, setSelectedVariations] = useState<{[productId: string]: string}>({});
 
   const handleVariationSelect = (productId: string, variationId: string) => {
@@ -96,15 +18,49 @@ export const Shop: React.FC = () => {
     }));
   };
 
-  const getSelectedVariation = (product: Product) => {
+  const getSelectedVariation = (product: any) => {
+    if (!product.variations || product.variations.length === 0) return null;
     const selectedId = selectedVariations[product.id];
-    return product.variations.find(v => v.id === selectedId) || product.variations[0];
+    return product.variations.find((v: any) => v.id === selectedId) || product.variations[0];
   };
 
-  const getDisplayPrice = (product: Product) => {
+  const getDisplayPrice = (product: any) => {
     const selectedVar = getSelectedVariation(product);
-    return selectedVar ? selectedVar.price : product.basePrice;
+    return selectedVar ? selectedVar.price : product.price;
   };
+
+  const getStock = (product: any) => {
+    const selectedVar = getSelectedVariation(product);
+    return selectedVar ? selectedVar.stockQuantity : product.stockQuantity || 0;
+  };
+
+  if (loading) {
+    return (
+      <div className="pt-20 min-h-screen" style={{
+        background: 'var(--custom-background, #f5f5f5)'
+      }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center mb-12">
+            <div className="animate-pulse">
+              <div className="h-8 bg-gray-300 rounded w-64 mx-auto mb-4"></div>
+              <div className="h-4 bg-gray-300 rounded w-96 mx-auto"></div>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="animate-pulse">
+                <div className="bg-gray-300 aspect-square rounded-lg mb-4"></div>
+                <div className="h-4 bg-gray-300 rounded mb-2"></div>
+                <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const activeProducts = products.filter(p => p.status === 'active');
 
   return (
     <div className="pt-20 min-h-screen" style={{
@@ -124,111 +80,124 @@ export const Shop: React.FC = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {products.filter(p => p.status === 'active').map((product) => {
-            const selectedVariation = getSelectedVariation(product);
-            const hasVariations = product.variations.length > 1;
-            
-            return (
-              <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow group border-0" style={{
-                background: 'var(--custom-cardBg, #ffffff)',
-                borderRadius: '8px'
-              }}>
-                <div className="aspect-square overflow-hidden">
-                  <img 
-                    src={product.image} 
-                    alt={product.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <Badge variant="secondary" className="text-xs border-0" style={{
-                      background: 'var(--custom-buttonBg, #1632f4)',
-                      color: 'var(--custom-buttonText, #ffffff)'
-                    }}>
-                      {product.category}
-                    </Badge>
-                    <div className="flex items-center text-yellow-500">
-                      <Star className="h-3 w-3 fill-current" />
-                      <span className="ml-1 text-xs" style={{
-                        color: 'var(--custom-text, #666666)'
-                      }}>{product.rating}</span>
-                    </div>
+        {activeProducts.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-lg" style={{ color: 'var(--custom-text, #666666)' }}>
+              Aucun produit disponible pour le moment.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {activeProducts.map((product) => {
+              const selectedVariation = getSelectedVariation(product);
+              const hasVariations = product.variations && product.variations.length > 0;
+              const stock = getStock(product);
+              const displayPrice = getDisplayPrice(product);
+              
+              return (
+                <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow group border-0" style={{
+                  background: 'var(--custom-cardBg, #ffffff)',
+                  borderRadius: '8px'
+                }}>
+                  <div className="aspect-square overflow-hidden">
+                    <img 
+                      src={product.images?.[0] || '/placeholder.svg'} 
+                      alt={product.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
                   </div>
-                  
-                  <h3 className="font-semibold mb-2 line-clamp-2" style={{
-                    color: 'var(--custom-cardText, #18181b)'
-                  }}>
-                    {product.name}
-                  </h3>
-                  
-                  {hasVariations && (
-                    <div className="mb-3">
-                      <Select 
-                        value={selectedVariations[product.id] || product.variations[0].id}
-                        onValueChange={(value) => handleVariationSelect(product.id, value)}
-                      >
-                        <SelectTrigger className="w-full text-xs border-0" style={{
-                          background: 'var(--custom-background, #f5f5f5)',
-                          color: 'var(--custom-text, #18181b)',
-                          borderRadius: '4px'
-                        }}>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent style={{
-                          background: 'var(--custom-cardBg, #ffffff)',
-                          border: '1px solid rgba(0,0,0,0.1)',
-                          borderRadius: '4px'
-                        }}>
-                          {product.variations.map((variation) => (
-                            <SelectItem key={variation.id} value={variation.id} style={{
-                              color: 'var(--custom-cardText, #18181b)'
-                            }}>
-                              <div className="flex items-center justify-between w-full">
-                                <span>
-                                  {variation.size && `${variation.size} `}
-                                  {variation.color && `${variation.color} `}
-                                  {variation.gender && `(${variation.gender})`}
-                                </span>
-                                <span className="ml-2 font-medium">{variation.price}€</span>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-                  
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-lg font-bold" style={{
-                        color: 'var(--custom-cardText, #18181b)'
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <Badge variant="secondary" className="text-xs border-0" style={{
+                        background: 'var(--custom-buttonBg, #1632f4)',
+                        color: 'var(--custom-buttonText, #ffffff)'
                       }}>
-                        {getDisplayPrice(product)}€
-                      </span>
-                      {selectedVariation && (
+                        {product.category}
+                      </Badge>
+                      {/* Affichage d'une note par défaut */}
+                      <div className="flex items-center text-yellow-500">
+                        <Star className="h-3 w-3 fill-current" />
+                        <span className="ml-1 text-xs" style={{
+                          color: 'var(--custom-text, #666666)'
+                        }}>4.5</span>
+                      </div>
+                    </div>
+                    
+                    <h3 className="font-semibold mb-2 line-clamp-2" style={{
+                      color: 'var(--custom-cardText, #18181b)'
+                    }}>
+                      {product.name}
+                    </h3>
+                    
+                    {product.description && (
+                      <p className="text-xs mb-2 line-clamp-2" style={{
+                        color: 'var(--custom-text, #666666)'
+                      }}>
+                        {product.description}
+                      </p>
+                    )}
+                    
+                    {hasVariations && (
+                      <div className="mb-3">
+                        <Select 
+                          value={selectedVariations[product.id] || product.variations[0].id}
+                          onValueChange={(value) => handleVariationSelect(product.id, value)}
+                        >
+                          <SelectTrigger className="w-full text-xs border-0" style={{
+                            background: 'var(--custom-background, #f5f5f5)',
+                            color: 'var(--custom-text, #18181b)',
+                            borderRadius: '4px'
+                          }}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent style={{
+                            background: 'var(--custom-cardBg, #ffffff)',
+                            border: '1px solid rgba(0,0,0,0.1)',
+                            borderRadius: '4px'
+                          }}>
+                            {product.variations.map((variation: any) => (
+                              <SelectItem key={variation.id} value={variation.id} style={{
+                                color: 'var(--custom-cardText, #18181b)'
+                              }}>
+                                <div className="flex items-center justify-between w-full">
+                                  <span>{variation.name}</span>
+                                  <span className="ml-2 font-medium">{variation.price}€</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-lg font-bold" style={{
+                          color: 'var(--custom-cardText, #18181b)'
+                        }}>
+                          {displayPrice}€
+                        </span>
                         <div className="text-xs" style={{
                           color: 'var(--custom-text, #666666)'
                         }}>
-                          Stock: {selectedVariation.stock}
+                          Stock: {stock}
                         </div>
-                      )}
+                      </div>
+                      <Button size="sm" disabled={stock === 0} className="border-0" style={{
+                        backgroundColor: stock > 0 ? 'var(--custom-buttonBg, #1632f4)' : 'var(--custom-text, #999999)',
+                        color: 'var(--custom-buttonText, #ffffff)',
+                        borderRadius: '4px'
+                      }}>
+                        <ShoppingBag className="h-4 w-4 mr-1" />
+                        {stock > 0 ? 'Ajouter' : 'Rupture'}
+                      </Button>
                     </div>
-                    <Button size="sm" disabled={!selectedVariation || selectedVariation.stock === 0} className="border-0" style={{
-                      backgroundColor: selectedVariation && selectedVariation.stock > 0 ? 'var(--custom-buttonBg, #1632f4)' : 'var(--custom-text, #999999)',
-                      color: 'var(--custom-buttonText, #ffffff)',
-                      borderRadius: '4px'
-                    }}>
-                      <ShoppingBag className="h-4 w-4 mr-1" />
-                      {selectedVariation && selectedVariation.stock > 0 ? 'Ajouter' : 'Rupture'}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
 
         <div className="text-center mt-12">
           <Button size="lg" variant="outline" className="border-0" style={{
