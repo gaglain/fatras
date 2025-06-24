@@ -1,58 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import React, { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { SEOManager } from '@/components/SEOManager';
-import { useNavigate } from 'react-router-dom';
-import { useFileUpload } from '@/hooks/useFileUpload';
-import { toast } from 'sonner';
-import { 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Eye, 
-  Settings, 
-  Globe, 
-  Layout, 
-  FileText,
-  Image,
-  Video,
-  Music,
-  Calendar,
-  Users,
-  ArrowLeft,
-  Upload,
-  Search
-} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Plus, FileText, Settings, Menu, Palette, Globe } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { WebsiteMenuManager } from '@/components/WebsiteMenuManager';
 
 interface WebPage {
   id: string;
   title: string;
   slug: string;
   status: 'published' | 'draft' | 'archived';
-  type: 'page' | 'blog' | 'event' | 'artist';
-  content: string;
+  blocks: any[];
   metaDescription: string;
-  featuredImage?: string;
-  createdAt: string;
-  updatedAt: string;
-  seoTitle?: string;
-  keywords?: string;
-  focusKeyword?: string;
-}
-
-interface FormData {
-  title: string;
-  slug: string;
-  type: 'page' | 'blog' | 'event' | 'artist';
-  content: string;
-  metaDescription: string;
-  status: 'published' | 'draft' | 'archived';
 }
 
 const defaultPages: WebPage[] = [
@@ -61,877 +21,153 @@ const defaultPages: WebPage[] = [
     title: 'Accueil',
     slug: '/',
     status: 'published',
-    type: 'page',
-    content: 'Page d\'accueil avec les derniers événements et artistes',
-    metaDescription: 'Découvrez nos artistes et événements exceptionnels',
-    createdAt: '2024-01-15',
-    updatedAt: '2024-01-20'
+    blocks: [],
+    metaDescription: 'Page d\'accueil par défaut'
   },
   {
     id: '2',
     title: 'Nos Artistes',
     slug: '/artists',
     status: 'published',
-    type: 'page',
-    content: 'Galerie complète de nos artistes talentueux',
-    metaDescription: 'Parcourez notre sélection d\'artistes exceptionnels',
-    createdAt: '2024-01-10',
-    updatedAt: '2024-01-18'
+    blocks: [],
+    metaDescription: 'Page des artistes par défaut'
   },
   {
     id: '3',
     title: 'Événements',
     slug: '/events',
     status: 'published',
-    type: 'page',
-    content: 'Calendrier des prochains événements et concerts',
-    metaDescription: 'Ne manquez aucun de nos événements musicaux',
-    createdAt: '2024-01-12',
-    updatedAt: '2024-01-19'
+    blocks: [],
+    metaDescription: 'Page des événements par défaut'
   },
   {
     id: '4',
+    title: 'Boutique',
+    slug: '/shop',
+    status: 'published',
+    blocks: [],
+    metaDescription: 'Page de la boutique par défaut'
+  },
+  {
+    id: '5',
     title: 'Contact',
     slug: '/contact',
     status: 'published',
-    type: 'page',
-    content: 'Formulaire de contact et informations',
-    metaDescription: 'Contactez-nous pour vos projets musicaux',
-    createdAt: '2024-01-14',
-    updatedAt: '2024-01-21'
+    blocks: [],
+    metaDescription: 'Page de contact par défaut'
   }
 ];
 
-interface WebsiteBackofficeProps {
-  onReturn?: () => void;
-}
-
-export const WebsiteBackoffice: React.FC<WebsiteBackofficeProps> = ({ onReturn }) => {
-  const navigate = useNavigate();
-  const { uploadFile, uploading } = useFileUpload();
+export const WebsiteBackoffice: React.FC = () => {
   const [pages, setPages] = useState<WebPage[]>(defaultPages);
-  const [selectedPage, setSelectedPage] = useState<WebPage | null>(null);
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [showEditDialog, setShowEditDialog] = useState(false);
-  const [showSEODialog, setShowSEODialog] = useState(false);
-  const [activeTab, setActiveTab] = useState('pages');
-  const [logoUrl, setLogoUrl] = useState('/placeholder.svg');
-  const [siteName, setSiteName] = useState('MusiConnect');
-  const [siteDescription, setSiteDescription] = useState('Plateforme de booking d\'artistes et gestion d\'événements musicaux');
-  const [uploadedMediaFiles, setUploadedMediaFiles] = useState([
-    { type: 'image', name: 'hero-banner.jpg', size: '2.4 MB', url: '/placeholder.svg' },
-    { type: 'image', name: 'artist-photo.jpg', size: '1.8 MB', url: '/placeholder.svg' },
-    { type: 'video', name: 'promo-video.mp4', size: '15.2 MB', url: '/placeholder.svg' },
-    { type: 'image', name: 'event-poster.png', size: '3.1 MB', url: '/placeholder.svg' },
-  ]);
-
-  useEffect(() => {
-    // Load saved settings from localStorage
-    const savedSettings = localStorage.getItem('websiteSettings');
-    if (savedSettings) {
-      try {
-        const settings = JSON.parse(savedSettings);
-        if (settings.logoUrl) setLogoUrl(settings.logoUrl);
-        if (settings.siteName) setSiteName(settings.siteName);
-        if (settings.siteDescription) setSiteDescription(settings.siteDescription);
-      } catch (e) {
-        console.error('Error loading saved website settings:', e);
-      }
-    }
-    
-    // Load media files from localStorage
-    const savedMedia = localStorage.getItem('mediaFiles');
-    if (savedMedia) {
-      try {
-        const media = JSON.parse(savedMedia);
-        if (Array.isArray(media)) {
-          setUploadedMediaFiles(media);
-        }
-      } catch (e) {
-        console.error('Error loading saved media files:', e);
-      }
-    }
-  }, []);
-
-  const [formData, setFormData] = useState<FormData>({
-    title: '',
-    slug: '',
-    type: 'page',
-    content: '',
-    metaDescription: '',
-    status: 'draft'
-  });
-
-  const resetForm = () => {
-    setFormData({
-      title: '',
-      slug: '',
-      type: 'page',
-      content: '',
-      metaDescription: '',
-      status: 'draft'
-    });
-  };
-
-  const handleCreatePage = (e: React.FormEvent) => {
-    e.preventDefault();
-    const newPage: WebPage = {
-      id: Date.now().toString(),
-      ...formData,
-      featuredImage: undefined,
-      createdAt: new Date().toISOString().split('T')[0],
-      updatedAt: new Date().toISOString().split('T')[0]
-    };
-    
-    setPages([...pages, newPage]);
-    setShowCreateDialog(false);
-    resetForm();
-    toast.success('Page créée avec succès');
-  };
-
-  const handleUpdatePage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedPage) return;
-    
-    const updatedPages = pages.map(page => 
-      page.id === selectedPage.id 
-        ? { 
-            ...page, 
-            ...formData, 
-            updatedAt: new Date().toISOString().split('T')[0] 
-          }
-        : page
-    );
-    
-    setPages(updatedPages);
-    setShowEditDialog(false);
-    setSelectedPage(null);
-    resetForm();
-    toast.success('Page mise à jour avec succès');
-  };
-
-  const handleDeletePage = (pageId: string) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette page ?')) {
-      setPages(pages.filter(page => page.id !== pageId));
-      toast.success('Page supprimée avec succès');
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'published': return 'bg-green-100 text-green-800';
-      case 'draft': return 'bg-yellow-100 text-yellow-800';
-      case 'archived': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'page': return <Layout className="h-4 w-4" />;
-      case 'blog': return <FileText className="h-4 w-4" />;
-      case 'event': return <Calendar className="h-4 w-4" />;
-      case 'artist': return <Users className="h-4 w-4" />;
-      default: return <Layout className="h-4 w-4" />;
-    }
-  };
-
-  const publishedPages = pages.filter(page => page.status === 'published');
-  const draftPages = pages.filter(page => page.status === 'draft');
-
-  const handleEditPage = (page: WebPage) => {
-    navigate(`/website/editor/${page.id}`);
-  };
-
-  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      try {
-        // Use FileReader to provide immediate feedback
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const dataUrl = e.target?.result as string;
-          setLogoUrl(dataUrl);
-          
-          // Save to localStorage
-          const settings = {
-            logoUrl: dataUrl,
-            siteName,
-            siteDescription
-          };
-          localStorage.setItem('websiteSettings', JSON.stringify(settings));
-          
-          toast.success('Logo mis à jour avec succès');
-        };
-        
-        reader.readAsDataURL(file);
-        
-        // Optionally upload to Supabase (commented out for now as we're using localStorage)
-        // const publicUrl = await uploadFile(file, 'website-assets', `logo-${Date.now()}`);
-        // setLogoUrl(publicUrl);
-      } catch (error) {
-        console.error('Erreur lors de l\'upload du logo:', error);
-        toast.error('Erreur lors de l\'upload du logo');
-      }
-    }
-  };
-
-  const handleMediaUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
-
-    const newMediaFiles = [...uploadedMediaFiles];
-    
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      try {
-        // Use FileReader to provide immediate feedback
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const dataUrl = e.target?.result as string;
-          
-          const newMediaFile = {
-            type: file.type.startsWith('image/') ? 'image' : 
-                  file.type.startsWith('video/') ? 'video' :
-                  file.type.startsWith('audio/') ? 'audio' : 'file',
-            name: file.name,
-            size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
-            url: dataUrl
-          };
-          
-          newMediaFiles.unshift(newMediaFile);
-          setUploadedMediaFiles([...newMediaFiles]);
-          
-          // Save to localStorage
-          localStorage.setItem('mediaFiles', JSON.stringify(newMediaFiles));
-          
-          toast.success(`${file.name} téléchargé avec succès`);
-        };
-        
-        reader.readAsDataURL(file);
-        
-        // Optionally upload to Supabase (commented out for now as we're using localStorage)
-        // const publicUrl = await uploadFile(file, 'website-assets', `media-${Date.now()}-${file.name}`);
-      } catch (error) {
-        console.error('Erreur lors de l\'upload du media:', error);
-        toast.error(`Erreur lors de l\'upload de ${file.name}`);
-      }
-    }
-  };
-
-  const handleSEOSave = (seoData: any) => {
-    if (!selectedPage) return;
-    
-    const updatedPages = pages.map(page => 
-      page.id === selectedPage.id 
-        ? { 
-            ...page, 
-            metaDescription: seoData.description,
-            seoTitle: seoData.title,
-            keywords: seoData.keywords,
-            focusKeyword: seoData.focusKeyword,
-            updatedAt: new Date().toISOString().split('T')[0] 
-          }
-        : page
-    );
-    
-    setPages(updatedPages);
-    setShowSEODialog(false);
-    setSelectedPage(null);
-    toast.success('SEO mis à jour avec succès');
-  };
-
-  const handleSiteSettingsSave = () => {
-    // Save settings to localStorage
-    const settings = {
-      logoUrl,
-      siteName,
-      siteDescription
-    };
-    localStorage.setItem('websiteSettings', JSON.stringify(settings));
-    toast.success('Paramètres du site sauvegardés');
-  };
-
-  const openSEODialog = (page: WebPage) => {
-    setSelectedPage(page);
-    setShowSEODialog(true);
-  };
-
-  const openEditDialog = (page: WebPage) => {
-    setSelectedPage(page);
-    setFormData({
-      title: page.title,
-      slug: page.slug,
-      type: page.type,
-      content: page.content,
-      metaDescription: page.metaDescription,
-      status: page.status
-    });
-    setShowEditDialog(true);
-  };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          {onReturn && (
-            <Button variant="ghost" onClick={onReturn} className="text-gray-700 hover:text-gray-900">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Retour au site
-            </Button>
-          )}
-          <h1 className="text-lg font-semibold text-gray-900">Back Office - Site Web</h1>
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-bold">Gestion du Site Web</h1>
+          <p className="text-muted-foreground mt-2">
+            Gérez le contenu et l'apparence de votre site web public
+          </p>
+        </div>
+        <div className="flex items-center space-x-3">
+          <Button variant="outline" asChild>
+            <Link to="/front" target="_blank">
+              <Globe className="h-4 w-4 mr-2" />
+              Voir le site
+            </Link>
+          </Button>
         </div>
       </div>
-      
-      <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Gestion du Site Web</h1>
-            <p className="text-gray-600 mt-2">Gérez le contenu et les pages de votre site web</p>
-          </div>
-          <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-            <DialogTrigger asChild>
-              <Button className="bg-[#1632f4] text-white hover:bg-[#1632f4]/90">
-                <Plus className="h-4 w-4 mr-2" />
-                Nouvelle Page
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Créer une nouvelle page</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleCreatePage} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Titre</label>
-                    <Input
-                      value={formData.title}
-                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                      placeholder="Titre de la page"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">URL (slug)</label>
-                    <Input
-                      value={formData.slug}
-                      onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                      placeholder="/ma-page"
-                      required
-                    />
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
-                    <Select value={formData.type} onValueChange={(value: any) => setFormData({ ...formData, type: value })}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="page">Page</SelectItem>
-                        <SelectItem value="blog">Article de blog</SelectItem>
-                        <SelectItem value="event">Événement</SelectItem>
-                        <SelectItem value="artist">Artiste</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Statut</label>
-                    <Select value={formData.status} onValueChange={(value: any) => setFormData({ ...formData, status: value })}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="draft">Brouillon</SelectItem>
-                        <SelectItem value="published">Publié</SelectItem>
-                        <SelectItem value="archived">Archivé</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Description SEO</label>
-                  <Textarea
-                    value={formData.metaDescription}
-                    onChange={(e) => setFormData({ ...formData, metaDescription: e.target.value })}
-                    placeholder="Description pour les moteurs de recherche..."
-                    rows={2}
-                  />
-                </div>
+      <Tabs defaultValue="pages" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="pages" className="flex items-center space-x-2">
+            <FileText className="h-4 w-4" />
+            <span>Pages</span>
+          </TabsTrigger>
+          <TabsTrigger value="menu" className="flex items-center space-x-2">
+            <Menu className="h-4 w-4" />
+            <span>Menu</span>
+          </TabsTrigger>
+          <TabsTrigger value="design" className="flex items-center space-x-2">
+            <Palette className="h-4 w-4" />
+            <span>Design</span>
+          </TabsTrigger>
+          <TabsTrigger value="settings" className="flex items-center space-x-2">
+            <Settings className="h-4 w-4" />
+            <span>Paramètres</span>
+          </TabsTrigger>
+        </TabsList>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Contenu</label>
-                  <Textarea
-                    value={formData.content}
-                    onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                    placeholder="Contenu de la page..."
-                    rows={4}
-                  />
-                </div>
-
-                <div className="flex justify-end space-x-2">
-                  <Button type="button" variant="outline" onClick={() => setShowCreateDialog(false)}>
-                    Annuler
-                  </Button>
-                  <Button type="submit" className="bg-[#1632f4] text-white hover:bg-[#1632f4]/90">
-                    Créer la page
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </div>
-
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card className="bg-white">
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <Globe className="h-8 w-8 text-blue-600" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Total Pages</p>
-                  <p className="text-2xl font-bold text-gray-900">{pages.length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white">
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <Eye className="h-8 w-8 text-green-600" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Publiées</p>
-                  <p className="text-2xl font-bold text-gray-900">{publishedPages.length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white">
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <Edit className="h-8 w-8 text-yellow-600" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Brouillons</p>
-                  <p className="text-2xl font-bold text-gray-900">{draftPages.length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white">
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <Settings className="h-8 w-8 text-purple-600" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Vues/mois</p>
-                  <p className="text-2xl font-bold text-gray-900">12.4k</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Main Content */}
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
-            <TabsTrigger value="pages">Toutes les Pages</TabsTrigger>
-            <TabsTrigger value="published">Publiées</TabsTrigger>
-            <TabsTrigger value="drafts">Brouillons</TabsTrigger>
-            <TabsTrigger value="seo">SEO Global</TabsTrigger>
-            <TabsTrigger value="settings">Paramètres</TabsTrigger>
-            <TabsTrigger value="media">Médias</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="pages" className="mt-6">
-            <Card className="bg-white">
-              <CardHeader>
-                <CardTitle className="text-gray-900">Gestion des Pages</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {pages.map((page) => (
-                    <div key={page.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-white">
-                      <div className="flex items-center space-x-4">
-                        {getTypeIcon(page.type)}
-                        <div>
-                          <h3 className="font-medium text-gray-900">{page.title}</h3>
-                          <p className="text-sm text-gray-600">{page.slug}</p>
-                          <p className="text-xs text-gray-500 mt-1">{page.content.substring(0, 100)}...</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <Badge className={getStatusColor(page.status)}>
-                          {page.status}
-                        </Badge>
-                        <span className="text-xs text-gray-500">
-                          Modifié le {page.updatedAt}
-                        </span>
-                        <div className="flex space-x-1">
-                          <Button size="sm" variant="outline" onClick={() => window.open(`/front${page.slug}`, '_blank')}>
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => handleEditPage(page)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            onClick={() => openSEODialog(page)}
-                          >
-                            <Search className="h-4 w-4" />
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => handleDeletePage(page.id)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="published" className="mt-6">
-            <Card className="bg-white">
-              <CardHeader>
-                <CardTitle className="text-gray-900">Pages Publiées ({publishedPages.length})</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {publishedPages.map((page) => (
-                    <div key={page.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-white">
-                      <div className="flex items-center space-x-4">
-                        {getTypeIcon(page.type)}
-                        <div>
-                          <h3 className="font-medium text-gray-900">{page.title}</h3>
-                          <p className="text-sm text-gray-600">{page.slug}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <Badge className="bg-green-100 text-green-800">En ligne</Badge>
-                        <Button size="sm" variant="outline" onClick={() => window.open(`/front${page.slug}`, '_blank')}>
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" variant="outline" onClick={() => openEditDialog(page)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="drafts" className="mt-6">
-            <Card className="bg-white">
-              <CardHeader>
-                <CardTitle className="text-gray-900">Brouillons ({draftPages.length})</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {draftPages.map((page) => (
-                    <div key={page.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-white">
-                      <div className="flex items-center space-x-4">
-                        {getTypeIcon(page.type)}
-                        <div>
-                          <h3 className="font-medium text-gray-900">{page.title}</h3>
-                          <p className="text-sm text-gray-600">{page.slug}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <Badge className="bg-yellow-100 text-yellow-800">Brouillon</Badge>
-                        <Button size="sm" variant="outline" onClick={() => openEditDialog(page)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" variant="outline" onClick={() => handleDeletePage(page.id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="seo" className="mt-6">
-            <Card className="bg-white">
-              <CardHeader>
-                <CardTitle className="text-gray-900">SEO Global du Site</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <SEOManager
-                  initialData={{
-                    title: "MusiConnect - Plateforme de booking d'artistes",
-                    description: "Découvrez notre plateforme de booking d'artistes et créons ensemble des expériences musicales exceptionnelles pour vos événements.",
-                    keywords: "booking, artistes, musique, événements, concerts, spectacles",
-                    focusKeyword: "booking artiste"
-                  }}
-                  onSave={(data) => {
-                    console.log('SEO global sauvegardé:', data);
-                    toast.success('SEO global sauvegardé');
-                  }}
-                />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="settings" className="mt-6">
-            <Card className="bg-white">
-              <CardHeader>
-                <CardTitle className="text-gray-900">Paramètres du Site</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Logo du Site</label>
-                  <div className="flex items-center space-x-4">
-                    <img 
-                      src={logoUrl} 
-                      alt="Logo actuel" 
-                      className="h-16 w-16 object-cover rounded-lg border border-gray-200"
-                    />
-                    <div>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleLogoUpload}
-                        className="hidden"
-                        id="logo-upload"
-                        disabled={uploading}
-                      />
-                      <label htmlFor="logo-upload">
-                        <Button variant="outline" className="cursor-pointer" asChild disabled={uploading}>
-                          <span>
-                            <Upload className="h-4 w-4 mr-2" />
-                            {uploading ? 'Upload en cours...' : 'Changer le logo'}
-                          </span>
-                        </Button>
-                      </label>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Formats acceptés: JPG, PNG, SVG. Taille recommandée: 200x200px
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Nom du Site</label>
-                  <Input 
-                    value={siteName}
-                    onChange={(e) => setSiteName(e.target.value)}
-                    placeholder="Nom de votre site" 
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Description du Site</label>
-                  <Textarea 
-                    value={siteDescription}
-                    onChange={(e) => setSiteDescription(e.target.value)}
-                    placeholder="Description de votre site"
-                    rows={3}
-                  />
-                </div>
-
-                <div className="flex justify-end">
-                  <Button onClick={handleSiteSettingsSave} className="bg-[#1632f4] text-white hover:bg-[#1632f4]/90">
-                    Sauvegarder les paramètres
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="media" className="mt-6">
-            <Card className="bg-white">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-gray-900">Médiathèque</CardTitle>
-                <div>
-                  <input
-                    type="file"
-                    id="media-upload"
-                    multiple
-                    accept="image/*,video/*,audio/*"
-                    onChange={handleMediaUpload}
-                    className="hidden"
-                  />
-                  <label htmlFor="media-upload">
-                    <Button variant="outline" className="cursor-pointer" asChild>
-                      <span>
-                        <Upload className="h-4 w-4 mr-2" />
-                        Ajouter des médias
-                      </span>
-                    </Button>
-                  </label>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {uploadedMediaFiles.map((media, index) => (
-                    <div key={index} className="border border-gray-200 rounded-lg p-4 bg-white">
-                      {media.type === 'image' ? (
-                        <div className="flex flex-col items-center">
-                          <div className="h-32 w-full mb-2 flex items-center justify-center overflow-hidden bg-gray-100 rounded">
-                            <img src={media.url} alt={media.name} className="max-h-full max-w-full object-contain" />
-                          </div>
-                          <p className="text-sm font-medium text-gray-900">{media.name}</p>
-                          <p className="text-xs text-gray-500">{media.size}</p>
-                        </div>
-                      ) : media.type === 'video' ? (
-                        <div className="flex flex-col items-center">
-                          <div className="h-32 w-full mb-2 flex items-center justify-center bg-gray-100 rounded">
-                            <Video className="h-16 w-16 text-gray-400" />
-                          </div>
-                          <p className="text-sm font-medium text-gray-900">{media.name}</p>
-                          <p className="text-xs text-gray-500">{media.size}</p>
-                        </div>
-                      ) : media.type === 'audio' ? (
-                        <div className="flex flex-col items-center">
-                          <div className="h-32 w-full mb-2 flex items-center justify-center bg-gray-100 rounded">
-                            <Music className="h-16 w-16 text-gray-400" />
-                          </div>
-                          <p className="text-sm font-medium text-gray-900">{media.name}</p>
-                          <p className="text-xs text-gray-500">{media.size}</p>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col items-center">
-                          <div className="h-32 w-full mb-2 flex items-center justify-center bg-gray-100 rounded">
-                            <FileText className="h-16 w-16 text-gray-400" />
-                          </div>
-                          <p className="text-sm font-medium text-gray-900">{media.name}</p>
-                          <p className="text-xs text-gray-500">{media.size}</p>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                  <label htmlFor="media-upload" className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center bg-white hover:border-gray-400 cursor-pointer">
-                    <Plus className="h-8 w-8 mx-auto text-gray-400 mb-2" />
-                    <p className="text-sm text-gray-500">Ajouter un média</p>
-                  </label>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-
-        {/* Edit Dialog */}
-        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Modifier la page</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleUpdatePage} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Titre</label>
-                  <Input
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    placeholder="Titre de la page"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">URL (slug)</label>
-                  <Input
-                    value={formData.slug}
-                    onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                    placeholder="/ma-page"
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
-                  <Select value={formData.type} onValueChange={(value: any) => setFormData({ ...formData, type: value })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="page">Page</SelectItem>
-                      <SelectItem value="blog">Article de blog</SelectItem>
-                      <SelectItem value="event">Événement</SelectItem>
-                      <SelectItem value="artist">Artiste</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Statut</label>
-                  <Select value={formData.status} onValueChange={(value: any) => setFormData({ ...formData, status: value })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="draft">Brouillon</SelectItem>
-                      <SelectItem value="published">Publié</SelectItem>
-                      <SelectItem value="archived">Archivé</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Description SEO</label>
-                <Textarea
-                  value={formData.metaDescription}
-                  onChange={(e) => setFormData({ ...formData, metaDescription: e.target.value })}
-                  placeholder="Description pour les moteurs de recherche..."
-                  rows={2}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Contenu</label>
-                <Textarea
-                  value={formData.content}
-                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                  placeholder="Contenu de la page..."
-                  rows={4}
-                />
-              </div>
-
-              <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={() => setShowEditDialog(false)}>
-                  Annuler
-                </Button>
-                <Button type="submit" className="bg-blue-600 text-white hover:bg-blue-700">
-                  Mettre à jour
+        <TabsContent value="pages">
+          <Card>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold">Liste des Pages</h2>
+                <Button asChild>
+                  <Link to="/website/editor/new" className="flex items-center space-x-2">
+                    <Plus className="h-4 w-4" />
+                    <span>Ajouter une Page</span>
+                  </Link>
                 </Button>
               </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+              <div className="grid gap-4">
+                {pages.map((page) => (
+                  <Card key={page.id}>
+                    <CardContent className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-md font-medium">{page.title}</h3>
+                        <p className="text-sm text-muted-foreground">{page.slug}</p>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Button variant="outline" size="sm" asChild>
+                          <Link to={`/website/editor/${page.id}`}>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Modifier
+                          </Link>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-        {/* SEO Dialog */}
-        <Dialog open={showSEODialog} onOpenChange={setShowSEODialog}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Optimisation SEO - {selectedPage?.title}</DialogTitle>
-            </DialogHeader>
-            {selectedPage && (
-              <SEOManager
-                initialData={{
-                  title: selectedPage.seoTitle || selectedPage.title,
-                  description: selectedPage.metaDescription || '',
-                  keywords: selectedPage.keywords || '',
-                  focusKeyword: selectedPage.focusKeyword || ''
-                }}
-                onSave={handleSEOSave}
-              />
-            )}
-          </DialogContent>
-        </Dialog>
-      </div>
+        <TabsContent value="menu">
+          <WebsiteMenuManager />
+        </TabsContent>
+
+        <TabsContent value="design">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center py-12">
+                <Palette className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-medium mb-2">Personnalisation du Design</h3>
+                <p className="text-muted-foreground mb-4">
+                  Fonctionnalité à venir : personnalisation des couleurs, polices et styles
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="settings">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center py-12">
+                <Settings className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-medium mb-2">Paramètres du Site</h3>
+                <p className="text-muted-foreground mb-4">
+                  Fonctionnalité à venir : SEO, domaines, analytics
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
