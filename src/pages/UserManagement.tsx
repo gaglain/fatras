@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -76,7 +75,14 @@ export const UserManagement: React.FC = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setUsers(data || []);
+      
+      // Cast the role field to UserRole type
+      const typedUsers = (data || []).map(user => ({
+        ...user,
+        role: user.role as UserRole
+      }));
+      
+      setUsers(typedUsers);
     } catch (error) {
       console.error('Error fetching users:', error);
       toast.error('Erreur lors du chargement des utilisateurs');
