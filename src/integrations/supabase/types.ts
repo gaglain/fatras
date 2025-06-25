@@ -650,6 +650,72 @@ export type Database = {
           },
         ]
       }
+      user_profiles: {
+        Row: {
+          address: string | null
+          birth_date: string | null
+          birth_place: string | null
+          city: string | null
+          created_at: string
+          email: string | null
+          first_name: string | null
+          function_title: string | null
+          guso_id: string | null
+          id: string
+          last_name: string | null
+          nationality: string | null
+          phone: string | null
+          postal_code: string | null
+          role: string
+          show_name: string | null
+          social_security_number: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          birth_date?: string | null
+          birth_place?: string | null
+          city?: string | null
+          created_at?: string
+          email?: string | null
+          first_name?: string | null
+          function_title?: string | null
+          guso_id?: string | null
+          id?: string
+          last_name?: string | null
+          nationality?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          role?: string
+          show_name?: string | null
+          social_security_number?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          birth_date?: string | null
+          birth_place?: string | null
+          city?: string | null
+          created_at?: string
+          email?: string | null
+          first_name?: string | null
+          function_title?: string | null
+          guso_id?: string | null
+          id?: string
+          last_name?: string | null
+          nationality?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          role?: string
+          show_name?: string | null
+          social_security_number?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

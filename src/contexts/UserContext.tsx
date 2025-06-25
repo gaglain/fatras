@@ -1,8 +1,9 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
-export type UserRole = 'super_admin' | 'admin' | 'manager' | 'artist';
+export type UserRole = 'super_admin' | 'admin' | 'manager' | 'artiste' | 'utilisateur';
 
 export interface User {
   id: string;
@@ -18,6 +19,17 @@ export interface User {
   bio?: string;
   googleCalendarConnected?: boolean;
   gmailConnected?: boolean;
+  // Nouvelles propriétés étendues
+  address?: string;
+  postal_code?: string;
+  city?: string;
+  birth_date?: string;
+  birth_place?: string;
+  social_security_number?: string;
+  guso_id?: string;
+  function_title?: string;
+  nationality?: string;
+  show_name?: string;
 }
 
 export interface UserPermissions {
@@ -45,69 +57,10 @@ interface UserContextType {
   changeOwnership: (itemType: string, itemId: string, newOwnerId: string) => void;
 }
 
-const defaultUsers: User[] = [
-  { 
-    id: 'user-1', 
-    name: 'Super', 
-    lastName: 'Admin',
-    email: 'superadmin@showmanager.fr', 
-    role: 'super_admin', 
-    isActive: true,
-    username: 'superadmin',
-    phone: '06 12 34 56 78',
-    department: 'Direction',
-    bio: 'Super administrateur du système',
-    googleCalendarConnected: true,
-    gmailConnected: true
-  },
-  { 
-    id: 'user-2', 
-    name: 'Admin', 
-    lastName: 'Principal',
-    email: 'admin@showmanager.fr', 
-    role: 'admin', 
-    isActive: true,
-    username: 'admin',
-    phone: '06 23 45 67 89',
-    department: 'Direction',
-    bio: 'Administrateur principal du système',
-    googleCalendarConnected: true,
-    gmailConnected: true
-  },
-  { 
-    id: 'user-3', 
-    name: 'Manager', 
-    lastName: 'Événements',
-    email: 'manager@showmanager.fr', 
-    role: 'manager', 
-    isActive: true,
-    username: 'manager_events',
-    phone: '06 23 45 67 89',
-    department: 'Événements',
-    bio: 'Gestionnaire et booker d\'événements',
-    googleCalendarConnected: false,
-    gmailConnected: true
-  },
-  { 
-    id: 'user-4', 
-    name: 'Artiste', 
-    lastName: 'Demo',
-    email: 'artiste@showmanager.fr', 
-    role: 'artist', 
-    isActive: true,
-    username: 'artiste',
-    phone: '06 34 56 78 90',
-    department: 'Artistes',
-    bio: 'Artiste membre de la plateforme',
-    googleCalendarConnected: false,
-    gmailConnected: false
-  }
-];
-
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [users, setUsers] = useState<User[]>(defaultUsers);
+  const [users, setUsers] = useState<User[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const { user: authUser, loading } = useAuth();
 
@@ -115,48 +68,94 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     console.log('Auth user changed:', authUser);
     if (authUser && !loading) {
-      // Créer ou mettre à jour l'utilisateur basé sur les données Supabase
-      const supabaseUser: User = {
-        id: authUser.id,
-        name: authUser.user_metadata?.first_name || 'Utilisateur',
-        lastName: authUser.user_metadata?.last_name || '',
-        email: authUser.email || '',
-        role: 'super_admin', // Vous pouvez ajuster selon votre logique
-        isActive: true,
-        username: authUser.email?.split('@')[0] || '',
-        avatar: authUser.user_metadata?.avatar_url || '',
-        phone: authUser.phone || '',
-        department: 'Direction',
-        bio: 'Utilisateur connecté via Supabase',
-        googleCalendarConnected: false,
-        gmailConnected: false
-      };
-
-      // Vérifier si l'utilisateur existe déjà dans la liste
-      const existingUserIndex = users.findIndex(u => u.id === authUser.id);
-      if (existingUserIndex >= 0) {
-        // Mettre à jour l'utilisateur existant
-        setUsers(prev => prev.map(u => u.id === authUser.id ? supabaseUser : u));
-      } else {
-        // Ajouter le nouvel utilisateur
-        setUsers(prev => [...prev, supabaseUser]);
-      }
-
-      setCurrentUser(supabaseUser);
-      console.log('Current user set to:', supabaseUser);
+      loadUserProfile(authUser.id);
     } else if (!authUser && !loading) {
-      // Utilisateur déconnecté
       setCurrentUser(null);
       console.log('User logged out, current user set to null');
     }
   }, [authUser, loading]);
+
+  const loadUserProfile = async (userId: string) => {
+    try {
+      const { data: profile, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        throw error;
+      }
+
+      let user: User;
+      
+      if (profile) {
+        // Utilisateur avec profil existant
+        user = {
+          id: profile.user_id,
+          name: profile.first_name || 'Utilisateur',
+          lastName: profile.last_name || '',
+          email: profile.email || authUser?.email || '',
+          role: profile.role as UserRole,
+          isActive: true,
+          username: authUser?.email?.split('@')[0] || '',
+          avatar: authUser?.user_metadata?.avatar_url || '',
+          phone: profile.phone || '',
+          department: profile.function_title || 'Non défini',
+          bio: `${roleLabels[profile.role as UserRole]} connecté via Supabase`,
+          googleCalendarConnected: false,
+          gmailConnected: false,
+          // Propriétés étendues
+          address: profile.address,
+          postal_code: profile.postal_code,
+          city: profile.city,
+          birth_date: profile.birth_date,
+          birth_place: profile.birth_place,
+          social_security_number: profile.social_security_number,
+          guso_id: profile.guso_id,
+          function_title: profile.function_title,
+          nationality: profile.nationality,
+          show_name: profile.show_name
+        };
+      } else {
+        // Créer un profil par défaut pour les utilisateurs sans profil
+        user = {
+          id: authUser?.id || '',
+          name: authUser?.user_metadata?.first_name || 'Utilisateur',
+          lastName: authUser?.user_metadata?.last_name || '',
+          email: authUser?.email || '',
+          role: 'utilisateur',
+          isActive: true,
+          username: authUser?.email?.split('@')[0] || '',
+          avatar: authUser?.user_metadata?.avatar_url || '',
+          phone: authUser?.phone || '',
+          department: 'Non défini',
+          bio: 'Utilisateur connecté via Supabase',
+          googleCalendarConnected: false,
+          gmailConnected: false
+        };
+      }
+
+      setCurrentUser(user);
+      console.log('Current user set to:', user);
+    } catch (error) {
+      console.error('Error loading user profile:', error);
+    }
+  };
+
+  const roleLabels = {
+    super_admin: 'Super Admin',
+    admin: 'Admin',
+    manager: 'Manager / Booker',
+    artiste: 'Artiste',
+    utilisateur: 'Utilisateur'
+  };
 
   const getUserById = (id: string): User | undefined => {
     return users.find(user => user.id === id);
   };
 
   const getUserPermissions = (user: User | null): UserPermissions => {
-    // Gérer le cas où user est null
     if (!user) {
       return {
         canCreateContacts: false,
@@ -208,7 +207,19 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           canManageArtists: true,
           canViewFinancials: false
         };
-      case 'artist':
+      case 'artiste':
+        return {
+          canCreateContacts: false,
+          canEditAllContacts: false,
+          canDeleteContacts: false,
+          canViewAllTasks: false,
+          canAssignTasks: false,
+          canManageUsers: false,
+          canManageWebsite: false,
+          canManageArtists: false,
+          canViewFinancials: false
+        };
+      case 'utilisateur':
         return {
           canCreateContacts: false,
           canEditAllContacts: false,
