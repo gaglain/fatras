@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 
-export type UserRole = 'admin' | 'manager' | 'user';
+export type UserRole = 'super_admin' | 'admin' | 'manager' | 'artist';
 
 export interface User {
   id: string;
@@ -27,6 +27,9 @@ export interface UserPermissions {
   canViewAllTasks: boolean;
   canAssignTasks: boolean;
   canManageUsers: boolean;
+  canManageWebsite: boolean;
+  canManageArtists: boolean;
+  canViewFinancials: boolean;
 }
 
 interface UserContextType {
@@ -45,20 +48,34 @@ interface UserContextType {
 const defaultUsers: User[] = [
   { 
     id: 'user-1', 
+    name: 'Super', 
+    lastName: 'Admin',
+    email: 'superadmin@showmanager.fr', 
+    role: 'super_admin', 
+    isActive: true,
+    username: 'superadmin',
+    phone: '06 12 34 56 78',
+    department: 'Direction',
+    bio: 'Super administrateur du système',
+    googleCalendarConnected: true,
+    gmailConnected: true
+  },
+  { 
+    id: 'user-2', 
     name: 'Admin', 
     lastName: 'Principal',
     email: 'admin@showmanager.fr', 
     role: 'admin', 
     isActive: true,
     username: 'admin',
-    phone: '06 12 34 56 78',
+    phone: '06 23 45 67 89',
     department: 'Direction',
     bio: 'Administrateur principal du système',
     googleCalendarConnected: true,
     gmailConnected: true
   },
   { 
-    id: 'user-2', 
+    id: 'user-3', 
     name: 'Manager', 
     lastName: 'Événements',
     email: 'manager@showmanager.fr', 
@@ -67,21 +84,21 @@ const defaultUsers: User[] = [
     username: 'manager_events',
     phone: '06 23 45 67 89',
     department: 'Événements',
-    bio: 'Gestionnaire des événements',
+    bio: 'Gestionnaire et booker d\'événements',
     googleCalendarConnected: false,
     gmailConnected: true
   },
   { 
-    id: 'user-3', 
-    name: 'Assistant', 
-    lastName: 'Production',
-    email: 'assistant@showmanager.fr', 
-    role: 'user', 
+    id: 'user-4', 
+    name: 'Artiste', 
+    lastName: 'Demo',
+    email: 'artiste@showmanager.fr', 
+    role: 'artist', 
     isActive: true,
-    username: 'assistant',
+    username: 'artiste',
     phone: '06 34 56 78 90',
-    department: 'Production',
-    bio: 'Assistant de production',
+    department: 'Artistes',
+    bio: 'Artiste membre de la plateforme',
     googleCalendarConnected: false,
     gmailConnected: false
   }
@@ -104,7 +121,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         name: authUser.user_metadata?.first_name || 'Utilisateur',
         lastName: authUser.user_metadata?.last_name || '',
         email: authUser.email || '',
-        role: 'admin', // Vous pouvez ajuster selon votre logique
+        role: 'super_admin', // Vous pouvez ajuster selon votre logique
         isActive: true,
         username: authUser.email?.split('@')[0] || '',
         avatar: authUser.user_metadata?.avatar_url || '',
@@ -147,11 +164,26 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         canDeleteContacts: false,
         canViewAllTasks: false,
         canAssignTasks: false,
-        canManageUsers: false
+        canManageUsers: false,
+        canManageWebsite: false,
+        canManageArtists: false,
+        canViewFinancials: false
       };
     }
 
     switch (user.role) {
+      case 'super_admin':
+        return {
+          canCreateContacts: true,
+          canEditAllContacts: true,
+          canDeleteContacts: true,
+          canViewAllTasks: true,
+          canAssignTasks: true,
+          canManageUsers: true,
+          canManageWebsite: true,
+          canManageArtists: true,
+          canViewFinancials: true
+        };
       case 'admin':
         return {
           canCreateContacts: true,
@@ -159,7 +191,10 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           canDeleteContacts: true,
           canViewAllTasks: true,
           canAssignTasks: true,
-          canManageUsers: true
+          canManageUsers: true,
+          canManageWebsite: true,
+          canManageArtists: true,
+          canViewFinancials: true
         };
       case 'manager':
         return {
@@ -168,16 +203,22 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           canDeleteContacts: false,
           canViewAllTasks: true,
           canAssignTasks: true,
-          canManageUsers: false
+          canManageUsers: false,
+          canManageWebsite: false,
+          canManageArtists: true,
+          canViewFinancials: false
         };
-      case 'user':
+      case 'artist':
         return {
-          canCreateContacts: true,
+          canCreateContacts: false,
           canEditAllContacts: false,
           canDeleteContacts: false,
           canViewAllTasks: false,
           canAssignTasks: false,
-          canManageUsers: false
+          canManageUsers: false,
+          canManageWebsite: false,
+          canManageArtists: false,
+          canViewFinancials: false
         };
       default:
         return {
@@ -186,7 +227,10 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           canDeleteContacts: false,
           canViewAllTasks: false,
           canAssignTasks: false,
-          canManageUsers: false
+          canManageUsers: false,
+          canManageWebsite: false,
+          canManageArtists: false,
+          canViewFinancials: false
         };
     }
   };

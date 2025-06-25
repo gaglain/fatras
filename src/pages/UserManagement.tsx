@@ -19,10 +19,16 @@ import {
   Calendar,
   CheckCircle,
   XCircle,
-  UserCheck
+  UserCheck,
+  Crown,
+  Users,
+  Music
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useUser, type UserRole } from '@/contexts/UserContext';
+
+// Mise à jour des types de rôles
+type ExtendedUserRole = 'super_admin' | 'admin' | 'manager' | 'artist';
 
 interface User {
   id: string;
@@ -30,7 +36,7 @@ interface User {
   firstName: string;
   lastName: string;
   pseudo: string;
-  role: UserRole;
+  role: ExtendedUserRole;
   status: 'active' | 'inactive' | 'pending';
   lastLogin: string;
   createdAt: string;
@@ -40,11 +46,11 @@ interface User {
 const sampleUsers: User[] = [
   {
     id: '1',
-    email: 'admin@showmanager.com',
-    firstName: 'Admin',
-    lastName: 'Principal',
+    email: 'superadmin@showmanager.com',
+    firstName: 'Super',
+    lastName: 'Admin',
     pseudo: 'SuperAdmin',
-    role: 'admin',
+    role: 'super_admin',
     status: 'active',
     lastLogin: '2024-06-12T10:30:00Z',
     createdAt: '2024-01-01T00:00:00Z',
@@ -52,10 +58,22 @@ const sampleUsers: User[] = [
   },
   {
     id: '2',
+    email: 'admin@showmanager.com',
+    firstName: 'Admin',
+    lastName: 'Principal',
+    pseudo: 'AdminPrincipal',
+    role: 'admin',
+    status: 'active',
+    lastLogin: '2024-06-12T09:15:00Z',
+    createdAt: '2024-01-15T00:00:00Z',
+    permissions: ['users', 'events', 'artists', 'contracts', 'website']
+  },
+  {
+    id: '3',
     email: 'manager@showmanager.com',
     firstName: 'Marie',
     lastName: 'Martin',
-    pseudo: 'MarieM',
+    pseudo: 'MarieBooker',
     role: 'manager',
     status: 'active',
     lastLogin: '2024-06-11T15:45:00Z',
@@ -63,23 +81,24 @@ const sampleUsers: User[] = [
     permissions: ['contacts', 'events', 'artists', 'contracts']
   },
   {
-    id: '3',
-    email: 'user@showmanager.com',
+    id: '4',
+    email: 'artist@showmanager.com',
     firstName: 'Jean',
     lastName: 'Dupont',
-    pseudo: 'JeanD',
-    role: 'user',
+    pseudo: 'JeanMusic',
+    role: 'artist',
     status: 'active',
     lastLogin: '2024-06-10T09:15:00Z',
     createdAt: '2024-03-01T00:00:00Z',
-    permissions: ['contacts', 'events']
+    permissions: ['profile', 'events', 'merchandise']
   }
 ];
 
 const roleLabels = {
-  admin: 'Administrateur',
-  manager: 'Manager',
-  user: 'Utilisateur'
+  super_admin: 'Super Admin',
+  admin: 'Admin',
+  manager: 'Manager / Booker',
+  artist: 'Artiste'
 };
 
 const statusLabels = {
@@ -98,7 +117,9 @@ const availablePermissions = [
   { value: 'agenda', label: 'Agenda' },
   { value: 'merchandise', label: 'Merchandise' },
   { value: 'opportunities', label: 'Opportunités' },
-  { value: 'website', label: 'Site Web' }
+  { value: 'website', label: 'Site Web' },
+  { value: 'users', label: 'Gestion Utilisateurs' },
+  { value: 'profile', label: 'Profil Personnel' }
 ];
 
 export const UserManagement: React.FC = () => {
@@ -112,7 +133,7 @@ export const UserManagement: React.FC = () => {
     firstName: '',
     lastName: '',
     pseudo: '',
-    role: 'user' as UserRole,
+    role: 'artist' as ExtendedUserRole,
     permissions: [] as string[]
   });
 
@@ -126,10 +147,21 @@ export const UserManagement: React.FC = () => {
 
   const getRoleColor = (role: string) => {
     switch (role) {
+      case 'super_admin': return 'bg-purple-100 text-purple-800';
       case 'admin': return 'bg-red-100 text-red-800';
       case 'manager': return 'bg-blue-100 text-blue-800';
-      case 'user': return 'bg-green-100 text-green-800';
+      case 'artist': return 'bg-green-100 text-green-800';
       default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getRoleIcon = (role: string) => {
+    switch (role) {
+      case 'super_admin': return Crown;
+      case 'admin': return Shield;
+      case 'manager': return Users;
+      case 'artist': return Music;
+      default: return User;
     }
   };
 
@@ -163,7 +195,7 @@ export const UserManagement: React.FC = () => {
       firstName: '',
       lastName: '',
       pseudo: '',
-      role: 'user',
+      role: 'artist',
       permissions: []
     });
     toast.success('Utilisateur ajouté avec succès');
@@ -199,7 +231,7 @@ export const UserManagement: React.FC = () => {
       firstName: '',
       lastName: '',
       pseudo: '',
-      role: 'user',
+      role: 'artist',
       permissions: []
     });
     toast.success('Utilisateur modifié avec succès');
@@ -290,14 +322,15 @@ export const UserManagement: React.FC = () => {
               
               <div>
                 <Label>Rôle</Label>
-                <Select value={newUser.role} onValueChange={(value: UserRole) => setNewUser({ ...newUser, role: value })}>
+                <Select value={newUser.role} onValueChange={(value: ExtendedUserRole) => setNewUser({ ...newUser, role: value })}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="admin">Administrateur</SelectItem>
-                    <SelectItem value="manager">Manager</SelectItem>
-                    <SelectItem value="user">Utilisateur</SelectItem>
+                    <SelectItem value="super_admin">Super Admin</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="manager">Manager / Booker</SelectItem>
+                    <SelectItem value="artist">Artiste</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -355,9 +388,10 @@ export const UserManagement: React.FC = () => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tous les rôles</SelectItem>
-            <SelectItem value="admin">Administrateur</SelectItem>
-            <SelectItem value="manager">Manager</SelectItem>
-            <SelectItem value="user">Utilisateur</SelectItem>
+            <SelectItem value="super_admin">Super Admin</SelectItem>
+            <SelectItem value="admin">Admin</SelectItem>
+            <SelectItem value="manager">Manager / Booker</SelectItem>
+            <SelectItem value="artist">Artiste</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -381,17 +415,17 @@ export const UserManagement: React.FC = () => {
         <Card>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-blue-600">
-              {users.filter(u => u.role === 'admin').length}
+              {users.filter(u => u.role === 'manager').length}
             </div>
-            <div className="text-sm text-muted-foreground">Administrateurs</div>
+            <div className="text-sm text-muted-foreground">Managers</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-yellow-600">
-              {users.filter(u => u.status === 'pending').length}
+              {users.filter(u => u.role === 'artist').length}
             </div>
-            <div className="text-sm text-muted-foreground">En attente</div>
+            <div className="text-sm text-muted-foreground">Artistes</div>
           </CardContent>
         </Card>
       </div>
@@ -410,85 +444,88 @@ export const UserManagement: React.FC = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredUsers.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
-                      <span className="text-white text-sm font-medium">
-                        {user.firstName.charAt(0)}{user.lastName.charAt(0)}
-                      </span>
-                    </div>
-                    <div>
-                      <div className="font-medium">{user.firstName} {user.lastName}</div>
-                      <div className="text-sm text-muted-foreground flex items-center">
-                        <Mail className="h-3 w-3 mr-1" />
-                        {user.email}
+            {filteredUsers.map((user) => {
+              const RoleIcon = getRoleIcon(user.role);
+              return (
+                <TableRow key={user.id}>
+                  <TableCell>
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
+                        <span className="text-white text-sm font-medium">
+                          {user.firstName.charAt(0)}{user.lastName.charAt(0)}
+                        </span>
+                      </div>
+                      <div>
+                        <div className="font-medium">{user.firstName} {user.lastName}</div>
+                        <div className="text-sm text-muted-foreground flex items-center">
+                          <Mail className="h-3 w-3 mr-1" />
+                          {user.email}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline">{user.pseudo}</Badge>
-                </TableCell>
-                <TableCell>
-                  <Badge className={getRoleColor(user.role)}>
-                    <Shield className="h-3 w-3 mr-1" />
-                    {roleLabels[user.role]}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <Badge className={getStatusColor(user.status)}>
-                    {user.status === 'active' ? (
-                      <CheckCircle className="h-3 w-3 mr-1" />
-                    ) : (
-                      <XCircle className="h-3 w-3 mr-1" />
-                    )}
-                    {statusLabels[user.status]}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex flex-wrap gap-1">
-                    {user.permissions.slice(0, 3).map((permission) => (
-                      <Badge key={permission} variant="secondary" className="text-xs">
-                        {availablePermissions.find(p => p.value === permission)?.label}
-                      </Badge>
-                    ))}
-                    {user.permissions.length > 3 && (
-                      <Badge variant="secondary" className="text-xs">
-                        +{user.permissions.length - 3}
-                      </Badge>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => toggleUserStatus(user.id)}
-                    >
-                      <UserCheck className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleEditUser(user)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDeleteUser(user.id)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{user.pseudo}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge className={getRoleColor(user.role)}>
+                      <RoleIcon className="h-3 w-3 mr-1" />
+                      {roleLabels[user.role]}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge className={getStatusColor(user.status)}>
+                      {user.status === 'active' ? (
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                      ) : (
+                        <XCircle className="h-3 w-3 mr-1" />
+                      )}
+                      {statusLabels[user.status]}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1">
+                      {user.permissions.slice(0, 3).map((permission) => (
+                        <Badge key={permission} variant="secondary" className="text-xs">
+                          {availablePermissions.find(p => p.value === permission)?.label}
+                        </Badge>
+                      ))}
+                      {user.permissions.length > 3 && (
+                        <Badge variant="secondary" className="text-xs">
+                          +{user.permissions.length - 3}
+                        </Badge>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleUserStatus(user.id)}
+                      >
+                        <UserCheck className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditUser(user)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteUser(user.id)}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </Card>
