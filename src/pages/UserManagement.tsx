@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,6 +44,7 @@ interface UserProfile {
   function_title?: string;
   nationality?: string;
   show_name?: string;
+  associated_artists?: string[];
   created_at: string;
   updated_at: string;
 }
@@ -53,6 +55,15 @@ const roleLabels = {
   manager: 'Manager / Booker',
   artiste: 'Artiste',
   utilisateur: 'Utilisateur'
+};
+
+// Sample artists data for display - this should match the data in ExtendedUserProfileForm
+const artistsLookup: Record<string, string> = {
+  '1': 'The Midnight Express',
+  '2': 'Sarah Mitchell',
+  '3': 'Thunder Road',
+  '4': 'Jazz Collective',
+  '5': 'Folk Harmony'
 };
 
 export const UserManagement: React.FC = () => {
@@ -79,7 +90,8 @@ export const UserManagement: React.FC = () => {
       // Cast the role field to UserRole type
       const typedUsers = (data || []).map(user => ({
         ...user,
-        role: user.role as UserRole
+        role: user.role as UserRole,
+        associated_artists: user.associated_artists || []
       }));
       
       setUsers(typedUsers);
@@ -119,6 +131,28 @@ export const UserManagement: React.FC = () => {
       case 'utilisateur': return User;
       default: return User;
     }
+  };
+
+  const getAssociatedArtistsDisplay = (associatedArtists?: string[]) => {
+    if (!associatedArtists || associatedArtists.length === 0) {
+      return '-';
+    }
+    
+    const artistNames = associatedArtists
+      .map(id => artistsLookup[id])
+      .filter(Boolean);
+    
+    if (artistNames.length === 0) return '-';
+    
+    if (artistNames.length === 1) {
+      return artistNames[0];
+    }
+    
+    if (artistNames.length <= 2) {
+      return artistNames.join(', ');
+    }
+    
+    return `${artistNames[0]} (+${artistNames.length - 1} autres)`;
   };
 
   const handleEditUser = (user: UserProfile) => {
@@ -253,6 +287,7 @@ export const UserManagement: React.FC = () => {
               <TableHead>Catégorie</TableHead>
               <TableHead>Téléphone</TableHead>
               <TableHead>Ville</TableHead>
+              <TableHead>Spectacles associés</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -285,6 +320,15 @@ export const UserManagement: React.FC = () => {
                   </TableCell>
                   <TableCell>{user.phone || '-'}</TableCell>
                   <TableCell>{user.city || '-'}</TableCell>
+                  <TableCell>
+                    <div className="text-sm">
+                      {user.role === 'artiste' ? (
+                        <span title={user.associated_artists?.map(id => artistsLookup[id]).filter(Boolean).join(', ')}>
+                          {getAssociatedArtistsDisplay(user.associated_artists)}
+                        </span>
+                      ) : '-'}
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center space-x-2">
                       <Button

@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -29,12 +30,18 @@ interface ExtendedUserProfile {
   function_title?: string;
   nationality?: string;
   show_name?: string;
+  associated_artists?: string[];
 }
 
 interface ExtendedUserProfileFormProps {
   profile?: ExtendedUserProfile;
   onSave: (profile: ExtendedUserProfile) => void;
   onCancel: () => void;
+}
+
+interface Artist {
+  id: string;
+  name: string;
 }
 
 const roleLabels = {
@@ -52,11 +59,35 @@ export const ExtendedUserProfileForm: React.FC<ExtendedUserProfileFormProps> = (
 }) => {
   const [formData, setFormData] = useState<ExtendedUserProfile>({
     role: 'utilisateur',
+    associated_artists: [],
     ...profile
   });
+  const [availableArtists, setAvailableArtists] = useState<Artist[]>([]);
+
+  // Sample artists data - in a real app, this would come from your artists database
+  useEffect(() => {
+    // For now, using sample data. In the future, this should fetch from your artists table
+    const sampleArtists: Artist[] = [
+      { id: '1', name: 'The Midnight Express' },
+      { id: '2', name: 'Sarah Mitchell' },
+      { id: '3', name: 'Thunder Road' },
+      { id: '4', name: 'Jazz Collective' },
+      { id: '5', name: 'Folk Harmony' }
+    ];
+    setAvailableArtists(sampleArtists);
+  }, []);
 
   const handleInputChange = (field: keyof ExtendedUserProfile, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleArtistSelection = (artistId: string, checked: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      associated_artists: checked
+        ? [...(prev.associated_artists || []), artistId]
+        : (prev.associated_artists || []).filter(id => id !== artistId)
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -67,7 +98,10 @@ export const ExtendedUserProfileForm: React.FC<ExtendedUserProfileFormProps> = (
         // Update existing profile
         const { error } = await supabase
           .from('user_profiles')
-          .update(formData)
+          .update({
+            ...formData,
+            associated_artists: formData.associated_artists || []
+          })
           .eq('id', profile.id);
         
         if (error) throw error;
@@ -85,6 +119,7 @@ export const ExtendedUserProfileForm: React.FC<ExtendedUserProfileFormProps> = (
   };
 
   const shouldShowExtendedFields = formData.role !== 'utilisateur';
+  const shouldShowArtistSelection = formData.role === 'artiste';
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -264,6 +299,49 @@ export const ExtendedUserProfileForm: React.FC<ExtendedUserProfileFormProps> = (
               </div>
             </CardContent>
           </Card>
+
+          {shouldShowArtistSelection && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Spectacles associés</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <Label>Sélectionnez les spectacles/groupes auxquels cet artiste participe :</Label>
+                  <div className="grid grid-cols-1 gap-3 max-h-48 overflow-y-auto">
+                    {availableArtists.map((artist) => (
+                      <div key={artist.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`artist-${artist.id}`}
+                          checked={formData.associated_artists?.includes(artist.id) || false}
+                          onCheckedChange={(checked) => 
+                            handleArtistSelection(artist.id, checked as boolean)
+                          }
+                        />
+                        <Label 
+                          htmlFor={`artist-${artist.id}`}
+                          className="text-sm font-normal cursor-pointer"
+                        >
+                          {artist.name}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                  {formData.associated_artists && formData.associated_artists.length > 0 && (
+                    <div className="mt-3 p-3 bg-gray-50 rounded-md">
+                      <Label className="text-sm font-medium">Spectacles sélectionnés :</Label>
+                      <div className="mt-1 text-sm text-gray-600">
+                        {formData.associated_artists
+                          .map(id => availableArtists.find(a => a.id === id)?.name)
+                          .filter(Boolean)
+                          .join(', ')}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </>
       )}
 
