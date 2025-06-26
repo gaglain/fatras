@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -87,7 +86,7 @@ export const UserManagement: React.FC = () => {
 
       if (error) throw error;
       
-      // Cast the role field to UserRole type
+      // Cast the role field to UserRole type and ensure associated_artists is properly handled
       const typedUsers = (data || []).map(user => ({
         ...user,
         role: user.role as UserRole,

@@ -653,6 +653,7 @@ export type Database = {
       user_profiles: {
         Row: {
           address: string | null
+          associated_artists: string[] | null
           birth_date: string | null
           birth_place: string | null
           city: string | null
@@ -674,6 +675,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          associated_artists?: string[] | null
           birth_date?: string | null
           birth_place?: string | null
           city?: string | null
@@ -695,6 +697,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          associated_artists?: string[] | null
           birth_date?: string | null
           birth_place?: string | null
           city?: string | null
