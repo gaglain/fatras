@@ -69,11 +69,11 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
     loadSettings();
 
     // Écouter les mises à jour
-    const handleDesignUpdate = (event: CustomEvent) => {
+    const handleDesignUpdate = (event: CustomEvent<SiteDesign>) => {
       setSiteDesign(event.detail);
     };
 
-    const handleSettingsUpdate = (event: CustomEvent) => {
+    const handleSettingsUpdate = (event: CustomEvent<WebsiteSettings>) => {
       setWebsiteSettings(event.detail);
     };
 
