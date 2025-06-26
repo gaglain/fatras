@@ -95,7 +95,13 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
   const siteName = websiteSettings?.siteName ?? siteDesign?.siteName ?? 'MusiConnect';
   const contactEmail = websiteSettings?.contactEmail ?? 'contact@musiconnect.com';
   const contactPhone = websiteSettings?.contactPhone ?? '+33 1 23 45 67 89';
-  const socialLinks = websiteSettings?.socialLinks ?? {};
+  const socialLinks = websiteSettings?.socialLinks ?? {
+    facebook: '',
+    instagram: '',
+    twitter: '',
+    youtube: '',
+    linkedin: ''
+  };
 
   return (
     <HelmetProvider>
@@ -163,7 +169,7 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
                       url && (
                         <a
                           key={platform}
-                          href={url}
+                          href={url as string}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="hover:opacity-80 transition-opacity duration-300"
