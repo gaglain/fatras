@@ -64,9 +64,20 @@ export const WebsiteSettingsManager: React.FC = () => {
     const savedSettings = localStorage.getItem('websiteSettings');
     if (savedSettings) {
       try {
-        setSettings(JSON.parse(savedSettings));
+        const parsedSettings = JSON.parse(savedSettings);
+        // S'assurer que socialLinks existe toujours
+        const mergedSettings = {
+          ...defaultSettings,
+          ...parsedSettings,
+          socialLinks: {
+            ...defaultSettings.socialLinks,
+            ...(parsedSettings.socialLinks || {})
+          }
+        };
+        setSettings(mergedSettings);
       } catch (error) {
         console.error('Erreur lors du chargement des paramètres:', error);
+        setSettings(defaultSettings);
       }
     }
   }, []);
@@ -134,6 +145,9 @@ export const WebsiteSettingsManager: React.FC = () => {
     
     toast.success('Paramètres sauvegardés avec succès');
   };
+
+  // S'assurer que socialLinks existe avant de l'utiliser
+  const socialLinks = settings.socialLinks || defaultSettings.socialLinks;
 
   return (
     <div className="space-y-6">
@@ -261,7 +275,7 @@ export const WebsiteSettingsManager: React.FC = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {Object.entries(settings.socialLinks).map(([platform, url]) => (
+            {Object.entries(socialLinks).map(([platform, url]) => (
               <div key={platform}>
                 <Label htmlFor={platform}>
                   {platform.charAt(0).toUpperCase() + platform.slice(1)}
