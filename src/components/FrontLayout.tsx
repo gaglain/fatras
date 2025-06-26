@@ -92,10 +92,10 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
     color: siteDesign.textColor
   } : {};
 
-  const siteName = websiteSettings?.siteName || siteDesign?.siteName || 'MusiConnect';
-  const contactEmail = websiteSettings?.contactEmail || 'contact@musiconnect.com';
-  const contactPhone = websiteSettings?.contactPhone || '+33 1 23 45 67 89';
-  const socialLinks = websiteSettings?.socialLinks || {};
+  const siteName = websiteSettings?.siteName ?? siteDesign?.siteName ?? 'MusiConnect';
+  const contactEmail = websiteSettings?.contactEmail ?? 'contact@musiconnect.com';
+  const contactPhone = websiteSettings?.contactPhone ?? '+33 1 23 45 67 89';
+  const socialLinks = websiteSettings?.socialLinks ?? {};
 
   return (
     <HelmetProvider>
@@ -136,7 +136,7 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
                   {siteName}
                 </h3>
                 <p className="arc-text-secondary leading-relaxed">
-                  {websiteSettings?.siteDescription || 'Votre plateforme de gestion musicale complète.'}
+                  {websiteSettings?.siteDescription ?? 'Votre plateforme de gestion musicale complète.'}
                 </p>
               </div>
               <div className="space-y-4">
@@ -177,7 +177,7 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
                 )}
               </div>
             </div>
-            <div className="border-t border-opacity-50 mt-12 pt-8 text-center arc-text-secondary" style={{ borderColor: siteDesign?.textColor || '#ffffff' }}>
+            <div className="border-t border-opacity-50 mt-12 pt-8 text-center arc-text-secondary" style={{ borderColor: siteDesign?.textColor ?? '#ffffff' }}>
               <p>&copy; 2024 {siteName}. Tous droits réservés.</p>
             </div>
           </div>
