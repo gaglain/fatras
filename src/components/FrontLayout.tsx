@@ -43,46 +43,96 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
   const [siteDesign, setSiteDesign] = useState<SiteDesign | null>(null);
   const [websiteSettings, setWebsiteSettings] = useState<WebsiteSettings | null>(null);
 
-  useEffect(() => {
-    // Charger le design et les paramètres
-    const loadSettings = () => {
-      const savedDesign = localStorage.getItem('websiteDesign');
-      const savedSettings = localStorage.getItem('websiteSettings');
-      
-      if (savedDesign) {
-        try {
-          setSiteDesign(JSON.parse(savedDesign));
-        } catch (error) {
-          console.error('Erreur lors du chargement du design:', error);
-        }
+  // Fonction pour charger et appliquer les paramètres
+  const loadAndApplySettings = () => {
+    const savedDesign = localStorage.getItem('websiteDesign');
+    const savedSettings = localStorage.getItem('websiteSettings');
+    
+    if (savedDesign) {
+      try {
+        const design = JSON.parse(savedDesign);
+        setSiteDesign(design);
+        
+        // Appliquer les couleurs CSS immédiatement
+        const root = document.documentElement;
+        root.style.setProperty('--site-primary-color', design.primaryColor);
+        root.style.setProperty('--site-secondary-color', design.secondaryColor);
+        root.style.setProperty('--site-accent-color', design.accentColor);
+        root.style.setProperty('--site-text-color', design.textColor);
+        root.style.setProperty('--site-link-color', design.linkColor);
+        
+        console.log('Design appliqué:', design);
+      } catch (error) {
+        console.error('Erreur lors du chargement du design:', error);
       }
-      
-      if (savedSettings) {
-        try {
-          setWebsiteSettings(JSON.parse(savedSettings));
-        } catch (error) {
-          console.error('Erreur lors du chargement des paramètres:', error);
+    }
+    
+    if (savedSettings) {
+      try {
+        const settings = JSON.parse(savedSettings);
+        setWebsiteSettings(settings);
+        
+        // Mettre à jour le titre de la page
+        document.title = settings.siteName || 'MusiConnect';
+        
+        // Mettre à jour les meta tags
+        let metaDescription = document.querySelector('meta[name="description"]');
+        if (!metaDescription) {
+          metaDescription = document.createElement('meta');
+          metaDescription.setAttribute('name', 'description');
+          document.getElementsByTagName('head')[0].appendChild(metaDescription);
         }
+        metaDescription.setAttribute('content', settings.siteDescription || '');
+        
+        console.log('Paramètres appliqués:', settings);
+      } catch (error) {
+        console.error('Erreur lors du chargement des paramètres:', error);
       }
-    };
+    }
+  };
 
-    loadSettings();
+  useEffect(() => {
+    // Charger au démarrage
+    loadAndApplySettings();
 
     // Écouter les mises à jour
     const handleDesignUpdate = (event: CustomEvent<SiteDesign>) => {
+      console.log('Événement design reçu:', event.detail);
       setSiteDesign(event.detail);
+      
+      // Appliquer les couleurs immédiatement
+      const root = document.documentElement;
+      root.style.setProperty('--site-primary-color', event.detail.primaryColor);
+      root.style.setProperty('--site-secondary-color', event.detail.secondaryColor);
+      root.style.setProperty('--site-accent-color', event.detail.accentColor);
+      root.style.setProperty('--site-text-color', event.detail.textColor);
+      root.style.setProperty('--site-link-color', event.detail.linkColor);
     };
 
     const handleSettingsUpdate = (event: CustomEvent<WebsiteSettings>) => {
+      console.log('Événement paramètres reçu:', event.detail);
       setWebsiteSettings(event.detail);
+      
+      // Mettre à jour le titre
+      document.title = event.detail.siteName || 'MusiConnect';
+    };
+
+    // Écouter les changements dans localStorage (pour synchroniser entre onglets)
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'websiteDesign' || event.key === 'websiteSettings') {
+        console.log('Changement localStorage détecté:', event.key);
+        loadAndApplySettings();
+      }
     };
 
     window.addEventListener('websiteDesignUpdated', handleDesignUpdate as EventListener);
     window.addEventListener('websiteSettingsUpdated', handleSettingsUpdate as EventListener);
+    window.addEventListener('storage', handleStorageChange);
 
     return () => {
       window.removeEventListener('websiteDesignUpdated', handleDesignUpdate as EventListener);
       window.removeEventListener('websiteSettingsUpdated', handleSettingsUpdate as EventListener);
+      window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
 

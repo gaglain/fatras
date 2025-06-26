@@ -37,52 +37,61 @@ export const FrontNavigation: React.FC = () => {
   const [navItems, setNavItems] = useState<MenuItem[]>(defaultNavItems);
   const [siteDesign, setSiteDesign] = useState<SiteDesign | null>(null);
 
+  // Fonction pour charger les paramètres
+  const loadSettings = () => {
+    const savedMenu = localStorage.getItem('websiteMenu');
+    const savedDesign = localStorage.getItem('websiteDesign');
+    
+    if (savedMenu) {
+      try {
+        const parsedMenu = JSON.parse(savedMenu);
+        setNavItems(parsedMenu);
+      } catch (error) {
+        console.error('Erreur lors du chargement du menu:', error);
+      }
+    }
+    
+    if (savedDesign) {
+      try {
+        const parsedDesign = JSON.parse(savedDesign);
+        setSiteDesign(parsedDesign);
+      } catch (error) {
+        console.error('Erreur lors du chargement du design:', error);
+      }
+    }
+  };
+
   useEffect(() => {
-    // Charger le menu personnalisé
-    const loadMenu = () => {
-      const savedMenu = localStorage.getItem('websiteMenu');
-      if (savedMenu) {
-        try {
-          const parsedMenu = JSON.parse(savedMenu);
-          setNavItems(parsedMenu);
-        } catch (error) {
-          console.error('Erreur lors du chargement du menu:', error);
-        }
-      }
-    };
-
-    // Charger le design personnalisé
-    const loadDesign = () => {
-      const savedDesign = localStorage.getItem('websiteDesign');
-      if (savedDesign) {
-        try {
-          const parsedDesign = JSON.parse(savedDesign);
-          setSiteDesign(parsedDesign);
-        } catch (error) {
-          console.error('Erreur lors du chargement du design:', error);
-        }
-      }
-    };
-
     // Charger au démarrage
-    loadMenu();
-    loadDesign();
+    loadSettings();
 
     // Écouter les mises à jour
     const handleMenuUpdate = (event: CustomEvent) => {
+      console.log('Navigation - Menu mis à jour:', event.detail);
       setNavItems(event.detail);
     };
 
     const handleDesignUpdate = (event: CustomEvent) => {
+      console.log('Navigation - Design mis à jour:', event.detail);
       setSiteDesign(event.detail);
+    };
+
+    // Écouter les changements dans localStorage
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'websiteMenu' || event.key === 'websiteDesign') {
+        console.log('Navigation - Changement localStorage:', event.key);
+        loadSettings();
+      }
     };
 
     window.addEventListener('websiteMenuUpdated', handleMenuUpdate as EventListener);
     window.addEventListener('websiteDesignUpdated', handleDesignUpdate as EventListener);
+    window.addEventListener('storage', handleStorageChange);
 
     return () => {
       window.removeEventListener('websiteMenuUpdated', handleMenuUpdate as EventListener);
       window.removeEventListener('websiteDesignUpdated', handleDesignUpdate as EventListener);
+      window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
 
