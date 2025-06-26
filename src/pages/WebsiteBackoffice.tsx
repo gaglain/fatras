@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -6,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Plus, FileText, Settings, Menu, Palette, Globe, Edit } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { WebsiteMenuManager } from '@/components/WebsiteMenuManager';
+import { WebsiteDesignManager } from '@/components/WebsiteDesignManager';
+import { WebsiteSettingsManager } from '@/components/WebsiteSettingsManager';
 
 interface WebPage {
   id: string;
@@ -142,31 +143,11 @@ export const WebsiteBackoffice: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="design">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center py-12">
-                <Palette className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">Personnalisation du Design</h3>
-                <p className="text-muted-foreground mb-4">
-                  Fonctionnalité à venir : personnalisation des couleurs, polices et styles
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <WebsiteDesignManager />
         </TabsContent>
 
         <TabsContent value="settings">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center py-12">
-                <Settings className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">Paramètres du Site</h3>
-                <p className="text-muted-foreground mb-4">
-                  Fonctionnalité à venir : SEO, domaines, analytics
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <WebsiteSettingsManager />
         </TabsContent>
       </Tabs>
     </div>

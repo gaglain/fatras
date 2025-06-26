@@ -12,6 +12,18 @@ interface MenuItem {
   isCustom?: boolean;
 }
 
+interface SiteDesign {
+  logo: string;
+  siteName: string;
+  primaryColor: string;
+  secondaryColor: string;
+  accentColor: string;
+  headerBg: string;
+  footerBg: string;
+  textColor: string;
+  linkColor: string;
+}
+
 const defaultNavItems = [
   { id: '1', label: 'Accueil', path: '/front', visible: true, order: 1 },
   { id: '2', label: 'Artistes', path: '/front/artists', visible: true, order: 2 },
@@ -23,6 +35,7 @@ const defaultNavItems = [
 export const FrontNavigation: React.FC = () => {
   const location = useLocation();
   const [navItems, setNavItems] = useState<MenuItem[]>(defaultNavItems);
+  const [siteDesign, setSiteDesign] = useState<SiteDesign | null>(null);
 
   useEffect(() => {
     // Charger le menu personnalisé
@@ -38,18 +51,38 @@ export const FrontNavigation: React.FC = () => {
       }
     };
 
+    // Charger le design personnalisé
+    const loadDesign = () => {
+      const savedDesign = localStorage.getItem('websiteDesign');
+      if (savedDesign) {
+        try {
+          const parsedDesign = JSON.parse(savedDesign);
+          setSiteDesign(parsedDesign);
+        } catch (error) {
+          console.error('Erreur lors du chargement du design:', error);
+        }
+      }
+    };
+
     // Charger au démarrage
     loadMenu();
+    loadDesign();
 
-    // Écouter les mises à jour du menu
+    // Écouter les mises à jour
     const handleMenuUpdate = (event: CustomEvent) => {
       setNavItems(event.detail);
     };
 
+    const handleDesignUpdate = (event: CustomEvent) => {
+      setSiteDesign(event.detail);
+    };
+
     window.addEventListener('websiteMenuUpdated', handleMenuUpdate as EventListener);
+    window.addEventListener('websiteDesignUpdated', handleDesignUpdate as EventListener);
 
     return () => {
       window.removeEventListener('websiteMenuUpdated', handleMenuUpdate as EventListener);
+      window.removeEventListener('websiteDesignUpdated', handleDesignUpdate as EventListener);
     };
   }, []);
 
@@ -60,17 +93,40 @@ export const FrontNavigation: React.FC = () => {
     
   const contactItem = navItems.find(item => item.path === '/front/contact' && item.visible);
 
+  // Styles dynamiques basés sur le design personnalisé
+  const headerStyle = siteDesign ? {
+    background: siteDesign.headerBg,
+    color: siteDesign.textColor
+  } : {};
+
+  const logoSrc = siteDesign?.logo || '/logo.svg';
+  const siteName = siteDesign?.siteName || 'MusiConnect';
+
   return (
-    <nav className="arc-front-header fixed top-0 left-0 right-0 z-50 h-20 bg-gradient-to-r from-background via-[#1a1f2e] to-[#222c45] shadow">
+    <nav 
+      className="arc-front-header fixed top-0 left-0 right-0 z-50 h-20 shadow"
+      style={headerStyle}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
         <div className="flex items-center justify-between h-full">
           {/* Logo à gauche + navigation principale */}
           <div className="flex items-center space-x-8 h-full">
             {/* Logo personnalisable */}
-            <Link to="/front" className="arc-logo flex items-center space-x-2 text-white font-extrabold text-xl tracking-tight hover:opacity-90 transition-opacity select-none">
-              {/* Image ou texte logo, modifiable facilement : */}
-              <img src="/logo.svg" alt="MusiConnect" className="h-9 w-9 object-contain" style={{filter: 'drop-shadow(0 2px 7px #6b21a8)'}} onError={(e: any) => { e.currentTarget.style.display='none' }} />
-              <span>MusiConnect</span>
+            <Link 
+              to="/front" 
+              className="arc-logo flex items-center space-x-2 font-extrabold text-xl tracking-tight hover:opacity-90 transition-opacity select-none"
+              style={{ color: siteDesign?.textColor || '#ffffff' }}
+            >
+              <img 
+                src={logoSrc} 
+                alt={siteName} 
+                className="h-9 w-9 object-contain" 
+                style={{
+                  filter: siteDesign ? 'none' : 'drop-shadow(0 2px 7px #6b21a8)'
+                }} 
+                onError={(e: any) => { e.currentTarget.style.display='none' }} 
+              />
+              <span>{siteName}</span>
             </Link>
             {/* Navigation principale */}
             <div className="hidden md:flex items-center space-x-6 h-full">
@@ -80,10 +136,13 @@ export const FrontNavigation: React.FC = () => {
                   to={item.path}
                   className={`arc-nav-link px-4 py-2 rounded h-full flex items-center ${
                     location.pathname === item.path 
-                      ? 'text-white bg-white/10 font-bold' 
-                      : 'text-white/90 hover:text-white'
+                      ? 'bg-white/10 font-bold' 
+                      : 'hover:text-opacity-90'
                   }`}
-                  style={{ transition: 'all 0.14s' }}
+                  style={{ 
+                    transition: 'all 0.14s',
+                    color: siteDesign?.textColor || '#ffffff'
+                  }}
                 >
                   {item.label}
                 </Link>
@@ -97,10 +156,13 @@ export const FrontNavigation: React.FC = () => {
                 to={contactItem.path}
                 className={`arc-nav-link px-4 py-2 rounded ${
                   location.pathname === contactItem.path 
-                    ? 'text-white bg-white/10 font-bold' 
-                    : 'text-white/90 hover:text-white'
+                    ? 'bg-white/10 font-bold' 
+                    : 'hover:text-opacity-90'
                 }`}
-                style={{ transition: 'all 0.14s' }}
+                style={{ 
+                  transition: 'all 0.14s',
+                  color: siteDesign?.textColor || '#ffffff'
+                }}
               >
                 {contactItem.label}
               </Link>
