@@ -77,9 +77,11 @@ export const WebsiteDesignManager: React.FC = () => {
     root.style.setProperty('--site-text-color', design.textColor);
     root.style.setProperty('--site-link-color', design.linkColor);
     
-    // Déclencher un événement pour mettre à jour le site
+    // Déclencher les événements de synchronisation
     window.dispatchEvent(new CustomEvent('websiteDesignUpdated', { detail: design }));
+    window.dispatchEvent(new CustomEvent('websiteDesignSaved'));
     
+    console.log('🎨 Design sauvegardé et événements déclenchés');
     toast.success('Design sauvegardé avec succès');
   };
 
@@ -94,6 +96,7 @@ export const WebsiteDesignManager: React.FC = () => {
     });
     
     window.dispatchEvent(new CustomEvent('websiteDesignUpdated', { detail: defaultDesign }));
+    window.dispatchEvent(new CustomEvent('websiteDesignSaved'));
     toast.success('Design réinitialisé');
   };
 

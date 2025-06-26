@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
@@ -6,6 +5,7 @@ import { FrontNavigation } from './FrontNavigation';
 import { SiteCustomizer } from './SiteCustomizer';
 import { Button } from '@/components/ui/button';
 import { Palette } from 'lucide-react';
+import { useWebsiteSync } from '@/hooks/useWebsiteSync';
 
 interface FrontLayoutProps {
   children?: React.ReactNode;
@@ -42,6 +42,9 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
   const [showCustomizer, setShowCustomizer] = useState(false);
   const [siteDesign, setSiteDesign] = useState<SiteDesign | null>(null);
   const [websiteSettings, setWebsiteSettings] = useState<WebsiteSettings | null>(null);
+
+  // Utiliser le hook de synchronisation
+  useWebsiteSync();
 
   // Fonction pour charger et appliquer les paramètres
   const loadAndApplySettings = () => {

@@ -140,9 +140,11 @@ export const WebsiteSettingsManager: React.FC = () => {
     }
     metaKeywords.setAttribute('content', settings.metaKeywords);
     
-    // Déclencher un événement pour informer les autres composants
+    // Déclencher les événements de synchronisation
     window.dispatchEvent(new CustomEvent('websiteSettingsUpdated', { detail: settings }));
+    window.dispatchEvent(new CustomEvent('websiteSettingsSaved'));
     
+    console.log('⚙️ Paramètres sauvegardés et événements déclenchés');
     toast.success('Paramètres sauvegardés avec succès');
   };
 
