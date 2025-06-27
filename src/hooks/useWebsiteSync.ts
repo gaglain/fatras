@@ -36,18 +36,24 @@ export const useWebsiteSync = () => {
         try {
           const design: SiteDesign = JSON.parse(savedDesign);
           
-          // Appliquer les couleurs CSS immédiatement
+          // Appliquer les couleurs CSS immédiatement avec force
           const root = document.documentElement;
-          root.style.setProperty('--site-primary-color', design.primaryColor);
-          root.style.setProperty('--site-secondary-color', design.secondaryColor);
-          root.style.setProperty('--site-accent-color', design.accentColor);
-          root.style.setProperty('--site-text-color', design.textColor);
-          root.style.setProperty('--site-link-color', design.linkColor);
+          root.style.setProperty('--site-primary-color', design.primaryColor, 'important');
+          root.style.setProperty('--site-secondary-color', design.secondaryColor, 'important');
+          root.style.setProperty('--site-accent-color', design.accentColor, 'important');
+          root.style.setProperty('--site-text-color', design.textColor, 'important');
+          root.style.setProperty('--site-link-color', design.linkColor, 'important');
+          
+          // Forcer un repaint de la page
+          document.body.style.display = 'none';
+          document.body.offsetHeight; // Trigger reflow
+          document.body.style.display = '';
           
           // Déclencher l'événement de mise à jour
-          window.dispatchEvent(new CustomEvent('websiteDesignUpdated', { detail: design }));
+          const event = new CustomEvent('websiteDesignUpdated', { detail: design });
+          window.dispatchEvent(event);
           
-          console.log('🎨 Design synchronisé:', design);
+          console.log('🎨 Design synchronisé et appliqué avec force:', design);
         } catch (error) {
           console.error('Erreur sync design:', error);
         }
@@ -64,7 +70,8 @@ export const useWebsiteSync = () => {
           document.title = settings.siteName || 'MusiConnect';
           
           // Déclencher l'événement de mise à jour
-          window.dispatchEvent(new CustomEvent('websiteSettingsUpdated', { detail: settings }));
+          const event = new CustomEvent('websiteSettingsUpdated', { detail: settings });
+          window.dispatchEvent(event);
           
           console.log('⚙️ Paramètres synchronisés:', settings);
         } catch (error) {
@@ -73,40 +80,53 @@ export const useWebsiteSync = () => {
       }
     };
 
-    // Synchroniser au démarrage
-    syncDesignChanges();
-    syncSettingsChanges();
+    // Synchroniser au démarrage avec un délai
+    setTimeout(() => {
+      syncDesignChanges();
+      syncSettingsChanges();
+    }, 100);
 
-    // Écouter les changements localStorage (entre onglets)
+    // Polling pour vérifier les changements
+    const interval = setInterval(() => {
+      syncDesignChanges();
+      syncSettingsChanges();
+    }, 1000);
+
+    // Écouter les changements localStorage
     const handleStorageChange = (event: StorageEvent) => {
       if (event.key === 'websiteDesign') {
-        console.log('📡 Changement design détecté');
+        console.log('📡 Changement design détecté via storage');
         syncDesignChanges();
       } else if (event.key === 'websiteSettings') {
-        console.log('📡 Changement paramètres détecté');
+        console.log('📡 Changement paramètres détecté via storage');
         syncSettingsChanges();
       }
     };
 
-    // Écouter les événements personnalisés (même onglet)
+    // Écouter les événements personnalisés
     const handleDesignSaved = () => {
-      console.log('💾 Design sauvegardé - synchronisation...');
+      console.log('💾 Design sauvegardé - synchronisation forcée...');
       setTimeout(syncDesignChanges, 100);
     };
 
     const handleSettingsSaved = () => {
-      console.log('💾 Paramètres sauvegardés - synchronisation...');
+      console.log('💾 Paramètres sauvegardés - synchronisation forcée...');
       setTimeout(syncSettingsChanges, 100);
     };
 
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('websiteDesignSaved', handleDesignSaved);
     window.addEventListener('websiteSettingsSaved', handleSettingsSaved);
+    window.addEventListener('focus', syncDesignChanges);
+    window.addEventListener('focus', syncSettingsChanges);
 
     return () => {
+      clearInterval(interval);
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('websiteDesignSaved', handleDesignSaved);
       window.removeEventListener('websiteSettingsSaved', handleSettingsSaved);
+      window.removeEventListener('focus', syncDesignChanges);
+      window.removeEventListener('focus', syncSettingsChanges);
     };
   }, []);
 };

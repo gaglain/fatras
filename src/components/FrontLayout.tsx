@@ -3,9 +3,12 @@ import { Outlet } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { FrontNavigation } from './FrontNavigation';
 import { SiteCustomizer } from './SiteCustomizer';
+import { RGPDModule } from './RGPDModule';
+import { GoogleAnalytics } from './GoogleAnalytics';
 import { Button } from '@/components/ui/button';
 import { Palette } from 'lucide-react';
 import { useWebsiteSync } from '@/hooks/useWebsiteSync';
+import { Link } from 'react-router-dom';
 
 interface FrontLayoutProps {
   children?: React.ReactNode;
@@ -36,6 +39,7 @@ interface WebsiteSettings {
     youtube: string;
     linkedin: string;
   };
+  googleAnalyticsId: string;
 }
 
 export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
@@ -43,7 +47,7 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
   const [siteDesign, setSiteDesign] = useState<SiteDesign | null>(null);
   const [websiteSettings, setWebsiteSettings] = useState<WebsiteSettings | null>(null);
 
-  // Utiliser le hook de synchronisation
+  // Utiliser le hook de synchronisation amélioré
   useWebsiteSync();
 
   // Fonction pour charger et appliquer les paramètres
@@ -161,6 +165,15 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
       <div className="min-h-screen arc-front-bg">
         <FrontNavigation />
         
+        {/* Google Analytics */}
+        <GoogleAnalytics 
+          measurementId={websiteSettings?.googleAnalyticsId} 
+          enabled={!!websiteSettings?.googleAnalyticsId}
+        />
+        
+        {/* Module RGPD */}
+        <RGPDModule />
+        
         {/* Bouton de personnalisation flottant */}
         <Button
           onClick={() => setShowCustomizer(true)}
@@ -238,6 +251,14 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
             </div>
             <div className="border-t border-opacity-50 mt-12 pt-8 text-center arc-text-secondary" style={{ borderColor: siteDesign?.textColor ?? '#ffffff' }}>
               <p>&copy; 2024 {siteName}. Tous droits réservés.</p>
+              <div className="flex justify-center space-x-4 mt-2">
+                <Link to="/front/legal-notices" className="hover:opacity-80 transition-opacity">
+                  Mentions légales
+                </Link>
+                <Link to="/front/terms-of-service" className="hover:opacity-80 transition-opacity">
+                  CGV
+                </Link>
+              </div>
             </div>
           </div>
         </footer>
