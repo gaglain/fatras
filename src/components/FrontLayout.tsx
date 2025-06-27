@@ -1,29 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
-import { HelmetProvider } from 'react-helmet-async';
+
+import React, { useEffect, useState } from 'react';
 import { FrontNavigation } from './FrontNavigation';
-import { SiteCustomizer } from './SiteCustomizer';
+import { useWebsiteSync } from '@/hooks/useWebsiteSync';
+import { PublicChatWidget } from './PublicChatWidget';
 import { RGPDModule } from './RGPDModule';
 import { GoogleAnalytics } from './GoogleAnalytics';
-import { Button } from '@/components/ui/button';
-import { Palette } from 'lucide-react';
-import { useWebsiteSync } from '@/hooks/useWebsiteSync';
-import { Link } from 'react-router-dom';
 
 interface FrontLayoutProps {
-  children?: React.ReactNode;
-}
-
-interface SiteDesign {
-  logo: string;
-  siteName: string;
-  primaryColor: string;
-  secondaryColor: string;
-  accentColor: string;
-  headerBg: string;
-  footerBg: string;
-  textColor: string;
-  linkColor: string;
+  children: React.ReactNode;
 }
 
 interface WebsiteSettings {
@@ -39,235 +23,221 @@ interface WebsiteSettings {
     youtube: string;
     linkedin: string;
   };
-  googleAnalyticsId: string;
+  googleAnalyticsId?: string;
 }
 
 export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
-  const [showCustomizer, setShowCustomizer] = useState(false);
-  const [siteDesign, setSiteDesign] = useState<SiteDesign | null>(null);
-  const [websiteSettings, setWebsiteSettings] = useState<WebsiteSettings | null>(null);
-
-  // Utiliser le hook de synchronisation amélioré
   useWebsiteSync();
-
-  // Fonction pour charger et appliquer les paramètres
-  const loadAndApplySettings = () => {
-    const savedDesign = localStorage.getItem('websiteDesign');
-    const savedSettings = localStorage.getItem('websiteSettings');
-    
-    if (savedDesign) {
-      try {
-        const design = JSON.parse(savedDesign);
-        setSiteDesign(design);
-        
-        // Appliquer les couleurs CSS immédiatement
-        const root = document.documentElement;
-        root.style.setProperty('--site-primary-color', design.primaryColor);
-        root.style.setProperty('--site-secondary-color', design.secondaryColor);
-        root.style.setProperty('--site-accent-color', design.accentColor);
-        root.style.setProperty('--site-text-color', design.textColor);
-        root.style.setProperty('--site-link-color', design.linkColor);
-        
-        console.log('Design appliqué:', design);
-      } catch (error) {
-        console.error('Erreur lors du chargement du design:', error);
-      }
+  
+  const [settings, setSettings] = useState<WebsiteSettings>({
+    siteName: 'MusiConnect',
+    siteDescription: 'Plateforme de gestion artistique',
+    contactEmail: 'contact@musiconnect.com',
+    contactPhone: '+33 1 23 45 67 89',
+    address: '123 Rue de la Musique, 75001 Paris',
+    socialLinks: {
+      facebook: '',
+      instagram: '',
+      twitter: '',
+      youtube: '',
+      linkedin: ''
     }
-    
-    if (savedSettings) {
-      try {
-        const settings = JSON.parse(savedSettings);
-        setWebsiteSettings(settings);
-        
-        // Mettre à jour le titre de la page
-        document.title = settings.siteName || 'MusiConnect';
-        
-        // Mettre à jour les meta tags
-        let metaDescription = document.querySelector('meta[name="description"]');
-        if (!metaDescription) {
-          metaDescription = document.createElement('meta');
-          metaDescription.setAttribute('name', 'description');
-          document.getElementsByTagName('head')[0].appendChild(metaDescription);
-        }
-        metaDescription.setAttribute('content', settings.siteDescription || '');
-        
-        console.log('Paramètres appliqués:', settings);
-      } catch (error) {
-        console.error('Erreur lors du chargement des paramètres:', error);
-      }
-    }
-  };
+  });
 
   useEffect(() => {
-    // Charger au démarrage
-    loadAndApplySettings();
-
-    // Écouter les mises à jour
-    const handleDesignUpdate = (event: CustomEvent<SiteDesign>) => {
-      console.log('Événement design reçu:', event.detail);
-      setSiteDesign(event.detail);
-      
-      // Appliquer les couleurs immédiatement
-      const root = document.documentElement;
-      root.style.setProperty('--site-primary-color', event.detail.primaryColor);
-      root.style.setProperty('--site-secondary-color', event.detail.secondaryColor);
-      root.style.setProperty('--site-accent-color', event.detail.accentColor);
-      root.style.setProperty('--site-text-color', event.detail.textColor);
-      root.style.setProperty('--site-link-color', event.detail.linkColor);
-    };
-
-    const handleSettingsUpdate = (event: CustomEvent<WebsiteSettings>) => {
-      console.log('Événement paramètres reçu:', event.detail);
-      setWebsiteSettings(event.detail);
-      
-      // Mettre à jour le titre
-      document.title = event.detail.siteName || 'MusiConnect';
-    };
-
-    // Écouter les changements dans localStorage (pour synchroniser entre onglets)
-    const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === 'websiteDesign' || event.key === 'websiteSettings') {
-        console.log('Changement localStorage détecté:', event.key);
-        loadAndApplySettings();
+    const loadSettings = () => {
+      const savedSettings = localStorage.getItem('websiteSettings');
+      if (savedSettings) {
+        try {
+          const parsed = JSON.parse(savedSettings);
+          setSettings(prev => ({ ...prev, ...parsed }));
+        } catch (error) {
+          console.error('Erreur chargement paramètres:', error);
+        }
       }
     };
 
-    window.addEventListener('websiteDesignUpdated', handleDesignUpdate as EventListener);
+    loadSettings();
+
+    const handleSettingsUpdate = (event: CustomEvent) => {
+      console.log('🔄 Mise à jour des paramètres détectée:', event.detail);
+      setSettings(prev => ({ ...prev, ...event.detail }));
+    };
+
     window.addEventListener('websiteSettingsUpdated', handleSettingsUpdate as EventListener);
-    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('storage', loadSettings);
 
     return () => {
-      window.removeEventListener('websiteDesignUpdated', handleDesignUpdate as EventListener);
       window.removeEventListener('websiteSettingsUpdated', handleSettingsUpdate as EventListener);
-      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('storage', loadSettings);
     };
   }, []);
 
-  // Styles dynamiques pour le footer
-  const footerStyle = siteDesign ? {
-    background: siteDesign.footerBg,
-    color: siteDesign.textColor
-  } : {};
-
-  const siteName = websiteSettings?.siteName ?? siteDesign?.siteName ?? 'MusiConnect';
-  const contactEmail = websiteSettings?.contactEmail ?? 'contact@musiconnect.com';
-  const contactPhone = websiteSettings?.contactPhone ?? '+33 1 23 45 67 89';
-  const socialLinks = websiteSettings?.socialLinks ?? {
-    facebook: '',
-    instagram: '',
-    twitter: '',
-    youtube: '',
-    linkedin: ''
-  };
-
   return (
-    <HelmetProvider>
-      <div className="min-h-screen arc-front-bg">
-        <FrontNavigation />
-        
-        {/* Google Analytics */}
-        <GoogleAnalytics 
-          measurementId={websiteSettings?.googleAnalyticsId} 
-          enabled={!!websiteSettings?.googleAnalyticsId}
-        />
-        
-        {/* Module RGPD */}
-        <RGPDModule />
-        
-        {/* Bouton de personnalisation flottant */}
-        <Button
-          onClick={() => setShowCustomizer(true)}
-          className="fixed bottom-6 right-6 z-40 rounded-full w-12 h-12 p-0 arc-button shadow-lg"
-          title="Personnaliser les couleurs"
-        >
-          <Palette className="h-5 w-5" />
-        </Button>
-
-        <main className="flex-1 pt-20">
-          {children || <Outlet />}
-        </main>
-        
-        <footer 
-          className="arc-footer py-12 mt-16 relative overflow-hidden"
-          style={footerStyle}
-        >
-          <div className="absolute inset-0 opacity-30">
-            <div 
-              className="absolute inset-0" 
-              style={{
-                backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(147, 51, 234, 0.1) 1px, transparent 0)',
-                backgroundSize: '30px 30px'
-              }}
-            ></div>
-          </div>
-          
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="space-y-4">
-                <h3 className="text-xl font-bold arc-text-primary">
-                  {siteName}
-                </h3>
-                <p className="arc-text-secondary leading-relaxed">
-                  {websiteSettings?.siteDescription ?? 'Votre plateforme de gestion musicale complète.'}
+    <div className="min-h-screen flex flex-col" data-theme-element="page">
+      {/* Google Analytics */}
+      <GoogleAnalytics measurementId={settings.googleAnalyticsId} />
+      
+      {/* Navigation */}
+      <FrontNavigation />
+      
+      {/* Main Content */}
+      <main className="flex-1" data-theme-element="main">
+        {children}
+      </main>
+      
+      {/* Footer */}
+      <footer 
+        className="front-footer py-8 px-4 mt-auto"
+        data-theme-element="footer"
+        style={{
+          backgroundColor: 'var(--site-footer-bg, #1f2937)',
+          color: 'var(--site-text-color, #ffffff)'
+        }}
+      >
+        <div className="container mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Contact Info */}
+            <div>
+              <h3 
+                className="font-semibold mb-4 text-lg"
+                style={{ color: 'var(--site-text-color, #ffffff)' }}
+              >
+                Contact
+              </h3>
+              <div className="space-y-2 text-sm">
+                <p style={{ color: 'var(--site-text-color, #e5e7eb)' }}>
+                  {settings.contactEmail}
+                </p>
+                <p style={{ color: 'var(--site-text-color, #e5e7eb)' }}>
+                  {settings.contactPhone}
+                </p>
+                <p style={{ color: 'var(--site-text-color, #e5e7eb)' }}>
+                  {settings.address}
                 </p>
               </div>
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold arc-text-primary">Liens rapides</h3>
-                <ul className="space-y-3 arc-text-secondary">
-                  <li><a href="/front" className="hover:opacity-80 transition-opacity duration-300">Accueil</a></li>
-                  <li><a href="/front/artists" className="hover:opacity-80 transition-opacity duration-300">Artistes</a></li>
-                  <li><a href="/front/events" className="hover:opacity-80 transition-opacity duration-300">Événements</a></li>
-                  <li><a href="/front/contact" className="hover:opacity-80 transition-opacity duration-300">Contact</a></li>
-                </ul>
-              </div>
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold arc-text-primary">Contact</h3>
-                <div className="arc-text-secondary space-y-2">
-                  <p>Email: {contactEmail}</p>
-                  <p>Téléphone: {contactPhone}</p>
-                  {websiteSettings?.address && <p>Adresse: {websiteSettings.address}</p>}
-                </div>
-                
-                {/* Liens sociaux */}
-                {Object.entries(socialLinks).some(([_, url]) => url) && (
-                  <div className="flex space-x-4 mt-4">
-                    {Object.entries(socialLinks).map(([platform, url]) => 
-                      url && (
-                        <a
-                          key={platform}
-                          href={url as string}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="hover:opacity-80 transition-opacity duration-300"
-                          title={platform.charAt(0).toUpperCase() + platform.slice(1)}
-                        >
-                          {platform.charAt(0).toUpperCase() + platform.slice(1)}
-                        </a>
-                      )
-                    )}
-                  </div>
+            </div>
+
+            {/* Social Links */}
+            <div>
+              <h3 
+                className="font-semibold mb-4 text-lg"
+                style={{ color: 'var(--site-text-color, #ffffff)' }}
+              >
+                Suivez-nous
+              </h3>
+              <div className="flex space-x-4">
+                {settings.socialLinks.facebook && (
+                  <a 
+                    href={settings.socialLinks.facebook}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="front-link hover:opacity-80"
+                    style={{ color: 'var(--site-link-color, #3b82f6)' }}
+                  >
+                    Facebook
+                  </a>
+                )}
+                {settings.socialLinks.instagram && (
+                  <a 
+                    href={settings.socialLinks.instagram}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="front-link hover:opacity-80"
+                    style={{ color: 'var(--site-link-color, #3b82f6)' }}
+                  >
+                    Instagram
+                  </a>
+                )}
+                {settings.socialLinks.twitter && (
+                  <a 
+                    href={settings.socialLinks.twitter}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="front-link hover:opacity-80"
+                    style={{ color: 'var(--site-link-color, #3b82f6)' }}
+                  >
+                    Twitter
+                  </a>
+                )}
+                {settings.socialLinks.youtube && (
+                  <a 
+                    href={settings.socialLinks.youtube}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="front-link hover:opacity-80"
+                    style={{ color: 'var(--site-link-color, #3b82f6)' }}
+                  >
+                    YouTube
+                  </a>
+                )}
+                {settings.socialLinks.linkedin && (
+                  <a 
+                    href={settings.socialLinks.linkedin}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="front-link hover:opacity-80"
+                    style={{ color: 'var(--site-link-color, #3b82f6)' }}
+                  >
+                    LinkedIn
+                  </a>
                 )}
               </div>
             </div>
-            <div className="border-t border-opacity-50 mt-12 pt-8 text-center arc-text-secondary" style={{ borderColor: siteDesign?.textColor ?? '#ffffff' }}>
-              <p>&copy; 2024 {siteName}. Tous droits réservés.</p>
-              <div className="flex justify-center space-x-4 mt-2">
-                <Link to="/front/legal-notices" className="hover:opacity-80 transition-opacity">
-                  Mentions légales
-                </Link>
-                <Link to="/front/terms-of-service" className="hover:opacity-80 transition-opacity">
-                  CGV
-                </Link>
+
+            {/* Legal Links */}
+            <div>
+              <h3 
+                className="font-semibold mb-4 text-lg"
+                style={{ color: 'var(--site-text-color, #ffffff)' }}
+              >
+                Informations légales
+              </h3>
+              <div className="space-y-2 text-sm">
+                <div>
+                  <a 
+                    href="/mentions-legales"
+                    className="front-link hover:opacity-80"
+                    style={{ color: 'var(--site-link-color, #3b82f6)' }}
+                  >
+                    Mentions légales
+                  </a>
+                </div>
+                <div>
+                  <a 
+                    href="/cgv"
+                    className="front-link hover:opacity-80"
+                    style={{ color: 'var(--site-link-color, #3b82f6)' }}
+                  >
+                    Conditions générales de vente
+                  </a>
+                </div>
+                <div>
+                  <a 
+                    href="/politique-confidentialite"
+                    className="front-link hover:opacity-80"
+                    style={{ color: 'var(--site-link-color, #3b82f6)' }}
+                  >
+                    Politique de confidentialité
+                  </a>
+                </div>
               </div>
             </div>
           </div>
-        </footer>
+          
+          <div className="border-t border-gray-600 mt-8 pt-8 text-center text-sm">
+            <p style={{ color: 'var(--site-text-color, #9ca3af)' }}>
+              © 2024 {settings.siteName}. Tous droits réservés.
+            </p>
+          </div>
+        </div>
+      </footer>
 
-        <SiteCustomizer 
-          isOpen={showCustomizer} 
-          onClose={() => setShowCustomizer(false)} 
-        />
-      </div>
-    </HelmetProvider>
+      {/* Chat Widget */}
+      <PublicChatWidget />
+      
+      {/* RGPD Module */}
+      <RGPDModule />
+    </div>
   );
 };

@@ -1,114 +1,235 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Calendar, CalendarDays, Clock, Plus, Edit2, Trash2, Bell, Instagram, Facebook, Twitter, Mail, Linkedin, Video, Link, Image, MessageSquare, User, CheckCircle, XCircle } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Calendar, Clock, Edit, Trash2, Plus, Image, Link, MessageSquare, CheckCircle, XCircle, Users, FileText } from 'lucide-react';
 import { toast } from 'sonner';
-
-interface PublicationComment {
-  id: string;
-  author: string;
-  content: string;
-  timestamp: string;
-  role: 'admin' | 'manager' | 'artist' | 'super_admin';
-}
+import { supabase } from '@/integrations/supabase/client';
+import { useUser } from '@/contexts/UserContext';
 
 interface Publication {
   id: string;
   title: string;
   content: string;
-  platforms: ('instagram' | 'facebook' | 'twitter' | 'newsletter' | 'linkedin' | 'tiktok' | 'youtube')[];
-  scheduledDate: string;
-  scheduledTime: string;
-  status: 'draft' | 'scheduled' | 'published' | 'pending_approval' | 'approved' | 'rejected';
-  notificationEnabled: boolean;
-  tags: string[];
-  assignedTo?: string;
-  assignedRole?: 'admin' | 'manager' | 'artist' | 'super_admin';
-  mediaUrl?: string;
-  mediaType?: 'image' | 'video';
-  linkUrl?: string;
+  scheduled_date: string;
+  platform: string;
+  status: 'draft' | 'scheduled' | 'published' | 'pending_approval';
+  assigned_to?: string;
+  assigned_username?: string;
+  media_url?: string;
+  media_type?: 'image' | 'video';
+  external_link?: string;
   comments: PublicationComment[];
-  approvedBy?: string;
-  rejectedBy?: string;
-  approvalDate?: string;
+  created_by: string;
+  created_at: string;
 }
 
-export const PublicationCalendar: React.FC = () => {
-  const [publications, setPublications] = useState<Publication[]>([
-    {
-      id: '1',
-      title: 'Nouveau single de l\'artiste',
-      content: 'Découvrez le nouveau single de notre artiste ! 🎵 #nouveauté #musique',
-      platforms: ['instagram', 'facebook'],
-      scheduledDate: '2024-06-15',
-      scheduledTime: '18:00',
-      status: 'pending_approval',
-      notificationEnabled: true,
-      tags: ['musique', 'nouveauté'],
-      assignedTo: 'Manager Marketing',
-      assignedRole: 'manager',
-      comments: [],
-      mediaUrl: '',
-      linkUrl: ''
-    }
-  ]);
+interface PublicationComment {
+  id: string;
+  user_id: string;
+  username: string;
+  comment: string;
+  created_at: string;
+}
 
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+const platforms = [
+  { value: 'facebook', label: 'Facebook' },
+  { value: 'instagram', label: 'Instagram' },
+  { value: 'twitter', label: 'Twitter' },
+  { value: 'linkedin', label: 'LinkedIn' },
+  { value: 'youtube', label: 'YouTube' },
+  { value: 'tiktok', label: 'TikTok' }
+];
+
+export const PublicationCalendar: React.FC = () => {
+  const { currentUser, users } = useUser();
+  const [publications, setPublications] = useState<Publication[]>([]);
+  const [showForm, setShowForm] = useState(false);
   const [editingPublication, setEditingPublication] = useState<Publication | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string>('');
+  const [userProfiles, setUserProfiles] = useState<any[]>([]);
+  const [showComments, setShowComments] = useState<string | null>(null);
   const [newComment, setNewComment] = useState('');
-  const [newPublication, setNewPublication] = useState<Partial<Publication>>({
+
+  const [formData, setFormData] = useState({
     title: '',
     content: '',
-    platforms: [],
-    scheduledDate: '',
-    scheduledTime: '',
-    status: 'draft',
-    notificationEnabled: true,
-    tags: [],
-    comments: [],
-    assignedRole: 'manager'
+    scheduled_date: '',
+    platform: '',
+    assigned_to: '',
+    media_url: '',
+    media_type: 'image' as 'image' | 'video',
+    external_link: ''
   });
 
-  const platformOptions = [
-    { value: 'instagram', label: 'Instagram', icon: Instagram, color: 'bg-pink-500' },
-    { value: 'facebook', label: 'Facebook', icon: Facebook, color: 'bg-blue-600' },
-    { value: 'twitter', label: 'Twitter', icon: Twitter, color: 'bg-blue-400' },
-    { value: 'linkedin', label: 'LinkedIn', icon: Linkedin, color: 'bg-blue-700' },
-    { value: 'tiktok', label: 'TikTok', icon: Video, color: 'bg-black' },
-    { value: 'youtube', label: 'YouTube', icon: Video, color: 'bg-red-600' },
-    { value: 'newsletter', label: 'Newsletter', icon: Mail, color: 'bg-green-600' }
-  ];
+  useEffect(() => {
+    loadPublications();
+    loadUserProfiles();
+  }, []);
 
-  const userRoles = [
-    { value: 'super_admin', label: 'Super Admin' },
-    { value: 'admin', label: 'Admin' },
-    { value: 'manager', label: 'Manager' },
-    { value: 'artist', label: 'Artiste' }
-  ];
+  const loadUserProfiles = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('user_id, username, first_name, last_name, role')
+        .order('username');
 
-  const getPlatformInfo = (platform: string) => {
-    return platformOptions.find(p => p.value === platform) || 
-           { icon: Calendar, color: 'bg-gray-500' };
+      if (error) throw error;
+      setUserProfiles(data || []);
+    } catch (error) {
+      console.error('Erreur lors du chargement des profils:', error);
+    }
+  };
+
+  const loadPublications = () => {
+    const saved = localStorage.getItem('publications');
+    if (saved) {
+      try {
+        setPublications(JSON.parse(saved));
+      } catch (error) {
+        console.error('Erreur chargement publications:', error);
+      }
+    }
+  };
+
+  const savePublications = (newPublications: Publication[]) => {
+    localStorage.setItem('publications', JSON.stringify(newPublications));
+    setPublications(newPublications);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentUser) return;
+
+    const assignedProfile = userProfiles.find(p => p.user_id === formData.assigned_to);
+
+    const publication: Publication = {
+      id: editingPublication?.id || `pub-${Date.now()}`,
+      ...formData,
+      assigned_username: assignedProfile?.username || '',
+      status: editingPublication?.status || 'draft',
+      comments: editingPublication?.comments || [],
+      created_by: currentUser.id,
+      created_at: editingPublication?.created_at || new Date().toISOString()
+    };
+
+    const updatedPublications = editingPublication
+      ? publications.map(p => p.id === editingPublication.id ? publication : p)
+      : [...publications, publication];
+
+    savePublications(updatedPublications);
+
+    // Envoyer une notification à l'utilisateur assigné
+    if (formData.assigned_to && !editingPublication) {
+      await sendNotificationToUser(formData.assigned_to, {
+        type: 'publication_assigned',
+        title: 'Nouvelle publication assignée',
+        message: `Une publication "${formData.title}" vous a été assignée pour le ${new Date(formData.scheduled_date).toLocaleDateString('fr-FR')}`
+      });
+    }
+
+    resetForm();
+    toast.success(editingPublication ? 'Publication modifiée' : 'Publication créée');
+  };
+
+  const sendNotificationToUser = async (userId: string, notification: any) => {
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .insert([{
+          user_id: userId,
+          ...notification,
+          data: { publication_id: formData.title }
+        }]);
+
+      if (error) throw error;
+      console.log('Notification envoyée à:', userId);
+    } catch (error) {
+      console.error('Erreur envoi notification:', error);
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      title: '',
+      content: '',
+      scheduled_date: '',
+      platform: '',
+      assigned_to: '',
+      media_url: '',
+      media_type: 'image',
+      external_link: ''
+    });
+    setEditingPublication(null);
+    setShowForm(false);
+  };
+
+  const handleEdit = (publication: Publication) => {
+    setFormData({
+      title: publication.title,
+      content: publication.content,
+      scheduled_date: publication.scheduled_date,
+      platform: publication.platform,
+      assigned_to: publication.assigned_to || '',
+      media_url: publication.media_url || '',
+      media_type: publication.media_type || 'image',
+      external_link: publication.external_link || ''
+    });
+    setEditingPublication(publication);
+    setShowForm(true);
+  };
+
+  const handleDelete = (id: string) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette publication ?')) {
+      const updated = publications.filter(p => p.id !== id);
+      savePublications(updated);
+      toast.success('Publication supprimée');
+    }
+  };
+
+  const changeStatus = (id: string, newStatus: Publication['status']) => {
+    const updated = publications.map(p => 
+      p.id === id ? { ...p, status: newStatus } : p
+    );
+    savePublications(updated);
+    toast.success('Statut mis à jour');
+  };
+
+  const addComment = (publicationId: string) => {
+    if (!newComment.trim() || !currentUser) return;
+
+    const comment: PublicationComment = {
+      id: `comment-${Date.now()}`,
+      user_id: currentUser.id,
+      username: currentUser.name || 'Utilisateur',
+      comment: newComment.trim(),
+      created_at: new Date().toISOString()
+    };
+
+    const updated = publications.map(p => 
+      p.id === publicationId 
+        ? { ...p, comments: [...p.comments, comment] }
+        : p
+    );
+
+    savePublications(updated);
+    setNewComment('');
+    toast.success('Commentaire ajouté');
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'draft': return 'bg-gray-500';
-      case 'scheduled': return 'bg-orange-500';
-      case 'published': return 'bg-green-500';
-      case 'pending_approval': return 'bg-yellow-500';
-      case 'approved': return 'bg-blue-500';
-      case 'rejected': return 'bg-red-500';
-      default: return 'bg-gray-500';
+      case 'draft': return 'bg-gray-100 text-gray-800';
+      case 'scheduled': return 'bg-blue-100 text-blue-800';
+      case 'published': return 'bg-green-100 text-green-800';
+      case 'pending_approval': return 'bg-yellow-100 text-yellow-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -118,513 +239,267 @@ export const PublicationCalendar: React.FC = () => {
       case 'scheduled': return 'Programmé';
       case 'published': return 'Publié';
       case 'pending_approval': return 'En attente';
-      case 'approved': return 'Approuvé';
-      case 'rejected': return 'Rejeté';
       default: return status;
     }
   };
 
-  const togglePlatform = (platform: string, isEdit = false) => {
-    const target = isEdit ? editingPublication : newPublication;
-    const setter = isEdit ? setEditingPublication : setNewPublication;
-    
-    const currentPlatforms = target?.platforms || [];
-    if (currentPlatforms.includes(platform as any)) {
-      setter(prev => ({
-        ...prev,
-        platforms: currentPlatforms.filter(p => p !== platform)
-      }));
-    } else {
-      setter(prev => ({
-        ...prev,
-        platforms: [...currentPlatforms, platform as any]
-      }));
-    }
-  };
-
-  const handleMediaUpload = (event: React.ChangeEvent<HTMLInputElement>, isEdit = false) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        const mediaType = file.type.startsWith('image/') ? 'image' : 'video';
-        
-        if (isEdit && editingPublication) {
-          setEditingPublication(prev => ({
-            ...prev!,
-            mediaUrl: result,
-            mediaType
-          }));
-        } else {
-          setNewPublication(prev => ({
-            ...prev,
-            mediaUrl: result,
-            mediaType
-          }));
-        }
-        toast.success('Média ajouté avec succès');
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const createPublication = () => {
-    if (!newPublication.title || !newPublication.content || !newPublication.platforms?.length) {
-      toast.error('Veuillez remplir tous les champs obligatoires');
-      return;
-    }
-
-    const publication: Publication = {
-      id: Date.now().toString(),
-      title: newPublication.title!,
-      content: newPublication.content!,
-      platforms: newPublication.platforms!,
-      scheduledDate: newPublication.scheduledDate || '',
-      scheduledTime: newPublication.scheduledTime || '',
-      status: 'draft',
-      notificationEnabled: newPublication.notificationEnabled || false,
-      tags: newPublication.tags || [],
-      assignedTo: newPublication.assignedTo || '',
-      assignedRole: newPublication.assignedRole || 'manager',
-      mediaUrl: newPublication.mediaUrl || '',
-      mediaType: newPublication.mediaType,
-      linkUrl: newPublication.linkUrl || '',
-      comments: []
-    };
-
-    setPublications(prev => [...prev, publication]);
-    setNewPublication({
-      title: '',
-      content: '',
-      platforms: [],
-      scheduledDate: '',
-      scheduledTime: '',
-      status: 'draft',
-      notificationEnabled: true,
-      tags: [],
-      comments: [],
-      assignedRole: 'manager'
-    });
-    setIsCreateDialogOpen(false);
-    toast.success('Publication créée avec succès');
-  };
-
-  const updatePublication = () => {
-    if (!editingPublication) return;
-
-    setPublications(prev => prev.map(p => 
-      p.id === editingPublication.id ? editingPublication : p
-    ));
-    setIsEditDialogOpen(false);
-    setEditingPublication(null);
-    toast.success('Publication mise à jour');
-  };
-
-  const deletePublication = (id: string) => {
-    setPublications(prev => prev.filter(p => p.id !== id));
-    toast.success('Publication supprimée');
-  };
-
-  const approvePublication = (id: string) => {
-    setPublications(prev => prev.map(p => 
-      p.id === id ? { 
-        ...p, 
-        status: 'approved' as const,
-        approvedBy: 'Admin',
-        approvalDate: new Date().toISOString()
-      } : p
-    ));
-    toast.success('Publication approuvée');
-  };
-
-  const rejectPublication = (id: string) => {
-    setPublications(prev => prev.map(p => 
-      p.id === id ? { 
-        ...p, 
-        status: 'rejected' as const,
-        rejectedBy: 'Admin'
-      } : p
-    ));
-    toast.success('Publication rejetée');
-  };
-
-  const addComment = (publicationId: string) => {
-    if (!newComment.trim()) return;
-
-    const comment: PublicationComment = {
-      id: Date.now().toString(),
-      author: 'Utilisateur Actuel',
-      content: newComment,
-      timestamp: new Date().toISOString(),
-      role: 'admin'
-    };
-
-    setPublications(prev => prev.map(p => 
-      p.id === publicationId ? {
-        ...p,
-        comments: [...p.comments, comment]
-      } : p
-    ));
-
-    setNewComment('');
-    toast.success('Commentaire ajouté');
-  };
-
-  const openEditDialog = (publication: Publication) => {
-    setEditingPublication({ ...publication });
-    setIsEditDialogOpen(true);
-  };
-
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Calendrier de publication</h1>
-          <p className="text-muted-foreground mt-2">
-            Planifiez et gérez vos publications sur les réseaux sociaux
-          </p>
+          <h1 className="text-3xl font-bold text-foreground">Calendrier de Publication</h1>
+          <p className="text-muted-foreground mt-2">Planifiez et gérez vos publications sur les réseaux sociaux</p>
         </div>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Nouvelle publication
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Créer une nouvelle publication</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="title">Titre *</Label>
-                <Input
-                  id="title"
-                  value={newPublication.title || ''}
-                  onChange={(e) => setNewPublication(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="Titre de la publication"
-                />
+        <Button onClick={() => setShowForm(true)} className="bg-purple-600 hover:bg-purple-700">
+          <Plus className="h-4 w-4 mr-2" />
+          Nouvelle publication
+        </Button>
+      </div>
+
+      {/* Publications Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {publications.map((publication) => (
+          <Card key={publication.id} className="relative">
+            <CardHeader className="pb-3">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <CardTitle className="text-lg">{publication.title}</CardTitle>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {platforms.find(p => p.value === publication.platform)?.label}
+                  </p>
+                </div>
+                <Badge className={getStatusColor(publication.status)}>
+                  {getStatusLabel(publication.status)}
+                </Badge>
               </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm line-clamp-3">{publication.content}</p>
               
-              <div>
-                <Label htmlFor="content">Contenu *</Label>
-                <Textarea
-                  id="content"
-                  value={newPublication.content || ''}
-                  onChange={(e) => setNewPublication(prev => ({ ...prev, content: e.target.value }))}
-                  placeholder="Contenu de la publication..."
-                  rows={4}
-                />
-              </div>
-
-              <div>
-                <Label>Plateformes *</Label>
-                <div className="grid grid-cols-2 gap-2 mt-2">
-                  {platformOptions.map((platform) => (
-                    <div key={platform.value} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={platform.value}
-                        checked={(newPublication.platforms || []).includes(platform.value as any)}
-                        onCheckedChange={() => togglePlatform(platform.value)}
-                      />
-                      <Label htmlFor={platform.value} className="flex items-center space-x-2 cursor-pointer">
-                        <div className={`p-1 rounded text-white ${platform.color}`}>
-                          <platform.icon className="h-3 w-3" />
-                        </div>
-                        <span className="text-sm">{platform.label}</span>
-                      </Label>
-                    </div>
-                  ))}
+              <div className="space-y-2">
+                <div className="flex items-center text-sm text-muted-foreground">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  {new Date(publication.scheduled_date).toLocaleDateString('fr-FR')} à{' '}
+                  {new Date(publication.scheduled_date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                 </div>
-              </div>
+                
+                {publication.assigned_username && (
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <Users className="h-4 w-4 mr-2" />
+                    Assigné à @{publication.assigned_username}
+                  </div>
+                )}
 
-              <div>
-                <Label htmlFor="status">Statut</Label>
-                <Select 
-                  value={newPublication.status} 
-                  onValueChange={(value) => setNewPublication(prev => ({ ...prev, status: value as Publication['status'] }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choisir un statut" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="draft">Brouillon</SelectItem>
-                    <SelectItem value="scheduled">Programmé</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                {publication.media_url && (
+                  <div className="flex items-center text-sm text-blue-600">
+                    <Image className="h-4 w-4 mr-2" />
+                    Média joint
+                  </div>
+                )}
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="date">Date de publication</Label>
-                  <Input
-                    id="date"
-                    type="date"
-                    value={newPublication.scheduledDate || ''}
-                    onChange={(e) => setNewPublication(prev => ({ ...prev, scheduledDate: e.target.value }))}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="time">Heure de publication</Label>
-                  <Input
-                    id="time"
-                    type="time"
-                    value={newPublication.scheduledTime || ''}
-                    onChange={(e) => setNewPublication(prev => ({ ...prev, scheduledTime: e.target.value }))}
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <Label htmlFor="notifications">Activer les notifications de rappel</Label>
-                <Switch
-                  id="notifications"
-                  checked={newPublication.notificationEnabled || false}
-                  onCheckedChange={(checked) => setNewPublication(prev => ({ ...prev, notificationEnabled: checked }))}
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="assignedTo">Assigné à</Label>
-                <Input
-                  id="assignedTo"
-                  value={newPublication.assignedTo || ''}
-                  onChange={(e) => setNewPublication(prev => ({ ...prev, assignedTo: e.target.value }))}
-                  placeholder="Nom de la personne"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="assignedRole">Rôle</Label>
-                <Select 
-                  value={newPublication.assignedRole} 
-                  onValueChange={(value) => setNewPublication(prev => ({ ...prev, assignedRole: value as any }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choisir un rôle" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {userRoles.map(role => (
-                      <SelectItem key={role.value} value={role.value}>
-                        {role.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="media">Média (Image/Vidéo)</Label>
-                <Input
-                  id="media"
-                  type="file"
-                  accept="image/*,video/*"
-                  onChange={(e) => handleMediaUpload(e)}
-                />
-                {newPublication.mediaUrl && (
-                  <div className="mt-2">
-                    {newPublication.mediaType === 'image' ? (
-                      <img src={newPublication.mediaUrl} alt="Media" className="h-20 w-20 object-cover rounded" />
-                    ) : (
-                      <video src={newPublication.mediaUrl} className="h-20 w-20 object-cover rounded" controls />
-                    )}
+                {publication.external_link && (
+                  <div className="flex items-center text-sm text-blue-600">
+                    <Link className="h-4 w-4 mr-2" />
+                    Lien externe
                   </div>
                 )}
               </div>
 
-              <div>
-                <Label htmlFor="linkUrl">Lien (optionnel)</Label>
-                <Input
-                  id="linkUrl"
-                  type="url"
-                  value={newPublication.linkUrl || ''}
-                  onChange={(e) => setNewPublication(prev => ({ ...prev, linkUrl: e.target.value }))}
-                  placeholder="https://exemple.com"
-                />
-              </div>
-
-              <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                  Annuler
-                </Button>
-                <Button onClick={createPublication}>
-                  Créer la publication
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      {/* Liste des publications avec nouvelles fonctionnalités */}
-      <div className="grid gap-4">
-        {publications.map(publication => (
-          <Card key={publication.id}>
-            <CardContent className="p-4">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2 mb-2 flex-wrap">
-                    <div className="flex space-x-1">
-                      {publication.platforms.map(platform => {
-                        const platformInfo = getPlatformInfo(platform);
-                        return (
-                          <div key={platform} className={`p-1 rounded text-white ${platformInfo.color}`}>
-                            <platformInfo.icon className="h-4 w-4" />
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <h3 className="font-semibold">{publication.title}</h3>
-                    <Badge className={`text-white ${getStatusColor(publication.status)}`}>
-                      {getStatusLabel(publication.status)}
-                    </Badge>
-                    {publication.notificationEnabled && <Bell className="h-4 w-4 text-orange-500" />}
-                    {publication.mediaUrl && <Image className="h-4 w-4 text-blue-500" />}
-                    {publication.linkUrl && <Link className="h-4 w-4 text-green-500" />}
-                  </div>
-                  
-                  <p className="text-muted-foreground mb-2 line-clamp-2">{publication.content}</p>
-                  
-                  {publication.assignedTo && (
-                    <div className="flex items-center text-sm text-muted-foreground mb-2">
-                      <User className="h-4 w-4 mr-1" />
-                      Assigné à: {publication.assignedTo} ({publication.assignedRole})
-                    </div>
-                  )}
-                  
-                  {publication.scheduledDate && (
-                    <div className="flex items-center text-sm text-muted-foreground space-x-4">
-                      <div className="flex items-center">
-                        <CalendarDays className="h-4 w-4 mr-1" />
-                        {new Date(publication.scheduledDate).toLocaleDateString('fr-FR')}
-                      </div>
-                      {publication.scheduledTime && (
-                        <div className="flex items-center">
-                          <Clock className="h-4 w-4 mr-1" />
-                          {publication.scheduledTime}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Commentaires */}
-                  {publication.comments.length > 0 && (
-                    <div className="mt-3 p-2 bg-gray-50 rounded">
-                      <div className="flex items-center mb-2">
-                        <MessageSquare className="h-4 w-4 mr-1" />
-                        <span className="text-sm font-medium">{publication.comments.length} commentaire(s)</span>
-                      </div>
-                      {publication.comments.slice(-2).map(comment => (
-                        <div key={comment.id} className="text-xs text-gray-600 mb-1">
-                          <strong>{comment.author}:</strong> {comment.content}
-                        </div>
-                      ))}
-                    </div>
-                  )}
+              <div className="flex items-center justify-between pt-2 border-t">
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowComments(showComments === publication.id ? null : publication.id)}
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    {publication.comments.length}
+                  </Button>
                 </div>
-
-                <div className="flex items-center space-x-2 ml-4">
+                
+                <div className="flex items-center space-x-1">
                   {publication.status === 'pending_approval' && (
                     <>
-                      <Button variant="outline" size="sm" onClick={() => approvePublication(publication.id)}>
-                        <CheckCircle className="h-4 w-4 mr-1" />
-                        Approuver
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => changeStatus(publication.id, 'scheduled')}
+                        className="text-green-600 hover:text-green-700"
+                      >
+                        <CheckCircle className="h-4 w-4" />
                       </Button>
-                      <Button variant="outline" size="sm" onClick={() => rejectPublication(publication.id)}>
-                        <XCircle className="h-4 w-4 mr-1" />
-                        Rejeter
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => changeStatus(publication.id, 'draft')}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <XCircle className="h-4 w-4" />
                       </Button>
                     </>
                   )}
-                  <Button variant="ghost" size="sm" onClick={() => openEditDialog(publication)}>
-                    <Edit2 className="h-4 w-4" />
+                  
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleEdit(publication)}
+                  >
+                    <Edit className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => deletePublication(publication.id)}>
+                  
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDelete(publication.id)}
+                    className="text-red-600 hover:text-red-700"
+                  >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
+
+              {/* Comments Section */}
+              {showComments === publication.id && (
+                <div className="space-y-3 pt-3 border-t">
+                  <div className="space-y-2 max-h-32 overflow-y-auto">
+                    {publication.comments.map((comment) => (
+                      <div key={comment.id} className="text-sm">
+                        <div className="font-medium">@{comment.username}</div>
+                        <div className="text-muted-foreground">{comment.comment}</div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="flex space-x-2">
+                    <Input
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      placeholder="Ajouter un commentaire..."
+                      className="flex-1"
+                      onKeyPress={(e) => e.key === 'Enter' && addComment(publication.id)}
+                    />
+                    <Button
+                      size="sm"
+                      onClick={() => addComment(publication.id)}
+                      disabled={!newComment.trim()}
+                    >
+                      <MessageSquare className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Dialog d'édition */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      {/* Publication Form Dialog */}
+      <Dialog open={showForm} onOpenChange={setShowForm}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Modifier la publication</DialogTitle>
+            <DialogTitle>
+              {editingPublication ? 'Modifier la publication' : 'Nouvelle publication'}
+            </DialogTitle>
           </DialogHeader>
-          {editingPublication && (
-            <div className="space-y-4">
+          
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="title">Titre *</Label>
+              <Input
+                id="title"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="content">Contenu *</Label>
+              <Textarea
+                id="content"
+                value={formData.content}
+                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                rows={4}
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="edit-title">Titre</Label>
+                <Label htmlFor="scheduled_date">Date et heure *</Label>
                 <Input
-                  id="edit-title"
-                  value={editingPublication.title}
-                  onChange={(e) => setEditingPublication(prev => ({ ...prev!, title: e.target.value }))}
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="edit-content">Contenu</Label>
-                <Textarea
-                  id="edit-content"
-                  value={editingPublication.content}
-                  onChange={(e) => setEditingPublication(prev => ({ ...prev!, content: e.target.value }))}
-                  rows={4}
+                  id="scheduled_date"
+                  type="datetime-local"
+                  value={formData.scheduled_date}
+                  onChange={(e) => setFormData({ ...formData, scheduled_date: e.target.value })}
+                  required
                 />
               </div>
 
               <div>
-                <Label>Plateformes</Label>
-                <div className="grid grid-cols-2 gap-2 mt-2">
-                  {platformOptions.map((platform) => (
-                    <div key={platform.value} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`edit-${platform.value}`}
-                        checked={editingPublication.platforms.includes(platform.value as any)}
-                        onCheckedChange={() => togglePlatform(platform.value, true)}
-                      />
-                      <Label htmlFor={`edit-${platform.value}`} className="flex items-center space-x-2 cursor-pointer">
-                        <div className={`p-1 rounded text-white ${platform.color}`}>
-                          <platform.icon className="h-3 w-3" />
-                        </div>
-                        <span className="text-sm">{platform.label}</span>
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Ajouter un commentaire */}
-              <div>
-                <Label htmlFor="new-comment">Ajouter un commentaire</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="new-comment"
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    placeholder="Votre commentaire..."
-                  />
-                  <Button onClick={() => addComment(editingPublication.id)}>
-                    Ajouter
-                  </Button>
-                </div>
-              </div>
-
-              <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-                  Annuler
-                </Button>
-                <Button onClick={updatePublication}>
-                  Sauvegarder
-                </Button>
+                <Label htmlFor="platform">Plateforme *</Label>
+                <Select value={formData.platform} onValueChange={(value) => setFormData({ ...formData, platform: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choisir une plateforme" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {platforms.map((platform) => (
+                      <SelectItem key={platform.value} value={platform.value}>
+                        {platform.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
-          )}
+
+            <div>
+              <Label htmlFor="assigned_to">Assigner à (pseudonyme)</Label>
+              <Select value={formData.assigned_to} onValueChange={(value) => setFormData({ ...formData, assigned_to: value })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choisir un utilisateur" />
+                </SelectTrigger>
+                <SelectContent>
+                  {userProfiles.map((profile) => (
+                    <SelectItem key={profile.user_id} value={profile.user_id}>
+                      @{profile.username} ({profile.first_name} {profile.last_name})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="media_url">URL du média (image/vidéo)</Label>
+              <Input
+                id="media_url"
+                type="url"
+                value={formData.media_url}
+                onChange={(e) => setFormData({ ...formData, media_url: e.target.value })}
+                placeholder="https://..."
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="external_link">Lien externe</Label>
+              <Input
+                id="external_link"
+                type="url"
+                value={formData.external_link}
+                onChange={(e) => setFormData({ ...formData, external_link: e.target.value })}
+                placeholder="https://..."
+              />
+            </div>
+
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button type="button" variant="outline" onClick={resetForm}>
+                Annuler
+              </Button>
+              <Button type="submit">
+                {editingPublication ? 'Modifier' : 'Créer'}
+              </Button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
     </div>

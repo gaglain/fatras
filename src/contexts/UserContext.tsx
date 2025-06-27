@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -98,7 +97,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           email: profile.email || authUser?.email || '',
           role: profile.role as UserRole,
           isActive: true,
-          username: authUser?.email?.split('@')[0] || '',
+          username: profile.username || authUser?.email?.split('@')[0] || '', // Utiliser le nouveau pseudonyme
           avatar: authUser?.user_metadata?.avatar_url || '',
           phone: profile.phone || '',
           department: profile.function_title || 'Non défini',
@@ -119,6 +118,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         };
       } else {
         // Créer un profil par défaut pour les utilisateurs sans profil
+        const defaultUsername = authUser?.email?.split('@')[0] || 'user';
         user = {
           id: authUser?.id || '',
           name: authUser?.user_metadata?.first_name || 'Utilisateur',
@@ -126,7 +126,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           email: authUser?.email || '',
           role: 'utilisateur',
           isActive: true,
-          username: authUser?.email?.split('@')[0] || '',
+          username: defaultUsername,
           avatar: authUser?.user_metadata?.avatar_url || '',
           phone: authUser?.phone || '',
           department: 'Non défini',

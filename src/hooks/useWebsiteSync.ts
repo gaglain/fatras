@@ -36,18 +36,56 @@ export const useWebsiteSync = () => {
         try {
           const design: SiteDesign = JSON.parse(savedDesign);
           
-          // Appliquer les couleurs CSS immédiatement avec force
+          // Appliquer les couleurs CSS avec force et priorité maximale
           const root = document.documentElement;
-          root.style.setProperty('--site-primary-color', design.primaryColor, 'important');
-          root.style.setProperty('--site-secondary-color', design.secondaryColor, 'important');
-          root.style.setProperty('--site-accent-color', design.accentColor, 'important');
-          root.style.setProperty('--site-text-color', design.textColor, 'important');
-          root.style.setProperty('--site-link-color', design.linkColor, 'important');
+          const style = document.createElement('style');
+          style.id = 'website-sync-styles';
           
-          // Forcer un repaint de la page
-          document.body.style.display = 'none';
-          document.body.offsetHeight; // Trigger reflow
-          document.body.style.display = '';
+          // Supprimer le style précédent s'il existe
+          const existingStyle = document.getElementById('website-sync-styles');
+          if (existingStyle) {
+            existingStyle.remove();
+          }
+          
+          // Créer des styles avec !important pour forcer l'application
+          style.innerHTML = `
+            :root {
+              --site-primary-color: ${design.primaryColor} !important;
+              --site-secondary-color: ${design.secondaryColor} !important;
+              --site-accent-color: ${design.accentColor} !important;
+              --site-text-color: ${design.textColor} !important;
+              --site-link-color: ${design.linkColor} !important;
+              --site-header-bg: ${design.headerBg} !important;
+              --site-footer-bg: ${design.footerBg} !important;
+            }
+            
+            /* Forcer l'application sur les éléments spécifiques */
+            .front-header, [data-theme-element="header"] {
+              background-color: ${design.headerBg} !important;
+            }
+            
+            .front-footer, [data-theme-element="footer"] {
+              background-color: ${design.footerBg} !important;
+            }
+            
+            .front-text, [data-theme-element="text"] {
+              color: ${design.textColor} !important;
+            }
+            
+            .front-link, [data-theme-element="link"] {
+              color: ${design.linkColor} !important;
+            }
+            
+            .front-primary, [data-theme-element="primary"] {
+              background-color: ${design.primaryColor} !important;
+            }
+            
+            .front-secondary, [data-theme-element="secondary"] {
+              background-color: ${design.secondaryColor} !important;
+            }
+          `;
+          
+          document.head.appendChild(style);
           
           // Déclencher l'événement de mise à jour
           const event = new CustomEvent('websiteDesignUpdated', { detail: design });
@@ -80,53 +118,86 @@ export const useWebsiteSync = () => {
       }
     };
 
-    // Synchroniser au démarrage avec un délai
+    const syncLegalContent = () => {
+      const savedContent = localStorage.getItem('legalContent');
+      if (savedContent) {
+        try {
+          const content = JSON.parse(savedContent);
+          const event = new CustomEvent('legalContentUpdated', { detail: content });
+          window.dispatchEvent(event);
+          console.log('📄 Contenu légal synchronisé:', content);
+        } catch (error) {
+          console.error('Erreur sync contenu légal:', error);
+        }
+      }
+    };
+
+    // Synchroniser immédiatement au démarrage
     setTimeout(() => {
       syncDesignChanges();
       syncSettingsChanges();
+      syncLegalContent();
     }, 100);
 
-    // Polling pour vérifier les changements
+    // Polling plus fréquent pour vérifier les changements
     const interval = setInterval(() => {
       syncDesignChanges();
       syncSettingsChanges();
-    }, 1000);
+      syncLegalContent();
+    }, 500);
 
     // Écouter les changements localStorage
     const handleStorageChange = (event: StorageEvent) => {
+      console.log('📡 Changement localStorage détecté:', event.key);
       if (event.key === 'websiteDesign') {
-        console.log('📡 Changement design détecté via storage');
         syncDesignChanges();
       } else if (event.key === 'websiteSettings') {
-        console.log('📡 Changement paramètres détecté via storage');
         syncSettingsChanges();
+      } else if (event.key === 'legalContent') {
+        syncLegalContent();
       }
     };
 
     // Écouter les événements personnalisés
     const handleDesignSaved = () => {
       console.log('💾 Design sauvegardé - synchronisation forcée...');
-      setTimeout(syncDesignChanges, 100);
+      setTimeout(syncDesignChanges, 50);
     };
 
     const handleSettingsSaved = () => {
       console.log('💾 Paramètres sauvegardés - synchronisation forcée...');
-      setTimeout(syncSettingsChanges, 100);
+      setTimeout(syncSettingsChanges, 50);
+    };
+
+    const handleLegalSaved = () => {
+      console.log('💾 Contenu légal sauvegardé - synchronisation forcée...');
+      setTimeout(syncLegalContent, 50);
+    };
+
+    // Écouter les événements de focus/visibilité pour resynchroniser
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        syncDesignChanges();
+        syncSettingsChanges();
+        syncLegalContent();
+      }
     };
 
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('websiteDesignSaved', handleDesignSaved);
     window.addEventListener('websiteSettingsSaved', handleSettingsSaved);
-    window.addEventListener('focus', syncDesignChanges);
-    window.addEventListener('focus', syncSettingsChanges);
+    window.addEventListener('legalContentSaved', handleLegalSaved);
+    window.addEventListener('focus', handleVisibilityChange);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       clearInterval(interval);
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('websiteDesignSaved', handleDesignSaved);
       window.removeEventListener('websiteSettingsSaved', handleSettingsSaved);
-      window.removeEventListener('focus', syncDesignChanges);
-      window.removeEventListener('focus', syncSettingsChanges);
+      window.removeEventListener('legalContentSaved', handleLegalSaved);
+      window.removeEventListener('focus', handleVisibilityChange);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
 };

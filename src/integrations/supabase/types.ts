@@ -283,6 +283,39 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          created_at: string | null
+          data: Json | null
+          id: string
+          message: string
+          read: boolean | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          message: string
+          read?: boolean | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          message?: string
+          read?: boolean | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           created_at: string | null
@@ -672,6 +705,7 @@ export type Database = {
           social_security_number: string | null
           updated_at: string
           user_id: string
+          username: string
         }
         Insert: {
           address?: string | null
@@ -694,6 +728,7 @@ export type Database = {
           social_security_number?: string | null
           updated_at?: string
           user_id: string
+          username: string
         }
         Update: {
           address?: string | null
@@ -716,6 +751,7 @@ export type Database = {
           social_security_number?: string | null
           updated_at?: string
           user_id?: string
+          username?: string
         }
         Relationships: []
       }
