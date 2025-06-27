@@ -132,29 +132,28 @@ export const useWebsiteSync = () => {
       }
     };
 
-    // Synchroniser immédiatement au démarrage
-    setTimeout(() => {
+    // Fonction de synchronisation complète
+    const performFullSync = () => {
       syncDesignChanges();
       syncSettingsChanges();
       syncLegalContent();
-    }, 100);
+    };
+
+    // Synchroniser immédiatement au démarrage
+    setTimeout(performFullSync, 100);
 
     // Polling plus fréquent pour vérifier les changements
-    const interval = setInterval(() => {
-      syncDesignChanges();
-      syncSettingsChanges();
-      syncLegalContent();
-    }, 500);
+    const interval = setInterval(performFullSync, 1000);
 
     // Écouter les changements localStorage
     const handleStorageChange = (event: StorageEvent) => {
       console.log('📡 Changement localStorage détecté:', event.key);
       if (event.key === 'websiteDesign') {
-        syncDesignChanges();
+        setTimeout(syncDesignChanges, 50);
       } else if (event.key === 'websiteSettings') {
-        syncSettingsChanges();
+        setTimeout(syncSettingsChanges, 50);
       } else if (event.key === 'legalContent') {
-        syncLegalContent();
+        setTimeout(syncLegalContent, 50);
       }
     };
 
@@ -177,17 +176,25 @@ export const useWebsiteSync = () => {
     // Écouter les événements de focus/visibilité pour resynchroniser
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        syncDesignChanges();
-        syncSettingsChanges();
-        syncLegalContent();
+        setTimeout(performFullSync, 100);
       }
+    };
+
+    const handleFocus = () => {
+      setTimeout(performFullSync, 100);
+    };
+
+    // Écouter les événements de navigation
+    const handleHashChange = () => {
+      setTimeout(performFullSync, 100);
     };
 
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('websiteDesignSaved', handleDesignSaved);
     window.addEventListener('websiteSettingsSaved', handleSettingsSaved);
     window.addEventListener('legalContentSaved', handleLegalSaved);
-    window.addEventListener('focus', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('hashchange', handleHashChange);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
@@ -196,7 +203,8 @@ export const useWebsiteSync = () => {
       window.removeEventListener('websiteDesignSaved', handleDesignSaved);
       window.removeEventListener('websiteSettingsSaved', handleSettingsSaved);
       window.removeEventListener('legalContentSaved', handleLegalSaved);
-      window.removeEventListener('focus', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('hashchange', handleHashChange);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);

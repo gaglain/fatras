@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,6 +11,7 @@ import { Calendar, Clock, Edit, Trash2, Plus, Image, Link, MessageSquare, CheckC
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useUser } from '@/contexts/UserContext';
+import { MediaUpload } from '@/components/MediaUpload';
 
 interface Publication {
   id: string;
@@ -52,7 +52,6 @@ export const PublicationCalendar: React.FC = () => {
   const [publications, setPublications] = useState<Publication[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingPublication, setEditingPublication] = useState<Publication | null>(null);
-  const [selectedDate, setSelectedDate] = useState<string>('');
   const [userProfiles, setUserProfiles] = useState<any[]>([]);
   const [showComments, setShowComments] = useState<string | null>(null);
   const [newComment, setNewComment] = useState('');
@@ -125,7 +124,6 @@ export const PublicationCalendar: React.FC = () => {
 
     savePublications(updatedPublications);
 
-    // Envoyer une notification à l'utilisateur assigné
     if (formData.assigned_to && !editingPublication) {
       await sendNotificationToUser(formData.assigned_to, {
         type: 'publication_assigned',
@@ -221,6 +219,14 @@ export const PublicationCalendar: React.FC = () => {
     savePublications(updated);
     setNewComment('');
     toast.success('Commentaire ajouté');
+  };
+
+  const handleMediaUploaded = (url: string, type: 'image' | 'video') => {
+    setFormData({ ...formData, media_url: url, media_type: type });
+  };
+
+  const handleMediaRemoved = () => {
+    setFormData({ ...formData, media_url: '', media_type: 'image' });
   };
 
   const getStatusColor = (status: string) => {
@@ -469,16 +475,11 @@ export const PublicationCalendar: React.FC = () => {
               </Select>
             </div>
 
-            <div>
-              <Label htmlFor="media_url">URL du média (image/vidéo)</Label>
-              <Input
-                id="media_url"
-                type="url"
-                value={formData.media_url}
-                onChange={(e) => setFormData({ ...formData, media_url: e.target.value })}
-                placeholder="https://..."
-              />
-            </div>
+            <MediaUpload
+              onMediaUploaded={handleMediaUploaded}
+              currentMedia={formData.media_url}
+              onMediaRemoved={handleMediaRemoved}
+            />
 
             <div>
               <Label htmlFor="external_link">Lien externe</Label>

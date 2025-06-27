@@ -1,4 +1,3 @@
-
 import { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
@@ -43,6 +42,9 @@ const FrontArtists = lazy(() => import('@/pages/FrontArtists').then(module => ({
 const FrontEvents = lazy(() => import('@/pages/FrontEvents').then(module => ({ default: module.FrontEvents })));
 const FrontShop = lazy(() => import('@/pages/FrontShop').then(module => ({ default: module.FrontShop })));
 const FrontContact = lazy(() => import('@/pages/FrontContact').then(module => ({ default: module.FrontContact })));
+const FrontLegalNotices = lazy(() => import('@/pages/FrontLegalNotices').then(module => ({ default: module.FrontLegalNotices })));
+const FrontTermsOfService = lazy(() => import('@/pages/FrontTermsOfService').then(module => ({ default: module.FrontTermsOfService })));
+const FrontPrivacyPolicy = lazy(() => import('@/pages/FrontPrivacyPolicy').then(module => ({ default: module.FrontPrivacyPolicy })));
 
 function App() {
   useCustomColors();
@@ -68,6 +70,9 @@ function App() {
             <Route path="events" element={<FrontEvents />} />
             <Route path="shop" element={<FrontShop />} />
             <Route path="contact" element={<FrontContact />} />
+            <Route path="legal" element={<FrontLegalNotices />} />
+            <Route path="terms" element={<FrontTermsOfService />} />
+            <Route path="privacy" element={<FrontPrivacyPolicy />} />
           </Route>
           
           {/* Routes protégées avec Layout */}
