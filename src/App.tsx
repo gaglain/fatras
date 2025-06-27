@@ -1,6 +1,6 @@
 
 import { Suspense, lazy } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Layout } from '@/components/Layout';
 import { FrontLayout } from '@/components/FrontLayout';
@@ -62,7 +62,7 @@ function App() {
           <Route path="/login" element={<Index />} />
           
           {/* Routes front-end publiques */}
-          <Route path="/front" element={<FrontLayout />}>
+          <Route path="/front" element={<FrontLayout><Outlet /></FrontLayout>}>
             <Route index element={<FrontHome />} />
             <Route path="artists" element={<FrontArtists />} />
             <Route path="events" element={<FrontEvents />} />
