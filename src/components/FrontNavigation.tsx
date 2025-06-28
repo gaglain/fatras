@@ -1,15 +1,23 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { Menu, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { FrontThemeToggle } from './FrontThemeToggle';
 
-interface MenuItem {
-  id: string;
-  label: string;
-  path: string;
-  visible: boolean;
-  order: number;
-  isCustom?: boolean;
+interface WebsiteSettings {
+  siteName: string;
+  siteDescription: string;
+  contactEmail: string;
+  contactPhone: string;
+  address: string;
+  socialLinks: {
+    facebook: string;
+    instagram: string;
+    twitter: string;
+    youtube: string;
+    linkedin: string;
+  };
 }
 
 interface SiteDesign {
@@ -24,161 +32,187 @@ interface SiteDesign {
   linkColor: string;
 }
 
-const defaultNavItems = [
-  { id: '1', label: 'Accueil', path: '/front', visible: true, order: 1 },
-  { id: '2', label: 'Artistes', path: '/front/artists', visible: true, order: 2 },
-  { id: '3', label: 'Événements', path: '/front/events', visible: true, order: 3 },
-  { id: '4', label: 'Boutique', path: '/front/shop', visible: true, order: 4 },
-  { id: '5', label: 'Contact', path: '/front/contact', visible: true, order: 5 }
-];
-
 export const FrontNavigation: React.FC = () => {
-  const location = useLocation();
-  const [navItems, setNavItems] = useState<MenuItem[]>(defaultNavItems);
-  const [siteDesign, setSiteDesign] = useState<SiteDesign | null>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [settings, setSettings] = useState<WebsiteSettings>({
+    siteName: 'MusiConnect',
+    siteDescription: 'Plateforme de gestion artistique',
+    contactEmail: 'contact@musiconnect.com',
+    contactPhone: '+33 1 23 45 67 89',
+    address: '123 Rue de la Musique, 75001 Paris',
+    socialLinks: {
+      facebook: '',
+      instagram: '',
+      twitter: '',
+      youtube: '',
+      linkedin: ''
+    }
+  });
 
-  // Fonction pour charger les paramètres
-  const loadSettings = () => {
-    const savedMenu = localStorage.getItem('websiteMenu');
-    const savedDesign = localStorage.getItem('websiteDesign');
-    
-    if (savedMenu) {
-      try {
-        const parsedMenu = JSON.parse(savedMenu);
-        setNavItems(parsedMenu);
-      } catch (error) {
-        console.error('Erreur lors du chargement du menu:', error);
-      }
-    }
-    
-    if (savedDesign) {
-      try {
-        const parsedDesign = JSON.parse(savedDesign);
-        setSiteDesign(parsedDesign);
-      } catch (error) {
-        console.error('Erreur lors du chargement du design:', error);
-      }
-    }
-  };
+  const [design, setDesign] = useState<SiteDesign>({
+    logo: '/logo.svg',
+    siteName: 'MusiConnect',
+    primaryColor: '#1632f4',
+    secondaryColor: '#ec5f65',
+    accentColor: '#f19e9c',
+    headerBg: 'linear-gradient(to right, #1a1f2e, #222c45)',
+    footerBg: 'linear-gradient(to right, #1a1f2e, #222c45)',
+    textColor: '#ffffff',
+    linkColor: '#60a5fa'
+  });
+
+  const location = useLocation();
 
   useEffect(() => {
-    // Charger au démarrage
-    loadSettings();
+    const loadSettings = () => {
+      const savedSettings = localStorage.getItem('websiteSettings');
+      if (savedSettings) {
+        try {
+          const parsed = JSON.parse(savedSettings);
+          setSettings(prev => ({ ...prev, ...parsed }));
+        } catch (error) {
+          console.error('Erreur chargement paramètres:', error);
+        }
+      }
+    };
 
-    // Écouter les mises à jour
-    const handleMenuUpdate = (event: CustomEvent) => {
-      console.log('Navigation - Menu mis à jour:', event.detail);
-      setNavItems(event.detail);
+    const loadDesign = () => {
+      const savedDesign = localStorage.getItem('websiteDesign');
+      if (savedDesign) {
+        try {
+          const parsed = JSON.parse(savedDesign);
+          setDesign(prev => ({ ...prev, ...parsed }));
+        } catch (error) {
+          console.error('Erreur chargement design:', error);
+        }
+      }
+    };
+
+    loadSettings();
+    loadDesign();
+
+    const handleSettingsUpdate = (event: CustomEvent) => {
+      console.log('🔄 Navigation - Mise à jour des paramètres:', event.detail);
+      setSettings(prev => ({ ...prev, ...event.detail }));
     };
 
     const handleDesignUpdate = (event: CustomEvent) => {
-      console.log('Navigation - Design mis à jour:', event.detail);
-      setSiteDesign(event.detail);
+      console.log('🎨 Navigation - Mise à jour du design:', event.detail);
+      setDesign(prev => ({ ...prev, ...event.detail }));
     };
 
-    // Écouter les changements dans localStorage
-    const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === 'websiteMenu' || event.key === 'websiteDesign') {
-        console.log('Navigation - Changement localStorage:', event.key);
-        loadSettings();
-      }
-    };
-
-    window.addEventListener('websiteMenuUpdated', handleMenuUpdate as EventListener);
+    window.addEventListener('websiteSettingsUpdated', handleSettingsUpdate as EventListener);
     window.addEventListener('websiteDesignUpdated', handleDesignUpdate as EventListener);
-    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('storage', () => {
+      loadSettings();
+      loadDesign();
+    });
+
+    // Polling pour s'assurer de la synchronisation
+    const interval = setInterval(() => {
+      loadSettings();
+      loadDesign();
+    }, 1000);
 
     return () => {
-      window.removeEventListener('websiteMenuUpdated', handleMenuUpdate as EventListener);
+      clearInterval(interval);
+      window.removeEventListener('websiteSettingsUpdated', handleSettingsUpdate as EventListener);
       window.removeEventListener('websiteDesignUpdated', handleDesignUpdate as EventListener);
-      window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
 
-  // Séparer les éléments de contact des autres
-  const mainNavItems = navItems
-    .filter(item => item.visible && item.path !== '/front/contact')
-    .sort((a, b) => a.order - b.order);
-    
-  const contactItem = navItems.find(item => item.path === '/front/contact' && item.visible);
-
-  // Styles dynamiques basés sur le design personnalisé
-  const headerStyle = siteDesign ? {
-    background: siteDesign.headerBg,
-    color: siteDesign.textColor
-  } : {};
-
-  const logoSrc = siteDesign?.logo || '/logo.svg';
-  const siteName = siteDesign?.siteName || 'MusiConnect';
+  const navItems = [
+    { name: 'Accueil', path: '/' },
+    { name: 'Artistes', path: '/artistes' },
+    { name: 'Événements', path: '/evenements' },
+    { name: 'Boutique', path: '/boutique' },
+    { name: 'Contact', path: '/contact' }
+  ];
 
   return (
     <nav 
-      className="arc-front-header fixed top-0 left-0 right-0 z-50 h-20 shadow"
-      style={headerStyle}
+      className="front-header fixed top-0 left-0 right-0 z-50 w-full shadow-lg"
+      data-theme-element="header"
+      style={{
+        background: design.headerBg,
+        color: design.textColor
+      }}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
-        <div className="flex items-center justify-between h-full">
-          {/* Logo à gauche + navigation principale */}
-          <div className="flex items-center space-x-8 h-full">
-            {/* Logo personnalisable */}
-            <Link 
-              to="/front" 
-              className="arc-logo flex items-center space-x-2 font-extrabold text-xl tracking-tight hover:opacity-90 transition-opacity select-none"
-              style={{ color: siteDesign?.textColor || '#ffffff' }}
-            >
-              <img 
-                src={logoSrc} 
-                alt={siteName} 
-                className="h-9 w-9 object-contain" 
-                style={{
-                  filter: siteDesign ? 'none' : 'drop-shadow(0 2px 7px #6b21a8)'
-                }} 
-                onError={(e: any) => { e.currentTarget.style.display='none' }} 
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo et nom */}
+          <div className="flex items-center space-x-3">
+            {design.logo && (
+              <img
+                src={design.logo}
+                alt="Logo"
+                className="site-logo h-10 w-auto"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).style.display = 'none';
+                }}
               />
-              <span>{siteName}</span>
+            )}
+            <Link 
+              to="/" 
+              className="site-name font-bold text-xl hover:opacity-80 transition-opacity"
+              data-site-name
+              style={{ color: design.textColor }}
+            >
+              {design.siteName || settings.siteName}
             </Link>
-            {/* Navigation principale */}
-            <div className="hidden md:flex items-center space-x-6 h-full">
-              {mainNavItems.map((item) => (
+          </div>
+
+          {/* Menu desktop */}
+          <div className="hidden md:flex items-center space-x-6">
+            {navItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`front-link hover:opacity-80 transition-opacity ${
+                  location.pathname === item.path ? 'font-semibold' : ''
+                }`}
+                style={{ color: design.linkColor }}
+              >
+                {item.name}
+              </Link>
+            ))}
+            <FrontThemeToggle />
+          </div>
+
+          {/* Menu mobile button */}
+          <div className="md:hidden flex items-center space-x-2">
+            <FrontThemeToggle />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              style={{ color: design.textColor }}
+            >
+              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
+          </div>
+        </div>
+
+        {/* Menu mobile */}
+        {isMenuOpen && (
+          <div className="md:hidden py-4 border-t border-gray-600">
+            <div className="flex flex-col space-y-2">
+              {navItems.map((item) => (
                 <Link
-                  key={item.id}
+                  key={item.path}
                   to={item.path}
-                  className={`arc-nav-link px-4 py-2 rounded h-full flex items-center ${
-                    location.pathname === item.path 
-                      ? 'bg-white/10 font-bold' 
-                      : 'hover:text-opacity-90'
+                  className={`front-link block py-2 px-3 rounded hover:bg-gray-700 transition-colors ${
+                    location.pathname === item.path ? 'font-semibold' : ''
                   }`}
-                  style={{ 
-                    transition: 'all 0.14s',
-                    color: siteDesign?.textColor || '#ffffff'
-                  }}
+                  style={{ color: design.linkColor }}
+                  onClick={() => setIsMenuOpen(false)}
                 >
-                  {item.label}
+                  {item.name}
                 </Link>
               ))}
             </div>
           </div>
-          {/* À droite : Contact + Dark/Light */}
-          <div className="flex items-center space-x-3">
-            {contactItem && (
-              <Link
-                to={contactItem.path}
-                className={`arc-nav-link px-4 py-2 rounded ${
-                  location.pathname === contactItem.path 
-                    ? 'bg-white/10 font-bold' 
-                    : 'hover:text-opacity-90'
-                }`}
-                style={{ 
-                  transition: 'all 0.14s',
-                  color: siteDesign?.textColor || '#ffffff'
-                }}
-              >
-                {contactItem.label}
-              </Link>
-            )}
-            <FrontThemeToggle variant="front" />
-          </div>
-        </div>
+        )}
       </div>
     </nav>
   );

@@ -60,7 +60,7 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
     loadSettings();
 
     const handleSettingsUpdate = (event: CustomEvent) => {
-      console.log('🔄 Mise à jour des paramètres détectée:', event.detail);
+      console.log('🔄 Layout - Mise à jour des paramètres détectée:', event.detail);
       setSettings(prev => ({ ...prev, ...event.detail }));
     };
 
@@ -78,11 +78,11 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
       {/* Google Analytics */}
       <GoogleAnalytics measurementId={settings.googleAnalyticsId} />
       
-      {/* Navigation */}
+      {/* Navigation fixe */}
       <FrontNavigation />
       
-      {/* Main Content */}
-      <main className="flex-1" data-theme-element="main">
+      {/* Main Content avec padding pour le header fixe */}
+      <main className="flex-1 pt-16" data-theme-element="main">
         {children}
       </main>
       

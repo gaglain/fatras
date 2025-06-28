@@ -39,9 +39,20 @@ export const useWebsiteDesignSync = () => {
         --site-footer-bg: ${design.footerBg} !important;
       }
       
-      /* Application immédiate des styles */
-      .front-header, [data-theme-element="header"], header {
+      /* Header fixe et styles forcés */
+      .front-header, [data-theme-element="header"], header, nav {
         background: ${design.headerBg} !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        z-index: 50 !important;
+        width: 100% !important;
+      }
+      
+      /* Compensation pour le header fixe */
+      body {
+        padding-top: 80px !important;
       }
       
       .front-footer, [data-theme-element="footer"], footer {
@@ -74,25 +85,41 @@ export const useWebsiteDesignSync = () => {
         background-color: ${design.secondaryColor} !important;
       }
 
-      /* Logo dans le header */
-      .site-logo {
+      /* Logo forcé */
+      .site-logo, img[alt="Logo"] {
         content: url('${design.logo}') !important;
         max-height: 40px !important;
         width: auto !important;
+        display: block !important;
+      }
+      
+      /* Nom du site forcé */
+      .site-name, [data-site-name] {
+        color: ${design.textColor} !important;
+        font-weight: bold !important;
       }
     `;
     
     document.head.appendChild(style);
     
-    // Mettre à jour le titre de la page
+    // Mettre à jour le titre de la page immédiatement
     if (design.siteName) {
       document.title = design.siteName;
     }
     
-    // Forcer le rafraîchissement des éléments
-    const elementsToUpdate = document.querySelectorAll('[data-theme-element], .front-header, .front-footer, .front-text, .front-link, .site-logo');
+    // Forcer le rafraîchissement des éléments existants
+    const elementsToUpdate = document.querySelectorAll('[data-theme-element], .front-header, .front-footer, .front-text, .front-link, .site-logo, .site-name');
     elementsToUpdate.forEach(el => {
-      (el as HTMLElement).style.transition = 'all 0.3s ease';
+      const htmlEl = el as HTMLElement;
+      htmlEl.style.transition = 'all 0.3s ease';
+      // Forcer le repaint
+      htmlEl.offsetHeight;
+    });
+    
+    // Forcer les éléments du nom du site
+    const siteNameElements = document.querySelectorAll('.site-name, [data-site-name]');
+    siteNameElements.forEach(el => {
+      el.textContent = design.siteName;
     });
     
     // Déclencher l'événement de mise à jour
@@ -118,55 +145,70 @@ export const useWebsiteDesignSync = () => {
     // Synchronisation immédiate
     syncDesignChanges();
 
-    // Polling très fréquent
-    const interval = setInterval(syncDesignChanges, 100);
+    // Polling ultra-fréquent
+    const interval = setInterval(syncDesignChanges, 50);
 
     // Écouter tous les événements possibles
     const handleStorageChange = (event: StorageEvent) => {
       if (event.key === 'websiteDesign') {
-        setTimeout(syncDesignChanges, 5);
+        setTimeout(syncDesignChanges, 1);
       }
     };
 
     const handleDesignSaved = () => {
-      setTimeout(syncDesignChanges, 5);
+      setTimeout(syncDesignChanges, 1);
     };
 
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        setTimeout(syncDesignChanges, 10);
+        setTimeout(syncDesignChanges, 1);
       }
     };
 
     const handleFocus = () => {
-      setTimeout(syncDesignChanges, 10);
+      setTimeout(syncDesignChanges, 1);
     };
 
-    // Observer les mutations DOM pour détecter les changements
+    // Observer les mutations DOM agressivement
     const observer = new MutationObserver(() => {
-      setTimeout(syncDesignChanges, 50);
+      setTimeout(syncDesignChanges, 10);
     });
 
     observer.observe(document.body, {
       childList: true,
       subtree: true,
       attributes: true,
-      attributeFilter: ['class', 'style']
+      attributeFilter: ['class', 'style', 'data-theme-element']
+    });
+
+    // Observer les changements sur le head aussi
+    const headObserver = new MutationObserver(() => {
+      setTimeout(syncDesignChanges, 10);
+    });
+
+    headObserver.observe(document.head, {
+      childList: true,
+      subtree: true
     });
 
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('websiteDesignSaved', handleDesignSaved);
     window.addEventListener('websiteDesignUpdated', handleDesignSaved);
     window.addEventListener('focus', handleFocus);
+    window.addEventListener('load', handleFocus);
+    window.addEventListener('DOMContentLoaded', handleFocus);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       clearInterval(interval);
       observer.disconnect();
+      headObserver.disconnect();
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('websiteDesignSaved', handleDesignSaved);
       window.removeEventListener('websiteDesignUpdated', handleDesignSaved);
       window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('load', handleFocus);
+      window.removeEventListener('DOMContentLoaded', handleFocus);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [syncDesignChanges]);

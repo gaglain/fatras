@@ -57,10 +57,11 @@ export const PublicationForm: React.FC<PublicationFormProps> = ({
   });
 
   const [errors, setErrors] = useState<Partial<PublicationFormData>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Réinitialiser le formulaire quand il s'ouvre
   useEffect(() => {
     if (isOpen) {
+      console.log('Form opened with initial data:', initialData);
       setFormData({
         title: initialData.title || '',
         content: initialData.content || '',
@@ -72,10 +73,11 @@ export const PublicationForm: React.FC<PublicationFormProps> = ({
         external_link: initialData.external_link || ''
       });
       setErrors({});
+      setIsSubmitting(false);
     }
   }, [isOpen, initialData]);
 
-  const validateForm = () => {
+  const validateForm = (): boolean => {
     const newErrors: Partial<PublicationFormData> = {};
     
     if (!formData.title.trim()) {
@@ -98,22 +100,47 @@ export const PublicationForm: React.FC<PublicationFormProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    e.stopPropagation();
     
-    console.log('Form submission started with data:', formData);
+    console.log('Form submit triggered');
+    console.log('Current form data:', formData);
     
-    if (!validateForm()) {
-      console.log('Form validation failed:', errors);
+    if (isSubmitting) {
+      console.log('Already submitting, ignoring');
       return;
     }
     
+    setIsSubmitting(true);
+    
     try {
-      onSubmit(formData);
-      console.log('Form submitted successfully');
+      if (!validateForm()) {
+        console.log('Form validation failed:', errors);
+        setIsSubmitting(false);
+        return;
+      }
+      
+      console.log('Calling onSubmit with data:', formData);
+      await onSubmit(formData);
+      console.log('onSubmit completed successfully');
+      
+      // Reset form
+      setFormData({
+        title: '',
+        content: '',
+        scheduled_date: '',
+        platform: '',
+        assigned_to: '',
+        media_url: '',
+        media_type: 'image',
+        external_link: ''
+      });
+      
+      onClose();
     } catch (error) {
-      console.error('Error submitting form:', error);
+      console.error('Error in form submission:', error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -126,12 +153,15 @@ export const PublicationForm: React.FC<PublicationFormProps> = ({
   };
 
   const handleInputChange = (field: keyof PublicationFormData, value: string) => {
+    console.log(`Updating ${field} to:`, value);
     setFormData(prev => ({ ...prev, [field]: value }));
-    // Effacer l'erreur quand l'utilisateur commence à taper
+    
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
     }
   };
+
+  if (!isOpen) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -239,11 +269,19 @@ export const PublicationForm: React.FC<PublicationFormProps> = ({
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onClose}
+              disabled={isSubmitting}
+            >
               Annuler
             </Button>
-            <Button type="submit">
-              {isEditing ? 'Modifier' : 'Créer'}
+            <Button 
+              type="submit"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Traitement...' : (isEditing ? 'Modifier' : 'Créer')}
             </Button>
           </div>
         </form>
