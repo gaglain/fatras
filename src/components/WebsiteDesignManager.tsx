@@ -60,7 +60,7 @@ export const WebsiteDesignManager: React.FC = () => {
       const reader = new FileReader();
       reader.onload = (e) => {
         const result = e.target?.result as string;
-        console.log('📸 Logo uploaded:', result.substring(0, 50) + '...');
+        console.log('📸 Logo uploaded');
         setDesign(prev => ({ ...prev, logo: result }));
         toast.success('Logo chargé avec succès');
       };
@@ -71,33 +71,29 @@ export const WebsiteDesignManager: React.FC = () => {
   const saveDesign = () => {
     console.log('💾 Saving design:', design);
     
-    // Sauvegarder dans localStorage
-    localStorage.setItem('websiteDesign', JSON.stringify(design));
-    
-    // Déclencher les événements de synchronisation IMMÉDIATEMENT
-    console.log('🚀 Triggering sync events...');
-    
-    // Déclencher plusieurs événements pour s'assurer de la synchronisation
-    window.dispatchEvent(new CustomEvent('websiteDesignUpdated', { detail: design }));
-    window.dispatchEvent(new CustomEvent('websiteDesignSaved', { detail: design }));
-    
-    // Forcer la synchronisation avec un petit délai
-    setTimeout(() => {
+    try {
+      // Sauvegarder dans localStorage
+      localStorage.setItem('websiteDesign', JSON.stringify(design));
+      
+      // Déclencher les événements de synchronisation
+      console.log('🚀 Triggering sync events...');
+      
       window.dispatchEvent(new CustomEvent('websiteDesignUpdated', { detail: design }));
+      window.dispatchEvent(new CustomEvent('websiteDesignSaved', { detail: design }));
+      
+      // Déclencher aussi l'événement storage pour être sûr
       window.dispatchEvent(new StorageEvent('storage', {
         key: 'websiteDesign',
         newValue: JSON.stringify(design),
         storageArea: localStorage
       }));
-    }, 100);
-    
-    // Autre tentative après 500ms
-    setTimeout(() => {
-      window.dispatchEvent(new CustomEvent('websiteDesignSaved', { detail: design }));
-    }, 500);
-    
-    toast.success('Design sauvegardé avec succès ! La synchronisation peut prendre quelques secondes.');
-    console.log('✅ Design saved and events triggered');
+      
+      toast.success('Design sauvegardé avec succès !');
+      console.log('✅ Design saved and events triggered');
+    } catch (error) {
+      console.error('❌ Error saving design:', error);
+      toast.error('Erreur lors de la sauvegarde');
+    }
   };
 
   const resetDesign = () => {

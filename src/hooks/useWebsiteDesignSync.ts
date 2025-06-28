@@ -17,8 +17,6 @@ export const useWebsiteDesignSync = () => {
   const applyDesignStyles = useCallback((design: SiteDesign) => {
     console.log('🎨 Applying design styles:', design);
     
-    const root = document.documentElement;
-    
     // Supprimer les anciens styles
     const existingStyle = document.getElementById('website-design-sync-styles');
     if (existingStyle) {
@@ -86,7 +84,7 @@ export const useWebsiteDesignSync = () => {
         background-color: ${design.secondaryColor} !important;
       }
 
-      /* Logo forcé avec gestion d'erreur */
+      /* Logo forcé */
       .site-logo, img[alt="Logo"] {
         max-height: 40px !important;
         width: auto !important;
@@ -102,10 +100,9 @@ export const useWebsiteDesignSync = () => {
     
     document.head.appendChild(style);
     
-    // Mettre à jour le titre de la page immédiatement
+    // Mettre à jour le titre immédiatement
     if (design.siteName) {
       document.title = design.siteName;
-      console.log('📝 Updated page title to:', design.siteName);
     }
     
     // Forcer la mise à jour du logo
@@ -115,7 +112,6 @@ export const useWebsiteDesignSync = () => {
       if (design.logo) {
         imgEl.src = design.logo;
         imgEl.style.display = 'block';
-        console.log('🖼️ Updated logo to:', design.logo);
       }
     });
     
@@ -124,37 +120,24 @@ export const useWebsiteDesignSync = () => {
     siteNameElements.forEach(el => {
       el.textContent = design.siteName;
       (el as HTMLElement).style.color = design.textColor;
-      console.log('🏷️ Updated site name to:', design.siteName);
     });
-    
-    // Forcer le rafraîchissement des éléments existants
-    const elementsToUpdate = document.querySelectorAll('[data-theme-element], .front-header, .front-footer, .front-text, .front-link');
-    elementsToUpdate.forEach(el => {
-      const htmlEl = el as HTMLElement;
-      htmlEl.style.transition = 'all 0.3s ease';
-      // Forcer le repaint
-      htmlEl.offsetHeight;
-    });
-    
-    // Déclencher l'événement de mise à jour
-    const event = new CustomEvent('websiteDesignUpdated', { detail: design });
-    window.dispatchEvent(event);
     
     console.log('✅ Design appliqué avec succès');
   }, []);
 
   const syncDesignChanges = useCallback(() => {
-    const savedDesign = localStorage.getItem('websiteDesign');
-    if (savedDesign) {
-      try {
+    try {
+      const savedDesign = localStorage.getItem('websiteDesign');
+      if (savedDesign) {
         const design: SiteDesign = JSON.parse(savedDesign);
         console.log('🔄 Syncing design changes:', design);
         applyDesignStyles(design);
-      } catch (error) {
-        console.error('❌ Error sync design:', error);
+        return true;
       }
-    } else {
-      console.log('ℹ️ No saved design found in localStorage');
+      return false;
+    } catch (error) {
+      console.error('❌ Error sync design:', error);
+      return false;
     }
   }, [applyDesignStyles]);
 
@@ -164,88 +147,45 @@ export const useWebsiteDesignSync = () => {
     // Synchronisation immédiate
     syncDesignChanges();
 
-    // Polling très fréquent pour forcer la synchronisation
-    const rapidSync = setInterval(syncDesignChanges, 100);
+    // Synchronisation simple mais efficace toutes les 500ms
+    const interval = setInterval(() => {
+      syncDesignChanges();
+    }, 500);
 
-    // Écouter tous les événements possibles
+    // Écouter les changements de localStorage
     const handleStorageChange = (event: StorageEvent) => {
       if (event.key === 'websiteDesign') {
         console.log('💾 Storage change detected for websiteDesign');
-        setTimeout(syncDesignChanges, 10);
+        setTimeout(syncDesignChanges, 50);
       }
     };
 
+    // Écouter les événements personnalisés
     const handleDesignSaved = () => {
       console.log('🎨 Design saved event detected');
-      setTimeout(syncDesignChanges, 10);
+      setTimeout(syncDesignChanges, 50);
     };
 
+    // Écouter quand la page devient visible
     const handleVisibilityChange = () => {
       if (!document.hidden) {
         console.log('👁️ Page became visible, syncing design');
-        setTimeout(syncDesignChanges, 10);
+        syncDesignChanges();
       }
     };
-
-    const handleFocus = () => {
-      console.log('🔍 Window focused, syncing design');
-      setTimeout(syncDesignChanges, 10);
-    };
-
-    // Observer les mutations DOM agressivement
-    const observer = new MutationObserver((mutations) => {
-      let shouldSync = false;
-      mutations.forEach(mutation => {
-        if (mutation.type === 'childList') {
-          mutation.addedNodes.forEach(node => {
-            if (node.nodeType === Node.ELEMENT_NODE) {
-              const element = node as Element;
-              if (element.classList?.contains('site-logo') || 
-                  element.classList?.contains('site-name') ||
-                  element.hasAttribute('data-site-name') ||
-                  element.hasAttribute('data-theme-element')) {
-                shouldSync = true;
-              }
-            }
-          });
-        }
-      });
-      
-      if (shouldSync) {
-        console.log('🔄 DOM mutation detected, syncing design');
-        setTimeout(syncDesignChanges, 50);
-      }
-    });
-
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: ['class', 'style', 'data-theme-element', 'data-site-name']
-    });
 
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('websiteDesignSaved', handleDesignSaved);
     window.addEventListener('websiteDesignUpdated', handleDesignSaved);
-    window.addEventListener('focus', handleFocus);
-    window.addEventListener('load', handleFocus);
-    window.addEventListener('DOMContentLoaded', handleFocus);
+    window.addEventListener('focus', syncDesignChanges);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
-    // Sync forcée après un délai initial
-    setTimeout(syncDesignChanges, 500);
-    setTimeout(syncDesignChanges, 1000);
-    setTimeout(syncDesignChanges, 2000);
-
     return () => {
-      clearInterval(rapidSync);
-      observer.disconnect();
+      clearInterval(interval);
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('websiteDesignSaved', handleDesignSaved);
       window.removeEventListener('websiteDesignUpdated', handleDesignSaved);
-      window.removeEventListener('focus', handleFocus);
-      window.removeEventListener('load', handleFocus);
-      window.removeEventListener('DOMContentLoaded', handleFocus);
+      window.removeEventListener('focus', syncDesignChanges);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [syncDesignChanges]);

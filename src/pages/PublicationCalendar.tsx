@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Plus, Edit, Trash2, Image, Link, MessageSquare, CheckCircle, XCircle, Users } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 import { useUser } from '@/contexts/UserContext';
 import { PublicationForm } from '@/components/PublicationForm';
 
@@ -44,51 +42,34 @@ const platforms = [
   { value: 'tiktok', label: 'TikTok' }
 ];
 
+const exampleProfiles = [
+  { user_id: 'user1', username: 'admin', first_name: 'Admin', last_name: 'User', role: 'admin' },
+  { user_id: 'user2', username: 'editor', first_name: 'Editor', last_name: 'User', role: 'editor' },
+  { user_id: 'user3', username: 'manager', first_name: 'Manager', last_name: 'User', role: 'manager' }
+];
+
 export const PublicationCalendar: React.FC = () => {
   const { currentUser } = useUser();
   const [publications, setPublications] = useState<Publication[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingPublication, setEditingPublication] = useState<Publication | null>(null);
-  const [userProfiles, setUserProfiles] = useState<any[]>([]);
+  const [userProfiles] = useState(exampleProfiles);
   const [showComments, setShowComments] = useState<string | null>(null);
   const [newComment, setNewComment] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    console.log('📅 PublicationCalendar - Component mounted');
+    console.log('📅 PublicationCalendar mounted');
     loadPublications();
-    loadUserProfiles();
   }, []);
-
-  const loadUserProfiles = async () => {
-    console.log('👥 Loading user profiles...');
-    try {
-      // Utiliser des données d'exemple au lieu de Supabase pour éviter les erreurs
-      const exampleProfiles = [
-        { user_id: 'user1', username: 'admin', first_name: 'Admin', last_name: 'User', role: 'admin' },
-        { user_id: 'user2', username: 'editor', first_name: 'Editor', last_name: 'User', role: 'editor' },
-        { user_id: 'user3', username: 'manager', first_name: 'Manager', last_name: 'User', role: 'manager' }
-      ];
-      
-      setUserProfiles(exampleProfiles);
-      console.log('👥 User profiles loaded:', exampleProfiles);
-    } catch (error) {
-      console.error('❌ Error loading user profiles:', error);
-      // Fallback avec des données d'exemple
-      const fallbackProfiles = [
-        { user_id: 'user1', username: 'admin', first_name: 'Admin', last_name: 'User', role: 'admin' }
-      ];
-      setUserProfiles(fallbackProfiles);
-    }
-  };
 
   const loadPublications = () => {
     console.log('📖 Loading publications from localStorage...');
     try {
-      const saved = localStorage.getItem('publications');
+      const saved = localStorage.getItem('publications_data');
       if (saved) {
         const parsedPublications = JSON.parse(saved);
-        console.log('📖 Publications loaded:', parsedPublications);
+        console.log('📖 Publications loaded:', parsedPublications.length, 'items');
         setPublications(parsedPublications);
       } else {
         console.log('📖 No publications found in localStorage');
@@ -101,14 +82,22 @@ export const PublicationCalendar: React.FC = () => {
   };
 
   const savePublications = (newPublications: Publication[]) => {
-    console.log('💾 Saving publications:', newPublications);
+    console.log('💾 Saving publications:', newPublications.length, 'items');
     try {
-      localStorage.setItem('publications', JSON.stringify(newPublications));
+      localStorage.setItem('publications_data', JSON.stringify(newPublications));
       setPublications(newPublications);
-      console.log('✅ Publications saved successfully');
+      console.log('✅ Publications saved successfully to localStorage');
+      
+      // Déclencher un événement pour indiquer que les données ont changé
+      window.dispatchEvent(new CustomEvent('publicationsUpdated', { 
+        detail: { count: newPublications.length } 
+      }));
+      
+      return true;
     } catch (error) {
       console.error('❌ Error saving publications:', error);
       toast.error('Erreur lors de la sauvegarde');
+      return false;
     }
   };
 
@@ -125,7 +114,7 @@ export const PublicationCalendar: React.FC = () => {
 
     try {
       const assignedProfile = userProfiles.find(p => p.user_id === formData.assigned_to);
-      console.log('👤 Assigned profile:', assignedProfile);
+      console.log('👤 Assigned profile found:', assignedProfile);
 
       const publication: Publication = {
         id: editingPublication?.id || `pub-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -144,61 +133,33 @@ export const PublicationCalendar: React.FC = () => {
         created_at: editingPublication?.created_at || new Date().toISOString()
       };
 
-      console.log('📝 Creating publication:', publication);
+      console.log('📝 Publication to save:', publication);
 
       const updatedPublications = editingPublication
         ? publications.map(p => p.id === editingPublication.id ? publication : p)
         : [...publications, publication];
 
-      savePublications(updatedPublications);
-
-      // Notification pour l'assignation
-      if (formData.assigned_to && !editingPublication) {
-        await sendNotificationToUser(formData.assigned_to, {
-          type: 'publication_assigned',
-          title: 'Nouvelle publication assignée',
-          message: `Une publication "${formData.title}" vous a été assignée pour le ${new Date(formData.scheduled_date).toLocaleDateString('fr-FR')}`
-        });
-      }
-
-      setEditingPublication(null);
-      setShowForm(false);
-      toast.success(editingPublication ? 'Publication modifiée avec succès' : 'Publication créée avec succès');
+      const saved = savePublications(updatedPublications);
       
-      console.log('✅ Publication saved successfully');
+      if (saved) {
+        setEditingPublication(null);
+        setShowForm(false);
+        toast.success(editingPublication ? 'Publication modifiée avec succès' : 'Publication créée avec succès');
+        console.log('✅ Publication operation completed successfully');
+        
+        // Recharger les publications pour s'assurer de la cohérence
+        setTimeout(loadPublications, 100);
+      }
     } catch (error) {
-      console.error('❌ Error saving publication:', error);
+      console.error('❌ Error in handleFormSubmit:', error);
       toast.error('Erreur lors de la sauvegarde de la publication');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const sendNotificationToUser = async (userId: string, notification: any) => {
-    console.log('🔔 Sending notification to user:', userId, notification);
-    try {
-      const { error } = await supabase
-        .from('notifications')
-        .insert([{
-          user_id: userId,
-          type: notification.type,
-          title: notification.title,
-          message: notification.message,
-          data: { publication_id: notification.title }
-        }]);
-
-      if (error) {
-        console.error('❌ Supabase notification error:', error);
-      } else {
-        console.log('✅ Notification sent successfully');
-      }
-    } catch (error) {
-      console.error('❌ Error sending notification:', error);
-    }
-  };
-
   const handleEdit = (publication: Publication) => {
-    console.log('✏️ Editing publication:', publication);
+    console.log('✏️ Editing publication:', publication.id);
     setEditingPublication(publication);
     setShowForm(true);
   };
@@ -207,8 +168,10 @@ export const PublicationCalendar: React.FC = () => {
     console.log('🗑️ Deleting publication:', id);
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cette publication ?')) {
       const updated = publications.filter(p => p.id !== id);
-      savePublications(updated);
-      toast.success('Publication supprimée');
+      const saved = savePublications(updated);
+      if (saved) {
+        toast.success('Publication supprimée');
+      }
     }
   };
 
@@ -217,8 +180,10 @@ export const PublicationCalendar: React.FC = () => {
     const updated = publications.map(p => 
       p.id === id ? { ...p, status: newStatus } : p
     );
-    savePublications(updated);
-    toast.success('Statut mis à jour');
+    const saved = savePublications(updated);
+    if (saved) {
+      toast.success('Statut mis à jour');
+    }
   };
 
   const addComment = (publicationId: string) => {
@@ -240,9 +205,11 @@ export const PublicationCalendar: React.FC = () => {
         : p
     );
 
-    savePublications(updated);
-    setNewComment('');
-    toast.success('Commentaire ajouté');
+    const saved = savePublications(updated);
+    if (saved) {
+      setNewComment('');
+      toast.success('Commentaire ajouté');
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -275,6 +242,7 @@ export const PublicationCalendar: React.FC = () => {
         <Button 
           onClick={() => {
             console.log('➕ Opening publication form');
+            setEditingPublication(null);
             setShowForm(true);
           }} 
           className="bg-purple-600 hover:bg-purple-700"
@@ -291,7 +259,8 @@ export const PublicationCalendar: React.FC = () => {
           <p className="text-sm text-blue-800">
             <strong>Debug:</strong> {publications.length} publication(s) trouvée(s) | 
             Utilisateur: {currentUser?.name || 'Non connecté'} | 
-            Profils: {userProfiles.length}
+            Profils: {userProfiles.length} | 
+            Form: {showForm ? 'Ouvert' : 'Fermé'}
           </p>
         </CardContent>
       </Card>
@@ -304,7 +273,11 @@ export const PublicationCalendar: React.FC = () => {
             <h3 className="text-lg font-medium text-gray-900 mb-2">Aucune publication</h3>
             <p className="text-gray-500 mb-4">Créez votre première publication pour commencer</p>
             <Button 
-              onClick={() => setShowForm(true)}
+              onClick={() => {
+                console.log('➕ Opening form from empty state');
+                setEditingPublication(null);
+                setShowForm(true);
+              }}
               className="bg-purple-600 hover:bg-purple-700"
             >
               <Plus className="h-4 w-4 mr-2" />
@@ -314,6 +287,7 @@ export const PublicationCalendar: React.FC = () => {
         ) : (
           publications.map((publication) => (
             <Card key={publication.id} className="relative">
+              
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
