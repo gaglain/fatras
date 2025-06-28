@@ -15,17 +15,19 @@ interface SiteDesign {
 
 export const useWebsiteDesignSync = () => {
   const applyDesignStyles = useCallback((design: SiteDesign) => {
-    const root = document.documentElement;
-    const style = document.createElement('style');
-    style.id = 'website-design-sync-styles';
+    console.log('🎨 Applying design styles:', design);
     
-    // Supprimer le style précédent s'il existe
+    const root = document.documentElement;
+    
+    // Supprimer les anciens styles
     const existingStyle = document.getElementById('website-design-sync-styles');
     if (existingStyle) {
       existingStyle.remove();
     }
     
-    // Créer des styles avec !important pour forcer l'application
+    // Créer et injecter les nouveaux styles
+    const style = document.createElement('style');
+    style.id = 'website-design-sync-styles';
     style.innerHTML = `
       :root {
         --site-primary-color: ${design.primaryColor} !important;
@@ -37,20 +39,20 @@ export const useWebsiteDesignSync = () => {
         --site-footer-bg: ${design.footerBg} !important;
       }
       
-      /* Forcer l'application sur les éléments spécifiques */
-      .front-header, [data-theme-element="header"] {
-        background-color: ${design.headerBg} !important;
+      /* Application immédiate des styles */
+      .front-header, [data-theme-element="header"], header {
+        background: ${design.headerBg} !important;
       }
       
-      .front-footer, [data-theme-element="footer"] {
-        background-color: ${design.footerBg} !important;
+      .front-footer, [data-theme-element="footer"], footer {
+        background: ${design.footerBg} !important;
       }
       
-      .front-text, [data-theme-element="text"] {
+      .front-text, [data-theme-element="text"], body {
         color: ${design.textColor} !important;
       }
       
-      .front-link, [data-theme-element="link"] {
+      .front-link, [data-theme-element="link"], a {
         color: ${design.linkColor} !important;
       }
       
@@ -62,24 +64,42 @@ export const useWebsiteDesignSync = () => {
         background-color: ${design.secondaryColor} !important;
       }
       
-      /* Appliquer aux boutons du front */
-      .front-button {
+      /* Boutons */
+      .front-button, button[class*="bg-"] {
         background-color: ${design.primaryColor} !important;
         color: white !important;
       }
       
-      .front-button:hover {
+      .front-button:hover, button[class*="bg-"]:hover {
         background-color: ${design.secondaryColor} !important;
+      }
+
+      /* Logo dans le header */
+      .site-logo {
+        content: url('${design.logo}') !important;
+        max-height: 40px !important;
+        width: auto !important;
       }
     `;
     
     document.head.appendChild(style);
     
+    // Mettre à jour le titre de la page
+    if (design.siteName) {
+      document.title = design.siteName;
+    }
+    
+    // Forcer le rafraîchissement des éléments
+    const elementsToUpdate = document.querySelectorAll('[data-theme-element], .front-header, .front-footer, .front-text, .front-link, .site-logo');
+    elementsToUpdate.forEach(el => {
+      (el as HTMLElement).style.transition = 'all 0.3s ease';
+    });
+    
     // Déclencher l'événement de mise à jour
     const event = new CustomEvent('websiteDesignUpdated', { detail: design });
     window.dispatchEvent(event);
     
-    console.log('🎨 Design synchronisé et appliqué:', design);
+    console.log('🎨 Design appliqué avec succès');
   }, []);
 
   const syncDesignChanges = useCallback(() => {
@@ -95,44 +115,57 @@ export const useWebsiteDesignSync = () => {
   }, [applyDesignStyles]);
 
   useEffect(() => {
-    // Synchroniser immédiatement au démarrage
+    // Synchronisation immédiate
     syncDesignChanges();
 
-    // Polling plus fréquent pour vérifier les changements
-    const interval = setInterval(syncDesignChanges, 500);
+    // Polling très fréquent
+    const interval = setInterval(syncDesignChanges, 100);
 
-    // Écouter les changements localStorage
+    // Écouter tous les événements possibles
     const handleStorageChange = (event: StorageEvent) => {
       if (event.key === 'websiteDesign') {
+        setTimeout(syncDesignChanges, 5);
+      }
+    };
+
+    const handleDesignSaved = () => {
+      setTimeout(syncDesignChanges, 5);
+    };
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
         setTimeout(syncDesignChanges, 10);
       }
     };
 
-    // Écouter les événements personnalisés
-    const handleDesignSaved = () => {
+    const handleFocus = () => {
       setTimeout(syncDesignChanges, 10);
     };
 
-    // Écouter les événements de focus/visibilité pour resynchroniser
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        setTimeout(syncDesignChanges, 50);
-      }
-    };
-
-    const handleFocus = () => {
+    // Observer les mutations DOM pour détecter les changements
+    const observer = new MutationObserver(() => {
       setTimeout(syncDesignChanges, 50);
-    };
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['class', 'style']
+    });
 
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('websiteDesignSaved', handleDesignSaved);
+    window.addEventListener('websiteDesignUpdated', handleDesignSaved);
     window.addEventListener('focus', handleFocus);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       clearInterval(interval);
+      observer.disconnect();
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('websiteDesignSaved', handleDesignSaved);
+      window.removeEventListener('websiteDesignUpdated', handleDesignSaved);
       window.removeEventListener('focus', handleFocus);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };

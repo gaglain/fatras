@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -46,35 +46,91 @@ export const PublicationForm: React.FC<PublicationFormProps> = ({
   isEditing = false
 }) => {
   const [formData, setFormData] = useState<PublicationFormData>({
-    title: initialData.title || '',
-    content: initialData.content || '',
-    scheduled_date: initialData.scheduled_date || '',
-    platform: initialData.platform || '',
-    assigned_to: initialData.assigned_to || '',
-    media_url: initialData.media_url || '',
-    media_type: initialData.media_type || 'image',
-    external_link: initialData.external_link || ''
+    title: '',
+    content: '',
+    scheduled_date: '',
+    platform: '',
+    assigned_to: '',
+    media_url: '',
+    media_type: 'image',
+    external_link: ''
   });
+
+  const [errors, setErrors] = useState<Partial<PublicationFormData>>({});
+
+  // Réinitialiser le formulaire quand il s'ouvre
+  useEffect(() => {
+    if (isOpen) {
+      setFormData({
+        title: initialData.title || '',
+        content: initialData.content || '',
+        scheduled_date: initialData.scheduled_date || '',
+        platform: initialData.platform || '',
+        assigned_to: initialData.assigned_to || '',
+        media_url: initialData.media_url || '',
+        media_type: initialData.media_type || 'image',
+        external_link: initialData.external_link || ''
+      });
+      setErrors({});
+    }
+  }, [isOpen, initialData]);
+
+  const validateForm = () => {
+    const newErrors: Partial<PublicationFormData> = {};
+    
+    if (!formData.title.trim()) {
+      newErrors.title = 'Le titre est obligatoire';
+    }
+    
+    if (!formData.content.trim()) {
+      newErrors.content = 'Le contenu est obligatoire';
+    }
+    
+    if (!formData.scheduled_date) {
+      newErrors.scheduled_date = 'La date est obligatoire';
+    }
+    
+    if (!formData.platform) {
+      newErrors.platform = 'La plateforme est obligatoire';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted with data:', formData);
+    e.stopPropagation();
     
-    // Validation simple
-    if (!formData.title.trim() || !formData.content.trim() || !formData.scheduled_date || !formData.platform) {
-      console.error('Champs obligatoires manquants');
+    console.log('Form submission started with data:', formData);
+    
+    if (!validateForm()) {
+      console.log('Form validation failed:', errors);
       return;
     }
     
-    onSubmit(formData);
+    try {
+      onSubmit(formData);
+      console.log('Form submitted successfully');
+    } catch (error) {
+      console.error('Error submitting form:', error);
+    }
   };
 
   const handleMediaUploaded = (url: string, type: 'image' | 'video') => {
-    setFormData({ ...formData, media_url: url, media_type: type });
+    setFormData(prev => ({ ...prev, media_url: url, media_type: type }));
   };
 
   const handleMediaRemoved = () => {
-    setFormData({ ...formData, media_url: '', media_type: 'image' });
+    setFormData(prev => ({ ...prev, media_url: '', media_type: 'image' }));
+  };
+
+  const handleInputChange = (field: keyof PublicationFormData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    // Effacer l'erreur quand l'utilisateur commence à taper
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: undefined }));
+    }
   };
 
   return (
@@ -92,10 +148,11 @@ export const PublicationForm: React.FC<PublicationFormProps> = ({
             <Input
               id="title"
               value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              required
+              onChange={(e) => handleInputChange('title', e.target.value)}
               placeholder="Titre de la publication"
+              className={errors.title ? 'border-red-500' : ''}
             />
+            {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
           </div>
 
           <div>
@@ -103,11 +160,12 @@ export const PublicationForm: React.FC<PublicationFormProps> = ({
             <Textarea
               id="content"
               value={formData.content}
-              onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+              onChange={(e) => handleInputChange('content', e.target.value)}
               rows={4}
-              required
               placeholder="Contenu de la publication"
+              className={errors.content ? 'border-red-500' : ''}
             />
+            {errors.content && <p className="text-red-500 text-sm mt-1">{errors.content}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -117,18 +175,19 @@ export const PublicationForm: React.FC<PublicationFormProps> = ({
                 id="scheduled_date"
                 type="datetime-local"
                 value={formData.scheduled_date}
-                onChange={(e) => setFormData({ ...formData, scheduled_date: e.target.value })}
-                required
+                onChange={(e) => handleInputChange('scheduled_date', e.target.value)}
+                className={errors.scheduled_date ? 'border-red-500' : ''}
               />
+              {errors.scheduled_date && <p className="text-red-500 text-sm mt-1">{errors.scheduled_date}</p>}
             </div>
 
             <div>
               <Label htmlFor="platform">Plateforme *</Label>
               <Select 
                 value={formData.platform} 
-                onValueChange={(value) => setFormData({ ...formData, platform: value })}
+                onValueChange={(value) => handleInputChange('platform', value)}
               >
-                <SelectTrigger>
+                <SelectTrigger className={errors.platform ? 'border-red-500' : ''}>
                   <SelectValue placeholder="Choisir une plateforme" />
                 </SelectTrigger>
                 <SelectContent>
@@ -139,6 +198,7 @@ export const PublicationForm: React.FC<PublicationFormProps> = ({
                   ))}
                 </SelectContent>
               </Select>
+              {errors.platform && <p className="text-red-500 text-sm mt-1">{errors.platform}</p>}
             </div>
           </div>
 
@@ -146,7 +206,7 @@ export const PublicationForm: React.FC<PublicationFormProps> = ({
             <Label htmlFor="assigned_to">Assigner à</Label>
             <Select 
               value={formData.assigned_to} 
-              onValueChange={(value) => setFormData({ ...formData, assigned_to: value })}
+              onValueChange={(value) => handleInputChange('assigned_to', value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Choisir un utilisateur" />
@@ -173,7 +233,7 @@ export const PublicationForm: React.FC<PublicationFormProps> = ({
               id="external_link"
               type="url"
               value={formData.external_link}
-              onChange={(e) => setFormData({ ...formData, external_link: e.target.value })}
+              onChange={(e) => handleInputChange('external_link', e.target.value)}
               placeholder="https://..."
             />
           </div>
