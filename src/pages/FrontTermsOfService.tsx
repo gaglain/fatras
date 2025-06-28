@@ -1,7 +1,20 @@
 
-import React, { useState, useEffect } from 'react';
-import { FrontLegalNotices } from './FrontLegalNotices';
+import React from 'react';
+import { FrontLegalEditor } from '@/components/FrontLegalEditor';
+import { useUser } from '@/contexts/UserContext';
 
 export const FrontTermsOfService: React.FC = () => {
-  return <FrontLegalNotices />;
+  const { currentUser, getUserPermissions } = useUser();
+  const permissions = getUserPermissions(currentUser);
+  const canEdit = permissions.canManageWebsite;
+
+  return (
+    <div className="min-h-screen bg-gray-50 py-8">
+      <FrontLegalEditor
+        type="termsOfService"
+        title="Conditions Générales de Vente"
+        canEdit={canEdit}
+      />
+    </div>
+  );
 };

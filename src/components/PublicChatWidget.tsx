@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,7 +30,7 @@ export const PublicChatWidget: React.FC = () => {
     scrollToBottom();
   }, [messages]);
 
-  // Charger les messages du chat (simulation avec localStorage)
+  // Charger les messages du chat depuis localStorage
   useEffect(() => {
     if (isOpen) {
       const savedMessages = localStorage.getItem('publicChatMessages');
@@ -65,12 +64,44 @@ export const PublicChatWidget: React.FC = () => {
     saveMessages(updatedMessages);
     setNewMessage('');
 
-    // Notifier le super admin
+    // Envoyer une notification réelle via Supabase
     try {
-      // Dans un vrai projet, ceci devrait utiliser une notification en temps réel
-      // Pour l'instant, on sauvegarde une notification dans localStorage
-      const notifications = JSON.parse(localStorage.getItem('adminNotifications') || '[]');
-      notifications.push({
+      // Obtenir les admins depuis les user_profiles
+      const { data: adminProfiles, error: adminError } = await supabase
+        .from('user_profiles')
+        .select('user_id')
+        .eq('role', 'super_admin');
+
+      if (adminError) {
+        console.error('Erreur lors de la récupération des admins:', adminError);
+      } else if (adminProfiles && adminProfiles.length > 0) {
+        // Envoyer une notification à chaque admin
+        const notifications = adminProfiles.map(admin => ({
+          user_id: admin.user_id,
+          type: 'chat_message',
+          title: 'Nouveau message chat public',
+          message: `${userName}: ${newMessage.slice(0, 50)}${newMessage.length > 50 ? '...' : ''}`,
+          data: { 
+            chat_message_id: message.id,
+            user_name: userName,
+            full_message: newMessage
+          }
+        }));
+
+        const { error: notifError } = await supabase
+          .from('notifications')
+          .insert(notifications);
+
+        if (notifError) {
+          console.error('Erreur notification Supabase:', notifError);
+        } else {
+          console.log('Notification envoyée aux admins via Supabase');
+        }
+      }
+
+      // Fallback vers localStorage pour compatibilité
+      const localNotifications = JSON.parse(localStorage.getItem('adminNotifications') || '[]');
+      localNotifications.push({
         id: `notif-${Date.now()}`,
         type: 'chat',
         title: 'Nouveau message chat public',
@@ -78,7 +109,7 @@ export const PublicChatWidget: React.FC = () => {
         timestamp: new Date().toISOString(),
         read: false
       });
-      localStorage.setItem('adminNotifications', JSON.stringify(notifications));
+      localStorage.setItem('adminNotifications', JSON.stringify(localNotifications));
       
       toast.success('Message envoyé !');
     } catch (error) {
