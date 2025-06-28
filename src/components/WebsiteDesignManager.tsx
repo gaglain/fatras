@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Palette, Upload, Save, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
@@ -35,21 +34,23 @@ const defaultDesign: SiteDesign = {
 
 export const WebsiteDesignManager: React.FC = () => {
   const [design, setDesign] = useState<SiteDesign>(defaultDesign);
-  const [previewMode, setPreviewMode] = useState(false);
 
   useEffect(() => {
     // Charger la configuration sauvegardée
     const savedDesign = localStorage.getItem('websiteDesign');
     if (savedDesign) {
       try {
-        setDesign(JSON.parse(savedDesign));
+        const parsed = JSON.parse(savedDesign);
+        setDesign(prev => ({ ...prev, ...parsed }));
+        console.log('🎨 Loaded saved design:', parsed);
       } catch (error) {
-        console.error('Erreur lors du chargement du design:', error);
+        console.error('❌ Error loading design:', error);
       }
     }
   }, []);
 
   const handleInputChange = (field: keyof SiteDesign, value: string) => {
+    console.log(`🔧 Changing ${field} to:`, value);
     setDesign(prev => ({ ...prev, [field]: value }));
   };
 
@@ -59,6 +60,7 @@ export const WebsiteDesignManager: React.FC = () => {
       const reader = new FileReader();
       reader.onload = (e) => {
         const result = e.target?.result as string;
+        console.log('📸 Logo uploaded:', result.substring(0, 50) + '...');
         setDesign(prev => ({ ...prev, logo: result }));
         toast.success('Logo chargé avec succès');
       };
@@ -67,41 +69,60 @@ export const WebsiteDesignManager: React.FC = () => {
   };
 
   const saveDesign = () => {
+    console.log('💾 Saving design:', design);
+    
+    // Sauvegarder dans localStorage
     localStorage.setItem('websiteDesign', JSON.stringify(design));
     
-    // Appliquer les couleurs immédiatement
-    const root = document.documentElement;
-    root.style.setProperty('--site-primary-color', design.primaryColor);
-    root.style.setProperty('--site-secondary-color', design.secondaryColor);
-    root.style.setProperty('--site-accent-color', design.accentColor);
-    root.style.setProperty('--site-text-color', design.textColor);
-    root.style.setProperty('--site-link-color', design.linkColor);
+    // Déclencher les événements de synchronisation IMMÉDIATEMENT
+    console.log('🚀 Triggering sync events...');
     
-    // Déclencher les événements de synchronisation
+    // Déclencher plusieurs événements pour s'assurer de la synchronisation
     window.dispatchEvent(new CustomEvent('websiteDesignUpdated', { detail: design }));
-    window.dispatchEvent(new CustomEvent('websiteDesignSaved'));
+    window.dispatchEvent(new CustomEvent('websiteDesignSaved', { detail: design }));
     
-    console.log('🎨 Design sauvegardé et événements déclenchés');
-    toast.success('Design sauvegardé avec succès');
+    // Forcer la synchronisation avec un petit délai
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('websiteDesignUpdated', { detail: design }));
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'websiteDesign',
+        newValue: JSON.stringify(design),
+        storageArea: localStorage
+      }));
+    }, 100);
+    
+    // Autre tentative après 500ms
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('websiteDesignSaved', { detail: design }));
+    }, 500);
+    
+    toast.success('Design sauvegardé avec succès ! La synchronisation peut prendre quelques secondes.');
+    console.log('✅ Design saved and events triggered');
   };
 
   const resetDesign = () => {
+    console.log('🔄 Resetting design to default');
     setDesign(defaultDesign);
     localStorage.removeItem('websiteDesign');
     
-    // Réinitialiser les variables CSS
-    const root = document.documentElement;
-    Object.keys(defaultDesign).forEach(key => {
-      root.style.removeProperty(`--site-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`);
-    });
-    
+    // Déclencher les événements de synchronisation
     window.dispatchEvent(new CustomEvent('websiteDesignUpdated', { detail: defaultDesign }));
-    window.dispatchEvent(new CustomEvent('websiteDesignSaved'));
+    window.dispatchEvent(new CustomEvent('websiteDesignSaved', { detail: defaultDesign }));
+    
     toast.success('Design réinitialisé');
   };
 
   return (
     <div className="space-y-6">
+      {/* Debug info */}
+      <Card className="bg-blue-50 border-blue-200">
+        <CardContent className="pt-4">
+          <p className="text-sm text-blue-800">
+            <strong>Debug:</strong> Nom actuel: "{design.siteName}" | Logo: {design.logo ? 'Défini' : 'Non défini'}
+          </p>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Logo et Branding */}
         <Card>
@@ -136,7 +157,10 @@ export const WebsiteDesignManager: React.FC = () => {
                       src={design.logo}
                       alt="Logo"
                       className="h-12 w-12 object-contain border rounded"
-                      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                      onError={(e) => { 
+                        console.error('❌ Logo loading error');
+                        (e.currentTarget as HTMLImageElement).style.display = 'none'; 
+                      }}
                     />
                     <Badge variant="secondary" className="text-xs">Logo chargé</Badge>
                   </div>
@@ -195,25 +219,6 @@ export const WebsiteDesignManager: React.FC = () => {
               </div>
 
               <div>
-                <Label htmlFor="accentColor">Couleur d'accent</Label>
-                <div className="flex gap-2 mt-1">
-                  <Input
-                    id="accentColor"
-                    type="color"
-                    value={design.accentColor}
-                    onChange={(e) => handleInputChange('accentColor', e.target.value)}
-                    className="w-16 h-10 p-1 border rounded"
-                  />
-                  <Input
-                    type="text"
-                    value={design.accentColor}
-                    onChange={(e) => handleInputChange('accentColor', e.target.value)}
-                    className="flex-1"
-                  />
-                </div>
-              </div>
-
-              <div>
                 <Label htmlFor="textColor">Couleur du texte</Label>
                 <div className="flex gap-2 mt-1">
                   <Input
@@ -227,6 +232,25 @@ export const WebsiteDesignManager: React.FC = () => {
                     type="text"
                     value={design.textColor}
                     onChange={(e) => handleInputChange('textColor', e.target.value)}
+                    className="flex-1"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="linkColor">Couleur des liens</Label>
+                <div className="flex gap-2 mt-1">
+                  <Input
+                    id="linkColor"
+                    type="color"
+                    value={design.linkColor}
+                    onChange={(e) => handleInputChange('linkColor', e.target.value)}
+                    className="w-16 h-10 p-1 border rounded"
+                  />
+                  <Input
+                    type="text"
+                    value={design.linkColor}
+                    onChange={(e) => handleInputChange('linkColor', e.target.value)}
                     className="flex-1"
                   />
                 </div>
