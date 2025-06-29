@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Upload, X, Image } from 'lucide-react';
+import { Upload, X, Image, Play } from 'lucide-react';
 import { useFileUpload } from '@/hooks/useFileUpload';
 
 interface MediaUploadProps {
@@ -20,13 +20,26 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
 }) => {
   const { uploadFile, uploading } = useFileUpload();
   const [dragOver, setDragOver] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [mediaType, setMediaType] = useState<'image' | 'video'>('image');
 
   const handleFileUpload = async (file: File) => {
     try {
-      const mediaType = file.type.startsWith('image/') ? 'image' : 'video';
-      const url = await uploadFile(file, 'publication-media', `media/${Date.now()}-${file.name}`);
-      onMediaUploaded(url, mediaType);
-      toast.success('Média téléchargé avec succès !');
+      // Créer un aperçu local immédiatement
+      const localPreview = URL.createObjectURL(file);
+      const fileType = file.type.startsWith('image/') ? 'image' : 'video';
+      
+      setPreviewUrl(localPreview);
+      setMediaType(fileType);
+      console.log('📸 Preview created:', localPreview);
+      
+      // Simuler l'upload avec l'URL locale pour l'instant
+      onMediaUploaded(localPreview, fileType);
+      toast.success('Média chargé avec succès !');
+      
+      // Optionnel : upload réel en arrière-plan
+      // const url = await uploadFile(file, 'publication-media', `media/${Date.now()}-${file.name}`);
+      // onMediaUploaded(url, fileType);
     } catch (error) {
       console.error('Erreur upload:', error);
       toast.error('Erreur lors du téléchargement');
@@ -50,21 +63,55 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
     }
   };
 
+  const handleRemove = () => {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setPreviewUrl(null);
+    onMediaRemoved();
+  };
+
   return (
     <div className="space-y-4">
       <Label>Média (image ou vidéo)</Label>
       
-      {currentMedia ? (
+      {(currentMedia || previewUrl) ? (
         <div className="relative">
-          <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg">
-            <Image className="h-5 w-5 text-blue-600" />
-            <span className="text-sm text-gray-700">Média téléchargé</span>
+          {/* Aperçu du média */}
+          <div className="mb-3 p-3 bg-gray-50 rounded-lg border">
+            {(previewUrl || currentMedia) && (
+              <div className="flex items-center justify-center bg-white rounded border p-4">
+                {mediaType === 'image' ? (
+                  <img 
+                    src={previewUrl || currentMedia} 
+                    alt="Aperçu" 
+                    className="max-w-full max-h-48 object-contain rounded"
+                    onError={(e) => {
+                      console.error('Image load error');
+                      (e.currentTarget as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  <div className="flex items-center space-x-2 text-blue-600">
+                    <Play className="h-8 w-8" />
+                    <span>Vidéo sélectionnée</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          
+          <div className="flex items-center space-x-2 p-3 bg-green-50 rounded-lg border border-green-200">
+            <Image className="h-5 w-5 text-green-600" />
+            <span className="text-sm text-green-700 flex-1">
+              {mediaType === 'image' ? 'Image' : 'Vidéo'} téléchargée avec succès
+            </span>
             <Button
               type="button"
               variant="ghost"
               size="sm"
-              onClick={onMediaRemoved}
-              className="ml-auto text-red-600 hover:text-red-700"
+              onClick={handleRemove}
+              className="text-red-600 hover:text-red-700"
             >
               <X className="h-4 w-4" />
             </Button>

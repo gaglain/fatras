@@ -87,12 +87,6 @@ export const PublicationCalendar: React.FC = () => {
       localStorage.setItem('publications_data', JSON.stringify(newPublications));
       setPublications(newPublications);
       console.log('✅ Publications saved successfully to localStorage');
-      
-      // Déclencher un événement pour indiquer que les données ont changé
-      window.dispatchEvent(new CustomEvent('publicationsUpdated', { 
-        detail: { count: newPublications.length } 
-      }));
-      
       return true;
     } catch (error) {
       console.error('❌ Error saving publications:', error);
@@ -147,8 +141,11 @@ export const PublicationCalendar: React.FC = () => {
         toast.success(editingPublication ? 'Publication modifiée avec succès' : 'Publication créée avec succès');
         console.log('✅ Publication operation completed successfully');
         
-        // Recharger les publications pour s'assurer de la cohérence
-        setTimeout(loadPublications, 100);
+        // Forcer un rechargement immédiat
+        setTimeout(() => {
+          loadPublications();
+          console.log('🔄 Forced reload completed');
+        }, 100);
       }
     } catch (error) {
       console.error('❌ Error in handleFormSubmit:', error);
@@ -259,8 +256,8 @@ export const PublicationCalendar: React.FC = () => {
           <p className="text-sm text-blue-800">
             <strong>Debug:</strong> {publications.length} publication(s) trouvée(s) | 
             Utilisateur: {currentUser?.name || 'Non connecté'} | 
-            Profils: {userProfiles.length} | 
-            Form: {showForm ? 'Ouvert' : 'Fermé'}
+            Form: {showForm ? 'Ouvert' : 'Fermé'} | 
+            localStorage key: publications_data
           </p>
         </CardContent>
       </Card>
@@ -287,7 +284,6 @@ export const PublicationCalendar: React.FC = () => {
         ) : (
           publications.map((publication) => (
             <Card key={publication.id} className="relative">
-              
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">

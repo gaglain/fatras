@@ -1,13 +1,13 @@
-
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 
 export const LoginForm = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -32,8 +32,13 @@ export const LoginForm = () => {
         const { error } = await signIn(email, password);
         if (error) throw error;
         toast.success('Connexion réussie !');
+        
+        // Redirection immédiate vers le dashboard
+        console.log('🔄 Redirecting to dashboard...');
+        navigate('/dashboard');
       }
     } catch (error: any) {
+      console.error('❌ Auth error:', error);
       toast.error(error.message);
     } finally {
       setIsLoading(false);
