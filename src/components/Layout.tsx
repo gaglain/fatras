@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Outlet, useLocation, Navigate } from 'react-router-dom';
 import { SidebarProvider } from '@/components/ui/sidebar';
@@ -19,10 +20,14 @@ export const Layout: React.FC = () => {
   const location = useLocation();
   const { theme } = useTheme();
 
+  console.log('🏗️ Layout - Rendering for path:', location.pathname);
+
   // Vérifier si on est sur une route back-office
   const isAdminRoute = adminRoutes.some(route =>
     location.pathname === route || location.pathname.startsWith(route + '/')
   );
+
+  console.log('🏗️ Layout - Is admin route:', isAdminRoute);
 
   // Gère les redirections historiques
   if (location.pathname === '/website/backoffice') {

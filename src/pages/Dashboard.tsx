@@ -8,6 +8,8 @@ import { TopArtistsCard } from '@/components/dashboard/TopArtistsCard';
 import { QuickActionsCard } from '@/components/dashboard/QuickActionsCard';
 
 export const Dashboard: React.FC = () => {
+  console.log('🎯 Dashboard - Component rendering');
+  
   return (
     <div className="space-y-6 min-h-screen p-6" style={{
       background: 'var(--custom-background, #ffffff)',
