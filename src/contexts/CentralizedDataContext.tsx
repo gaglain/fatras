@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 // Types centralisés
@@ -123,7 +122,7 @@ const initialArtists: Artist[] = [
     status: 'active',
     upcomingShows: 3,
     totalShows: 45,
-    bio: 'Artiste folk avec une voix envoûtante et des compositions originales qui touchent le cœur.',
+    bio: 'Artiste folk avec une voix envoûtante et des compositions originales qui touche le cœur.',
     image: 'https://images.unsplash.com/photo-1494790108755-2616c056ca66?w=400',
     rating: 4.7,
     contact: {
@@ -145,6 +144,8 @@ const initialArtists: Artist[] = [
 ];
 
 export const CentralizedDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  console.log('🚀 CentralizedDataProvider - Initializing...');
+
   const [artists, setArtists] = useState<Artist[]>([]);
   const [publications, setPublications] = useState<Publication[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
@@ -157,7 +158,9 @@ export const CentralizedDataProvider: React.FC<{ children: React.ReactNode }> = 
 
   // Sauvegarder automatiquement quand les données changent
   useEffect(() => {
-    saveData();
+    if (artists.length > 0 || publications.length > 0 || events.length > 0) {
+      saveData();
+    }
   }, [artists, publications, events]);
 
   const loadData = () => {
@@ -198,7 +201,6 @@ export const CentralizedDataProvider: React.FC<{ children: React.ReactNode }> = 
     }
   };
 
-  // Actions pour les artistes
   const addArtist = (artistData: Omit<Artist, 'id'>) => {
     const newArtist: Artist = {
       ...artistData,
@@ -218,7 +220,6 @@ export const CentralizedDataProvider: React.FC<{ children: React.ReactNode }> = 
   const deleteArtist = (id: string) => {
     console.log('🗑️ Deleting artist:', id);
     setArtists(prev => prev.filter(artist => artist.id !== id));
-    // Nettoyer les références dans les autres entités
     setEvents(prev => prev.map(event => 
       event.artistId === id ? { ...event, artistId: undefined } : event
     ));
@@ -228,7 +229,6 @@ export const CentralizedDataProvider: React.FC<{ children: React.ReactNode }> = 
     return artists.find(artist => artist.id === id);
   };
 
-  // Actions pour les publications
   const addPublication = (pubData: Omit<Publication, 'id'>) => {
     const newPublication: Publication = {
       ...pubData,
@@ -254,7 +254,6 @@ export const CentralizedDataProvider: React.FC<{ children: React.ReactNode }> = 
     return publications.find(pub => pub.id === id);
   };
 
-  // Actions pour les événements
   const addEvent = (eventData: Omit<Event, 'id'>) => {
     const newEvent: Event = {
       ...eventData,
@@ -284,6 +283,8 @@ export const CentralizedDataProvider: React.FC<{ children: React.ReactNode }> = 
     console.log('🔄 Refreshing data...');
     loadData();
   };
+
+  console.log('📊 Current state - Artists:', artists.length, 'Publications:', publications.length, 'Events:', events.length);
 
   return (
     <CentralizedDataContext.Provider value={{

@@ -9,37 +9,26 @@ const Index = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen flex items-center justify-center transition-colors duration-300" style={{
-      background: 'var(--custom-background, #ffffff)',
-      color: 'var(--custom-text, #18181b)'
-    }}>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="w-full max-w-md p-6">
-        <Card className="shadow-xl" style={{
-          background: 'var(--custom-cardBg, #ffffff)',
-          color: 'var(--custom-cardText, #18181b)',
-          border: '1px solid rgba(0,0,0,0.1)'
-        }}>
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold" style={{
-              color: 'var(--custom-text, #18181b)'
-            }}>
+        <Card className="shadow-xl border-0">
+          <CardHeader className="text-center pb-6">
+            <CardTitle className="text-3xl font-bold text-gray-900 mb-2">
               Fatras Booking
             </CardTitle>
-            <CardDescription style={{
-              color: 'var(--custom-text, #666666)'
-            }}>
+            <CardDescription className="text-gray-600 text-lg">
               Système de gestion pour bookers professionnels
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-0">
             <LoginForm />
             <div className="mt-6 text-center">
               <Button 
                 variant="outline" 
-                onClick={() => navigate('/front')}
-                className="w-full back-office-button"
+                onClick={() => navigate('/dashboard')}
+                className="w-full"
               >
-                Voir le site public
+                Accéder au Dashboard
               </Button>
             </div>
           </CardContent>
@@ -49,5 +38,4 @@ const Index = () => {
   );
 };
 
-export { Index };
 export default Index;
