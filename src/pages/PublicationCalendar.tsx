@@ -7,31 +7,7 @@ import { Calendar, Plus, Edit, Trash2, Image, Link, MessageSquare, CheckCircle, 
 import { toast } from 'sonner';
 import { useUser } from '@/contexts/UserContext';
 import { PublicationForm } from '@/components/PublicationForm';
-
-interface Publication {
-  id: string;
-  title: string;
-  content: string;
-  scheduled_date: string;
-  platform: string;
-  status: 'draft' | 'scheduled' | 'published' | 'pending_approval';
-  assigned_to?: string;
-  assigned_username?: string;
-  media_url?: string;
-  media_type?: 'image' | 'video';
-  external_link?: string;
-  comments: PublicationComment[];
-  created_by: string;
-  created_at: string;
-}
-
-interface PublicationComment {
-  id: string;
-  user_id: string;
-  username: string;
-  comment: string;
-  created_at: string;
-}
+import { useCentralizedData, Publication, PublicationComment } from '@/contexts/CentralizedDataContext';
 
 const platforms = [
   { value: 'facebook', label: 'Facebook' },
@@ -50,7 +26,7 @@ const exampleProfiles = [
 
 export const PublicationCalendar: React.FC = () => {
   const { currentUser } = useUser();
-  const [publications, setPublications] = useState<Publication[]>([]);
+  const { publications, addPublication, updatePublication, deletePublication } = useCentralizedData();
   const [showForm, setShowForm] = useState(false);
   const [editingPublication, setEditingPublication] = useState<Publication | null>(null);
   const [userProfiles] = useState(exampleProfiles);
@@ -58,42 +34,7 @@ export const PublicationCalendar: React.FC = () => {
   const [newComment, setNewComment] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    console.log('📅 PublicationCalendar mounted');
-    loadPublications();
-  }, []);
-
-  const loadPublications = () => {
-    console.log('📖 Loading publications from localStorage...');
-    try {
-      const saved = localStorage.getItem('publications_data');
-      if (saved) {
-        const parsedPublications = JSON.parse(saved);
-        console.log('📖 Publications loaded:', parsedPublications.length, 'items');
-        setPublications(parsedPublications);
-      } else {
-        console.log('📖 No publications found in localStorage');
-        setPublications([]);
-      }
-    } catch (error) {
-      console.error('❌ Error loading publications:', error);
-      setPublications([]);
-    }
-  };
-
-  const savePublications = (newPublications: Publication[]) => {
-    console.log('💾 Saving publications:', newPublications.length, 'items');
-    try {
-      localStorage.setItem('publications_data', JSON.stringify(newPublications));
-      setPublications(newPublications);
-      console.log('✅ Publications saved successfully to localStorage');
-      return true;
-    } catch (error) {
-      console.error('❌ Error saving publications:', error);
-      toast.error('Erreur lors de la sauvegarde');
-      return false;
-    }
-  };
+  console.log('📅 PublicationCalendar - Current publications:', publications.length);
 
   const handleFormSubmit = async (formData: any) => {
     console.log('📝 Form submitted with data:', formData);
@@ -110,8 +51,7 @@ export const PublicationCalendar: React.FC = () => {
       const assignedProfile = userProfiles.find(p => p.user_id === formData.assigned_to);
       console.log('👤 Assigned profile found:', assignedProfile);
 
-      const publication: Publication = {
-        id: editingPublication?.id || `pub-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      const publicationData = {
         title: formData.title,
         content: formData.content,
         scheduled_date: formData.scheduled_date,
@@ -119,34 +59,25 @@ export const PublicationCalendar: React.FC = () => {
         assigned_to: formData.assigned_to || '',
         assigned_username: assignedProfile?.username || '',
         media_url: formData.media_url || '',
-        media_type: formData.media_type || 'image',
+        media_type: formData.media_type || 'image' as const,
         external_link: formData.external_link || '',
-        status: editingPublication?.status || 'draft',
+        status: editingPublication?.status || 'draft' as const,
         comments: editingPublication?.comments || [],
         created_by: currentUser.id,
         created_at: editingPublication?.created_at || new Date().toISOString()
       };
 
-      console.log('📝 Publication to save:', publication);
-
-      const updatedPublications = editingPublication
-        ? publications.map(p => p.id === editingPublication.id ? publication : p)
-        : [...publications, publication];
-
-      const saved = savePublications(updatedPublications);
-      
-      if (saved) {
-        setEditingPublication(null);
-        setShowForm(false);
-        toast.success(editingPublication ? 'Publication modifiée avec succès' : 'Publication créée avec succès');
-        console.log('✅ Publication operation completed successfully');
-        
-        // Forcer un rechargement immédiat
-        setTimeout(() => {
-          loadPublications();
-          console.log('🔄 Forced reload completed');
-        }, 100);
+      if (editingPublication) {
+        updatePublication(editingPublication.id, publicationData);
+        toast.success('Publication modifiée avec succès');
+      } else {
+        addPublication(publicationData);
+        toast.success('Publication créée avec succès');
       }
+
+      setEditingPublication(null);
+      setShowForm(false);
+      console.log('✅ Publication operation completed successfully');
     } catch (error) {
       console.error('❌ Error in handleFormSubmit:', error);
       toast.error('Erreur lors de la sauvegarde de la publication');
@@ -164,23 +95,15 @@ export const PublicationCalendar: React.FC = () => {
   const handleDelete = (id: string) => {
     console.log('🗑️ Deleting publication:', id);
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cette publication ?')) {
-      const updated = publications.filter(p => p.id !== id);
-      const saved = savePublications(updated);
-      if (saved) {
-        toast.success('Publication supprimée');
-      }
+      deletePublication(id);
+      toast.success('Publication supprimée');
     }
   };
 
   const changeStatus = (id: string, newStatus: Publication['status']) => {
     console.log('🔄 Changing status for publication:', id, 'to:', newStatus);
-    const updated = publications.map(p => 
-      p.id === id ? { ...p, status: newStatus } : p
-    );
-    const saved = savePublications(updated);
-    if (saved) {
-      toast.success('Statut mis à jour');
-    }
+    updatePublication(id, { status: newStatus });
+    toast.success('Statut mis à jour');
   };
 
   const addComment = (publicationId: string) => {
@@ -196,14 +119,11 @@ export const PublicationCalendar: React.FC = () => {
       created_at: new Date().toISOString()
     };
 
-    const updated = publications.map(p => 
-      p.id === publicationId 
-        ? { ...p, comments: [...p.comments, comment] }
-        : p
-    );
-
-    const saved = savePublications(updated);
-    if (saved) {
+    const publication = publications.find(p => p.id === publicationId);
+    if (publication) {
+      updatePublication(publicationId, {
+        comments: [...publication.comments, comment]
+      });
       setNewComment('');
       toast.success('Commentaire ajouté');
     }
@@ -234,7 +154,7 @@ export const PublicationCalendar: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Calendrier de Publication</h1>
-          <p className="text-muted-foreground mt-2">Planifiez et gérez vos publications sur les réseaux sociaux</p>
+          <p className="text-muted-foreground mt-2">Planifiez et gérez vos publications sur les réseaux sociaux ({publications.length} publications)</p>
         </div>
         <Button 
           onClick={() => {
@@ -249,18 +169,6 @@ export const PublicationCalendar: React.FC = () => {
           Nouvelle publication
         </Button>
       </div>
-
-      {/* Debug info */}
-      <Card className="bg-blue-50 border-blue-200">
-        <CardContent className="pt-4">
-          <p className="text-sm text-blue-800">
-            <strong>Debug:</strong> {publications.length} publication(s) trouvée(s) | 
-            Utilisateur: {currentUser?.name || 'Non connecté'} | 
-            Form: {showForm ? 'Ouvert' : 'Fermé'} | 
-            localStorage key: publications_data
-          </p>
-        </CardContent>
-      </Card>
 
       {/* Publications Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -328,7 +236,7 @@ export const PublicationCalendar: React.FC = () => {
                     </div>
                   )}
                 </div>
-
+                
                 <div className="flex items-center justify-between pt-2 border-t">
                   <div className="flex items-center space-x-2">
                     <Button

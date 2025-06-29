@@ -5,15 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Music, Calendar, MapPin, Clock, Bed, BookOpen, Trash2, Upload, Image } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-
-interface Artist {
-  id: string;
-  name: string;
-  genre: string;
-  status: 'active' | 'inactive';
-  upcomingShows: number;
-  currentTour?: string;
-}
+import { useCentralizedData, Artist } from '@/contexts/CentralizedDataContext';
+import { toast } from 'sonner';
 
 interface TourSchedule {
   id: string;
@@ -25,32 +18,6 @@ interface TourSchedule {
   hotel?: string;
   notes?: string;
 }
-
-const sampleArtists: Artist[] = [
-  {
-    id: '1',
-    name: 'The Midnight Express',
-    genre: 'Rock',
-    status: 'active',
-    upcomingShows: 8,
-    currentTour: 'Tournée Rock Été 2024'
-  },
-  {
-    id: '2',
-    name: 'Sarah Mitchell',
-    genre: 'Folk/Acoustique',
-    status: 'active',
-    upcomingShows: 3
-  },
-  {
-    id: '3',
-    name: 'Thunder Road',
-    genre: 'Rock Classique',
-    status: 'active',
-    upcomingShows: 12,
-    currentTour: 'Tournée Legends Never Die'
-  }
-];
 
 const sampleTourSchedule: TourSchedule[] = [
   {
@@ -76,7 +43,7 @@ const sampleTourSchedule: TourSchedule[] = [
 
 export const Artists: React.FC = () => {
   const navigate = useNavigate();
-  const [artists, setArtists] = useState<Artist[]>(sampleArtists);
+  const { artists, addArtist, updateArtist, deleteArtist } = useCentralizedData();
   const [tourSchedule, setTourSchedule] = useState<TourSchedule[]>(sampleTourSchedule);
   const [selectedArtist, setSelectedArtist] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -85,65 +52,64 @@ export const Artists: React.FC = () => {
     name: '',
     genre: '',
     currentTour: '',
-    photo: null as File | null,
     bio: '',
-    rider: null as File | null,
-    setList: null as File | null
+    image: ''
   });
+
+  console.log('🎭 Artists page - Current artists:', artists.length);
 
   const selectedArtistSchedule = tourSchedule.filter(
     schedule => schedule.artistId === selectedArtist
   );
 
   const handleDeleteArtist = (artistId: string) => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer cet artiste ? Cette action est irréversible.')) {
-      setArtists(prev => prev.filter(artist => artist.id !== artistId));
+    const artist = artists.find(a => a.id === artistId);
+    if (confirm(`Êtes-vous sûr de vouloir supprimer l'artiste "${artist?.name}" ? Cette action est irréversible.`)) {
+      deleteArtist(artistId);
       setTourSchedule(prev => prev.filter(schedule => schedule.artistId !== artistId));
       if (selectedArtist === artistId) {
         setSelectedArtist(null);
       }
+      toast.success('Artiste supprimé avec succès');
     }
   };
 
   const handleEditArtist = (artist: Artist) => {
+    console.log('✏️ Editing artist:', artist);
     setEditingArtist(artist);
     setFormData({
       name: artist.name,
       genre: artist.genre,
       currentTour: artist.currentTour || '',
-      photo: null,
-      bio: '',
-      rider: null,
-      setList: null
+      bio: artist.bio || '',
+      image: artist.image || ''
     });
     setShowAddForm(true);
   };
 
-  const handleFileChange = (field: string, file: File | null) => {
-    setFormData(prev => ({ ...prev, [field]: file }));
-  };
-
   const handleSaveArtist = () => {
     if (!formData.name || !formData.genre) {
-      alert('Veuillez remplir tous les champs obligatoires');
+      toast.error('Veuillez remplir tous les champs obligatoires');
       return;
     }
 
-    const newArtist: Artist = {
-      id: editingArtist?.id || Date.now().toString(),
+    const artistData = {
       name: formData.name,
       genre: formData.genre,
-      status: 'active',
+      status: 'active' as const,
       upcomingShows: editingArtist?.upcomingShows || 0,
-      currentTour: formData.currentTour || undefined
+      totalShows: editingArtist?.totalShows || 0,
+      currentTour: formData.currentTour || undefined,
+      bio: formData.bio || undefined,
+      image: formData.image || undefined
     };
 
     if (editingArtist) {
-      setArtists(prev => prev.map(artist => 
-        artist.id === editingArtist.id ? newArtist : artist
-      ));
+      updateArtist(editingArtist.id, artistData);
+      toast.success('Artiste modifié avec succès');
     } else {
-      setArtists(prev => [...prev, newArtist]);
+      addArtist(artistData);
+      toast.success('Artiste créé avec succès');
     }
 
     setShowAddForm(false);
@@ -152,10 +118,8 @@ export const Artists: React.FC = () => {
       name: '',
       genre: '',
       currentTour: '',
-      photo: null,
       bio: '',
-      rider: null,
-      setList: null
+      image: ''
     });
   };
 
@@ -164,7 +128,7 @@ export const Artists: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Gestion des Artistes</h1>
-          <p className="text-gray-600 mt-2">Gérer les artistes, tournées, plannings et logistique</p>
+          <p className="text-gray-600 mt-2">Gérer les artistes, tournées, plannings et logistique ({artists.length} artistes)</p>
         </div>
         <div className="flex space-x-2">
           <Button variant="outline" onClick={() => navigate('/show-bible')}>
@@ -254,94 +218,94 @@ export const Artists: React.FC = () => {
               </Card>
             ))}
           </div>
-        </div>
 
-        {/* Tour Schedule */}
-        <div className="lg:col-span-2">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">
-            {selectedArtist ? 
-              `Planning de Tournée - ${artists.find(a => a.id === selectedArtist)?.name}` : 
-              'Sélectionner un artiste pour voir le planning de tournée'
-            }
-          </h2>
-          
-          {selectedArtist ? (
-            <div className="space-y-4">
-              {selectedArtistSchedule.map((schedule) => (
-                <Card key={schedule.id}>
-                  <CardContent className="p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-3">{schedule.venue}</h3>
-                        
-                        <div className="space-y-2">
-                          <div className="flex items-center text-gray-600">
-                            <Calendar className="h-4 w-4 mr-2" />
-                            <span>{new Date(schedule.date).toLocaleDateString('fr-FR')}</span>
-                          </div>
+          {/* Tour Schedule */}
+          <div className="mt-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+              {selectedArtist ? 
+                `Planning de Tournée - ${artists.find(a => a.id === selectedArtist)?.name}` : 
+                'Sélectionner un artiste pour voir le planning de tournée'
+              }
+            </h2>
+            
+            {selectedArtist ? (
+              <div className="space-y-4">
+                {selectedArtistSchedule.map((schedule) => (
+                  <Card key={schedule.id}>
+                    <CardContent className="p-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900 mb-3">{schedule.venue}</h3>
                           
-                          <div className="flex items-center text-gray-600">
-                            <Clock className="h-4 w-4 mr-2" />
-                            <span>Spectacle: {schedule.showTime}</span>
-                          </div>
-                          
-                          <div className="flex items-center text-gray-600">
-                            <Clock className="h-4 w-4 mr-2" />
-                            <span>Répétition: {schedule.rehearsalTime}</span>
-                          </div>
-                          
-                          {schedule.hotel && (
+                          <div className="space-y-2">
                             <div className="flex items-center text-gray-600">
-                              <Bed className="h-4 w-4 mr-2" />
-                              <span>{schedule.hotel}</span>
+                              <Calendar className="h-4 w-4 mr-2" />
+                              <span>{new Date(schedule.date).toLocaleDateString('fr-FR')}</span>
+                            </div>
+                            
+                            <div className="flex items-center text-gray-600">
+                              <Clock className="h-4 w-4 mr-2" />
+                              <span>Spectacle: {schedule.showTime}</span>
+                            </div>
+                            
+                            <div className="flex items-center text-gray-600">
+                              <Clock className="h-4 w-4 mr-2" />
+                              <span>Répétition: {schedule.rehearsalTime}</span>
+                            </div>
+                            
+                            {schedule.hotel && (
+                              <div className="flex items-center text-gray-600">
+                                <Bed className="h-4 w-4 mr-2" />
+                                <span>{schedule.hotel}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div>
+                          {schedule.notes && (
+                            <div>
+                              <h4 className="font-medium text-gray-900 mb-2">Notes</h4>
+                              <p className="text-gray-600 text-sm">{schedule.notes}</p>
                             </div>
                           )}
-                        </div>
-                      </div>
-                      
-                      <div>
-                        {schedule.notes && (
-                          <div>
-                            <h4 className="font-medium text-gray-900 mb-2">Notes</h4>
-                            <p className="text-gray-600 text-sm">{schedule.notes}</p>
+                          
+                          <div className="mt-4 space-y-2">
+                            <Button variant="outline" size="sm" className="w-full">
+                              <Calendar className="h-3 w-3 mr-1" />
+                              Ajouter au Google Calendar
+                            </Button>
+                            <Button variant="outline" size="sm" className="w-full">
+                              Modifier Planning
+                            </Button>
                           </div>
-                        )}
-                        
-                        <div className="mt-4 space-y-2">
-                          <Button variant="outline" size="sm" className="w-full">
-                            <Calendar className="h-3 w-3 mr-1" />
-                            Ajouter au Google Calendar
-                          </Button>
-                          <Button variant="outline" size="sm" className="w-full">
-                            Modifier Planning
-                          </Button>
                         </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-              
-              {selectedArtistSchedule.length === 0 && (
-                <Card>
-                  <CardContent className="p-6 text-center">
-                    <p className="text-gray-500">Aucune date de tournée programmée pour cet artiste.</p>
-                    <Button className="mt-4" variant="outline">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Ajouter Date de Tournée
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          ) : (
-            <Card>
-              <CardContent className="p-8 text-center">
-                <Music className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">Sélectionnez un artiste dans la liste pour voir son planning de tournée et gérer la logistique.</p>
-              </CardContent>
-            </Card>
-          )}
+                    </CardContent>
+                  </Card>
+                ))}
+                
+                {selectedArtistSchedule.length === 0 && (
+                  <Card>
+                    <CardContent className="p-6 text-center">
+                      <p className="text-gray-500">Aucune date de tournée programmée pour cet artiste.</p>
+                      <Button className="mt-4" variant="outline">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Ajouter Date de Tournée
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <Music className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500">Sélectionnez un artiste dans la liste pour voir son planning de tournée et gérer la logistique.</p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </div>
       </div>
 
@@ -372,20 +336,11 @@ export const Artists: React.FC = () => {
                 onChange={(e) => setFormData(prev => ({ ...prev, currentTour: e.target.value }))}
               />
               
-              <div>
-                <label className="block text-sm font-medium mb-2">Photo de profil</label>
-                <div className="flex items-center space-x-4">
-                  <Input 
-                    type="file" 
-                    accept="image/*"
-                    onChange={(e) => handleFileChange('photo', e.target.files?.[0] || null)}
-                  />
-                  <Button variant="outline" size="sm">
-                    <Upload className="h-4 w-4 mr-2" />
-                    Charger Photo
-                  </Button>
-                </div>
-              </div>
+              <Input 
+                placeholder="URL de l'image (optionnel)" 
+                value={formData.image}
+                onChange={(e) => setFormData(prev => ({ ...prev, image: e.target.value }))}
+              />
               
               <div>
                 <label className="block text-sm font-medium mb-2">Biographie</label>
@@ -397,25 +352,6 @@ export const Artists: React.FC = () => {
                 />
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Rider Technique (PDF)</label>
-                  <Input 
-                    type="file" 
-                    accept=".pdf"
-                    onChange={(e) => handleFileChange('rider', e.target.files?.[0] || null)}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Set List (PDF/TXT)</label>
-                  <Input 
-                    type="file" 
-                    accept=".pdf,.txt,.doc,.docx"
-                    onChange={(e) => handleFileChange('setList', e.target.files?.[0] || null)}
-                  />
-                </div>
-              </div>
-              
               <div className="flex space-x-3 pt-4">
                 <Button 
                   onClick={() => {
@@ -425,10 +361,8 @@ export const Artists: React.FC = () => {
                       name: '',
                       genre: '',
                       currentTour: '',
-                      photo: null,
                       bio: '',
-                      rider: null,
-                      setList: null
+                      image: ''
                     });
                   }} 
                   variant="outline" 

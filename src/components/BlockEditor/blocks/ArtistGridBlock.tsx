@@ -7,29 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Star, Eye } from 'lucide-react';
 import { ArtistGridBlockContent } from '../types';
-
-const sampleArtists = [
-  {
-    id: '1',
-    name: 'The Midnight Express',
-    genre: 'Rock',
-    image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400',
-    bio: 'Groupe de rock emblématique avec plus de 10 ans de carrière.',
-    upcomingShows: 8,
-    totalShows: 150,
-    rating: 4.9
-  },
-  {
-    id: '2',
-    name: 'Sarah Mitchell',
-    genre: 'Folk/Acoustique',
-    image: 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?w=400',
-    bio: 'Artiste folk avec une voix envoûtante.',
-    upcomingShows: 3,
-    totalShows: 45,
-    rating: 4.7
-  }
-];
+import { useCentralizedData } from '@/contexts/CentralizedDataContext';
 
 interface ArtistGridBlockProps {
   content: ArtistGridBlockContent;
@@ -38,7 +16,10 @@ interface ArtistGridBlockProps {
 }
 
 export const ArtistGridBlock: React.FC<ArtistGridBlockProps> = ({ content, isEditing, onChange }) => {
+  const { artists } = useCentralizedData();
   const [isEditingGrid, setIsEditingGrid] = useState(false);
+
+  console.log('🎭 ArtistGridBlock - Using centralized artists:', artists.length);
 
   if (isEditing && isEditingGrid) {
     return (
@@ -96,11 +77,11 @@ export const ArtistGridBlock: React.FC<ArtistGridBlockProps> = ({ content, isEdi
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {sampleArtists.map((artist) => (
+          {artists.slice(0, 2).map((artist) => (
             <Card key={artist.id} className="group hover:shadow-2xl transition-all duration-500 border-0 shadow-lg overflow-hidden bg-white rounded-3xl">
               <div className="relative">
                 <img 
-                  src={artist.image} 
+                  src={artist.image || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400'} 
                   alt={artist.name} 
                   className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-500" 
                 />
@@ -114,13 +95,13 @@ export const ArtistGridBlock: React.FC<ArtistGridBlockProps> = ({ content, isEdi
                 {content.showRating && (
                   <div className="absolute top-6 right-6 flex items-center space-x-1 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1">
                     <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                    <span className="text-white font-medium text-sm">{artist.rating}</span>
+                    <span className="text-white font-medium text-sm">{artist.rating || 4.5}</span>
                   </div>
                 )}
               </div>
               
               <CardContent className="p-6">
-                <p className="text-gray-600 mb-6 leading-relaxed">{artist.bio}</p>
+                <p className="text-gray-600 mb-6 leading-relaxed">{artist.bio || 'Description de l\'artiste...'}</p>
                 
                 {content.showStats && (
                   <div className="flex items-center justify-between mb-6">
@@ -145,6 +126,12 @@ export const ArtistGridBlock: React.FC<ArtistGridBlockProps> = ({ content, isEdi
             </Card>
           ))}
         </div>
+
+        {artists.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-gray-500">Aucun artiste disponible pour affichage.</p>
+          </div>
+        )}
       </div>
     </section>
   );
