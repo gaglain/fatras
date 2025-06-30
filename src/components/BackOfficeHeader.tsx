@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { User, Bell } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { FrontThemeToggle } from './FrontThemeToggle';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useTheme } from 'next-themes';
 import { useCompanySettings } from '@/hooks/useCompanySettings';
 import { useUser } from '@/contexts/UserContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -55,10 +55,8 @@ export const BackOfficeHeader: React.FC = () => {
             </div>
             
             <div className="flex items-center space-x-4">
-              {/* Indicateur temps réel */}
               <RealtimeIndicator />
               
-              {/* Bouton Notifications */}
               <div className="relative">
                 <Button 
                   onClick={handleNotificationClick}

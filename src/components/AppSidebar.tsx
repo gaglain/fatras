@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/sidebar';
 import { useNavigation } from '@/hooks/useNavigation';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useTheme } from 'next-themes';
 
 export function AppSidebar() {
   const { navigation, openSections, toggleSection } = useNavigation();

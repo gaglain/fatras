@@ -25,7 +25,7 @@ function App() {
   return (
     <div className="min-h-screen bg-white">
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <TooltipProvider>
             <RealtimeProvider>
               <UserProvider>
