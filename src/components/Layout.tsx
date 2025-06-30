@@ -29,18 +29,16 @@ export const Layout: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <SidebarProvider>
-        <div className="flex h-screen w-full">
-          <AppSidebar />
-          <div className="flex-1 flex flex-col overflow-hidden">
-            <BackOfficeHeader />
-            <main className="flex-1 overflow-auto p-6 bg-white">
-              <Outlet />
-            </main>
-          </div>
+    <SidebarProvider>
+      <div className="flex h-screen w-full bg-white">
+        <AppSidebar />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <BackOfficeHeader />
+          <main className="flex-1 overflow-auto p-6 bg-white">
+            <Outlet />
+          </main>
         </div>
-      </SidebarProvider>
-    </div>
+      </div>
+    </SidebarProvider>
   );
 };

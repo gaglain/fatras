@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { User, Bell } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { FrontThemeToggle } from './FrontThemeToggle';
 import { useTheme } from 'next-themes';
@@ -28,11 +28,7 @@ export const BackOfficeHeader: React.FC = () => {
 
   return (
     <>
-      <header 
-        className={`shadow-sm relative border-b transition-colors duration-300 ${
-          isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'
-        }`}
-      >
+      <header className="shadow-sm relative border-b transition-colors duration-300 bg-white border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
@@ -41,14 +37,10 @@ export const BackOfficeHeader: React.FC = () => {
                   src={logo || "/logo.svg"}
                   alt={name}
                   className="h-9 w-9 object-contain"
-                  style={{ filter: isDark ? "drop-shadow(0 2px 7px #fff9)" : "drop-shadow(0 2px 7px #1632f4)" }}
+                  style={{ filter: "drop-shadow(0 2px 7px #1632f4)" }}
                   onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                 />
-                <span 
-                  className={`text-lg font-bold tracking-tight transition-colors duration-300 ${
-                    isDark ? 'text-white' : 'text-gray-900'
-                  }`}
-                >
+                <span className="text-lg font-bold tracking-tight transition-colors duration-300 text-gray-900">
                   {name || "MusiConnect"}
                 </span>
               </Link>
@@ -62,9 +54,7 @@ export const BackOfficeHeader: React.FC = () => {
                   onClick={handleNotificationClick}
                   variant="ghost"
                   size="icon"
-                  className={`relative hover:opacity-80 transition-all duration-300 ${
-                    isDark ? 'text-white' : 'text-gray-900'
-                  }`}
+                  className="relative hover:opacity-80 transition-all duration-300 text-gray-900"
                 >
                   <Bell className="h-5 w-5" />
                   {unreadCount > 0 && (
@@ -98,11 +88,7 @@ export const BackOfficeHeader: React.FC = () => {
                     {currentUser?.lastName?.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
-                <span 
-                  className={`hidden md:block text-sm font-medium transition-colors duration-300 ${
-                    isDark ? 'text-white' : 'text-gray-900'
-                  }`}
-                >
+                <span className="hidden md:block text-sm font-medium transition-colors duration-300 text-gray-900">
                   {currentUser?.name}
                 </span>
               </button>

@@ -1,56 +1,67 @@
 
-import { Toaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import React from "react";
 import { Routes, Route } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
+import { HelmetProvider } from 'react-helmet-async';
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/sonner";
+import { UserProvider } from "@/contexts/UserContext";
+import { MessagingProvider } from "@/contexts/MessagingContext";
+import { AppDataProvider } from "@/contexts/AppDataContext";
+import { RealtimeProvider } from "@/contexts/RealtimeContext";
+import { CentralizedDataProvider } from "@/contexts/CentralizedDataContext";
 import Index from "./pages/Index";
 import { Dashboard } from "./pages/Dashboard";
 import { Artists } from "./pages/Artists";
 import { Events } from "./pages/Events";
 import { PublicationCalendar } from "./pages/PublicationCalendar";
 import { Layout } from "./components/Layout";
-import { AppDataProvider } from "./contexts/AppDataContext";
-import { CentralizedDataProvider } from "./contexts/CentralizedDataContext";
-import { UserProvider } from "./contexts/UserContext";
-import { RealtimeProvider } from "./contexts/RealtimeContext";
-import { MessagingProvider } from "./contexts/MessagingContext";
 import "./App.css";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: 1,
+    },
+  },
+});
 
 function App() {
   console.log('🚀 App - Rendering App component...');
   
   return (
-    <div className="min-h-screen bg-white">
-      <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
+      <HelmetProvider>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <TooltipProvider>
-            <RealtimeProvider>
-              <UserProvider>
-                <MessagingProvider>
-                  <AppDataProvider>
+            <UserProvider>
+              <MessagingProvider>
+                <AppDataProvider>
+                  <RealtimeProvider>
                     <CentralizedDataProvider>
-                      <Routes>
-                        <Route path="/" element={<Index />} />
-                        <Route element={<Layout />}>
-                          <Route path="/dashboard" element={<Dashboard />} />
-                          <Route path="/artists" element={<Artists />} />
-                          <Route path="/events" element={<Events />} />
-                          <Route path="/publication-calendar" element={<PublicationCalendar />} />
-                        </Route>
-                      </Routes>
+                      <div className="min-h-screen bg-white">
+                        <Routes>
+                          <Route path="/" element={<Index />} />
+                          <Route element={<Layout />}>
+                            <Route path="/dashboard" element={<Dashboard />} />
+                            <Route path="/artists" element={<Artists />} />
+                            <Route path="/events" element={<Events />} />
+                            <Route path="/publication-calendar" element={<PublicationCalendar />} />
+                          </Route>
+                        </Routes>
+                      </div>
                       <Toaster />
                     </CentralizedDataProvider>
-                  </AppDataProvider>
-                </MessagingProvider>
-              </UserProvider>
-            </RealtimeProvider>
+                  </RealtimeProvider>
+                </AppDataProvider>
+              </MessagingProvider>
+            </UserProvider>
           </TooltipProvider>
         </ThemeProvider>
-      </QueryClientProvider>
-    </div>
+      </HelmetProvider>
+    </QueryClientProvider>
   );
 }
 
