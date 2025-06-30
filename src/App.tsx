@@ -20,35 +20,37 @@ import "./App.css";
 const queryClient = new QueryClient();
 
 function App() {
-  console.log('🚀 App - Rendering...');
+  console.log('🚀 App - Rendering App component...');
   
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        <TooltipProvider>
-          <RealtimeProvider>
-            <UserProvider>
-              <MessagingProvider>
-                <AppDataProvider>
-                  <CentralizedDataProvider>
-                    <Routes>
-                      <Route path="/" element={<Index />} />
-                      <Route element={<Layout />}>
-                        <Route path="/dashboard" element={<Dashboard />} />
-                        <Route path="/artists" element={<Artists />} />
-                        <Route path="/events" element={<Events />} />
-                        <Route path="/publication-calendar" element={<PublicationCalendar />} />
-                      </Route>
-                    </Routes>
-                    <Toaster />
-                  </CentralizedDataProvider>
-                </AppDataProvider>
-              </MessagingProvider>
-            </UserProvider>
-          </RealtimeProvider>
-        </TooltipProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <div className="min-h-screen bg-white">
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <TooltipProvider>
+            <RealtimeProvider>
+              <UserProvider>
+                <MessagingProvider>
+                  <AppDataProvider>
+                    <CentralizedDataProvider>
+                      <Routes>
+                        <Route path="/" element={<Index />} />
+                        <Route element={<Layout />}>
+                          <Route path="/dashboard" element={<Dashboard />} />
+                          <Route path="/artists" element={<Artists />} />
+                          <Route path="/events" element={<Events />} />
+                          <Route path="/publication-calendar" element={<PublicationCalendar />} />
+                        </Route>
+                      </Routes>
+                      <Toaster />
+                    </CentralizedDataProvider>
+                  </AppDataProvider>
+                </MessagingProvider>
+              </UserProvider>
+            </RealtimeProvider>
+          </TooltipProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </div>
   );
 }
 
