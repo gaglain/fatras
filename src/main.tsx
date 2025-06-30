@@ -6,7 +6,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
 import { Toaster } from '@/components/ui/sonner';
 import { UserProvider } from '@/contexts/UserContext';
-import { ThemeProvider } from '@/contexts/ThemeContext';
 import { MessagingProvider } from '@/contexts/MessagingContext';
 import { AppDataProvider } from '@/contexts/AppDataContext';
 import { RealtimeProvider } from '@/contexts/RealtimeContext';
@@ -27,18 +26,16 @@ createRoot(document.getElementById('root')!).render(
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
         <HelmetProvider>
-          <ThemeProvider>
-            <UserProvider>
-              <MessagingProvider>
-                <AppDataProvider>
-                  <RealtimeProvider>
-                    <App />
-                    <Toaster />
-                  </RealtimeProvider>
-                </AppDataProvider>
-              </MessagingProvider>
-            </UserProvider>
-          </ThemeProvider>
+          <UserProvider>
+            <MessagingProvider>
+              <AppDataProvider>
+                <RealtimeProvider>
+                  <App />
+                  <Toaster />
+                </RealtimeProvider>
+              </AppDataProvider>
+            </MessagingProvider>
+          </UserProvider>
         </HelmetProvider>
       </QueryClientProvider>
     </BrowserRouter>

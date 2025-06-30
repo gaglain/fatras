@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Moon, Sun } from 'lucide-react';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useTheme } from 'next-themes';
 
 interface FrontThemeToggleProps {
   className?: string;
@@ -13,7 +13,11 @@ export const FrontThemeToggle: React.FC<FrontThemeToggleProps> = ({
   className = '', 
   variant = 'front' 
 }) => {
-  const { theme, toggleTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
+
+  const toggleTheme = () => {
+    setTheme(theme === 'light' ? 'dark' : 'light');
+  };
 
   if (variant === 'front') {
     return (
