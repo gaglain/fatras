@@ -4,6 +4,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { BackOfficeHeader } from '@/components/BackOfficeHeader';
+import { PublicChatWidget } from '@/components/PublicChatWidget';
 
 const adminRoutes = [
   '/admin', '/dashboard', '/artists', '/events', '/agenda', '/contacts',
@@ -39,6 +40,7 @@ export const Layout: React.FC = () => {
           </main>
         </div>
       </div>
+      <PublicChatWidget />
     </SidebarProvider>
   );
 };

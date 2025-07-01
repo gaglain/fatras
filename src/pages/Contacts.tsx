@@ -10,10 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Plus, Search, Phone, Mail, User, Calendar, ExternalLink, Globe, FileText, CheckSquare, History, Upload, Trash2 } from 'lucide-react';
-import { EmailPopup } from '@/components/EmailPopup';
 import { useUser } from '@/contexts/UserContext';
-import { CSVImporter } from '@/components/CSVImporter';
-import { CreateEventFromContact } from '@/components/contacts/CreateEventFromContact';
+import { toast } from 'sonner';
 
 interface Contact {
   id: string;
@@ -41,21 +39,44 @@ interface Contact {
   }>;
 }
 
-// Données nettoyées - seulement quelques exemples
-const sampleContacts: Contact[] = [];
-
-const sampleContracts = [];
-const sampleTasks = [];
-const sampleEvents = [];
+const sampleContacts: Contact[] = [
+  {
+    id: 'contact-1',
+    firstName: 'Jean',
+    lastName: 'Dupont',
+    phone: '06 12 34 56 78',
+    email: 'jean.dupont@example.com',
+    ownerId: 'user-1',
+    company: 'Productions Musicales',
+    role: 'Producteur',
+    acceptsPromotionalEmails: true,
+    source: 'manual',
+    linkedEventIds: [],
+    contractIds: [],
+    taskIds: []
+  },
+  {
+    id: 'contact-2',
+    firstName: 'Marie',
+    lastName: 'Martin',
+    phone: '06 23 45 67 89',
+    email: 'marie.martin@example.com',
+    ownerId: 'user-1',
+    company: 'Festival d\'été',
+    role: 'Organisatrice',
+    acceptsPromotionalEmails: true,
+    source: 'manual',
+    linkedEventIds: [],
+    contractIds: [],
+    taskIds: []
+  }
+];
 
 export const Contacts: React.FC = () => {
-  const { currentUser, users, getUserPermissions, changeOwnership } = useUser();
+  const { currentUser, users, getUserPermissions } = useUser();
   const [contacts, setContacts] = useState<Contact[]>(sampleContacts);
-  const [events, setEvents] = useState(sampleEvents);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
-  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
-  const [showCSVImporter, setShowCSVImporter] = useState(false);
   const [newContact, setNewContact] = useState({
     firstName: '',
     lastName: '',
@@ -65,11 +86,6 @@ export const Contacts: React.FC = () => {
     role: '',
     ownerId: currentUser?.id || 'user-1',
     acceptsPromotionalEmails: true
-  });
-  const [emailPopup, setEmailPopup] = useState<{ show: boolean; email: string; contactName: string }>({
-    show: false,
-    email: '',
-    contactName: ''
   });
 
   const permissions = currentUser ? getUserPermissions(currentUser) : null;
@@ -85,46 +101,18 @@ export const Contacts: React.FC = () => {
     return matchesSearch && canView;
   });
 
-  const getLinkedEvents = (eventIds?: string[]) => {
-    if (!eventIds) return [];
-    return events.filter(event => eventIds.includes(event.id));
-  };
-
   const handleEmailClick = (email: string, contactName: string) => {
-    setEmailPopup({ show: true, email, contactName });
-  };
-
-  const handleOwnershipChange = (contactId: string, newOwnerId: string) => {
-    setContacts(prev => prev.map(contact => 
-      contact.id === contactId ? { ...contact, ownerId: newOwnerId } : contact
-    ));
-
-    const contact = contacts.find(c => c.id === contactId);
-    if (contact?.linkedEventIds) {
-      setEvents(prev => prev.map(event => 
-        contact.linkedEventIds?.includes(event.id) 
-          ? { ...event, ownerId: newOwnerId }
-          : event
-      ));
-    }
-
-    changeOwnership('contact', contactId, newOwnerId);
+    window.open(`mailto:${email}`, '_blank');
   };
 
   const handleDeleteContact = (contactId: string) => {
-    const contact = contacts.find(c => c.id === contactId);
-    
-    if (contact?.linkedEventIds) {
-      setEvents(prev => prev.filter(event => !contact.linkedEventIds?.includes(event.id)));
-    }
-    
     setContacts(prev => prev.filter(c => c.id !== contactId));
-    
-    console.log(`Contact ${contactId} and linked events deleted`);
+    toast.success('Contact supprimé');
   };
 
   const handleAddContact = () => {
     if (!newContact.firstName || !newContact.lastName || !newContact.email) {
+      toast.error('Veuillez remplir tous les champs obligatoires');
       return;
     }
 
@@ -141,14 +129,7 @@ export const Contacts: React.FC = () => {
       source: 'manual',
       linkedEventIds: [],
       contractIds: [],
-      taskIds: [],
-      activityHistory: [{
-        id: `activity-${Date.now()}`,
-        type: 'email',
-        description: 'Contact créé manuellement',
-        date: new Date().toISOString(),
-        user: currentUser?.name || 'Utilisateur'
-      }]
+      taskIds: []
     };
 
     setContacts(prev => [...prev, contact]);
@@ -163,42 +144,12 @@ export const Contacts: React.FC = () => {
       acceptsPromotionalEmails: true
     });
     setShowAddForm(false);
+    toast.success('Contact ajouté');
   };
 
   const getOwnerName = (ownerId: string) => {
     const owner = users.find(user => user.id === ownerId);
     return owner?.name || 'Utilisateur inconnu';
-  };
-
-  const handleCSVImport = (importedContacts: any[]) => {
-    const newContacts = importedContacts.map((contact, index) => ({
-      id: `imported-${Date.now()}-${index}`,
-      firstName: contact.firstName || contact.name?.split(' ')[0] || '',
-      lastName: contact.lastName || contact.name?.split(' ').slice(1).join(' ') || '',
-      phone: contact.phone || '',
-      email: contact.email || '',
-      ownerId: currentUser?.id || 'user-1',
-      company: contact.company,
-      role: contact.role,
-      source: 'csv' as const,
-      eventName: contact.eventName,
-      eventType: contact.eventType,
-      message: contact.message,
-      acceptsPromotionalEmails: contact.acceptsPromotionalEmails !== false,
-      linkedEventIds: [],
-      contractIds: [],
-      taskIds: [],
-      activityHistory: [{
-        id: `activity-${Date.now()}`,
-        type: 'email' as const,
-        description: 'Contact importé via CSV',
-        date: new Date().toISOString(),
-        user: currentUser?.name || 'Utilisateur'
-      }]
-    }));
-
-    setContacts(prev => [...prev, ...newContacts]);
-    console.log(`${newContacts.length} contacts importés avec succès`);
   };
 
   if (!currentUser || !permissions) {
@@ -213,20 +164,10 @@ export const Contacts: React.FC = () => {
           <p className="text-gray-600 mt-2">Gérer vos gestionnaires de lieux, promoteurs et contacts de l'industrie</p>
         </div>
         {permissions.canCreateContacts && (
-          <div className="flex space-x-3">
-            <Button 
-              onClick={() => setShowCSVImporter(true)} 
-              variant="outline"
-              className="back-office-button"
-            >
-              <Upload className="h-4 w-4 mr-2" />
-              Importer CSV
-            </Button>
-            <Button onClick={() => setShowAddForm(true)} className="back-office-button">
-              <Plus className="h-4 w-4 mr-2" />
-              Ajouter Contact
-            </Button>
-          </div>
+          <Button onClick={() => setShowAddForm(true)} className="back-office-button">
+            <Plus className="h-4 w-4 mr-2" />
+            Ajouter Contact
+          </Button>
         )}
       </div>
 
@@ -323,32 +264,10 @@ export const Contacts: React.FC = () => {
 
                 <div className="text-sm">
                   <strong className="text-gray-700">Propriétaire:</strong>
-                  {permissions.canEditAllContacts ? (
-                    <Select
-                      value={contact.ownerId}
-                      onValueChange={(value) => handleOwnershipChange(contact.id, value)}
-                    >
-                      <SelectTrigger className="w-full mt-1">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {users.filter(user => user.isActive).map((user) => (
-                          <SelectItem key={user.id} value={user.id}>
-                            {user.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <span className="ml-2 text-gray-600">{getOwnerName(contact.ownerId)}</span>
-                  )}
+                  <span className="ml-2 text-gray-600">{getOwnerName(contact.ownerId)}</span>
                 </div>
 
                 <div className="flex space-x-2 pt-3">
-                  <CreateEventFromContact 
-                    contactId={contact.id} 
-                    contactName={`${contact.firstName} ${contact.lastName}`} 
-                  />
                   <Button 
                     size="sm" 
                     variant="outline" 
@@ -413,22 +332,6 @@ export const Contacts: React.FC = () => {
                 <label className="text-sm font-medium">Accepte les emails promotionnels</label>
               </div>
               
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Propriétaire</label>
-                <Select value={newContact.ownerId} onValueChange={(value) => setNewContact({...newContact, ownerId: value})}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {users.filter(user => user.isActive).map((user) => (
-                      <SelectItem key={user.id} value={user.id}>
-                        {user.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
               <div className="flex space-x-3 pt-4">
                 <Button onClick={() => setShowAddForm(false)} variant="outline" className="flex-1 back-office-button">
                   Annuler
@@ -441,19 +344,6 @@ export const Contacts: React.FC = () => {
           </Card>
         </div>
       )}
-
-      <CSVImporter
-        isOpen={showCSVImporter}
-        onClose={() => setShowCSVImporter(false)}
-        onImport={handleCSVImport}
-      />
-
-      <EmailPopup
-        isOpen={emailPopup.show}
-        onClose={() => setEmailPopup({ show: false, email: '', contactName: '' })}
-        email={emailPopup.email}
-        contactName={emailPopup.contactName}
-      />
     </div>
   );
 };

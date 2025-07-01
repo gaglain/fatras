@@ -1,12 +1,9 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { WebsiteDesignManager } from '@/components/WebsiteDesignManager';
-import { WebsiteSettingsManager } from '@/components/WebsiteSettingsManager';
-import { LegalContentManager } from '@/components/LegalContentManager';
-import { AdminChatNotifications } from '@/components/AdminChatNotifications';
 import { Palette, Settings, FileText, MessageCircle } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export const Website: React.FC = () => {
   const { currentUser, getUserPermissions } = useUser();
@@ -55,19 +52,47 @@ export const Website: React.FC = () => {
         </TabsList>
 
         <TabsContent value="design">
-          <WebsiteDesignManager />
+          <Card>
+            <CardHeader>
+              <CardTitle>Design du site</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>Module de design en cours de développement...</p>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="settings">
-          <WebsiteSettingsManager />
+          <Card>
+            <CardHeader>
+              <CardTitle>Paramètres du site</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>Paramètres du site en cours de développement...</p>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="legal">
-          <LegalContentManager />
+          <Card>
+            <CardHeader>
+              <CardTitle>Contenu légal</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>Gestion du contenu légal en cours de développement...</p>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="chat">
-          <AdminChatNotifications />
+          <Card>
+            <CardHeader>
+              <CardTitle>Chat public</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>Module de chat public en cours de développement...</p>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

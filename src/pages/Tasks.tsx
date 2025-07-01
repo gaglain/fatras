@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +9,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { CheckSquare, Search, Plus, Calendar, User, Phone, Mail, Edit, X, Filter } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
-import { TaskCreator } from '@/components/tasks/TaskCreator';
 import { toast } from 'sonner';
 
 interface Task {
@@ -25,34 +25,6 @@ interface Task {
   createdAt: string;
 }
 
-interface Contact {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  company?: string;
-}
-
-const sampleContacts: Contact[] = [
-  {
-    id: 'contact-1',
-    firstName: 'Jean',
-    lastName: 'Dupont',
-    email: 'jean.dupont@example.com',
-    phone: '06 12 34 56 78',
-    company: 'Productions Musicales'
-  },
-  {
-    id: 'contact-2',
-    firstName: 'Marie',
-    lastName: 'Martin',
-    email: 'marie.martin@example.com',
-    phone: '06 23 45 67 89',
-    company: 'Festival d\'été'
-  }
-];
-
 const sampleTasks: Task[] = [
   {
     id: '1',
@@ -63,8 +35,6 @@ const sampleTasks: Task[] = [
     dueDate: '2024-06-10',
     priority: 'high',
     status: 'todo',
-    relatedToId: 'contact-1',
-    relatedToType: 'contact',
     createdAt: '2024-06-04T10:00:00Z'
   },
   {
@@ -76,8 +46,6 @@ const sampleTasks: Task[] = [
     dueDate: '2024-06-08',
     priority: 'medium',
     status: 'in_progress',
-    relatedToId: 'contact-2',
-    relatedToType: 'contact',
     createdAt: '2024-06-02T14:30:00Z'
   }
 ];
@@ -85,24 +53,17 @@ const sampleTasks: Task[] = [
 export const Tasks: React.FC = () => {
   const { users, getUserById, currentUser, getUserPermissions } = useUser();
   const [tasks, setTasks] = useState<Task[]>(sampleTasks);
-  const [contacts] = useState<Contact[]>(sampleContacts);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<string>('all');
-  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [showTaskEdit, setShowTaskEdit] = useState(false);
-  const [editFormData, setEditFormData] = useState({
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newTask, setNewTask] = useState({
     title: '',
     description: '',
-    assignedTo: '',
+    assignedTo: currentUser?.id || 'user-1',
     dueDate: '',
-    priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent',
-    status: 'todo' as 'todo' | 'in_progress' | 'completed',
-    relatedToId: '',
-    relatedToType: 'contact' as 'contact' | 'event' | 'contract'
+    priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent'
   });
 
-  // Ne pas rendre le composant si currentUser n'est pas encore chargé
   if (!currentUser) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -162,49 +123,34 @@ export const Tasks: React.FC = () => {
     }
   };
 
-  const getRelatedContact = (taskId: string) => {
-    const task = tasks.find(t => t.id === taskId);
-    if (task?.relatedToType === 'contact' && task.relatedToId) {
-      return contacts.find(c => c.id === task.relatedToId);
+  const handleAddTask = () => {
+    if (!newTask.title || !newTask.description) {
+      toast.error('Veuillez remplir tous les champs obligatoires');
+      return;
     }
-    return null;
-  };
 
-  const handleContactClick = (contact: Contact) => {
-    setSelectedContact(contact);
-  };
+    const task: Task = {
+      id: `task-${Date.now()}`,
+      title: newTask.title,
+      description: newTask.description,
+      assignedTo: newTask.assignedTo,
+      createdBy: currentUser?.id || 'user-1',
+      dueDate: newTask.dueDate,
+      priority: newTask.priority,
+      status: 'todo',
+      createdAt: new Date().toISOString()
+    };
 
-  const handleTaskEdit = (task: Task) => {
-    setSelectedTask(task);
-    setEditFormData({
-      title: task.title,
-      description: task.description,
-      assignedTo: task.assignedTo,
-      dueDate: task.dueDate,
-      priority: task.priority,
-      status: task.status,
-      relatedToId: task.relatedToId || '',
-      relatedToType: task.relatedToType || 'contact'
+    setTasks(prev => [...prev, task]);
+    setNewTask({
+      title: '',
+      description: '',
+      assignedTo: currentUser?.id || 'user-1',
+      dueDate: '',
+      priority: 'medium'
     });
-    setShowTaskEdit(true);
-  };
-
-  const handleUpdateTask = () => {
-    if (!selectedTask) return;
-
-    setTasks(prev => prev.map(task => 
-      task.id === selectedTask.id 
-        ? { ...task, ...editFormData }
-        : task
-    ));
-
-    setShowTaskEdit(false);
-    setSelectedTask(null);
-    toast.success('Tâche mise à jour');
-  };
-
-  const handleTaskCreated = (newTask: any) => {
-    setTasks(prev => [...prev, newTask]);
+    setShowAddForm(false);
+    toast.success('Tâche créée');
   };
 
   const todoTasks = filteredTasks.filter(task => task.status === 'todo');
@@ -213,7 +159,6 @@ export const Tasks: React.FC = () => {
 
   const TaskCard = ({ task }: { task: Task }) => {
     const assignedUser = getUserById(task.assignedTo);
-    const relatedContact = getRelatedContact(task.id);
     
     return (
       <Card className="hover:shadow-md transition-shadow">
@@ -233,7 +178,7 @@ export const Tasks: React.FC = () => {
               </div>
               <p className="text-gray-600 mb-3">{task.description}</p>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
                 <div className="flex items-center space-x-2">
                   <User className="h-4 w-4" />
                   <span>Assigné à: {assignedUser?.name || 'Utilisateur inconnu'}</span>
@@ -242,24 +187,8 @@ export const Tasks: React.FC = () => {
                   <Calendar className="h-4 w-4" />
                   <span>Échéance: {new Date(task.dueDate).toLocaleDateString('fr-FR')}</span>
                 </div>
-                {relatedContact && (
-                  <div>
-                    <span className="text-gray-500">Contact lié:</span>
-                    <button
-                      onClick={() => handleContactClick(relatedContact)}
-                      className="ml-2 text-purple-600 hover:text-purple-800 font-medium"
-                    >
-                      {relatedContact.firstName} {relatedContact.lastName}
-                    </button>
-                  </div>
-                )}
               </div>
             </div>
-            {task.status !== 'completed' && (
-              <Button size="sm" variant="outline" onClick={() => handleTaskEdit(task)}>
-                <Edit className="h-4 w-4" />
-              </Button>
-            )}
           </div>
         </CardContent>
       </Card>
@@ -273,7 +202,10 @@ export const Tasks: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-900">Tâches</h1>
           <p className="text-gray-600 mt-2">Gérez vos tâches et suivez leur progression</p>
         </div>
-        <TaskCreator onTaskCreated={handleTaskCreated} />
+        <Button onClick={() => setShowAddForm(true)} className="back-office-button">
+          <Plus className="h-4 w-4 mr-2" />
+          Nouvelle Tâche
+        </Button>
       </div>
 
       <div className="flex items-center space-x-4">
@@ -340,94 +272,35 @@ export const Tasks: React.FC = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Contact Details Modal */}
-      {selectedContact && (
-        <Dialog open={!!selectedContact} onOpenChange={() => setSelectedContact(null)}>
+      {showAddForm && (
+        <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Fiche Contact</DialogTitle>
+              <DialogTitle>Créer une nouvelle tâche</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <h3 className="text-lg font-semibold">
-                  {selectedContact.firstName} {selectedContact.lastName}
-                </h3>
-                {selectedContact.company && (
-                  <p className="text-gray-600">{selectedContact.company}</p>
-                )}
-              </div>
-              
-              <div className="space-y-3">
-                <div className="flex items-center space-x-3">
-                  <Mail className="h-4 w-4 text-gray-500" />
-                  <a 
-                    href={`mailto:${selectedContact.email}`}
-                    className="text-purple-600 hover:text-purple-800"
-                  >
-                    {selectedContact.email}
-                  </a>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <Phone className="h-4 w-4 text-gray-500" />
-                  <a 
-                    href={`tel:${selectedContact.phone}`}
-                    className="text-purple-600 hover:text-purple-800"
-                  >
-                    {selectedContact.phone}
-                  </a>
-                </div>
-              </div>
-
-              <div className="flex space-x-2 pt-4">
-                <Button 
-                  className="flex-1"
-                  onClick={() => window.open(`mailto:${selectedContact.email}`)}
-                >
-                  <Mail className="h-4 w-4 mr-2" />
-                  Envoyer un email
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="flex-1"
-                  onClick={() => window.open(`tel:${selectedContact.phone}`)}
-                >
-                  <Phone className="h-4 w-4 mr-2" />
-                  Appeler
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
-
-      {/* Task Edit Modal */}
-      {showTaskEdit && selectedTask && (
-        <Dialog open={showTaskEdit} onOpenChange={setShowTaskEdit}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Modifier la tâche</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Titre</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Titre *</label>
                 <Input
-                  value={editFormData.title}
-                  onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
+                  value={newTask.title}
+                  onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                  placeholder="Titre de la tâche"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
                 <Input
-                  value={editFormData.description}
-                  onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
+                  value={newTask.description}
+                  onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+                  placeholder="Description de la tâche"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Assigné à</label>
-                  <Select value={editFormData.assignedTo} onValueChange={(value) => setEditFormData({ ...editFormData, assignedTo: value })}>
+                  <Select value={newTask.assignedTo} onValueChange={(value) => setNewTask({ ...newTask, assignedTo: value })}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -442,24 +315,8 @@ export const Tasks: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Statut</label>
-                  <Select value={editFormData.status} onValueChange={(value: any) => setEditFormData({ ...editFormData, status: value })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="todo">À faire</SelectItem>
-                      <SelectItem value="in_progress">En cours</SelectItem>
-                      <SelectItem value="completed">Terminée</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Priorité</label>
-                  <Select value={editFormData.priority} onValueChange={(value: any) => setEditFormData({ ...editFormData, priority: value })}>
+                  <Select value={newTask.priority} onValueChange={(value: any) => setNewTask({ ...newTask, priority: value })}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -471,23 +328,23 @@ export const Tasks: React.FC = () => {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Date d'échéance</label>
-                  <Input
-                    type="date"
-                    value={editFormData.dueDate}
-                    onChange={(e) => setEditFormData({ ...editFormData, dueDate: e.target.value })}
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date d'échéance</label>
+                <Input
+                  type="date"
+                  value={newTask.dueDate}
+                  onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value })}
+                />
               </div>
 
               <div className="flex space-x-2 pt-4">
-                <Button variant="outline" onClick={() => setShowTaskEdit(false)} className="flex-1">
+                <Button variant="outline" onClick={() => setShowAddForm(false)} className="flex-1">
                   Annuler
                 </Button>
-                <Button onClick={handleUpdateTask} className="flex-1">
-                  Mettre à jour
+                <Button onClick={handleAddTask} className="flex-1">
+                  Créer la tâche
                 </Button>
               </div>
             </div>
