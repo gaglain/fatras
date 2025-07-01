@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { useTheme } from 'next-themes';
 
@@ -13,7 +14,7 @@ export const useCustomColors = () => {
           const root = document.documentElement;
           const isDark = theme === 'dark';
           
-          console.log('🎨 Applying custom colors:', colors, 'Theme:', theme);
+          console.log('🎨 Applying custom colors with useCustomColors:', colors, 'Theme:', theme);
           
           // Appliquer les couleurs principales avec fallbacks
           root.style.setProperty('--app-background', isDark ? (colors.backgroundDark || '#0f0f0f') : (colors.background || '#ffffff'));
@@ -35,14 +36,6 @@ export const useCustomColors = () => {
           root.style.setProperty('--notification-button-text', colors.notificationButtonText || (isDark ? '#ffffff' : '#374151'));
           root.style.setProperty('--notification-red-dot', colors.notificationRedDot || '#ef4444');
           
-          // Appliquer les couleurs de la sidebar
-          root.style.setProperty('--custom-sidebarBg', colors.sidebarBg || (isDark ? '#0f0f0f' : '#ffffff'));
-          root.style.setProperty('--custom-sidebarText', colors.sidebarText || (isDark ? '#ffffff' : '#18181b'));
-          root.style.setProperty('--custom-sidebarActiveItemBg', colors.sidebarActiveItemBg || '#1632f4');
-          root.style.setProperty('--custom-sidebarActiveItemText', colors.sidebarActiveItemText || '#ffffff');
-          root.style.setProperty('--custom-sidebarIconLight', colors.sidebarIconLight || '#1632f4');
-          root.style.setProperty('--custom-sidebarIconDark', colors.sidebarIconDark || '#ffffff');
-          
           // Forcer l'application sur body et html
           const bgColor = isDark ? (colors.backgroundDark || '#0f0f0f') : (colors.background || '#ffffff');
           const textColor = isDark ? (colors.textDark || '#ffffff') : (colors.text || '#18181b');
@@ -52,16 +45,21 @@ export const useCustomColors = () => {
           document.documentElement.style.backgroundColor = bgColor;
           document.documentElement.style.color = textColor;
           
-          // Mettre à jour les variables CSS Tailwind
-          root.style.setProperty('--background', isDark ? '222.2 84% 4.9%' : '0 0% 100%');
-          root.style.setProperty('--foreground', isDark ? '210 40% 98%' : '222.2 84% 4.9%');
-          root.style.setProperty('--card', isDark ? '222.2 84% 4.9%' : '0 0% 100%');
-          root.style.setProperty('--card-foreground', isDark ? '210 40% 98%' : '222.2 84% 4.9%');
+          // Mettre à jour les variables CSS Tailwind avec les bonnes valeurs
+          const tailwindVars = {
+            '--background': isDark ? '222.2 84% 4.9%' : '0 0% 100%',
+            '--foreground': isDark ? '210 40% 98%' : '222.2 84% 4.9%',
+            '--card': isDark ? '222.2 84% 4.9%' : '0 0% 100%',
+            '--card-foreground': isDark ? '210 40% 98%' : '222.2 84% 4.9%',
+            '--primary': '221 83% 53%',
+            '--primary-foreground': isDark ? '255 255 255' : '210 40% 98%'
+          };
           
-          // Déclencher un événement pour informer les autres composants
-          window.dispatchEvent(new CustomEvent('customColorsApplied', { detail: colors }));
+          Object.entries(tailwindVars).forEach(([key, value]) => {
+            root.style.setProperty(key, value);
+          });
           
-          console.log('✅ Custom colors applied successfully');
+          console.log('✅ Custom colors applied successfully with useCustomColors');
         } catch (error) {
           console.error('❌ Error applying custom colors:', error);
         }
@@ -78,8 +76,6 @@ export const useCustomColors = () => {
           root.style.setProperty('--app-card-text', '#ffffff');
           root.style.setProperty('--app-button-bg', '#ffffff');
           root.style.setProperty('--app-button-text', '#000000');
-          root.style.setProperty('--custom-sidebarBg', '#0f0f0f');
-          root.style.setProperty('--custom-sidebarText', '#ffffff');
           document.body.style.backgroundColor = '#0f0f0f';
           document.body.style.color = '#ffffff';
         } else {
@@ -89,8 +85,6 @@ export const useCustomColors = () => {
           root.style.setProperty('--app-card-text', '#18181b');
           root.style.setProperty('--app-button-bg', '#1632f4');
           root.style.setProperty('--app-button-text', '#ffffff');
-          root.style.setProperty('--custom-sidebarBg', '#ffffff');
-          root.style.setProperty('--custom-sidebarText', '#18181b');
           document.body.style.backgroundColor = '#ffffff';
           document.body.style.color = '#18181b';
         }
@@ -100,16 +94,27 @@ export const useCustomColors = () => {
     // Appliquer immédiatement
     applyCustomColors();
     
-    // Écouter les changements de couleurs
+    // Écouter les changements de couleurs avec tous les événements possibles
     const handleColorsChange = () => {
-      console.log('🎨 Colors changed event received');
-      applyCustomColors();
+      console.log('🎨 Colors changed event received in useCustomColors');
+      setTimeout(applyCustomColors, 50);
+    };
+    
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'customColors') {
+        console.log('💾 Storage change detected for customColors in useCustomColors');
+        setTimeout(applyCustomColors, 50);
+      }
     };
     
     window.addEventListener('customColorsChanged', handleColorsChange);
+    window.addEventListener('customColorsApplied', handleColorsChange);
+    window.addEventListener('storage', handleStorageChange);
     
     return () => {
       window.removeEventListener('customColorsChanged', handleColorsChange);
+      window.removeEventListener('customColorsApplied', handleColorsChange);
+      window.removeEventListener('storage', handleStorageChange);
     };
   }, [theme]);
 

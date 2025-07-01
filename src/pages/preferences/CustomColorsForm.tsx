@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,10 +62,13 @@ export const CustomColorsForm: React.FC = () => {
   const [colors, setColors] = useState<CustomColors>(defaultColors);
   const [hasChanges, setHasChanges] = useState(false);
 
-  const applyColorsImmediately = (newColors: CustomColors) => {
+  const applyColorsToDocument = (newColors: CustomColors) => {
     const root = document.documentElement;
     const isDark = theme === 'dark';
     
+    console.log('🎨 Applying colors immediately:', { newColors, isDark });
+    
+    // Variables CSS personnalisées pour l'application
     root.style.setProperty('--app-background', isDark ? newColors.backgroundDark : newColors.background);
     root.style.setProperty('--app-text', isDark ? newColors.textDark : newColors.text);
     root.style.setProperty('--app-card-bg', isDark ? newColors.cardBgDark : newColors.cardBg);
@@ -76,6 +78,7 @@ export const CustomColorsForm: React.FC = () => {
     root.style.setProperty('--app-chat-widget-bg', newColors.chatWidgetBg);
     root.style.setProperty('--app-chat-widget-icon', newColors.chatWidgetIcon);
     
+    // Variables pour les notifications
     root.style.setProperty('--notification-bg', newColors.notificationBg);
     root.style.setProperty('--notification-text', newColors.notificationText);
     root.style.setProperty('--notification-border', newColors.notificationBorder);
@@ -85,6 +88,7 @@ export const CustomColorsForm: React.FC = () => {
     root.style.setProperty('--notification-button-text', newColors.notificationButtonText);
     root.style.setProperty('--notification-red-dot', newColors.notificationRedDot);
     
+    // Appliquer directement au body et html
     const bgColor = isDark ? newColors.backgroundDark : newColors.background;
     const textColor = isDark ? newColors.textDark : newColors.text;
     
@@ -92,7 +96,23 @@ export const CustomColorsForm: React.FC = () => {
     document.body.style.color = textColor;
     document.documentElement.style.backgroundColor = bgColor;
     
+    // Forcer la mise à jour des variables Tailwind CSS
+    const hslValues = {
+      background: isDark ? '222.2 84% 4.9%' : '0 0% 100%',
+      foreground: isDark ? '210 40% 98%' : '222.2 84% 4.9%',
+      card: isDark ? '222.2 84% 4.9%' : '0 0% 100%',
+      'card-foreground': isDark ? '210 40% 98%' : '222.2 84% 4.9%'
+    };
+    
+    Object.entries(hslValues).forEach(([key, value]) => {
+      root.style.setProperty(`--${key}`, value);
+    });
+    
+    // Déclencher l'événement de changement de couleurs
     window.dispatchEvent(new CustomEvent('customColorsChanged', { detail: newColors }));
+    window.dispatchEvent(new CustomEvent('customColorsApplied', { detail: newColors }));
+    
+    console.log('✅ Colors applied successfully');
   };
 
   useEffect(() => {
@@ -103,15 +123,15 @@ export const CustomColorsForm: React.FC = () => {
           const parsed = JSON.parse(savedColors);
           const mergedColors = { ...defaultColors, ...parsed };
           setColors(mergedColors);
-          applyColorsImmediately(mergedColors);
+          applyColorsToDocument(mergedColors);
         } catch (error) {
           console.error("Error loading colors:", error);
           setColors(defaultColors);
-          applyColorsImmediately(defaultColors);
+          applyColorsToDocument(defaultColors);
         }
       } else {
         setColors(defaultColors);
-        applyColorsImmediately(defaultColors);
+        applyColorsToDocument(defaultColors);
       }
     };
 
@@ -122,21 +142,41 @@ export const CustomColorsForm: React.FC = () => {
     const newColors = { ...colors, [key]: value };
     setColors(newColors);
     setHasChanges(true);
-    applyColorsImmediately(newColors);
+    applyColorsToDocument(newColors);
   };
 
   const saveColors = () => {
-    localStorage.setItem("customColors", JSON.stringify(colors));
-    applyColorsImmediately(colors);
-    setHasChanges(false);
-    toast.success("Couleurs sauvegardées et appliquées !");
+    try {
+      localStorage.setItem("customColors", JSON.stringify(colors));
+      applyColorsToDocument(colors);
+      setHasChanges(false);
+      
+      // Déclencher tous les événements de synchronisation
+      window.dispatchEvent(new CustomEvent('customColorsChanged', { detail: colors }));
+      window.dispatchEvent(new CustomEvent('customColorsApplied', { detail: colors }));
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'customColors',
+        newValue: JSON.stringify(colors),
+        storageArea: localStorage
+      }));
+      
+      toast.success("Couleurs sauvegardées et appliquées !");
+    } catch (error) {
+      console.error("Error saving colors:", error);
+      toast.error("Erreur lors de la sauvegarde");
+    }
   };
 
   const resetColors = () => {
     setColors(defaultColors);
     localStorage.removeItem("customColors");
-    applyColorsImmediately(defaultColors);
+    applyColorsToDocument(defaultColors);
     setHasChanges(false);
+    
+    // Déclencher les événements de réinitialisation
+    window.dispatchEvent(new CustomEvent('customColorsChanged', { detail: defaultColors }));
+    window.dispatchEvent(new CustomEvent('customColorsApplied', { detail: defaultColors }));
+    
     toast.success("Couleurs remises par défaut !");
   };
 
@@ -174,6 +214,7 @@ export const CustomColorsForm: React.FC = () => {
           </p>
         </CardHeader>
         <CardContent className="space-y-6">
+          
           <div className="space-y-4">
             <h3 className="text-lg font-semibold border-b pb-2">🌞 Mode Clair</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

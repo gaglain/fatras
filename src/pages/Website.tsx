@@ -4,6 +4,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Palette, Settings, FileText, MessageCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AdminChatNotifications } from '@/components/AdminChatNotifications';
+import { WebsiteDesignManager } from '@/components/WebsiteDesignManager';
+import { WebsiteSettingsManager } from '@/components/WebsiteSettingsManager';
+import { LegalContentManager } from '@/components/LegalContentManager';
 
 export const Website: React.FC = () => {
   return (
@@ -36,36 +39,15 @@ export const Website: React.FC = () => {
         </TabsList>
 
         <TabsContent value="design">
-          <Card>
-            <CardHeader>
-              <CardTitle>Design du site</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>Module de design du site web - Personnalisez les couleurs, polices et mise en page de votre site public.</p>
-            </CardContent>
-          </Card>
+          <WebsiteDesignManager />
         </TabsContent>
 
         <TabsContent value="settings">
-          <Card>
-            <CardHeader>
-              <CardTitle>Paramètres du site</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>Configurez les paramètres généraux de votre site : nom, description, SEO, etc.</p>
-            </CardContent>
-          </Card>
+          <WebsiteSettingsManager />
         </TabsContent>
 
         <TabsContent value="legal">
-          <Card>
-            <CardHeader>
-              <CardTitle>Contenu légal</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>Gérez vos mentions légales, politique de confidentialité et conditions d'utilisation.</p>
-            </CardContent>
-          </Card>
+          <LegalContentManager />
         </TabsContent>
 
         <TabsContent value="chat">

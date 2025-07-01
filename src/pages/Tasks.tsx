@@ -1,20 +1,22 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { CheckSquare, Search, Plus, Calendar, User, Filter } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { CheckSquare, Search, Plus, Calendar, User, Filter, Users } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Task {
   id: string;
   title: string;
   description: string;
   assignedTo: string;
+  assignedToName?: string;
   createdBy: string;
   dueDate: string;
   priority: 'low' | 'medium' | 'high' | 'urgent';
@@ -22,20 +24,54 @@ interface Task {
   createdAt: string;
 }
 
-const sampleTasks: Task[] = [];
+interface User {
+  id: string;
+  username: string;
+  role: string;
+  first_name?: string;
+  last_name?: string;
+}
 
 export const Tasks: React.FC = () => {
-  const [tasks, setTasks] = useState<Task[]>(sampleTasks);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<string>('all');
   const [showAddForm, setShowAddForm] = useState(false);
   const [newTask, setNewTask] = useState({
     title: '',
     description: '',
-    assignedTo: 'user-1',
+    assignedTo: '',
     dueDate: '',
     priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent'
   });
+
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  const loadUsers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('user_id, username, role, first_name, last_name');
+      
+      if (error) throw error;
+      
+      const formattedUsers = data?.map(user => ({
+        id: user.user_id,
+        username: user.username,
+        role: user.role,
+        first_name: user.first_name,
+        last_name: user.last_name
+      })) || [];
+      
+      setUsers(formattedUsers);
+    } catch (error) {
+      console.error('Error loading users:', error);
+      toast.error('Erreur lors du chargement des utilisateurs');
+    }
+  };
 
   const filteredTasks = tasks.filter(task => {
     const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -45,16 +81,22 @@ export const Tasks: React.FC = () => {
   });
 
   const handleAddTask = () => {
-    if (!newTask.title || !newTask.description) {
+    if (!newTask.title || !newTask.description || !newTask.assignedTo) {
       toast.error('Veuillez remplir tous les champs obligatoires');
       return;
     }
+
+    const assignedUser = users.find(u => u.id === newTask.assignedTo);
+    const assignedToName = assignedUser 
+      ? `${assignedUser.first_name || ''} ${assignedUser.last_name || ''}`.trim() || assignedUser.username
+      : 'Utilisateur inconnu';
 
     const task: Task = {
       id: `task-${Date.now()}`,
       title: newTask.title,
       description: newTask.description,
       assignedTo: newTask.assignedTo,
+      assignedToName,
       createdBy: 'user-1',
       dueDate: newTask.dueDate,
       priority: newTask.priority,
@@ -66,12 +108,19 @@ export const Tasks: React.FC = () => {
     setNewTask({
       title: '',
       description: '',
-      assignedTo: 'user-1',
+      assignedTo: '',
       dueDate: '',
       priority: 'medium'
     });
     setShowAddForm(false);
     toast.success('Tâche créée');
+  };
+
+  const updateTaskStatus = (taskId: string, newStatus: Task['status']) => {
+    setTasks(prev => prev.map(task => 
+      task.id === taskId ? { ...task, status: newStatus } : task
+    ));
+    toast.success('Statut de la tâche mis à jour');
   };
 
   const todoTasks = filteredTasks.filter(task => task.status === 'todo');
@@ -98,6 +147,16 @@ export const Tasks: React.FC = () => {
     }
   };
 
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case 'super_admin': return 'Super Admin';
+      case 'admin': return 'Admin';
+      case 'manager': return 'Manager';
+      case 'artist': return 'Artiste';
+      default: return 'Utilisateur';
+    }
+  };
+
   const TaskCard = ({ task }: { task: Task }) => (
     <Card className="hover:shadow-md transition-shadow">
       <CardContent className="p-6">
@@ -111,15 +170,28 @@ export const Tasks: React.FC = () => {
             </div>
             <p className="text-gray-600 mb-3">{task.description}</p>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 mb-4">
               <div className="flex items-center space-x-2">
                 <User className="h-4 w-4" />
-                <span>Assigné à: {task.assignedTo}</span>
+                <span>Assigné à: {task.assignedToName}</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Calendar className="h-4 w-4" />
                 <span>Échéance: {new Date(task.dueDate).toLocaleDateString('fr-FR')}</span>
               </div>
+            </div>
+
+            <div className="flex space-x-2">
+              <Select value={task.status} onValueChange={(value: Task['status']) => updateTaskStatus(task.id, value)}>
+                <SelectTrigger className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todo">À faire</SelectItem>
+                  <SelectItem value="in_progress">En cours</SelectItem>
+                  <SelectItem value="completed">Terminée</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </div>
@@ -131,8 +203,8 @@ export const Tasks: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Tâches</h1>
-          <p className="text-gray-600 mt-2">Gérez vos tâches et suivez leur progression</p>
+          <h1 className="text-3xl font-bold text-foreground">Tâches</h1>
+          <p className="text-muted-foreground mt-2">Gérez vos tâches et suivez leur progression</p>
         </div>
         <Button onClick={() => setShowAddForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
@@ -150,6 +222,21 @@ export const Tasks: React.FC = () => {
             className="pl-10"
           />
         </div>
+        <Select value={selectedUser} onValueChange={setSelectedUser}>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="Filtrer par utilisateur" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tous les utilisateurs</SelectItem>
+            {users.map((user) => (
+              <SelectItem key={user.id} value={user.id}>
+                {user.first_name && user.last_name 
+                  ? `${user.first_name} ${user.last_name}` 
+                  : user.username} ({getRoleLabel(user.role)})
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <Tabs defaultValue="all" className="space-y-6">
@@ -210,6 +297,32 @@ export const Tasks: React.FC = () => {
                   onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
                   placeholder="Description de la tâche"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Assigner à *</label>
+                <Select value={newTask.assignedTo} onValueChange={(value) => setNewTask({ ...newTask, assignedTo: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un utilisateur" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {users.map((user) => (
+                      <SelectItem key={user.id} value={user.id}>
+                        <div className="flex items-center space-x-2">
+                          <Users className="h-4 w-4" />
+                          <span>
+                            {user.first_name && user.last_name 
+                              ? `${user.first_name} ${user.last_name}` 
+                              : user.username}
+                          </span>
+                          <Badge variant="secondary" className="text-xs">
+                            {getRoleLabel(user.role)}
+                          </Badge>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
