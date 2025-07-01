@@ -20,3 +20,5 @@ export const sampleNotifications = [];
 export const sampleInteractions = [];
 
 export const sampleQuotes = [];
+
+export const sampleTourStops = [];
