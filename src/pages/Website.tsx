@@ -2,26 +2,10 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Palette, Settings, FileText, MessageCircle } from 'lucide-react';
-import { useUser } from '@/contexts/UserContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { AdminChatNotifications } from '@/components/AdminChatNotifications';
 
 export const Website: React.FC = () => {
-  const { currentUser, getUserPermissions } = useUser();
-  const permissions = getUserPermissions(currentUser);
-
-  if (!permissions.canManageWebsite) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold mb-2">Accès restreint</h2>
-          <p className="text-muted-foreground">
-            Vous n'avez pas les permissions pour gérer le site web.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <div>
@@ -57,7 +41,7 @@ export const Website: React.FC = () => {
               <CardTitle>Design du site</CardTitle>
             </CardHeader>
             <CardContent>
-              <p>Module de design en cours de développement...</p>
+              <p>Module de design du site web - Personnalisez les couleurs, polices et mise en page de votre site public.</p>
             </CardContent>
           </Card>
         </TabsContent>
@@ -68,7 +52,7 @@ export const Website: React.FC = () => {
               <CardTitle>Paramètres du site</CardTitle>
             </CardHeader>
             <CardContent>
-              <p>Paramètres du site en cours de développement...</p>
+              <p>Configurez les paramètres généraux de votre site : nom, description, SEO, etc.</p>
             </CardContent>
           </Card>
         </TabsContent>
@@ -79,20 +63,13 @@ export const Website: React.FC = () => {
               <CardTitle>Contenu légal</CardTitle>
             </CardHeader>
             <CardContent>
-              <p>Gestion du contenu légal en cours de développement...</p>
+              <p>Gérez vos mentions légales, politique de confidentialité et conditions d'utilisation.</p>
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="chat">
-          <Card>
-            <CardHeader>
-              <CardTitle>Chat public</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>Module de chat public en cours de développement...</p>
-            </CardContent>
-          </Card>
+          <AdminChatNotifications />
         </TabsContent>
       </Tabs>
     </div>
