@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { X, Send, Paperclip, FileText, Image, Video, Music, Upload, Signature } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import { generateEmailSignature, getPlainTextSignature } from '@/utils/emailSignature';
+import { toast } from 'sonner';
 
 interface EmailHistory {
   id: string;
@@ -113,9 +113,31 @@ export const EmailPopup: React.FC<EmailPopupProps> = ({ isOpen, onClose, email, 
 
   const handleTemplateSelect = (template: EmailTemplate) => {
     setSelectedTemplate(template);
-    setEmailSubject(template.subject);
-    setEmailContent(template.content);
+    
+    // Remplacer les variables par des valeurs réelles ou des placeholders
+    let processedSubject = template.subject;
+    let processedContent = template.content;
+    
+    const replacements = {
+      '{{contact_name}}': contactName,
+      '{{user_name}}': currentUser ? `${currentUser.name} ${currentUser.lastName}` : 'Votre nom',
+      '{{event_name}}': '[Nom de l\'événement]',
+      '{{event_date}}': '[Date de l\'événement]',
+      '{{venue_name}}': '[Nom du lieu]',
+      '{{artist_name}}': '[Nom de l\'artiste]',
+      '{{contract_amount}}': '[Montant du contrat]',
+      '{{company_name}}': 'Fatras Booking'
+    };
+
+    Object.entries(replacements).forEach(([key, value]) => {
+      processedSubject = processedSubject.replace(new RegExp(key, 'g'), value);
+      processedContent = processedContent.replace(new RegExp(key, 'g'), value);
+    });
+
+    setEmailSubject(processedSubject);
+    setEmailContent(processedContent);
     setShowTemplates(false);
+    toast.success(`Modèle "${template.name}" appliqué`);
   };
 
   const handleBibleFileToggle = (fileId: string) => {
@@ -131,29 +153,42 @@ export const EmailPopup: React.FC<EmailPopupProps> = ({ isOpen, onClose, email, 
     setExternalFiles(prev => [...prev, ...files]);
   };
 
-  const handleSendEmail = () => {
+  const handleSendEmail = async () => {
+    if (!emailSubject.trim() || !emailContent.trim()) {
+      toast.error('Veuillez remplir l\'objet et le contenu de l\'email');
+      return;
+    }
+
     let finalContent = emailContent;
     
     if (includeSignature && currentUser) {
       finalContent += '\n\n' + getPlainTextSignature(currentUser);
     }
     
-    // Ici, vous pourriez intégrer avec votre service d'envoi d'email
-    console.log('Envoi d\'email:', {
-      to: email,
-      subject: emailSubject,
-      content: finalContent,
-      attachments: [...attachedBibleFiles, ...externalFiles.map(f => f.name)],
-      signature: includeSignature ? generateEmailSignature(currentUser) : null
-    });
-    
-    // Simuler l'envoi
-    alert('Email envoyé avec succès !');
-    setShowCompose(false);
-    setEmailSubject('');
-    setEmailContent('');
-    setAttachedBibleFiles([]);
-    setExternalFiles([]);
+    try {
+      // Simuler l'envoi d'email
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      console.log('Envoi d\'email:', {
+        to: email,
+        subject: emailSubject,
+        content: finalContent,
+        attachments: [...attachedBibleFiles, ...externalFiles.map(f => f.name)],
+        signature: includeSignature ? generateEmailSignature(currentUser) : null
+      });
+      
+      toast.success('Email envoyé avec succès !');
+      
+      // Réinitialiser le formulaire
+      setShowCompose(false);
+      setEmailSubject('');
+      setEmailContent('');
+      setAttachedBibleFiles([]);
+      setExternalFiles([]);
+      setSelectedTemplate(null);
+    } catch (error) {
+      toast.error('Erreur lors de l\'envoi de l\'email');
+    }
   };
 
   if (!isOpen) return null;

@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Mail, Send, Calendar, Phone, FileText, Edit, Trash2, Inbox, Search, Star, Archive } from 'lucide-react';
 import { EmailViewer } from '@/components/EmailViewer';
+import { toast } from 'sonner';
 
 interface Email {
   id: string;
@@ -140,6 +141,15 @@ export const Email: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
+  
+  // Nouveaux états pour la composition d'email
+  const [composeData, setComposeData] = useState({
+    to: '',
+    cc: '',
+    subject: '',
+    content: '',
+    selectedTemplateId: ''
+  });
 
   const categories = ['all', 'Contrat', 'Réservation', 'Technique', 'Commercial', 'Finance'];
 
@@ -176,6 +186,59 @@ export const Email: React.FC = () => {
     setSelectedEmail(null);
     setShowCompose(true);
     // Pre-fill compose form with forward data
+  };
+
+  const handleTemplateSelect = (templateId: string) => {
+    const template = emailTemplates.find(t => t.id === templateId);
+    if (template) {
+      setComposeData(prev => ({
+        ...prev,
+        subject: template.subject,
+        content: template.content,
+        selectedTemplateId: templateId
+      }));
+      toast.success(`Modèle "${template.name}" appliqué`);
+    }
+  };
+
+  const handleSendEmail = async () => {
+    if (!composeData.to.trim() || !composeData.subject.trim() || !composeData.content.trim()) {
+      toast.error('Veuillez remplir tous les champs obligatoires');
+      return;
+    }
+
+    try {
+      // Simuler l'envoi d'email
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Ajouter l'email envoyé à la liste
+      const newEmail: Email = {
+        id: Date.now().toString(),
+        from: 'user@showmanager.com',
+        to: composeData.to,
+        subject: composeData.subject,
+        content: composeData.content,
+        date: new Date().toISOString(),
+        isRead: true,
+        isStarred: false
+      };
+
+      setEmails(prev => [newEmail, ...prev]);
+      
+      // Réinitialiser le formulaire
+      setComposeData({
+        to: '',
+        cc: '',
+        subject: '',
+        content: '',
+        selectedTemplateId: ''
+      });
+      
+      setShowCompose(false);
+      toast.success('Email envoyé avec succès !');
+    } catch (error) {
+      toast.error('Erreur lors de l\'envoi de l\'email');
+    }
   };
 
   const handleEditTemplate = (template: EmailTemplate) => {
@@ -515,12 +578,25 @@ export const Email: React.FC = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <Input placeholder="À" />
-                <Input placeholder="CC (optionnel)" />
+                <Input 
+                  placeholder="À" 
+                  value={composeData.to}
+                  onChange={(e) => setComposeData(prev => ({ ...prev, to: e.target.value }))}
+                />
+                <Input 
+                  placeholder="CC (optionnel)" 
+                  value={composeData.cc}
+                  onChange={(e) => setComposeData(prev => ({ ...prev, cc: e.target.value }))}
+                />
               </div>
               <div className="flex space-x-2">
-                <Input placeholder="Objet" className="flex-1" />
-                <Select>
+                <Input 
+                  placeholder="Objet" 
+                  className="flex-1" 
+                  value={composeData.subject}
+                  onChange={(e) => setComposeData(prev => ({ ...prev, subject: e.target.value }))}
+                />
+                <Select value={composeData.selectedTemplateId} onValueChange={handleTemplateSelect}>
                   <SelectTrigger className="w-40">
                     <SelectValue placeholder="Modèle" />
                   </SelectTrigger>
@@ -537,6 +613,8 @@ export const Email: React.FC = () => {
                 placeholder="Composez votre email..."
                 className="w-full p-3 border border-gray-300 rounded-md"
                 rows={12}
+                value={composeData.content}
+                onChange={(e) => setComposeData(prev => ({ ...prev, content: e.target.value }))}
               />
               <div className="flex items-center space-x-4">
                 <label className="flex items-center space-x-2">
@@ -546,13 +624,29 @@ export const Email: React.FC = () => {
                 <Input type="datetime-local" className="w-auto" />
               </div>
               <div className="flex space-x-3 pt-4">
-                <Button onClick={() => setShowCompose(false)} variant="outline" className="flex-1">
+                <Button 
+                  onClick={() => {
+                    setShowCompose(false);
+                    setComposeData({
+                      to: '',
+                      cc: '',
+                      subject: '',
+                      content: '',
+                      selectedTemplateId: ''
+                    });
+                  }} 
+                  variant="outline" 
+                  className="flex-1"
+                >
                   Annuler
                 </Button>
                 <Button variant="outline" className="flex-1">
                   Sauvegarder comme Brouillon
                 </Button>
-                <Button onClick={() => setShowCompose(false)} className="flex-1 bg-purple-600 hover:bg-purple-700">
+                <Button 
+                  onClick={handleSendEmail} 
+                  className="flex-1 bg-purple-600 hover:bg-purple-700"
+                >
                   <Send className="h-4 w-4 mr-2" />
                   Envoyer
                 </Button>
