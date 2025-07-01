@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,7 +37,7 @@ export const Opportunities: React.FC = () => {
     location: '',
     date: '',
     budget: 0,
-    status: 'open' as const,
+    status: 'open' as 'open' | 'applied' | 'won' | 'lost',
     deadline: '',
     requirements: '',
     contact: ''
@@ -70,7 +69,7 @@ export const Opportunities: React.FC = () => {
       location: '',
       date: '',
       budget: 0,
-      status: 'open',
+      status: 'open' as 'open' | 'applied' | 'won' | 'lost',
       deadline: '',
       requirements: '',
       contact: ''
@@ -112,7 +111,7 @@ export const Opportunities: React.FC = () => {
       location: '',
       date: '',
       budget: 0,
-      status: 'open',
+      status: 'open' as 'open' | 'applied' | 'won' | 'lost',
       deadline: '',
       requirements: '',
       contact: ''
@@ -252,7 +251,7 @@ export const Opportunities: React.FC = () => {
               location: '',
               date: '',
               budget: 0,
-              status: 'open',
+              status: 'open' as 'open' | 'applied' | 'won' | 'lost',
               deadline: '',
               requirements: '',
               contact: ''
@@ -316,7 +315,7 @@ export const Opportunities: React.FC = () => {
                 <label className="block text-sm font-medium mb-1">Statut</label>
                 <Select
                   value={newOpportunity.status}
-                  onValueChange={(value: any) => setNewOpportunity({ ...newOpportunity, status: value })}
+                  onValueChange={(value: 'open' | 'applied' | 'won' | 'lost') => setNewOpportunity({ ...newOpportunity, status: value })}
                 >
                   <SelectTrigger>
                     <SelectValue />
