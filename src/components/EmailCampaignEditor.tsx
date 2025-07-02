@@ -39,7 +39,6 @@ export const EmailCampaignEditor: React.FC<EmailCampaignEditorProps> = ({
   onBack
 }) => {
   const [editedCampaign, setEditedCampaign] = useState<EmailCampaign>(campaign);
-  const [showPreview, setShowPreview] = useState(false);
 
   const handleSave = () => {
     if (!editedCampaign.name.trim() || !editedCampaign.subject.trim()) {
@@ -93,10 +92,6 @@ export const EmailCampaignEditor: React.FC<EmailCampaignEditorProps> = ({
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <Button variant="outline" onClick={() => setShowPreview(!showPreview)}>
-              <Eye className="h-4 w-4 mr-2" />
-              {showPreview ? 'Masquer' : 'Prévisualiser'}
-            </Button>
             <Button variant="outline" onClick={handleSave}>
               <Save className="h-4 w-4 mr-2" />
               Sauvegarder
@@ -192,7 +187,6 @@ export const EmailCampaignEditor: React.FC<EmailCampaignEditorProps> = ({
             initialBlocks={editedCampaign.blocks}
             onSave={handleBlocksChange}
             onPreview={(blocks) => console.log('Preview blocks:', blocks)}
-            showPreview={showPreview}
           />
         </div>
       </div>
