@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -79,8 +80,8 @@ export const CustomColorsForm: React.FC = () => {
     root.style.setProperty('--app-chat-widget-icon', newColors.chatWidgetIcon);
     
     // Variables pour les notifications
-    root.style.setProperty('--notification-bg', newColors.notificationBg);
-    root.style.setProperty('--notification-text', newColors.notificationText);
+    root.style.setProperty('--notification-bg', isDark ? newColors.cardBgDark : newColors.notificationBg);
+    root.style.setProperty('--notification-text', isDark ? newColors.textDark : newColors.notificationText);
     root.style.setProperty('--notification-border', newColors.notificationBorder);
     root.style.setProperty('--notification-badge-bg', newColors.notificationBadgeBg);
     root.style.setProperty('--notification-badge-text', newColors.notificationBadgeText);
@@ -244,6 +245,20 @@ export const CustomColorsForm: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <ColorInput label="Arrière-plan du widget" value={colors.chatWidgetBg} onChange={(value) => handleColorChange("chatWidgetBg", value)} />
               <ColorInput label="Couleur de l'icône" value={colors.chatWidgetIcon} onChange={(value) => handleColorChange("chatWidgetIcon", value)} />
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold border-b pb-2">🔔 Notifications</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <ColorInput label="Arrière-plan des notifications" value={colors.notificationBg} onChange={(value) => handleColorChange("notificationBg", value)} />
+              <ColorInput label="Texte des notifications" value={colors.notificationText} onChange={(value) => handleColorChange("notificationText", value)} />
+              <ColorInput label="Bordure des notifications" value={colors.notificationBorder} onChange={(value) => handleColorChange("notificationBorder", value)} />
+              <ColorInput label="Badge - Arrière-plan" value={colors.notificationBadgeBg} onChange={(value) => handleColorChange("notificationBadgeBg", value)} />
+              <ColorInput label="Badge - Texte" value={colors.notificationBadgeText} onChange={(value) => handleColorChange("notificationBadgeText", value)} />
+              <ColorInput label="Boutons - Arrière-plan" value={colors.notificationButtonBg} onChange={(value) => handleColorChange("notificationButtonBg", value)} />
+              <ColorInput label="Boutons - Texte" value={colors.notificationButtonText} onChange={(value) => handleColorChange("notificationButtonText", value)} />
+              <ColorInput label="Point rouge" value={colors.notificationRedDot} onChange={(value) => handleColorChange("notificationRedDot", value)} />
             </div>
           </div>
 
