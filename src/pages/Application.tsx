@@ -1,205 +1,255 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Smartphone, Download, Apple, Bot, QrCode, Settings, CheckCircle, AlertCircle } from 'lucide-react';
+import { 
+  Smartphone, 
+  Download, 
+  Share2, 
+  Globe, 
+  ExternalLink,
+  QrCode,
+  TestTube,
+  Monitor,
+  Tablet
+} from 'lucide-react';
 
 export const Application: React.FC = () => {
-  const [buildStatus, setBuildStatus] = useState<'idle' | 'building' | 'success' | 'error'>('idle');
-
-  const handleBuildApp = () => {
-    setBuildStatus('building');
-    
-    // Simulation du processus de build
-    setTimeout(() => {
-      setBuildStatus('success');
-      setTimeout(() => setBuildStatus('idle'), 5000);
-    }, 3000);
+  const handleTestDesktop = () => {
+    window.open(window.location.origin, '_blank');
   };
 
-  const initializeCapacitor = () => {
-    console.log('Initializing Capacitor...');
-    // En production, ceci exécuterait: npx cap init
-    alert('Capacitor initialisé ! Consultez la console pour les prochaines étapes.');
+  const handleTestMobile = () => {
+    // Ouvrir dans un nouvel onglet avec simulation mobile
+    const mobileUrl = `${window.location.origin}?mobile=true`;
+    window.open(mobileUrl, '_blank');
+  };
+
+  const handleGenerateQR = () => {
+    // Générer un QR code pour l'application
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(window.location.origin)}`;
+    window.open(qrUrl, '_blank');
+  };
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'MusiConnect',
+          text: 'Découvrez MusiConnect - Gestion d\'artistes et d\'événements',
+          url: window.location.origin
+        });
+      } catch (error) {
+        console.log('Partage annulé');
+      }
+    } else {
+      // Fallback pour les navigateurs qui ne supportent pas l'API de partage
+      navigator.clipboard.writeText(window.location.origin);
+      alert('Lien copié dans le presse-papiers');
+    }
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6" style={{
+      backgroundColor: 'var(--app-background, #ffffff)',
+      color: 'var(--app-text, #18181b)',
+      minHeight: '100vh'
+    }}>
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Application Mobile</h1>
-          <p className="text-gray-600 mt-2">Gérez et distribuez votre application mobile iOS et Android</p>
+          <h1 className="text-3xl font-bold" style={{ color: 'var(--app-text, #18181b)' }}>
+            Test de l'Application
+          </h1>
+          <p className="mt-2" style={{ color: 'var(--app-text, #666666)' }}>
+            Testez votre application sur différents appareils et partagez-la
+          </p>
         </div>
-        <Badge className="bg-green-100 text-green-800">
-          Capacitor Ready
+        <Badge className="px-3 py-1 text-sm" style={{
+          backgroundColor: 'var(--app-button-bg, #1632f4)',
+          color: 'var(--app-button-text, #ffffff)'
+        }}>
+          Version 1.0.0
         </Badge>
       </div>
 
-      {/* Status Cards */}
+      {/* Test Options */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                <Apple className="h-6 w-6 text-blue-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold">iOS App</h3>
-                <p className="text-sm text-gray-600">Version 1.0.0</p>
-                <Badge variant="outline" className="mt-1">En développement</Badge>
-              </div>
+        <Card style={{
+          backgroundColor: 'var(--app-card-bg, #ffffff)',
+          color: 'var(--app-card-text, #18181b)',
+          border: '1px solid var(--notification-border, #e5e7eb)'
+        }}>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Monitor className="h-5 w-5 mr-2" />
+              Test Desktop
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm" style={{ color: 'var(--app-text, #666666)' }}>
+              Ouvrez l'application dans un nouvel onglet pour tester l'expérience desktop
+            </p>
+            <Button 
+              onClick={handleTestDesktop}
+              className="w-full"
+              style={{
+                backgroundColor: 'var(--app-button-bg, #1632f4)',
+                color: 'var(--app-button-text, #ffffff)'
+              }}
+            >
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Tester sur Desktop
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card style={{
+          backgroundColor: 'var(--app-card-bg, #ffffff)',
+          color: 'var(--app-card-text, #18181b)',
+          border: '1px solid var(--notification-border, #e5e7eb)'
+        }}>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Smartphone className="h-5 w-5 mr-2" />
+              Test Mobile
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm" style={{ color: 'var(--app-text, #666666)' }}>
+              Testez l'application en mode mobile ou scannez le QR code avec votre téléphone
+            </p>
+            <div className="space-y-2">
+              <Button 
+                onClick={handleTestMobile}
+                className="w-full"
+                variant="outline"
+                style={{
+                  borderColor: 'var(--app-button-bg, #1632f4)',
+                  color: 'var(--app-button-bg, #1632f4)'
+                }}
+              >
+                <Tablet className="h-4 w-4 mr-2" />
+                Mode Mobile
+              </Button>
+              <Button 
+                onClick={handleGenerateQR}
+                className="w-full"
+                variant="outline"
+                style={{
+                  borderColor: 'var(--app-button-bg, #1632f4)',
+                  color: 'var(--app-button-bg, #1632f4)'
+                }}
+              >
+                <QrCode className="h-4 w-4 mr-2" />
+                QR Code
+              </Button>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                <Bot className="h-6 w-6 text-green-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold">Android App</h3>
-                <p className="text-sm text-gray-600">Version 1.0.0</p>
-                <Badge variant="outline" className="mt-1">En développement</Badge>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                <Smartphone className="h-6 w-6 text-purple-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold">PWA</h3>
-                <p className="text-sm text-gray-600">Progressive Web App</p>
-                <Badge className="mt-1 bg-green-500">Active</Badge>
-              </div>
-            </div>
+        <Card style={{
+          backgroundColor: 'var(--app-card-bg, #ffffff)',
+          color: 'var(--app-card-text, #18181b)',
+          border: '1px solid var(--notification-border, #e5e7eb)'
+        }}>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Share2 className="h-5 w-5 mr-2" />
+              Partage
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm" style={{ color: 'var(--app-text, #666666)' }}>
+              Partagez votre application avec d'autres utilisateurs pour obtenir des retours
+            </p>
+            <Button 
+              onClick={handleShare}
+              className="w-full"
+              style={{
+                backgroundColor: 'var(--app-button-bg, #1632f4)',
+                color: 'var(--app-button-text, #ffffff)'
+              }}
+            >
+              <Share2 className="h-4 w-4 mr-2" />
+              Partager l'App
+            </Button>
           </CardContent>
         </Card>
       </div>
 
-      {/* Build Section */}
-      <Card>
+      {/* Test Instructions */}
+      <Card style={{
+        backgroundColor: 'var(--app-card-bg, #ffffff)',
+        color: 'var(--app-card-text, #18181b)',
+        border: '1px solid var(--notification-border, #e5e7eb)'
+      }}>
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Settings className="h-5 w-5" />
-            <span>Configuration Capacitor</span>
+          <CardTitle className="flex items-center">
+            <TestTube className="h-5 w-5 mr-2" />
+            Instructions de Test
           </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h4 className="font-medium mb-2">Configuration actuelle :</h4>
-            <div className="space-y-1 text-sm text-gray-600">
-              <p>• App ID: app.lovable.1430f060d6304b55b692677815f70ace</p>
-              <p>• App Name: ShowManager Mobile</p>
-              <p>• Bundle ID: com.showmanager.mobile</p>
-              <p>• Version: 1.0.0</p>
-            </div>
-          </div>
-
-          <div className="flex space-x-4">
-            <Button onClick={initializeCapacitor} variant="outline">
-              <Settings className="h-4 w-4 mr-2" />
-              Initialiser Capacitor
-            </Button>
-            <Button onClick={handleBuildApp} disabled={buildStatus === 'building'}>
-              {buildStatus === 'building' ? (
-                <>
-                  <div className="animate-spin h-4 w-4 mr-2 border-2 border-white border-t-transparent rounded-full" />
-                  Construction...
-                </>
-              ) : (
-                <>
-                  <Download className="h-4 w-4 mr-2" />
-                  Construire l'App
-                </>
-              )}
-            </Button>
-          </div>
-
-          {buildStatus === 'success' && (
-            <div className="flex items-center space-x-2 text-green-600 bg-green-50 p-3 rounded-lg">
-              <CheckCircle className="h-5 w-5" />
-              <span>Application construite avec succès ! Prête pour le déploiement.</span>
-            </div>
-          )}
-
-          {buildStatus === 'error' && (
-            <div className="flex items-center space-x-2 text-red-600 bg-red-50 p-3 rounded-lg">
-              <AlertCircle className="h-5 w-5" />
-              <span>Erreur lors de la construction. Vérifiez les logs.</span>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Download Links */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Download className="h-5 w-5" />
-            <span>Téléchargements</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Button size="lg" className="h-16 flex-col space-y-1" variant="outline">
-              <Apple className="h-6 w-6" />
-              <span>Télécharger pour iOS</span>
-              <span className="text-xs text-gray-500">App Store</span>
-            </Button>
-            
-            <Button size="lg" className="h-16 flex-col space-y-1" variant="outline">
-              <Bot className="h-6 w-6" />
-              <span>Télécharger pour Android</span>
-              <span className="text-xs text-gray-500">Google Play</span>
-            </Button>
-          </div>
-
-          <div className="flex items-center justify-center space-x-4 p-6 bg-gray-50 rounded-lg">
-            <QrCode className="h-24 w-24 text-gray-400" />
-            <div>
-              <h4 className="font-medium">QR Code de téléchargement</h4>
-              <p className="text-sm text-gray-600">Scannez pour télécharger directement</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Instructions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Instructions de Déploiement</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <h4 className="font-medium text-blue-900 mb-2">Pour tester sur un appareil physique :</h4>
-              <ol className="list-decimal list-inside space-y-1 text-sm text-blue-800">
-                <li>Exportez le projet vers GitHub</li>
-                <li>Clonez le projet localement</li>
-                <li>Exécutez <code className="bg-blue-100 px-1 rounded">npm install</code></li>
-                <li>Ajoutez les plateformes : <code className="bg-blue-100 px-1 rounded">npx cap add ios android</code></li>
-                <li>Construisez : <code className="bg-blue-100 px-1 rounded">npm run build</code></li>
-                <li>Synchronisez : <code className="bg-blue-100 px-1 rounded">npx cap sync</code></li>
-                <li>Lancez : <code className="bg-blue-100 px-1 rounded">npx cap run ios/android</code></li>
-              </ol>
+            <div>
+              <h3 className="font-medium mb-2">🖥️ Test Desktop</h3>
+              <ul className="text-sm space-y-1" style={{ color: 'var(--app-text, #666666)' }}>
+                <li>• Testez toutes les fonctionnalités principales</li>
+                <li>• Vérifiez la responsive design en redimensionnant la fenêtre</li>
+                <li>• Testez les raccourcis clavier</li>
+              </ul>
             </div>
             
-            <div className="bg-yellow-50 p-4 rounded-lg">
-              <h4 className="font-medium text-yellow-900 mb-2">Prérequis :</h4>
-              <ul className="list-disc list-inside space-y-1 text-sm text-yellow-800">
-                <li>macOS avec Xcode pour iOS</li>
-                <li>Android Studio pour Android</li>
-                <li>Compte développeur Apple (iOS)</li>
-                <li>Compte développeur Google Play (Android)</li>
+            <div>
+              <h3 className="font-medium mb-2">📱 Test Mobile</h3>
+              <ul className="text-sm space-y-1" style={{ color: 'var(--app-text, #666666)' }}>
+                <li>• Testez les gestes tactiles (swipe, pinch, etc.)</li>
+                <li>• Vérifiez l'adaptation à différentes tailles d'écran</li>
+                <li>• Testez en mode portrait et paysage</li>
               </ul>
+            </div>
+
+            <div>
+              <h3 className="font-medium mb-2">🔗 Partage et Feedback</h3>
+              <ul className="text-sm space-y-1" style={{ color: 'var(--app-text, #666666)' }}>
+                <li>• Partagez avec vos collègues ou clients</li>
+                <li>• Collectez les retours utilisateurs</li>
+                <li>• Notez les bugs ou améliorations possibles</li>
+              </ul>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Current URL Info */}
+      <Card style={{
+        backgroundColor: 'var(--app-card-bg, #ffffff)',
+        color: 'var(--app-card-text, #18181b)',
+        border: '1px solid var(--notification-border, #e5e7eb)'
+      }}>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Globe className="h-5 w-5 mr-2" />
+            Informations de l'Application
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">URL de l'application :</span>
+              <code className="text-xs px-2 py-1 rounded" style={{
+                backgroundColor: 'var(--app-background, #f5f5f5)',
+                color: 'var(--app-text, #333333)'
+              }}>
+                {window.location.origin}
+              </code>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Environnement :</span>
+              <Badge variant="outline">
+                {window.location.hostname === 'localhost' ? 'Développement' : 'Production'}
+              </Badge>
             </div>
           </div>
         </CardContent>

@@ -1,11 +1,16 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { BlockEditor } from '@/components/BlockEditor/BlockEditor';
-import { Block } from '@/components/BlockEditor/types';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Save, Eye } from 'lucide-react';
 import { toast } from 'sonner';
+
+interface Block {
+  id: string;
+  type: string;
+  order: number;
+  content: any;
+}
 
 interface WebPage {
   id: string;
@@ -23,31 +28,7 @@ const defaultPages: WebPage[] = [
     slug: '/',
     status: 'published',
     metaDescription: 'Page d\'accueil de MusiConnect',
-    blocks: [
-      {
-        id: '1',
-        type: 'hero',
-        order: 0,
-        content: {
-          title: 'Créons des Moments Magiques',
-          subtitle: 'Découvrez nos artistes talentueux et créons ensemble des expériences musicales exceptionnelles pour vos événements',
-          backgroundImage: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1200',
-          buttonText: 'Découvrir nos Artistes',
-          buttonLink: '/front/artists'
-        }
-      },
-      {
-        id: '2',
-        type: 'artist-grid',
-        order: 1,
-        content: {
-          title: 'Nos Artistes',
-          subtitle: 'Découvrez les talents qui font vibrer nos scènes',
-          showRating: true,
-          showStats: true
-        }
-      }
-    ]
+    blocks: []
   },
   {
     id: '2',
@@ -55,26 +36,7 @@ const defaultPages: WebPage[] = [
     slug: '/artists',
     status: 'published',
     metaDescription: 'Découvrez notre sélection d\'artistes exceptionnels',
-    blocks: [
-      {
-        id: '3',
-        type: 'text',
-        order: 0,
-        content: {
-          text: '<h1>Nos Artistes</h1><p>Découvrez notre sélection d\'artistes talentueux</p>'
-        }
-      },
-      {
-        id: '4',
-        type: 'artist-grid',
-        order: 1,
-        content: {
-          title: 'Tous nos Artistes',
-          showRating: true,
-          showStats: true
-        }
-      }
-    ]
+    blocks: []
   },
   {
     id: '3',
@@ -82,16 +44,7 @@ const defaultPages: WebPage[] = [
     slug: '/events',
     status: 'published',
     metaDescription: 'Ne manquez aucun de nos événements musicaux',
-    blocks: [
-      {
-        id: '5',
-        type: 'text',
-        order: 0,
-        content: {
-          text: '<h1>Nos Événements</h1><p>Découvrez tous nos événements à venir</p>'
-        }
-      }
-    ]
+    blocks: []
   },
   {
     id: '4',
@@ -99,16 +52,7 @@ const defaultPages: WebPage[] = [
     slug: '/contact',
     status: 'published',
     metaDescription: 'Contactez-nous pour vos projets musicaux',
-    blocks: [
-      {
-        id: '6',
-        type: 'text',
-        order: 0,
-        content: {
-          text: '<h1>Contactez-nous</h1><p>Nous sommes là pour réaliser vos projets musicaux</p>'
-        }
-      }
-    ]
+    blocks: []
   }
 ];
 
@@ -116,15 +60,12 @@ export const WebsitePageEditor: React.FC = () => {
   const { pageId } = useParams<{ pageId: string }>();
   const navigate = useNavigate();
   const [page, setPage] = useState<WebPage | null>(null);
-  const [blocks, setBlocks] = useState<Block[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Load page data
     const loadPage = () => {
       console.log('Loading page data for ID:', pageId);
       
-      // Try to load from localStorage first
       const savedPages = localStorage.getItem('websitePages');
       let pagesData = defaultPages;
       
@@ -144,7 +85,17 @@ export const WebsitePageEditor: React.FC = () => {
       if (foundPage) {
         console.log('Found page:', foundPage);
         setPage(foundPage);
-        setBlocks(foundPage.blocks || []);
+      } else if (pageId === 'new') {
+        // Création d'une nouvelle page
+        const newPage: WebPage = {
+          id: `page-${Date.now()}`,
+          title: 'Nouvelle Page',
+          slug: '/nouvelle-page',
+          status: 'draft',
+          metaDescription: '',
+          blocks: []
+        };
+        setPage(newPage);
       } else {
         console.error('Page not found for ID:', pageId);
         toast.error('Page non trouvée');
@@ -156,20 +107,14 @@ export const WebsitePageEditor: React.FC = () => {
     loadPage();
   }, [pageId]);
 
-  const handleSave = (newBlocks: Block[]) => {
+  const handleSave = () => {
     if (!page) {
       toast.error('Impossible de sauvegarder : page non trouvée');
       return;
     }
 
-    console.log('Saving blocks:', newBlocks);
+    console.log('Saving page:', page);
 
-    // Update the page with new blocks
-    const updatedPage = { ...page, blocks: newBlocks };
-    setPage(updatedPage);
-    setBlocks(newBlocks);
-    
-    // Save to localStorage
     const savedPages = localStorage.getItem('websitePages');
     let pagesData = defaultPages;
     
@@ -184,16 +129,16 @@ export const WebsitePageEditor: React.FC = () => {
       }
     }
     
-    // Update the page in the array
     const updatedPages = pagesData.map(p => 
-      p.id === pageId ? updatedPage : p
+      p.id === page.id ? page : p
     );
     
-    // Save back to localStorage
-    localStorage.setItem('websitePages', JSON.stringify(updatedPages));
+    // Si c'est une nouvelle page, l'ajouter
+    if (!pagesData.find(p => p.id === page.id)) {
+      updatedPages.push(page);
+    }
     
-    // Here you would normally save to your backend as well
-    console.log('Saving page:', updatedPage);
+    localStorage.setItem('websitePages', JSON.stringify(updatedPages));
     
     toast.success('Page sauvegardée avec succès');
   };
@@ -205,15 +150,30 @@ export const WebsitePageEditor: React.FC = () => {
   };
 
   if (isLoading) {
-    return <div className="p-6">Chargement...</div>;
+    return (
+      <div className="p-6" style={{
+        backgroundColor: 'var(--app-background, #ffffff)',
+        color: 'var(--app-text, #18181b)',
+        minHeight: '100vh'
+      }}>
+        Chargement...
+      </div>
+    );
   }
 
   if (!page) {
     return (
-      <div className="p-6">
+      <div className="p-6" style={{
+        backgroundColor: 'var(--app-background, #ffffff)',
+        color: 'var(--app-text, #18181b)',
+        minHeight: '100vh'
+      }}>
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Page non trouvée</h1>
-          <Button onClick={() => navigate('/admin')} className="bg-[#1632f4] hover:bg-[#1632f4]/90 text-white">
+          <h1 className="text-2xl font-bold mb-4">Page non trouvée</h1>
+          <Button onClick={() => navigate('/website')} style={{
+            backgroundColor: 'var(--app-button-bg, #1632f4)',
+            color: 'var(--app-button-text, #ffffff)'
+          }}>
             Retour à la gestion des pages
           </Button>
         </div>
@@ -222,17 +182,24 @@ export const WebsitePageEditor: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b px-6 py-4">
+    <div style={{
+      backgroundColor: 'var(--app-background, #ffffff)',
+      color: 'var(--app-text, #18181b)',
+      minHeight: '100vh'
+    }}>
+      <div className="border-b px-6 py-4" style={{
+        backgroundColor: 'var(--app-card-bg, #ffffff)',
+        borderColor: 'var(--notification-border, #e5e7eb)'
+      }}>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" onClick={() => navigate('/admin')}>
+            <Button variant="ghost" onClick={() => navigate('/website')}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Retour
             </Button>
             <div>
               <h1 className="text-lg font-semibold">Édition : {page.title}</h1>
-              <p className="text-sm text-gray-600">{page.slug}</p>
+              <p className="text-sm" style={{ color: 'var(--app-text, #666666)' }}>{page.slug}</p>
             </div>
           </div>
           <div className="flex items-center space-x-2">
@@ -240,14 +207,25 @@ export const WebsitePageEditor: React.FC = () => {
               <Eye className="h-4 w-4 mr-2" />
               Aperçu
             </Button>
+            <Button onClick={handleSave} style={{
+              backgroundColor: 'var(--app-button-bg, #1632f4)',
+              color: 'var(--app-button-text, #ffffff)'
+            }}>
+              <Save className="h-4 w-4 mr-2" />
+              Sauvegarder
+            </Button>
           </div>
         </div>
       </div>
       
-      <BlockEditor
-        initialBlocks={blocks}
-        onSave={handleSave}
-      />
+      <div className="p-6">
+        <div className="text-center py-12">
+          <h2 className="text-xl font-semibold mb-4">Éditeur de page</h2>
+          <p style={{ color: 'var(--app-text, #666666)' }}>
+            L'éditeur de blocs sera bientôt disponible pour personnaliser cette page.
+          </p>
+        </div>
+      </div>
     </div>
   );
 };

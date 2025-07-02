@@ -1,358 +1,444 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Plus, 
-  Search, 
   Edit, 
   Trash2, 
-  Shield, 
-  User, 
-  Mail,
-  CheckCircle,
-  XCircle,
-  UserCheck,
-  Crown,
-  Users,
-  Music
+  Users, 
+  Mail, 
+  Phone,
+  User,
+  Save
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
-import { ExtendedUserProfileForm, type UserRole } from '@/components/ExtendedUserProfileForm';
 
 interface UserProfile {
   id: string;
-  user_id: string;
-  role: UserRole;
-  first_name?: string;
-  last_name?: string;
-  email?: string;
+  email: string;
+  username: string;
+  firstName: string;
+  lastName: string;
   phone?: string;
-  address?: string;
-  postal_code?: string;
-  city?: string;
-  birth_date?: string;
-  birth_place?: string;
-  social_security_number?: string;
-  guso_id?: string;
-  function_title?: string;
-  nationality?: string;
-  show_name?: string;
-  associated_artists?: string[];
-  created_at: string;
-  updated_at: string;
+  role: 'admin' | 'user' | 'moderator';
+  status: 'active' | 'inactive';
+  createdAt: string;
 }
 
-const roleLabels = {
-  super_admin: 'Super Admin',
-  admin: 'Admin',
-  manager: 'Manager / Booker',
-  artiste: 'Artiste',
-  utilisateur: 'Utilisateur'
-};
-
-// Sample artists data for display - this should match the data in ExtendedUserProfileForm
-const artistsLookup: Record<string, string> = {
-  '1': 'The Midnight Express',
-  '2': 'Sarah Mitchell',
-  '3': 'Thunder Road',
-  '4': 'Jazz Collective',
-  '5': 'Folk Harmony'
-};
+const mockUsers: UserProfile[] = [
+  {
+    id: '1',
+    email: 'admin@musiconnect.com',
+    username: 'admin',
+    firstName: 'Admin',
+    lastName: 'Principal',
+    phone: '+33123456789',
+    role: 'admin',
+    status: 'active',
+    createdAt: '2024-01-01'
+  }
+];
 
 export const UserManagement: React.FC = () => {
-  const [users, setUsers] = useState<UserProfile[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState<UserProfile[]>(mockUsers);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedRole, setSelectedRole] = useState<string>('all');
-  const [showForm, setShowForm] = useState(false);
-  const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
-
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  const fetchUsers = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      
-      // Cast the role field to UserRole type and ensure associated_artists is properly handled
-      const typedUsers = (data || []).map(user => ({
-        ...user,
-        role: user.role as UserRole,
-        associated_artists: user.associated_artists || []
-      }));
-      
-      setUsers(typedUsers);
-    } catch (error) {
-      console.error('Error fetching users:', error);
-      toast.error('Erreur lors du chargement des utilisateurs');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = 
-      user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      `${user.first_name} ${user.last_name}`.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = selectedRole === 'all' || user.role === selectedRole;
-    return matchesSearch && matchesRole;
+  const [userForm, setUserForm] = useState<Partial<UserProfile>>({
+    email: '',
+    username: '',
+    firstName: '',
+    lastName: '',
+    phone: '',
+    role: 'user',
+    status: 'active'
   });
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case 'super_admin': return 'bg-purple-100 text-purple-800';
       case 'admin': return 'bg-red-100 text-red-800';
-      case 'manager': return 'bg-blue-100 text-blue-800';
-      case 'artiste': return 'bg-green-100 text-green-800';
-      case 'utilisateur': return 'bg-gray-100 text-gray-800';
+      case 'moderator': return 'bg-yellow-100 text-yellow-800';
+      case 'user': return 'bg-blue-100 text-blue-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const getRoleIcon = (role: string) => {
-    switch (role) {
-      case 'super_admin': return Crown;
-      case 'admin': return Shield;
-      case 'manager': return Users;
-      case 'artiste': return Music;
-      case 'utilisateur': return User;
-      default: return User;
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active': return 'bg-green-100 text-green-800';
+      case 'inactive': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const getAssociatedArtistsDisplay = (associatedArtists?: string[]) => {
-    if (!associatedArtists || associatedArtists.length === 0) {
-      return '-';
-    }
-    
-    const artistNames = associatedArtists
-      .map(id => artistsLookup[id])
-      .filter(Boolean);
-    
-    if (artistNames.length === 0) return '-';
-    
-    if (artistNames.length === 1) {
-      return artistNames[0];
-    }
-    
-    if (artistNames.length <= 2) {
-      return artistNames.join(', ');
-    }
-    
-    return `${artistNames[0]} (+${artistNames.length - 1} autres)`;
-  };
-
-  const handleEditUser = (user: UserProfile) => {
-    setEditingUser(user);
-    setShowForm(true);
-  };
-
-  const handleDeleteUser = async (userId: string) => {
-    if (!window.confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) {
+  const handleSaveUser = () => {
+    if (!userForm.email || !userForm.username || !userForm.firstName || !userForm.lastName) {
+      toast.error('Veuillez remplir tous les champs obligatoires');
       return;
     }
 
-    try {
-      const { error } = await supabase
-        .from('user_profiles')
-        .delete()
-        .eq('id', userId);
+    if (selectedUser) {
+      // Modification
+      setUsers(prev => prev.map(u => 
+        u.id === selectedUser.id 
+          ? { ...selectedUser, ...userForm } as UserProfile
+          : u
+      ));
+      toast.success('Utilisateur modifié avec succès');
+    } else {
+      // Création
+      const newUser: UserProfile = {
+        id: Date.now().toString(),
+        ...userForm as Omit<UserProfile, 'id' | 'createdAt'>,
+        createdAt: new Date().toISOString().split('T')[0]
+      };
+      setUsers(prev => [...prev, newUser]);
+      toast.success('Utilisateur créé avec succès');
+    }
 
-      if (error) throw error;
-      
-      setUsers(prev => prev.filter(user => user.id !== userId));
-      toast.success('Utilisateur supprimé avec succès');
-    } catch (error) {
-      console.error('Error deleting user:', error);
-      toast.error('Erreur lors de la suppression');
+    setIsFormOpen(false);
+    setSelectedUser(null);
+    setUserForm({
+      email: '',
+      username: '',
+      firstName: '',
+      lastName: '',
+      phone: '',
+      role: 'user',
+      status: 'active'
+    });
+  };
+
+  const handleEditUser = (user: UserProfile) => {
+    setSelectedUser(user);
+    setUserForm(user);
+    setIsFormOpen(true);
+  };
+
+  const handleDeleteUser = (userId: string) => {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) {
+      setUsers(prev => prev.filter(u => u.id !== userId));
+      toast.success('Utilisateur supprimé');
     }
   };
 
-  const handleSaveUser = async (profileData: any) => {
-    try {
-      await fetchUsers(); // Refresh the list
-      setShowForm(false);
-      setEditingUser(null);
-    } catch (error) {
-      console.error('Error in handleSaveUser:', error);
-    }
+  const handleNewUser = () => {
+    setSelectedUser(null);
+    setUserForm({
+      email: '',
+      username: '',
+      firstName: '',
+      lastName: '',
+      phone: '',
+      role: 'user',
+      status: 'active'
+    });
+    setIsFormOpen(true);
   };
 
-  const getDisplayName = (user: UserProfile) => {
-    if (user.first_name && user.last_name) {
-      return `${user.first_name} ${user.last_name}`;
-    }
-    return user.email || 'Utilisateur sans nom';
-  };
-
-  if (loading) {
-    return <div className="flex justify-center items-center h-64">Chargement...</div>;
-  }
+  const filteredUsers = users.filter(user =>
+    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.lastName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6" style={{
+      backgroundColor: 'var(--app-background, #ffffff)',
+      color: 'var(--app-text, #18181b)',
+      minHeight: '100vh'
+    }}>
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Gestion des Utilisateurs</h1>
-          <p className="text-muted-foreground mt-2">Gérer les utilisateurs, catégories et informations</p>
+          <h1 className="text-3xl font-bold" style={{ color: 'var(--app-text, #18181b)' }}>
+            Gestion des Utilisateurs
+          </h1>
+          <p className="mt-2" style={{ color: 'var(--app-text, #666666)' }}>
+            Gérez les comptes utilisateurs et leurs permissions
+          </p>
         </div>
-        <Dialog open={showForm} onOpenChange={setShowForm}>
-          <DialogTrigger asChild>
-            <Button className="bg-purple-600 hover:bg-purple-700">
-              <Plus className="h-4 w-4 mr-2" />
-              Ajouter un utilisateur
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>
-                {editingUser ? 'Modifier l\'utilisateur' : 'Ajouter un nouvel utilisateur'}
-              </DialogTitle>
-            </DialogHeader>
-            <ExtendedUserProfileForm
-              profile={editingUser || undefined}
-              onSave={handleSaveUser}
-              onCancel={() => {
-                setShowForm(false);
-                setEditingUser(null);
-              }}
-            />
-          </DialogContent>
-        </Dialog>
+        <Button 
+          onClick={handleNewUser}
+          style={{
+            backgroundColor: 'var(--app-button-bg, #1632f4)',
+            color: 'var(--app-button-text, #ffffff)'
+          }}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Nouvel Utilisateur
+        </Button>
       </div>
 
-      {/* Search and Filters */}
-      <div className="flex gap-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-          <Input
-            placeholder="Rechercher des utilisateurs..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        <Select value={selectedRole} onValueChange={setSelectedRole}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Toutes les catégories" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Toutes les catégories</SelectItem>
-            {Object.entries(roleLabels).map(([value, label]) => (
-              <SelectItem key={value} value={value}>{label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-purple-600">{users.length}</div>
-            <div className="text-sm text-muted-foreground">Total</div>
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card style={{
+          backgroundColor: 'var(--app-card-bg, #ffffff)',
+          color: 'var(--app-card-text, #18181b)',
+          border: '1px solid var(--notification-border, #e5e7eb)'
+        }}>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <Users className="h-8 w-8" style={{ color: 'var(--app-button-bg, #1632f4)' }} />
+              <div>
+                <p className="text-2xl font-bold">{users.length}</p>
+                <p className="text-sm" style={{ color: 'var(--app-text, #666666)' }}>Total</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
-        {Object.entries(roleLabels).map(([role, label]) => (
-          <Card key={role}>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-blue-600">
-                {users.filter(u => u.role === role).length}
+
+        <Card style={{
+          backgroundColor: 'var(--app-card-bg, #ffffff)',
+          color: 'var(--app-card-text, #18181b)',
+          border: '1px solid var(--notification-border, #e5e7eb)'
+        }}>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <User className="h-8 w-8 text-green-600" />
+              <div>
+                <p className="text-2xl font-bold">{users.filter(u => u.status === 'active').length}</p>
+                <p className="text-sm" style={{ color: 'var(--app-text, #666666)' }}>Actifs</p>
               </div>
-              <div className="text-sm text-muted-foreground">{label}</div>
-            </CardContent>
-          </Card>
-        ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card style={{
+          backgroundColor: 'var(--app-card-bg, #ffffff)',
+          color: 'var(--app-card-text, #18181b)',
+          border: '1px solid var(--notification-border, #e5e7eb)'
+        }}>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <User className="h-8 w-8 text-red-600" />
+              <div>
+                <p className="text-2xl font-bold">{users.filter(u => u.role === 'admin').length}</p>
+                <p className="text-sm" style={{ color: 'var(--app-text, #666666)' }}>Admins</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card style={{
+          backgroundColor: 'var(--app-card-bg, #ffffff)',
+          color: 'var(--app-card-text, #18181b)',
+          border: '1px solid var(--notification-border, #e5e7eb)'
+        }}>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <User className="h-8 w-8 text-gray-600" />
+              <div>
+                <p className="text-2xl font-bold">{users.filter(u => u.status === 'inactive').length}</p>
+                <p className="text-sm" style={{ color: 'var(--app-text, #666666)' }}>Inactifs</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Users Table */}
-      <Card>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Utilisateur</TableHead>
-              <TableHead>Catégorie</TableHead>
-              <TableHead>Téléphone</TableHead>
-              <TableHead>Ville</TableHead>
-              <TableHead>Spectacles associés</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredUsers.map((user) => {
-              const RoleIcon = getRoleIcon(user.role);
-              return (
-                <TableRow key={user.id}>
-                  <TableCell>
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
-                        <span className="text-white text-sm font-medium">
-                          {user.first_name?.charAt(0) || user.email?.charAt(0) || 'U'}
-                        </span>
-                      </div>
-                      <div>
-                        <div className="font-medium">{getDisplayName(user)}</div>
-                        <div className="text-sm text-muted-foreground flex items-center">
-                          <Mail className="h-3 w-3 mr-1" />
-                          {user.email}
-                        </div>
-                      </div>
+      {/* Users List */}
+      <Card style={{
+        backgroundColor: 'var(--app-card-bg, #ffffff)',
+        color: 'var(--app-card-text, #18181b)',
+        border: '1px solid var(--notification-border, #e5e7eb)'
+      }}>
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <CardTitle style={{ color: 'var(--app-card-text, #18181b)' }}>
+              Liste des Utilisateurs
+            </CardTitle>
+            <Input
+              placeholder="Rechercher un utilisateur..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="max-w-sm"
+              style={{
+                color: 'var(--app-text, #18181b)',
+                borderColor: 'var(--notification-border, #e5e7eb)'
+              }}
+            />
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {filteredUsers.map((user) => (
+              <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg" style={{
+                borderColor: 'var(--notification-border, #e5e7eb)'
+              }}>
+                <div className="flex-1">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{
+                      backgroundColor: 'var(--app-button-bg, #1632f4)',
+                      color: 'var(--app-button-text, #ffffff)'
+                    }}>
+                      {user.firstName.charAt(0)}{user.lastName.charAt(0)}
                     </div>
-                  </TableCell>
-                  <TableCell>
+                    <div>
+                      <h3 className="font-medium" style={{ color: 'var(--app-card-text, #18181b)' }}>
+                        {user.firstName} {user.lastName}
+                      </h3>
+                      <p className="text-sm" style={{ color: 'var(--app-text, #666666)' }}>
+                        @{user.username}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-4 mt-2">
+                    <div className="flex items-center text-sm" style={{ color: 'var(--app-text, #666666)' }}>
+                      <Mail className="h-4 w-4 mr-1" />
+                      {user.email}
+                    </div>
+                    {user.phone && (
+                      <div className="flex items-center text-sm" style={{ color: 'var(--app-text, #666666)' }}>
+                        <Phone className="h-4 w-4 mr-1" />
+                        {user.phone}
+                      </div>
+                    )}
                     <Badge className={getRoleColor(user.role)}>
-                      <RoleIcon className="h-3 w-3 mr-1" />
-                      {roleLabels[user.role]}
+                      {user.role}
                     </Badge>
-                  </TableCell>
-                  <TableCell>{user.phone || '-'}</TableCell>
-                  <TableCell>{user.city || '-'}</TableCell>
-                  <TableCell>
-                    <div className="text-sm">
-                      {user.role === 'artiste' ? (
-                        <span title={user.associated_artists?.map(id => artistsLookup[id]).filter(Boolean).join(', ')}>
-                          {getAssociatedArtistsDisplay(user.associated_artists)}
-                        </span>
-                      ) : '-'}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditUser(user)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteUser(user.id)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+                    <Badge className={getStatusColor(user.status)}>
+                      {user.status}
+                    </Badge>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleEditUser(user)}
+                    style={{
+                      color: 'var(--app-button-bg, #1632f4)',
+                      borderColor: 'var(--app-button-bg, #1632f4)'
+                    }}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleDeleteUser(user.id)}
+                    className="text-red-600 border-red-600 hover:bg-red-50"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
       </Card>
+
+      {/* Dialog pour le formulaire utilisateur */}
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedUser ? 'Modifier l\'utilisateur' : 'Nouvel utilisateur'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="firstName">Prénom *</Label>
+                <Input
+                  id="firstName"
+                  value={userForm.firstName || ''}
+                  onChange={(e) => setUserForm(prev => ({ ...prev, firstName: e.target.value }))}
+                  placeholder="Prénom"
+                />
+              </div>
+              <div>
+                <Label htmlFor="lastName">Nom *</Label>
+                <Input
+                  id="lastName"
+                  value={userForm.lastName || ''}
+                  onChange={(e) => setUserForm(prev => ({ ...prev, lastName: e.target.value }))}
+                  placeholder="Nom"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="username">Pseudo *</Label>
+              <Input
+                id="username"
+                value={userForm.username || ''}
+                onChange={(e) => setUserForm(prev => ({ ...prev, username: e.target.value }))}
+                placeholder="Pseudo unique"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="email">Email *</Label>
+              <Input
+                id="email"
+                type="email"
+                value={userForm.email || ''}
+                onChange={(e) => setUserForm(prev => ({ ...prev, email: e.target.value }))}
+                placeholder="email@exemple.com"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="phone">Téléphone</Label>
+              <Input
+                id="phone"
+                value={userForm.phone || ''}
+                onChange={(e) => setUserForm(prev => ({ ...prev, phone: e.target.value }))}
+                placeholder="+33123456789"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="role">Rôle</Label>
+                <Select value={userForm.role} onValueChange={(value: any) => setUserForm(prev => ({ ...prev, role: value }))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="user">Utilisateur</SelectItem>
+                    <SelectItem value="moderator">Modérateur</SelectItem>
+                    <SelectItem value="admin">Administrateur</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="status">Statut</Label>
+                <Select value={userForm.status} onValueChange={(value: any) => setUserForm(prev => ({ ...prev, status: value }))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Actif</SelectItem>
+                    <SelectItem value="inactive">Inactif</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="flex space-x-2 pt-4">
+              <Button variant="outline" onClick={() => setIsFormOpen(false)} className="flex-1">
+                Annuler
+              </Button>
+              <Button onClick={handleSaveUser} className="flex-1" style={{
+                backgroundColor: 'var(--app-button-bg, #1632f4)',
+                color: 'var(--app-button-text, #ffffff)'
+              }}>
+                <Save className="h-4 w-4 mr-2" />
+                {selectedUser ? 'Modifier' : 'Créer'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
