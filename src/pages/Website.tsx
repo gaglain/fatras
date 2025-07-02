@@ -1,57 +1,156 @@
 
-import React from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Palette, Settings, FileText, MessageCircle } from 'lucide-react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AdminChatNotifications } from '@/components/AdminChatNotifications';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Globe, Menu, Palette, Settings, Eye, Code } from 'lucide-react';
+import { WebsiteMenuManager } from '@/components/WebsiteMenuManager';
 import { WebsiteDesignManager } from '@/components/WebsiteDesignManager';
 import { WebsiteSettingsManager } from '@/components/WebsiteSettingsManager';
+import { SEOManager } from '@/components/SEOManager';
 import { LegalContentManager } from '@/components/LegalContentManager';
 
 export const Website: React.FC = () => {
+  const [activeTab, setActiveTab] = useState('menu');
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Gestion du Site Web</h1>
-        <p className="text-muted-foreground mt-2">
-          Personnalisez l'apparence et le contenu de votre site web
-        </p>
+    <div className="space-y-6" style={{
+      backgroundColor: 'var(--app-background, #ffffff)',
+      color: 'var(--app-text, #18181b)',
+      minHeight: '100vh'
+    }}>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold" style={{ color: 'var(--app-text, #18181b)' }}>
+            Gestion du Site Web
+          </h1>
+          <p className="mt-2" style={{ color: 'var(--app-text, #666666)' }}>
+            Configurez et personnalisez votre site web public
+          </p>
+        </div>
       </div>
 
-      <Tabs defaultValue="design" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="design" className="flex items-center space-x-2">
-            <Palette className="h-4 w-4" />
-            <span>Design</span>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="menu">
+            <Menu className="h-4 w-4 mr-2" />
+            Menu
           </TabsTrigger>
-          <TabsTrigger value="settings" className="flex items-center space-x-2">
-            <Settings className="h-4 w-4" />
-            <span>Paramètres</span>
+          <TabsTrigger value="design">
+            <Palette className="h-4 w-4 mr-2" />
+            Design
           </TabsTrigger>
-          <TabsTrigger value="legal" className="flex items-center space-x-2">
-            <FileText className="h-4 w-4" />
-            <span>Contenu légal</span>
+          <TabsTrigger value="settings">
+            <Settings className="h-4 w-4 mr-2" />
+            Paramètres
           </TabsTrigger>
-          <TabsTrigger value="chat" className="flex items-center space-x-2">
-            <MessageCircle className="h-4 w-4" />
-            <span>Chat Public</span>
+          <TabsTrigger value="seo">
+            <Code className="h-4 w-4 mr-2" />
+            SEO
+          </TabsTrigger>
+          <TabsTrigger value="legal">
+            <Eye className="h-4 w-4 mr-2" />
+            Légal
           </TabsTrigger>
         </TabsList>
 
+        <TabsContent value="menu">
+          <Card style={{
+            backgroundColor: 'var(--app-card-bg, #ffffff)',
+            color: 'var(--app-card-text, #18181b)',
+            border: '1px solid var(--notification-border, #e5e7eb)'
+          }}>
+            <CardHeader>
+              <CardTitle style={{ color: 'var(--app-card-text, #18181b)' }}>
+                Gestion du Menu
+              </CardTitle>
+              <p style={{ color: 'var(--app-text, #666666)' }}>
+                Personnalisez la navigation de votre site web
+              </p>
+            </CardHeader>
+            <CardContent>
+              <WebsiteMenuManager />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="design">
-          <WebsiteDesignManager />
+          <Card style={{
+            backgroundColor: 'var(--app-card-bg, #ffffff)',
+            color: 'var(--app-card-text, #18181b)',
+            border: '1px solid var(--notification-border, #e5e7eb)'
+          }}>
+            <CardHeader>
+              <CardTitle style={{ color: 'var(--app-card-text, #18181b)' }}>
+                Design et Apparence
+              </CardTitle>
+              <p style={{ color: 'var(--app-text, #666666)' }}>
+                Personnalisez l'apparence de votre site web
+              </p>
+            </CardHeader>
+            <CardContent>
+              <WebsiteDesignManager />
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="settings">
-          <WebsiteSettingsManager />
+          <Card style={{
+            backgroundColor: 'var(--app-card-bg, #ffffff)',
+            color: 'var(--app-card-text, #18181b)',
+            border: '1px solid var(--notification-border, #e5e7eb)'
+          }}>
+            <CardHeader>
+              <CardTitle style={{ color: 'var(--app-card-text, #18181b)' }}>
+                Paramètres Généraux
+              </CardTitle>
+              <p style={{ color: 'var(--app-text, #666666)' }}>
+                Configuration générale du site web
+              </p>
+            </CardHeader>
+            <CardContent>
+              <WebsiteSettingsManager />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="seo">
+          <Card style={{
+            backgroundColor: 'var(--app-card-bg, #ffffff)',
+            color: 'var(--app-card-text, #18181b)',
+            border: '1px solid var(--notification-border, #e5e7eb)'
+          }}>
+            <CardHeader>
+              <CardTitle style={{ color: 'var(--app-card-text, #18181b)' }}>
+                SEO et Référencement
+              </CardTitle>
+              <p style={{ color: 'var(--app-text, #666666)' }}>
+                Optimisez le référencement de votre site
+              </p>
+            </CardHeader>
+            <CardContent>
+              <SEOManager />
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="legal">
-          <LegalContentManager />
-        </TabsContent>
-
-        <TabsContent value="chat">
-          <AdminChatNotifications />
+          <Card style={{
+            backgroundColor: 'var(--app-card-bg, #ffffff)',
+            color: 'var(--app-card-text, #18181b)',
+            border: '1px solid var(--notification-border, #e5e7eb)'
+          }}>
+            <CardHeader>
+              <CardTitle style={{ color: 'var(--app-card-text, #18181b)' }}>
+                Contenu Légal
+              </CardTitle>
+              <p style={{ color: 'var(--app-text, #666666)' }}>
+                Gérez les mentions légales et CGV
+              </p>
+            </CardHeader>
+            <CardContent>
+              <LegalContentManager />
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

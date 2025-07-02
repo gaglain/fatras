@@ -5,6 +5,8 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { BackOfficeHeader } from '@/components/BackOfficeHeader';
 import { PublicChatWidget } from '@/components/PublicChatWidget';
+import { ChatWidget } from '@/components/ChatWidget';
+import { useCustomColors } from '@/hooks/useCustomColors';
 
 const adminRoutes = [
   '/admin', '/dashboard', '/artists', '/events', '/agenda', '/contacts',
@@ -16,6 +18,9 @@ const adminRoutes = [
 export const Layout: React.FC = () => {
   const location = useLocation();
   
+  // Appliquer les couleurs personnalisées
+  useCustomColors();
+  
   console.log('🏗️ Layout - Rendering for path:', location.pathname);
   
   const isAdminRoute = adminRoutes.some(route =>
@@ -26,21 +31,37 @@ export const Layout: React.FC = () => {
   
   if (!isAdminRoute) {
     console.log('🏗️ Layout - Not admin route, rendering outlet only');
-    return <Outlet />;
+    return (
+      <>
+        <Outlet />
+        <PublicChatWidget />
+      </>
+    );
   }
 
   return (
     <SidebarProvider>
-      <div className="flex h-screen w-full bg-white">
+      <div 
+        className="flex h-screen w-full"
+        style={{ 
+          backgroundColor: 'var(--app-background, #ffffff)',
+          color: 'var(--app-text, #18181b)'
+        }}
+      >
         <AppSidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
           <BackOfficeHeader />
-          <main className="flex-1 overflow-auto p-6 bg-white">
+          <main 
+            className="flex-1 overflow-auto p-6"
+            style={{ 
+              backgroundColor: 'var(--app-background, #ffffff)'
+            }}
+          >
             <Outlet />
           </main>
         </div>
       </div>
-      <PublicChatWidget />
+      <ChatWidget />
     </SidebarProvider>
   );
 };

@@ -43,7 +43,6 @@ export const useCustomColors = () => {
           document.body.style.backgroundColor = bgColor;
           document.body.style.color = textColor;
           document.documentElement.style.backgroundColor = bgColor;
-          document.documentElement.style.color = textColor;
           
           // Mettre à jour les variables CSS Tailwind avec les bonnes valeurs
           const tailwindVars = {
@@ -59,34 +58,14 @@ export const useCustomColors = () => {
             root.style.setProperty(key, value);
           });
           
+          // Forcer la re-peinture
+          document.body.style.display = 'none';
+          document.body.offsetHeight; // trigger reflow
+          document.body.style.display = '';
+          
           console.log('✅ Custom colors applied successfully with useCustomColors');
         } catch (error) {
           console.error('❌ Error applying custom colors:', error);
-        }
-      } else {
-        console.log('🎨 No custom colors found, applying defaults');
-        // Appliquer les couleurs par défaut
-        const root = document.documentElement;
-        const isDark = theme === 'dark';
-        
-        if (isDark) {
-          root.style.setProperty('--app-background', '#0f0f0f');
-          root.style.setProperty('--app-text', '#ffffff');
-          root.style.setProperty('--app-card-bg', '#1a1a1a');
-          root.style.setProperty('--app-card-text', '#ffffff');
-          root.style.setProperty('--app-button-bg', '#ffffff');
-          root.style.setProperty('--app-button-text', '#000000');
-          document.body.style.backgroundColor = '#0f0f0f';
-          document.body.style.color = '#ffffff';
-        } else {
-          root.style.setProperty('--app-background', '#ffffff');
-          root.style.setProperty('--app-text', '#18181b');
-          root.style.setProperty('--app-card-bg', '#ffffff');
-          root.style.setProperty('--app-card-text', '#18181b');
-          root.style.setProperty('--app-button-bg', '#1632f4');
-          root.style.setProperty('--app-button-text', '#ffffff');
-          document.body.style.backgroundColor = '#ffffff';
-          document.body.style.color = '#18181b';
         }
       }
     };
@@ -118,18 +97,5 @@ export const useCustomColors = () => {
     };
   }, [theme]);
 
-  // Fonction utilitaire pour obtenir les couleurs actuelles
-  const getCurrentColors = () => {
-    const savedColors = localStorage.getItem("customColors");
-    if (savedColors) {
-      try {
-        return JSON.parse(savedColors);
-      } catch (error) {
-        console.error('Error parsing saved colors:', error);
-      }
-    }
-    return null;
-  };
-
-  return { getCurrentColors };
+  return {};
 };
