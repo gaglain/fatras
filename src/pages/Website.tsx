@@ -12,6 +12,11 @@ import { LegalContentManager } from '@/components/LegalContentManager';
 export const Website: React.FC = () => {
   const [activeTab, setActiveTab] = useState('menu');
 
+  const handleSEOSave = (seoData: any) => {
+    console.log('Saving SEO data:', seoData);
+    // TODO: Implement SEO data saving to backend
+  };
+
   return (
     <div className="space-y-6" style={{
       backgroundColor: 'var(--app-background, #ffffff)',
@@ -128,7 +133,7 @@ export const Website: React.FC = () => {
               </p>
             </CardHeader>
             <CardContent>
-              <SEOManager />
+              <SEOManager onSave={handleSEOSave} />
             </CardContent>
           </Card>
         </TabsContent>
