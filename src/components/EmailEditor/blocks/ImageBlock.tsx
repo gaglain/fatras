@@ -1,9 +1,9 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Upload, X } from 'lucide-react';
+import { Upload, Link as LinkIcon } from 'lucide-react';
 import { ImageBlockContent } from '../types';
 
 interface ImageBlockProps {
@@ -12,134 +12,164 @@ interface ImageBlockProps {
 }
 
 export const ImageBlock: React.FC<ImageBlockProps> = ({ content, onChange }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [uploadMethod, setUploadMethod] = useState<'file' | 'url'>('url');
+
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        onChange({ 
-          ...content, 
-          src: e.target?.result as string,
-          alt: file.name 
-        });
+        const src = e.target?.result as string;
+        onChange({ ...content, src });
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const removeImage = () => {
-    onChange({ ...content, src: '', alt: '' });
+  const handleUrlChange = (url: string) => {
+    onChange({ ...content, src: url });
   };
 
-  return (
-    <div className="space-y-4">
-      {content.src ? (
-        <div className="relative">
-          <div style={{ textAlign: content.alignment }}>
-            <img
-              src={content.src}
-              alt={content.alt}
-              style={{
-                maxWidth: `${content.width}%`,
-                height: content.height || 'auto',
-                display: 'inline-block',
-                borderRadius: content.borderRadius ? `${content.borderRadius}px` : '0'
-              }}
-            />
-          </div>
+  if (isEditing) {
+    return (
+      <div className="space-y-4 p-4 border rounded-lg bg-gray-50">
+        <div className="flex space-x-2">
           <Button
-            variant="destructive"
+            variant={uploadMethod === 'url' ? 'default' : 'outline'}
             size="sm"
-            className="absolute top-2 right-2"
-            onClick={removeImage}
+            onClick={() => setUploadMethod('url')}
           >
-            <X className="h-4 w-4" />
+            <LinkIcon className="h-4 w-4 mr-2" />
+            URL
+          </Button>
+          <Button
+            variant={uploadMethod === 'file' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setUploadMethod('file')}
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            Fichier
           </Button>
         </div>
-      ) : (
-        <div className="border-2 border-dashed border-gray-300 p-8 text-center rounded-lg">
-          <Upload className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-          <p className="text-gray-500 mb-4">Ajouter une image</p>
-          <div className="space-y-2">
-            <label className="cursor-pointer">
-              <Button variant="outline" size="sm" asChild>
-                <span>
-                  <Upload className="h-4 w-4 mr-2" />
-                  Télécharger un fichier
-                </span>
-              </Button>
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleImageUpload}
-              />
-            </label>
-            <div className="text-sm text-gray-500">ou</div>
+
+        {uploadMethod === 'url' ? (
+          <div>
+            <label className="block text-sm font-medium mb-2">URL de l'image</label>
             <Input
-              type="url"
-              placeholder="URL de l'image"
               value={content.src}
-              onChange={(e) => onChange({ ...content, src: e.target.value })}
+              onChange={(e) => handleUrlChange(e.target.value)}
+              placeholder="https://exemple.com/image.jpg"
+            />
+          </div>
+        ) : (
+          <div>
+            <label className="block text-sm font-medium mb-2">Télécharger une image</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+              id={`image-upload-${Date.now()}`}
+            />
+            <Button
+              variant="outline"
+              onClick={() => document.getElementById(`image-upload-${Date.now()}`)?.click()}
+              className="w-full"
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Choisir un fichier
+            </Button>
+          </div>
+        )}
+
+        <div>
+          <label className="block text-sm font-medium mb-2">Texte alternatif</label>
+          <Input
+            value={content.alt}
+            onChange={(e) => onChange({ ...content, alt: e.target.value })}
+            placeholder="Description de l'image"
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Alignement</label>
+            <Select
+              value={content.alignment}
+              onValueChange={(value: 'left' | 'center' | 'right') => 
+                onChange({ ...content, alignment: value })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="left">Gauche</SelectItem>
+                <SelectItem value="center">Centre</SelectItem>
+                <SelectItem value="right">Droite</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Largeur (%)</label>
+            <Input
+              type="number"
+              value={content.width}
+              onChange={(e) => onChange({ ...content, width: parseInt(e.target.value) || 100 })}
+              min="10"
+              max="100"
+              placeholder="100"
             />
           </div>
         </div>
+
+        <div className="flex space-x-2">
+          <Button onClick={() => setIsEditing(false)} className="flex-1">
+            Terminer
+          </Button>
+          <Button variant="outline" onClick={() => setIsEditing(false)}>
+            Annuler
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div 
+      className={`p-4 cursor-pointer hover:bg-gray-50 rounded-lg border-2 border-dashed border-gray-200 ${
+        content.alignment === 'center' ? 'text-center' : 
+        content.alignment === 'right' ? 'text-right' : 'text-left'
+      }`}
+      onClick={() => setIsEditing(true)}
+    >
+      {content.src ? (
+        <div style={{ textAlign: content.alignment }}>
+          <img
+            src={content.src}
+            alt={content.alt}
+            style={{
+              maxWidth: `${content.width}%`,
+              height: 'auto',
+              display: content.alignment === 'center' ? 'inline-block' : 
+                     content.alignment === 'right' ? 'block' : 'block',
+              marginLeft: content.alignment === 'right' ? 'auto' : 
+                         content.alignment === 'center' ? 'auto' : '0',
+              marginRight: content.alignment === 'left' ? 'auto' : 
+                          content.alignment === 'center' ? 'auto' : '0'
+            }}
+            className="rounded-lg shadow-sm"
+          />
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center py-8 text-gray-500">
+          <Upload className="h-12 w-12 mb-2" />
+          <p className="text-sm">Cliquez pour ajouter une image</p>
+          <p className="text-xs">URL ou fichier local</p>
+        </div>
       )}
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">Largeur (%)</label>
-          <Input
-            type="number"
-            min="10"
-            max="100"
-            value={content.width}
-            onChange={(e) => onChange({ ...content, width: parseInt(e.target.value) || 100 })}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Hauteur</label>
-          <Input
-            placeholder="auto"
-            value={content.height || ''}
-            onChange={(e) => onChange({ ...content, height: e.target.value })}
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">Alignement</label>
-          <Select value={content.alignment} onValueChange={(value: 'left' | 'center' | 'right') => onChange({ ...content, alignment: value })}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="left">Gauche</SelectItem>
-              <SelectItem value="center">Centre</SelectItem>
-              <SelectItem value="right">Droite</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Bordure arrondie (px)</label>
-          <Input
-            type="number"
-            min="0"
-            value={content.borderRadius || 0}
-            onChange={(e) => onChange({ ...content, borderRadius: parseInt(e.target.value) || 0 })}
-          />
-        </div>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium mb-1">Texte alternatif</label>
-        <Input
-          placeholder="Description de l'image"
-          value={content.alt}
-          onChange={(e) => onChange({ ...content, alt: e.target.value })}
-        />
-      </div>
     </div>
   );
 };

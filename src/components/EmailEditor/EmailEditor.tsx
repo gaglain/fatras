@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -89,6 +90,7 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
     const newBlock: EmailBlock = { id, type, content };
     setBlocks([...blocks, newBlock]);
     setSelectedBlockId(id);
+    toast.success(`Bloc ${type} ajouté`);
   };
 
   const updateBlock = (id: string, content: any) => {
@@ -102,6 +104,7 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
     if (selectedBlockId === id) {
       setSelectedBlockId(null);
     }
+    toast.success('Bloc supprimé');
   };
 
   const reorderBlocks = (result: any) => {
@@ -351,17 +354,18 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
                 >
                   {blocks.map((block, index) => (
                     <Draggable key={block.id} draggableId={block.id} index={index}>
-                      {(provided) => (
+                      {(provided, snapshot) => (
                         <div
                           ref={provided.innerRef}
                           {...provided.draggableProps}
-                          className={`border rounded-lg p-4 bg-white ${
-                            selectedBlockId === block.id ? 'ring-2 ring-purple-500' : ''
-                          }`}
+                          className={`group border rounded-lg p-4 bg-white transition-all ${
+                            selectedBlockId === block.id ? 'ring-2 ring-purple-500' : 'hover:shadow-md'
+                          } ${snapshot.isDragging ? 'shadow-lg rotate-1' : ''}`}
                           onClick={() => setSelectedBlockId(block.id)}
                         >
                           <BlockToolbar
                             onDelete={() => deleteBlock(block.id)}
+                            dragHandleProps={provided.dragHandleProps}
                           />
                           {renderBlock(block)}
                         </div>
@@ -370,8 +374,10 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
                   ))}
                   {provided.placeholder}
                   {blocks.length === 0 && (
-                    <div className="text-center py-8 text-gray-500">
-                      Ajoutez votre premier bloc depuis la barre latérale
+                    <div className="text-center py-12 text-gray-500 border-2 border-dashed border-gray-200 rounded-lg">
+                      <ImageIcon className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+                      <h3 className="text-lg font-medium mb-2">Votre email est vide</h3>
+                      <p className="text-sm">Ajoutez votre premier bloc depuis la barre latérale</p>
                     </div>
                   )}
                 </div>
