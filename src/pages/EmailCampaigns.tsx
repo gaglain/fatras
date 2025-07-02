@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, Mail, Send, Users, Calendar, Edit, Trash2, Eye, BarChart3, MousePointer } from 'lucide-react';
-import { EmailEditor } from '@/components/EmailEditor/EmailEditor';
+import { EmailCampaignEditor } from '@/components/EmailCampaignEditor';
 import { EmailBlock } from '@/components/EmailEditor/types';
 import { toast } from 'sonner';
 
@@ -79,7 +79,6 @@ export const EmailCampaigns: React.FC = () => {
   const [campaigns, setCampaigns] = useState<EmailCampaign[]>(sampleCampaigns);
   const [contactLists] = useState<ContactList[]>(sampleContactLists);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [showEditor, setShowEditor] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<EmailCampaign | null>(null);
   const [newCampaign, setNewCampaign] = useState({
     name: '',
@@ -106,25 +105,18 @@ export const EmailCampaigns: React.FC = () => {
     setCampaigns(prev => [...prev, campaign]);
     setNewCampaign({ name: '', subject: '', contactListIds: [] });
     setShowCreateDialog(false);
+    setEditingCampaign(campaign);
     toast.success('Campagne créée');
   };
 
   const handleEditCampaign = (campaign: EmailCampaign) => {
     setEditingCampaign(campaign);
-    setShowEditor(true);
   };
 
-  const handleSaveDesign = (blocks: EmailBlock[]) => {
-    if (editingCampaign) {
-      setCampaigns(prev => prev.map(campaign =>
-        campaign.id === editingCampaign.id
-          ? { ...campaign, blocks }
-          : campaign
-      ));
-      setShowEditor(false);
-      setEditingCampaign(null);
-      toast.success('Design sauvegardé');
-    }
+  const handleSaveCampaign = (updatedCampaign: EmailCampaign) => {
+    setCampaigns(prev => prev.map(campaign =>
+      campaign.id === updatedCampaign.id ? updatedCampaign : campaign
+    ));
   };
 
   const handleDeleteCampaign = (id: string) => {
@@ -182,16 +174,18 @@ export const EmailCampaigns: React.FC = () => {
 
   const totalStats = getTotalStats();
 
-  if (showEditor && editingCampaign) {
+  if (editingCampaign) {
     return (
-      <EmailEditor
-        initialBlocks={editingCampaign.blocks}
-        onSave={handleSaveDesign}
-        onPreview={(blocks) => console.log('Preview:', blocks)}
+      <EmailCampaignEditor
+        campaign={editingCampaign}
+        contactLists={contactLists}
+        onSave={handleSaveCampaign}
+        onBack={() => setEditingCampaign(null)}
       />
     );
   }
 
+  
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -274,7 +268,10 @@ export const EmailCampaigns: React.FC = () => {
                       ) : null;
                     })}
                     <p className="text-sm text-gray-600 mt-2">
-                      Total: {getTotalContacts(newCampaign.contactListIds)} contacts
+                      Total: {newCampaign.contactListIds.reduce((total, id) => {
+                        const list = contactLists.find(l => l.id === id);
+                        return total + (list ? list.contactCount : 0);
+                      }, 0)} contacts
                     </p>
                   </div>
                 )}
@@ -311,7 +308,9 @@ export const EmailCampaigns: React.FC = () => {
               <Send className="h-8 w-8 text-green-600" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Emails envoyés</p>
-                <p className="text-2xl font-bold text-gray-900">{totalStats.sent}</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {campaigns.filter(c => c.stats).reduce((sum, c) => sum + (c.stats?.sent || 0), 0)}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -322,7 +321,14 @@ export const EmailCampaigns: React.FC = () => {
               <Eye className="h-8 w-8 text-blue-600" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Taux d'ouverture</p>
-                <p className="text-2xl font-bold text-gray-900">{totalStats.avgOpenRate}%</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {campaigns.filter(c => c.stats).length > 0 
+                    ? Math.round(campaigns.filter(c => c.stats).reduce((sum, c) => {
+                        const openRate = c.stats ? (c.stats.opened / c.stats.sent) * 100 : 0;
+                        return sum + openRate;
+                      }, 0) / campaigns.filter(c => c.stats).length)
+                    : 0}%
+                </p>
               </div>
             </div>
           </CardContent>
@@ -333,7 +339,14 @@ export const EmailCampaigns: React.FC = () => {
               <MousePointer className="h-8 w-8 text-orange-600" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Taux de clic</p>
-                <p className="text-2xl font-bold text-gray-900">{totalStats.avgClickRate}%</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {campaigns.filter(c => c.stats).length > 0 
+                    ? Math.round(campaigns.filter(c => c.stats).reduce((sum, c) => {
+                        const clickRate = c.stats ? (c.stats.clicked / c.stats.sent) * 100 : 0;
+                        return sum + clickRate;
+                      }, 0) / campaigns.filter(c => c.stats).length)
+                    : 0}%
+                </p>
               </div>
             </div>
           </CardContent>
@@ -366,13 +379,18 @@ export const EmailCampaigns: React.FC = () => {
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-2">
                       <h3 className="font-semibold text-gray-900">{campaign.name}</h3>
-                      {getStatusBadge(campaign.status)}
+                      <Badge variant={campaign.status === 'draft' ? 'outline' : campaign.status === 'scheduled' ? 'secondary' : 'default'}>
+                        {campaign.status === 'draft' ? 'Brouillon' : campaign.status === 'scheduled' ? 'Programmée' : 'Envoyée'}
+                      </Badge>
                     </div>
                     <p className="text-gray-600 mb-2">{campaign.subject}</p>
                     <div className="flex items-center space-x-4 text-sm text-gray-500">
                       <span>
                         <Users className="h-4 w-4 inline mr-1" />
-                        {getTotalContacts(campaign.contactListIds)} contacts
+                        {campaign.contactListIds.reduce((total, id) => {
+                          const list = contactLists.find(l => l.id === id);
+                          return total + (list ? list.contactCount : 0);
+                        }, 0)} contacts
                       </span>
                       <span>
                         <Calendar className="h-4 w-4 inline mr-1" />
@@ -390,11 +408,6 @@ export const EmailCampaigns: React.FC = () => {
                           </span>
                         </>
                       )}
-                    </div>
-                    <div className="mt-2">
-                      <p className="text-xs text-gray-500">
-                        Listes: {getContactListNames(campaign.contactListIds)}
-                      </p>
                     </div>
                   </div>
                   <div className="flex space-x-2">
