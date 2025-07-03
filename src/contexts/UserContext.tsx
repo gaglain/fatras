@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -67,81 +68,30 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     console.log('Auth user changed:', authUser);
     if (authUser && !loading) {
-      loadUserProfile(authUser.id);
+      // Créer un utilisateur par défaut avec les données d'auth
+      const defaultUser: User = {
+        id: authUser.id,
+        name: authUser.user_metadata?.first_name || 'Laurent',
+        lastName: authUser.user_metadata?.last_name || 'Guillet',
+        email: authUser.email || '',
+        role: 'admin',
+        isActive: true,
+        username: authUser.email?.split('@')[0] || 'user',
+        avatar: authUser.user_metadata?.avatar_url || '',
+        phone: authUser.phone || '',
+        department: 'Administration',
+        bio: 'Utilisateur administrateur',
+        googleCalendarConnected: false,
+        gmailConnected: false
+      };
+      
+      setCurrentUser(defaultUser);
+      console.log('Current user set to:', defaultUser);
     } else if (!authUser && !loading) {
       setCurrentUser(null);
       console.log('User logged out, current user set to null');
     }
   }, [authUser, loading]);
-
-  const loadUserProfile = async (userId: string) => {
-    try {
-      const { data: profile, error } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-
-      if (error && error.code !== 'PGRST116') {
-        throw error;
-      }
-
-      let user: User;
-      
-      if (profile) {
-        // Utilisateur avec profil existant
-        user = {
-          id: profile.user_id,
-          name: profile.first_name || 'Utilisateur',
-          lastName: profile.last_name || '',
-          email: profile.email || authUser?.email || '',
-          role: profile.role as UserRole,
-          isActive: true,
-          username: profile.username || authUser?.email?.split('@')[0] || '', // Utiliser le nouveau pseudonyme
-          avatar: authUser?.user_metadata?.avatar_url || '',
-          phone: profile.phone || '',
-          department: profile.function_title || 'Non défini',
-          bio: `${roleLabels[profile.role as UserRole]} connecté via Supabase`,
-          googleCalendarConnected: false,
-          gmailConnected: false,
-          // Propriétés étendues
-          address: profile.address,
-          postal_code: profile.postal_code,
-          city: profile.city,
-          birth_date: profile.birth_date,
-          birth_place: profile.birth_place,
-          social_security_number: profile.social_security_number,
-          guso_id: profile.guso_id,
-          function_title: profile.function_title,
-          nationality: profile.nationality,
-          show_name: profile.show_name
-        };
-      } else {
-        // Créer un profil par défaut pour les utilisateurs sans profil
-        const defaultUsername = authUser?.email?.split('@')[0] || 'user';
-        user = {
-          id: authUser?.id || '',
-          name: authUser?.user_metadata?.first_name || 'Utilisateur',
-          lastName: authUser?.user_metadata?.last_name || '',
-          email: authUser?.email || '',
-          role: 'utilisateur',
-          isActive: true,
-          username: defaultUsername,
-          avatar: authUser?.user_metadata?.avatar_url || '',
-          phone: authUser?.phone || '',
-          department: 'Non défini',
-          bio: 'Utilisateur connecté via Supabase',
-          googleCalendarConnected: false,
-          gmailConnected: false
-        };
-      }
-
-      setCurrentUser(user);
-      console.log('Current user set to:', user);
-    } catch (error) {
-      console.error('Error loading user profile:', error);
-    }
-  };
 
   const roleLabels = {
     super_admin: 'Super Admin',
@@ -172,17 +122,6 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     switch (user.role) {
       case 'super_admin':
-        return {
-          canCreateContacts: true,
-          canEditAllContacts: true,
-          canDeleteContacts: true,
-          canViewAllTasks: true,
-          canAssignTasks: true,
-          canManageUsers: true,
-          canManageWebsite: true,
-          canManageArtists: true,
-          canViewFinancials: true
-        };
       case 'admin':
         return {
           canCreateContacts: true,
@@ -205,30 +144,6 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           canManageUsers: false,
           canManageWebsite: false,
           canManageArtists: true,
-          canViewFinancials: false
-        };
-      case 'artiste':
-        return {
-          canCreateContacts: false,
-          canEditAllContacts: false,
-          canDeleteContacts: false,
-          canViewAllTasks: false,
-          canAssignTasks: false,
-          canManageUsers: false,
-          canManageWebsite: false,
-          canManageArtists: false,
-          canViewFinancials: false
-        };
-      case 'utilisateur':
-        return {
-          canCreateContacts: false,
-          canEditAllContacts: false,
-          canDeleteContacts: false,
-          canViewAllTasks: false,
-          canAssignTasks: false,
-          canManageUsers: false,
-          canManageWebsite: false,
-          canManageArtists: false,
           canViewFinancials: false
         };
       default:

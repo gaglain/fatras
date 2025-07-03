@@ -15,6 +15,7 @@ export const GoogleCalendarTab: React.FC = () => {
   });
   const [isTesting, setIsTesting] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
+  const [showClientId, setShowClientId] = useState(false);
 
   const handleSave = () => {
     if (!config.clientId.trim() || !config.apiKey.trim()) {
@@ -22,7 +23,6 @@ export const GoogleCalendarTab: React.FC = () => {
       return;
     }
 
-    // Sauvegarder la configuration
     localStorage.setItem('googleCalendarClientId', config.clientId);
     localStorage.setItem('googleCalendarApiKey', config.apiKey);
     localStorage.setItem('googleCalendarConfigured', 'true');
@@ -39,7 +39,6 @@ export const GoogleCalendarTab: React.FC = () => {
 
     setIsTesting(true);
     try {
-      // Simuler un test de connexion
       await new Promise(resolve => setTimeout(resolve, 2000));
       toast.success('Connexion Google Calendar testée avec succès');
     } catch (error) {
@@ -85,14 +84,14 @@ export const GoogleCalendarTab: React.FC = () => {
             )}
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6">
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <h4 className="font-medium text-blue-900 mb-2 flex items-center">
               <Key className="h-4 w-4 mr-2" />
               Instructions de configuration
             </h4>
             <ol className="text-sm text-blue-800 space-y-2 list-decimal list-inside">
-              <li>Rendez-vous sur la <a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer" className="underline">Google Cloud Console</a></li>
+              <li>Rendez-vous sur la <a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-600">Google Cloud Console</a></li>
               <li>Créez un nouveau projet ou sélectionnez un projet existant</li>
               <li>Activez l'API Google Calendar</li>
               <li>Créez des identifiants OAuth 2.0 et une clé API</li>
@@ -114,24 +113,36 @@ export const GoogleCalendarTab: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="grid grid-cols-1 gap-6">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
                 Client ID OAuth 2.0 *
               </label>
-              <Input
-                type="text"
-                placeholder="123456789-abcdefghijklmnop.apps.googleusercontent.com"
-                value={config.clientId}
-                onChange={(e) => setConfig(prev => ({ ...prev, clientId: e.target.value }))}
-              />
-              <p className="text-xs text-gray-500 mt-1">
+              <div className="relative">
+                <Input
+                  type={showClientId ? "text" : "password"}
+                  placeholder="123456789-abcdefghijklmnop.apps.googleusercontent.com"
+                  value={config.clientId}
+                  onChange={(e) => setConfig(prev => ({ ...prev, clientId: e.target.value }))}
+                  className="pr-10"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                  onClick={() => setShowClientId(!showClientId)}
+                >
+                  {showClientId ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
+              <p className="text-xs text-gray-500">
                 Trouvé dans Google Cloud Console → APIs & Services → Credentials
               </p>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
                 Clé API *
               </label>
               <div className="relative">
@@ -152,17 +163,18 @@ export const GoogleCalendarTab: React.FC = () => {
                   {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </Button>
               </div>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-500">
                 Créée dans Google Cloud Console → APIs & Services → Credentials
               </p>
             </div>
           </div>
 
-          <div className="flex space-x-3 pt-4">
+          <div className="flex space-x-3 pt-4 border-t">
             <Button 
               onClick={handleTest} 
               variant="outline" 
               disabled={!config.clientId || !config.apiKey || isTesting}
+              className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
             >
               <TestTube className="h-4 w-4 mr-2" />
               {isTesting ? 'Test en cours...' : 'Tester la connexion'}
@@ -170,6 +182,7 @@ export const GoogleCalendarTab: React.FC = () => {
             <Button 
               onClick={handleSave}
               disabled={!config.clientId || !config.apiKey}
+              className="bg-green-600 hover:bg-green-700"
             >
               <Save className="h-4 w-4 mr-2" />
               Sauvegarder
@@ -191,7 +204,7 @@ export const GoogleCalendarTab: React.FC = () => {
           <CardTitle>Paramètres de synchronisation</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between p-4 border rounded-lg">
             <div>
               <h4 className="font-medium">Synchronisation automatique</h4>
               <p className="text-sm text-gray-600">Synchroniser automatiquement toutes les heures</p>
@@ -199,7 +212,7 @@ export const GoogleCalendarTab: React.FC = () => {
             <input type="checkbox" className="rounded" defaultChecked />
           </div>
           
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between p-4 border rounded-lg">
             <div>
               <h4 className="font-medium">Notifications des nouveaux événements</h4>
               <p className="text-sm text-gray-600">Recevoir une notification pour les nouveaux événements</p>
@@ -207,7 +220,7 @@ export const GoogleCalendarTab: React.FC = () => {
             <input type="checkbox" className="rounded" defaultChecked />
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between p-4 border rounded-lg">
             <div>
               <h4 className="font-medium">Synchronisation bidirectionnelle</h4>
               <p className="text-sm text-gray-600">Les événements créés dans ShowManager apparaissent dans Google</p>

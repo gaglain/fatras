@@ -54,54 +54,6 @@ const defaultPages: WebPage[] = [
       }
     ],
     metaDescription: 'Découvrez nos artistes talentueux'
-  },
-  {
-    id: '3',
-    title: 'Événements',
-    slug: '/events',
-    status: 'published',
-    blocks: [
-      {
-        id: 'text-2',
-        type: 'text',
-        content: {
-          text: '<h1>Nos Événements</h1><p>Ne manquez aucun de nos concerts et événements.</p>'
-        }
-      }
-    ],
-    metaDescription: 'Tous nos événements et concerts'
-  },
-  {
-    id: '4',
-    title: 'Boutique',
-    slug: '/shop',
-    status: 'published',
-    blocks: [
-      {
-        id: 'text-3',
-        type: 'text',
-        content: {
-          text: '<h1>Notre Boutique</h1><p>Découvrez nos produits exclusifs.</p>'
-        }
-      }
-    ],
-    metaDescription: 'Boutique officielle - Produits exclusifs'
-  },
-  {
-    id: '5',
-    title: 'Contact',
-    slug: '/contact',
-    status: 'published',
-    blocks: [
-      {
-        id: 'text-4',
-        type: 'text',
-        content: {
-          text: '<h1>Contactez-nous</h1><p>Nous sommes à votre écoute.</p>'
-        }
-      }
-    ],
-    metaDescription: 'Contactez notre équipe'
   }
 ];
 
@@ -236,7 +188,7 @@ export const WebsiteBackoffice: React.FC = () => {
 
         <TabsContent value="pages">
           <Card>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 p-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold">Liste des Pages</h2>
                 <Button onClick={() => setShowPageCreator(true)}>
@@ -246,15 +198,15 @@ export const WebsiteBackoffice: React.FC = () => {
               </div>
 
               {showPageCreator && (
-                <Card className="p-4 border-2 border-dashed border-blue-200">
+                <Card className="p-4 border-2 border-dashed border-blue-200 bg-blue-50/50">
                   <div className="space-y-4">
-                    <h3 className="font-medium">Créer une nouvelle page</h3>
-                    <div className="grid grid-cols-2 gap-4">
+                    <h3 className="font-medium text-blue-900">Créer une nouvelle page</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium mb-1">Titre *</label>
                         <input
                           type="text"
-                          className="w-full px-3 py-2 border rounded-lg"
+                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="Titre de la page"
                           value={newPageData.title}
                           onChange={(e) => setNewPageData({
@@ -267,7 +219,7 @@ export const WebsiteBackoffice: React.FC = () => {
                         <label className="block text-sm font-medium mb-1">URL</label>
                         <input
                           type="text"
-                          className="w-full px-3 py-2 border rounded-lg"
+                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="/ma-page"
                           value={newPageData.slug}
                           onChange={(e) => setNewPageData({
@@ -281,7 +233,7 @@ export const WebsiteBackoffice: React.FC = () => {
                       <label className="block text-sm font-medium mb-1">Description SEO</label>
                       <input
                         type="text"
-                        className="w-full px-3 py-2 border rounded-lg"
+                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         placeholder="Description pour les moteurs de recherche"
                         value={newPageData.metaDescription}
                         onChange={(e) => setNewPageData({
@@ -291,7 +243,7 @@ export const WebsiteBackoffice: React.FC = () => {
                       />
                     </div>
                     <div className="flex space-x-2">
-                      <Button onClick={handleCreatePage}>
+                      <Button onClick={handleCreatePage} className="bg-blue-600 hover:bg-blue-700">
                         Créer la page
                       </Button>
                       <Button 
@@ -310,7 +262,7 @@ export const WebsiteBackoffice: React.FC = () => {
 
               <div className="grid gap-4">
                 {pages.map((page) => (
-                  <Card key={page.id}>
+                  <Card key={page.id} className="hover:shadow-md transition-shadow">
                     <CardContent className="flex items-center justify-between p-4">
                       <div>
                         <h3 className="text-md font-medium">{page.title}</h3>
@@ -324,11 +276,12 @@ export const WebsiteBackoffice: React.FC = () => {
                           variant="outline" 
                           size="sm"
                           onClick={() => setEditingPage(page)}
+                          className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
                         >
                           <Edit className="h-4 w-4 mr-2" />
                           Modifier
                         </Button>
-                        {page.id !== '1' && ( // Ne pas permettre de supprimer la page d'accueil
+                        {page.id !== '1' && (
                           <Button 
                             variant="outline" 
                             size="sm"

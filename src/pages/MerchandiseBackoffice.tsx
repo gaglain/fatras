@@ -1,8 +1,9 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Plus, Package, Edit, Settings, Trash2, X } from 'lucide-react';
+import { Plus, Package, Edit, Settings, Trash2, X, Upload, Image as ImageIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -63,17 +64,6 @@ const defaultProducts: Product[] = [
     images: ['/casquette.png'],
     status: 'active',
     tags: ['casquette', 'broderie', 'baseball']
-  },
-  {
-    id: '3',
-    name: 'Sticker Logo',
-    description: 'Pack de 5 stickers avec différents logos MusiConnect',
-    price: 4.99,
-    costPrice: 1.00,
-    stockQuantity: 500,
-    images: ['/sticker.png'],
-    status: 'active',
-    tags: ['sticker', 'logo', 'pack']
   }
 ];
 
@@ -99,13 +89,6 @@ const defaultVariations: ProductVariation[] = [
     price: 34.99,
     stockQuantity: 20,
     sku: 'MC-TSHIRT-NOIR-M'
-  },
-  {
-    id: 'var-2',
-    attributes: { Couleur: 'Blanc', Taille: 'L' },
-    price: 34.99,
-    stockQuantity: 15,
-    sku: 'MC-TSHIRT-BLANC-L'
   }
 ];
 
@@ -123,6 +106,39 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSave, onCancel, product }) 
   const [stockQuantity, setStockQuantity] = useState(product?.stockQuantity || 0);
   const [status, setStatus] = useState<"active" | "inactive">(product?.status || "active");
   const [tags, setTags] = useState((product?.tags || []).join(', '));
+  const [images, setImages] = useState<string[]>(product?.images || []);
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Veuillez sélectionner une image');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('L\'image doit faire moins de 5MB');
+      return;
+    }
+
+    try {
+      setUploadingImage(true);
+      const tempUrl = URL.createObjectURL(file);
+      setImages(prev => [...prev, tempUrl]);
+      toast.success('Image ajoutée avec succès');
+    } catch (error) {
+      console.error('Erreur lors du téléchargement:', error);
+      toast.error('Erreur lors du téléchargement de l\'image');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setImages(prev => prev.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = () => {
     if (!name.trim() || price <= 0) {
@@ -138,14 +154,15 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSave, onCancel, product }) 
       costPrice: parseFloat(costPrice.toString()) || 0,
       stockQuantity: parseInt(stockQuantity.toString()) || 0,
       status: status,
-      tags: tags.split(',').map(tag => tag.trim()).filter(tag => tag !== '')
+      tags: tags.split(',').map(tag => tag.trim()).filter(tag => tag !== ''),
+      images: images
     };
 
     onSave(newProduct);
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <Label htmlFor="name">Nom du produit *</Label>
@@ -155,6 +172,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSave, onCancel, product }) 
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Nom du produit"
+            className="mt-1"
           />
         </div>
         <div>
@@ -165,6 +183,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSave, onCancel, product }) 
             value={price}
             onChange={(e) => setPrice(parseFloat(e.target.value))}
             placeholder="Prix du produit"
+            className="mt-1"
           />
         </div>
         <div>
@@ -175,6 +194,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSave, onCancel, product }) 
             value={costPrice}
             onChange={(e) => setCostPrice(parseFloat(e.target.value))}
             placeholder="Prix coûtant"
+            className="mt-1"
           />
         </div>
         <div>
@@ -185,9 +205,11 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSave, onCancel, product }) 
             value={stockQuantity}
             onChange={(e) => setStockQuantity(parseInt(e.target.value))}
             placeholder="Quantité en stock"
+            className="mt-1"
           />
         </div>
       </div>
+
       <div>
         <Label htmlFor="description">Description</Label>
         <Textarea
@@ -195,8 +217,10 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSave, onCancel, product }) 
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Description du produit"
+          className="mt-1"
         />
       </div>
+
       <div>
         <Label htmlFor="tags">Tags (séparés par des virgules)</Label>
         <Input
@@ -204,12 +228,66 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSave, onCancel, product }) 
           id="tags"
           value={tags}
           onChange={(e) => setTags(e.target.value)}
-          placeholder="Tags"
+          placeholder="t-shirt, logo, coton"
+          className="mt-1"
         />
       </div>
+
+      <div>
+        <Label>Images du produit</Label>
+        <div className="mt-2 space-y-4">
+          <div className="flex items-center space-x-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => document.getElementById('imageInput')?.click()}
+              disabled={uploadingImage}
+              className="flex items-center space-x-2"
+            >
+              {uploadingImage ? (
+                <Upload className="h-4 w-4 animate-spin" />
+              ) : (
+                <ImageIcon className="h-4 w-4" />
+              )}
+              <span>{uploadingImage ? 'Téléchargement...' : 'Ajouter une image'}</span>
+            </Button>
+            <input
+              id="imageInput"
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+            />
+          </div>
+          
+          {images.length > 0 && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {images.map((image, index) => (
+                <div key={index} className="relative group">
+                  <img
+                    src={image}
+                    alt={`Product ${index + 1}`}
+                    className="w-full h-24 object-cover rounded-lg border"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleRemoveImage(index)}
+                    className="absolute top-1 right-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
       <div>
         <Label>Statut</Label>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 mt-2">
           <Checkbox
             id="active"
             checked={status === "active"}
@@ -218,11 +296,12 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSave, onCancel, product }) 
           <Label htmlFor="active">Actif</Label>
         </div>
       </div>
-      <div className="flex justify-end space-x-2">
+
+      <div className="flex justify-end space-x-2 pt-4">
         <Button variant="outline" onClick={onCancel}>
           Annuler
         </Button>
-        <Button onClick={handleSubmit}>
+        <Button onClick={handleSubmit} className="bg-blue-600 hover:bg-blue-700">
           Sauvegarder
         </Button>
       </div>
@@ -239,13 +318,11 @@ export const MerchandiseBackoffice: React.FC = () => {
   const [productVariations, setProductVariations] = useState<ProductVariation[]>(defaultVariations);
 
   const handleSaveProduct = (product: Product) => {
-    if (product.id) {
-      // Mise à jour d'un produit existant
+    if (editingProduct) {
       const updatedProducts = products.map(p => p.id === product.id ? product : p);
       setProducts(updatedProducts);
       toast.success('Produit mis à jour');
     } else {
-      // Création d'un nouveau produit
       setProducts([...products, product]);
       toast.success('Produit créé');
     }
@@ -263,6 +340,11 @@ export const MerchandiseBackoffice: React.FC = () => {
       setProducts(products.filter(p => p.id !== productId));
       toast.success('Produit supprimé');
     }
+  };
+
+  const handleCreateNew = () => {
+    setEditingProduct(null);
+    setShowProductForm(true);
   };
 
   return (
@@ -301,7 +383,7 @@ export const MerchandiseBackoffice: React.FC = () => {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Catalogue Produits</CardTitle>
-                <Button onClick={() => setShowProductForm(true)}>
+                <Button onClick={handleCreateNew} className="bg-blue-600 hover:bg-blue-700">
                   <Plus className="h-4 w-4 mr-2" />
                   Nouveau Produit
                 </Button>
@@ -309,11 +391,17 @@ export const MerchandiseBackoffice: React.FC = () => {
             </CardHeader>
             <CardContent>
               {showProductForm && (
-                <div className="mb-6 p-6 border-2 border-dashed border-blue-200 rounded-lg">
+                <div className="mb-6 p-6 border-2 border-dashed border-blue-200 rounded-lg bg-blue-50/30">
+                  <h3 className="font-medium mb-4 text-blue-900">
+                    {editingProduct ? 'Modifier le produit' : 'Créer un nouveau produit'}
+                  </h3>
                   <ProductForm 
                     onSave={handleSaveProduct}
-                    onCancel={() => setShowProductForm(false)}
-                    product={editingProduct}
+                    onCancel={() => {
+                      setShowProductForm(false);
+                      setEditingProduct(null);
+                    }}
+                    product={editingProduct || undefined}
                   />
                 </div>
               )}
@@ -323,7 +411,7 @@ export const MerchandiseBackoffice: React.FC = () => {
                   <Package className="h-16 w-16 mx-auto mb-4 text-gray-400" />
                   <h3 className="text-lg font-medium mb-2">Aucun produit</h3>
                   <p className="text-gray-600 mb-4">Commencez par créer votre premier produit</p>
-                  <Button onClick={() => setShowProductForm(true)}>
+                  <Button onClick={handleCreateNew} className="bg-blue-600 hover:bg-blue-700">
                     <Plus className="h-4 w-4 mr-2" />
                     Créer un produit
                   </Button>
@@ -390,7 +478,7 @@ export const MerchandiseBackoffice: React.FC = () => {
                             variant="outline"
                             size="sm"
                             onClick={() => handleEditProduct(product)}
-                            className="flex-1"
+                            className="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
                           >
                             <Edit className="h-4 w-4 mr-1" />
                             Modifier
@@ -399,7 +487,7 @@ export const MerchandiseBackoffice: React.FC = () => {
                             variant="outline"
                             size="sm"
                             onClick={() => setEditingVariations(product)}
-                            className="flex-1"
+                            className="flex-1 bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200"
                           >
                             <Settings className="h-4 w-4 mr-1" />
                             Variations

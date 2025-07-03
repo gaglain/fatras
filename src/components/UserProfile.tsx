@@ -20,28 +20,22 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const displayUser = currentUser || {
+    name: authUser?.user_metadata?.first_name || 'Laurent',
+    lastName: authUser?.user_metadata?.last_name || 'Guillet',
+    email: authUser?.email || '',
+    avatar: authUser?.user_metadata?.avatar_url || ''
+  };
+
   const [formData, setFormData] = useState({
-    name: currentUser?.name || '',
-    lastName: currentUser?.lastName || '',
-    email: currentUser?.email || '',
+    name: displayUser.name || '',
+    lastName: displayUser.lastName || '',
+    email: displayUser.email || '',
     phone: currentUser?.phone || '',
     bio: currentUser?.bio || '',
-    avatar: currentUser?.avatar || ''
+    avatar: displayUser.avatar || ''
   });
-
-  // S'assurer que les données sont à jour avec l'utilisateur connecté
-  React.useEffect(() => {
-    if (currentUser) {
-      setFormData({
-        name: currentUser.name || '',
-        lastName: currentUser.lastName || '',
-        email: currentUser.email || '',
-        phone: currentUser.phone || '',
-        bio: currentUser.bio || '',
-        avatar: currentUser.avatar || ''
-      });
-    }
-  }, [currentUser]);
 
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -50,13 +44,11 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
       return;
     }
 
-    // Vérifier le type de fichier
     if (!file.type.startsWith('image/')) {
       toast.error('Veuillez sélectionner une image');
       return;
     }
 
-    // Vérifier la taille du fichier (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast.error('L\'image doit faire moins de 5MB');
       return;
@@ -66,19 +58,16 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
       setUploading(true);
       console.log('Starting avatar upload...');
       
-      // Créer une URL temporaire pour l'aperçu immédiat
       const tempUrl = URL.createObjectURL(file);
       setFormData(prev => ({ ...prev, avatar: tempUrl }));
       
-      // Simuler l'upload
       await new Promise(resolve => setTimeout(resolve, 1500));
       
       toast.success('Photo de profil mise à jour avec succès');
     } catch (error) {
       console.error('Erreur lors du téléchargement:', error);
       toast.error('Erreur lors du téléchargement de la photo');
-      // Restaurer l'ancienne image en cas d'erreur
-      setFormData(prev => ({ ...prev, avatar: currentUser?.avatar || '' }));
+      setFormData(prev => ({ ...prev, avatar: displayUser.avatar || '' }));
     } finally {
       setUploading(false);
     }
@@ -106,22 +95,14 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
 
   const handleCancel = () => {
     setFormData({
-      name: currentUser?.name || '',
-      lastName: currentUser?.lastName || '',
-      email: currentUser?.email || '',
+      name: displayUser.name || '',
+      lastName: displayUser.lastName || '',
+      email: displayUser.email || '',
       phone: currentUser?.phone || '',
       bio: currentUser?.bio || '',
-      avatar: currentUser?.avatar || ''
+      avatar: displayUser.avatar || ''
     });
     setIsEditing(false);
-  };
-
-  // Afficher les informations de l'utilisateur authentifié
-  const displayUser = currentUser || {
-    name: authUser?.user_metadata?.first_name || 'Utilisateur',
-    lastName: authUser?.user_metadata?.last_name || '',
-    email: authUser?.email || '',
-    avatar: authUser?.user_metadata?.avatar_url || ''
   };
 
   return (
@@ -147,11 +128,10 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
                   className="object-cover"
                 />
                 <AvatarFallback className="text-xl bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold">
-                  {((formData.name || displayUser.name)?.charAt(0) || '') + ((formData.lastName || displayUser.lastName)?.charAt(0) || '')}
+                  {((formData.name || displayUser.name)?.charAt(0) || 'L') + ((formData.lastName || displayUser.lastName)?.charAt(0) || 'G')}
                 </AvatarFallback>
               </Avatar>
               
-              {/* Overlay pour le changement de photo */}
               <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                 <Button
                   variant="ghost"
