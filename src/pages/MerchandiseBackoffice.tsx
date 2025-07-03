@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,7 +18,7 @@ import {
 } from 'lucide-react';
 import { Shop } from '@/components/Shop';
 import { ProductForm } from '@/components/ProductForm';
-import { VariationManager } from '@/components/VariationManager';
+import { ProductVariationManager } from '@/components/ProductVariationManager';
 import { toast } from 'sonner';
 
 const mockProducts = [
@@ -33,16 +32,18 @@ const mockProducts = [
     sales: 89,
     description: 'T-shirt officiel de la tournée 2024',
     images: ['/placeholder.svg'],
+    attributes: [],
     variations: []
   }
 ];
 
 export const MerchandiseBackoffice: React.FC = () => {
   const [products, setProducts] = useState(mockProducts);
-  const [variations, setVariations] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isVariationManagerOpen, setIsVariationManagerOpen] = useState(false);
+  const [selectedVariationProduct, setSelectedVariationProduct] = useState<any>(null);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -91,6 +92,26 @@ export const MerchandiseBackoffice: React.FC = () => {
     setIsFormOpen(true);
   };
 
+  const handleManageVariations = (product: any) => {
+    setSelectedVariationProduct({
+      ...product,
+      attributes: product.attributes || [],
+      variations: product.variations || []
+    });
+    setIsVariationManagerOpen(true);
+  };
+
+  const handleSaveVariations = (attributes: any[], variations: any[]) => {
+    if (selectedVariationProduct) {
+      setProducts(prev => prev.map(p => 
+        p.id === selectedVariationProduct.id 
+          ? { ...p, attributes, variations }
+          : p
+      ));
+      toast.success('Variations sauvegardées');
+    }
+  };
+
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -123,14 +144,10 @@ export const MerchandiseBackoffice: React.FC = () => {
       </div>
 
       <Tabs defaultValue="products" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="products">
             <Settings className="h-4 w-4 mr-2" />
             Produits
-          </TabsTrigger>
-          <TabsTrigger value="variations">
-            <Layers className="h-4 w-4 mr-2" />
-            Variations
           </TabsTrigger>
           <TabsTrigger value="orders">
             <ShoppingCart className="h-4 w-4 mr-2" />
@@ -169,7 +186,9 @@ export const MerchandiseBackoffice: React.FC = () => {
                 <div className="flex items-center space-x-2">
                   <Layers className="h-8 w-8" style={{ color: 'var(--app-button-bg, #1632f4)' }} />
                   <div>
-                    <p className="text-2xl font-bold">{variations.length}</p>
+                    <p className="text-2xl font-bold">
+                      {products.reduce((total, product) => total + (product.variations?.length || 0), 0)}
+                    </p>
                     <p className="text-sm" style={{ color: 'var(--app-text, #666666)' }}>Variations</p>
                   </div>
                 </div>
@@ -266,6 +285,11 @@ export const MerchandiseBackoffice: React.FC = () => {
                             <span>Prix: {product.price}€</span>
                             <span>Stock: {product.stockQuantity}</span>
                             <span>Ventes: {product.sales}</span>
+                            {product.variations && product.variations.length > 0 && (
+                              <Badge variant="outline" className="text-xs">
+                                {product.variations.length} variation{product.variations.length > 1 ? 's' : ''}
+                              </Badge>
+                            )}
                             <Badge className={getStatusColor(product.status)}>
                               {getStatusLabel(product.status)}
                             </Badge>
@@ -288,6 +312,18 @@ export const MerchandiseBackoffice: React.FC = () => {
                         <Button 
                           variant="outline" 
                           size="sm" 
+                          onClick={() => handleManageVariations(product)}
+                          style={{
+                            color: 'var(--app-button-bg, #1632f4)',
+                            borderColor: 'var(--app-button-bg, #1632f4)'
+                          }}
+                        >
+                          <Layers className="h-4 w-4 mr-1" />
+                          Variations
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
                           onClick={() => handleDeleteProduct(product.id)}
                           className="text-red-600 border-red-600 hover:bg-red-50"
                         >
@@ -300,13 +336,6 @@ export const MerchandiseBackoffice: React.FC = () => {
               )}
             </CardContent>
           </Card>
-        </TabsContent>
-
-        <TabsContent value="variations">
-          <VariationManager 
-            variations={variations}
-            onVariationsChange={setVariations}
-          />
         </TabsContent>
 
         <TabsContent value="orders">
@@ -366,6 +395,30 @@ export const MerchandiseBackoffice: React.FC = () => {
             onSave={handleSaveProduct}
             onClose={() => setIsFormOpen(false)}
           />
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog pour la gestion des variations */}
+      <Dialog open={isVariationManagerOpen} onOpenChange={setIsVariationManagerOpen}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Gestion des Variations - {selectedVariationProduct?.name}
+            </DialogTitle>
+          </DialogHeader>
+          {selectedVariationProduct && (
+            <ProductVariationManager
+              attributes={selectedVariationProduct.attributes || []}
+              variations={selectedVariationProduct.variations || []}
+              onAttributesChange={(attributes) => {
+                setSelectedVariationProduct(prev => ({ ...prev, attributes }));
+              }}
+              onVariationsChange={(variations) => {
+                setSelectedVariationProduct(prev => ({ ...prev, variations }));
+                handleSaveVariations(selectedVariationProduct.attributes || [], variations);
+              }}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>
