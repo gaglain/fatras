@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock, MapPin, Users, Plus, Settings, ExternalLink, CheckCircle, XCircle } from 'lucide-react';
+import { Calendar, Clock, MapPin, Plus, ExternalLink, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface GoogleEvent {
@@ -20,70 +20,50 @@ export const Agenda: React.FC = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [events, setEvents] = useState<GoogleEvent[]>([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(false);
+  const [hasRealConnection, setHasRealConnection] = useState(false);
 
   useEffect(() => {
-    // Vérifier si Google Calendar est déjà connecté
+    // Vérifier si Google Calendar est réellement connecté
     const savedConnection = localStorage.getItem('googleCalendarConnected');
+    const realConnection = localStorage.getItem('googleCalendarRealConnection');
+    
     if (savedConnection === 'true') {
       setIsConnected(true);
-      loadGoogleEvents();
+      if (realConnection === 'true') {
+        setHasRealConnection(true);
+        // Ici on chargerait les vrais événements depuis l'API Google Calendar
+        // Pour l'instant, on laisse vide car la vraie API n'est pas configurée
+      }
     }
   }, []);
-
-  const loadGoogleEvents = async () => {
-    if (!isConnected) return;
-    
-    setIsLoadingEvents(true);
-    try {
-      // Simulation de chargement des événements Google Calendar
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Événements simulés pour la démo
-      const mockEvents: GoogleEvent[] = [
-        {
-          id: '1',
-          summary: 'Concert Jazz Festival',
-          start: { dateTime: '2024-07-10T20:00:00Z' },
-          end: { dateTime: '2024-07-10T23:00:00Z' },
-          location: 'Salle Pleyel, Paris',
-          description: 'Concert de jazz avec quartet exceptionnel'
-        },
-        {
-          id: '2',
-          summary: 'Répétition générale',
-          start: { dateTime: '2024-07-08T14:00:00Z' },
-          end: { dateTime: '2024-07-08T18:00:00Z' },
-          location: 'Studio B, 15ème arrondissement'
-        },
-        {
-          id: '3',
-          summary: 'Meeting avec producteur',
-          start: { dateTime: '2024-07-12T10:30:00Z' },
-          end: { dateTime: '2024-07-12T11:30:00Z' },
-          location: 'Bureau Musicorp'
-        }
-      ];
-      
-      setEvents(mockEvents);
-    } catch (error) {
-      toast.error('Erreur lors du chargement des événements');
-    } finally {
-      setIsLoadingEvents(false);
-    }
-  };
 
   const handleConnectGoogleCalendar = async () => {
     setIsConnecting(true);
     try {
+      // Vérifier si les clés API Google Calendar sont configurées
+      const googleConfig = localStorage.getItem('googleCalendarConfig');
+      
+      if (!googleConfig) {
+        toast.error('Configuration Google Calendar manquante. Veuillez configurer vos clés API dans les Préférences.');
+        setIsConnecting(false);
+        return;
+      }
+
       // Simulation de la connexion OAuth Google Calendar
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      localStorage.setItem('googleCalendarConnected', 'true');
-      setIsConnected(true);
-      toast.success('Connexion à Google Calendar réussie !');
+      // Pour une vraie implémentation, ici on ferait :
+      // 1. Redirection vers Google OAuth
+      // 2. Récupération du token d'accès
+      // 3. Test de l'API Google Calendar
       
-      // Charger les événements après connexion
-      loadGoogleEvents();
+      localStorage.setItem('googleCalendarConnected', 'true');
+      // Ne pas marquer comme vraie connexion car c'est une simulation
+      // localStorage.setItem('googleCalendarRealConnection', 'true');
+      
+      setIsConnected(true);
+      toast.success('Connexion simulée réussie ! Configurez les vraies clés API pour voir vos événements.');
+      
     } catch (error) {
       toast.error('Erreur lors de la connexion à Google Calendar');
     } finally {
@@ -93,9 +73,26 @@ export const Agenda: React.FC = () => {
 
   const handleDisconnectGoogleCalendar = () => {
     localStorage.removeItem('googleCalendarConnected');
+    localStorage.removeItem('googleCalendarRealConnection');
     setIsConnected(false);
+    setHasRealConnection(false);
     setEvents([]);
     toast.success('Déconnexion de Google Calendar réussie');
+  };
+
+  const loadRealGoogleEvents = async () => {
+    setIsLoadingEvents(true);
+    try {
+      // Ici on ferait un appel à l'API Google Calendar avec les vraies clés
+      // const response = await gapi.client.calendar.events.list({...});
+      // setEvents(response.result.items);
+      
+      toast.info('Configuration API Google Calendar requise pour charger les événements réels');
+    } catch (error) {
+      toast.error('Erreur lors du chargement des événements');
+    } finally {
+      setIsLoadingEvents(false);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -172,22 +169,35 @@ export const Agenda: React.FC = () => {
         <Card style={{
           backgroundColor: 'var(--app-card-bg, #ffffff)',
           color: 'var(--app-card-text, #18181b)',
-          border: '1px solid #10b981'
+          border: hasRealConnection ? '1px solid #10b981' : '1px solid #f59e0b'
         }}>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <CheckCircle className="h-5 w-5 text-green-600" />
-                <span className="text-green-600 font-medium">Google Calendar connecté</span>
+                {hasRealConnection ? (
+                  <>
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                    <span className="text-green-600 font-medium">Google Calendar connecté</span>
+                  </>
+                ) : (
+                  <>
+                    <AlertCircle className="h-5 w-5 text-amber-600" />
+                    <span className="text-amber-600 font-medium">
+                      Connexion simulée - Configurez les clés API dans Préférences
+                    </span>
+                  </>
+                )}
               </div>
-              <Button
-                onClick={loadGoogleEvents}
-                disabled={isLoadingEvents}
-                size="sm"
-                variant="outline"
-              >
-                {isLoadingEvents ? 'Actualisation...' : 'Actualiser'}
-              </Button>
+              {hasRealConnection && (
+                <Button
+                  onClick={loadRealGoogleEvents}
+                  disabled={isLoadingEvents}
+                  size="sm"
+                  variant="outline"
+                >
+                  {isLoadingEvents ? 'Actualisation...' : 'Actualiser'}
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -201,7 +211,7 @@ export const Agenda: React.FC = () => {
       }}>
         <CardHeader>
           <CardTitle style={{ color: 'var(--app-card-text, #18181b)' }}>
-            {isConnected ? 'Événements Google Calendar' : 'Calendrier des Événements'}
+            Calendrier des Événements
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -215,12 +225,20 @@ export const Agenda: React.FC = () => {
                 Connectez Google Calendar pour voir vos événements ou créez votre premier événement
               </p>
             </div>
-          ) : isLoadingEvents ? (
+          ) : !hasRealConnection ? (
             <div className="text-center py-12">
-              <div className="animate-spin h-8 w-8 border-2 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
-              <p style={{ color: 'var(--app-text, #666666)' }}>
-                Chargement des événements...
+              <Calendar className="h-16 w-16 mx-auto mb-4 text-amber-500" />
+              <h3 className="text-lg font-medium mb-2" style={{ color: 'var(--app-card-text, #18181b)' }}>
+                Configuration requise
+              </h3>
+              <p className="mb-4" style={{ color: 'var(--app-text, #666666)' }}>
+                Configurez vos clés API Google Calendar dans les Préférences pour voir vos événements réels
               </p>
+              <Button variant="outline" asChild>
+                <a href="/preferences">
+                  Aller aux Préférences
+                </a>
+              </Button>
             </div>
           ) : events.length === 0 ? (
             <div className="text-center py-12">
@@ -229,7 +247,7 @@ export const Agenda: React.FC = () => {
                 Aucun événement trouvé
               </h3>
               <p style={{ color: 'var(--app-text, #666666)' }}>
-                Vos événements Google Calendar apparaîtront ici
+                Vos événements Google Calendar apparaîtront ici une fois la configuration terminée
               </p>
             </div>
           ) : (

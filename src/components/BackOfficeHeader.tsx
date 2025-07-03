@@ -77,19 +77,19 @@ export const BackOfficeHeader: React.FC = () => {
               <FrontThemeToggle variant="back-office" />
               
               <button
-                className="flex items-center space-x-2 focus:outline-none group transition-all duration-300"
+                className="flex items-center space-x-2 focus:outline-none group transition-all duration-300 hover:bg-gray-100 rounded-lg p-2"
                 onClick={() => setShowUserProfile(true)}
                 aria-label="Voir le profil"
               >
-                <Avatar className="h-8 w-8 border-2 border-blue-600">
+                <Avatar className="h-8 w-8 border-2 border-gray-300 hover:border-blue-500 transition-colors">
                   <AvatarImage src={currentUser?.avatar} alt={currentUser?.name} />
-                  <AvatarFallback className="text-base bg-blue-600 text-white">
-                    {currentUser?.name?.charAt(0)}
-                    {currentUser?.lastName?.charAt(0)}
+                  <AvatarFallback className="text-base bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold">
+                    {currentUser?.name?.charAt(0) || 'U'}
+                    {currentUser?.lastName?.charAt(0) || ''}
                   </AvatarFallback>
                 </Avatar>
-                <span className="hidden md:block text-sm font-medium transition-colors duration-300 text-gray-900">
-                  {currentUser?.name}
+                <span className="hidden md:block text-sm font-medium transition-colors duration-300 text-gray-900 group-hover:text-blue-600">
+                  {currentUser?.name || 'Utilisateur'}
                 </span>
               </button>
             </div>
