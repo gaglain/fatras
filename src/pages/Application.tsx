@@ -12,8 +12,13 @@ import {
   QrCode,
   TestTube,
   Monitor,
-  Tablet
+  Tablet,
+  FileDown,
+  Zap,
+  Code,
+  Settings
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 export const Application: React.FC = () => {
   const handleTestDesktop = () => {
@@ -21,15 +26,45 @@ export const Application: React.FC = () => {
   };
 
   const handleTestMobile = () => {
-    // Ouvrir dans un nouvel onglet avec simulation mobile
     const mobileUrl = `${window.location.origin}?mobile=true`;
     window.open(mobileUrl, '_blank');
   };
 
   const handleGenerateQR = () => {
-    // Générer un QR code pour l'application
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(window.location.origin)}`;
     window.open(qrUrl, '_blank');
+  };
+
+  const handleDownloadAPK = () => {
+    toast.info('Fonctionnalité en développement - Génération APK via Capacitor');
+    // Ici on pourrait implémenter la génération d'APK
+  };
+
+  const handleDownloadIPA = () => {
+    toast.info('Fonctionnalité en développement - Génération IPA via Capacitor');
+    // Ici on pourrait implémenter la génération d'IPA
+  };
+
+  const handleExportProject = () => {
+    // Simuler l'export du projet
+    const projectData = {
+      name: 'MusiConnect',
+      version: '1.0.0',
+      timestamp: new Date().toISOString(),
+      url: window.location.origin
+    };
+    
+    const blob = new Blob([JSON.stringify(projectData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'musiconnect-project.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast.success('Projet exporté avec succès');
   };
 
   const handleShare = async () => {
@@ -44,9 +79,8 @@ export const Application: React.FC = () => {
         console.log('Partage annulé');
       }
     } else {
-      // Fallback pour les navigateurs qui ne supportent pas l'API de partage
       navigator.clipboard.writeText(window.location.origin);
-      alert('Lien copié dans le presse-papiers');
+      toast.success('Lien copié dans le presse-papiers');
     }
   };
 
@@ -59,10 +93,10 @@ export const Application: React.FC = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold" style={{ color: 'var(--app-text, #18181b)' }}>
-            Test de l'Application
+            Test et Déploiement
           </h1>
           <p className="mt-2" style={{ color: 'var(--app-text, #666666)' }}>
-            Testez votre application sur différents appareils et partagez-la
+            Testez, partagez et déployez votre application sur différentes plateformes
           </p>
         </div>
         <Badge className="px-3 py-1 text-sm" style={{
@@ -117,7 +151,7 @@ export const Application: React.FC = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm" style={{ color: 'var(--app-text, #666666)' }}>
-              Testez l'application en mode mobile ou scannez le QR code avec votre téléphone
+              Testez l'application en mode mobile ou scannez le QR code
             </p>
             <div className="space-y-2">
               <Button 
@@ -161,7 +195,7 @@ export const Application: React.FC = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm" style={{ color: 'var(--app-text, #666666)' }}>
-              Partagez votre application avec d'autres utilisateurs pour obtenir des retours
+              Partagez votre application avec d'autres utilisateurs
             </p>
             <Button 
               onClick={handleShare}
@@ -178,7 +212,99 @@ export const Application: React.FC = () => {
         </Card>
       </div>
 
-      {/* Test Instructions */}
+      {/* Download and Export Options */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card style={{
+          backgroundColor: 'var(--app-card-bg, #ffffff)',
+          color: 'var(--app-card-text, #18181b)',
+          border: '1px solid var(--notification-border, #e5e7eb)'
+        }}>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Download className="h-5 w-5 mr-2" />
+              Applications Mobiles
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm" style={{ color: 'var(--app-text, #666666)' }}>
+              Téléchargez les fichiers d'installation pour les appareils mobiles
+            </p>
+            <div className="space-y-2">
+              <Button 
+                onClick={handleDownloadAPK}
+                className="w-full"
+                variant="outline"
+                style={{
+                  borderColor: 'var(--app-button-bg, #1632f4)',
+                  color: 'var(--app-button-bg, #1632f4)'
+                }}
+              >
+                <FileDown className="h-4 w-4 mr-2" />
+                Télécharger APK (Android)
+              </Button>
+              <Button 
+                onClick={handleDownloadIPA}
+                className="w-full"
+                variant="outline"
+                style={{
+                  borderColor: 'var(--app-button-bg, #1632f4)',
+                  color: 'var(--app-button-bg, #1632f4)'
+                }}
+              >
+                <FileDown className="h-4 w-4 mr-2" />
+                Télécharger IPA (iOS)
+              </Button>
+            </div>
+            <div className="p-3 rounded-lg" style={{
+              backgroundColor: 'var(--app-background, #f9f9f9)',
+              border: '1px solid var(--notification-border, #e5e7eb)'
+            }}>
+              <p className="text-xs" style={{ color: 'var(--app-text, #666666)' }}>
+                💡 Pour générer des apps natives, exportez votre projet vers GitHub et utilisez Capacitor
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card style={{
+          backgroundColor: 'var(--app-card-bg, #ffffff)',
+          color: 'var(--app-card-text, #18181b)',
+          border: '1px solid var(--notification-border, #e5e7eb)'
+        }}>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Code className="h-5 w-5 mr-2" />
+              Export de Projet
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm" style={{ color: 'var(--app-text, #666666)' }}>
+              Exportez les données de votre projet pour sauvegarde ou migration
+            </p>
+            <Button 
+              onClick={handleExportProject}
+              className="w-full"
+              style={{
+                backgroundColor: 'var(--app-button-bg, #1632f4)',
+                color: 'var(--app-button-text, #ffffff)'
+              }}
+            >
+              <FileDown className="h-4 w-4 mr-2" />
+              Exporter le Projet
+            </Button>
+            <div className="p-3 rounded-lg" style={{
+              backgroundColor: 'var(--app-background, #f9f9f9)',
+              border: '1px solid var(--notification-border, #e5e7eb)'
+            }}>
+              <p className="text-xs" style={{ color: 'var(--app-text, #666666)' }}>
+                📁 Exporte les configurations et données au format JSON
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Deployment Instructions */}
       <Card style={{
         backgroundColor: 'var(--app-card-bg, #ffffff)',
         color: 'var(--app-card-text, #18181b)',
@@ -186,37 +312,93 @@ export const Application: React.FC = () => {
       }}>
         <CardHeader>
           <CardTitle className="flex items-center">
-            <TestTube className="h-5 w-5 mr-2" />
-            Instructions de Test
+            <Zap className="h-5 w-5 mr-2" />
+            Instructions de Déploiement Mobile
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div>
-              <h3 className="font-medium mb-2">🖥️ Test Desktop</h3>
-              <ul className="text-sm space-y-1" style={{ color: 'var(--app-text, #666666)' }}>
-                <li>• Testez toutes les fonctionnalités principales</li>
-                <li>• Vérifiez la responsive design en redimensionnant la fenêtre</li>
-                <li>• Testez les raccourcis clavier</li>
-              </ul>
-            </div>
-            
-            <div>
-              <h3 className="font-medium mb-2">📱 Test Mobile</h3>
-              <ul className="text-sm space-y-1" style={{ color: 'var(--app-text, #666666)' }}>
-                <li>• Testez les gestes tactiles (swipe, pinch, etc.)</li>
-                <li>• Vérifiez l'adaptation à différentes tailles d'écran</li>
-                <li>• Testez en mode portrait et paysage</li>
-              </ul>
+              <h3 className="font-medium mb-3 flex items-center">
+                <Settings className="h-4 w-4 mr-2" />
+                Prérequis pour le déploiement mobile
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-4 rounded-lg" style={{
+                  backgroundColor: 'var(--app-background, #f9f9f9)',
+                  border: '1px solid var(--notification-border, #e5e7eb)'
+                }}>
+                  <h4 className="font-medium mb-2">Android (APK)</h4>
+                  <ul className="text-sm space-y-1" style={{ color: 'var(--app-text, #666666)' }}>
+                    <li>• Android Studio installé</li>
+                    <li>• SDK Android configuré</li>
+                    <li>• Capacitor CLI installé</li>
+                    <li>• Certificat de signature (pour production)</li>
+                  </ul>
+                </div>
+                <div className="p-4 rounded-lg" style={{
+                  backgroundColor: 'var(--app-background, #f9f9f9)',
+                  border: '1px solid var(--notification-border, #e5e7eb)'
+                }}>
+                  <h4 className="font-medium mb-2">iOS (IPA)</h4>
+                  <ul className="text-sm space-y-1" style={{ color: 'var(--app-text, #666666)' }}>
+                    <li>• macOS avec Xcode</li>
+                    <li>• Compte développeur Apple</li>
+                    <li>• Certificats iOS configurés</li>
+                    <li>• Profils de provisioning</li>
+                  </ul>
+                </div>
+              </div>
             </div>
 
             <div>
-              <h3 className="font-medium mb-2">🔗 Partage et Feedback</h3>
-              <ul className="text-sm space-y-1" style={{ color: 'var(--app-text, #666666)' }}>
-                <li>• Partagez avec vos collègues ou clients</li>
-                <li>• Collectez les retours utilisateurs</li>
-                <li>• Notez les bugs ou améliorations possibles</li>
-              </ul>
+              <h3 className="font-medium mb-3">Étapes de déploiement</h3>
+              <div className="space-y-2">
+                <div className="flex items-start space-x-3 p-3 rounded-lg" style={{
+                  backgroundColor: 'var(--app-background, #f9f9f9)'
+                }}>
+                  <span className="flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">1</span>
+                  <div>
+                    <p className="font-medium">Export vers GitHub</p>
+                    <p className="text-sm" style={{ color: 'var(--app-text, #666666)' }}>
+                      Utilisez le bouton "Export to GitHub" pour transférer votre projet
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-3 p-3 rounded-lg" style={{
+                  backgroundColor: 'var(--app-background, #f9f9f9)'
+                }}>
+                  <span className="flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">2</span>
+                  <div>
+                    <p className="font-medium">Installation des dépendances</p>
+                    <p className="text-sm" style={{ color: 'var(--app-text, #666666)' }}>
+                      <code className="bg-gray-100 px-1 rounded">npm install && npx cap add android/ios</code>
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-3 p-3 rounded-lg" style={{
+                  backgroundColor: 'var(--app-background, #f9f9f9)'
+                }}>
+                  <span className="flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">3</span>
+                  <div>
+                    <p className="font-medium">Build et synchronisation</p>
+                    <p className="text-sm" style={{ color: 'var(--app-text, #666666)' }}>
+                      <code className="bg-gray-100 px-1 rounded">npm run build && npx cap sync</code>
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-3 p-3 rounded-lg" style={{
+                  backgroundColor: 'var(--app-background, #f9f9f9)'
+                }}>
+                  <span className="flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">4</span>
+                  <div>
+                    <p className="font-medium">Génération de l'application</p>
+                    <p className="text-sm" style={{ color: 'var(--app-text, #666666)' }}>
+                      <code className="bg-gray-100 px-1 rounded">npx cap run android/ios</code>
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </CardContent>
@@ -249,6 +431,12 @@ export const Application: React.FC = () => {
               <span className="text-sm font-medium">Environnement :</span>
               <Badge variant="outline">
                 {window.location.hostname === 'localhost' ? 'Développement' : 'Production'}
+              </Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Status :</span>
+              <Badge className="bg-green-100 text-green-800">
+                En ligne
               </Badge>
             </div>
           </div>

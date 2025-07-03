@@ -14,10 +14,12 @@ import {
   DollarSign, 
   ShoppingCart,
   Eye,
-  Settings
+  Settings,
+  Layers
 } from 'lucide-react';
 import { Shop } from '@/components/Shop';
 import { ProductForm } from '@/components/ProductForm';
+import { VariationManager } from '@/components/VariationManager';
 import { toast } from 'sonner';
 
 const mockProducts = [
@@ -37,6 +39,7 @@ const mockProducts = [
 
 export const MerchandiseBackoffice: React.FC = () => {
   const [products, setProducts] = useState(mockProducts);
+  const [variations, setVariations] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -104,7 +107,7 @@ export const MerchandiseBackoffice: React.FC = () => {
             Gestion Merchandise
           </h1>
           <p className="mt-2" style={{ color: 'var(--app-text, #666666)' }}>
-            Gérez vos produits et visualisez la boutique publique
+            Gérez vos produits, variations et visualisez la boutique publique
           </p>
         </div>
         <Button 
@@ -119,11 +122,19 @@ export const MerchandiseBackoffice: React.FC = () => {
         </Button>
       </div>
 
-      <Tabs defaultValue="management" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="management">
+      <Tabs defaultValue="products" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="products">
             <Settings className="h-4 w-4 mr-2" />
-            Gestion
+            Produits
+          </TabsTrigger>
+          <TabsTrigger value="variations">
+            <Layers className="h-4 w-4 mr-2" />
+            Variations
+          </TabsTrigger>
+          <TabsTrigger value="orders">
+            <ShoppingCart className="h-4 w-4 mr-2" />
+            Commandes
           </TabsTrigger>
           <TabsTrigger value="preview">
             <Eye className="h-4 w-4 mr-2" />
@@ -131,7 +142,7 @@ export const MerchandiseBackoffice: React.FC = () => {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="management" className="space-y-6">
+        <TabsContent value="products" className="space-y-6">
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Card style={{
@@ -149,7 +160,21 @@ export const MerchandiseBackoffice: React.FC = () => {
                 </div>
               </CardContent>
             </Card>
-
+            <Card style={{
+              backgroundColor: 'var(--app-card-bg, #ffffff)',
+              color: 'var(--app-card-text, #18181b)',
+              border: '1px solid var(--notification-border, #e5e7eb)'
+            }}>
+              <CardContent className="p-4">
+                <div className="flex items-center space-x-2">
+                  <Layers className="h-8 w-8" style={{ color: 'var(--app-button-bg, #1632f4)' }} />
+                  <div>
+                    <p className="text-2xl font-bold">{variations.length}</p>
+                    <p className="text-sm" style={{ color: 'var(--app-text, #666666)' }}>Variations</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
             <Card style={{
               backgroundColor: 'var(--app-card-bg, #ffffff)',
               color: 'var(--app-card-text, #18181b)',
@@ -165,7 +190,6 @@ export const MerchandiseBackoffice: React.FC = () => {
                 </div>
               </CardContent>
             </Card>
-
             <Card style={{
               backgroundColor: 'var(--app-card-bg, #ffffff)',
               color: 'var(--app-card-text, #18181b)',
@@ -173,26 +197,10 @@ export const MerchandiseBackoffice: React.FC = () => {
             }}>
               <CardContent className="p-4">
                 <div className="flex items-center space-x-2">
-                  <ShoppingCart className="h-8 w-8" style={{ color: 'var(--app-button-bg, #1632f4)' }} />
+                  <ShoppingCart className="h-8 w-8 text-orange-500" />
                   <div>
                     <p className="text-2xl font-bold">0</p>
-                    <p className="text-sm" style={{ color: 'var(--app-text, #666666)' }}>Ventes</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card style={{
-              backgroundColor: 'var(--app-card-bg, #ffffff)',
-              color: 'var(--app-card-text, #18181b)',
-              border: '1px solid var(--notification-border, #e5e7eb)'
-            }}>
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-2">
-                  <Package className="h-8 w-8 text-orange-500" />
-                  <div>
-                    <p className="text-2xl font-bold">{products.reduce((sum, p) => sum + (p.stockQuantity || 0), 0)}</p>
-                    <p className="text-sm" style={{ color: 'var(--app-text, #666666)' }}>Stock Total</p>
+                    <p className="text-sm" style={{ color: 'var(--app-text, #666666)' }}>Commandes</p>
                   </div>
                 </div>
               </CardContent>
@@ -223,38 +231,45 @@ export const MerchandiseBackoffice: React.FC = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {filteredProducts.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Package className="h-16 w-16 mx-auto mb-4" style={{ color: 'var(--app-button-bg, #1632f4)' }} />
-                    <h3 className="text-lg font-medium mb-2">Aucun produit</h3>
-                    <p className="mb-4" style={{ color: 'var(--app-text, #666666)' }}>
-                      Commencez par créer votre premier produit
-                    </p>
-                    <Button onClick={handleNewProduct} style={{
-                      backgroundColor: 'var(--app-button-bg, #1632f4)',
-                      color: 'var(--app-button-text, #ffffff)'
-                    }}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Créer un produit
-                    </Button>
-                  </div>
-                ) : (
-                  filteredProducts.map((product) => (
+              {filteredProducts.length === 0 ? (
+                <div className="text-center py-8">
+                  <Package className="h-16 w-16 mx-auto mb-4" style={{ color: 'var(--app-button-bg, #1632f4)' }} />
+                  <h3 className="text-lg font-medium mb-2">Aucun produit</h3>
+                  <p className="mb-4" style={{ color: 'var(--app-text, #666666)' }}>
+                    Commencez par créer votre premier produit
+                  </p>
+                  <Button onClick={handleNewProduct} style={{
+                    backgroundColor: 'var(--app-button-bg, #1632f4)',
+                    color: 'var(--app-button-text, #ffffff)'
+                  }}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Créer un produit
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {filteredProducts.map((product) => (
                     <div key={product.id} className="flex items-center justify-between p-4 border rounded-lg" style={{
                       borderColor: 'var(--notification-border, #e5e7eb)'
                     }}>
-                      <div className="flex-1">
-                        <h3 className="font-medium" style={{ color: 'var(--app-card-text, #18181b)' }}>
-                          {product.name}
-                        </h3>
-                        <div className="flex items-center space-x-4 mt-2 text-sm" style={{ color: 'var(--app-text, #666666)' }}>
-                          <span>Prix: {product.price}€</span>
-                          <span>Stock: {product.stockQuantity}</span>
-                          <span>Ventes: {product.sales}</span>
-                          <Badge className={getStatusColor(product.status)}>
-                            {getStatusLabel(product.status)}
-                          </Badge>
+                      <div className="flex items-center space-x-4">
+                        <img 
+                          src={product.images?.[0] || '/placeholder.svg'} 
+                          alt={product.name}
+                          className="w-16 h-16 object-cover rounded"
+                        />
+                        <div className="flex-1">
+                          <h3 className="font-medium" style={{ color: 'var(--app-card-text, #18181b)' }}>
+                            {product.name}
+                          </h3>
+                          <div className="flex items-center space-x-4 mt-2 text-sm" style={{ color: 'var(--app-text, #666666)' }}>
+                            <span>Prix: {product.price}€</span>
+                            <span>Stock: {product.stockQuantity}</span>
+                            <span>Ventes: {product.sales}</span>
+                            <Badge className={getStatusColor(product.status)}>
+                              {getStatusLabel(product.status)}
+                            </Badge>
+                          </div>
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
@@ -267,7 +282,8 @@ export const MerchandiseBackoffice: React.FC = () => {
                             borderColor: 'var(--app-button-bg, #1632f4)'
                           }}
                         >
-                          <Edit className="h-4 w-4" />
+                          <Edit className="h-4 w-4 mr-1" />
+                          Modifier
                         </Button>
                         <Button 
                           variant="outline" 
@@ -279,8 +295,38 @@ export const MerchandiseBackoffice: React.FC = () => {
                         </Button>
                       </div>
                     </div>
-                  ))
-                )}
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="variations">
+          <VariationManager 
+            variations={variations}
+            onVariationsChange={setVariations}
+          />
+        </TabsContent>
+
+        <TabsContent value="orders">
+          <Card style={{
+            backgroundColor: 'var(--app-card-bg, #ffffff)',
+            color: 'var(--app-card-text, #18181b)',
+            border: '1px solid var(--notification-border, #e5e7eb)'
+          }}>
+            <CardHeader>
+              <CardTitle style={{ color: 'var(--app-card-text, #18181b)' }}>
+                Gestion des Commandes
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-12">
+                <ShoppingCart className="h-16 w-16 mx-auto mb-4" style={{ color: 'var(--app-button-bg, #1632f4)' }} />
+                <h3 className="text-lg font-medium mb-2">Aucune commande</h3>
+                <p style={{ color: 'var(--app-text, #666666)' }}>
+                  Les commandes apparaîtront ici une fois que les clients commenceront à acheter
+                </p>
               </div>
             </CardContent>
           </Card>
