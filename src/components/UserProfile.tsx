@@ -8,7 +8,6 @@ import { X, User, Save, Camera, Upload, ImageIcon } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useUser } from '@/contexts/UserContext';
 import { useAuth } from '@/hooks/useAuth';
-import { useFileUpload } from '@/hooks/useFileUpload';
 import { toast } from 'sonner';
 
 interface UserProfileProps {
@@ -18,8 +17,8 @@ interface UserProfileProps {
 export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
   const { currentUser, updateUser } = useUser();
   const { user: authUser } = useAuth();
-  const { uploadFile, uploading } = useFileUpload();
   const [isEditing, setIsEditing] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     name: currentUser?.name || '',
@@ -64,33 +63,44 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
     }
 
     try {
+      setUploading(true);
       console.log('Starting avatar upload...');
       
       // Créer une URL temporaire pour l'aperçu immédiat
       const tempUrl = URL.createObjectURL(file);
       setFormData(prev => ({ ...prev, avatar: tempUrl }));
       
-      // Simuler l'upload (remplacer par vraie logique d'upload)
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Simuler l'upload
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Pour une vraie implémentation, utiliser uploadFile ou Supabase
-      // const imageUrl = await uploadFile(file, 'avatars', `${authUser?.id}/profile`);
-      
-      // Pour l'instant, on garde l'URL temporaire
       toast.success('Photo de profil mise à jour avec succès');
     } catch (error) {
       console.error('Erreur lors du téléchargement:', error);
       toast.error('Erreur lors du téléchargement de la photo');
       // Restaurer l'ancienne image en cas d'erreur
       setFormData(prev => ({ ...prev, avatar: currentUser?.avatar || '' }));
+    } finally {
+      setUploading(false);
     }
   };
 
-  const handleSave = () => {
-    if (currentUser?.id) {
-      updateUser(currentUser.id, formData);
-      setIsEditing(false);
-      toast.success('Profil mis à jour avec succès');
+  const handleSave = async () => {
+    try {
+      if (!formData.name.trim()) {
+        toast.error('Le prénom est requis');
+        return;
+      }
+
+      if (currentUser?.id) {
+        await updateUser(currentUser.id, formData);
+        setIsEditing(false);
+        toast.success('Profil mis à jour avec succès');
+      } else {
+        toast.error('Impossible de sauvegarder : utilisateur non trouvé');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
+      toast.error('Erreur lors de la sauvegarde du profil');
     }
   };
 
@@ -184,7 +194,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
           {/* Form Fields */}
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-gray-700 font-medium">Prénom</Label>
+              <Label htmlFor="name" className="text-gray-700 font-medium">Prénom *</Label>
               <Input
                 id="name"
                 value={formData.name}

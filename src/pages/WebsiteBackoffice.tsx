@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Plus, FileText, Settings, Menu, Palette, Globe, Edit, Eye } from 'lucide-react';
+import { Plus, FileText, Settings, Menu, Palette, Globe, Edit, Eye, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { WebsiteMenuManager } from '@/components/WebsiteMenuManager';
 import { WebsiteDesignManager } from '@/components/WebsiteDesignManager';
@@ -26,40 +26,82 @@ const defaultPages: WebPage[] = [
     title: 'Accueil',
     slug: '/',
     status: 'published',
-    blocks: [],
-    metaDescription: 'Page d\'accueil par défaut'
+    blocks: [
+      {
+        id: 'hero-1',
+        type: 'hero',
+        content: {
+          title: 'Bienvenue sur notre site',
+          subtitle: 'Découvrez notre univers musical',
+          backgroundImage: '/hero-bg.jpg'
+        }
+      }
+    ],
+    metaDescription: 'Page d\'accueil - Découvrez notre univers musical'
   },
   {
     id: '2',
     title: 'Nos Artistes',
     slug: '/artists',
     status: 'published',
-    blocks: [],
-    metaDescription: 'Page des artistes par défaut'
+    blocks: [
+      {
+        id: 'text-1',
+        type: 'text',
+        content: {
+          text: '<h1>Nos Artistes</h1><p>Découvrez les artistes exceptionnels de notre label.</p>'
+        }
+      }
+    ],
+    metaDescription: 'Découvrez nos artistes talentueux'
   },
   {
     id: '3',
     title: 'Événements',
     slug: '/events',
     status: 'published',
-    blocks: [],
-    metaDescription: 'Page des événements par défaut'
+    blocks: [
+      {
+        id: 'text-2',
+        type: 'text',
+        content: {
+          text: '<h1>Nos Événements</h1><p>Ne manquez aucun de nos concerts et événements.</p>'
+        }
+      }
+    ],
+    metaDescription: 'Tous nos événements et concerts'
   },
   {
     id: '4',
     title: 'Boutique',
     slug: '/shop',
     status: 'published',
-    blocks: [],
-    metaDescription: 'Page de la boutique par défaut'
+    blocks: [
+      {
+        id: 'text-3',
+        type: 'text',
+        content: {
+          text: '<h1>Notre Boutique</h1><p>Découvrez nos produits exclusifs.</p>'
+        }
+      }
+    ],
+    metaDescription: 'Boutique officielle - Produits exclusifs'
   },
   {
     id: '5',
     title: 'Contact',
     slug: '/contact',
     status: 'published',
-    blocks: [],
-    metaDescription: 'Page de contact par défaut'
+    blocks: [
+      {
+        id: 'text-4',
+        type: 'text',
+        content: {
+          text: '<h1>Contactez-nous</h1><p>Nous sommes à votre écoute.</p>'
+        }
+      }
+    ],
+    metaDescription: 'Contactez notre équipe'
   }
 ];
 
@@ -84,14 +126,21 @@ export const WebsiteBackoffice: React.FC = () => {
       title: newPageData.title,
       slug: newPageData.slug || `/${newPageData.title.toLowerCase().replace(/ /g, '-')}`,
       status: 'draft',
-      blocks: [],
+      blocks: [
+        {
+          id: `text-${Date.now()}`,
+          type: 'text',
+          content: {
+            text: `<h1>${newPageData.title}</h1><p>Contenu de votre nouvelle page.</p>`
+          }
+        }
+      ],
       metaDescription: newPageData.metaDescription
     };
 
     setPages([...pages, newPage]);
     setNewPageData({ title: '', slug: '', metaDescription: '' });
     setShowPageCreator(false);
-    setEditingPage(newPage);
     toast.success('Page créée avec succès');
   };
 
@@ -104,6 +153,13 @@ export const WebsiteBackoffice: React.FC = () => {
       );
       setPages(updatedPages);
       toast.success('Page sauvegardée');
+    }
+  };
+
+  const handleDeletePage = (pageId: string) => {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette page ?')) {
+      setPages(pages.filter(p => p.id !== pageId));
+      toast.success('Page supprimée');
     }
   };
 
@@ -272,6 +328,16 @@ export const WebsiteBackoffice: React.FC = () => {
                           <Edit className="h-4 w-4 mr-2" />
                           Modifier
                         </Button>
+                        {page.id !== '1' && ( // Ne pas permettre de supprimer la page d'accueil
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleDeletePage(page.id)}
+                            className="text-red-600 border-red-600 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
