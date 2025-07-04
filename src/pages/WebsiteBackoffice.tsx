@@ -105,6 +105,8 @@ export const WebsiteBackoffice: React.FC = () => {
   };
 
   const handleSaveBlocks = (pageId: string, blocks: SimpleBlock[]) => {
+    console.log('Saving blocks for page:', pageId, blocks);
+    
     const updatedPages = pages.map(page => 
       page.id === pageId 
         ? { ...page, blocks: blocks as Block[] }
@@ -120,7 +122,7 @@ export const WebsiteBackoffice: React.FC = () => {
       }
     }
     
-    toast.success('Page sauvegardée');
+    toast.success('Page sauvegardée avec succès !');
   };
 
   const handlePreviewSite = () => {
@@ -128,18 +130,24 @@ export const WebsiteBackoffice: React.FC = () => {
   };
 
   const handleEditPage = (page: WebPage) => {
+    console.log('Opening editor for page:', page);
     setEditingPage(page);
-    console.log('Editing page:', page);
   };
 
+  // Mode édition - Affichage de l'éditeur de blocs
   if (editingPage) {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto p-6">
+          {/* En-tête de l'éditeur */}
           <div className="flex items-center justify-between mb-6 p-4 bg-white rounded-lg border shadow-sm">
             <div>
               <h2 className="text-xl font-bold">Édition : {editingPage.title}</h2>
               <p className="text-sm text-gray-600">{editingPage.slug}</p>
+              <Badge variant={editingPage.status === 'published' ? 'default' : 'secondary'}>
+                {editingPage.status === 'published' ? 'Publié' : 
+                 editingPage.status === 'draft' ? 'Brouillon' : 'Archivé'}
+              </Badge>
             </div>
             <div className="flex items-center space-x-2">
               <Button onClick={handlePreviewSite} variant="outline">
@@ -152,16 +160,21 @@ export const WebsiteBackoffice: React.FC = () => {
             </div>
           </div>
           
-          <SimpleBlockEditor
-            initialBlocks={editingPage.blocks as SimpleBlock[]}
-            onSave={(blocks) => handleSaveBlocks(editingPage.id, blocks)}
-            onPreview={handlePreviewSite}
-          />
+          {/* Éditeur de blocs */}
+          <div className="bg-white rounded-lg border shadow-sm">
+            <SimpleBlockEditor
+              key={editingPage.id} // Force re-render when page changes
+              initialBlocks={editingPage.blocks as SimpleBlock[]}
+              onSave={(blocks) => handleSaveBlocks(editingPage.id, blocks)}
+              onPreview={handlePreviewSite}
+            />
+          </div>
         </div>
       </div>
     );
   }
 
+  // Mode liste - Affichage de la gestion des pages
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-8">
@@ -204,12 +217,13 @@ export const WebsiteBackoffice: React.FC = () => {
             <CardContent className="space-y-4 p-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold">Gestionnaire de Pages</h2>
-                <Button onClick={() => setShowPageCreator(true)}>
+                <Button onClick={() => setShowPageCreator(true)} className="bg-blue-600 hover:bg-blue-700">
                   <Plus className="h-4 w-4 mr-2" />
                   Nouvelle Page
                 </Button>
               </div>
 
+              {/* Formulaire de création de page */}
               {showPageCreator && (
                 <Card className="p-4 border-2 border-dashed border-blue-200 bg-blue-50/50">
                   <div className="space-y-4">
@@ -273,6 +287,7 @@ export const WebsiteBackoffice: React.FC = () => {
                 </Card>
               )}
 
+              {/* Liste des pages */}
               <div className="grid gap-4">
                 {pages.map((page) => (
                   <Card key={page.id} className="hover:shadow-md transition-shadow">

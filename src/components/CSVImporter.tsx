@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,19 +23,20 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
     { key: 'lastName', label: 'Nom *', required: true },
     { key: 'email', label: 'Email *', required: true },
     { key: 'phone', label: 'Téléphone', required: false },
-    { key: 'company', label: 'Entreprise', required: false },
-    { key: 'role', label: 'Rôle/Titre', required: false },
+    { key: 'eventId', label: 'ID Événement', required: false },
     { key: 'eventName', label: 'Nom de l\'événement', required: false },
-    { key: 'eventType', label: 'Type d\'événement', required: false },
-    { key: 'message', label: 'Message', required: false },
-    { key: 'acceptsPromotionalEmails', label: 'Accepte les emails (true/false)', required: false }
+    { key: 'eventTypeId', label: 'ID Type d\'événement', required: false },
+    { key: 'eventTypeName', label: 'Type d\'événement', required: false },
+    { key: 'role', label: 'Rôle/Titre', required: false },
+    { key: 'address', label: 'Adresse', required: false },
+    { key: 'acceptsMarketingEmails', label: 'Marketing (true/false)', required: false }
   ];
 
   const generateTemplate = () => {
     const csvContent = [
       expectedFields.map(field => field.label).join(','),
-      'Jean,Dupont,jean.dupont@example.com,06 12 34 56 78,Ma Société,Directeur,Festival d\'été,Festival,Bonjour nous aimerions organiser un événement,true',
-      'Marie,Martin,marie.martin@example.com,06 23 45 67 89,Autre Société,Manager,Concert privé,Concert,Merci pour votre travail,false'
+      'Jean,Dupont,jean.dupont@example.com,06 12 34 56 78,,Festival d\'été,,Festival,Directeur,"123 rue Example Paris",true',
+      'Marie,Martin,marie.martin@example.com,06 23 45 67 89,,Concert privé,,Concert,Manager,"456 avenue Test Lyon",false'
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -122,7 +122,7 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
       const mappedRow: any = {};
       Object.entries(mapping).forEach(([fieldKey, headerName]) => {
         if (headerName && row[headerName] !== undefined) {
-          if (fieldKey === 'acceptsPromotionalEmails') {
+          if (fieldKey === 'acceptsMarketingEmails') {
             mappedRow[fieldKey] = row[headerName]?.toLowerCase() === 'true';
           } else {
             mappedRow[fieldKey] = row[headerName];

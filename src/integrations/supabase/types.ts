@@ -62,12 +62,14 @@ export type Database = {
       }
       contacts: {
         Row: {
+          accepts_marketing_emails: boolean | null
           address: string | null
           city: string | null
-          company: string | null
           country: string | null
           created_at: string | null
           email: string | null
+          event_id: string | null
+          event_type_id: string | null
           first_name: string
           id: string
           last_name: string
@@ -76,6 +78,7 @@ export type Database = {
           phone: string | null
           position: string | null
           postal_code: string | null
+          role: string | null
           source: string | null
           status: string | null
           tags: string[] | null
@@ -83,12 +86,14 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          accepts_marketing_emails?: boolean | null
           address?: string | null
           city?: string | null
-          company?: string | null
           country?: string | null
           created_at?: string | null
           email?: string | null
+          event_id?: string | null
+          event_type_id?: string | null
           first_name: string
           id?: string
           last_name: string
@@ -97,6 +102,7 @@ export type Database = {
           phone?: string | null
           position?: string | null
           postal_code?: string | null
+          role?: string | null
           source?: string | null
           status?: string | null
           tags?: string[] | null
@@ -104,12 +110,14 @@ export type Database = {
           user_id: string
         }
         Update: {
+          accepts_marketing_emails?: boolean | null
           address?: string | null
           city?: string | null
-          company?: string | null
           country?: string | null
           created_at?: string | null
           email?: string | null
+          event_id?: string | null
+          event_type_id?: string | null
           first_name?: string
           id?: string
           last_name?: string
@@ -118,10 +126,56 @@ export type Database = {
           phone?: string | null
           position?: string | null
           postal_code?: string | null
+          role?: string | null
           source?: string | null
           status?: string | null
           tags?: string[] | null
           updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contacts_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contacts_event_type_id_fkey"
+            columns: ["event_type_id"]
+            isOneToOne: false
+            referencedRelation: "event_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_types: {
+        Row: {
+          color: string | null
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
