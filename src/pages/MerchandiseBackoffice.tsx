@@ -9,10 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { ProductVariationManager } from '@/components/ProductVariationManager';
 
 interface Product {
   id: string;
@@ -24,73 +22,23 @@ interface Product {
   images?: string[];
   status: 'active' | 'inactive';
   tags?: string[];
+  attributes?: ProductAttribute[];
+  variations?: ProductVariation[];
 }
 
 interface ProductAttribute {
   id: string;
   name: string;
   values: string[];
-  variation: boolean;
 }
 
 interface ProductVariation {
   id: string;
-  attributes: { [key: string]: string };
+  name: string;
   price: number;
   stockQuantity: number;
-  sku?: string;
-  image?: string;
+  attributes: { [key: string]: string };
 }
-
-const defaultProducts: Product[] = [
-  {
-    id: '1',
-    name: 'T-Shirt MusiConnect',
-    description: 'T-shirt en coton bio avec le logo MusiConnect',
-    price: 29.99,
-    costPrice: 15.50,
-    stockQuantity: 150,
-    images: ['/tshirt.png'],
-    status: 'active',
-    tags: ['t-shirt', 'logo', 'coton bio']
-  },
-  {
-    id: '2',
-    name: 'Casquette Brodé',
-    description: 'Casquette de baseball avec broderie MusiConnect',
-    price: 24.99,
-    costPrice: 12.00,
-    stockQuantity: 80,
-    images: ['/casquette.png'],
-    status: 'active',
-    tags: ['casquette', 'broderie', 'baseball']
-  }
-];
-
-const defaultAttributes: ProductAttribute[] = [
-  {
-    id: 'attr-1',
-    name: 'Couleur',
-    values: ['Noir', 'Blanc', 'Gris'],
-    variation: true
-  },
-  {
-    id: 'attr-2',
-    name: 'Taille',
-    values: ['S', 'M', 'L', 'XL'],
-    variation: true
-  }
-];
-
-const defaultVariations: ProductVariation[] = [
-  {
-    id: 'var-1',
-    attributes: { Couleur: 'Noir', Taille: 'M' },
-    price: 34.99,
-    stockQuantity: 20,
-    sku: 'MC-TSHIRT-NOIR-M'
-  }
-];
 
 interface ProductFormProps {
   onSave: (product: Product) => void;
@@ -107,7 +55,18 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSave, onCancel, product }) 
   const [status, setStatus] = useState<"active" | "inactive">(product?.status || "active");
   const [tags, setTags] = useState((product?.tags || []).join(', '));
   const [images, setImages] = useState<string[]>(product?.images || []);
+  const [attributes, setAttributes] = useState<ProductAttribute[]>(product?.attributes || []);
+  const [variations, setVariations] = useState<ProductVariation[]>(product?.variations || []);
   const [uploadingImage, setUploadingImage] = useState(false);
+
+  // Nouvel attribut
+  const [newAttributeName, setNewAttributeName] = useState('');
+  const [newAttributeValues, setNewAttributeValues] = useState('');
+
+  // Nouvelle variation
+  const [newVariationName, setNewVariationName] = useState('');
+  const [newVariationPrice, setNewVariationPrice] = useState(0);
+  const [newVariationStock, setNewVariationStock] = useState(0);
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -140,13 +99,60 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSave, onCancel, product }) 
     setImages(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = () => {
-    if (!name.trim() || price <= 0) {
-      toast.error('Veuillez remplir tous les champs obligatoires');
+  const addAttribute = () => {
+    if (!newAttributeName.trim() || !newAttributeValues.trim()) {
+      toast.error('Nom et valeurs de l\'attribut requis');
       return;
     }
 
-    const newProduct = {
+    const newAttribute: ProductAttribute = {
+      id: Date.now().toString(),
+      name: newAttributeName,
+      values: newAttributeValues.split(',').map(v => v.trim())
+    };
+
+    setAttributes([...attributes, newAttribute]);
+    setNewAttributeName('');
+    setNewAttributeValues('');
+    toast.success('Attribut ajouté');
+  };
+
+  const removeAttribute = (id: string) => {
+    setAttributes(attributes.filter(attr => attr.id !== id));
+  };
+
+  const addVariation = () => {
+    if (!newVariationName.trim()) {
+      toast.error('Nom de la variation requis');
+      return;
+    }
+
+    const newVariation: ProductVariation = {
+      id: Date.now().toString(),
+      name: newVariationName,
+      price: newVariationPrice,
+      stockQuantity: newVariationStock,
+      attributes: {}
+    };
+
+    setVariations([...variations, newVariation]);
+    setNewVariationName('');
+    setNewVariationPrice(0);
+    setNewVariationStock(0);
+    toast.success('Variation ajoutée');
+  };
+
+  const removeVariation = (id: string) => {
+    setVariations(variations.filter(variation => variation.id !== id));
+  };
+
+  const handleSubmit = () => {
+    if (!name.trim() || price <= 0) {
+      toast.error('Nom et prix requis');
+      return;
+    }
+
+    const newProduct: Product = {
       id: product?.id || Date.now().toString(),
       name: name.trim(),
       description: description.trim(),
@@ -155,14 +161,16 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSave, onCancel, product }) 
       stockQuantity: parseInt(stockQuantity.toString()) || 0,
       status: status,
       tags: tags.split(',').map(tag => tag.trim()).filter(tag => tag !== ''),
-      images: images
+      images: images,
+      attributes: attributes,
+      variations: variations
     };
 
     onSave(newProduct);
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-h-96 overflow-y-auto">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <Label htmlFor="name">Nom du produit *</Label>
@@ -186,28 +194,6 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSave, onCancel, product }) 
             className="mt-1"
           />
         </div>
-        <div>
-          <Label htmlFor="costPrice">Prix coûtant</Label>
-          <Input
-            type="number"
-            id="costPrice"
-            value={costPrice}
-            onChange={(e) => setCostPrice(parseFloat(e.target.value))}
-            placeholder="Prix coûtant"
-            className="mt-1"
-          />
-        </div>
-        <div>
-          <Label htmlFor="stockQuantity">Quantité en stock</Label>
-          <Input
-            type="number"
-            id="stockQuantity"
-            value={stockQuantity}
-            onChange={(e) => setStockQuantity(parseInt(e.target.value))}
-            placeholder="Quantité en stock"
-            className="mt-1"
-          />
-        </div>
       </div>
 
       <div>
@@ -221,60 +207,43 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSave, onCancel, product }) 
         />
       </div>
 
-      <div>
-        <Label htmlFor="tags">Tags (séparés par des virgules)</Label>
-        <Input
-          type="text"
-          id="tags"
-          value={tags}
-          onChange={(e) => setTags(e.target.value)}
-          placeholder="t-shirt, logo, coton"
-          className="mt-1"
-        />
-      </div>
-
+      {/* Images */}
       <div>
         <Label>Images du produit</Label>
         <div className="mt-2 space-y-4">
-          <div className="flex items-center space-x-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => document.getElementById('imageInput')?.click()}
-              disabled={uploadingImage}
-              className="flex items-center space-x-2"
-            >
-              {uploadingImage ? (
-                <Upload className="h-4 w-4 animate-spin" />
-              ) : (
-                <ImageIcon className="h-4 w-4" />
-              )}
-              <span>{uploadingImage ? 'Téléchargement...' : 'Ajouter une image'}</span>
-            </Button>
-            <input
-              id="imageInput"
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="hidden"
-            />
-          </div>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => document.getElementById('imageInput')?.click()}
+            disabled={uploadingImage}
+            className="flex items-center space-x-2"
+          >
+            <ImageIcon className="h-4 w-4" />
+            <span>Ajouter une image</span>
+          </Button>
+          <input
+            id="imageInput"
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            className="hidden"
+          />
           
           {images.length > 0 && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-3 gap-2">
               {images.map((image, index) => (
                 <div key={index} className="relative group">
                   <img
                     src={image}
                     alt={`Product ${index + 1}`}
-                    className="w-full h-24 object-cover rounded-lg border"
+                    className="w-full h-16 object-cover rounded border"
                   />
                   <Button
                     type="button"
                     variant="destructive"
                     size="sm"
                     onClick={() => handleRemoveImage(index)}
-                    className="absolute top-1 right-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute top-0 right-0 h-5 w-5 p-0"
                   >
                     <X className="h-3 w-3" />
                   </Button>
@@ -285,15 +254,86 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSave, onCancel, product }) 
         </div>
       </div>
 
+      {/* Attributs */}
       <div>
-        <Label>Statut</Label>
-        <div className="flex items-center space-x-2 mt-2">
-          <Checkbox
-            id="active"
-            checked={status === "active"}
-            onCheckedChange={(checked) => setStatus(checked ? "active" : "inactive")}
-          />
-          <Label htmlFor="active">Actif</Label>
+        <Label>Attributs (Couleur, Taille, etc.)</Label>
+        <div className="mt-2 space-y-2">
+          <div className="flex gap-2">
+            <Input
+              placeholder="Nom (ex: Couleur)"
+              value={newAttributeName}
+              onChange={(e) => setNewAttributeName(e.target.value)}
+            />
+            <Input
+              placeholder="Valeurs (Rouge, Bleu, Vert)"
+              value={newAttributeValues}
+              onChange={(e) => setNewAttributeValues(e.target.value)}
+            />
+            <Button type="button" onClick={addAttribute} size="sm">
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
+          {attributes.map((attr) => (
+            <div key={attr.id} className="flex items-center justify-between p-2 border rounded">
+              <div>
+                <span className="font-medium">{attr.name}: </span>
+                <span className="text-sm">{attr.values.join(', ')}</span>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => removeAttribute(attr.id)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Variations */}
+      <div>
+        <Label>Variations</Label>
+        <div className="mt-2 space-y-2">
+          <div className="grid grid-cols-4 gap-2">
+            <Input
+              placeholder="Nom variation"
+              value={newVariationName}
+              onChange={(e) => setNewVariationName(e.target.value)}
+            />
+            <Input
+              type="number"
+              placeholder="Prix"
+              value={newVariationPrice}
+              onChange={(e) => setNewVariationPrice(parseFloat(e.target.value))}
+            />
+            <Input
+              type="number"
+              placeholder="Stock"
+              value={newVariationStock}
+              onChange={(e) => setNewVariationStock(parseInt(e.target.value))}
+            />
+            <Button type="button" onClick={addVariation} size="sm">
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
+          {variations.map((variation) => (
+            <div key={variation.id} className="flex items-center justify-between p-2 border rounded">
+              <div>
+                <span className="font-medium">{variation.name}</span>
+                <span className="text-sm ml-2">({variation.price}€ - Stock: {variation.stockQuantity})</span>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => removeVariation(variation.id)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -310,12 +350,9 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSave, onCancel, product }) 
 };
 
 export const MerchandiseBackoffice: React.FC = () => {
-  const [products, setProducts] = useState<Product[]>(defaultProducts);
+  const [products, setProducts] = useState<Product[]>([]);
   const [showProductForm, setShowProductForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [editingVariations, setEditingVariations] = useState<Product | null>(null);
-  const [productAttributes, setProductAttributes] = useState<ProductAttribute[]>(defaultAttributes);
-  const [productVariations, setProductVariations] = useState<ProductVariation[]>(defaultVariations);
 
   const handleSaveProduct = (product: Product) => {
     if (editingProduct) {
@@ -353,7 +390,7 @@ export const MerchandiseBackoffice: React.FC = () => {
         <div>
           <h1 className="text-3xl font-bold">Gestion de la Boutique</h1>
           <p className="text-muted-foreground mt-2">
-            Gérez vos produits, catégories et variations
+            Gérez vos produits avec attributs et variations
           </p>
         </div>
         <div className="flex items-center space-x-3">
@@ -366,196 +403,110 @@ export const MerchandiseBackoffice: React.FC = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="products" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="products" className="flex items-center space-x-2">
-            <Package className="h-4 w-4" />
-            <span>Produits</span>
-          </TabsTrigger>
-          <TabsTrigger value="categories" className="flex items-center space-x-2">
-            <Settings className="h-4 w-4" />
-            <span>Catégories</span>
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="products">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Catalogue Produits</CardTitle>
-                <Button onClick={handleCreateNew} className="bg-blue-600 hover:bg-blue-700">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nouveau Produit
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {showProductForm && (
-                <div className="mb-6 p-6 border-2 border-dashed border-blue-200 rounded-lg bg-blue-50/30">
-                  <h3 className="font-medium mb-4 text-blue-900">
-                    {editingProduct ? 'Modifier le produit' : 'Créer un nouveau produit'}
-                  </h3>
-                  <ProductForm 
-                    onSave={handleSaveProduct}
-                    onCancel={() => {
-                      setShowProductForm(false);
-                      setEditingProduct(null);
-                    }}
-                    product={editingProduct || undefined}
-                  />
-                </div>
-              )}
-
-              {products.length === 0 ? (
-                <div className="text-center py-12">
-                  <Package className="h-16 w-16 mx-auto mb-4 text-gray-400" />
-                  <h3 className="text-lg font-medium mb-2">Aucun produit</h3>
-                  <p className="text-gray-600 mb-4">Commencez par créer votre premier produit</p>
-                  <Button onClick={handleCreateNew} className="bg-blue-600 hover:bg-blue-700">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Créer un produit
-                  </Button>
-                </div>
-              ) : (
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {products.map((product) => (
-                    <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                      <div className="aspect-square relative bg-gray-100">
-                        {product.images?.[0] ? (
-                          <img
-                            src={product.images[0]}
-                            alt={product.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Package className="h-16 w-16 text-gray-400" />
-                          </div>
-                        )}
-                        <div className="absolute top-2 right-2">
-                          <Badge 
-                            variant={product.status === 'active' ? 'default' : 'secondary'}
-                            className={product.status === 'active' ? 'bg-green-600' : ''}
-                          >
-                            {product.status === 'active' ? 'Actif' : 'Inactif'}
-                          </Badge>
-                        </div>
-                      </div>
-                      <CardContent className="p-4">
-                        <div className="space-y-2">
-                          <h3 className="font-semibold text-lg line-clamp-2">{product.name}</h3>
-                          <p className="text-sm text-gray-600 line-clamp-2">{product.description}</p>
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <span className="text-2xl font-bold text-blue-600">{product.price}€</span>
-                              {product.costPrice && (
-                                <span className="text-sm text-gray-500 ml-2 line-through">
-                                  {product.costPrice}€
-                                </span>
-                              )}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              Stock: {product.stockQuantity || 0}
-                            </div>
-                          </div>
-                          {product.tags && product.tags.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mt-2">
-                              {product.tags.slice(0, 3).map((tag, index) => (
-                                <Badge key={index} variant="outline" className="text-xs">
-                                  {tag}
-                                </Badge>
-                              ))}
-                              {product.tags.length > 3 && (
-                                <Badge variant="outline" className="text-xs">
-                                  +{product.tags.length - 3}
-                                </Badge>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex space-x-2 mt-4">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEditProduct(product)}
-                            className="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
-                          >
-                            <Edit className="h-4 w-4 mr-1" />
-                            Modifier
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setEditingVariations(product)}
-                            className="flex-1 bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200"
-                          >
-                            <Settings className="h-4 w-4 mr-1" />
-                            Variations
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDeleteProduct(product.id)}
-                            className="text-red-600 border-red-600 hover:bg-red-50"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="categories">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Gestion des Catégories</CardTitle>
-                <Button disabled>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nouvelle Catégorie
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-center text-gray-500">
-                Fonctionnalité à venir...
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      {/* Product Variation Manager Modal */}
-      {editingVariations && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg w-full max-w-6xl max-h-[90vh] overflow-hidden">
-            <div className="flex items-center justify-between p-6 border-b">
-              <h2 className="text-xl font-semibold">
-                Gestion des Variations - {editingVariations.name}
-              </h2>
-              <Button
-                variant="outline"
-                onClick={() => setEditingVariations(null)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-              <ProductVariationManager
-                attributes={productAttributes}
-                variations={productVariations}
-                onAttributesChange={setProductAttributes}
-                onVariationsChange={setProductVariations}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>Catalogue Produits</CardTitle>
+            <Button onClick={handleCreateNew} className="bg-blue-600 hover:bg-blue-700">
+              <Plus className="h-4 w-4 mr-2" />
+              Nouveau Produit
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {showProductForm && (
+            <div className="mb-6 p-6 border-2 border-dashed border-blue-200 rounded-lg bg-blue-50/30">
+              <h3 className="font-medium mb-4 text-blue-900">
+                {editingProduct ? 'Modifier le produit' : 'Créer un nouveau produit'}
+              </h3>
+              <ProductForm 
+                onSave={handleSaveProduct}
+                onCancel={() => {
+                  setShowProductForm(false);
+                  setEditingProduct(null);
+                }}
+                product={editingProduct || undefined}
               />
             </div>
-          </div>
-        </div>
-      )}
+          )}
+
+          {products.length === 0 ? (
+            <div className="text-center py-12">
+              <Package className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+              <h3 className="text-lg font-medium mb-2">Aucun produit</h3>
+              <p className="text-gray-600 mb-4">Commencez par créer votre premier produit</p>
+              <Button onClick={handleCreateNew} className="bg-blue-600 hover:bg-blue-700">
+                <Plus className="h-4 w-4 mr-2" />
+                Créer un produit
+              </Button>
+            </div>
+          ) : (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {products.map((product) => (
+                <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                  <div className="aspect-square relative bg-gray-100">
+                    {product.images?.[0] ? (
+                      <img
+                        src={product.images[0]}
+                        alt={product.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Package className="h-16 w-16 text-gray-400" />
+                      </div>
+                    )}
+                    <div className="absolute top-2 right-2">
+                      <Badge 
+                        variant={product.status === 'active' ? 'default' : 'secondary'}
+                        className={product.status === 'active' ? 'bg-green-600' : ''}
+                      >
+                        {product.status === 'active' ? 'Actif' : 'Inactif'}
+                      </Badge>
+                    </div>
+                  </div>
+                  <CardContent className="p-4">
+                    <div className="space-y-2">
+                      <h3 className="font-semibold text-lg line-clamp-2">{product.name}</h3>
+                      <p className="text-sm text-gray-600 line-clamp-2">{product.description}</p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-2xl font-bold text-blue-600">{product.price}€</span>
+                        <div className="text-sm text-gray-500">
+                          Stock: {product.stockQuantity || 0}
+                        </div>
+                      </div>
+                      {product.attributes && product.attributes.length > 0 && (
+                        <div className="text-xs text-gray-500">
+                          {product.attributes.length} attribut(s) • {product.variations?.length || 0} variation(s)
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex space-x-2 mt-4">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditProduct(product)}
+                        className="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
+                      >
+                        <Edit className="h-4 w-4 mr-1" />
+                        Modifier
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeleteProduct(product.id)}
+                        className="text-red-600 border-red-600 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };

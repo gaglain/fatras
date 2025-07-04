@@ -3,20 +3,25 @@ import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Plus, FileText, Settings, Menu, Palette, Globe, Edit, Eye, Trash2 } from 'lucide-react';
+import { Plus, FileText, Settings, Menu, Palette, Globe, Edit, Eye, Trash2, Type, Image as ImageIcon, Layout, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { WebsiteMenuManager } from '@/components/WebsiteMenuManager';
 import { WebsiteDesignManager } from '@/components/WebsiteDesignManager';
 import { WebsiteSettingsManager } from '@/components/WebsiteSettingsManager';
-import { BlockEditor } from '@/components/BlockEditor/BlockEditor';
 import { toast } from 'sonner';
+
+interface Block {
+  id: string;
+  type: 'text' | 'image' | 'hero' | 'artists';
+  content: any;
+}
 
 interface WebPage {
   id: string;
   title: string;
   slug: string;
   status: 'published' | 'draft' | 'archived';
-  blocks: any[];
+  blocks: Block[];
   metaDescription: string;
 }
 
@@ -26,34 +31,8 @@ const defaultPages: WebPage[] = [
     title: 'Accueil',
     slug: '/',
     status: 'published',
-    blocks: [
-      {
-        id: 'hero-1',
-        type: 'hero',
-        content: {
-          title: 'Bienvenue sur notre site',
-          subtitle: 'Découvrez notre univers musical',
-          backgroundImage: '/hero-bg.jpg'
-        }
-      }
-    ],
+    blocks: [],
     metaDescription: 'Page d\'accueil - Découvrez notre univers musical'
-  },
-  {
-    id: '2',
-    title: 'Nos Artistes',
-    slug: '/artists',
-    status: 'published',
-    blocks: [
-      {
-        id: 'text-1',
-        type: 'text',
-        content: {
-          text: '<h1>Nos Artistes</h1><p>Découvrez les artistes exceptionnels de notre label.</p>'
-        }
-      }
-    ],
-    metaDescription: 'Découvrez nos artistes talentueux'
   }
 ];
 
@@ -78,16 +57,8 @@ export const WebsiteBackoffice: React.FC = () => {
       title: newPageData.title,
       slug: newPageData.slug || `/${newPageData.title.toLowerCase().replace(/ /g, '-')}`,
       status: 'draft',
-      blocks: [
-        {
-          id: `text-${Date.now()}`,
-          type: 'text',
-          content: {
-            text: `<h1>${newPageData.title}</h1><p>Contenu de votre nouvelle page.</p>`
-          }
-        }
-      ],
-      metaDescription: newPageData.metaDescription
+      blocks: [],
+      metaDescription: newPageData.metaDescription || `Page ${newPageData.title}`
     };
 
     setPages([...pages, newPage]);
@@ -96,53 +67,281 @@ export const WebsiteBackoffice: React.FC = () => {
     toast.success('Page créée avec succès');
   };
 
-  const handleSavePage = (blocks: any[]) => {
-    if (editingPage) {
-      const updatedPages = pages.map(p => 
-        p.id === editingPage.id 
-          ? { ...p, blocks, status: 'published' as const }
-          : p
-      );
-      setPages(updatedPages);
-      toast.success('Page sauvegardée');
-    }
-  };
-
   const handleDeletePage = (pageId: string) => {
+    if (pageId === '1') {
+      toast.error('Impossible de supprimer la page d\'accueil');
+      return;
+    }
     if (confirm('Êtes-vous sûr de vouloir supprimer cette page ?')) {
       setPages(pages.filter(p => p.id !== pageId));
       toast.success('Page supprimée');
     }
   };
 
-  if (editingPage) {
+  const addBlockToPage = (pageId: string, blockType: 'text' | 'image' | 'hero' | 'artists') => {
+    const newBlock: Block = {
+      id: Date.now().toString(),
+      type: blockType,
+      content: getDefaultBlockContent(blockType)
+    };
+
+    setPages(pages.map(page => 
+      page.id === pageId 
+        ? { ...page, blocks: [...page.blocks, newBlock] }
+        : page
+    ));
+
+    toast.success(`Bloc ${blockType} ajouté`);
+  };
+
+  const removeBlockFromPage = (pageId: string, blockId: string) => {
+    setPages(pages.map(page => 
+      page.id === pageId 
+        ? { ...page, blocks: page.blocks.filter(block => block.id !== blockId) }
+        : page
+    ));
+    toast.success('Bloc supprimé');
+  };
+
+  const updateBlockContent = (pageId: string, blockId: string, content: any) => {
+    setPages(pages.map(page => 
+      page.id === pageId 
+        ? { 
+            ...page, 
+            blocks: page.blocks.map(block => 
+              block.id === blockId ? { ...block, content } : block
+            )
+          }
+        : page
+    ));
+  };
+
+  const getDefaultBlockContent = (type: string) => {
+    switch (type) {
+      case 'text':
+        return { text: 'Votre texte ici...', style: 'normal' };
+      case 'image':
+        return { src: '', alt: 'Image', caption: '' };
+      case 'hero':
+        return { title: 'Titre Principal', subtitle: 'Votre sous-titre', backgroundImage: '', buttonText: 'Action', buttonLink: '#' };
+      case 'artists':
+        return { title: 'Nos Artistes', showAll: true };
+      default:
+        return {};
+    }
+  };
+
+  const BlockEditor = ({ page }: { page: WebPage }) => {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="sticky top-0 z-50 bg-white border-b shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Button
-                onClick={() => setEditingPage(null)}
-                variant="outline"
-              >
-                ← Retour
-              </Button>
-              <h1 className="text-xl font-semibold">
-                Édition : {editingPage.title}
-              </h1>
-            </div>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between p-4 border-b">
+          <h2 className="text-xl font-bold">Édition : {page.title}</h2>
+          <div className="flex space-x-2">
             <Button variant="outline" asChild>
               <Link to="/front" target="_blank">
                 <Eye className="h-4 w-4 mr-2" />
                 Aperçu
               </Link>
             </Button>
+            <Button onClick={() => setEditingPage(null)}>
+              Terminer
+            </Button>
           </div>
         </div>
-        <BlockEditor
-          initialBlocks={editingPage.blocks}
-          onSave={handleSavePage}
-        />
+
+        {/* Barre d'outils de blocs */}
+        <div className="p-4 bg-gray-50 border rounded-lg">
+          <h3 className="font-medium mb-3">Ajouter un bloc :</h3>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => addBlockToPage(page.id, 'text')}
+              className="flex items-center"
+            >
+              <Type className="h-4 w-4 mr-2" />
+              Texte
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => addBlockToPage(page.id, 'image')}
+              className="flex items-center"
+            >
+              <ImageIcon className="h-4 w-4 mr-2" />
+              Image
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => addBlockToPage(page.id, 'hero')}
+              className="flex items-center"
+            >
+              <Layout className="h-4 w-4 mr-2" />
+              Section Hero
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => addBlockToPage(page.id, 'artists')}
+              className="flex items-center"
+            >
+              <Users className="h-4 w-4 mr-2" />
+              Grille Artistes
+            </Button>
+          </div>
+        </div>
+
+        {/* Blocs de contenu */}
+        <div className="space-y-4">
+          {page.blocks.length === 0 ? (
+            <div className="text-center py-12 border-2 border-dashed border-gray-300 rounded-lg">
+              <Layout className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+              <h3 className="text-lg font-medium mb-2">Aucun contenu</h3>
+              <p className="text-gray-600 mb-4">Ajoutez des blocs pour créer votre page</p>
+            </div>
+          ) : (
+            page.blocks.map((block, index) => (
+              <Card key={block.id} className="p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-2">
+                    <Badge variant="outline">
+                      {block.type === 'text' && 'Texte'}
+                      {block.type === 'image' && 'Image'}
+                      {block.type === 'hero' && 'Hero'}
+                      {block.type === 'artists' && 'Artistes'}
+                    </Badge>
+                    <span className="text-sm text-gray-500">Bloc #{index + 1}</span>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => removeBlockFromPage(page.id, block.id)}
+                    className="text-red-600 border-red-600 hover:bg-red-50"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                {/* Éditeur selon le type de bloc */}
+                {block.type === 'text' && (
+                  <div className="space-y-3">
+                    <textarea
+                      className="w-full p-3 border rounded-lg resize-none"
+                      rows={4}
+                      placeholder="Votre texte ici..."
+                      value={block.content.text || ''}
+                      onChange={(e) => updateBlockContent(page.id, block.id, { ...block.content, text: e.target.value })}
+                    />
+                    <select 
+                      className="p-2 border rounded"
+                      value={block.content.style || 'normal'}
+                      onChange={(e) => updateBlockContent(page.id, block.id, { ...block.content, style: e.target.value })}
+                    >
+                      <option value="normal">Texte normal</option>
+                      <option value="title">Titre</option>
+                      <option value="subtitle">Sous-titre</option>
+                    </select>
+                  </div>
+                )}
+
+                {block.type === 'image' && (
+                  <div className="space-y-3">
+                    <input
+                      type="text"
+                      className="w-full p-3 border rounded-lg"
+                      placeholder="URL de l'image"
+                      value={block.content.src || ''}
+                      onChange={(e) => updateBlockContent(page.id, block.id, { ...block.content, src: e.target.value })}
+                    />
+                    <input
+                      type="text"
+                      className="w-full p-2 border rounded-lg"
+                      placeholder="Texte alternatif"
+                      value={block.content.alt || ''}
+                      onChange={(e) => updateBlockContent(page.id, block.id, { ...block.content, alt: e.target.value })}
+                    />
+                    {block.content.src && (
+                      <img src={block.content.src} alt={block.content.alt} className="max-w-xs rounded border" />
+                    )}
+                  </div>
+                )}
+
+                {block.type === 'hero' && (
+                  <div className="space-y-3">
+                    <input
+                      type="text"
+                      className="w-full p-3 border rounded-lg font-bold"
+                      placeholder="Titre principal"
+                      value={block.content.title || ''}
+                      onChange={(e) => updateBlockContent(page.id, block.id, { ...block.content, title: e.target.value })}
+                    />
+                    <input
+                      type="text"
+                      className="w-full p-2 border rounded-lg"
+                      placeholder="Sous-titre"
+                      value={block.content.subtitle || ''}
+                      onChange={(e) => updateBlockContent(page.id, block.id, { ...block.content, subtitle: e.target.value })}
+                    />
+                    <input
+                      type="text"
+                      className="w-full p-2 border rounded-lg"
+                      placeholder="URL image de fond"
+                      value={block.content.backgroundImage || ''}
+                      onChange={(e) => updateBlockContent(page.id, block.id, { ...block.content, backgroundImage: e.target.value })}
+                    />
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        className="p-2 border rounded-lg"
+                        placeholder="Texte du bouton"
+                        value={block.content.buttonText || ''}
+                        onChange={(e) => updateBlockContent(page.id, block.id, { ...block.content, buttonText: e.target.value })}
+                      />
+                      <input
+                        type="text"
+                        className="p-2 border rounded-lg"
+                        placeholder="Lien du bouton"
+                        value={block.content.buttonLink || ''}
+                        onChange={(e) => updateBlockContent(page.id, block.id, { ...block.content, buttonLink: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {block.type === 'artists' && (
+                  <div className="space-y-3">
+                    <input
+                      type="text"
+                      className="w-full p-3 border rounded-lg"
+                      placeholder="Titre de la section"
+                      value={block.content.title || ''}
+                      onChange={(e) => updateBlockContent(page.id, block.id, { ...block.content, title: e.target.value })}
+                    />
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={block.content.showAll || false}
+                        onChange={(e) => updateBlockContent(page.id, block.id, { ...block.content, showAll: e.target.checked })}
+                      />
+                      <span>Afficher tous les artistes</span>
+                    </label>
+                  </div>
+                )}
+              </Card>
+            ))
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  if (editingPage) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-6xl mx-auto p-6">
+          <BlockEditor page={editingPage} />
+        </div>
       </div>
     );
   }
@@ -153,7 +352,7 @@ export const WebsiteBackoffice: React.FC = () => {
         <div>
           <h1 className="text-3xl font-bold">Gestion du Site Web</h1>
           <p className="text-muted-foreground mt-2">
-            Gérez le contenu et l'apparence de votre site web public
+            Créez et personnalisez vos pages avec un éditeur de blocs
           </p>
         </div>
         <div className="flex items-center space-x-3">
@@ -190,10 +389,10 @@ export const WebsiteBackoffice: React.FC = () => {
           <Card>
             <CardContent className="space-y-4 p-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Liste des Pages</h2>
+                <h2 className="text-lg font-semibold">Gestionnaire de Pages</h2>
                 <Button onClick={() => setShowPageCreator(true)}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Ajouter une Page
+                  Nouvelle Page
                 </Button>
               </div>
 
@@ -279,7 +478,7 @@ export const WebsiteBackoffice: React.FC = () => {
                           className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
                         >
                           <Edit className="h-4 w-4 mr-2" />
-                          Modifier
+                          Éditer
                         </Button>
                         {page.id !== '1' && (
                           <Button 

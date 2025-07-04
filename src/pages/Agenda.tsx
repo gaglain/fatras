@@ -1,295 +1,350 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock, MapPin, Plus, ExternalLink, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Calendar, Plus, Settings, Clock, MapPin, Users, Edit, Trash2, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 
-interface GoogleEvent {
+interface Event {
   id: string;
-  summary: string;
-  start: { dateTime?: string; date?: string };
-  end: { dateTime?: string; date?: string };
-  location?: string;
-  description?: string;
+  title: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  location: string;
+  attendees: number;
+  type: 'concert' | 'meeting' | 'other';
+  status: 'confirmed' | 'pending' | 'cancelled';
 }
 
-export const Agenda: React.FC = () => {
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [isConnected, setIsConnected] = useState(false);
-  const [events, setEvents] = useState<GoogleEvent[]>([]);
-  const [isLoadingEvents, setIsLoadingEvents] = useState(false);
-  const [hasRealConnection, setHasRealConnection] = useState(false);
+const EventForm = ({ onSave, onCancel, event }: { 
+  onSave: (event: Event) => void; 
+  onCancel: () => void; 
+  event?: Event 
+}) => {
+  const [title, setTitle] = useState(event?.title || '');
+  const [description, setDescription] = useState(event?.description || '');
+  const [startDate, setStartDate] = useState(event?.startDate || '');
+  const [endDate, setEndDate] = useState(event?.endDate || '');
+  const [location, setLocation] = useState(event?.location || '');
+  const [attendees, setAttendees] = useState(event?.attendees || 0);
+  const [type, setType] = useState<'concert' | 'meeting' | 'other'>(event?.type || 'other');
 
-  useEffect(() => {
-    // Vérifier si Google Calendar est réellement connecté
-    const savedConnection = localStorage.getItem('googleCalendarConnected');
-    const realConnection = localStorage.getItem('googleCalendarRealConnection');
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     
-    if (savedConnection === 'true') {
-      setIsConnected(true);
-      if (realConnection === 'true') {
-        setHasRealConnection(true);
-        // Ici on chargerait les vrais événements depuis l'API Google Calendar
-        // Pour l'instant, on laisse vide car la vraie API n'est pas configurée
-      }
+    if (!title.trim() || !startDate) {
+      toast.error('Titre et date de début requis');
+      return;
     }
-  }, []);
 
-  const handleConnectGoogleCalendar = async () => {
-    setIsConnecting(true);
-    try {
-      // Vérifier si les clés API Google Calendar sont configurées
-      const googleConfig = localStorage.getItem('googleCalendarConfig');
-      
-      if (!googleConfig) {
-        toast.error('Configuration Google Calendar manquante. Veuillez configurer vos clés API dans les Préférences.');
-        setIsConnecting(false);
-        return;
-      }
+    const newEvent: Event = {
+      id: event?.id || Date.now().toString(),
+      title: title.trim(),
+      description: description.trim(),
+      startDate,
+      endDate: endDate || startDate,
+      location: location.trim(),
+      attendees,
+      type,
+      status: 'confirmed'
+    };
 
-      // Simulation de la connexion OAuth Google Calendar
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Pour une vraie implémentation, ici on ferait :
-      // 1. Redirection vers Google OAuth
-      // 2. Récupération du token d'accès
-      // 3. Test de l'API Google Calendar
-      
-      localStorage.setItem('googleCalendarConnected', 'true');
-      // Ne pas marquer comme vraie connexion car c'est une simulation
-      // localStorage.setItem('googleCalendarRealConnection', 'true');
-      
-      setIsConnected(true);
-      toast.success('Connexion simulée réussie ! Configurez les vraies clés API pour voir vos événements.');
-      
-    } catch (error) {
-      toast.error('Erreur lors de la connexion à Google Calendar');
-    } finally {
-      setIsConnecting(false);
-    }
-  };
-
-  const handleDisconnectGoogleCalendar = () => {
-    localStorage.removeItem('googleCalendarConnected');
-    localStorage.removeItem('googleCalendarRealConnection');
-    setIsConnected(false);
-    setHasRealConnection(false);
-    setEvents([]);
-    toast.success('Déconnexion de Google Calendar réussie');
-  };
-
-  const loadRealGoogleEvents = async () => {
-    setIsLoadingEvents(true);
-    try {
-      // Ici on ferait un appel à l'API Google Calendar avec les vraies clés
-      // const response = await gapi.client.calendar.events.list({...});
-      // setEvents(response.result.items);
-      
-      toast.info('Configuration API Google Calendar requise pour charger les événements réels');
-    } catch (error) {
-      toast.error('Erreur lors du chargement des événements');
-    } finally {
-      setIsLoadingEvents(false);
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('fr-FR', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
-
-  const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString('fr-FR', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    onSave(newEvent);
   };
 
   return (
-    <div className="space-y-6" style={{
-      backgroundColor: 'var(--app-background, #ffffff)',
-      color: 'var(--app-text, #18181b)',
-      minHeight: '100vh'
-    }}>
-      <div className="flex justify-between items-center">
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <h1 className="text-3xl font-bold" style={{ color: 'var(--app-text, #18181b)' }}>
+          <Label htmlFor="title">Titre de l'événement *</Label>
+          <Input
+            id="title"    
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Nom de l'événement"
+            required
+          />
+        </div>
+        <div>
+          <Label htmlFor="type">Type</Label>
+          <select
+            id="type"
+            value={type}
+            onChange={(e) => setType(e.target.value as 'concert' | 'meeting' | 'other')}
+            className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="other">Autre</option>
+            <option value="concert">Concert</option>
+            <option value="meeting">Réunion</option>
+          </select>
+        </div>
+        <div>
+          <Label htmlFor="startDate">Date de début *</Label>
+          <Input
+            id="startDate"
+            type="datetime-local"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <Label htmlFor="endDate">Date de fin</Label>
+          <Input
+            id="endDate"
+            type="datetime-local"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+          />
+        </div>
+        <div>
+          <Label htmlFor="location">Lieu</Label>
+          <Input
+            id="location"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            placeholder="Adresse ou nom du lieu"
+          />
+        </div>
+        <div>
+          <Label htmlFor="attendees">Nombre de participants</Label>
+          <Input
+            id="attendees"
+            type="number"
+            value={attendees}
+            onChange={(e) => setAttendees(parseInt(e.target.value) || 0)}
+            placeholder="0"
+          />
+        </div>
+      </div>
+      
+      <div>
+        <Label htmlFor="description">Description</Label>
+        <Textarea
+          id="description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Détails de l'événement"
+          rows={3}
+        />
+      </div>
+
+      <div className="flex justify-end space-x-2">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Annuler
+        </Button>
+        <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+          {event ? 'Modifier' : 'Créer'} l'événement
+        </Button>
+      </div>
+    </form>
+  );
+};
+
+export const Agenda: React.FC = () => {
+  const [events, setEvents] = useState<Event[]>([]);
+  const [showEventForm, setShowEventForm] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [currentView, setCurrentView] = useState<'month' | 'week' | 'list'>('list');
+
+  const handleSaveEvent = (event: Event) => {
+    if (editingEvent) {
+      setEvents(events.map(e => e.id === event.id ? event : e));
+      toast.success('Événement modifié');
+    } else {
+      setEvents([...events, event]);
+      toast.success('Événement créé');
+    }
+    setShowEventForm(false);
+    setEditingEvent(null);
+  };
+
+  const handleEditEvent = (event: Event) => {
+    setEditingEvent(event);
+    setShowEventForm(true);
+  };
+
+  const handleDeleteEvent = (eventId: string) => {
+    if (confirm('Supprimer cet événement ?')) {
+      setEvents(events.filter(e => e.id !== eventId));
+      toast.success('Événement supprimé');
+    }
+  };
+
+  const handleCreateNew = () => {
+    setEditingEvent(null);
+    setShowEventForm(true);
+  };
+
+  const getEventTypeColor = (type: string) => {
+    switch (type) {
+      case 'concert': return 'bg-purple-100 text-purple-800';
+      case 'meeting': return 'bg-blue-100 text-blue-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'confirmed': return 'bg-green-100 text-green-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'cancelled': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-bold flex items-center">
+            <Calendar className="h-8 w-8 mr-3 text-blue-600" />
             Agenda
           </h1>
-          <p className="mt-2" style={{ color: 'var(--app-text, #666666)' }}>
-            Gérez vos événements et synchronisez avec Google Calendar
+          <p className="text-muted-foreground mt-2">
+            Gérez vos événements, concerts et réunions
           </p>
         </div>
-        <div className="flex space-x-2">
-          {isConnected ? (
-            <Button 
-              onClick={handleDisconnectGoogleCalendar}
-              variant="outline"
-              style={{
-                borderColor: 'var(--app-button-bg, #1632f4)',
-                color: 'var(--app-button-bg, #1632f4)'
-              }}
-            >
-              <XCircle className="h-4 w-4 mr-2" />
-              Déconnecter Google Calendar
-            </Button>
-          ) : (
-            <Button 
-              onClick={handleConnectGoogleCalendar}
-              disabled={isConnecting}
-              style={{
-                backgroundColor: 'var(--app-button-bg, #1632f4)',
-                color: 'var(--app-button-text, #ffffff)'
-              }}
-            >
-              <ExternalLink className="h-4 w-4 mr-2" />
-              {isConnecting ? 'Connexion...' : 'Connecter Google Calendar'}
-            </Button>
-          )}
-          <Button 
-            style={{
-              backgroundColor: 'var(--app-button-bg, #1632f4)',
-              color: 'var(--app-button-text, #ffffff)'
-            }}
-          >
+        <div className="flex items-center space-x-3">
+          <Button variant="outline" asChild>
+            <Link to="/preferences?tab=calendar">
+              <Settings className="h-4 w-4 mr-2" />
+              Préférences
+            </Link>
+          </Button>
+          <Button onClick={handleCreateNew} className="bg-blue-600 hover:bg-blue-700">
             <Plus className="h-4 w-4 mr-2" />
             Nouvel Événement
           </Button>
         </div>
       </div>
 
-      {/* Connection Status */}
-      {isConnected && (
-        <Card style={{
-          backgroundColor: 'var(--app-card-bg, #ffffff)',
-          color: 'var(--app-card-text, #18181b)',
-          border: hasRealConnection ? '1px solid #10b981' : '1px solid #f59e0b'
-        }}>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                {hasRealConnection ? (
-                  <>
-                    <CheckCircle className="h-5 w-5 text-green-600" />
-                    <span className="text-green-600 font-medium">Google Calendar connecté</span>
-                  </>
-                ) : (
-                  <>
-                    <AlertCircle className="h-5 w-5 text-amber-600" />
-                    <span className="text-amber-600 font-medium">
-                      Connexion simulée - Configurez les clés API dans Préférences
-                    </span>
-                  </>
-                )}
-              </div>
-              {hasRealConnection && (
-                <Button
-                  onClick={loadRealGoogleEvents}
-                  disabled={isLoadingEvents}
-                  size="sm"
-                  variant="outline"
-                >
-                  {isLoadingEvents ? 'Actualisation...' : 'Actualiser'}
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Events Display */}
-      <Card style={{
-        backgroundColor: 'var(--app-card-bg, #ffffff)',
-        color: 'var(--app-card-text, #18181b)',
-        border: '1px solid var(--notification-border, #e5e7eb)'
-      }}>
+      {/* Vue de liste des événements */}
+      <Card>
         <CardHeader>
-          <CardTitle style={{ color: 'var(--app-card-text, #18181b)' }}>
-            Calendrier des Événements
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {!isConnected ? (
-            <div className="text-center py-12">
-              <Calendar className="h-16 w-16 mx-auto mb-4" style={{ color: 'var(--app-button-bg, #1632f4)' }} />
-              <h3 className="text-lg font-medium mb-2" style={{ color: 'var(--app-card-text, #18181b)' }}>
-                Aucun événement planifié
-              </h3>
-              <p className="mb-4" style={{ color: 'var(--app-text, #666666)' }}>
-                Connectez Google Calendar pour voir vos événements ou créez votre premier événement
-              </p>
-            </div>
-          ) : !hasRealConnection ? (
-            <div className="text-center py-12">
-              <Calendar className="h-16 w-16 mx-auto mb-4 text-amber-500" />
-              <h3 className="text-lg font-medium mb-2" style={{ color: 'var(--app-card-text, #18181b)' }}>
-                Configuration requise
-              </h3>
-              <p className="mb-4" style={{ color: 'var(--app-text, #666666)' }}>
-                Configurez vos clés API Google Calendar dans les Préférences pour voir vos événements réels
-              </p>
-              <Button variant="outline" asChild>
-                <a href="/preferences">
-                  Aller aux Préférences
-                </a>
+          <div className="flex items-center justify-between">
+            <CardTitle>Événements à venir</CardTitle>
+            <div className="flex space-x-2">
+              <Button
+                variant={currentView === 'list' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setCurrentView('list')}
+              >
+                Liste
+              </Button>
+              <Button
+                variant={currentView === 'month' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setCurrentView('month')}
+                disabled
+              >
+                Mois (bientôt)
               </Button>
             </div>
-          ) : events.length === 0 ? (
+          </div>
+        </CardHeader>
+        <CardContent>
+          {showEventForm && (
+            <div className="mb-6 p-6 border-2 border-dashed border-blue-200 rounded-lg bg-blue-50/30">
+              <h3 className="font-medium mb-4 text-blue-900">
+                {editingEvent ? 'Modifier l\'événement' : 'Créer un nouvel événement'}
+              </h3>
+              <EventForm
+                onSave={handleSaveEvent}
+                onCancel={() => {
+                  setShowEventForm(false);
+                  setEditingEvent(null);
+                }}
+                event={editingEvent || undefined}
+              />
+            </div>
+          )}
+
+          {events.length === 0 ? (
             <div className="text-center py-12">
               <Calendar className="h-16 w-16 mx-auto mb-4 text-gray-400" />
-              <h3 className="text-lg font-medium mb-2" style={{ color: 'var(--app-card-text, #18181b)' }}>
-                Aucun événement trouvé
-              </h3>
-              <p style={{ color: 'var(--app-text, #666666)' }}>
-                Vos événements Google Calendar apparaîtront ici une fois la configuration terminée
-              </p>
+              <h3 className="text-lg font-medium mb-2">Aucun événement planifié</h3>
+              <p className="text-gray-600 mb-4">Commencez par créer votre premier événement</p>
+              <Button onClick={handleCreateNew} className="bg-blue-600 hover:bg-blue-700">
+                <Plus className="h-4 w-4 mr-2" />
+                Créer un événement
+              </Button>
             </div>
           ) : (
             <div className="space-y-4">
-              {events.map((event) => (
-                <div
-                  key={event.id}
-                  className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
-                  style={{ borderColor: 'var(--notification-border, #e5e7eb)' }}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-lg mb-2" style={{ color: 'var(--app-card-text, #18181b)' }}>
-                        {event.summary}
-                      </h3>
-                      <div className="flex items-center space-x-4 text-sm mb-2" style={{ color: 'var(--app-text, #666666)' }}>
-                        <div className="flex items-center">
-                          <Calendar className="h-4 w-4 mr-1" />
-                          {event.start.dateTime && formatDate(event.start.dateTime)}
+              {events
+                .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+                .map((event) => (
+                <Card key={event.id} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <h3 className="text-lg font-semibold">{event.title}</h3>
+                          <Badge className={getEventTypeColor(event.type)}>
+                            {event.type === 'concert' ? 'Concert' : 
+                             event.type === 'meeting' ? 'Réunion' : 'Autre'}
+                          </Badge>
+                          <Badge className={getStatusColor(event.status)}>
+                            {event.status === 'confirmed' ? 'Confirmé' :
+                             event.status === 'pending' ? 'En attente' : 'Annulé'}
+                          </Badge>
                         </div>
-                        <div className="flex items-center">
-                          <Clock className="h-4 w-4 mr-1" />
-                          {event.start.dateTime && formatTime(event.start.dateTime)} - {event.end.dateTime && formatTime(event.end.dateTime)}
+                        
+                        {event.description && (
+                          <p className="text-gray-600 mb-3">{event.description}</p>
+                        )}
+                        
+                        <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+                          <div className="flex items-center">
+                            <Clock className="h-4 w-4 mr-1" />
+                            {new Date(event.startDate).toLocaleString('fr-FR')}
+                            {event.endDate && event.endDate !== event.startDate && (
+                              <span> → {new Date(event.endDate).toLocaleString('fr-FR')}</span>
+                            )}
+                          </div>
+                          {event.location && (
+                            <div className="flex items-center">
+                              <MapPin className="h-4 w-4 mr-1" />
+                              {event.location}
+                            </div>
+                          )}
+                          {event.attendees > 0 && (
+                            <div className="flex items-center">
+                              <Users className="h-4 w-4 mr-1" />
+                              {event.attendees} participants
+                            </div>
+                          )}
                         </div>
                       </div>
-                      {event.location && (
-                        <div className="flex items-center text-sm mb-2" style={{ color: 'var(--app-text, #666666)' }}>
-                          <MapPin className="h-4 w-4 mr-1" />
-                          {event.location}
-                        </div>
-                      )}
-                      {event.description && (
-                        <p className="text-sm" style={{ color: 'var(--app-text, #666666)' }}>
-                          {event.description}
-                        </p>
-                      )}
+                      
+                      <div className="flex space-x-2 ml-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEditEvent(event)}
+                          className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteEvent(event.id)}
+                          className="text-red-600 border-red-600 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
-                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                      Google Calendar
-                    </Badge>
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           )}
