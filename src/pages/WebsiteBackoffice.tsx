@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, FileText, Settings, Menu, Palette, Globe, Edit, Eye, Trash2, Type, Image as ImageIcon, Layout, Users } from 'lucide-react';
+import { Plus, FileText, Settings, Menu, Palette, Globe, Edit, Eye, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { WebsiteMenuManager } from '@/components/WebsiteMenuManager';
 import { WebsiteDesignManager } from '@/components/WebsiteDesignManager';
@@ -32,7 +33,19 @@ const defaultPages: WebPage[] = [
     title: 'Accueil',
     slug: '/',
     status: 'published',
-    blocks: [],
+    blocks: [
+      {
+        id: 'hero-1',
+        type: 'hero',
+        content: {
+          title: 'Bienvenue sur notre site',
+          subtitle: 'Découvrez notre univers musical',
+          backgroundImage: '',
+          buttonText: 'En savoir plus',
+          buttonLink: '#'
+        }
+      }
+    ],
     metaDescription: 'Page d\'accueil - Découvrez notre univers musical'
   }
 ];
@@ -56,9 +69,18 @@ export const WebsiteBackoffice: React.FC = () => {
     const newPage: WebPage = {
       id: Date.now().toString(),
       title: newPageData.title,
-      slug: newPageData.slug || `/${newPageData.title.toLowerCase().replace(/ /g, '-')}`,
+      slug: newPageData.slug || `/${newPageData.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`,
       status: 'draft',
-      blocks: [],
+      blocks: [
+        {
+          id: `text-${Date.now()}`,
+          type: 'text',
+          content: {
+            text: `Contenu de la page ${newPageData.title}`,
+            style: 'normal'
+          }
+        }
+      ],
       metaDescription: newPageData.metaDescription || `Page ${newPageData.title}`
     };
 
@@ -75,21 +97,39 @@ export const WebsiteBackoffice: React.FC = () => {
     }
     if (confirm('Êtes-vous sûr de vouloir supprimer cette page ?')) {
       setPages(pages.filter(p => p.id !== pageId));
+      if (editingPage && editingPage.id === pageId) {
+        setEditingPage(null);
+      }
       toast.success('Page supprimée');
     }
   };
 
   const handleSaveBlocks = (pageId: string, blocks: SimpleBlock[]) => {
-    setPages(pages.map(page => 
+    const updatedPages = pages.map(page => 
       page.id === pageId 
         ? { ...page, blocks: blocks as Block[] }
         : page
-    ));
+    );
+    setPages(updatedPages);
+    
+    // Mettre à jour la page en cours d'édition
+    if (editingPage && editingPage.id === pageId) {
+      const updatedPage = updatedPages.find(p => p.id === pageId);
+      if (updatedPage) {
+        setEditingPage(updatedPage);
+      }
+    }
+    
     toast.success('Page sauvegardée');
   };
 
   const handlePreviewSite = () => {
     window.open('/front', '_blank');
+  };
+
+  const handleEditPage = (page: WebPage) => {
+    setEditingPage(page);
+    console.log('Editing page:', page);
   };
 
   if (editingPage) {
@@ -101,9 +141,15 @@ export const WebsiteBackoffice: React.FC = () => {
               <h2 className="text-xl font-bold">Édition : {editingPage.title}</h2>
               <p className="text-sm text-gray-600">{editingPage.slug}</p>
             </div>
-            <Button onClick={() => setEditingPage(null)} variant="outline">
-              Retour à la liste
-            </Button>
+            <div className="flex items-center space-x-2">
+              <Button onClick={handlePreviewSite} variant="outline">
+                <Globe className="h-4 w-4 mr-2" />
+                Prévisualiser le site
+              </Button>
+              <Button onClick={() => setEditingPage(null)} variant="outline">
+                Retour à la liste
+              </Button>
+            </div>
           </div>
           
           <SimpleBlockEditor
@@ -234,15 +280,21 @@ export const WebsiteBackoffice: React.FC = () => {
                       <div>
                         <h3 className="text-md font-medium">{page.title}</h3>
                         <p className="text-sm text-muted-foreground">{page.slug}</p>
-                        <p className="text-xs text-gray-500">
-                          {page.blocks.length} bloc(s) • {page.status}
-                        </p>
+                        <div className="flex items-center space-x-2 mt-1">
+                          <p className="text-xs text-gray-500">
+                            {page.blocks.length} bloc(s)
+                          </p>
+                          <Badge variant={page.status === 'published' ? 'default' : 'secondary'}>
+                            {page.status === 'published' ? 'Publié' : 
+                             page.status === 'draft' ? 'Brouillon' : 'Archivé'}
+                          </Badge>
+                        </div>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Button 
                           variant="outline" 
                           size="sm"
-                          onClick={() => setEditingPage(page)}
+                          onClick={() => handleEditPage(page)}
                           className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
                         >
                           <Edit className="h-4 w-4 mr-2" />
