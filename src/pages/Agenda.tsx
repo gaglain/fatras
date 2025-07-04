@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Plus, Settings, Clock, MapPin, Users, Edit, Trash2, X } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Calendar, Plus, Settings, Clock, MapPin, Users, Edit, Trash2, X, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -20,7 +21,24 @@ interface Event {
   attendees: number;
   type: 'concert' | 'meeting' | 'other';
   status: 'confirmed' | 'pending' | 'cancelled';
+  userId: string;
+  userName: string;
 }
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  color: string;
+  isVisible: boolean;
+}
+
+const mockUsers: User[] = [
+  { id: '1', name: 'Alice Martin', email: 'alice@example.com', color: '#3B82F6', isVisible: true },
+  { id: '2', name: 'Bob Dupont', email: 'bob@example.com', color: '#10B981', isVisible: true },
+  { id: '3', name: 'Claire Durand', email: 'claire@example.com', color: '#F59E0B', isVisible: true },
+  { id: '4', name: 'David Moreau', email: 'david@example.com', color: '#EF4444', isVisible: false },
+];
 
 const EventForm = ({ onSave, onCancel, event }: { 
   onSave: (event: Event) => void; 
@@ -52,7 +70,9 @@ const EventForm = ({ onSave, onCancel, event }: {
       location: location.trim(),
       attendees,
       type,
-      status: 'confirmed'
+      status: 'confirmed',
+      userId: '1', // Current user
+      userName: 'Alice Martin'
     };
 
     onSave(newEvent);
@@ -149,9 +169,9 @@ const EventForm = ({ onSave, onCancel, event }: {
 
 export const Agenda: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
+  const [users, setUsers] = useState<User[]>(mockUsers);
   const [showEventForm, setShowEventForm] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
-  const [currentView, setCurrentView] = useState<'month' | 'week' | 'list'>('list');
 
   const handleSaveEvent = (event: Event) => {
     if (editingEvent) {
@@ -182,6 +202,12 @@ export const Agenda: React.FC = () => {
     setShowEventForm(true);
   };
 
+  const toggleUserVisibility = (userId: string) => {
+    setUsers(users.map(user => 
+      user.id === userId ? { ...user, isVisible: !user.isVisible } : user
+    ));
+  };
+
   const getEventTypeColor = (type: string) => {
     switch (type) {
       case 'concert': return 'bg-purple-100 text-purple-800';
@@ -199,6 +225,10 @@ export const Agenda: React.FC = () => {
     }
   };
 
+  const filteredEvents = events.filter(event => 
+    users.find(user => user.id === event.userId)?.isVisible
+  );
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-8">
@@ -215,7 +245,7 @@ export const Agenda: React.FC = () => {
           <Button variant="outline" asChild>
             <Link to="/preferences?tab=calendar">
               <Settings className="h-4 w-4 mr-2" />
-              Préférences
+              Configuration Google
             </Link>
           </Button>
           <Button onClick={handleCreateNew} className="bg-blue-600 hover:bg-blue-700">
@@ -225,29 +255,47 @@ export const Agenda: React.FC = () => {
         </div>
       </div>
 
-      {/* Vue de liste des événements */}
+      {/* Sélecteur d'utilisateurs à la Notion */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Users className="h-5 w-5 mr-2" />
+            Agendas des utilisateurs
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-3">
+            {users.map((user) => (
+              <div
+                key={user.id}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-lg border cursor-pointer transition-all ${
+                  user.isVisible 
+                    ? 'bg-white shadow-sm border-gray-200' 
+                    : 'bg-gray-50 border-gray-100 opacity-50'
+                }`}
+                onClick={() => toggleUserVisibility(user.id)}
+              >
+                <div
+                  className="w-3 h-3 rounded-full"
+                  style={{ backgroundColor: user.color }}
+                />
+                <User className="h-4 w-4" />
+                <span className="text-sm font-medium">{user.name}</span>
+                <Switch
+                  checked={user.isVisible}
+                  onCheckedChange={() => toggleUserVisibility(user.id)}
+                  className="ml-2"
+                />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Liste des événements */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Événements à venir</CardTitle>
-            <div className="flex space-x-2">
-              <Button
-                variant={currentView === 'list' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setCurrentView('list')}
-              >
-                Liste
-              </Button>
-              <Button
-                variant={currentView === 'month' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setCurrentView('month')}
-                disabled
-              >
-                Mois (bientôt)
-              </Button>
-            </div>
-          </div>
+          <CardTitle>Événements à venir</CardTitle>
         </CardHeader>
         <CardContent>
           {showEventForm && (
@@ -266,7 +314,7 @@ export const Agenda: React.FC = () => {
             </div>
           )}
 
-          {events.length === 0 ? (
+          {filteredEvents.length === 0 ? (
             <div className="text-center py-12">
               <Calendar className="h-16 w-16 mx-auto mb-4 text-gray-400" />
               <h3 className="text-lg font-medium mb-2">Aucun événement planifié</h3>
@@ -278,74 +326,87 @@ export const Agenda: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {events
+              {filteredEvents
                 .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
-                .map((event) => (
-                <Card key={event.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-2">
-                          <h3 className="text-lg font-semibold">{event.title}</h3>
-                          <Badge className={getEventTypeColor(event.type)}>
-                            {event.type === 'concert' ? 'Concert' : 
-                             event.type === 'meeting' ? 'Réunion' : 'Autre'}
-                          </Badge>
-                          <Badge className={getStatusColor(event.status)}>
-                            {event.status === 'confirmed' ? 'Confirmé' :
-                             event.status === 'pending' ? 'En attente' : 'Annulé'}
-                          </Badge>
-                        </div>
-                        
-                        {event.description && (
-                          <p className="text-gray-600 mb-3">{event.description}</p>
-                        )}
-                        
-                        <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-                          <div className="flex items-center">
-                            <Clock className="h-4 w-4 mr-1" />
-                            {new Date(event.startDate).toLocaleString('fr-FR')}
-                            {event.endDate && event.endDate !== event.startDate && (
-                              <span> → {new Date(event.endDate).toLocaleString('fr-FR')}</span>
+                .map((event) => {
+                  const user = users.find(u => u.id === event.userId);
+                  return (
+                    <Card key={event.id} className="hover:shadow-md transition-shadow">
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-2 mb-2">
+                              {user && (
+                                <div
+                                  className="w-3 h-3 rounded-full"
+                                  style={{ backgroundColor: user.color }}
+                                />
+                              )}
+                              <h3 className="text-lg font-semibold">{event.title}</h3>
+                              <Badge className={getEventTypeColor(event.type)}>
+                                {event.type === 'concert' ? 'Concert' : 
+                                 event.type === 'meeting' ? 'Réunion' : 'Autre'}
+                              </Badge>
+                              <Badge className={getStatusColor(event.status)}>
+                                {event.status === 'confirmed' ? 'Confirmé' :
+                                 event.status === 'pending' ? 'En attente' : 'Annulé'}
+                              </Badge>
+                            </div>
+                            
+                            {event.description && (
+                              <p className="text-gray-600 mb-3">{event.description}</p>
                             )}
+                            
+                            <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+                              <div className="flex items-center">
+                                <Clock className="h-4 w-4 mr-1" />
+                                {new Date(event.startDate).toLocaleString('fr-FR')}
+                                {event.endDate && event.endDate !== event.startDate && (
+                                  <span> → {new Date(event.endDate).toLocaleString('fr-FR')}</span>
+                                )}
+                              </div>
+                              {event.location && (
+                                <div className="flex items-center">
+                                  <MapPin className="h-4 w-4 mr-1" />
+                                  {event.location}
+                                </div>
+                              )}
+                              {event.attendees > 0 && (
+                                <div className="flex items-center">
+                                  <Users className="h-4 w-4 mr-1" />
+                                  {event.attendees} participants
+                                </div>
+                              )}
+                              <div className="flex items-center">
+                                <User className="h-4 w-4 mr-1" />
+                                {event.userName}
+                              </div>
+                            </div>
                           </div>
-                          {event.location && (
-                            <div className="flex items-center">
-                              <MapPin className="h-4 w-4 mr-1" />
-                              {event.location}
-                            </div>
-                          )}
-                          {event.attendees > 0 && (
-                            <div className="flex items-center">
-                              <Users className="h-4 w-4 mr-1" />
-                              {event.attendees} participants
-                            </div>
-                          )}
+                          
+                          <div className="flex space-x-2 ml-4">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEditEvent(event)}
+                              className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeleteEvent(event.id)}
+                              className="text-red-600 border-red-600 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                      
-                      <div className="flex space-x-2 ml-4">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEditEvent(event)}
-                          className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDeleteEvent(event.id)}
-                          className="text-red-600 border-red-600 hover:bg-red-50"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
             </div>
           )}
         </CardContent>
