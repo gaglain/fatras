@@ -12,8 +12,7 @@ import {
   RefreshCw, 
   CheckCircle, 
   AlertCircle,
-  Link as LinkIcon,
-  Sync
+  Link as LinkIcon
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -128,7 +127,7 @@ export const GmailTab: React.FC = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
-            <Sync className="h-5 w-5 mr-2" />
+            <RefreshCw className="h-5 w-5 mr-2" />
             Synchronisation
           </CardTitle>
         </CardHeader>
