@@ -7,6 +7,7 @@ import { BackOfficeHeader } from '@/components/BackOfficeHeader';
 import { PublicChatWidget } from '@/components/PublicChatWidget';
 import { ChatWidget } from '@/components/ChatWidget';
 import { useCustomColors } from '@/hooks/useCustomColors';
+import { useWebsiteSync } from '@/hooks/useWebsiteSync';
 
 const adminRoutes = [
   '/admin', '/dashboard', '/artists', '/events', '/agenda', '/contacts',
@@ -20,6 +21,9 @@ export const Layout: React.FC = () => {
   
   // Appliquer les couleurs personnalisées
   useCustomColors();
+  
+  // Activer la synchronisation du site web
+  useWebsiteSync();
   
   console.log('🏗️ Layout - Rendering for path:', location.pathname);
   

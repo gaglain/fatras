@@ -10,8 +10,7 @@ export const useWebsiteSync = () => {
   const { syncLegalContent } = useLegalContentSync();
 
   useEffect(() => {
-    // Forcer une synchronisation complète immédiatement
-    console.log('🔄 Initialisation de la synchronisation globale');
+    console.log('🔄 Initialisation de la synchronisation globale du site web');
     
     const performFullSync = () => {
       syncDesignChanges();
@@ -22,15 +21,15 @@ export const useWebsiteSync = () => {
     // Sync immédiate
     performFullSync();
 
-    // Sync forcée toutes les secondes pour s'assurer que tout est à jour
-    const forceSync = setInterval(performFullSync, 1000);
+    // Sync régulière toutes les 2 secondes pour assurer la mise à jour
+    const regularSync = setInterval(performFullSync, 2000);
 
-    // Sync ultra-rapide pendant les 10 premières secondes
-    const rapidSync = setInterval(performFullSync, 50);
-    setTimeout(() => clearInterval(rapidSync), 10000);
+    // Sync ultra-rapide pendant les 15 premières secondes
+    const rapidSync = setInterval(performFullSync, 100);
+    setTimeout(() => clearInterval(rapidSync), 15000);
 
     return () => {
-      clearInterval(forceSync);
+      clearInterval(regularSync);
       clearInterval(rapidSync);
     };
   }, [syncDesignChanges, syncSettingsChanges, syncLegalContent]);
@@ -41,6 +40,7 @@ export const useWebsiteSync = () => {
     syncSettingsChanges,
     syncLegalContent,
     forceFullSync: () => {
+      console.log('🔄 Force sync triggered');
       syncDesignChanges();
       syncSettingsChanges();
       syncLegalContent();

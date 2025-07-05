@@ -1,489 +1,362 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Plus, Search, Phone, Mail, User, Trash2, Upload, FileText } from 'lucide-react';
-import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { Plus, Search, Filter, Download, Upload, Trash2, Edit, Phone, Mail, MapPin, User, Building2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { CSVImporter } from '@/components/CSVImporter';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface Contact {
   id: string;
-  firstName: string;
-  lastName: string;
-  phone: string;
-  email: string;
-  eventId?: string;
-  eventTypeId?: string;
+  first_name: string;
+  last_name: string;
+  email?: string;
+  phone?: string;
   role?: string;
   address?: string;
-  acceptsMarketingEmails: boolean;
-  source?: 'manual' | 'website' | 'csv';
-}
-
-interface Event {
-  id: string;
-  title: string;
-}
-
-interface EventType {
-  id: string;
-  name: string;
+  accepts_marketing_emails?: boolean;
+  event_id?: string;
+  event_type_id?: string;
+  created_at: string;
+  events?: { title: string };
+  event_types?: { name: string };
 }
 
 export const Contacts: React.FC = () => {
+  console.log('👥 Contacts page loading');
+  
   const [contacts, setContacts] = useState<Contact[]>([]);
-  const [events, setEvents] = useState<Event[]>([]);
-  const [eventTypes, setEventTypes] = useState<EventType[]>([]);
+  const [filteredContacts, setFilteredContacts] = useState<Contact[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [showCSVImporter, setShowCSVImporter] = useState(false);
-  const [newContact, setNewContact] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    eventId: '',
-    eventTypeId: '',
-    role: '',
-    address: '',
-    acceptsMarketingEmails: true
-  });
+  const [showImporter, setShowImporter] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [events, setEvents] = useState<any[]>([]);
+  const [eventTypes, setEventTypes] = useState<any[]>([]);
 
   useEffect(() => {
-    fetchContacts();
-    fetchEvents();
-    fetchEventTypes();
+    console.log('🔄 Loading contacts data');
+    loadContacts();
+    loadEventsAndEventTypes();
   }, []);
 
-  const fetchContacts = async () => {
+  useEffect(() => {
+    // Filtrer les contacts selon le terme de recherche
+    const filtered = contacts.filter(contact => {
+      const searchLower = searchTerm.toLowerCase();
+      return (
+        contact.first_name.toLowerCase().includes(searchLower) ||
+        contact.last_name.toLowerCase().includes(searchLower) ||
+        contact.email?.toLowerCase().includes(searchLower) ||
+        contact.phone?.includes(searchTerm) ||
+        contact.role?.toLowerCase().includes(searchLower)
+      );
+    });
+    setFilteredContacts(filtered);
+    console.log('🔍 Filtered contacts:', filtered.length, 'of', contacts.length);
+  }, [contacts, searchTerm]);
+
+  const loadContacts = async () => {
     try {
+      console.log('📊 Loading contacts from database');
       const { data, error } = await supabase
         .from('contacts')
         .select(`
-          id,
-          first_name,
-          last_name,
-          email,
-          phone,
-          event_id,
-          event_type_id,
-          role,
-          address,
-          accepts_marketing_emails,
-          source,
-          events(title),
-          event_types(name)
-        `);
+          *,
+          events:event_id(title),
+          event_types:event_type_id(name)
+        `)
+        .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error loading contacts:', error);
+        toast.error('Erreur lors du chargement des contacts');
+        return;
+      }
 
-      const formattedContacts: Contact[] = data?.map(contact => ({
-        id: contact.id,
-        firstName: contact.first_name,
-        lastName: contact.last_name,
-        email: contact.email || '',
-        phone: contact.phone || '',
-        eventId: contact.event_id,
-        eventTypeId: contact.event_type_id,
-        role: contact.role,
-        address: contact.address,
-        acceptsMarketingEmails: contact.accepts_marketing_emails ?? true,
-        source: contact.source as 'manual' | 'website' | 'csv' || 'manual'
-      })) || [];
-
-      setContacts(formattedContacts);
+      console.log('✅ Contacts loaded:', data?.length || 0);
+      setContacts(data || []);
     } catch (error) {
-      console.error('Error fetching contacts:', error);
+      console.error('❌ Exception loading contacts:', error);
       toast.error('Erreur lors du chargement des contacts');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const fetchEvents = async () => {
+  const loadEventsAndEventTypes = async () => {
     try {
-      const { data, error } = await supabase
+      // Charger les événements
+      const { data: eventsData } = await supabase
         .from('events')
         .select('id, title')
         .order('title');
+      setEvents(eventsData || []);
 
-      if (error) throw error;
-      setEvents(data || []);
-    } catch (error) {
-      console.error('Error fetching events:', error);
-    }
-  };
-
-  const fetchEventTypes = async () => {
-    try {
-      const { data, error } = await supabase
+      // Charger les types d'événement
+      const { data: eventTypesData } = await supabase
         .from('event_types')
-        .select('id, name')
+        .select('id, name, color')
         .order('name');
+      setEventTypes(eventTypesData || []);
 
-      if (error) throw error;
-      setEventTypes(data || []);
+      console.log('✅ Events and event types loaded');
     } catch (error) {
-      console.error('Error fetching event types:', error);
+      console.error('Error loading events/event types:', error);
     }
   };
 
-  const filteredContacts = contacts.filter(contact => {
-    const fullName = `${contact.firstName} ${contact.lastName}`;
-    return fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           contact.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           contact.address?.toLowerCase().includes(searchTerm.toLowerCase());
-  });
-
-  const handleEmailClick = (email: string) => {
-    window.open(`mailto:${email}`, '_blank');
+  const handleImport = (importedContacts: any[]) => {
+    console.log('📥 Handling imported contacts:', importedContacts.length);
+    toast.success(`${importedContacts.length} contacts importés !`);
+    loadContacts(); // Recharger la liste
   };
 
   const handleDeleteContact = async (contactId: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce contact ?')) {
+      return;
+    }
+
     try {
+      console.log('🗑️ Deleting contact:', contactId);
       const { error } = await supabase
         .from('contacts')
         .delete()
         .eq('id', contactId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error deleting contact:', error);
+        toast.error('Erreur lors de la suppression');
+        return;
+      }
 
-      setContacts(prev => prev.filter(c => c.id !== contactId));
       toast.success('Contact supprimé');
+      loadContacts();
     } catch (error) {
-      console.error('Error deleting contact:', error);
+      console.error('Exception deleting contact:', error);
       toast.error('Erreur lors de la suppression');
     }
   };
 
-  const handleAddContact = async () => {
-    if (!newContact.firstName || !newContact.lastName || !newContact.email) {
-      toast.error('Veuillez remplir tous les champs obligatoires');
-      return;
-    }
-
-    try {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) {
-        toast.error('Utilisateur non connecté');
-        return;
-      }
-
-      const contactData = {
-        user_id: userData.user.id,
-        first_name: newContact.firstName,
-        last_name: newContact.lastName,
-        email: newContact.email,
-        phone: newContact.phone || null,
-        event_id: newContact.eventId || null,
-        event_type_id: newContact.eventTypeId || null,
-        role: newContact.role || null,
-        address: newContact.address || null,
-        accepts_marketing_emails: newContact.acceptsMarketingEmails,
-        source: 'manual'
-      };
-
-      const { error } = await supabase
-        .from('contacts')
-        .insert([contactData]);
-
-      if (error) throw error;
-
-      await fetchContacts();
-      setNewContact({
-        firstName: '',
-        lastName: '',
-        email: '',
-        phone: '',
-        eventId: '',
-        eventTypeId: '',
-        role: '',
-        address: '',
-        acceptsMarketingEmails: true
-      });
-      setShowAddForm(false);
-      toast.success('Contact ajouté');
-    } catch (error) {
-      console.error('Error adding contact:', error);
-      toast.error('Erreur lors de l\'ajout du contact');
-    }
+  const getEventTypeBadge = (eventType: any) => {
+    if (!eventType) return null;
+    
+    return (
+      <Badge 
+        style={{ 
+          backgroundColor: eventType.color || '#3B82F6',
+          color: 'white'
+        }}
+        className="text-xs"
+      >
+        {eventType.name}
+      </Badge>
+    );
   };
 
-  const handleCSVImport = async (importedContacts: any[]) => {
-    try {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) {
-        toast.error('Utilisateur non connecté');
-        return;
-      }
+  if (loading) {
+    console.log('⏳ Contacts page loading...');
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Chargement des contacts...</p>
+        </div>
+      </div>
+    );
+  }
 
-      const contactsToInsert = importedContacts.map(contact => ({
-        user_id: userData.user.id,
-        first_name: contact.firstName || '',
-        last_name: contact.lastName || '',
-        email: contact.email || '',
-        phone: contact.phone || null,
-        event_id: contact.eventId || null,
-        event_type_id: contact.eventTypeId || null,
-        role: contact.role || null,
-        address: contact.address || null,
-        accepts_marketing_emails: contact.acceptsMarketingEmails ?? true,
-        source: 'csv'
-      }));
-
-      const { error } = await supabase
-        .from('contacts')
-        .insert(contactsToInsert);
-
-      if (error) throw error;
-
-      await fetchContacts();
-      toast.success(`${importedContacts.length} contacts importés avec succès`);
-    } catch (error) {
-      console.error('Error importing contacts:', error);
-      toast.error('Erreur lors de l\'importation');
-    }
-  };
-
-  const getEventName = (eventId?: string) => {
-    if (!eventId) return '';
-    const event = events.find(e => e.id === eventId);
-    return event ? event.title : '';
-  };
-
-  const getEventTypeName = (eventTypeId?: string) => {
-    if (!eventTypeId) return '';
-    const eventType = eventTypes.find(et => et.id === eventTypeId);
-    return eventType ? eventType.name : '';
-  };
+  console.log('🎨 Rendering contacts page with', filteredContacts.length, 'contacts');
 
   return (
     <div className="space-y-6">
+      {/* En-tête */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Contacts</h1>
-          <p className="text-gray-600 mt-2">Gérer vos gestionnaires de lieux, promoteurs et contacts de l'industrie</p>
+          <h1 className="text-3xl font-bold">Contacts</h1>
+          <p className="text-muted-foreground">
+            Gérez vos contacts et organisez vos relations professionnelles
+          </p>
         </div>
-        <div className="flex space-x-2">
-          <Button onClick={() => setShowCSVImporter(true)} variant="outline">
-            <Upload className="h-4 w-4 mr-2" />
-            Importer CSV
+        <div className="flex items-center space-x-2">
+          <Button
+            onClick={() => setShowImporter(true)}
+            variant="outline"
+            className="flex items-center space-x-2"
+          >
+            <Upload className="h-4 w-4" />
+            <span>Importer CSV</span>
           </Button>
-          <Button onClick={() => setShowAddForm(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Ajouter Contact
+          <Button className="flex items-center space-x-2">
+            <Plus className="h-4 w-4" />
+            <span>Nouveau Contact</span>
           </Button>
         </div>
       </div>
 
-      <div className="flex items-center space-x-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <Input
-            placeholder="Rechercher des contacts..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        <Button variant="outline">Exporter</Button>
-      </div>
-
-      {filteredContacts.length === 0 ? (
-        <Card className="text-center py-12">
-          <CardContent>
-            <User className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun contact trouvé</h3>
-            <p className="text-gray-500 mb-4">Commencez par ajouter votre premier contact</p>
-            <Button onClick={() => setShowAddForm(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Ajouter Contact
+      {/* Barre de recherche et filtres */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-center space-x-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Rechercher un contact..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Button variant="outline" size="sm">
+              <Filter className="h-4 w-4 mr-2" />
+              Filtres
             </Button>
+            <Button variant="outline" size="sm">
+              <Download className="h-4 w-4 mr-2" />
+              Exporter
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Statistiques */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold">{contacts.length}</div>
+            <div className="text-sm text-muted-foreground">Total Contacts</div>
           </CardContent>
         </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredContacts.map((contact) => (
-            <Card key={contact.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                    <User className="h-6 w-6 text-blue-600" />
-                  </div>
-                  <div className="flex-1">
-                    <CardTitle className="text-lg">{contact.firstName} {contact.lastName}</CardTitle>
-                    <p className="text-sm text-gray-500">{contact.role}</p>
-                  </div>
-                  <div className="flex flex-col space-y-1">
-                    <Badge className={contact.acceptsMarketingEmails ? 'bg-green-100 text-green-800 text-xs' : 'bg-red-100 text-red-800 text-xs'}>
-                      {contact.acceptsMarketingEmails ? '✓ Marketing' : '✗ Marketing'}
-                    </Badge>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="outline" size="sm" className="h-6 w-6 p-0">
-                          <Trash2 className="h-3 w-3 text-red-500" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Supprimer le contact</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Êtes-vous sûr de vouloir supprimer ce contact ? Cette action ne peut pas être annulée.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Annuler</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDeleteContact(contact.id)} className="bg-red-600 hover:bg-red-700">
-                            Supprimer
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div 
-                  className="flex items-center text-sm text-gray-600 cursor-pointer hover:text-blue-600"
-                  onClick={() => handleEmailClick(contact.email)}
-                >
-                  <Mail className="h-4 w-4 mr-2" />
-                  {contact.email}
-                </div>
-                <div className="flex items-center text-sm text-gray-600">
-                  <Phone className="h-4 w-4 mr-2" />
-                  {contact.phone}
-                </div>
-                {contact.address && (
-                  <div className="text-sm text-gray-600">
-                    <strong>Adresse:</strong> {contact.address}
-                  </div>
-                )}
-                {getEventName(contact.eventId) && (
-                  <div className="text-sm text-gray-600">
-                    <strong>Événement:</strong> {getEventName(contact.eventId)}
-                  </div>
-                )}
-                {getEventTypeName(contact.eventTypeId) && (
-                  <div className="text-sm text-gray-600">
-                    <strong>Type:</strong> {getEventTypeName(contact.eventTypeId)}
-                  </div>
-                )}
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold text-green-600">
+              {contacts.filter(c => c.accepts_marketing_emails).length}
+            </div>
+            <div className="text-sm text-muted-foreground">Acceptent le marketing</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold text-blue-600">
+              {events.length}
+            </div>
+            <div className="text-sm text-muted-foreground">Événements liés</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold text-purple-600">
+              {eventTypes.length}
+            </div>
+            <div className="text-sm text-muted-foreground">Types d'événements</div>
+          </CardContent>
+        </Card>
+      </div>
 
-                <div className="flex space-x-2 pt-3">
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="flex-1"
-                    onClick={() => handleEmailClick(contact.email)}
-                  >
-                    <Mail className="h-3 w-3 mr-1" />
-                    Email
-                  </Button>
+      {/* Liste des contacts */}
+      <div className="grid gap-4">
+        {filteredContacts.length === 0 ? (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium mb-2">Aucun contact trouvé</h3>
+              <p className="text-muted-foreground mb-4">
+                {contacts.length === 0 
+                  ? "Commencez par ajouter des contacts ou importer un fichier CSV"
+                  : "Aucun contact ne correspond à votre recherche"
+                }
+              </p>
+              {contacts.length === 0 && (
+                <Button onClick={() => setShowImporter(true)}>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Importer des contacts
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        ) : (
+          filteredContacts.map((contact) => (
+            <Card key={contact.id} className="hover:shadow-md transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-3 mb-3">
+                      <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center">
+                        <User className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-lg">
+                          {contact.first_name} {contact.last_name}
+                        </h3>
+                        {contact.role && (
+                          <p className="text-sm text-muted-foreground">{contact.role}</p>
+                        )}
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        {contact.event_types && getEventTypeBadge(contact.event_types)}
+                        {contact.accepts_marketing_emails && (
+                          <Badge variant="outline" className="text-green-600 border-green-600">
+                            Marketing OK
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                      {contact.email && (
+                        <div className="flex items-center space-x-2">
+                          <Mail className="h-4 w-4 text-gray-400" />
+                          <span>{contact.email}</span>
+                        </div>
+                      )}
+                      {contact.phone && (
+                        <div className="flex items-center space-x-2">
+                          <Phone className="h-4 w-4 text-gray-400" />
+                          <span>{contact.phone}</span>
+                        </div>
+                      )}
+                      {contact.address && (
+                        <div className="flex items-center space-x-2">
+                          <MapPin className="h-4 w-4 text-gray-400" />
+                          <span className="truncate">{contact.address}</span>
+                        </div>
+                      )}
+                      {contact.events && (
+                        <div className="flex items-center space-x-2">
+                          <Building2 className="h-4 w-4 text-gray-400" />
+                          <span className="truncate">{contact.events.title}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Button variant="outline" size="sm">
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleDeleteContact(contact.id)}
+                      className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
-          ))}
-        </div>
-      )}
+          ))
+        )}
+      </div>
 
-      {showAddForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <Card className="w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-            <CardHeader>
-              <CardTitle>Ajouter Nouveau Contact</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <Input 
-                  placeholder="Prénom *" 
-                  value={newContact.firstName}
-                  onChange={(e) => setNewContact({...newContact, firstName: e.target.value})}
-                />
-                <Input 
-                  placeholder="Nom *" 
-                  value={newContact.lastName}
-                  onChange={(e) => setNewContact({...newContact, lastName: e.target.value})}
-                />
-              </div>
-              <Input 
-                placeholder="Adresse email *" 
-                value={newContact.email}
-                onChange={(e) => setNewContact({...newContact, email: e.target.value})}
-              />
-              <Input 
-                placeholder="Numéro de téléphone" 
-                value={newContact.phone}
-                onChange={(e) => setNewContact({...newContact, phone: e.target.value})}
-              />
-              <Input 
-                placeholder="Adresse" 
-                value={newContact.address}
-                onChange={(e) => setNewContact({...newContact, address: e.target.value})}
-              />
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Événement</label>
-                  <Select value={newContact.eventId} onValueChange={(value) => setNewContact({...newContact, eventId: value})}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner un événement" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {events.map(event => (
-                        <SelectItem key={event.id} value={event.id}>{event.title}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Type d'événement</label>
-                  <Select value={newContact.eventTypeId} onValueChange={(value) => setNewContact({...newContact, eventTypeId: value})}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner un type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {eventTypes.map(eventType => (
-                        <SelectItem key={eventType.id} value={eventType.id}>{eventType.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <Input 
-                placeholder="Rôle/Titre" 
-                value={newContact.role}
-                onChange={(e) => setNewContact({...newContact, role: e.target.value})}
-              />
-              
-              <div className="flex items-center space-x-2">
-                <Switch 
-                  checked={newContact.acceptsMarketingEmails}
-                  onCheckedChange={(checked) => setNewContact({...newContact, acceptsMarketingEmails: checked})}
-                />
-                <label className="text-sm font-medium">Accepte les emails marketing</label>
-              </div>
-              
-              <div className="flex space-x-3 pt-4">
-                <Button onClick={() => setShowAddForm(false)} variant="outline" className="flex-1">
-                  Annuler
-                </Button>
-                <Button onClick={handleAddContact} className="flex-1">
-                  Sauvegarder Contact
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      <CSVImporter 
-        isOpen={showCSVImporter}
-        onClose={() => setShowCSVImporter(false)}
-        onImport={handleCSVImport}
+      {/* CSV Importer */}
+      <CSVImporter
+        isOpen={showImporter}
+        onClose={() => setShowImporter(false)}
+        onImport={handleImport}
       />
     </div>
   );

@@ -31,6 +31,7 @@ import { Forms } from "./pages/Forms";
 import { ShowBible } from "./pages/ShowBible";
 import { Merchandise } from "./pages/Merchandise";
 import { Website } from "./pages/Website";
+import { WebsiteBackoffice } from "./pages/WebsiteBackoffice";
 import { UserManagement } from "./pages/UserManagement";
 import { Application } from "./pages/Application";
 import { Preferences } from "./pages/Preferences";
@@ -83,6 +84,7 @@ function App() {
                             <Route path="/show-bible" element={<ShowBible />} />
                             <Route path="/merchandise" element={<Merchandise />} />
                             <Route path="/website" element={<Website />} />
+                            <Route path="/website-editor" element={<WebsiteBackoffice />} />
                             <Route path="/user-management" element={<UserManagement />} />
                             <Route path="/application" element={<Application />} />
                             <Route path="/preferences" element={<Preferences />} />
