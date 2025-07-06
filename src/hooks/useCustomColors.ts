@@ -1,6 +1,5 @@
 
 import { useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 
 export const useCustomColors = () => {
   useEffect(() => {
@@ -53,18 +52,49 @@ export const useCustomColors = () => {
         root.style.setProperty('--app-button-bg', isDark ? colors.buttonBgDark : colors.buttonBg);
         root.style.setProperty('--app-button-text', isDark ? colors.buttonTextDark : colors.buttonText);
 
-        // Appliquer directement au body
+        // Appliquer directement au body avec !important
         const bgColor = isDark ? colors.backgroundDark : colors.background;
         const textColor = isDark ? colors.textDark : colors.text;
         
-        document.body.style.backgroundColor = bgColor;
-        document.body.style.color = textColor;
-        document.documentElement.style.backgroundColor = bgColor;
+        document.body.style.setProperty('background-color', bgColor, 'important');
+        document.body.style.setProperty('color', textColor, 'important');
+        document.documentElement.style.setProperty('background-color', bgColor, 'important');
+
+        // Forcer l'application sur tous les éléments principaux
+        const style = document.getElementById('custom-colors-override') || document.createElement('style');
+        style.id = 'custom-colors-override';
+        style.innerHTML = `
+          body, #root, html {
+            background-color: ${bgColor} !important;
+            color: ${textColor} !important;
+          }
+          
+          .card, [data-testid="card"] {
+            background-color: ${isDark ? colors.cardBgDark : colors.cardBg} !important;
+            color: ${isDark ? colors.cardTextDark : colors.cardText} !important;
+          }
+          
+          .button, [data-testid="button"], button {
+            background-color: ${isDark ? colors.buttonBgDark : colors.buttonBg} !important;
+            color: ${isDark ? colors.buttonTextDark : colors.buttonText} !important;
+          }
+          
+          main, section, article, div[class*="container"] {
+            background-color: ${bgColor} !important;
+            color: ${textColor} !important;
+          }
+          
+          nav, header {
+            background-color: ${isDark ? colors.cardBgDark : colors.cardBg} !important;
+            color: ${isDark ? colors.cardTextDark : colors.cardText} !important;
+          }
+        `;
+        
+        if (!document.getElementById('custom-colors-override')) {
+          document.head.appendChild(style);
+        }
 
         console.log('🎨 Colors applied successfully', { bgColor, textColor, isDark });
-
-        // Déclencher l'événement de changement de couleurs
-        window.dispatchEvent(new CustomEvent('customColorsChanged', { detail: colors }));
 
       } catch (error) {
         console.error('🎨 Error in loadAndApplyColors:', error);

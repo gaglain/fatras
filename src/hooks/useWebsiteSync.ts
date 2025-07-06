@@ -13,6 +13,7 @@ export const useWebsiteSync = () => {
     console.log('🔄 Initialisation de la synchronisation globale du site web');
     
     const performFullSync = () => {
+      console.log('🔄 Performing full sync...');
       syncDesignChanges();
       syncSettingsChanges();
       syncLegalContent();
@@ -21,20 +22,29 @@ export const useWebsiteSync = () => {
     // Sync immédiate
     performFullSync();
 
-    // Sync régulière toutes les 2 secondes pour assurer la mise à jour
-    const regularSync = setInterval(performFullSync, 2000);
+    // Sync régulière toutes les 5 secondes
+    const regularSync = setInterval(performFullSync, 5000);
 
-    // Sync ultra-rapide pendant les 15 premières secondes
-    const rapidSync = setInterval(performFullSync, 100);
-    setTimeout(() => clearInterval(rapidSync), 15000);
+    // Écouter les événements de sauvegarde
+    const handleWebsiteUpdate = () => {
+      console.log('🔄 Website update detected, syncing...');
+      setTimeout(performFullSync, 100);
+    };
+
+    window.addEventListener('websiteDesignSaved', handleWebsiteUpdate);
+    window.addEventListener('websiteSettingsSaved', handleWebsiteUpdate);
+    window.addEventListener('websiteDesignUpdated', handleWebsiteUpdate);
+    window.addEventListener('websiteSettingsUpdated', handleWebsiteUpdate);
 
     return () => {
       clearInterval(regularSync);
-      clearInterval(rapidSync);
+      window.removeEventListener('websiteDesignSaved', handleWebsiteUpdate);
+      window.removeEventListener('websiteSettingsSaved', handleWebsiteUpdate);
+      window.removeEventListener('websiteDesignUpdated', handleWebsiteUpdate);
+      window.removeEventListener('websiteSettingsUpdated', handleWebsiteUpdate);
     };
   }, [syncDesignChanges, syncSettingsChanges, syncLegalContent]);
 
-  // Exposer les fonctions de synchronisation
   return {
     syncDesignChanges,
     syncSettingsChanges,

@@ -58,13 +58,14 @@ export const Layout: React.FC = () => {
         </div>
 
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Header avec menu hamburger intégré */}
+          {/* Header avec menu hamburger intégré pour mobile */}
           <BackOfficeHeader />
 
           <main 
             className="flex-1 overflow-auto p-4 lg:p-6"
             style={{ 
-              backgroundColor: 'var(--app-background, #ffffff)'
+              backgroundColor: 'var(--app-background, #ffffff)',
+              color: 'var(--app-text, #18181b)'
             }}
           >
             <Outlet />
