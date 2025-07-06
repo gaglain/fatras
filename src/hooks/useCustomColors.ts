@@ -1,101 +1,140 @@
 
 import { useEffect } from 'react';
-import { useTheme } from 'next-themes';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useCustomColors = () => {
-  const { theme } = useTheme();
-
   useEffect(() => {
-    const applyCustomColors = () => {
-      const savedColors = localStorage.getItem("customColors");
-      if (savedColors) {
-        try {
-          const colors = JSON.parse(savedColors);
-          const root = document.documentElement;
-          const isDark = theme === 'dark';
-          
-          console.log('🎨 Applying custom colors with useCustomColors:', colors, 'Theme:', theme);
-          
-          // Appliquer les couleurs principales avec fallbacks
-          root.style.setProperty('--app-background', isDark ? (colors.backgroundDark || '#0f0f0f') : (colors.background || '#ffffff'));
-          root.style.setProperty('--app-text', isDark ? (colors.textDark || '#ffffff') : (colors.text || '#18181b'));
-          root.style.setProperty('--app-card-bg', isDark ? (colors.cardBgDark || '#1a1a1a') : (colors.cardBg || '#ffffff'));
-          root.style.setProperty('--app-card-text', isDark ? (colors.cardTextDark || '#ffffff') : (colors.cardText || '#18181b'));
-          root.style.setProperty('--app-button-bg', isDark ? (colors.buttonBgDark || '#ffffff') : (colors.buttonBg || '#1632f4'));
-          root.style.setProperty('--app-button-text', isDark ? (colors.buttonTextDark || '#000000') : (colors.buttonText || '#ffffff'));
-          root.style.setProperty('--app-chat-widget-bg', colors.chatWidgetBg || '#1632f4');
-          root.style.setProperty('--app-chat-widget-icon', colors.chatWidgetIcon || '#ffffff');
-          
-          // Appliquer les couleurs de notifications avec fallbacks
-          root.style.setProperty('--notification-bg', colors.notificationBg || (isDark ? '#1a1a1a' : '#ffffff'));
-          root.style.setProperty('--notification-text', colors.notificationText || (isDark ? '#ffffff' : '#18181b'));
-          root.style.setProperty('--notification-border', colors.notificationBorder || (isDark ? '#374151' : '#e5e7eb'));
-          root.style.setProperty('--notification-badge-bg', colors.notificationBadgeBg || '#ef4444');
-          root.style.setProperty('--notification-badge-text', colors.notificationBadgeText || '#ffffff');
-          root.style.setProperty('--notification-button-bg', colors.notificationButtonBg || (isDark ? '#374151' : '#f3f4f6'));
-          root.style.setProperty('--notification-button-text', colors.notificationButtonText || (isDark ? '#ffffff' : '#374151'));
-          root.style.setProperty('--notification-red-dot', colors.notificationRedDot || '#ef4444');
-          
-          // Forcer l'application sur body et html
-          const bgColor = isDark ? (colors.backgroundDark || '#0f0f0f') : (colors.background || '#ffffff');
-          const textColor = isDark ? (colors.textDark || '#ffffff') : (colors.text || '#18181b');
-          
-          document.body.style.backgroundColor = bgColor;
-          document.body.style.color = textColor;
-          document.documentElement.style.backgroundColor = bgColor;
-          
-          // Mettre à jour les variables CSS Tailwind avec les bonnes valeurs
-          const tailwindVars = {
-            '--background': isDark ? '222.2 84% 4.9%' : '0 0% 100%',
-            '--foreground': isDark ? '210 40% 98%' : '222.2 84% 4.9%',
-            '--card': isDark ? '222.2 84% 4.9%' : '0 0% 100%',
-            '--card-foreground': isDark ? '210 40% 98%' : '222.2 84% 4.9%',
-            '--primary': '221 83% 53%',
-            '--primary-foreground': isDark ? '255 255 255' : '210 40% 98%'
-          };
-          
-          Object.entries(tailwindVars).forEach(([key, value]) => {
-            root.style.setProperty(key, value);
-          });
-          
-          // Forcer la re-peinture
-          document.body.style.display = 'none';
-          document.body.offsetHeight; // trigger reflow
-          document.body.style.display = '';
-          
-          console.log('✅ Custom colors applied successfully with useCustomColors');
-        } catch (error) {
-          console.error('❌ Error applying custom colors:', error);
+    console.log('🎨 Initializing custom colors hook');
+    
+    const loadAndApplyColors = async () => {
+      try {
+        const { data: user } = await supabase.auth.getUser();
+        if (!user?.user) {
+          console.log('🎨 No authenticated user, skipping color loading');
+          return;
         }
+
+        // Charger les préférences utilisateur depuis la base de données
+        const { data: profile, error } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('user_id', user.user.id)
+          .maybeSingle();
+
+        if (error) {
+          console.error('🎨 Error loading user profile:', error);
+          return;
+        }
+
+        if (!profile) {
+          console.log('🎨 No user profile found');
+          return;
+        }
+
+        // Récupérer les couleurs personnalisées depuis localStorage avec fallback sur les valeurs par défaut
+        const savedColors = localStorage.getItem('customColors');
+        let colors = {
+          primary: '#8B5CF6',
+          secondary: '#3B82F6',
+          accent: '#10B981',
+          background: '#FFFFFF',
+          text: '#18181B'
+        };
+
+        if (savedColors) {
+          try {
+            colors = { ...colors, ...JSON.parse(savedColors) };
+            console.log('🎨 Loaded saved colors:', colors);
+          } catch (e) {
+            console.error('🎨 Error parsing saved colors:', e);
+          }
+        }
+
+        // Appliquer les couleurs aux variables CSS
+        const root = document.documentElement;
+        
+        // Couleurs principales
+        root.style.setProperty('--primary', colors.primary);
+        root.style.setProperty('--secondary', colors.secondary);
+        root.style.setProperty('--accent', colors.accent);
+        root.style.setProperty('--app-background', colors.background);
+        root.style.setProperty('--app-text', colors.text);
+
+        // Convertir hex en HSL pour les variables Tailwind
+        const hexToHsl = (hex: string) => {
+          const r = parseInt(hex.slice(1, 3), 16);
+          const g = parseInt(hex.slice(3, 5), 16);
+          const b = parseInt(hex.slice(5, 7), 16);
+
+          const rNorm = r / 255;
+          const gNorm = g / 255;
+          const bNorm = b / 255;
+
+          const max = Math.max(rNorm, gNorm, bNorm);
+          const min = Math.min(rNorm, gNorm, bNorm);
+          let h = 0;
+          let s = 0;
+          const l = (max + min) / 2;
+
+          if (max !== min) {
+            const d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            
+            switch (max) {
+              case rNorm: h = (gNorm - bNorm) / d + (gNorm < bNorm ? 6 : 0); break;
+              case gNorm: h = (bNorm - rNorm) / d + 2; break;
+              case bNorm: h = (rNorm - gNorm) / d + 4; break;
+            }
+            h /= 6;
+          }
+
+          return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
+        };
+
+        // Appliquer les couleurs en format HSL pour Tailwind
+        try {
+          root.style.setProperty('--primary-hsl', hexToHsl(colors.primary));
+          root.style.setProperty('--secondary-hsl', hexToHsl(colors.secondary));
+          root.style.setProperty('--accent-hsl', hexToHsl(colors.accent));
+          
+          console.log('🎨 Colors applied successfully');
+        } catch (e) {
+          console.error('🎨 Error converting colors to HSL:', e);
+        }
+
+        // Forcer un re-render des éléments en triggant une classe CSS
+        document.body.classList.remove('colors-updated');
+        setTimeout(() => document.body.classList.add('colors-updated'), 10);
+
+      } catch (error) {
+        console.error('🎨 Error in loadAndApplyColors:', error);
       }
     };
 
-    // Appliquer immédiatement
-    applyCustomColors();
-    
-    // Écouter les changements de couleurs avec tous les événements possibles
-    const handleColorsChange = () => {
-      console.log('🎨 Colors changed event received in useCustomColors');
-      setTimeout(applyCustomColors, 50);
-    };
-    
+    // Charger les couleurs immédiatement
+    loadAndApplyColors();
+
+    // Écouter les changements de couleurs
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'customColors') {
-        console.log('💾 Storage change detected for customColors in useCustomColors');
-        setTimeout(applyCustomColors, 50);
+        console.log('🎨 Colors changed in localStorage, reloading...');
+        loadAndApplyColors();
       }
     };
-    
-    window.addEventListener('customColorsChanged', handleColorsChange);
-    window.addEventListener('customColorsApplied', handleColorsChange);
-    window.addEventListener('storage', handleStorageChange);
-    
-    return () => {
-      window.removeEventListener('customColorsChanged', handleColorsChange);
-      window.removeEventListener('customColorsApplied', handleColorsChange);
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, [theme]);
 
-  return {};
+    window.addEventListener('storage', handleStorageChange);
+
+    // Écouter les changements d'authentification
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('🎨 Auth state changed:', event);
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        loadAndApplyColors();
+      }
+    });
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      subscription.unsubscribe();
+    };
+  }, []);
 };

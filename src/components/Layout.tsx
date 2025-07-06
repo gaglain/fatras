@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
@@ -8,6 +8,9 @@ import { PublicChatWidget } from '@/components/PublicChatWidget';
 import { ChatWidget } from '@/components/ChatWidget';
 import { useCustomColors } from '@/hooks/useCustomColors';
 import { useWebsiteSync } from '@/hooks/useWebsiteSync';
+import { Button } from '@/components/ui/button';
+import { Menu, X } from 'lucide-react';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 const adminRoutes = [
   '/admin', '/dashboard', '/artists', '/events', '/agenda', '/contacts',
@@ -18,6 +21,7 @@ const adminRoutes = [
 
 export const Layout: React.FC = () => {
   const location = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   // Appliquer les couleurs personnalisées
   useCustomColors();
@@ -52,11 +56,40 @@ export const Layout: React.FC = () => {
           color: 'var(--app-text, #18181b)'
         }}
       >
-        <AppSidebar />
+        {/* Desktop Sidebar */}
+        <div className="hidden lg:block">
+          <AppSidebar />
+        </div>
+
+        {/* Mobile Sidebar Sheet */}
+        <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+          <SheetContent side="left" className="p-0 w-80">
+            <AppSidebar />
+          </SheetContent>
+        </Sheet>
+
         <div className="flex-1 flex flex-col overflow-hidden">
-          <BackOfficeHeader />
+          {/* Mobile Header with Burger Menu */}
+          <div className="lg:hidden flex items-center justify-between p-4 border-b bg-white">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setMobileMenuOpen(true)}
+              className="flex items-center space-x-2"
+            >
+              <Menu className="h-5 w-5" />
+              <span>Menu</span>
+            </Button>
+            <BackOfficeHeader />
+          </div>
+
+          {/* Desktop Header */}
+          <div className="hidden lg:block">
+            <BackOfficeHeader />
+          </div>
+
           <main 
-            className="flex-1 overflow-auto p-6"
+            className="flex-1 overflow-auto p-4 lg:p-6"
             style={{ 
               backgroundColor: 'var(--app-background, #ffffff)'
             }}

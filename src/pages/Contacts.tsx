@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Search, Filter, Download, Upload, Trash2, Edit, Phone, Mail, MapPin, User, Building2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { CSVImporter } from '@/components/CSVImporter';
+import { ContactForm } from '@/components/ContactForm';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -17,12 +18,15 @@ interface Contact {
   phone?: string;
   role?: string;
   address?: string;
+  city?: string;
+  postal_code?: string;
+  country?: string;
   accepts_marketing_emails?: boolean;
   event_id?: string;
   event_type_id?: string;
   created_at: string;
   events?: { title: string };
-  event_types?: { name: string };
+  event_types?: { name: string; color?: string };
 }
 
 export const Contacts: React.FC = () => {
@@ -32,6 +36,8 @@ export const Contacts: React.FC = () => {
   const [filteredContacts, setFilteredContacts] = useState<Contact[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showImporter, setShowImporter] = useState(false);
+  const [showContactForm, setShowContactForm] = useState(false);
+  const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [loading, setLoading] = useState(true);
   const [events, setEvents] = useState<any[]>([]);
   const [eventTypes, setEventTypes] = useState<any[]>([]);
@@ -51,7 +57,9 @@ export const Contacts: React.FC = () => {
         contact.last_name.toLowerCase().includes(searchLower) ||
         contact.email?.toLowerCase().includes(searchLower) ||
         contact.phone?.includes(searchTerm) ||
-        contact.role?.toLowerCase().includes(searchLower)
+        contact.role?.toLowerCase().includes(searchLower) ||
+        contact.city?.toLowerCase().includes(searchLower) ||
+        contact.country?.toLowerCase().includes(searchLower)
       );
     });
     setFilteredContacts(filtered);
@@ -66,7 +74,7 @@ export const Contacts: React.FC = () => {
         .select(`
           *,
           events:event_id(title),
-          event_types:event_type_id(name)
+          event_types:event_type_id(name, color)
         `)
         .order('created_at', { ascending: false });
 
@@ -140,6 +148,17 @@ export const Contacts: React.FC = () => {
     }
   };
 
+  const handleEditContact = (contact: Contact) => {
+    setEditingContact(contact);
+    setShowContactForm(true);
+  };
+
+  const handleContactSaved = () => {
+    setShowContactForm(false);
+    setEditingContact(null);
+    loadContacts();
+  };
+
   const getEventTypeBadge = (eventType: any) => {
     if (!eventType) return null;
     
@@ -154,6 +173,17 @@ export const Contacts: React.FC = () => {
         {eventType.name}
       </Badge>
     );
+  };
+
+  const formatAddress = (contact: Contact) => {
+    const parts = [];
+    if (contact.address) parts.push(contact.address);
+    if (contact.postal_code || contact.city) {
+      const cityPart = [contact.postal_code, contact.city].filter(Boolean).join(' ');
+      if (cityPart) parts.push(cityPart);
+    }
+    if (contact.country) parts.push(contact.country);
+    return parts.join(', ');
   };
 
   if (loading) {
@@ -171,25 +201,28 @@ export const Contacts: React.FC = () => {
   console.log('🎨 Rendering contacts page with', filteredContacts.length, 'contacts');
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-4 md:p-6">
       {/* En-tête */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between space-y-4 md:space-y-0">
         <div>
-          <h1 className="text-3xl font-bold">Contacts</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl md:text-3xl font-bold">Contacts</h1>
+          <p className="text-muted-foreground text-sm md:text-base">
             Gérez vos contacts et organisez vos relations professionnelles
           </p>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
           <Button
             onClick={() => setShowImporter(true)}
             variant="outline"
-            className="flex items-center space-x-2"
+            className="flex items-center justify-center space-x-2 w-full sm:w-auto"
           >
             <Upload className="h-4 w-4" />
             <span>Importer CSV</span>
           </Button>
-          <Button className="flex items-center space-x-2">
+          <Button 
+            onClick={() => setShowContactForm(true)}
+            className="flex items-center justify-center space-x-2 w-full sm:w-auto"
+          >
             <Plus className="h-4 w-4" />
             <span>Nouveau Contact</span>
           </Button>
@@ -199,7 +232,7 @@ export const Contacts: React.FC = () => {
       {/* Barre de recherche et filtres */}
       <Card>
         <CardContent className="p-4">
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-col md:flex-row items-stretch md:items-center space-y-4 md:space-y-0 md:space-x-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
@@ -209,48 +242,50 @@ export const Contacts: React.FC = () => {
                 className="pl-10"
               />
             </div>
-            <Button variant="outline" size="sm">
-              <Filter className="h-4 w-4 mr-2" />
-              Filtres
-            </Button>
-            <Button variant="outline" size="sm">
-              <Download className="h-4 w-4 mr-2" />
-              Exporter
-            </Button>
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+              <Button variant="outline" size="sm" className="w-full sm:w-auto">
+                <Filter className="h-4 w-4 mr-2" />
+                Filtres
+              </Button>
+              <Button variant="outline" size="sm" className="w-full sm:w-auto">
+                <Download className="h-4 w-4 mr-2" />
+                Exporter
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Statistiques */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
-            <div className="text-2xl font-bold">{contacts.length}</div>
-            <div className="text-sm text-muted-foreground">Total Contacts</div>
+            <div className="text-xl md:text-2xl font-bold">{contacts.length}</div>
+            <div className="text-xs md:text-sm text-muted-foreground">Total Contacts</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-xl md:text-2xl font-bold text-green-600">
               {contacts.filter(c => c.accepts_marketing_emails).length}
             </div>
-            <div className="text-sm text-muted-foreground">Acceptent le marketing</div>
+            <div className="text-xs md:text-sm text-muted-foreground">Marketing OK</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-xl md:text-2xl font-bold text-blue-600">
               {events.length}
             </div>
-            <div className="text-sm text-muted-foreground">Événements liés</div>
+            <div className="text-xs md:text-sm text-muted-foreground">Événements</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
-            <div className="text-2xl font-bold text-purple-600">
+            <div className="text-xl md:text-2xl font-bold text-purple-600">
               {eventTypes.length}
             </div>
-            <div className="text-sm text-muted-foreground">Types d'événements</div>
+            <div className="text-xs md:text-sm text-muted-foreground">Types d'événements</div>
           </CardContent>
         </Card>
       </div>
@@ -269,32 +304,40 @@ export const Contacts: React.FC = () => {
                 }
               </p>
               {contacts.length === 0 && (
-                <Button onClick={() => setShowImporter(true)}>
-                  <Upload className="h-4 w-4 mr-2" />
-                  Importer des contacts
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                  <Button onClick={() => setShowImporter(true)} variant="outline">
+                    <Upload className="h-4 w-4 mr-2" />
+                    Importer des contacts
+                  </Button>
+                  <Button onClick={() => setShowContactForm(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Nouveau contact
+                  </Button>
+                </div>
               )}
             </CardContent>
           </Card>
         ) : (
           filteredContacts.map((contact) => (
             <Card key={contact.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between">
+              <CardContent className="p-4 md:p-6">
+                <div className="flex flex-col md:flex-row md:items-start justify-between space-y-4 md:space-y-0">
                   <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-3">
-                      <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center">
-                        <User className="h-5 w-5 text-primary" />
+                    <div className="flex flex-col md:flex-row md:items-center space-y-3 md:space-y-0 md:space-x-3 mb-3">
+                      <div className="flex items-center space-x-3">
+                        <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                          <User className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-lg">
+                            {contact.first_name} {contact.last_name}
+                          </h3>
+                          {contact.role && (
+                            <p className="text-sm text-muted-foreground">{contact.role}</p>
+                          )}
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-lg">
-                          {contact.first_name} {contact.last_name}
-                        </h3>
-                        {contact.role && (
-                          <p className="text-sm text-muted-foreground">{contact.role}</p>
-                        )}
-                      </div>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         {contact.event_types && getEventTypeBadge(contact.event_types)}
                         {contact.accepts_marketing_emails && (
                           <Badge variant="outline" className="text-green-600 border-green-600">
@@ -304,37 +347,42 @@ export const Contacts: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 text-sm">
                       {contact.email && (
                         <div className="flex items-center space-x-2">
-                          <Mail className="h-4 w-4 text-gray-400" />
-                          <span>{contact.email}</span>
+                          <Mail className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                          <span className="break-all">{contact.email}</span>
                         </div>
                       )}
                       {contact.phone && (
                         <div className="flex items-center space-x-2">
-                          <Phone className="h-4 w-4 text-gray-400" />
+                          <Phone className="h-4 w-4 text-gray-400 flex-shrink-0" />
                           <span>{contact.phone}</span>
                         </div>
                       )}
-                      {contact.address && (
-                        <div className="flex items-center space-x-2">
-                          <MapPin className="h-4 w-4 text-gray-400" />
-                          <span className="truncate">{contact.address}</span>
+                      {formatAddress(contact) && (
+                        <div className="flex items-start space-x-2 lg:col-span-2">
+                          <MapPin className="h-4 w-4 text-gray-400 flex-shrink-0 mt-0.5" />
+                          <span className="break-words">{formatAddress(contact)}</span>
                         </div>
                       )}
                       {contact.events && (
-                        <div className="flex items-center space-x-2">
-                          <Building2 className="h-4 w-4 text-gray-400" />
+                        <div className="flex items-center space-x-2 lg:col-span-2">
+                          <Building2 className="h-4 w-4 text-gray-400 flex-shrink-0" />
                           <span className="truncate">{contact.events.title}</span>
                         </div>
                       )}
                     </div>
                   </div>
 
-                  <div className="flex items-center space-x-2">
-                    <Button variant="outline" size="sm">
+                  <div className="flex items-center space-x-2 md:ml-4">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleEditContact(contact)}
+                    >
                       <Edit className="h-4 w-4" />
+                      <span className="sr-only md:not-sr-only md:ml-2">Modifier</span>
                     </Button>
                     <Button 
                       variant="outline" 
@@ -343,6 +391,7 @@ export const Contacts: React.FC = () => {
                       className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
                     >
                       <Trash2 className="h-4 w-4" />
+                      <span className="sr-only md:not-sr-only md:ml-2">Supprimer</span>
                     </Button>
                   </div>
                 </div>
@@ -357,6 +406,19 @@ export const Contacts: React.FC = () => {
         isOpen={showImporter}
         onClose={() => setShowImporter(false)}
         onImport={handleImport}
+      />
+
+      {/* Contact Form */}
+      <ContactForm
+        isOpen={showContactForm}
+        onClose={() => {
+          setShowContactForm(false);
+          setEditingContact(null);
+        }}
+        onSave={handleContactSaved}
+        contact={editingContact}
+        events={events}
+        eventTypes={eventTypes}
       />
     </div>
   );
