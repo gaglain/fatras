@@ -63,6 +63,7 @@
   --custom-sidebarIconDark: #ffffff;
 }
 
+/* Application forcée des couleurs */
 body {
   background-color: var(--app-background) !important;
   color: var(--app-text) !important;
@@ -80,7 +81,7 @@ html {
 }
 
 /* Application forcée pour tous les composants */
-.card, [data-testid="card"] {
+.card, [data-testid="card"], [data-sonner-toaster] {
   background-color: var(--app-card-bg) !important;
   color: var(--app-card-text) !important;
 }
@@ -88,4 +89,16 @@ html {
 .button, [data-testid="button"] {
   background-color: var(--app-button-bg) !important;
   color: var(--app-button-text) !important;
+}
+
+/* Forcer l'application sur tous les éléments principaux */
+main, section, article, div[class*="container"] {
+  background-color: var(--app-background);
+  color: var(--app-text);
+}
+
+/* Forcer sur les éléments de navigation */
+nav, header {
+  background-color: var(--app-card-bg);
+  color: var(--app-card-text);
 }

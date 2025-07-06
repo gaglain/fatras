@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Bell } from 'lucide-react';
+import { Bell, Menu } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { FrontThemeToggle } from './FrontThemeToggle';
 import { useTheme } from 'next-themes';
@@ -11,6 +11,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { UserProfile } from './UserProfile';
 import { NotificationCenter } from './NotificationCenter';
 import { RealtimeIndicator } from '@/components/ui/realtime-indicator';
+import { AppSidebar } from '@/components/AppSidebar';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 export const BackOfficeHeader: React.FC = () => {
   const { theme } = useTheme();
@@ -18,6 +20,7 @@ export const BackOfficeHeader: React.FC = () => {
   const { currentUser } = useUser();
   const [showUserProfile, setShowUserProfile] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [unreadCount] = useState(3);
 
   const isDark = theme === "dark";
@@ -32,6 +35,25 @@ export const BackOfficeHeader: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
+              {/* Menu Hamburger pour mobile */}
+              <div className="lg:hidden">
+                <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                  <SheetTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="flex items-center space-x-2"
+                    >
+                      <Menu className="h-5 w-5" />
+                      <span>Menu</span>
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="left" className="p-0 w-80">
+                    <AppSidebar />
+                  </SheetContent>
+                </Sheet>
+              </div>
+
               <Link to="/dashboard" className="flex items-center space-x-2 group">
                 <img
                   src={logo || "/logo.svg"}

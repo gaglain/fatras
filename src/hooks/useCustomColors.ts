@@ -8,103 +8,63 @@ export const useCustomColors = () => {
     
     const loadAndApplyColors = async () => {
       try {
-        const { data: user } = await supabase.auth.getUser();
-        if (!user?.user) {
-          console.log('🎨 No authenticated user, skipping color loading');
-          return;
-        }
-
-        // Charger les préférences utilisateur depuis la base de données
-        const { data: profile, error } = await supabase
-          .from('user_profiles')
-          .select('*')
-          .eq('user_id', user.user.id)
-          .maybeSingle();
-
-        if (error) {
-          console.error('🎨 Error loading user profile:', error);
-          return;
-        }
-
-        if (!profile) {
-          console.log('🎨 No user profile found');
-          return;
-        }
-
-        // Récupérer les couleurs personnalisées depuis localStorage avec fallback sur les valeurs par défaut
+        // Récupérer les couleurs personnalisées depuis localStorage
         const savedColors = localStorage.getItem('customColors');
         let colors = {
           primary: '#8B5CF6',
           secondary: '#3B82F6',
           accent: '#10B981',
           background: '#FFFFFF',
-          text: '#18181B'
+          text: '#18181B',
+          backgroundDark: '#0f0f0f',
+          textDark: '#ffffff',
+          cardBg: '#ffffff',
+          cardText: '#18181b',
+          buttonBg: '#1632f4',
+          buttonText: '#ffffff',
+          cardBgDark: '#1a1a1a',
+          cardTextDark: '#ffffff',
+          buttonBgDark: '#ffffff',
+          buttonTextDark: '#000000'
         };
 
         if (savedColors) {
           try {
-            colors = { ...colors, ...JSON.parse(savedColors) };
+            const parsedColors = JSON.parse(savedColors);
+            colors = { ...colors, ...parsedColors };
             console.log('🎨 Loaded saved colors:', colors);
           } catch (e) {
             console.error('🎨 Error parsing saved colors:', e);
           }
         }
 
+        // Détecter le thème actuel
+        const isDark = document.documentElement.classList.contains('dark');
+        console.log('🎨 Current theme is dark:', isDark);
+
         // Appliquer les couleurs aux variables CSS
         const root = document.documentElement;
         
-        // Couleurs principales
-        root.style.setProperty('--primary', colors.primary);
-        root.style.setProperty('--secondary', colors.secondary);
-        root.style.setProperty('--accent', colors.accent);
-        root.style.setProperty('--app-background', colors.background);
-        root.style.setProperty('--app-text', colors.text);
+        // Couleurs principales basées sur le thème
+        root.style.setProperty('--app-background', isDark ? colors.backgroundDark : colors.background);
+        root.style.setProperty('--app-text', isDark ? colors.textDark : colors.text);
+        root.style.setProperty('--app-card-bg', isDark ? colors.cardBgDark : colors.cardBg);
+        root.style.setProperty('--app-card-text', isDark ? colors.cardTextDark : colors.cardText);
+        root.style.setProperty('--app-button-bg', isDark ? colors.buttonBgDark : colors.buttonBg);
+        root.style.setProperty('--app-button-text', isDark ? colors.buttonTextDark : colors.buttonText);
 
-        // Convertir hex en HSL pour les variables Tailwind
-        const hexToHsl = (hex: string) => {
-          const r = parseInt(hex.slice(1, 3), 16);
-          const g = parseInt(hex.slice(3, 5), 16);
-          const b = parseInt(hex.slice(5, 7), 16);
+        // Appliquer directement au body
+        const bgColor = isDark ? colors.backgroundDark : colors.background;
+        const textColor = isDark ? colors.textDark : colors.text;
+        
+        document.body.style.backgroundColor = bgColor;
+        document.body.style.color = textColor;
+        document.documentElement.style.backgroundColor = bgColor;
 
-          const rNorm = r / 255;
-          const gNorm = g / 255;
-          const bNorm = b / 255;
+        console.log('🎨 Colors applied successfully', { bgColor, textColor, isDark });
 
-          const max = Math.max(rNorm, gNorm, bNorm);
-          const min = Math.min(rNorm, gNorm, bNorm);
-          let h = 0;
-          let s = 0;
-          const l = (max + min) / 2;
-
-          if (max !== min) {
-            const d = max - min;
-            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-            
-            switch (max) {
-              case rNorm: h = (gNorm - bNorm) / d + (gNorm < bNorm ? 6 : 0); break;
-              case gNorm: h = (bNorm - rNorm) / d + 2; break;
-              case bNorm: h = (rNorm - gNorm) / d + 4; break;
-            }
-            h /= 6;
-          }
-
-          return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
-        };
-
-        // Appliquer les couleurs en format HSL pour Tailwind
-        try {
-          root.style.setProperty('--primary-hsl', hexToHsl(colors.primary));
-          root.style.setProperty('--secondary-hsl', hexToHsl(colors.secondary));
-          root.style.setProperty('--accent-hsl', hexToHsl(colors.accent));
-          
-          console.log('🎨 Colors applied successfully');
-        } catch (e) {
-          console.error('🎨 Error converting colors to HSL:', e);
-        }
-
-        // Forcer un re-render des éléments en triggant une classe CSS
-        document.body.classList.remove('colors-updated');
-        setTimeout(() => document.body.classList.add('colors-updated'), 10);
+        // Déclencher l'événement de changement de couleurs
+        window.dispatchEvent(new CustomEvent('customColorsChanged', { detail: colors }));
 
       } catch (error) {
         console.error('🎨 Error in loadAndApplyColors:', error);
@@ -118,23 +78,45 @@ export const useCustomColors = () => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'customColors') {
         console.log('🎨 Colors changed in localStorage, reloading...');
-        loadAndApplyColors();
+        setTimeout(loadAndApplyColors, 100);
       }
     };
 
-    window.addEventListener('storage', handleStorageChange);
+    // Écouter les changements de thème
+    const handleThemeChange = () => {
+      console.log('🎨 Theme changed, reapplying colors...');
+      setTimeout(loadAndApplyColors, 100);
+    };
 
-    // Écouter les changements d'authentification
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('🎨 Auth state changed:', event);
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        loadAndApplyColors();
-      }
+    // Écouter les événements personnalisés
+    const handleCustomColorsChanged = () => {
+      console.log('🎨 Custom colors event detected, reapplying...');
+      setTimeout(loadAndApplyColors, 50);
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('customColorsChanged', handleCustomColorsChanged);
+    window.addEventListener('customColorsApplied', handleCustomColorsChanged);
+    
+    // Observer les changements de classe sur documentElement pour détecter les changements de thème
+    const themeObserver = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+          handleThemeChange();
+        }
+      });
+    });
+    
+    themeObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
     });
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
-      subscription.unsubscribe();
+      window.removeEventListener('customColorsChanged', handleCustomColorsChanged);
+      window.removeEventListener('customColorsApplied', handleCustomColorsChanged);
+      themeObserver.disconnect();
     };
   }, []);
 };
