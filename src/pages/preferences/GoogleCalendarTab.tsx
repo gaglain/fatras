@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { GoogleCalendarIntegration } from '@/components/integrations/GoogleCalendarIntegration';
+import { GoogleCalendarSetup } from '@/components/integrations/GoogleCalendarSetup';
 
 export const GoogleCalendarTab: React.FC = () => {
   return (
@@ -12,6 +13,7 @@ export const GoogleCalendarTab: React.FC = () => {
         </p>
       </div>
       
+      <GoogleCalendarSetup />
       <GoogleCalendarIntegration />
       
       <div className="bg-blue-50 p-4 rounded-lg">

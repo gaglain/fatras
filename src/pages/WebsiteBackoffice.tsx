@@ -60,6 +60,27 @@ export const WebsiteBackoffice: React.FC = () => {
     metaDescription: ''
   });
 
+  // Sauvegarder et charger les pages depuis localStorage
+  useEffect(() => {
+    console.log('🔄 Loading website pages from localStorage');
+    const savedPages = localStorage.getItem('websitePages');
+    if (savedPages) {
+      try {
+        const parsed = JSON.parse(savedPages);
+        setPages(parsed);
+        console.log('✅ Pages loaded:', parsed.length);
+      } catch (error) {
+        console.error('❌ Error loading pages:', error);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    // Sauvegarder automatiquement les pages
+    console.log('💾 Saving pages to localStorage:', pages.length);
+    localStorage.setItem('websitePages', JSON.stringify(pages));
+  }, [pages]);
+
   const handleCreatePage = () => {
     if (!newPageData.title.trim()) {
       toast.error('Le titre de la page est requis');
@@ -75,19 +96,22 @@ export const WebsiteBackoffice: React.FC = () => {
         {
           id: `text-${Date.now()}`,
           type: 'text',
+          order: 0,
           content: {
-            text: `Contenu de la page ${newPageData.title}`,
-            style: 'normal'
+            text: `<h1>${newPageData.title}</h1><p>Contenu de la page ${newPageData.title}</p>`
           }
         }
       ],
       metaDescription: newPageData.metaDescription || `Page ${newPageData.title}`
     };
 
-    setPages([...pages, newPage]);
+    const updatedPages = [...pages, newPage];
+    setPages(updatedPages);
     setNewPageData({ title: '', slug: '', metaDescription: '' });
     setShowPageCreator(false);
     toast.success('Page créée avec succès');
+    
+    console.log('✅ New page created:', newPage);
   };
 
   const handleDeletePage = (pageId: string) => {
@@ -96,7 +120,8 @@ export const WebsiteBackoffice: React.FC = () => {
       return;
     }
     if (confirm('Êtes-vous sûr de vouloir supprimer cette page ?')) {
-      setPages(pages.filter(p => p.id !== pageId));
+      const updatedPages = pages.filter(p => p.id !== pageId);
+      setPages(updatedPages);
       if (editingPage && editingPage.id === pageId) {
         setEditingPage(null);
       }
@@ -105,7 +130,7 @@ export const WebsiteBackoffice: React.FC = () => {
   };
 
   const handleSaveBlocks = (pageId: string, blocks: SimpleBlock[]) => {
-    console.log('Saving blocks for page:', pageId, blocks);
+    console.log('💾 Saving blocks for page:', pageId, blocks);
     
     const updatedPages = pages.map(page => 
       page.id === pageId 
@@ -126,11 +151,14 @@ export const WebsiteBackoffice: React.FC = () => {
   };
 
   const handlePreviewSite = () => {
-    window.open('/front', '_blank');
+    // Ouvrir dans un nouvel onglet
+    const previewUrl = '/front';
+    window.open(previewUrl, '_blank');
+    console.log('🔍 Opening preview:', previewUrl);
   };
 
   const handleEditPage = (page: WebPage) => {
-    console.log('Opening editor for page:', page);
+    console.log('✏️ Opening editor for page:', page.title);
     setEditingPage(page);
   };
 
@@ -187,7 +215,7 @@ export const WebsiteBackoffice: React.FC = () => {
         <div className="flex items-center space-x-3">
           <Button variant="outline" onClick={handlePreviewSite}>
             <Globe className="h-4 w-4 mr-2" />
-            Voir le site
+            Voir le site ({pages.length} pages)
           </Button>
         </div>
       </div>

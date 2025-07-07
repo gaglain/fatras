@@ -7,20 +7,36 @@ export const useCustomColors = () => {
     
     const applyColors = () => {
       try {
-        // Couleurs par défaut
+        // Couleurs par défaut étendues
         const defaultColors = {
+          // Mode clair
           background: '#ffffff',
           text: '#18181b',
           cardBg: '#ffffff',
           cardText: '#18181b',
           buttonBg: '#1632f4',
           buttonText: '#ffffff',
+          headerBg: '#ffffff',
+          headerText: '#18181b',
+          sidebarBg: '#f8fafc',
+          sidebarText: '#374151',
+          inputBg: '#ffffff',
+          inputText: '#18181b',
+          borderColor: '#e5e7eb',
+          // Mode sombre
           backgroundDark: '#0f0f0f',
           textDark: '#ffffff',
           cardBgDark: '#1a1a1a',
           cardTextDark: '#ffffff',
           buttonBgDark: '#ffffff',
-          buttonTextDark: '#000000'
+          buttonTextDark: '#000000',
+          headerBgDark: '#1a1a1a',
+          headerTextDark: '#ffffff',
+          sidebarBgDark: '#111827',
+          sidebarTextDark: '#d1d5db',
+          inputBgDark: '#1f2937',
+          inputTextDark: '#ffffff',
+          borderColorDark: '#374151'
         };
 
         // Charger les couleurs sauvegardées
@@ -39,27 +55,110 @@ export const useCustomColors = () => {
         // Détecter le thème
         const isDark = document.documentElement.classList.contains('dark');
         
-        // Appliquer les couleurs
-        const bgColor = isDark ? colors.backgroundDark : colors.background;
-        const textColor = isDark ? colors.textDark : colors.text;
-        const cardBg = isDark ? colors.cardBgDark : colors.cardBg;
-        const cardText = isDark ? colors.cardTextDark : colors.cardText;
-        const buttonBg = isDark ? colors.buttonBgDark : colors.buttonBg;
-        const buttonText = isDark ? colors.buttonTextDark : colors.buttonText;
+        // Appliquer les couleurs selon le thème
+        const activeColors = {
+          background: isDark ? colors.backgroundDark : colors.background,
+          text: isDark ? colors.textDark : colors.text,
+          cardBg: isDark ? colors.cardBgDark : colors.cardBg,
+          cardText: isDark ? colors.cardTextDark : colors.cardText,
+          buttonBg: isDark ? colors.buttonBgDark : colors.buttonBg,
+          buttonText: isDark ? colors.buttonTextDark : colors.buttonText,
+          headerBg: isDark ? colors.headerBgDark : colors.headerBg,
+          headerText: isDark ? colors.headerTextDark : colors.headerText,
+          sidebarBg: isDark ? colors.sidebarBgDark : colors.sidebarBg,
+          sidebarText: isDark ? colors.sidebarTextDark : colors.sidebarText,
+          inputBg: isDark ? colors.inputBgDark : colors.inputBg,
+          inputText: isDark ? colors.inputTextDark : colors.inputText,
+          borderColor: isDark ? colors.borderColorDark : colors.borderColor
+        };
 
-        // Variables CSS
-        document.documentElement.style.setProperty('--app-background', bgColor);
-        document.documentElement.style.setProperty('--app-text', textColor);
-        document.documentElement.style.setProperty('--app-card-bg', cardBg);
-        document.documentElement.style.setProperty('--app-card-text', cardText);
-        document.documentElement.style.setProperty('--app-button-bg', buttonBg);
-        document.documentElement.style.setProperty('--app-button-text', buttonText);
+        // Supprimer l'ancien style
+        const existingStyle = document.getElementById('custom-colors-style');
+        if (existingStyle) {
+          existingStyle.remove();
+        }
 
-        // Application directe
-        document.body.style.backgroundColor = bgColor;
-        document.body.style.color = textColor;
+        // Créer et injecter le nouveau style
+        const style = document.createElement('style');
+        style.id = 'custom-colors-style';
+        style.innerHTML = `
+          :root {
+            --app-background: ${activeColors.background} !important;
+            --app-text: ${activeColors.text} !important;
+            --app-card-bg: ${activeColors.cardBg} !important;
+            --app-card-text: ${activeColors.cardText} !important;
+            --app-button-bg: ${activeColors.buttonBg} !important;
+            --app-button-text: ${activeColors.buttonText} !important;
+            --app-header-bg: ${activeColors.headerBg} !important;
+            --app-header-text: ${activeColors.headerText} !important;
+            --app-sidebar-bg: ${activeColors.sidebarBg} !important;
+            --app-sidebar-text: ${activeColors.sidebarText} !important;
+            --app-input-bg: ${activeColors.inputBg} !important;
+            --app-input-text: ${activeColors.inputText} !important;
+            --app-border: ${activeColors.borderColor} !important;
+          }
 
-        console.log('✅ Colors applied:', { bgColor, textColor, isDark });
+          /* Application globale avec force */
+          body, #root {
+            background-color: var(--app-background) !important;
+            color: var(--app-text) !important;
+          }
+
+          /* Header */
+          .back-office-header, header {
+            background-color: var(--app-header-bg) !important;
+            color: var(--app-header-text) !important;
+            border-color: var(--app-border) !important;
+          }
+
+          /* Sidebar */
+          .sidebar, [data-sidebar], .app-sidebar {
+            background-color: var(--app-sidebar-bg) !important;
+            color: var(--app-sidebar-text) !important;
+          }
+
+          /* Cards */
+          .card, [data-card] {
+            background-color: var(--app-card-bg) !important;
+            color: var(--app-card-text) !important;
+            border-color: var(--app-border) !important;
+          }
+
+          /* Buttons */
+          .btn-primary, .button-primary, [data-primary-button] {
+            background-color: var(--app-button-bg) !important;
+            color: var(--app-button-text) !important;
+          }
+
+          /* Inputs */
+          input, textarea, select {
+            background-color: var(--app-input-bg) !important;
+            color: var(--app-input-text) !important;
+            border-color: var(--app-border) !important;
+          }
+
+          /* Notifications - FIX TRANSPARENCY */
+          .notification, [data-sonner-toaster], [data-sonner-toast] {
+            background-color: var(--app-card-bg) !important;
+            color: var(--app-card-text) !important;
+            border: 1px solid var(--app-border) !important;
+            backdrop-filter: none !important;
+            z-index: 9999 !important;
+          }
+
+          /* Dropdowns - FIX TRANSPARENCY */
+          .dropdown-menu, [data-radix-popper-content-wrapper] {
+            background-color: var(--app-card-bg) !important;
+            color: var(--app-card-text) !important;
+            border: 1px solid var(--app-border) !important;
+            backdrop-filter: none !important;
+            z-index: 9999 !important;
+          }
+        `;
+        
+        document.head.appendChild(style);
+
+        console.log('✅ Colors applied successfully:', activeColors);
       } catch (error) {
         console.error('❌ Error applying colors:', error);
       }

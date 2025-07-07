@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { GmailIntegration } from '@/components/integrations/GmailIntegration';
+import { GmailSetup } from '@/components/integrations/GmailSetup';
 
 export const GmailTab: React.FC = () => {
   return (
@@ -12,6 +13,7 @@ export const GmailTab: React.FC = () => {
         </p>
       </div>
       
+      <GmailSetup />
       <GmailIntegration />
       
       <div className="bg-blue-50 p-4 rounded-lg">
