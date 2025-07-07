@@ -22,6 +22,13 @@ interface CustomColors {
   inputBg: string;
   inputText: string;
   borderColor: string;
+  // Messagerie et notifications
+  messageBg: string;
+  messageText: string;
+  notificationBg: string;
+  notificationText: string;
+  widgetBg: string;
+  widgetText: string;
   // Mode sombre
   backgroundDark: string;
   textDark: string;
@@ -36,6 +43,13 @@ interface CustomColors {
   inputBgDark: string;
   inputTextDark: string;
   borderColorDark: string;
+  // Messagerie et notifications - Mode sombre
+  messageBgDark: string;
+  messageTextDark: string;
+  notificationBgDark: string;
+  notificationTextDark: string;
+  widgetBgDark: string;
+  widgetTextDark: string;
 }
 
 const defaultColors: CustomColors = {
@@ -52,6 +66,12 @@ const defaultColors: CustomColors = {
   inputBg: "#ffffff",
   inputText: "#18181b",
   borderColor: "#e5e7eb",
+  messageBg: "#f0f9ff",
+  messageText: "#1e40af",
+  notificationBg: "#ffffff",
+  notificationText: "#18181b",
+  widgetBg: "#1632f4",
+  widgetText: "#ffffff",
   backgroundDark: "#0f0f0f",
   textDark: "#ffffff",
   cardBgDark: "#1a1a1a",
@@ -65,6 +85,12 @@ const defaultColors: CustomColors = {
   inputBgDark: "#1f2937",
   inputTextDark: "#ffffff",
   borderColorDark: "#374151",
+  messageBgDark: "#1e3a8a",
+  messageTextDark: "#bfdbfe",
+  notificationBgDark: "#1a1a1a",
+  notificationTextDark: "#ffffff",
+  widgetBgDark: "#1632f4",
+  widgetTextDark: "#ffffff",
 };
 
 export const CustomColorsForm: React.FC = () => {
@@ -162,6 +188,12 @@ export const CustomColorsForm: React.FC = () => {
               <ColorInput label="Inputs - Fond" value={colors.inputBg} onChange={(value) => handleColorChange("inputBg", value)} />
               <ColorInput label="Inputs - Texte" value={colors.inputText} onChange={(value) => handleColorChange("inputText", value)} />
               <ColorInput label="Bordures" value={colors.borderColor} onChange={(value) => handleColorChange("borderColor", value)} />
+              <ColorInput label="Messages - Fond" value={colors.messageBg} onChange={(value) => handleColorChange("messageBg", value)} />
+              <ColorInput label="Messages - Texte" value={colors.messageText} onChange={(value) => handleColorChange("messageText", value)} />
+              <ColorInput label="Notifications - Fond" value={colors.notificationBg} onChange={(value) => handleColorChange("notificationBg", value)} />
+              <ColorInput label="Notifications - Texte" value={colors.notificationText} onChange={(value) => handleColorChange("notificationText", value)} />
+              <ColorInput label="Widget - Fond" value={colors.widgetBg} onChange={(value) => handleColorChange("widgetBg", value)} />
+              <ColorInput label="Widget - Texte" value={colors.widgetText} onChange={(value) => handleColorChange("widgetText", value)} />
             </div>
           </div>
 
@@ -181,6 +213,12 @@ export const CustomColorsForm: React.FC = () => {
               <ColorInput label="Inputs - Fond" value={colors.inputBgDark} onChange={(value) => handleColorChange("inputBgDark", value)} />
               <ColorInput label="Inputs - Texte" value={colors.inputTextDark} onChange={(value) => handleColorChange("inputTextDark", value)} />
               <ColorInput label="Bordures" value={colors.borderColorDark} onChange={(value) => handleColorChange("borderColorDark", value)} />
+              <ColorInput label="Messages - Fond" value={colors.messageBgDark} onChange={(value) => handleColorChange("messageBgDark", value)} />
+              <ColorInput label="Messages - Texte" value={colors.messageTextDark} onChange={(value) => handleColorChange("messageTextDark", value)} />
+              <ColorInput label="Notifications - Fond" value={colors.notificationBgDark} onChange={(value) => handleColorChange("notificationBgDark", value)} />
+              <ColorInput label="Notifications - Texte" value={colors.notificationTextDark} onChange={(value) => handleColorChange("notificationTextDark", value)} />
+              <ColorInput label="Widget - Fond" value={colors.widgetBgDark} onChange={(value) => handleColorChange("widgetBgDark", value)} />
+              <ColorInput label="Widget - Texte" value={colors.widgetTextDark} onChange={(value) => handleColorChange("widgetTextDark", value)} />
             </div>
           </div>
 

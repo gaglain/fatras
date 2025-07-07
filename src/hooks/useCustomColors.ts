@@ -23,6 +23,12 @@ export const useCustomColors = () => {
           inputBg: '#ffffff',
           inputText: '#18181b',
           borderColor: '#e5e7eb',
+          messageBg: '#f0f9ff',
+          messageText: '#1e40af',
+          notificationBg: '#ffffff',
+          notificationText: '#18181b',
+          widgetBg: '#1632f4',
+          widgetText: '#ffffff',
           // Mode sombre
           backgroundDark: '#0f0f0f',
           textDark: '#ffffff',
@@ -36,7 +42,13 @@ export const useCustomColors = () => {
           sidebarTextDark: '#d1d5db',
           inputBgDark: '#1f2937',
           inputTextDark: '#ffffff',
-          borderColorDark: '#374151'
+          borderColorDark: '#374151',
+          messageBgDark: '#1e3a8a',
+          messageTextDark: '#bfdbfe',
+          notificationBgDark: '#1a1a1a',
+          notificationTextDark: '#ffffff',
+          widgetBgDark: '#1632f4',
+          widgetTextDark: '#ffffff'
         };
 
         // Charger les couleurs sauvegardées
@@ -69,7 +81,13 @@ export const useCustomColors = () => {
           sidebarText: isDark ? colors.sidebarTextDark : colors.sidebarText,
           inputBg: isDark ? colors.inputBgDark : colors.inputBg,
           inputText: isDark ? colors.inputTextDark : colors.inputText,
-          borderColor: isDark ? colors.borderColorDark : colors.borderColor
+          borderColor: isDark ? colors.borderColorDark : colors.borderColor,
+          messageBg: isDark ? colors.messageBgDark : colors.messageBg,
+          messageText: isDark ? colors.messageTextDark : colors.messageText,
+          notificationBg: isDark ? colors.notificationBgDark : colors.notificationBg,
+          notificationText: isDark ? colors.notificationTextDark : colors.notificationText,
+          widgetBg: isDark ? colors.widgetBgDark : colors.widgetBg,
+          widgetText: isDark ? colors.widgetTextDark : colors.widgetText
         };
 
         // Supprimer l'ancien style
@@ -96,6 +114,12 @@ export const useCustomColors = () => {
             --app-input-bg: ${activeColors.inputBg} !important;
             --app-input-text: ${activeColors.inputText} !important;
             --app-border: ${activeColors.borderColor} !important;
+            --app-message-bg: ${activeColors.messageBg} !important;
+            --app-message-text: ${activeColors.messageText} !important;
+            --app-notification-bg: ${activeColors.notificationBg} !important;
+            --app-notification-text: ${activeColors.notificationText} !important;
+            --app-widget-bg: ${activeColors.widgetBg} !important;
+            --app-widget-text: ${activeColors.widgetText} !important;
           }
 
           /* Application globale avec force */
@@ -137,10 +161,33 @@ export const useCustomColors = () => {
             border-color: var(--app-border) !important;
           }
 
+          /* Messagerie */
+          .message, .chat-message, [data-message] {
+            background-color: var(--app-message-bg) !important;
+            color: var(--app-message-text) !important;
+            border-color: var(--app-border) !important;
+          }
+
+          /* Widget de messagerie */
+          .chat-widget, .messaging-widget, [data-chat-widget] {
+            background-color: var(--app-widget-bg) !important;
+            color: var(--app-widget-text) !important;
+            border-color: var(--app-border) !important;
+          }
+
           /* Notifications - FIX TRANSPARENCY */
           .notification, [data-sonner-toaster], [data-sonner-toast] {
-            background-color: var(--app-card-bg) !important;
-            color: var(--app-card-text) !important;
+            background-color: var(--app-notification-bg) !important;
+            color: var(--app-notification-text) !important;
+            border: 1px solid var(--app-border) !important;
+            backdrop-filter: none !important;
+            z-index: 9999 !important;
+          }
+
+          /* Pop-up de notifications */
+          .notification-popup, [data-notification-popup] {
+            background-color: var(--app-notification-bg) !important;
+            color: var(--app-notification-text) !important;
             border: 1px solid var(--app-border) !important;
             backdrop-filter: none !important;
             z-index: 9999 !important;
