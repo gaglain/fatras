@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ interface Block {
   id: string;
   type: 'text' | 'image' | 'hero' | 'artists';
   content: any;
+  order: number;
 }
 
 interface WebPage {
@@ -37,6 +38,7 @@ const defaultPages: WebPage[] = [
       {
         id: 'hero-1',
         type: 'hero',
+        order: 0,
         content: {
           title: 'Bienvenue sur notre site',
           subtitle: 'Découvrez notre univers musical',
@@ -134,7 +136,7 @@ export const WebsiteBackoffice: React.FC = () => {
     
     const updatedPages = pages.map(page => 
       page.id === pageId 
-        ? { ...page, blocks: blocks as Block[] }
+        ? { ...page, blocks: blocks.map((block, index) => ({ ...block, order: index })) as Block[] }
         : page
     );
     setPages(updatedPages);
