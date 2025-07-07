@@ -6,7 +6,6 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Save, RotateCcw, Palette } from "lucide-react";
-import { useTheme } from "next-themes";
 
 interface CustomColors {
   background: string;
@@ -21,16 +20,6 @@ interface CustomColors {
   cardTextDark: string;
   buttonBgDark: string;
   buttonTextDark: string;
-  chatWidgetBg: string;
-  chatWidgetIcon: string;
-  notificationBg: string;
-  notificationText: string;
-  notificationBorder: string;
-  notificationBadgeBg: string;
-  notificationBadgeText: string;
-  notificationButtonBg: string;
-  notificationButtonText: string;
-  notificationRedDot: string;
 }
 
 const defaultColors: CustomColors = {
@@ -46,122 +35,59 @@ const defaultColors: CustomColors = {
   cardTextDark: "#ffffff",
   buttonBgDark: "#ffffff",
   buttonTextDark: "#000000",
-  chatWidgetBg: "#1632f4",
-  chatWidgetIcon: "#ffffff",
-  notificationBg: "#ffffff",
-  notificationText: "#18181b",
-  notificationBorder: "#e5e7eb",
-  notificationBadgeBg: "#ef4444",
-  notificationBadgeText: "#ffffff",
-  notificationButtonBg: "#f3f4f6",
-  notificationButtonText: "#374151",
-  notificationRedDot: "#ef4444",
 };
 
 export const CustomColorsForm: React.FC = () => {
-  const { theme } = useTheme();
   const [colors, setColors] = useState<CustomColors>(defaultColors);
-  const [hasChanges, setHasChanges] = useState(false);
-
-  const applyColorsToDocument = (newColors: CustomColors) => {
-    const root = document.documentElement;
-    const isDark = theme === 'dark';
-    
-    console.log('🎨 Applying colors immediately:', { newColors, isDark });
-    
-    // Variables CSS personnalisées pour l'application
-    root.style.setProperty('--app-background', isDark ? newColors.backgroundDark : newColors.background);
-    root.style.setProperty('--app-text', isDark ? newColors.textDark : newColors.text);
-    root.style.setProperty('--app-card-bg', isDark ? newColors.cardBgDark : newColors.cardBg);
-    root.style.setProperty('--app-card-text', isDark ? newColors.cardTextDark : newColors.cardText);
-    root.style.setProperty('--app-button-bg', isDark ? newColors.buttonBgDark : newColors.buttonBg);
-    root.style.setProperty('--app-button-text', isDark ? newColors.buttonTextDark : newColors.buttonText);
-    root.style.setProperty('--app-chat-widget-bg', newColors.chatWidgetBg);
-    root.style.setProperty('--app-chat-widget-icon', newColors.chatWidgetIcon);
-    
-    // Variables pour les notifications
-    root.style.setProperty('--notification-bg', isDark ? newColors.cardBgDark : newColors.notificationBg);
-    root.style.setProperty('--notification-text', isDark ? newColors.textDark : newColors.notificationText);
-    root.style.setProperty('--notification-border', newColors.notificationBorder);
-    root.style.setProperty('--notification-badge-bg', newColors.notificationBadgeBg);
-    root.style.setProperty('--notification-badge-text', newColors.notificationBadgeText);
-    root.style.setProperty('--notification-button-bg', newColors.notificationButtonBg);
-    root.style.setProperty('--notification-button-text', newColors.notificationButtonText);
-    root.style.setProperty('--notification-red-dot', newColors.notificationRedDot);
-    
-    // Appliquer directement au body et html
-    const bgColor = isDark ? newColors.backgroundDark : newColors.background;
-    const textColor = isDark ? newColors.textDark : newColors.text;
-    
-    document.body.style.backgroundColor = bgColor;
-    document.body.style.color = textColor;
-    document.documentElement.style.backgroundColor = bgColor;
-    
-    // Forcer la mise à jour des variables Tailwind CSS
-    const hslValues = {
-      background: isDark ? '222.2 84% 4.9%' : '0 0% 100%',
-      foreground: isDark ? '210 40% 98%' : '222.2 84% 4.9%',
-      card: isDark ? '222.2 84% 4.9%' : '0 0% 100%',
-      'card-foreground': isDark ? '210 40% 98%' : '222.2 84% 4.9%'
-    };
-    
-    Object.entries(hslValues).forEach(([key, value]) => {
-      root.style.setProperty(`--${key}`, value);
-    });
-    
-    // Déclencher l'événement de changement de couleurs
-    window.dispatchEvent(new CustomEvent('customColorsChanged', { detail: newColors }));
-    window.dispatchEvent(new CustomEvent('customColorsApplied', { detail: newColors }));
-    
-    console.log('✅ Colors applied successfully');
-  };
 
   useEffect(() => {
-    const loadColors = () => {
-      const savedColors = localStorage.getItem("customColors");
-      if (savedColors) {
-        try {
-          const parsed = JSON.parse(savedColors);
-          const mergedColors = { ...defaultColors, ...parsed };
-          setColors(mergedColors);
-          applyColorsToDocument(mergedColors);
-        } catch (error) {
-          console.error("Error loading colors:", error);
-          setColors(defaultColors);
-          applyColorsToDocument(defaultColors);
-        }
-      } else {
-        setColors(defaultColors);
-        applyColorsToDocument(defaultColors);
+    // Charger les couleurs sauvegardées
+    const savedColors = localStorage.getItem("customColors");
+    if (savedColors) {
+      try {
+        const parsed = JSON.parse(savedColors);
+        setColors({ ...defaultColors, ...parsed });
+      } catch (error) {
+        console.error("Error loading colors:", error);
       }
-    };
-
-    loadColors();
-  }, [theme]);
+    }
+  }, []);
 
   const handleColorChange = (key: keyof CustomColors, value: string) => {
     const newColors = { ...colors, [key]: value };
     setColors(newColors);
-    setHasChanges(true);
-    applyColorsToDocument(newColors);
+    applyColors(newColors);
+  };
+
+  const applyColors = (newColors: CustomColors) => {
+    // Détecter le thème actuel
+    const isDark = document.documentElement.classList.contains('dark');
+    
+    // Appliquer les couleurs selon le thème
+    const bgColor = isDark ? newColors.backgroundDark : newColors.background;
+    const textColor = isDark ? newColors.textDark : newColors.text;
+    
+    // Variables CSS
+    document.documentElement.style.setProperty('--app-background', bgColor);
+    document.documentElement.style.setProperty('--app-text', textColor);
+    document.documentElement.style.setProperty('--app-card-bg', isDark ? newColors.cardBgDark : newColors.cardBg);
+    document.documentElement.style.setProperty('--app-card-text', isDark ? newColors.cardTextDark : newColors.cardText);
+    document.documentElement.style.setProperty('--app-button-bg', isDark ? newColors.buttonBgDark : newColors.buttonBg);
+    document.documentElement.style.setProperty('--app-button-text', isDark ? newColors.buttonTextDark : newColors.buttonText);
+    
+    // Application directe
+    document.body.style.backgroundColor = bgColor;
+    document.body.style.color = textColor;
   };
 
   const saveColors = () => {
     try {
       localStorage.setItem("customColors", JSON.stringify(colors));
-      applyColorsToDocument(colors);
-      setHasChanges(false);
       
-      // Déclencher tous les événements de synchronisation
+      // Déclencher l'événement de changement
       window.dispatchEvent(new CustomEvent('customColorsChanged', { detail: colors }));
-      window.dispatchEvent(new CustomEvent('customColorsApplied', { detail: colors }));
-      window.dispatchEvent(new StorageEvent('storage', {
-        key: 'customColors',
-        newValue: JSON.stringify(colors),
-        storageArea: localStorage
-      }));
       
-      toast.success("Couleurs sauvegardées et appliquées !");
+      toast.success("Couleurs sauvegardées !");
     } catch (error) {
       console.error("Error saving colors:", error);
       toast.error("Erreur lors de la sauvegarde");
@@ -171,14 +97,10 @@ export const CustomColorsForm: React.FC = () => {
   const resetColors = () => {
     setColors(defaultColors);
     localStorage.removeItem("customColors");
-    applyColorsToDocument(defaultColors);
-    setHasChanges(false);
+    applyColors(defaultColors);
     
-    // Déclencher les événements de réinitialisation
     window.dispatchEvent(new CustomEvent('customColorsChanged', { detail: defaultColors }));
-    window.dispatchEvent(new CustomEvent('customColorsApplied', { detail: defaultColors }));
-    
-    toast.success("Couleurs remises par défaut !");
+    toast.success("Couleurs réinitialisées !");
   };
 
   const ColorInput = ({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) => (
@@ -208,57 +130,35 @@ export const CustomColorsForm: React.FC = () => {
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <Palette className="h-5 w-5" />
-            <span>Personnalisation des Couleurs</span>
+            <span>Couleurs Personnalisées</span>
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            Les changements s'appliquent en temps réel. Sauvegardez pour les conserver.
+            Les changements s'appliquent en temps réel.
           </p>
         </CardHeader>
         <CardContent className="space-y-6">
           
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold border-b pb-2">🌞 Mode Clair</h3>
+            <h3 className="text-lg font-semibold">🌞 Mode Clair</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <ColorInput label="Arrière-plan principal" value={colors.background} onChange={(value) => handleColorChange("background", value)} />
-              <ColorInput label="Texte principal" value={colors.text} onChange={(value) => handleColorChange("text", value)} />
-              <ColorInput label="Arrière-plan des cartes" value={colors.cardBg} onChange={(value) => handleColorChange("cardBg", value)} />
-              <ColorInput label="Texte des cartes" value={colors.cardText} onChange={(value) => handleColorChange("cardText", value)} />
-              <ColorInput label="Arrière-plan des boutons" value={colors.buttonBg} onChange={(value) => handleColorChange("buttonBg", value)} />
-              <ColorInput label="Texte des boutons" value={colors.buttonText} onChange={(value) => handleColorChange("buttonText", value)} />
+              <ColorInput label="Arrière-plan" value={colors.background} onChange={(value) => handleColorChange("background", value)} />
+              <ColorInput label="Texte" value={colors.text} onChange={(value) => handleColorChange("text", value)} />
+              <ColorInput label="Cartes - Fond" value={colors.cardBg} onChange={(value) => handleColorChange("cardBg", value)} />
+              <ColorInput label="Cartes - Texte" value={colors.cardText} onChange={(value) => handleColorChange("cardText", value)} />
+              <ColorInput label="Boutons - Fond" value={colors.buttonBg} onChange={(value) => handleColorChange("buttonBg", value)} />
+              <ColorInput label="Boutons - Texte" value={colors.buttonText} onChange={(value) => handleColorChange("buttonText", value)} />
             </div>
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold border-b pb-2">🌙 Mode Sombre</h3>
+            <h3 className="text-lg font-semibold">🌙 Mode Sombre</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <ColorInput label="Arrière-plan principal" value={colors.backgroundDark} onChange={(value) => handleColorChange("backgroundDark", value)} />
-              <ColorInput label="Texte principal" value={colors.textDark} onChange={(value) => handleColorChange("textDark", value)} />
-              <ColorInput label="Arrière-plan des cartes" value={colors.cardBgDark} onChange={(value) => handleColorChange("cardBgDark", value)} />
-              <ColorInput label="Texte des cartes" value={colors.cardTextDark} onChange={(value) => handleColorChange("cardTextDark", value)} />
-              <ColorInput label="Arrière-plan des boutons" value={colors.buttonBgDark} onChange={(value) => handleColorChange("buttonBgDark", value)} />
-              <ColorInput label="Texte des boutons" value={colors.buttonTextDark} onChange={(value) => handleColorChange("buttonTextDark", value)} />
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold border-b pb-2">💬 Widget de Chat</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <ColorInput label="Arrière-plan du widget" value={colors.chatWidgetBg} onChange={(value) => handleColorChange("chatWidgetBg", value)} />
-              <ColorInput label="Couleur de l'icône" value={colors.chatWidgetIcon} onChange={(value) => handleColorChange("chatWidgetIcon", value)} />
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold border-b pb-2">🔔 Notifications</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <ColorInput label="Arrière-plan des notifications" value={colors.notificationBg} onChange={(value) => handleColorChange("notificationBg", value)} />
-              <ColorInput label="Texte des notifications" value={colors.notificationText} onChange={(value) => handleColorChange("notificationText", value)} />
-              <ColorInput label="Bordure des notifications" value={colors.notificationBorder} onChange={(value) => handleColorChange("notificationBorder", value)} />
-              <ColorInput label="Badge - Arrière-plan" value={colors.notificationBadgeBg} onChange={(value) => handleColorChange("notificationBadgeBg", value)} />
-              <ColorInput label="Badge - Texte" value={colors.notificationBadgeText} onChange={(value) => handleColorChange("notificationBadgeText", value)} />
-              <ColorInput label="Boutons - Arrière-plan" value={colors.notificationButtonBg} onChange={(value) => handleColorChange("notificationButtonBg", value)} />
-              <ColorInput label="Boutons - Texte" value={colors.notificationButtonText} onChange={(value) => handleColorChange("notificationButtonText", value)} />
-              <ColorInput label="Point rouge" value={colors.notificationRedDot} onChange={(value) => handleColorChange("notificationRedDot", value)} />
+              <ColorInput label="Arrière-plan" value={colors.backgroundDark} onChange={(value) => handleColorChange("backgroundDark", value)} />
+              <ColorInput label="Texte" value={colors.textDark} onChange={(value) => handleColorChange("textDark", value)} />
+              <ColorInput label="Cartes - Fond" value={colors.cardBgDark} onChange={(value) => handleColorChange("cardBgDark", value)} />
+              <ColorInput label="Cartes - Texte" value={colors.cardTextDark} onChange={(value) => handleColorChange("cardTextDark", value)} />
+              <ColorInput label="Boutons - Fond" value={colors.buttonBgDark} onChange={(value) => handleColorChange("buttonBgDark", value)} />
+              <ColorInput label="Boutons - Texte" value={colors.buttonTextDark} onChange={(value) => handleColorChange("buttonTextDark", value)} />
             </div>
           </div>
 
@@ -272,12 +172,6 @@ export const CustomColorsForm: React.FC = () => {
               <RotateCcw className="h-4 w-4" />
               <span>Réinitialiser</span>
             </Button>
-            
-            {hasChanges && (
-              <p className="text-sm flex items-center text-yellow-600">
-                ⚠️ Changements non sauvegardés
-              </p>
-            )}
           </div>
         </CardContent>
       </Card>

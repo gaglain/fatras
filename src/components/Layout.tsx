@@ -19,10 +19,8 @@ const adminRoutes = [
 export const Layout: React.FC = () => {
   const location = useLocation();
   
-  // Appliquer les couleurs personnalisées
+  // Hooks simplifiés
   useCustomColors();
-  
-  // Activer la synchronisation du site web
   useWebsiteSync();
   
   console.log('🏗️ Layout - Rendering for path:', location.pathname);
@@ -31,10 +29,7 @@ export const Layout: React.FC = () => {
     location.pathname === route || location.pathname.startsWith(route + '/')
   );
   
-  console.log('🏗️ Layout - Is admin route:', isAdminRoute);
-  
   if (!isAdminRoute) {
-    console.log('🏗️ Layout - Not admin route, rendering outlet only');
     return (
       <>
         <Outlet />
@@ -45,29 +40,16 @@ export const Layout: React.FC = () => {
 
   return (
     <SidebarProvider>
-      <div 
-        className="flex h-screen w-full"
-        style={{ 
-          backgroundColor: 'var(--app-background, #ffffff)',
-          color: 'var(--app-text, #18181b)'
-        }}
-      >
-        {/* Desktop Sidebar - TOUJOURS visible sur desktop (lg:block) */}
+      <div className="flex h-screen w-full">
+        {/* Sidebar desktop seulement */}
         <div className="hidden lg:block">
           <AppSidebar />
         </div>
 
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Header avec menu hamburger UNIQUEMENT pour mobile */}
           <BackOfficeHeader />
-
-          <main 
-            className="flex-1 overflow-auto p-4 lg:p-6"
-            style={{ 
-              backgroundColor: 'var(--app-background, #ffffff)',
-              color: 'var(--app-text, #18181b)'
-            }}
-          >
+          
+          <main className="flex-1 overflow-auto p-4 lg:p-6">
             <Outlet />
           </main>
         </div>

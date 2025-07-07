@@ -7,33 +7,13 @@
 @tailwind utilities;
 
 :root {
-  /* Couleurs par défaut - mode clair */
+  /* Variables de couleur par défaut */
   --app-background: #ffffff;
   --app-text: #18181b;
   --app-card-bg: #ffffff;
   --app-card-text: #18181b;
   --app-button-bg: #1632f4;
   --app-button-text: #ffffff;
-  --app-chat-widget-bg: #1632f4;
-  --app-chat-widget-icon: #ffffff;
-  
-  /* Variables pour les notifications */
-  --notification-bg: #ffffff;
-  --notification-text: #18181b;
-  --notification-border: #e5e7eb;
-  --notification-badge-bg: #ef4444;
-  --notification-badge-text: #ffffff;
-  --notification-button-bg: #f3f4f6;
-  --notification-button-text: #374151;
-  --notification-red-dot: #ef4444;
-  
-  /* Variables pour la sidebar */
-  --custom-sidebarBg: #ffffff;
-  --custom-sidebarText: #18181b;
-  --custom-sidebarActiveItemBg: #1632f4;
-  --custom-sidebarActiveItemText: #ffffff;
-  --custom-sidebarIconLight: #1632f4;
-  --custom-sidebarIconDark: #ffffff;
 }
 
 .dark {
@@ -43,31 +23,13 @@
   --app-card-text: #ffffff;
   --app-button-bg: #ffffff;
   --app-button-text: #000000;
-  
-  /* Variables pour les notifications mode sombre */
-  --notification-bg: #1a1a1a;
-  --notification-text: #ffffff;
-  --notification-border: #374151;
-  --notification-badge-bg: #ef4444;
-  --notification-badge-text: #ffffff;
-  --notification-button-bg: #374151;
-  --notification-button-text: #ffffff;
-  --notification-red-dot: #ef4444;
-  
-  /* Variables pour la sidebar mode sombre */
-  --custom-sidebarBg: #0f0f0f;
-  --custom-sidebarText: #ffffff;
-  --custom-sidebarActiveItemBg: #1632f4;
-  --custom-sidebarActiveItemText: #ffffff;
-  --custom-sidebarIconLight: #1632f4;
-  --custom-sidebarIconDark: #ffffff;
 }
 
-/* Application forcée des couleurs */
+/* Application des couleurs avec force */
 body {
   background-color: var(--app-background) !important;
   color: var(--app-text) !important;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 html {
@@ -78,27 +40,4 @@ html {
   background-color: var(--app-background) !important;
   color: var(--app-text) !important;
   min-height: 100vh;
-}
-
-/* Application forcée pour tous les composants */
-.card, [data-testid="card"], [data-sonner-toaster] {
-  background-color: var(--app-card-bg) !important;
-  color: var(--app-card-text) !important;
-}
-
-.button, [data-testid="button"] {
-  background-color: var(--app-button-bg) !important;
-  color: var(--app-button-text) !important;
-}
-
-/* Forcer l'application sur tous les éléments principaux */
-main, section, article, div[class*="container"] {
-  background-color: var(--app-background);
-  color: var(--app-text);
-}
-
-/* Forcer sur les éléments de navigation */
-nav, header {
-  background-color: var(--app-card-bg);
-  color: var(--app-card-text);
 }

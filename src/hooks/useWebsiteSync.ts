@@ -1,59 +1,57 @@
 
-import { useWebsiteDesignSync } from './useWebsiteDesignSync';
-import { useWebsiteSettingsSync } from './useWebsiteSettingsSync';
-import { useLegalContentSync } from './useLegalContentSync';
 import { useEffect } from 'react';
 
 export const useWebsiteSync = () => {
-  const { syncDesignChanges } = useWebsiteDesignSync();
-  const { syncSettingsChanges } = useWebsiteSettingsSync();
-  const { syncLegalContent } = useLegalContentSync();
-
   useEffect(() => {
-    console.log('🔄 Initialisation de la synchronisation globale du site web');
+    console.log('🔄 Website sync initialized (simplified)');
     
-    const performFullSync = () => {
-      console.log('🔄 Performing full sync...');
-      syncDesignChanges();
-      syncSettingsChanges();
-      syncLegalContent();
+    // Sync simple une seule fois au chargement
+    const syncOnce = () => {
+      try {
+        // Synchroniser les paramètres du site
+        const savedSettings = localStorage.getItem('websiteSettings');
+        if (savedSettings) {
+          const settings = JSON.parse(savedSettings);
+          if (settings.siteName) {
+            document.title = settings.siteName;
+          }
+        }
+
+        // Synchroniser le design
+        const savedDesign = localStorage.getItem('websiteDesign');
+        if (savedDesign) {
+          const design = JSON.parse(savedDesign);
+          if (design.siteName) {
+            document.title = design.siteName;
+          }
+        }
+
+        console.log('✅ Website sync completed');
+      } catch (error) {
+        console.error('❌ Website sync error:', error);
+      }
     };
 
-    // Sync immédiate
-    performFullSync();
+    // Sync une seule fois
+    syncOnce();
 
-    // Sync régulière toutes les 5 secondes
-    const regularSync = setInterval(performFullSync, 5000);
-
-    // Écouter les événements de sauvegarde
-    const handleWebsiteUpdate = () => {
-      console.log('🔄 Website update detected, syncing...');
-      setTimeout(performFullSync, 100);
+    // Écouter uniquement les événements de sauvegarde
+    const handleSave = () => {
+      setTimeout(syncOnce, 100);
     };
 
-    window.addEventListener('websiteDesignSaved', handleWebsiteUpdate);
-    window.addEventListener('websiteSettingsSaved', handleWebsiteUpdate);
-    window.addEventListener('websiteDesignUpdated', handleWebsiteUpdate);
-    window.addEventListener('websiteSettingsUpdated', handleWebsiteUpdate);
+    window.addEventListener('websiteDesignSaved', handleSave);
+    window.addEventListener('websiteSettingsSaved', handleSave);
 
     return () => {
-      clearInterval(regularSync);
-      window.removeEventListener('websiteDesignSaved', handleWebsiteUpdate);
-      window.removeEventListener('websiteSettingsSaved', handleWebsiteUpdate);
-      window.removeEventListener('websiteDesignUpdated', handleWebsiteUpdate);
-      window.removeEventListener('websiteSettingsUpdated', handleWebsiteUpdate);
+      window.removeEventListener('websiteDesignSaved', handleSave);
+      window.removeEventListener('websiteSettingsSaved', handleSave);
     };
-  }, [syncDesignChanges, syncSettingsChanges, syncLegalContent]);
+  }, []);
 
   return {
-    syncDesignChanges,
-    syncSettingsChanges,
-    syncLegalContent,
-    forceFullSync: () => {
-      console.log('🔄 Force sync triggered');
-      syncDesignChanges();
-      syncSettingsChanges();
-      syncLegalContent();
+    forceSync: () => {
+      console.log('🔄 Force sync requested');
     }
   };
 };
