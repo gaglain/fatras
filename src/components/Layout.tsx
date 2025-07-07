@@ -52,13 +52,13 @@ export const Layout: React.FC = () => {
           color: 'var(--app-text, #18181b)'
         }}
       >
-        {/* Desktop Sidebar */}
+        {/* Desktop Sidebar - TOUJOURS visible sur desktop (lg:block) */}
         <div className="hidden lg:block">
           <AppSidebar />
         </div>
 
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Header avec menu hamburger intégré pour mobile */}
+          {/* Header avec menu hamburger UNIQUEMENT pour mobile */}
           <BackOfficeHeader />
 
           <main 
