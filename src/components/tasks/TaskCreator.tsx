@@ -186,14 +186,17 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
           <div className="space-y-2">
             <Label htmlFor="relatedItem">Élément lié</Label>
             <Select 
-              value={formData.relatedToId || 'none'} 
-              onValueChange={(value) => setFormData({ ...formData, relatedToId: value === 'none' ? '' : value })}
+              value={formData.relatedToId || 'aucun'} 
+              onValueChange={(value) => setFormData({ 
+                ...formData, 
+                relatedToId: value === 'aucun' ? '' : value 
+              })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner un élément (optionnel)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Aucun élément</SelectItem>
+                <SelectItem value="aucun">Aucun élément</SelectItem>
                 {relatedItems.map((item) => {
                   const Icon = item.icon;
                   return (

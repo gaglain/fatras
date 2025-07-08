@@ -56,6 +56,7 @@ export const WebsiteBackoffice: React.FC = () => {
   const [pages, setPages] = useState<WebPage[]>(defaultPages);
   const [editingPage, setEditingPage] = useState<WebPage | null>(null);
   const [showPageCreator, setShowPageCreator] = useState(false);
+  const [activeTab, setActiveTab] = useState('pages'); // Définir "pages" par défaut
   const [newPageData, setNewPageData] = useState({
     title: '',
     slug: '',
@@ -214,7 +215,7 @@ export const WebsiteBackoffice: React.FC = () => {
           {/* Éditeur de blocs */}
           <div className="bg-white rounded-lg border shadow-sm">
             <SimpleBlockEditor
-              key={editingPage.id} // Force re-render when page changes
+              key={editingPage.id}
               initialBlocks={editingPage.blocks as SimpleBlock[]}
               onSave={(blocks) => handleSaveBlocks(editingPage.id, blocks)}
               onPreview={handlePreviewSite}
@@ -243,7 +244,7 @@ export const WebsiteBackoffice: React.FC = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="pages" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="pages" className="flex items-center space-x-2">
             <FileText className="h-4 w-4" />
