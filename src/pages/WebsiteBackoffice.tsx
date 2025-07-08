@@ -56,7 +56,7 @@ export const WebsiteBackoffice: React.FC = () => {
   const [pages, setPages] = useState<WebPage[]>(defaultPages);
   const [editingPage, setEditingPage] = useState<WebPage | null>(null);
   const [showPageCreator, setShowPageCreator] = useState(false);
-  const [activeTab, setActiveTab] = useState('pages'); // Définir "pages" par défaut
+  const [activeTab, setActiveTab] = useState('pages');
   const [newPageData, setNewPageData] = useState({
     title: '',
     slug: '',

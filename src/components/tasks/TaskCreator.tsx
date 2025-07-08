@@ -186,17 +186,17 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
           <div className="space-y-2">
             <Label htmlFor="relatedItem">Élément lié</Label>
             <Select 
-              value={formData.relatedToId || 'aucun'} 
+              value={formData.relatedToId || 'no-selection'} 
               onValueChange={(value) => setFormData({ 
                 ...formData, 
-                relatedToId: value === 'aucun' ? '' : value 
+                relatedToId: value === 'no-selection' ? '' : value 
               })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner un élément (optionnel)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="aucun">Aucun élément</SelectItem>
+                <SelectItem value="no-selection">Aucun élément</SelectItem>
                 {relatedItems.map((item) => {
                   const Icon = item.icon;
                   return (
@@ -223,7 +223,7 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
                   <SelectValue placeholder="Sélectionner un utilisateur" />
                 </SelectTrigger>
                 <SelectContent>
-                  {users.filter(user => user.isActive).map((user) => (
+                  {users.filter(user => user.isActive && user.id).map((user) => (
                     <SelectItem key={user.id} value={user.id}>
                       {user.name}
                     </SelectItem>
