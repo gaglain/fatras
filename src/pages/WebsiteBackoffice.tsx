@@ -244,7 +244,7 @@ export const WebsiteBackoffice: React.FC = () => {
       </div>
 
       <Tabs defaultValue="pages" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="pages" className="flex items-center space-x-2">
             <FileText className="h-4 w-4" />
             <span>Pages</span>
@@ -260,6 +260,10 @@ export const WebsiteBackoffice: React.FC = () => {
           <TabsTrigger value="settings" className="flex items-center space-x-2">
             <Settings className="h-4 w-4" />
             <span>Paramètres</span>
+          </TabsTrigger>
+          <TabsTrigger value="legal" className="flex items-center space-x-2">
+            <FileText className="h-4 w-4" />
+            <span>Légal</span>
           </TabsTrigger>
         </TabsList>
 
@@ -404,6 +408,17 @@ export const WebsiteBackoffice: React.FC = () => {
 
         <TabsContent value="settings">
           <WebsiteSettingsManager />
+        </TabsContent>
+
+        <TabsContent value="legal">
+          <Card>
+            <CardContent className="p-6">
+              <h2 className="text-lg font-semibold mb-4">Gestion du contenu légal</h2>
+              <p className="text-muted-foreground">
+                Gérez les mentions légales, conditions d'utilisation et politique de confidentialité de votre site.
+              </p>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

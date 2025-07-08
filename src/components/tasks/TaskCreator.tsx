@@ -193,7 +193,7 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
                 <SelectValue placeholder="Sélectionner un élément (optionnel)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Aucun élément</SelectItem>
+                <SelectItem value="no-item">Aucun élément</SelectItem>
                 {relatedItems.map((item) => {
                   const Icon = item.icon;
                   return (
