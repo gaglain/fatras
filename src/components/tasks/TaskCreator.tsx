@@ -48,15 +48,18 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
     description: '',
     assignedTo: currentUser?.id || '',
     dueDate: '',
-    priority: 'medium',
-    status: 'todo',
+    priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent',
+    status: 'todo' as 'todo' | 'in_progress' | 'done',
     relatedToId: relatedToId || '',
-    relatedToType: relatedToType || 'contact'
+    relatedToType: (relatedToType || 'contact') as 'contact' | 'event' | 'contract' | 'opportunity'
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title.trim()) return;
+    if (!formData.title.trim()) {
+      toast.error('Le titre de la tâche est requis');
+      return;
+    }
 
     setLoading(true);
     try {
@@ -67,9 +70,11 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
         createdBy: currentUser?.id || ''
       };
 
+      console.log('Creating new task:', newTask);
       onTaskCreated?.(newTask);
       toast.success('Tâche créée avec succès');
-      setOpen(false);
+      
+      // Reset form
       setFormData({
         title: '',
         description: '',
@@ -80,7 +85,9 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
         relatedToId: '',
         relatedToType: 'contact'
       });
+      setOpen(false);
     } catch (error) {
+      console.error('Error creating task:', error);
       toast.error('Erreur lors de la création de la tâche');
     } finally {
       setLoading(false);
@@ -140,6 +147,7 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               required
+              placeholder="Entrez le titre de la tâche"
             />
           </div>
 
@@ -150,6 +158,7 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows={3}
+              placeholder="Description détaillée de la tâche"
             />
           </div>
 
@@ -157,7 +166,11 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
             <Label htmlFor="relatedType">Type de relation</Label>
             <Select 
               value={formData.relatedToType} 
-              onValueChange={(value) => setFormData({ ...formData, relatedToType: value as any, relatedToId: '' })}
+              onValueChange={(value) => setFormData({ 
+                ...formData, 
+                relatedToType: value as 'contact' | 'event' | 'contract' | 'opportunity', 
+                relatedToId: '' 
+              })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner le type" />
@@ -180,7 +193,7 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
                 <SelectValue placeholder="Sélectionner un élément (optionnel)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Aucun élément</SelectItem>
+                <SelectItem value="none">Aucun élément</SelectItem>
                 {relatedItems.map((item) => {
                   const Icon = item.icon;
                   return (
@@ -218,7 +231,7 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
 
             <div className="space-y-2">
               <Label htmlFor="priority">Priorité</Label>
-              <Select value={formData.priority} onValueChange={(value) => setFormData({ ...formData, priority: value })}>
+              <Select value={formData.priority} onValueChange={(value) => setFormData({ ...formData, priority: value as any })}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, FileText, Settings, Menu, Palette, Globe, Edit, Eye, Trash2 } from 'lucide-react';
+import { Plus, FileText, Settings, Menu, Palette, Globe, Edit, Eye, Trash2, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { WebsiteMenuManager } from '@/components/WebsiteMenuManager';
 import { WebsiteDesignManager } from '@/components/WebsiteDesignManager';
@@ -88,10 +89,12 @@ export const WebsiteBackoffice: React.FC = () => {
       return;
     }
 
+    const slug = newPageData.slug || `/${newPageData.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`;
+    
     const newPage: WebPage = {
       id: Date.now().toString(),
       title: newPageData.title,
-      slug: newPageData.slug || `/${newPageData.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`,
+      slug: slug,
       status: 'draft',
       blocks: [
         {
@@ -152,15 +155,26 @@ export const WebsiteBackoffice: React.FC = () => {
   };
 
   const handlePreviewSite = () => {
-    // Ouvrir dans un nouvel onglet
+    // Ouvrir la prévisualisation dans un nouvel onglet
     const previewUrl = '/front';
     window.open(previewUrl, '_blank');
     console.log('🔍 Opening preview:', previewUrl);
+    toast.success('Prévisualisation ouverte dans un nouvel onglet');
   };
 
   const handleEditPage = (page: WebPage) => {
     console.log('✏️ Opening editor for page:', page.title);
     setEditingPage(page);
+  };
+
+  const handlePublishPage = (pageId: string) => {
+    const updatedPages = pages.map(page => 
+      page.id === pageId 
+        ? { ...page, status: 'published' as const }
+        : page
+    );
+    setPages(updatedPages);
+    toast.success('Page publiée avec succès');
   };
 
   // Mode édition - Affichage de l'éditeur de blocs
@@ -180,9 +194,17 @@ export const WebsiteBackoffice: React.FC = () => {
             </div>
             <div className="flex items-center space-x-2">
               <Button onClick={handlePreviewSite} variant="outline">
-                <Globe className="h-4 w-4 mr-2" />
-                Prévisualiser le site
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Prévisualiser
               </Button>
+              {editingPage.status !== 'published' && (
+                <Button 
+                  onClick={() => handlePublishPage(editingPage.id)}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  Publier
+                </Button>
+              )}
               <Button onClick={() => setEditingPage(null)} variant="outline">
                 Retour à la liste
               </Button>
@@ -216,7 +238,7 @@ export const WebsiteBackoffice: React.FC = () => {
         <div className="flex items-center space-x-3">
           <Button variant="outline" onClick={handlePreviewSite}>
             <Globe className="h-4 w-4 mr-2" />
-            Voir le site ({pages.length} pages)
+            Prévisualiser le site ({pages.length} pages)
           </Button>
         </div>
       </div>
@@ -343,6 +365,15 @@ export const WebsiteBackoffice: React.FC = () => {
                         >
                           <Edit className="h-4 w-4 mr-2" />
                           Éditer
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={handlePreviewSite}
+                          className="text-green-600 border-green-600 hover:bg-green-50"
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          Voir
                         </Button>
                         {page.id !== '1' && (
                           <Button 

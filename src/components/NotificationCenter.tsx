@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Bell, X, Mail, CheckSquare, Calendar, User, MessageSquare } from 'lucide-react';
@@ -117,39 +118,29 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
 
   return (
     <div 
-      className="w-96 max-w-[90vw] shadow-2xl z-[200] border rounded-lg transition-all duration-300"
+      className="w-96 max-w-[90vw] shadow-2xl z-[200] border rounded-lg transition-all duration-300 bg-white dark:bg-gray-900"
       style={{
-        backgroundColor: 'var(--notification-bg)',
-        borderColor: 'var(--notification-border)',
-        color: 'var(--notification-text)'
+        backgroundColor: theme === 'dark' ? '#1a1a1a' : '#ffffff',
+        borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
+        color: theme === 'dark' ? '#ffffff' : '#18181b'
       }}
     >
       {/* Header */}
       <div 
-        className="pb-2 border-b p-4"
+        className="pb-2 border-b p-4 bg-white dark:bg-gray-900"
         style={{
-          borderColor: 'var(--notification-border)',
-          backgroundColor: 'var(--notification-bg)'
+          borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
+          backgroundColor: theme === 'dark' ? '#1a1a1a' : '#ffffff'
         }}
       >
         <div className="flex items-center justify-between">
           <div 
-            className="text-lg flex items-center font-semibold"
-            style={{ color: 'var(--notification-text)' }}
+            className="text-lg flex items-center font-semibold text-gray-900 dark:text-white"
           >
-            <Bell 
-              className="h-5 w-5 mr-2" 
-              style={{ color: 'var(--notification-text)' }} 
-            />
+            <Bell className="h-5 w-5 mr-2" />
             Notifications
             {unreadCount > 0 && (
-              <div 
-                className="ml-2 px-2 py-1 rounded-full text-xs font-semibold"
-                style={{
-                  backgroundColor: 'var(--notification-badge-bg)',
-                  color: 'var(--notification-badge-text)'
-                }}
-              >
+              <div className="ml-2 px-2 py-1 rounded-full text-xs font-semibold bg-blue-600 text-white">
                 {unreadCount}
               </div>
             )}
@@ -159,11 +150,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
               console.log('🔔 Close button clicked in NotificationCenter');
               onClose();
             }}
-            className="h-8 w-8 p-0 hover:opacity-80 rounded flex items-center justify-center transition-all duration-300"
-            style={{
-              backgroundColor: 'var(--notification-button-bg)',
-              color: 'var(--notification-button-text)'
-            }}
+            className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-700 rounded flex items-center justify-center transition-all duration-300"
           >
             <X className="h-4 w-4" />
           </button>
@@ -171,12 +158,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
         {notifications.length > 0 && (
           <button 
             onClick={markAllAsRead}
-            className="self-end mt-2 hover:opacity-80 px-3 py-1 text-sm rounded border transition-all duration-300"
-            style={{
-              backgroundColor: 'var(--notification-button-bg)',
-              color: 'var(--notification-button-text)',
-              borderColor: 'var(--notification-border)'
-            }}
+            className="self-end mt-2 hover:bg-gray-100 dark:hover:bg-gray-700 px-3 py-1 text-sm rounded border transition-all duration-300"
           >
             Tout marquer comme lu
           </button>
@@ -185,18 +167,14 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
       
       {/* Corps */}
       <div 
-        className="max-h-96 overflow-y-auto p-4"
-        style={{ backgroundColor: 'var(--notification-bg)' }}
+        className="max-h-96 overflow-y-auto p-4 bg-white dark:bg-gray-900"
+        style={{ 
+          backgroundColor: theme === 'dark' ? '#1a1a1a' : '#ffffff' 
+        }}
       >
         {notifications.length === 0 ? (
-          <div 
-            className="text-center py-8"
-            style={{ color: 'var(--notification-text)' }}
-          >
-            <Bell 
-              className="h-12 w-12 mx-auto mb-3" 
-              style={{ color: 'var(--notification-text)' }} 
-            />
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+            <Bell className="h-12 w-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
             <p>Aucune notification</p>
           </div>
         ) : (
@@ -204,52 +182,38 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
             {notifications.map((notification) => (
               <div
                 key={notification.id}
-                className="p-3 border rounded-lg transition-all duration-200 cursor-pointer hover:shadow-md"
+                className="p-3 border rounded-lg transition-all duration-200 cursor-pointer hover:shadow-md bg-white dark:bg-gray-800"
                 style={{
-                  backgroundColor: 'var(--notification-bg)',
+                  backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
                   borderColor: !notification.isRead 
-                    ? 'var(--notification-badge-bg)' 
-                    : 'var(--notification-border)',
+                    ? '#3b82f6' 
+                    : (theme === 'dark' ? '#374151' : '#e5e7eb'),
                   borderWidth: !notification.isRead ? '2px' : '1px'
                 }}
                 onClick={() => handleNotificationClick(notification)}
               >
                 <div className="flex items-start space-x-3">
-                  <div style={{ color: 'var(--notification-text)' }}>
+                  <div className="text-gray-600 dark:text-gray-300">
                     {getIcon(notification.type)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
-                      <p 
-                        className="text-sm font-medium truncate"
-                        style={{ color: 'var(--notification-text)' }}
-                      >
+                      <p className="text-sm font-medium truncate text-gray-900 dark:text-white">
                         {notification.title}
                       </p>
                       <div className="flex items-center space-x-2">
-                        <div 
-                          className={`px-2 py-1 rounded text-xs font-semibold ${getPriorityColor(notification.priority)}`}
-                        >
+                        <div className={`px-2 py-1 rounded text-xs font-semibold ${getPriorityColor(notification.priority)}`}>
                           {notification.priority}
                         </div>
                         {!notification.isRead && (
-                          <div 
-                            className="w-2 h-2 rounded-full"
-                            style={{ backgroundColor: 'var(--notification-red-dot)' }}
-                          ></div>
+                          <div className="w-2 h-2 rounded-full bg-red-500"></div>
                         )}
                       </div>
                     </div>
-                    <p 
-                      className="text-sm line-clamp-2"
-                      style={{ color: 'var(--notification-text)' }}
-                    >
+                    <p className="text-sm line-clamp-2 text-gray-600 dark:text-gray-300">
                       {notification.message}
                     </p>
-                    <p 
-                      className="text-xs mt-1 opacity-70"
-                      style={{ color: 'var(--notification-text)' }}
-                    >
+                    <p className="text-xs mt-1 opacity-70 text-gray-500 dark:text-gray-400">
                       {formatTime(notification.timestamp)}
                     </p>
                   </div>
