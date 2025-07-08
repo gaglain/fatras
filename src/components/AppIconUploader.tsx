@@ -11,7 +11,7 @@ import { Upload, Image } from 'lucide-react';
 export const AppIconUploader: React.FC = () => {
   const [iconUrl, setIconUrl] = useState<string>('');
   const [previewUrl, setPreviewUrl] = useState<string>('');
-  const { uploadFile, uploading } = useFileUpload();
+  const { uploadFile, isUploading } = useFileUpload();
 
   React.useEffect(() => {
     // Charger l'icône sauvegardée
@@ -34,7 +34,8 @@ export const AppIconUploader: React.FC = () => {
 
     try {
       console.log('📱 Uploading app icon:', file.name);
-      const url = await uploadFile(file, 'app-assets', 'icons');
+      const result = await uploadFile(file, 'app-assets', 'icons');
+      const url = result.url;
       setIconUrl(url);
       setPreviewUrl(url);
       
@@ -92,10 +93,10 @@ export const AppIconUploader: React.FC = () => {
                 type="file"
                 accept="image/*"
                 onChange={handleFileUpload}
-                disabled={uploading}
+                disabled={isUploading}
                 className="cursor-pointer"
               />
-              {uploading && (
+              {isUploading && (
                 <p className="text-sm text-blue-600 mt-2">
                   ⏳ Téléchargement en cours...
                 </p>

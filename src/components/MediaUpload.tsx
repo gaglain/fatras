@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,7 +17,7 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
   currentMedia,
   onMediaRemoved
 }) => {
-  const { uploadFile, uploading } = useFileUpload();
+  const { uploadFile, isUploading } = useFileUpload();
   const [dragOver, setDragOver] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [mediaType, setMediaType] = useState<'image' | 'video'>('image');
@@ -38,8 +37,8 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
       toast.success('Média chargé avec succès !');
       
       // Optionnel : upload réel en arrière-plan
-      // const url = await uploadFile(file, 'publication-media', `media/${Date.now()}-${file.name}`);
-      // onMediaUploaded(url, fileType);
+      // const result = await uploadFile(file, 'publication-media', `media/${Date.now()}-${file.name}`);
+      // onMediaUploaded(result.url, fileType);
     } catch (error) {
       console.error('Erreur upload:', error);
       toast.error('Erreur lors du téléchargement');
@@ -139,17 +138,17 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
             type="file"
             accept="image/*,video/*"
             onChange={handleFileSelect}
-            disabled={uploading}
+            disabled={isUploading}
             className="hidden"
             id="media-upload"
           />
           <Button
             type="button"
             variant="outline"
-            disabled={uploading}
+            disabled={isUploading}
             onClick={() => document.getElementById('media-upload')?.click()}
           >
-            {uploading ? 'Téléchargement...' : 'Choisir un fichier'}
+            {isUploading ? 'Téléchargement...' : 'Choisir un fichier'}
           </Button>
         </div>
       )}
