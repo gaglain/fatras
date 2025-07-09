@@ -16,25 +16,6 @@ interface TaskCreatorProps {
   relatedToType?: 'contact' | 'event' | 'contract' | 'opportunity';
 }
 
-// Sample data - in a real app, this would come from databases
-const sampleContacts = [
-  { id: 'contact-1', firstName: 'Jean', lastName: 'Dupont', company: 'Productions Musicales' },
-  { id: 'contact-2', firstName: 'Marie', lastName: 'Martin', company: 'Festival d\'été' },
-  { id: 'contact-3', firstName: 'Paul', lastName: 'Leroy', company: 'Studio Sound' },
-  { id: 'contact-4', firstName: 'Sophie', lastName: 'Bernard', company: 'Event Manager' }
-];
-
-const sampleOpportunities = [
-  { id: 'opp-1', title: 'Festival d\'Été 2024', artist: 'The Midnight Express', estimatedAmount: '50000€' },
-  { id: 'opp-2', title: 'Soirée Acoustique', artist: 'Sarah Mitchell', estimatedAmount: '8500€' },
-  { id: 'opp-3', title: 'Rock Legends Tour', artist: 'Thunder Road', estimatedAmount: '75000€' }
-];
-
-const sampleEvents = [
-  { id: 'event-1', title: 'Concert Central Park', venue: 'Central Park', date: '2024-07-15' },
-  { id: 'event-2', title: 'Soirée Jazz Club', venue: 'Blue Note', date: '2024-06-20' }
-];
-
 export const TaskCreator: React.FC<TaskCreatorProps> = ({ 
   onTaskCreated, 
   relatedToId, 
@@ -43,6 +24,7 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const { users, currentUser } = useUser();
+  
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -56,12 +38,19 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (!formData.title.trim()) {
       toast.error('Le titre de la tâche est requis');
       return;
     }
 
+    if (!formData.assignedTo) {
+      toast.error('Veuillez assigner la tâche à un utilisateur');
+      return;
+    }
+
     setLoading(true);
+    
     try {
       const newTask = {
         id: `task-${Date.now()}`,
@@ -71,7 +60,11 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
       };
 
       console.log('Creating new task:', newTask);
-      onTaskCreated?.(newTask);
+      
+      if (onTaskCreated) {
+        onTaskCreated(newTask);
+      }
+      
       toast.success('Tâche créée avec succès');
       
       // Reset form
@@ -85,6 +78,7 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
         relatedToId: '',
         relatedToType: 'contact'
       });
+      
       setOpen(false);
     } catch (error) {
       console.error('Error creating task:', error);
@@ -94,35 +88,8 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
     }
   };
 
-  const getRelatedItems = () => {
-    switch (formData.relatedToType) {
-      case 'contact':
-        return sampleContacts.map(item => ({
-          id: item.id,
-          name: `${item.firstName} ${item.lastName}`,
-          subtitle: item.company,
-          icon: User
-        }));
-      case 'opportunity':
-        return sampleOpportunities.map(item => ({
-          id: item.id,
-          name: item.title,
-          subtitle: `${item.artist} - ${item.estimatedAmount}`,
-          icon: Target
-        }));
-      case 'event':
-        return sampleEvents.map(item => ({
-          id: item.id,
-          name: item.title,
-          subtitle: `${item.venue} - ${item.date}`,
-          icon: Calendar
-        }));
-      default:
-        return [];
-    }
-  };
-
-  const relatedItems = getRelatedItems();
+  // Filtrer les utilisateurs actifs avec des IDs valides
+  const activeUsers = users.filter(user => user.isActive && user.id && user.name);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -162,68 +129,18 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="relatedType">Type de relation</Label>
-            <Select 
-              value={formData.relatedToType} 
-              onValueChange={(value) => setFormData({ 
-                ...formData, 
-                relatedToType: value as 'contact' | 'event' | 'contract' | 'opportunity', 
-                relatedToId: '' 
-              })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner le type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="contact">Contact</SelectItem>
-                <SelectItem value="opportunity">Opportunité</SelectItem>
-                <SelectItem value="event">Événement</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="relatedItem">Élément lié</Label>
-            <Select 
-              value={formData.relatedToId || 'no-selection'} 
-              onValueChange={(value) => setFormData({ 
-                ...formData, 
-                relatedToId: value === 'no-selection' ? '' : value 
-              })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un élément (optionnel)" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="no-selection">Aucun élément</SelectItem>
-                {relatedItems.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <SelectItem key={item.id} value={item.id}>
-                      <div className="flex items-center space-x-2">
-                        <Icon className="h-4 w-4" />
-                        <div>
-                          <span>{item.name}</span>
-                          {item.subtitle && <span className="text-xs text-muted-foreground ml-1">({item.subtitle})</span>}
-                        </div>
-                      </div>
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-          </div>
-
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="assignedTo">Assigné à</Label>
-              <Select value={formData.assignedTo} onValueChange={(value) => setFormData({ ...formData, assignedTo: value })}>
+              <Label htmlFor="assignedTo">Assigné à *</Label>
+              <Select 
+                value={formData.assignedTo} 
+                onValueChange={(value) => setFormData({ ...formData, assignedTo: value })}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un utilisateur" />
                 </SelectTrigger>
                 <SelectContent>
-                  {users.filter(user => user.isActive && user.id).map((user) => (
+                  {activeUsers.map((user) => (
                     <SelectItem key={user.id} value={user.id}>
                       {user.name}
                     </SelectItem>
@@ -234,7 +151,10 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
 
             <div className="space-y-2">
               <Label htmlFor="priority">Priorité</Label>
-              <Select value={formData.priority} onValueChange={(value) => setFormData({ ...formData, priority: value as any })}>
+              <Select 
+                value={formData.priority} 
+                onValueChange={(value) => setFormData({ ...formData, priority: value as any })}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

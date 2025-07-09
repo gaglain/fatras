@@ -5,7 +5,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, FileText, Settings, Menu, Palette, Globe, Edit, Eye, Trash2, ExternalLink } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { WebsiteMenuManager } from '@/components/WebsiteMenuManager';
 import { WebsiteDesignManager } from '@/components/WebsiteDesignManager';
 import { WebsiteSettingsManager } from '@/components/WebsiteSettingsManager';
@@ -56,16 +55,14 @@ export const WebsiteBackoffice: React.FC = () => {
   const [pages, setPages] = useState<WebPage[]>(defaultPages);
   const [editingPage, setEditingPage] = useState<WebPage | null>(null);
   const [showPageCreator, setShowPageCreator] = useState(false);
-  const [activeTab, setActiveTab] = useState('pages');
   const [newPageData, setNewPageData] = useState({
     title: '',
     slug: '',
     metaDescription: ''
   });
 
-  // Sauvegarder et charger les pages depuis localStorage
+  // Charger les pages depuis localStorage
   useEffect(() => {
-    console.log('🔄 Loading website pages from localStorage');
     const savedPages = localStorage.getItem('websitePages');
     if (savedPages) {
       try {
@@ -78,9 +75,8 @@ export const WebsiteBackoffice: React.FC = () => {
     }
   }, []);
 
+  // Sauvegarder automatiquement les pages
   useEffect(() => {
-    // Sauvegarder automatiquement les pages
-    console.log('💾 Saving pages to localStorage:', pages.length);
     localStorage.setItem('websitePages', JSON.stringify(pages));
   }, [pages]);
 
@@ -110,13 +106,10 @@ export const WebsiteBackoffice: React.FC = () => {
       metaDescription: newPageData.metaDescription || `Page ${newPageData.title}`
     };
 
-    const updatedPages = [...pages, newPage];
-    setPages(updatedPages);
+    setPages([...pages, newPage]);
     setNewPageData({ title: '', slug: '', metaDescription: '' });
     setShowPageCreator(false);
     toast.success('Page créée avec succès');
-    
-    console.log('✅ New page created:', newPage);
   };
 
   const handleDeletePage = (pageId: string) => {
@@ -125,8 +118,7 @@ export const WebsiteBackoffice: React.FC = () => {
       return;
     }
     if (confirm('Êtes-vous sûr de vouloir supprimer cette page ?')) {
-      const updatedPages = pages.filter(p => p.id !== pageId);
-      setPages(updatedPages);
+      setPages(pages.filter(p => p.id !== pageId));
       if (editingPage && editingPage.id === pageId) {
         setEditingPage(null);
       }
@@ -135,8 +127,6 @@ export const WebsiteBackoffice: React.FC = () => {
   };
 
   const handleSaveBlocks = (pageId: string, blocks: SimpleBlock[]) => {
-    console.log('💾 Saving blocks for page:', pageId, blocks);
-    
     const updatedPages = pages.map(page => 
       page.id === pageId 
         ? { ...page, blocks: blocks.map((block, index) => ({ ...block, order: index })) as Block[] }
@@ -144,7 +134,6 @@ export const WebsiteBackoffice: React.FC = () => {
     );
     setPages(updatedPages);
     
-    // Mettre à jour la page en cours d'édition
     if (editingPage && editingPage.id === pageId) {
       const updatedPage = updatedPages.find(p => p.id === pageId);
       if (updatedPage) {
@@ -156,41 +145,34 @@ export const WebsiteBackoffice: React.FC = () => {
   };
 
   const handlePreviewSite = () => {
-    // Ouvrir la prévisualisation dans un nouvel onglet
-    const previewUrl = '/front';
-    window.open(previewUrl, '_blank');
-    console.log('🔍 Opening preview:', previewUrl);
+    window.open('/front', '_blank');
     toast.success('Prévisualisation ouverte dans un nouvel onglet');
   };
 
   const handleEditPage = (page: WebPage) => {
-    console.log('✏️ Opening editor for page:', page.title);
     setEditingPage(page);
   };
 
   const handlePublishPage = (pageId: string) => {
-    const updatedPages = pages.map(page => 
+    setPages(pages.map(page => 
       page.id === pageId 
         ? { ...page, status: 'published' as const }
         : page
-    );
-    setPages(updatedPages);
+    ));
     toast.success('Page publiée avec succès');
   };
 
-  // Mode édition - Affichage de l'éditeur de blocs
+  // Mode édition
   if (editingPage) {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto p-6">
-          {/* En-tête de l'éditeur */}
           <div className="flex items-center justify-between mb-6 p-4 bg-white rounded-lg border shadow-sm">
             <div>
               <h2 className="text-xl font-bold">Édition : {editingPage.title}</h2>
               <p className="text-sm text-gray-600">{editingPage.slug}</p>
               <Badge variant={editingPage.status === 'published' ? 'default' : 'secondary'}>
-                {editingPage.status === 'published' ? 'Publié' : 
-                 editingPage.status === 'draft' ? 'Brouillon' : 'Archivé'}
+                {editingPage.status === 'published' ? 'Publié' : 'Brouillon'}
               </Badge>
             </div>
             <div className="flex items-center space-x-2">
@@ -207,12 +189,11 @@ export const WebsiteBackoffice: React.FC = () => {
                 </Button>
               )}
               <Button onClick={() => setEditingPage(null)} variant="outline">
-                Retour à la liste
+                Retour
               </Button>
             </div>
           </div>
           
-          {/* Éditeur de blocs */}
           <div className="bg-white rounded-lg border shadow-sm">
             <SimpleBlockEditor
               key={editingPage.id}
@@ -226,7 +207,6 @@ export const WebsiteBackoffice: React.FC = () => {
     );
   }
 
-  // Mode liste - Affichage de la gestion des pages
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-8">
@@ -244,7 +224,7 @@ export const WebsiteBackoffice: React.FC = () => {
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      <Tabs defaultValue="pages" className="space-y-6">
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="pages" className="flex items-center space-x-2">
             <FileText className="h-4 w-4" />
@@ -279,7 +259,6 @@ export const WebsiteBackoffice: React.FC = () => {
                 </Button>
               </div>
 
-              {/* Formulaire de création de page */}
               {showPageCreator && (
                 <Card className="p-4 border-2 border-dashed border-blue-200 bg-blue-50/50">
                   <div className="space-y-4">
@@ -343,7 +322,6 @@ export const WebsiteBackoffice: React.FC = () => {
                 </Card>
               )}
 
-              {/* Liste des pages */}
               <div className="grid gap-4">
                 {pages.map((page) => (
                   <Card key={page.id} className="hover:shadow-md transition-shadow">
@@ -356,8 +334,7 @@ export const WebsiteBackoffice: React.FC = () => {
                             {page.blocks.length} bloc(s)
                           </p>
                           <Badge variant={page.status === 'published' ? 'default' : 'secondary'}>
-                            {page.status === 'published' ? 'Publié' : 
-                             page.status === 'draft' ? 'Brouillon' : 'Archivé'}
+                            {page.status === 'published' ? 'Publié' : 'Brouillon'}
                           </Badge>
                         </div>
                       </div>
