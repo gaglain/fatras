@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +9,7 @@ import { WebsiteDesignManager } from '@/components/WebsiteDesignManager';
 import { WebsiteSettingsManager } from '@/components/WebsiteSettingsManager';
 import { SEOManager } from '@/components/SEOManager';
 import { LegalContentManager } from '@/components/LegalContentManager';
+import { CMSPageManager } from '@/components/CMSPageManager';
 
 export const Website: React.FC = () => {
   const [activeTab, setActiveTab] = useState('pages');
@@ -98,38 +98,8 @@ export const Website: React.FC = () => {
             color: 'var(--app-card-text, #18181b)',
             border: '1px solid var(--notification-border, #e5e7eb)'
           }}>
-            <CardHeader>
-              <CardTitle style={{ color: 'var(--app-card-text, #18181b)' }}>
-                Gestion des Pages
-              </CardTitle>
-              <p style={{ color: 'var(--app-text, #666666)' }}>
-                Créez et modifiez les pages de votre site web
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="text-center py-8">
-                <FileText className="h-16 w-16 mx-auto mb-4 text-blue-500" />
-                <h3 className="text-lg font-semibold mb-2">Éditeur de Pages</h3>
-                <p className="text-gray-600 mb-6">
-                  Utilisez l'éditeur de pages pour créer, modifier et gérer le contenu de votre site web
-                </p>
-                <div className="flex justify-center space-x-4">
-                  <Button 
-                    onClick={handleOpenEditor}
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
-                  >
-                    <Edit className="h-4 w-4 mr-2" />
-                    Ouvrir l'éditeur
-                  </Button>
-                  <Button 
-                    onClick={handlePreviewSite}
-                    variant="outline"
-                  >
-                    <Globe className="h-4 w-4 mr-2" />
-                    Voir le site
-                  </Button>
-                </div>
-              </div>
+            <CardContent className="p-6">
+              <CMSPageManager />
             </CardContent>
           </Card>
         </TabsContent>

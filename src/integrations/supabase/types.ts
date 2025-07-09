@@ -342,6 +342,39 @@ export type Database = {
           },
         ]
       }
+      legal_content: {
+        Row: {
+          content: string
+          content_type: string
+          created_at: string | null
+          id: string
+          is_published: boolean | null
+          title: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          content: string
+          content_type: string
+          created_at?: string | null
+          id?: string
+          is_published?: boolean | null
+          title: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          content?: string
+          content_type?: string
+          created_at?: string | null
+          id?: string
+          is_published?: boolean | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string | null
@@ -742,6 +775,57 @@ export type Database = {
           },
         ]
       }
+      shop_orders: {
+        Row: {
+          created_at: string | null
+          currency: string | null
+          customer_address: Json | null
+          customer_email: string
+          customer_name: string | null
+          id: string
+          items: Json
+          payment_method: string | null
+          status: string | null
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
+          total_amount: number
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          currency?: string | null
+          customer_address?: Json | null
+          customer_email: string
+          customer_name?: string | null
+          id?: string
+          items?: Json
+          payment_method?: string | null
+          status?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          total_amount: number
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          currency?: string | null
+          customer_address?: Json | null
+          customer_email?: string
+          customer_name?: string | null
+          id?: string
+          items?: Json
+          payment_method?: string | null
+          status?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          total_amount?: number
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_profiles: {
         Row: {
           address: string | null
@@ -811,6 +895,143 @@ export type Database = {
           updated_at?: string
           user_id?: string
           username?: string
+        }
+        Relationships: []
+      }
+      website_menu: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_visible: boolean | null
+          label: string
+          menu_order: number | null
+          parent_id: string | null
+          target: string | null
+          updated_at: string | null
+          url: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_visible?: boolean | null
+          label: string
+          menu_order?: number | null
+          parent_id?: string | null
+          target?: string | null
+          updated_at?: string | null
+          url: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_visible?: boolean | null
+          label?: string
+          menu_order?: number | null
+          parent_id?: string | null
+          target?: string | null
+          updated_at?: string | null
+          url?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_menu_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "website_menu"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      website_pages: {
+        Row: {
+          content: Json | null
+          created_at: string | null
+          id: string
+          meta_description: string | null
+          meta_keywords: string | null
+          meta_title: string | null
+          page_type: string | null
+          slug: string
+          status: string | null
+          title: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          content?: Json | null
+          created_at?: string | null
+          id?: string
+          meta_description?: string | null
+          meta_keywords?: string | null
+          meta_title?: string | null
+          page_type?: string | null
+          slug: string
+          status?: string | null
+          title: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          content?: Json | null
+          created_at?: string | null
+          id?: string
+          meta_description?: string | null
+          meta_keywords?: string | null
+          meta_title?: string | null
+          page_type?: string | null
+          slug?: string
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      website_seo: {
+        Row: {
+          created_at: string | null
+          google_analytics_id: string | null
+          google_search_console_id: string | null
+          id: string
+          og_image: string | null
+          robots_txt: string | null
+          site_description: string | null
+          site_keywords: string | null
+          site_title: string | null
+          twitter_card_type: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          google_analytics_id?: string | null
+          google_search_console_id?: string | null
+          id?: string
+          og_image?: string | null
+          robots_txt?: string | null
+          site_description?: string | null
+          site_keywords?: string | null
+          site_title?: string | null
+          twitter_card_type?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          google_analytics_id?: string | null
+          google_search_console_id?: string | null
+          id?: string
+          og_image?: string | null
+          robots_txt?: string | null
+          site_description?: string | null
+          site_keywords?: string | null
+          site_title?: string | null
+          twitter_card_type?: string | null
+          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }

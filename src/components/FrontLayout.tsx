@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
-import { FrontNavigation } from './FrontNavigation';
+import { DynamicFrontNavigation } from './DynamicFrontNavigation';
 import { useWebsiteSync } from '@/hooks/useWebsiteSync';
 import { PublicChatWidget } from './PublicChatWidget';
 import { RGPDModule } from './RGPDModule';
@@ -79,11 +79,11 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
       {/* Google Analytics */}
       <GoogleAnalytics measurementId={settings.googleAnalyticsId} />
       
-      {/* Navigation fixe */}
-      <FrontNavigation />
+      {/* Navigation dynamique synchronisée */}
+      <DynamicFrontNavigation />
       
-      {/* Main Content avec padding pour le header fixe */}
-      <main className="flex-1 pt-16" data-theme-element="main">
+      {/* Main Content */}
+      <main className="flex-1" data-theme-element="main">
         {children || <Outlet />}
       </main>
       
