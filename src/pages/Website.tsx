@@ -1,8 +1,10 @@
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Globe, Menu, Palette, Settings, Eye, Code } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Globe, Menu, Palette, Settings, Eye, Code, Edit, FileText, ExternalLink } from 'lucide-react';
 import { WebsiteMenuManager } from '@/components/WebsiteMenuManager';
 import { WebsiteDesignManager } from '@/components/WebsiteDesignManager';
 import { WebsiteSettingsManager } from '@/components/WebsiteSettingsManager';
@@ -10,11 +12,22 @@ import { SEOManager } from '@/components/SEOManager';
 import { LegalContentManager } from '@/components/LegalContentManager';
 
 export const Website: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('menu');
+  const [activeTab, setActiveTab] = useState('pages');
+  const navigate = useNavigate();
 
   const handleSEOSave = (seoData: any) => {
     console.log('Saving SEO data:', seoData);
     // TODO: Implement SEO data saving to backend
+  };
+
+  const handleOpenEditor = () => {
+    console.log('🚀 Opening website editor');
+    navigate('/website-editor');
+  };
+
+  const handlePreviewSite = () => {
+    console.log('👁️ Opening preview in new tab');
+    window.open('/front', '_blank');
   };
 
   return (
@@ -32,10 +45,31 @@ export const Website: React.FC = () => {
             Configurez et personnalisez votre site web public
           </p>
         </div>
+        <div className="flex items-center space-x-3">
+          <Button 
+            onClick={handlePreviewSite}
+            variant="outline"
+            className="flex items-center space-x-2"
+          >
+            <ExternalLink className="h-4 w-4" />
+            <span>Aperçu du site</span>
+          </Button>
+          <Button 
+            onClick={handleOpenEditor}
+            className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <Edit className="h-4 w-4" />
+            <span>Éditeur de pages</span>
+          </Button>
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
+          <TabsTrigger value="pages">
+            <FileText className="h-4 w-4 mr-2" />
+            Pages
+          </TabsTrigger>
           <TabsTrigger value="menu">
             <Menu className="h-4 w-4 mr-2" />
             Menu
@@ -57,6 +91,48 @@ export const Website: React.FC = () => {
             Légal
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="pages">
+          <Card style={{
+            backgroundColor: 'var(--app-card-bg, #ffffff)',
+            color: 'var(--app-card-text, #18181b)',
+            border: '1px solid var(--notification-border, #e5e7eb)'
+          }}>
+            <CardHeader>
+              <CardTitle style={{ color: 'var(--app-card-text, #18181b)' }}>
+                Gestion des Pages
+              </CardTitle>
+              <p style={{ color: 'var(--app-text, #666666)' }}>
+                Créez et modifiez les pages de votre site web
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="text-center py-8">
+                <FileText className="h-16 w-16 mx-auto mb-4 text-blue-500" />
+                <h3 className="text-lg font-semibold mb-2">Éditeur de Pages</h3>
+                <p className="text-gray-600 mb-6">
+                  Utilisez l'éditeur de pages pour créer, modifier et gérer le contenu de votre site web
+                </p>
+                <div className="flex justify-center space-x-4">
+                  <Button 
+                    onClick={handleOpenEditor}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Ouvrir l'éditeur
+                  </Button>
+                  <Button 
+                    onClick={handlePreviewSite}
+                    variant="outline"
+                  >
+                    <Globe className="h-4 w-4 mr-2" />
+                    Voir le site
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="menu">
           <Card style={{
