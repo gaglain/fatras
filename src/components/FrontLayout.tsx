@@ -1,5 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
+import { Outlet } from 'react-router-dom';
 import { FrontNavigation } from './FrontNavigation';
 import { useWebsiteSync } from '@/hooks/useWebsiteSync';
 import { PublicChatWidget } from './PublicChatWidget';
@@ -7,7 +8,7 @@ import { RGPDModule } from './RGPDModule';
 import { GoogleAnalytics } from './GoogleAnalytics';
 
 interface FrontLayoutProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 interface WebsiteSettings {
@@ -83,7 +84,7 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
       
       {/* Main Content avec padding pour le header fixe */}
       <main className="flex-1 pt-16" data-theme-element="main">
-        {children}
+        {children || <Outlet />}
       </main>
       
       {/* Footer */}
