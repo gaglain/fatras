@@ -61,22 +61,29 @@ export const WebsiteBackoffice: React.FC = () => {
     metaDescription: ''
   });
 
+  console.log('🔄 WebsiteBackoffice - Current pages:', pages.length);
+  console.log('🔄 WebsiteBackoffice - Editing page:', editingPage?.title);
+
   // Charger les pages depuis localStorage
   useEffect(() => {
     const savedPages = localStorage.getItem('websitePages');
     if (savedPages) {
       try {
         const parsed = JSON.parse(savedPages);
+        console.log('✅ Pages loaded from localStorage:', parsed.length);
         setPages(parsed);
-        console.log('✅ Pages loaded:', parsed.length);
       } catch (error) {
-        console.error('❌ Error loading pages:', error);
+        console.error('❌ Error loading pages from localStorage:', error);
       }
+    } else {
+      console.log('📝 No saved pages found, using defaults');
+      localStorage.setItem('websitePages', JSON.stringify(defaultPages));
     }
   }, []);
 
   // Sauvegarder automatiquement les pages
   useEffect(() => {
+    console.log('💾 Saving pages to localStorage:', pages.length);
     localStorage.setItem('websitePages', JSON.stringify(pages));
   }, [pages]);
 
@@ -106,7 +113,8 @@ export const WebsiteBackoffice: React.FC = () => {
       metaDescription: newPageData.metaDescription || `Page ${newPageData.title}`
     };
 
-    setPages([...pages, newPage]);
+    console.log('➕ Creating new page:', newPage.title);
+    setPages(prev => [...prev, newPage]);
     setNewPageData({ title: '', slug: '', metaDescription: '' });
     setShowPageCreator(false);
     toast.success('Page créée avec succès');
@@ -118,7 +126,8 @@ export const WebsiteBackoffice: React.FC = () => {
       return;
     }
     if (confirm('Êtes-vous sûr de vouloir supprimer cette page ?')) {
-      setPages(pages.filter(p => p.id !== pageId));
+      console.log('🗑️ Deleting page:', pageId);
+      setPages(prev => prev.filter(p => p.id !== pageId));
       if (editingPage && editingPage.id === pageId) {
         setEditingPage(null);
       }
@@ -127,6 +136,7 @@ export const WebsiteBackoffice: React.FC = () => {
   };
 
   const handleSaveBlocks = (pageId: string, blocks: SimpleBlock[]) => {
+    console.log('💾 Saving blocks for page:', pageId, blocks.length);
     const updatedPages = pages.map(page => 
       page.id === pageId 
         ? { ...page, blocks: blocks.map((block, index) => ({ ...block, order: index })) as Block[] }
@@ -145,16 +155,19 @@ export const WebsiteBackoffice: React.FC = () => {
   };
 
   const handlePreviewSite = () => {
+    console.log('👁️ Opening preview in new tab');
     window.open('/front', '_blank');
     toast.success('Prévisualisation ouverte dans un nouvel onglet');
   };
 
   const handleEditPage = (page: WebPage) => {
+    console.log('✏️ Editing page:', page.title);
     setEditingPage(page);
   };
 
   const handlePublishPage = (pageId: string) => {
-    setPages(pages.map(page => 
+    console.log('📢 Publishing page:', pageId);
+    setPages(prev => prev.map(page => 
       page.id === pageId 
         ? { ...page, status: 'published' as const }
         : page
@@ -252,7 +265,7 @@ export const WebsiteBackoffice: React.FC = () => {
           <Card>
             <CardContent className="space-y-4 p-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Gestionnaire de Pages</h2>
+                <h2 className="text-lg font-semibold">Gestionnaire de Pages ({pages.length})</h2>
                 <Button onClick={() => setShowPageCreator(true)} className="bg-blue-600 hover:bg-blue-700">
                   <Plus className="h-4 w-4 mr-2" />
                   Nouvelle Page

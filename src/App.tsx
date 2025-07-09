@@ -36,6 +36,12 @@ import { UserManagement } from "./pages/UserManagement";
 import { Application } from "./pages/Application";
 import { Preferences } from "./pages/Preferences";
 import { Layout } from "./components/Layout";
+import { FrontLayout } from "./components/FrontLayout";
+import { FrontHome } from "./pages/FrontHome";
+import { FrontArtists } from "./pages/FrontArtists";
+import { FrontEvents } from "./pages/FrontEvents";
+import { FrontShop } from "./pages/FrontShop";
+import { FrontContact } from "./pages/FrontContact";
 import "./App.css";
 
 const queryClient = new QueryClient({
@@ -63,6 +69,17 @@ function App() {
                       <div className="min-h-screen bg-white">
                         <Routes>
                           <Route path="/" element={<Index />} />
+                          
+                          {/* Front-end routes */}
+                          <Route path="/front" element={<FrontLayout />}>
+                            <Route index element={<FrontHome />} />
+                            <Route path="artists" element={<FrontArtists />} />
+                            <Route path="events" element={<FrontEvents />} />
+                            <Route path="shop" element={<FrontShop />} />
+                            <Route path="contact" element={<FrontContact />} />
+                          </Route>
+                          
+                          {/* Back-office routes */}
                           <Route element={<Layout />}>
                             <Route path="/dashboard" element={<Dashboard />} />
                             <Route path="/artists" element={<Artists />} />

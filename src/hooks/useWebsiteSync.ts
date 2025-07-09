@@ -3,41 +3,50 @@ import { useEffect } from 'react';
 
 export const useWebsiteSync = () => {
   useEffect(() => {
-    console.log('🔄 Website sync initialized (simplified)');
+    console.log('🔄 Website sync initialized');
     
-    // Sync simple une seule fois au chargement
-    const syncOnce = () => {
+    // Sync des paramètres
+    const syncSettings = () => {
       try {
-        // Synchroniser les paramètres du site
         const savedSettings = localStorage.getItem('websiteSettings');
         if (savedSettings) {
           const settings = JSON.parse(savedSettings);
+          console.log('⚙️ Syncing settings:', settings.siteName);
           if (settings.siteName) {
             document.title = settings.siteName;
           }
         }
+      } catch (error) {
+        console.error('❌ Settings sync error:', error);
+      }
+    };
 
-        // Synchroniser le design
+    // Sync du design
+    const syncDesign = () => {
+      try {
         const savedDesign = localStorage.getItem('websiteDesign');
         if (savedDesign) {
           const design = JSON.parse(savedDesign);
+          console.log('🎨 Syncing design:', design.siteName);
           if (design.siteName) {
             document.title = design.siteName;
           }
         }
-
-        console.log('✅ Website sync completed');
       } catch (error) {
-        console.error('❌ Website sync error:', error);
+        console.error('❌ Design sync error:', error);
       }
     };
 
-    // Sync une seule fois
-    syncOnce();
+    // Sync initial
+    syncSettings();
+    syncDesign();
 
-    // Écouter uniquement les événements de sauvegarde
+    // Écouter les événements de sauvegarde
     const handleSave = () => {
-      setTimeout(syncOnce, 100);
+      setTimeout(() => {
+        syncSettings();
+        syncDesign();
+      }, 100);
     };
 
     window.addEventListener('websiteDesignSaved', handleSave);
