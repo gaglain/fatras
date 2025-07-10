@@ -1,342 +1,311 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Calendar, MapPin, Clock, ExternalLink, CheckSquare, User } from 'lucide-react';
-import { Link } from 'react-router-dom';
-
-interface EventType {
-  id: string;
-  name: string;
-  color: string;
-  isActive: boolean;
-}
+import { Plus, Calendar, Search, MapPin, Users, Clock, Edit, Trash2, Eye } from 'lucide-react';
+import { GlobalFileUpload } from '@/components/GlobalFileUpload';
+import { toast } from 'sonner';
 
 interface Event {
   id: string;
-  name: string;
-  typeIds: string[];
-  date: string;
-  venue: string;
-  address: {
-    street: string;
-    city: string;
-    postalCode: string;
-    country: string;
-  };
-  url?: string;
-  status: 'confirmed' | 'pending' | 'cancelled';
-  artist?: string;
-  artistId?: string;
-  contactIds?: string[];
-  relatedTasks?: Array<{
-    id: string;
-    title: string;
-    status: 'todo' | 'in-progress' | 'done';
-    dueDate: string;
-  }>;
+  title: string;
+  description?: string;
+  startDate: string;
+  endDate: string;
+  venue?: string;
+  address?: string;
+  city?: string;
+  attendeesCount?: number;
+  budgetMin?: number;
+  budgetMax?: number;
+  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  eventType?: string;
+  contactName?: string;
+  requirements?: string;
+  notes?: string;
 }
 
-const sampleEventTypes: EventType[] = [
-  { id: '1', name: 'Festival', color: 'bg-purple-500', isActive: true },
-  { id: '2', name: 'Concert', color: 'bg-blue-500', isActive: true },
-  { id: '3', name: 'Événement d\'entreprise', color: 'bg-green-500', isActive: true },
-  { id: '4', name: 'Événement privé', color: 'bg-orange-500', isActive: true },
-  { id: '5', name: 'Mariage', color: 'bg-pink-500', isActive: true },
-];
-
-// Données nettoyées
-const sampleEvents: Event[] = [];
-const sampleContacts = [];
-
 export const Events: React.FC = () => {
-  const [events, setEvents] = useState<Event[]>(sampleEvents);
-  const [eventTypes, setEventTypes] = useState<EventType[]>(sampleEventTypes);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [selectedTypeIds, setSelectedTypeIds] = useState<string[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const handleTypeSelection = (typeId: string) => {
-    setSelectedTypeIds(prev => 
-      prev.includes(typeId) 
-        ? prev.filter(id => id !== typeId)
-        : [...prev, typeId]
-    );
+  console.log('🎪 Events - Page loaded with', events.length, 'events');
+
+  // Simulation de données
+  useEffect(() => {
+    const mockEvents: Event[] = [
+      {
+        id: '1',
+        title: 'Concert Jazz Festival',
+        description: 'Concert de jazz en plein air',
+        startDate: '2024-07-15T20:00:00',
+        endDate: '2024-07-15T23:00:00',
+        venue: 'Parc de la Musique',
+        address: '123 Avenue des Arts',
+        city: 'Paris',
+        attendeesCount: 500,
+        budgetMin: 5000,
+        budgetMax: 8000,
+        status: 'confirmed',
+        eventType: 'Concert',
+        contactName: 'Jean Dupont',
+        requirements: 'Scène couverte, éclairage professionnel',
+        notes: 'Prévoir plan B en cas de pluie'
+      },
+      {
+        id: '2',
+        title: 'Mariage Sarah & Pierre',
+        description: 'Cérémonie et réception de mariage',
+        startDate: '2024-08-20T16:00:00',
+        endDate: '2024-08-21T02:00:00',
+        venue: 'Château de Versailles',
+        address: 'Place d\'Armes',
+        city: 'Versailles',
+        attendeesCount: 120,
+        budgetMin: 15000,
+        budgetMax: 20000,
+        status: 'pending',
+        eventType: 'Mariage',
+        contactName: 'Marie Martin',
+        requirements: 'DJ, éclairage romantique, sonorisation',
+        notes: 'Thème champêtre chic'
+      }
+    ];
+
+    setTimeout(() => {
+      setEvents(mockEvents);
+      setLoading(false);
+    }, 500);
+  }, []);
+
+  const filteredEvents = events.filter(event =>
+    event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    event.venue?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    event.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    event.contactName?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleCreateEvent = () => {
+    console.log('➕ Creating new event');
+    setShowCreateForm(true);
+    toast.info('Formulaire de création d\'événement (à implémenter)');
   };
 
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Événements</h1>
-          <p className="text-gray-600 mt-2">Gérer les concerts, festivals et dates de tournée</p>
-        </div>
-        <div className="flex space-x-3">
-          <Link to="/event-types">
-            <Button variant="outline">Gérer Types</Button>
-          </Link>
-          <Button onClick={() => setShowAddForm(true)} className="bg-purple-600 hover:bg-purple-700">
-            <Plus className="h-4 w-4 mr-2" />
-            Ajouter Événement
-          </Button>
+  const handleEditEvent = (eventId: string) => {
+    console.log('✏️ Editing event:', eventId);
+    toast.info('Édition d\'événement (à implémenter)');
+  };
+
+  const handleDeleteEvent = (eventId: string) => {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cet événement ?')) {
+      console.log('🗑️ Deleting event:', eventId);
+      setEvents(prev => prev.filter(e => e.id !== eventId));
+      toast.success('Événement supprimé');
+    }
+  };
+
+  const handleFileUploaded = (file: { url: string; name: string; type: string }) => {
+    console.log('📎 File uploaded for events:', file);
+    toast.success(`Document "${file.name}" ajouté à l'événement`);
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'confirmed': return 'bg-green-100 text-green-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'cancelled': return 'bg-red-100 text-red-800';
+      case 'completed': return 'bg-blue-100 text-blue-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('fr-FR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p>Chargement des événements...</p>
         </div>
       </div>
+    );
+  }
 
-      {events.length === 0 ? (
-        <Card className="text-center py-12">
-          <CardContent>
-            <Calendar className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun événement trouvé</h3>
-            <p className="text-gray-500 mb-4">Commencez par créer votre premier événement</p>
-            <Button onClick={() => setShowAddForm(true)} className="bg-purple-600 hover:bg-purple-700">
-              <Plus className="h-4 w-4 mr-2" />
-              Créer Événement
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-4">
-          {events.map((event) => (
-            <Card key={event.id} className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardContent className="p-6">
-              <div className="flex items-center justify-between">
+  return (
+    <div className="space-y-6 p-6" style={{
+      background: 'var(--custom-background, #ffffff)',
+      color: 'var(--custom-text, #18181b)',
+      minHeight: '100vh'
+    }}>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold flex items-center">
+            <Calendar className="h-8 w-8 mr-3 text-purple-600" />
+            Gestion des Événements
+          </h1>
+          <p className="mt-2 text-gray-600">
+            {events.length} événement{events.length !== 1 ? 's' : ''} planifié{events.length !== 1 ? 's' : ''}
+          </p>
+        </div>
+        <Button onClick={handleCreateEvent} className="bg-purple-600 hover:bg-purple-700">
+          <Plus className="h-4 w-4 mr-2" />
+          Nouvel Événement
+        </Button>
+      </div>
+
+      {/* Search */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Rechercher par titre, lieu ou contact..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Upload de documents */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Documents d'Événements</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <GlobalFileUpload
+            onFileUploaded={handleFileUploaded}
+            acceptedTypes=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+            label="Télécharger des documents (contrats, plans, photos...)"
+            maxSize={10}
+            multiple={true}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Events List */}
+      <div className="grid gap-6">
+        {filteredEvents.map((event) => (
+          <Card key={event.id} className="hover:shadow-lg transition-shadow">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 mb-2">
-                    <h3 className="text-xl font-semibold text-gray-900">{event.name}</h3>
+                    <h3 className="text-xl font-semibold">{event.title}</h3>
                     <Badge className={getStatusColor(event.status)}>
-                      {event.status === 'confirmed' ? 'Confirmé' : event.status === 'pending' ? 'En attente' : 'Annulé'}
+                      {event.status}
                     </Badge>
-                    {/* Multiple Event Type Badges */}
-                    {getEventTypesByIds(event.typeIds, eventTypes).map((type) => (
-                      <Badge key={type.id} className={`${type.color} text-white`}>
-                        {type.name}
-                      </Badge>
-                    ))}
                   </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center text-gray-600">
-                        <Calendar className="h-4 w-4 mr-2" />
-                        <span>{new Date(event.date).toLocaleDateString('fr-FR')}</span>
-                      </div>
-                      
-                      <div className="flex items-start text-gray-600">
-                        <MapPin className="h-4 w-4 mr-2 mt-0.5" />
-                        <div className="flex-1">
-                          <div className="font-medium">{event.venue}</div>
-                          <div className="text-sm">
-                            {event.address.street}<br/>
-                            {event.address.city}, {event.address.postalCode}<br/>
-                            {event.address.country}
-                          </div>
-                          <a
-                            href={getGoogleMapsUrl(event.address, event.venue)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm mt-1"
-                          >
-                            <ExternalLink className="h-3 w-3 mr-1" />
-                            Voir sur Google Maps
-                          </a>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      {event.artist && (
-                        <div className="flex items-center text-gray-600">
-                          <Link 
-                            to="/artists" 
-                            className="text-purple-600 hover:text-purple-800 flex items-center space-x-1"
-                          >
-                            <Clock className="h-4 w-4 mr-1" />
-                            <span>{event.artist}</span>
-                            <ExternalLink className="h-3 w-3" />
-                          </Link>
-                        </div>
-                      )}
-
-                      {/* Linked Contacts */}
-                      {event.contactIds && event.contactIds.length > 0 && (
-                        <div>
-                          <div className="flex items-center space-x-2 mb-1">
-                            <User className="h-4 w-4 text-gray-600" />
-                            <span className="text-sm font-medium text-gray-700">Contacts liés:</span>
-                          </div>
-                          <div className="space-y-1">
-                            {getContactsByIds(event.contactIds).map((contact) => (
-                              <Link
-                                key={contact.id}
-                                to="/contacts"
-                                className="block text-purple-600 hover:text-purple-800 text-sm flex items-center space-x-1"
-                              >
-                                <span>{contact.name}</span>
-                                <ExternalLink className="h-3 w-3" />
-                              </Link>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Related Tasks */}
-                  {event.relatedTasks && event.relatedTasks.length > 0 && (
-                    <div className="mt-4">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <CheckSquare className="h-4 w-4 text-gray-600" />
-                        <span className="text-sm font-medium text-gray-700">Tâches liées:</span>
-                      </div>
-                      <div className="space-y-1">
-                        {event.relatedTasks.map((task) => (
-                          <Link
-                            key={task.id}
-                            to="/tasks"
-                            className="flex items-center justify-between p-2 bg-gray-50 rounded hover:bg-gray-100 transition-colors"
-                          >
-                            <div className="flex items-center space-x-2">
-                              <span className="text-sm text-gray-700">{task.title}</span>
-                              <Badge className={`${getTaskStatusColor(task.status)} text-xs`}>
-                                {task.status === 'todo' ? 'À faire' : task.status === 'in-progress' ? 'En cours' : 'Terminé'}
-                              </Badge>
-                            </div>
-                            <div className="flex items-center space-x-1 text-xs text-gray-500">
-                              <span>Échéance: {new Date(task.dueDate).toLocaleDateString('fr-FR')}</span>
-                              <ExternalLink className="h-3 w-3" />
-                            </div>
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {event.url && (
-                    <div className="mt-3">
-                      <a 
-                        href={event.url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center text-purple-600 hover:text-purple-800"
-                      >
-                        <ExternalLink className="h-4 w-4 mr-1" />
-                        Site de l'événement
-                      </a>
-                    </div>
+                  {event.description && (
+                    <p className="text-gray-600 mb-3">{event.description}</p>
                   )}
                 </div>
-                
-                <div className="flex space-x-2">
-                  <Button variant="outline" size="sm">Modifier</Button>
-                  <Button variant="outline" size="sm">Voir Détails</Button>
+                <div className="flex items-center space-x-2">
+                  <Button variant="outline" size="sm">
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleEditEvent(event.id)}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleDeleteEvent(event.id)}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
+
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                <div className="flex items-center space-x-2 text-sm">
+                  <Clock className="h-4 w-4 text-gray-400" />
+                  <div>
+                    <div>Début: {formatDate(event.startDate)}</div>
+                    <div>Fin: {formatDate(event.endDate)}</div>
+                  </div>
+                </div>
+                
+                {event.venue && (
+                  <div className="flex items-center space-x-2 text-sm">
+                    <MapPin className="h-4 w-4 text-gray-400" />
+                    <div>
+                      <div>{event.venue}</div>
+                      <div className="text-gray-500">{event.city}</div>
+                    </div>
+                  </div>
+                )}
+
+                {event.attendeesCount && (
+                  <div className="flex items-center space-x-2 text-sm">
+                    <Users className="h-4 w-4 text-gray-400" />
+                    <span>{event.attendeesCount} participants</span>
+                  </div>
+                )}
+              </div>
+
+              {(event.budgetMin || event.budgetMax) && (
+                <div className="mb-4">
+                  <span className="text-sm font-medium">Budget: </span>
+                  <span className="text-sm">
+                    {event.budgetMin && event.budgetMax 
+                      ? `${event.budgetMin}€ - ${event.budgetMax}€`
+                      : event.budgetMin 
+                        ? `À partir de ${event.budgetMin}€`
+                        : `Jusqu'à ${event.budgetMax}€`
+                    }
+                  </span>
+                </div>
+              )}
+
+              {event.requirements && (
+                <div className="bg-gray-50 p-3 rounded text-sm">
+                  <strong>Exigences:</strong> {event.requirements}
+                </div>
+              )}
             </CardContent>
           </Card>
         ))}
       </div>
-      )}
 
-      {showAddForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <Card className="w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-            <CardHeader>
-              <CardTitle>Ajouter Nouvel Événement</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <Input placeholder="Nom de l'événement" />
-                <Input type="date" placeholder="Date de l'événement" />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-2">Types d'événement *</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {eventTypes.filter(type => type.isActive).map((type) => (
-                    <label key={type.id} className="flex items-center space-x-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
-                      <input
-                        type="checkbox"
-                        checked={selectedTypeIds.includes(type.id)}
-                        onChange={() => handleTypeSelection(type.id)}
-                        className="rounded"
-                      />
-                      <div className={`w-3 h-3 rounded-full ${type.color}`}></div>
-                      <span className="text-sm">{type.name}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-              
-              <Input placeholder="Lieu/Salle" />
-              <div className="space-y-2">
-                <h4 className="font-medium">Adresse complète</h4>
-                <Input placeholder="Rue et numéro" />
-                <div className="grid grid-cols-3 gap-2">
-                  <Input placeholder="Ville" />
-                  <Input placeholder="Code postal" />
-                  <Input placeholder="Pays" />
-                </div>
-              </div>
-              <Input placeholder="URL de l'événement (optionnel)" />
-              <Input placeholder="Artiste" />
-              <div className="flex space-x-3 pt-4">
-                <Button onClick={() => setShowAddForm(false)} variant="outline" className="flex-1">
-                  Annuler
-                </Button>
-                <Button 
-                  onClick={() => setShowAddForm(false)} 
-                  disabled={selectedTypeIds.length === 0}
-                  className="flex-1 bg-purple-600 hover:bg-purple-700"
-                >
-                  Sauvegarder Événement
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+      {filteredEvents.length === 0 && (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium mb-2">Aucun événement trouvé</h3>
+            <p className="text-gray-600 mb-4">
+              {searchTerm ? 'Aucun événement ne correspond à votre recherche.' : 'Commencez par planifier votre premier événement.'}
+            </p>
+            {!searchTerm && (
+              <Button onClick={handleCreateEvent}>
+                <Plus className="h-4 w-4 mr-2" />
+                Créer un événement
+              </Button>
+            )}
+          </CardContent>
+        </Card>
       )}
     </div>
   );
-};
-
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'confirmed':
-      return 'bg-green-100 text-green-800';
-    case 'pending':
-      return 'bg-yellow-100 text-yellow-800';
-    case 'cancelled':
-      return 'bg-red-100 text-red-800';
-    default:
-      return 'bg-gray-100 text-gray-800';
-  }
-};
-
-const getTaskStatusColor = (status: string) => {
-  switch (status) {
-    case 'done':
-      return 'bg-green-100 text-green-800';
-    case 'in-progress':
-      return 'bg-yellow-100 text-yellow-800';
-    case 'todo':
-      return 'bg-blue-100 text-blue-800';
-    default:
-      return 'bg-gray-100 text-gray-800';
-  }
-};
-
-const getGoogleMapsUrl = (address: Event['address'], venue: string) => {
-  const fullAddress = `${venue}, ${address.street}, ${address.city}, ${address.postalCode}, ${address.country}`;
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
-};
-
-const getContactsByIds = (contactIds?: string[]) => {
-  if (!contactIds) return [];
-  return sampleContacts.filter(contact => contactIds.includes(contact.id));
-};
-
-const getEventTypesByIds = (typeIds: string[], eventTypesArray: EventType[]) => {
-  return eventTypesArray.filter(type => typeIds.includes(type.id));
 };

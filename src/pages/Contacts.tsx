@@ -1,425 +1,287 @@
 
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Filter, Download, Upload, Trash2, Edit, Phone, Mail, MapPin, User, Building2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { CSVImporter } from '@/components/CSVImporter';
-import { ContactForm } from '@/components/ContactForm';
-import { supabase } from '@/integrations/supabase/client';
+import { Badge } from '@/components/ui/badge';
+import { Plus, Search, Filter, Users, Mail, Phone, MapPin, Edit, Trash2, Eye } from 'lucide-react';
+import { GlobalFileUpload } from '@/components/GlobalFileUpload';
 import { toast } from 'sonner';
 
 interface Contact {
   id: string;
-  first_name: string;
-  last_name: string;
-  email?: string;
-  phone?: string;
-  role?: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  company?: string;
+  position?: string;
   address?: string;
   city?: string;
-  postal_code?: string;
-  country?: string;
-  accepts_marketing_emails?: boolean;
-  event_id?: string;
-  event_type_id?: string;
-  created_at: string;
-  events?: { title: string };
-  event_types?: { name: string; color?: string };
+  status: 'prospect' | 'client' | 'inactive';
+  source?: string;
+  notes?: string;
+  tags: string[];
+  createdAt: string;
 }
 
 export const Contacts: React.FC = () => {
-  console.log('👥 Contacts page loading');
-  
   const [contacts, setContacts] = useState<Contact[]>([]);
-  const [filteredContacts, setFilteredContacts] = useState<Contact[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showImporter, setShowImporter] = useState(false);
-  const [showContactForm, setShowContactForm] = useState(false);
+  const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [loading, setLoading] = useState(true);
-  const [events, setEvents] = useState<any[]>([]);
-  const [eventTypes, setEventTypes] = useState<any[]>([]);
 
+  console.log('📋 Contacts - Page loaded with', contacts.length, 'contacts');
+
+  // Simulation de données
   useEffect(() => {
-    console.log('🔄 Loading contacts data');
-    loadContacts();
-    loadEventsAndEventTypes();
+    const mockContacts: Contact[] = [
+      {
+        id: '1',
+        firstName: 'Jean',
+        lastName: 'Dupont',
+        email: 'jean.dupont@example.com',
+        phone: '+33 1 23 45 67 89',
+        company: 'Tech Corp',
+        position: 'Directeur Marketing',
+        address: '123 Rue de la Paix',
+        city: 'Paris',
+        status: 'client',
+        source: 'Site web',
+        notes: 'Contact très intéressé par nos services',
+        tags: ['VIP', 'Tech'],
+        createdAt: '2024-01-15'
+      },
+      {
+        id: '2',
+        firstName: 'Marie',
+        lastName: 'Martin',
+        email: 'marie.martin@example.com',
+        phone: '+33 6 12 34 56 78',
+        company: 'Event Solutions',
+        position: 'Responsable Événements',
+        address: '456 Avenue des Champs',
+        city: 'Lyon',
+        status: 'prospect',
+        source: 'Recommandation',
+        notes: 'À recontacter la semaine prochaine',
+        tags: ['Événementiel'],
+        createdAt: '2024-01-20'
+      }
+    ];
+
+    setTimeout(() => {
+      setContacts(mockContacts);
+      setLoading(false);
+    }, 500);
   }, []);
 
-  useEffect(() => {
-    // Filtrer les contacts selon le terme de recherche
-    const filtered = contacts.filter(contact => {
-      const searchLower = searchTerm.toLowerCase();
-      return (
-        contact.first_name.toLowerCase().includes(searchLower) ||
-        contact.last_name.toLowerCase().includes(searchLower) ||
-        contact.email?.toLowerCase().includes(searchLower) ||
-        contact.phone?.includes(searchTerm) ||
-        contact.role?.toLowerCase().includes(searchLower) ||
-        contact.city?.toLowerCase().includes(searchLower) ||
-        contact.country?.toLowerCase().includes(searchLower)
-      );
-    });
-    setFilteredContacts(filtered);
-    console.log('🔍 Filtered contacts:', filtered.length, 'of', contacts.length);
-  }, [contacts, searchTerm]);
+  const filteredContacts = contacts.filter(contact =>
+    contact.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    contact.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    contact.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    contact.company?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-  const loadContacts = async () => {
-    try {
-      console.log('📊 Loading contacts from database');
-      const { data, error } = await supabase
-        .from('contacts')
-        .select(`
-          *,
-          events:event_id(title),
-          event_types:event_type_id(name, color)
-        `)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('❌ Error loading contacts:', error);
-        toast.error('Erreur lors du chargement des contacts');
-        return;
-      }
-
-      console.log('✅ Contacts loaded:', data?.length || 0);
-      setContacts(data || []);
-    } catch (error) {
-      console.error('❌ Exception loading contacts:', error);
-      toast.error('Erreur lors du chargement des contacts');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadEventsAndEventTypes = async () => {
-    try {
-      // Charger les événements
-      const { data: eventsData } = await supabase
-        .from('events')
-        .select('id, title')
-        .order('title');
-      setEvents(eventsData || []);
-
-      // Charger les types d'événement
-      const { data: eventTypesData } = await supabase
-        .from('event_types')
-        .select('id, name, color')
-        .order('name');
-      setEventTypes(eventTypesData || []);
-
-      console.log('✅ Events and event types loaded');
-    } catch (error) {
-      console.error('Error loading events/event types:', error);
-    }
-  };
-
-  const handleImport = (importedContacts: any[]) => {
-    console.log('📥 Handling imported contacts:', importedContacts.length);
-    toast.success(`${importedContacts.length} contacts importés !`);
-    loadContacts(); // Recharger la liste
-  };
-
-  const handleDeleteContact = async (contactId: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce contact ?')) {
-      return;
-    }
-
-    try {
-      console.log('🗑️ Deleting contact:', contactId);
-      const { error } = await supabase
-        .from('contacts')
-        .delete()
-        .eq('id', contactId);
-
-      if (error) {
-        console.error('Error deleting contact:', error);
-        toast.error('Erreur lors de la suppression');
-        return;
-      }
-
-      toast.success('Contact supprimé');
-      loadContacts();
-    } catch (error) {
-      console.error('Exception deleting contact:', error);
-      toast.error('Erreur lors de la suppression');
-    }
+  const handleCreateContact = () => {
+    console.log('➕ Creating new contact');
+    setShowCreateForm(true);
   };
 
   const handleEditContact = (contact: Contact) => {
+    console.log('✏️ Editing contact:', contact.id);
     setEditingContact(contact);
-    setShowContactForm(true);
+    setShowCreateForm(true);
   };
 
-  const handleContactSaved = () => {
-    setShowContactForm(false);
-    setEditingContact(null);
-    loadContacts();
-  };
-
-  const getEventTypeBadge = (eventType: any) => {
-    if (!eventType) return null;
-    
-    return (
-      <Badge 
-        style={{ 
-          backgroundColor: eventType.color || '#3B82F6',
-          color: 'white'
-        }}
-        className="text-xs"
-      >
-        {eventType.name}
-      </Badge>
-    );
-  };
-
-  const formatAddress = (contact: Contact) => {
-    const parts = [];
-    if (contact.address) parts.push(contact.address);
-    if (contact.postal_code || contact.city) {
-      const cityPart = [contact.postal_code, contact.city].filter(Boolean).join(' ');
-      if (cityPart) parts.push(cityPart);
+  const handleDeleteContact = (contactId: string) => {
+    if (confirm('Êtes-vous sûr de vouloir supprimer ce contact ?')) {
+      console.log('🗑️ Deleting contact:', contactId);
+      setContacts(prev => prev.filter(c => c.id !== contactId));
+      toast.success('Contact supprimé');
     }
-    if (contact.country) parts.push(contact.country);
-    return parts.join(', ');
+  };
+
+  const handleFileUploaded = (file: { url: string; name: string; type: string }) => {
+    console.log('📎 File uploaded for contacts:', file);
+    toast.success(`Fichier "${file.name}" ajouté aux contacts`);
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'client': return 'bg-green-100 text-green-800';
+      case 'prospect': return 'bg-blue-100 text-blue-800';
+      case 'inactive': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
   };
 
   if (loading) {
-    console.log('⏳ Contacts page loading...');
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p>Chargement des contacts...</p>
         </div>
       </div>
     );
   }
 
-  console.log('🎨 Rendering contacts page with', filteredContacts.length, 'contacts');
-
   return (
-    <div className="space-y-6 p-4 md:p-6">
-      {/* En-tête */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between space-y-4 md:space-y-0">
+    <div className="space-y-6 p-6" style={{
+      background: 'var(--custom-background, #ffffff)',
+      color: 'var(--custom-text, #18181b)',
+      minHeight: '100vh'
+    }}>
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold">Contacts</h1>
-          <p className="text-muted-foreground text-sm md:text-base">
-            Gérez vos contacts et organisez vos relations professionnelles
+          <h1 className="text-3xl font-bold flex items-center">
+            <Users className="h-8 w-8 mr-3 text-blue-600" />
+            Gestion des Contacts
+          </h1>
+          <p className="mt-2 text-gray-600">
+            {contacts.length} contact{contacts.length !== 1 ? 's' : ''} enregistré{contacts.length !== 1 ? 's' : ''}
           </p>
         </div>
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
-          <Button
-            onClick={() => setShowImporter(true)}
-            variant="outline"
-            className="flex items-center justify-center space-x-2 w-full sm:w-auto"
-          >
-            <Upload className="h-4 w-4" />
-            <span>Importer CSV</span>
-          </Button>
-          <Button 
-            onClick={() => setShowContactForm(true)}
-            className="flex items-center justify-center space-x-2 w-full sm:w-auto"
-          >
-            <Plus className="h-4 w-4" />
-            <span>Nouveau Contact</span>
-          </Button>
-        </div>
+        <Button onClick={handleCreateContact} className="bg-blue-600 hover:bg-blue-700">
+          <Plus className="h-4 w-4 mr-2" />
+          Nouveau Contact
+        </Button>
       </div>
 
-      {/* Barre de recherche et filtres */}
+      {/* Search and Filters */}
       <Card>
         <CardContent className="p-4">
-          <div className="flex flex-col md:flex-row items-stretch md:items-center space-y-4 md:space-y-0 md:space-x-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <div className="flex items-center space-x-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Rechercher un contact..."
+                placeholder="Rechercher par nom, email ou entreprise..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
               />
             </div>
-            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-              <Button variant="outline" size="sm" className="w-full sm:w-auto">
-                <Filter className="h-4 w-4 mr-2" />
-                Filtres
-              </Button>
-              <Button variant="outline" size="sm" className="w-full sm:w-auto">
-                <Download className="h-4 w-4 mr-2" />
-                Exporter
-              </Button>
-            </div>
+            <Button variant="outline">
+              <Filter className="h-4 w-4 mr-2" />
+              Filtres
+            </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Statistiques */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-xl md:text-2xl font-bold">{contacts.length}</div>
-            <div className="text-xs md:text-sm text-muted-foreground">Total Contacts</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-xl md:text-2xl font-bold text-green-600">
-              {contacts.filter(c => c.accepts_marketing_emails).length}
-            </div>
-            <div className="text-xs md:text-sm text-muted-foreground">Marketing OK</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-xl md:text-2xl font-bold text-blue-600">
-              {events.length}
-            </div>
-            <div className="text-xs md:text-sm text-muted-foreground">Événements</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-xl md:text-2xl font-bold text-purple-600">
-              {eventTypes.length}
-            </div>
-            <div className="text-xs md:text-sm text-muted-foreground">Types d'événements</div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Upload de fichiers */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Import de Contacts</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <GlobalFileUpload
+            onFileUploaded={handleFileUploaded}
+            acceptedTypes=".csv,.xlsx,.vcf"
+            label="Importer des contacts (CSV, Excel, vCard)"
+            maxSize={5}
+          />
+        </CardContent>
+      </Card>
 
-      {/* Liste des contacts */}
+      {/* Contacts List */}
       <div className="grid gap-4">
-        {filteredContacts.length === 0 ? (
-          <Card>
-            <CardContent className="p-8 text-center">
-              <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium mb-2">Aucun contact trouvé</h3>
-              <p className="text-muted-foreground mb-4">
-                {contacts.length === 0 
-                  ? "Commencez par ajouter des contacts ou importer un fichier CSV"
-                  : "Aucun contact ne correspond à votre recherche"
-                }
-              </p>
-              {contacts.length === 0 && (
-                <div className="flex flex-col sm:flex-row gap-2 justify-center">
-                  <Button onClick={() => setShowImporter(true)} variant="outline">
-                    <Upload className="h-4 w-4 mr-2" />
-                    Importer des contacts
+        {filteredContacts.map((contact) => (
+          <Card key={contact.id} className="hover:shadow-md transition-shadow">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-4 mb-3">
+                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                      <span className="text-blue-600 font-semibold text-lg">
+                        {contact.firstName.charAt(0)}{contact.lastName.charAt(0)}
+                      </span>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-lg">
+                        {contact.firstName} {contact.lastName}
+                      </h3>
+                      <p className="text-gray-600">{contact.position} {contact.company && `• ${contact.company}`}</p>
+                    </div>
+                    <Badge className={getStatusColor(contact.status)}>
+                      {contact.status}
+                    </Badge>
+                  </div>
+                  
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                    <div className="flex items-center space-x-2">
+                      <Mail className="h-4 w-4 text-gray-400" />
+                      <span>{contact.email}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Phone className="h-4 w-4 text-gray-400" />
+                      <span>{contact.phone}</span>
+                    </div>
+                    {contact.city && (
+                      <div className="flex items-center space-x-2">
+                        <MapPin className="h-4 w-4 text-gray-400" />
+                        <span>{contact.city}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {contact.tags.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-1">
+                      {contact.tags.map((tag, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Button variant="outline" size="sm">
+                    <Eye className="h-4 w-4" />
                   </Button>
-                  <Button onClick={() => setShowContactForm(true)}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Nouveau contact
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleEditContact(contact)}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleDeleteContact(contact.id)}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
-              )}
+              </div>
             </CardContent>
           </Card>
-        ) : (
-          filteredContacts.map((contact) => (
-            <Card key={contact.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-4 md:p-6">
-                <div className="flex flex-col md:flex-row md:items-start justify-between space-y-4 md:space-y-0">
-                  <div className="flex-1">
-                    <div className="flex flex-col md:flex-row md:items-center space-y-3 md:space-y-0 md:space-x-3 mb-3">
-                      <div className="flex items-center space-x-3">
-                        <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                          <User className="h-5 w-5 text-primary" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-lg">
-                            {contact.first_name} {contact.last_name}
-                          </h3>
-                          {contact.role && (
-                            <p className="text-sm text-muted-foreground">{contact.role}</p>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        {contact.event_types && getEventTypeBadge(contact.event_types)}
-                        {contact.accepts_marketing_emails && (
-                          <Badge variant="outline" className="text-green-600 border-green-600">
-                            Marketing OK
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 text-sm">
-                      {contact.email && (
-                        <div className="flex items-center space-x-2">
-                          <Mail className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                          <span className="break-all">{contact.email}</span>
-                        </div>
-                      )}
-                      {contact.phone && (
-                        <div className="flex items-center space-x-2">
-                          <Phone className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                          <span>{contact.phone}</span>
-                        </div>
-                      )}
-                      {formatAddress(contact) && (
-                        <div className="flex items-start space-x-2 lg:col-span-2">
-                          <MapPin className="h-4 w-4 text-gray-400 flex-shrink-0 mt-0.5" />
-                          <span className="break-words">{formatAddress(contact)}</span>
-                        </div>
-                      )}
-                      {contact.events && (
-                        <div className="flex items-center space-x-2 lg:col-span-2">
-                          <Building2 className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                          <span className="truncate">{contact.events.title}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-2 md:ml-4">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleEditContact(contact)}
-                    >
-                      <Edit className="h-4 w-4" />
-                      <span className="sr-only md:not-sr-only md:ml-2">Modifier</span>
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleDeleteContact(contact.id)}
-                      className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      <span className="sr-only md:not-sr-only md:ml-2">Supprimer</span>
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        )}
+        ))}
       </div>
 
-      {/* CSV Importer */}
-      <CSVImporter
-        isOpen={showImporter}
-        onClose={() => setShowImporter(false)}
-        onImport={handleImport}
-      />
-
-      {/* Contact Form */}
-      <ContactForm
-        isOpen={showContactForm}
-        onClose={() => {
-          setShowContactForm(false);
-          setEditingContact(null);
-        }}
-        onSave={handleContactSaved}
-        contact={editingContact}
-        events={events}
-        eventTypes={eventTypes}
-      />
+      {filteredContacts.length === 0 && (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium mb-2">Aucun contact trouvé</h3>
+            <p className="text-gray-600 mb-4">
+              {searchTerm ? 'Aucun contact ne correspond à votre recherche.' : 'Commencez par ajouter votre premier contact.'}
+            </p>
+            {!searchTerm && (
+              <Button onClick={handleCreateContact}>
+                <Plus className="h-4 w-4 mr-2" />
+                Créer un contact
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
