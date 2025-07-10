@@ -3,17 +3,20 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Globe, Menu, Palette, Settings, Eye, Code, Edit, FileText, ExternalLink } from 'lucide-react';
+import { Globe, Menu, Palette, Settings, Eye, Code, Edit, FileText, ExternalLink, Wrench } from 'lucide-react';
 import { WebsiteMenuManager } from '@/components/WebsiteMenuManager';
 import { WebsiteDesignManager } from '@/components/WebsiteDesignManager';
 import { WebsiteSettingsManager } from '@/components/WebsiteSettingsManager';
 import { SEOManager } from '@/components/SEOManager';
 import { LegalContentManager } from '@/components/LegalContentManager';
 import { CMSPageManager } from '@/components/CMSPageManager';
+import { GoogleIntegrationDiagnostic } from '@/components/integrations/GoogleIntegrationDiagnostic';
+import { useWebsiteSync } from '@/hooks/useWebsiteSync';
 
 export const Website: React.FC = () => {
   const [activeTab, setActiveTab] = useState('pages');
   const navigate = useNavigate();
+  const { forceSync } = useWebsiteSync();
 
   const handleSEOSave = (seoData: any) => {
     console.log('Saving SEO data:', seoData);
@@ -47,6 +50,15 @@ export const Website: React.FC = () => {
         </div>
         <div className="flex items-center space-x-3">
           <Button 
+            onClick={forceSync}
+            variant="outline"
+            className="flex items-center space-x-2"
+            title="Forcer la synchronisation"
+          >
+            <Wrench className="h-4 w-4" />
+            <span>Sync</span>
+          </Button>
+          <Button 
             onClick={handlePreviewSite}
             variant="outline"
             className="flex items-center space-x-2"
@@ -65,7 +77,7 @@ export const Website: React.FC = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="pages">
             <FileText className="h-4 w-4 mr-2" />
             Pages
@@ -89,6 +101,10 @@ export const Website: React.FC = () => {
           <TabsTrigger value="legal">
             <Eye className="h-4 w-4 mr-2" />
             Légal
+          </TabsTrigger>
+          <TabsTrigger value="integrations">
+            <Wrench className="h-4 w-4 mr-2" />
+            Intégrations
           </TabsTrigger>
         </TabsList>
 
@@ -200,6 +216,26 @@ export const Website: React.FC = () => {
             </CardHeader>
             <CardContent>
               <LegalContentManager />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="integrations">
+          <Card style={{
+            backgroundColor: 'var(--app-card-bg, #ffffff)',
+            color: 'var(--app-card-text, #18181b)',
+            border: '1px solid var(--notification-border, #e5e7eb)'
+          }}>
+            <CardHeader>
+              <CardTitle style={{ color: 'var(--app-card-text, #18181b)' }}>
+                Intégrations Google
+              </CardTitle>
+              <p style={{ color: 'var(--app-text, #666666)' }}>
+                Diagnostiquez et testez vos intégrations Google
+              </p>
+            </CardHeader>
+            <CardContent>
+              <GoogleIntegrationDiagnostic />
             </CardContent>
           </Card>
         </TabsContent>

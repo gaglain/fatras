@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useWebsitePagesSync } from '@/hooks/useWebsitePagesSync';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,9 +8,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Edit, Trash2, Eye, Globe } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, Globe, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Tables } from '@/integrations/supabase/types';
+import { BlockEditor } from '@/components/BlockEditor/BlockEditor';
 
 type WebsitePage = Tables<'website_pages'>;
 
@@ -19,10 +19,11 @@ export const CMSPageManager: React.FC = () => {
   const { pages, loading, savePage, updatePage, deletePage } = useWebsitePagesSync();
   const [isCreating, setIsCreating] = useState(false);
   const [editingPage, setEditingPage] = useState<WebsitePage | null>(null);
+  const [showBlockEditor, setShowBlockEditor] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     slug: '',
-    content: null as any,
+    content: [] as any[],
     meta_title: '',
     meta_description: '',
     meta_keywords: '',
@@ -37,30 +38,42 @@ export const CMSPageManager: React.FC = () => {
         return;
       }
 
-      await savePage({
-        ...formData,
-        user_id: null // This will be set automatically by the hook
-      });
+      console.log('🚀 Creating page with data:', formData);
+      await savePage(formData);
       toast.success('Page créée avec succès');
       setIsCreating(false);
       resetForm();
-    } catch (error) {
-      toast.error('Erreur lors de la création de la page');
-      console.error(error);
+    } catch (error: any) {
+      console.error('❌ Error creating page:', error);
+      toast.error('Erreur lors de la création de la page: ' + (error.message || 'Erreur inconnue'));
     }
   };
 
   const handleUpdatePage = async () => {
     try {
-      if (!editingPage || !formData.title || !formData.slug) return;
+      if (!editingPage || !formData.title || !formData.slug) {
+        toast.error('Le titre et le slug sont requis');
+        return;
+      }
 
-      await updatePage(editingPage.id, formData);
+      console.log('🔄 Updating page:', editingPage.id, formData);
+      await updatePage(editingPage.id, {
+        title: formData.title,
+        slug: formData.slug,
+        content: formData.content,
+        meta_title: formData.meta_title,
+        meta_description: formData.meta_description,
+        meta_keywords: formData.meta_keywords,
+        status: formData.status,
+        page_type: formData.page_type
+      });
       toast.success('Page mise à jour avec succès');
       setEditingPage(null);
+      setShowBlockEditor(false);
       resetForm();
-    } catch (error) {
-      toast.error('Erreur lors de la mise à jour');
-      console.error(error);
+    } catch (error: any) {
+      console.error('❌ Error updating page:', error);
+      toast.error('Erreur lors de la mise à jour: ' + (error.message || 'Erreur inconnue'));
     }
   };
 
@@ -70,9 +83,9 @@ export const CMSPageManager: React.FC = () => {
     try {
       await deletePage(id);
       toast.success('Page supprimée avec succès');
-    } catch (error) {
-      toast.error('Erreur lors de la suppression');
-      console.error(error);
+    } catch (error: any) {
+      console.error('❌ Error deleting page:', error);
+      toast.error('Erreur lors de la suppression: ' + (error.message || 'Erreur inconnue'));
     }
   };
 
@@ -80,7 +93,7 @@ export const CMSPageManager: React.FC = () => {
     setFormData({
       title: '',
       slug: '',
-      content: null,
+      content: [],
       meta_title: '',
       meta_description: '',
       meta_keywords: '',
@@ -112,27 +125,68 @@ export const CMSPageManager: React.FC = () => {
     setFormData({
       title: page.title,
       slug: page.slug,
-      content: page.content,
+      content: Array.isArray(page.content) ? page.content : [],
       meta_title: page.meta_title || '',
       meta_description: page.meta_description || '',
       meta_keywords: page.meta_keywords || '',
-      status: (page.status || 'draft') as string,
-      page_type: (page.page_type || 'page') as string
+      status: page.status || 'draft',
+      page_type: page.page_type || 'page'
     });
+  };
+
+  const openBlockEditor = (page: WebsitePage) => {
+    startEdit(page);
+    setShowBlockEditor(true);
+  };
+
+  const handleBlocksUpdate = (blocks: any[]) => {
+    setFormData(prev => ({ ...prev, content: blocks }));
   };
 
   const getStatusBadge = (status: string | null) => {
     const statusValue = status || 'draft';
-    const variants = {
-      draft: 'secondary' as const,
-      published: 'default' as const,
-      archived: 'destructive' as const
+    const variants: Record<string, 'secondary' | 'default' | 'destructive'> = {
+      draft: 'secondary',
+      published: 'default',
+      archived: 'destructive'
     };
-    return <Badge variant={variants[statusValue as keyof typeof variants] || 'secondary'}>{statusValue}</Badge>;
+    const variant = variants[statusValue] || 'secondary';
+    return <Badge variant={variant}>{statusValue}</Badge>;
   };
 
   if (loading) {
     return <div className="flex items-center justify-center p-8">Chargement...</div>;
+  }
+
+  // Mode éditeur de blocs
+  if (showBlockEditor && editingPage) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-bold">Éditeur de blocs - {editingPage.title}</h2>
+            <p className="text-muted-foreground">Modifiez le contenu de votre page avec l'éditeur de blocs</p>
+          </div>
+          <div className="flex space-x-2">
+            <Button onClick={handleUpdatePage} className="bg-green-600 hover:bg-green-700">
+              Sauvegarder
+            </Button>
+            <Button variant="outline" onClick={() => {
+              setShowBlockEditor(false);
+              setEditingPage(null);
+              resetForm();
+            }}>
+              Retour
+            </Button>
+          </div>
+        </div>
+        
+        <BlockEditor
+          initialBlocks={formData.content}
+          onSave={handleBlocksUpdate}
+        />
+      </div>
+    );
   }
 
   return (
@@ -146,7 +200,7 @@ export const CMSPageManager: React.FC = () => {
       </div>
 
       {/* Formulaire de création/édition */}
-      {(isCreating || editingPage) && (
+      {(isCreating || (editingPage && !showBlockEditor)) && (
         <Card>
           <CardHeader>
             <CardTitle>
@@ -191,6 +245,21 @@ export const CMSPageManager: React.FC = () => {
                       URL: /front/{formData.slug}
                     </p>
                   </div>
+
+                  {editingPage && (
+                    <div>
+                      <Button 
+                        onClick={() => openBlockEditor(editingPage)}
+                        className="flex items-center space-x-2"
+                      >
+                        <FileText className="h-4 w-4" />
+                        <span>Ouvrir l'éditeur de blocs</span>
+                      </Button>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {Array.isArray(formData.content) ? formData.content.length : 0} bloc(s) configuré(s)
+                      </p>
+                    </div>
+                  )}
                 </div>
               </TabsContent>
 
@@ -280,7 +349,7 @@ export const CMSPageManager: React.FC = () => {
       {/* Liste des pages */}
       <Card>
         <CardHeader>
-          <CardTitle>Pages existantes</CardTitle>
+          <CardTitle>Pages existantes ({pages.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {pages.length === 0 ? (
@@ -303,6 +372,9 @@ export const CMSPageManager: React.FC = () => {
                     <p className="text-sm text-gray-500 mt-1">
                       /{page.slug} • Modifié le {new Date(page.updated_at || page.created_at || '').toLocaleDateString()}
                     </p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {Array.isArray(page.content) ? page.content.length : 0} bloc(s) configuré(s)
+                    </p>
                   </div>
                   
                   <div className="flex items-center space-x-2">
@@ -315,6 +387,14 @@ export const CMSPageManager: React.FC = () => {
                         <Eye className="h-4 w-4" />
                       </Button>
                     )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => openBlockEditor(page)}
+                      title="Éditeur de blocs"
+                    >
+                      <FileText className="h-4 w-4" />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="sm"

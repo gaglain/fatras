@@ -19,34 +19,53 @@ export const useWebsitePagesSync = () => {
       if (error) throw error;
       
       setPages(data || []);
+      console.log('✅ Pages loaded successfully:', data?.length || 0);
     } catch (error) {
-      console.error('Erreur lors du chargement des pages:', error);
+      console.error('❌ Erreur lors du chargement des pages:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const savePage = async (page: Omit<WebsitePage, 'id' | 'created_at' | 'updated_at'>) => {
+  const savePage = async (pageData: {
+    title: string;
+    slug: string;
+    content: any;
+    meta_title: string;
+    meta_description: string;
+    meta_keywords: string;
+    status: string;
+    page_type: string;
+  }) => {
     try {
       const { data: user } = await supabase.auth.getUser();
       
+      if (!user.user) {
+        throw new Error('Utilisateur non authentifié');
+      }
+
       const { data, error } = await supabase
         .from('website_pages')
-        .insert([{ ...page, user_id: user.user?.id || null }])
+        .insert([{ 
+          ...pageData,
+          user_id: user.user.id,
+          content: pageData.content || []
+        }])
         .select()
         .single();
 
       if (error) throw error;
       
       await loadPages();
+      console.log('✅ Page saved successfully:', data);
       return data;
     } catch (error) {
-      console.error('Erreur lors de la sauvegarde de la page:', error);
+      console.error('❌ Erreur lors de la sauvegarde de la page:', error);
       throw error;
     }
   };
 
-  const updatePage = async (id: string, updates: Partial<WebsitePage>) => {
+  const updatePage = async (id: string, updates: Partial<Omit<WebsitePage, 'id' | 'created_at' | 'updated_at' | 'user_id'>>) => {
     try {
       const { error } = await supabase
         .from('website_pages')
@@ -56,8 +75,9 @@ export const useWebsitePagesSync = () => {
       if (error) throw error;
       
       await loadPages();
+      console.log('✅ Page updated successfully');
     } catch (error) {
-      console.error('Erreur lors de la mise à jour de la page:', error);
+      console.error('❌ Erreur lors de la mise à jour de la page:', error);
       throw error;
     }
   };
@@ -72,8 +92,9 @@ export const useWebsitePagesSync = () => {
       if (error) throw error;
       
       await loadPages();
+      console.log('✅ Page deleted successfully');
     } catch (error) {
-      console.error('Erreur lors de la suppression de la page:', error);
+      console.error('❌ Erreur lors de la suppression de la page:', error);
       throw error;
     }
   };
@@ -90,7 +111,7 @@ export const useWebsitePagesSync = () => {
       if (error) throw error;
       return data;
     } catch (error) {
-      console.error('Erreur lors du chargement de la page:', error);
+      console.error('❌ Erreur lors du chargement de la page:', error);
       return null;
     }
   };
@@ -103,7 +124,8 @@ export const useWebsitePagesSync = () => {
       .channel('website_pages_changes')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'website_pages' }, 
-        () => {
+        (payload) => {
+          console.log('🔄 Real-time update received:', payload);
           loadPages();
         }
       )
