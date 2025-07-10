@@ -28,9 +28,11 @@ export const useWebsitePagesSync = () => {
 
   const savePage = async (page: Omit<WebsitePage, 'id' | 'created_at' | 'updated_at'>) => {
     try {
+      const { data: user } = await supabase.auth.getUser();
+      
       const { data, error } = await supabase
         .from('website_pages')
-        .insert([{ ...page, user_id: (await supabase.auth.getUser()).data.user?.id }])
+        .insert([{ ...page, user_id: user.user?.id || null }])
         .select()
         .single();
 

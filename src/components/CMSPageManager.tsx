@@ -22,12 +22,12 @@ export const CMSPageManager: React.FC = () => {
   const [formData, setFormData] = useState({
     title: '',
     slug: '',
-    content: null,
+    content: null as any,
     meta_title: '',
     meta_description: '',
     meta_keywords: '',
-    status: 'draft' as const,
-    page_type: 'page' as const
+    status: 'draft',
+    page_type: 'page'
   });
 
   const handleCreatePage = async () => {
@@ -37,7 +37,10 @@ export const CMSPageManager: React.FC = () => {
         return;
       }
 
-      await savePage(formData);
+      await savePage({
+        ...formData,
+        user_id: null // This will be set automatically by the hook
+      });
       toast.success('Page créée avec succès');
       setIsCreating(false);
       resetForm();
@@ -113,8 +116,8 @@ export const CMSPageManager: React.FC = () => {
       meta_title: page.meta_title || '',
       meta_description: page.meta_description || '',
       meta_keywords: page.meta_keywords || '',
-      status: page.status || 'draft',
-      page_type: page.page_type || 'page'
+      status: (page.status || 'draft') as string,
+      page_type: (page.page_type || 'page') as string
     });
   };
 
@@ -227,7 +230,7 @@ export const CMSPageManager: React.FC = () => {
               <TabsContent value="settings" className="space-y-4">
                 <div>
                   <Label htmlFor="status">Statut</Label>
-                  <Select value={formData.status} onValueChange={(value: any) => setFormData(prev => ({ ...prev, status: value }))}>
+                  <Select value={formData.status} onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -241,7 +244,7 @@ export const CMSPageManager: React.FC = () => {
 
                 <div>
                   <Label htmlFor="page_type">Type de page</Label>
-                  <Select value={formData.page_type} onValueChange={(value: any) => setFormData(prev => ({ ...prev, page_type: value }))}>
+                  <Select value={formData.page_type} onValueChange={(value) => setFormData(prev => ({ ...prev, page_type: value }))}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
