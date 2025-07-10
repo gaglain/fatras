@@ -1,20 +1,9 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import type { Tables } from '@/integrations/supabase/types';
 
-interface WebsitePage {
-  id: string;
-  title: string;
-  slug: string;
-  content: any;
-  meta_title?: string;
-  meta_description?: string;
-  meta_keywords?: string;
-  status: 'draft' | 'published' | 'archived';
-  page_type: 'page' | 'home' | 'legal';
-  created_at: string;
-  updated_at: string;
-}
+type WebsitePage = Tables<'website_pages'>;
 
 export const useWebsitePagesSync = () => {
   const [pages, setPages] = useState<WebsitePage[]>([]);

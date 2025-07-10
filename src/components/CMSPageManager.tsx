@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useWebsitePagesSync } from '@/hooks/useWebsitePagesSync';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,20 +11,23 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Edit, Trash2, Eye, Globe } from 'lucide-react';
 import { toast } from 'sonner';
+import type { Tables } from '@/integrations/supabase/types';
+
+type WebsitePage = Tables<'website_pages'>;
 
 export const CMSPageManager: React.FC = () => {
   const { pages, loading, savePage, updatePage, deletePage } = useWebsitePagesSync();
   const [isCreating, setIsCreating] = useState(false);
-  const [editingPage, setEditingPage] = useState<any>(null);
+  const [editingPage, setEditingPage] = useState<WebsitePage | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     slug: '',
-    content: [],
+    content: null,
     meta_title: '',
     meta_description: '',
     meta_keywords: '',
-    status: 'draft' as 'draft' | 'published' | 'archived',
-    page_type: 'page' as 'page' | 'home' | 'legal'
+    status: 'draft' as const,
+    page_type: 'page' as const
   });
 
   const handleCreatePage = async () => {
@@ -73,7 +77,7 @@ export const CMSPageManager: React.FC = () => {
     setFormData({
       title: '',
       slug: '',
-      content: [],
+      content: null,
       meta_title: '',
       meta_description: '',
       meta_keywords: '',
@@ -100,27 +104,28 @@ export const CMSPageManager: React.FC = () => {
       .replace(/^-|-$/g, '');
   };
 
-  const startEdit = (page: any) => {
+  const startEdit = (page: WebsitePage) => {
     setEditingPage(page);
     setFormData({
       title: page.title,
       slug: page.slug,
-      content: page.content || [],
+      content: page.content,
       meta_title: page.meta_title || '',
       meta_description: page.meta_description || '',
       meta_keywords: page.meta_keywords || '',
-      status: page.status,
-      page_type: page.page_type
+      status: page.status || 'draft',
+      page_type: page.page_type || 'page'
     });
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string | null) => {
+    const statusValue = status || 'draft';
     const variants = {
       draft: 'secondary' as const,
       published: 'default' as const,
       archived: 'destructive' as const
     };
-    return <Badge variant={variants[status as keyof typeof variants] || 'secondary'}>{status}</Badge>;
+    return <Badge variant={variants[statusValue as keyof typeof variants] || 'secondary'}>{statusValue}</Badge>;
   };
 
   if (loading) {
@@ -293,7 +298,7 @@ export const CMSPageManager: React.FC = () => {
                       <Badge variant="outline">{page.page_type}</Badge>
                     </div>
                     <p className="text-sm text-gray-500 mt-1">
-                      /{page.slug} • Modifié le {new Date(page.updated_at).toLocaleDateString()}
+                      /{page.slug} • Modifié le {new Date(page.updated_at || page.created_at || '').toLocaleDateString()}
                     </p>
                   </div>
                   
