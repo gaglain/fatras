@@ -10,58 +10,60 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+interface Contact {
+  id?: string;
+  first_name: string;
+  last_name: string;
+  email?: string;
+  phone?: string;
+  position?: string;
+  address?: string;
+  city?: string;
+  postal_code?: string;
+  country?: string;
+  status: 'prospect' | 'client' | 'inactive';
+  source?: string;
+  notes?: string;
+  tags: string[];
+  accepts_marketing_emails: boolean;
+}
+
 interface ContactFormProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: () => void;
-  contact?: any;
-  events: any[];
-  eventTypes: any[];
+  contact?: Contact;
 }
 
 export const ContactForm: React.FC<ContactFormProps> = ({
   isOpen,
   onClose,
   onSave,
-  contact,
-  events,
-  eventTypes
+  contact
 }) => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<Contact>({
     first_name: '',
     last_name: '',
     email: '',
     phone: '',
-    role: '',
+    position: '',
     address: '',
     city: '',
     postal_code: '',
     country: '',
-    event_id: '',
-    event_type_id: '',
-    accepts_marketing_emails: true,
-    notes: ''
+    status: 'prospect',
+    source: '',
+    notes: '',
+    tags: [],
+    accepts_marketing_emails: true
   });
 
   const [loading, setLoading] = useState(false);
+  const [newTag, setNewTag] = useState('');
 
   useEffect(() => {
     if (contact) {
-      setFormData({
-        first_name: contact.first_name || '',
-        last_name: contact.last_name || '',
-        email: contact.email || '',
-        phone: contact.phone || '',
-        role: contact.role || '',
-        address: contact.address || '',
-        city: contact.city || '',
-        postal_code: contact.postal_code || '',
-        country: contact.country || '',
-        event_id: contact.event_id || '',
-        event_type_id: contact.event_type_id || '',
-        accepts_marketing_emails: contact.accepts_marketing_emails ?? true,
-        notes: contact.notes || ''
-      });
+      setFormData(contact);
     } else {
       // Reset form for new contact
       setFormData({
@@ -69,15 +71,16 @@ export const ContactForm: React.FC<ContactFormProps> = ({
         last_name: '',
         email: '',
         phone: '',
-        role: '',
+        position: '',
         address: '',
         city: '',
         postal_code: '',
         country: '',
-        event_id: '',
-        event_type_id: '',
-        accepts_marketing_emails: true,
-        notes: ''
+        status: 'prospect',
+        source: '',
+        notes: '',
+        tags: [],
+        accepts_marketing_emails: true
       });
     }
   }, [contact, isOpen]);
@@ -93,14 +96,18 @@ export const ContactForm: React.FC<ContactFormProps> = ({
     setLoading(true);
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('Vous devez être connecté');
+        return;
+      }
+
       const contactData = {
         ...formData,
-        user_id: (await supabase.auth.getUser()).data.user?.id,
-        event_id: formData.event_id || null,
-        event_type_id: formData.event_type_id || null
+        user_id: user.id
       };
 
-      if (contact) {
+      if (contact?.id) {
         // Update existing contact
         const { error } = await supabase
           .from('contacts')
@@ -128,6 +135,7 @@ export const ContactForm: React.FC<ContactFormProps> = ({
       }
 
       onSave();
+      onClose();
     } catch (error) {
       console.error('Exception in handleSubmit:', error);
       toast.error('Une erreur inattendue s\'est produite');
@@ -136,10 +144,27 @@ export const ContactForm: React.FC<ContactFormProps> = ({
     }
   };
 
-  const handleInputChange = (field: string, value: string | boolean) => {
+  const handleInputChange = (field: keyof Contact, value: string | boolean | string[]) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
+    }));
+  };
+
+  const addTag = () => {
+    if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        tags: [...prev.tags, newTag.trim()]
+      }));
+      setNewTag('');
+    }
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    setFormData(prev => ({
+      ...prev,
+      tags: prev.tags.filter(tag => tag !== tagToRemove)
     }));
   };
 
@@ -184,7 +209,7 @@ export const ContactForm: React.FC<ContactFormProps> = ({
               <Input
                 id="email"
                 type="email"
-                value={formData.email}
+                value={formData.email || ''}
                 onChange={(e) => handleInputChange('email', e.target.value)}
               />
             </div>
@@ -192,20 +217,35 @@ export const ContactForm: React.FC<ContactFormProps> = ({
               <Label htmlFor="phone">Téléphone</Label>
               <Input
                 id="phone"
-                value={formData.phone}
+                value={formData.phone || ''}
                 onChange={(e) => handleInputChange('phone', e.target.value)}
               />
             </div>
           </div>
 
-          {/* Rôle */}
-          <div className="space-y-2">
-            <Label htmlFor="role">Rôle/Titre</Label>
-            <Input
-              id="role"
-              value={formData.role}
-              onChange={(e) => handleInputChange('role', e.target.value)}
-            />
+          {/* Position et statut */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="position">Poste/Fonction</Label>
+              <Input
+                id="position"
+                value={formData.position || ''}
+                onChange={(e) => handleInputChange('position', e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="status">Statut</Label>
+              <Select value={formData.status} onValueChange={(value) => handleInputChange('status', value as Contact['status'])}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="prospect">Prospect</SelectItem>
+                  <SelectItem value="client">Client</SelectItem>
+                  <SelectItem value="inactive">Inactif</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Adresse */}
@@ -214,7 +254,7 @@ export const ContactForm: React.FC<ContactFormProps> = ({
               <Label htmlFor="address">Adresse</Label>
               <Input
                 id="address"
-                value={formData.address}
+                value={formData.address || ''}
                 onChange={(e) => handleInputChange('address', e.target.value)}
               />
             </div>
@@ -223,7 +263,7 @@ export const ContactForm: React.FC<ContactFormProps> = ({
                 <Label htmlFor="postal_code">Code postal</Label>
                 <Input
                   id="postal_code"
-                  value={formData.postal_code}
+                  value={formData.postal_code || ''}
                   onChange={(e) => handleInputChange('postal_code', e.target.value)}
                 />
               </div>
@@ -231,7 +271,7 @@ export const ContactForm: React.FC<ContactFormProps> = ({
                 <Label htmlFor="city">Ville</Label>
                 <Input
                   id="city"
-                  value={formData.city}
+                  value={formData.city || ''}
                   onChange={(e) => handleInputChange('city', e.target.value)}
                 />
               </div>
@@ -239,46 +279,54 @@ export const ContactForm: React.FC<ContactFormProps> = ({
                 <Label htmlFor="country">Pays</Label>
                 <Input
                   id="country"
-                  value={formData.country}
+                  value={formData.country || ''}
                   onChange={(e) => handleInputChange('country', e.target.value)}
                 />
               </div>
             </div>
           </div>
 
-          {/* Événements */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="event_id">Événement</Label>
-              <Select value={formData.event_id} onValueChange={(value) => handleInputChange('event_id', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un événement" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Aucun événement</SelectItem>
-                  {events.map((event) => (
-                    <SelectItem key={event.id} value={event.id}>
-                      {event.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          {/* Source */}
+          <div className="space-y-2">
+            <Label htmlFor="source">Source</Label>
+            <Input
+              id="source"
+              value={formData.source || ''}
+              onChange={(e) => handleInputChange('source', e.target.value)}
+              placeholder="Ex: Site web, Référence, Salon..."
+            />
+          </div>
+
+          {/* Tags */}
+          <div className="space-y-2">
+            <Label>Tags</Label>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {formData.tags.map((tag, index) => (
+                <span
+                  key={index}
+                  className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800"
+                >
+                  {tag}
+                  <button
+                    type="button"
+                    onClick={() => removeTag(tag)}
+                    className="ml-1 text-blue-600 hover:text-blue-800"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="event_type_id">Type d'événement</Label>
-              <Select value={formData.event_type_id} onValueChange={(value) => handleInputChange('event_type_id', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Aucun type</SelectItem>
-                  {eventTypes.map((type) => (
-                    <SelectItem key={type.id} value={type.id}>
-                      {type.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="flex gap-2">
+              <Input
+                value={newTag}
+                onChange={(e) => setNewTag(e.target.value)}
+                placeholder="Ajouter un tag"
+                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+              />
+              <Button type="button" onClick={addTag} variant="outline">
+                Ajouter
+              </Button>
             </div>
           </div>
 
@@ -299,7 +347,7 @@ export const ContactForm: React.FC<ContactFormProps> = ({
             <Label htmlFor="notes">Notes</Label>
             <Textarea
               id="notes"
-              value={formData.notes}
+              value={formData.notes || ''}
               onChange={(e) => handleInputChange('notes', e.target.value)}
               rows={3}
             />

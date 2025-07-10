@@ -7,16 +7,16 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Search, Filter, Users, Mail, Phone, MapPin, Edit, Trash2, Eye, Upload } from 'lucide-react';
 import { GlobalFileUpload } from '@/components/GlobalFileUpload';
 import { CSVImporter } from '@/components/CSVImporter';
+import { ContactForm } from '@/components/ContactForm';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Contact {
   id: string;
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
   email: string;
   phone: string;
-  company?: string;
   position?: string;
   address?: string;
   city?: string;
@@ -24,7 +24,8 @@ interface Contact {
   source?: string;
   notes?: string;
   tags: string[];
-  createdAt: string;
+  accepts_marketing_emails: boolean;
+  created_at: string;
 }
 
 export const Contacts: React.FC = () => {
@@ -57,19 +58,19 @@ export const Contacts: React.FC = () => {
 
       const formattedContacts = contactsData?.map(contact => ({
         id: contact.id,
-        firstName: contact.first_name || '',
-        lastName: contact.last_name || '',
+        first_name: contact.first_name || '',
+        last_name: contact.last_name || '',
         email: contact.email || '',
         phone: contact.phone || '',
-        company: contact.position || '',
-        position: contact.role || '',
+        position: contact.position || '',
         address: contact.address || '',
         city: contact.city || '',
         status: (contact.status as 'prospect' | 'client' | 'inactive') || 'prospect',
         source: contact.source || '',
         notes: contact.notes || '',
         tags: contact.tags || [],
-        createdAt: contact.created_at || new Date().toISOString()
+        accepts_marketing_emails: contact.accepts_marketing_emails ?? true,
+        created_at: contact.created_at || new Date().toISOString()
       })) || [];
 
       setContacts(formattedContacts);
@@ -83,14 +84,15 @@ export const Contacts: React.FC = () => {
   };
 
   const filteredContacts = contacts.filter(contact =>
-    contact.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    contact.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    contact.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    contact.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     contact.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    contact.company?.toLowerCase().includes(searchTerm.toLowerCase())
+    contact.position?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleCreateContact = () => {
     console.log('➕ Creating new contact');
+    setEditingContact(null);
     setShowCreateForm(true);
   };
 
@@ -122,6 +124,12 @@ export const Contacts: React.FC = () => {
         toast.error('Erreur lors de la suppression');
       }
     }
+  };
+
+  const handleFormSave = () => {
+    loadContacts();
+    setShowCreateForm(false);
+    setEditingContact(null);
   };
 
   const handleCSVImport = (importedContacts: any[]) => {
@@ -196,7 +204,7 @@ export const Contacts: React.FC = () => {
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Rechercher par nom, email ou entreprise..."
+                placeholder="Rechercher par nom, email ou poste..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -235,14 +243,14 @@ export const Contacts: React.FC = () => {
                   <div className="flex items-center space-x-4 mb-3">
                     <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                       <span className="text-blue-600 font-semibold text-lg">
-                        {contact.firstName.charAt(0)}{contact.lastName.charAt(0)}
+                        {contact.first_name.charAt(0)}{contact.last_name.charAt(0)}
                       </span>
                     </div>
                     <div>
                       <h3 className="font-semibold text-lg">
-                        {contact.firstName} {contact.lastName}
+                        {contact.first_name} {contact.last_name}
                       </h3>
-                      <p className="text-gray-600">{contact.position} {contact.company && `• ${contact.company}`}</p>
+                      <p className="text-gray-600">{contact.position}</p>
                     </div>
                     <Badge className={getStatusColor(contact.status)}>
                       {contact.status}
@@ -250,14 +258,18 @@ export const Contacts: React.FC = () => {
                   </div>
                   
                   <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
-                    <div className="flex items-center space-x-2">
-                      <Mail className="h-4 w-4 text-gray-400" />
-                      <span>{contact.email}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Phone className="h-4 w-4 text-gray-400" />
-                      <span>{contact.phone}</span>
-                    </div>
+                    {contact.email && (
+                      <div className="flex items-center space-x-2">
+                        <Mail className="h-4 w-4 text-gray-400" />
+                        <span>{contact.email}</span>
+                      </div>
+                    )}
+                    {contact.phone && (
+                      <div className="flex items-center space-x-2">
+                        <Phone className="h-4 w-4 text-gray-400" />
+                        <span>{contact.phone}</span>
+                      </div>
+                    )}
                     {contact.city && (
                       <div className="flex items-center space-x-2">
                         <MapPin className="h-4 w-4 text-gray-400" />
@@ -320,6 +332,17 @@ export const Contacts: React.FC = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Contact Form Dialog */}
+      <ContactForm
+        isOpen={showCreateForm}
+        onClose={() => {
+          setShowCreateForm(false);
+          setEditingContact(null);
+        }}
+        onSave={handleFormSave}
+        contact={editingContact || undefined}
+      />
 
       {/* CSV Importer Dialog */}
       <CSVImporter
