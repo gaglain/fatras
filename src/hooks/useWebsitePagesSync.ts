@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
@@ -19,7 +18,26 @@ export const useWebsitePagesSync = () => {
       if (error) throw error;
       
       setPages(data || []);
-      console.log('✅ Pages loaded successfully:', data?.length || 0);
+      
+      // Synchroniser avec localStorage pour le front-end
+      if (data) {
+        const pagesForLocalStorage = data.map(page => ({
+          id: page.id,
+          title: page.title,
+          slug: page.slug,
+          status: page.status,
+          blocks: Array.isArray(page.content) ? page.content : [],
+          metaDescription: page.meta_description || ''
+        }));
+        
+        localStorage.setItem('websitePages', JSON.stringify(pagesForLocalStorage));
+        
+        // Déclencher l'événement pour le menu
+        const event = new CustomEvent('websitePagesUpdated', { detail: pagesForLocalStorage });
+        window.dispatchEvent(event);
+      }
+      
+      console.log('✅ Pages loaded and synced:', data?.length || 0);
     } catch (error) {
       console.error('❌ Erreur lors du chargement des pages:', error);
     } finally {
@@ -65,57 +83,6 @@ export const useWebsitePagesSync = () => {
     }
   };
 
-  const updatePage = async (id: string, updates: Partial<Omit<WebsitePage, 'id' | 'created_at' | 'updated_at' | 'user_id'>>) => {
-    try {
-      const { error } = await supabase
-        .from('website_pages')
-        .update(updates)
-        .eq('id', id);
-
-      if (error) throw error;
-      
-      await loadPages();
-      console.log('✅ Page updated successfully');
-    } catch (error) {
-      console.error('❌ Erreur lors de la mise à jour de la page:', error);
-      throw error;
-    }
-  };
-
-  const deletePage = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('website_pages')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-      
-      await loadPages();
-      console.log('✅ Page deleted successfully');
-    } catch (error) {
-      console.error('❌ Erreur lors de la suppression de la page:', error);
-      throw error;
-    }
-  };
-
-  const getPageBySlug = async (slug: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('website_pages')
-        .select('*')
-        .eq('slug', slug)
-        .eq('status', 'published')
-        .single();
-
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error('❌ Erreur lors du chargement de la page:', error);
-      return null;
-    }
-  };
-
   useEffect(() => {
     loadPages();
 
@@ -140,9 +107,54 @@ export const useWebsitePagesSync = () => {
     pages,
     loading,
     savePage,
-    updatePage,
-    deletePage,
-    getPageBySlug,
+    updatePage: async (id: string, updates: Partial<Omit<WebsitePage, 'id' | 'created_at' | 'updated_at' | 'user_id'>>) => {
+      try {
+        const { error } = await supabase
+          .from('website_pages')
+          .update(updates)
+          .eq('id', id);
+
+        if (error) throw error;
+        
+        await loadPages();
+        console.log('✅ Page updated successfully');
+      } catch (error) {
+        console.error('❌ Erreur lors de la mise à jour de la page:', error);
+        throw error;
+      }
+    },
+    deletePage: async (id: string) => {
+      try {
+        const { error } = await supabase
+          .from('website_pages')
+          .delete()
+          .eq('id', id);
+
+        if (error) throw error;
+        
+        await loadPages();
+        console.log('✅ Page deleted successfully');
+      } catch (error) {
+        console.error('❌ Erreur lors de la suppression de la page:', error);
+        throw error;
+      }
+    },
+    getPageBySlug: async (slug: string) => {
+      try {
+        const { data, error } = await supabase
+          .from('website_pages')
+          .select('*')
+          .eq('slug', slug)
+          .eq('status', 'published')
+          .single();
+
+        if (error) throw error;
+        return data;
+      } catch (error) {
+        console.error('❌ Erreur lors du chargement de la page:', error);
+        return null;
+      }
+    },
     refreshPages: loadPages
   };
 };

@@ -1,12 +1,12 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { GripVertical, Plus, Trash2, Eye, EyeOff } from 'lucide-react';
+import { GripVertical, Plus, Trash2, Eye, EyeOff, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface MenuItem {
@@ -16,6 +16,13 @@ interface MenuItem {
   visible: boolean;
   order: number;
   isCustom?: boolean;
+}
+
+interface WebsitePage {
+  id: string;
+  title: string;
+  slug: string;
+  status: string;
 }
 
 const defaultMenuItems: MenuItem[] = [
@@ -30,6 +37,8 @@ export const WebsiteMenuManager: React.FC = () => {
   const [menuItems, setMenuItems] = useState<MenuItem[]>(defaultMenuItems);
   const [newItemLabel, setNewItemLabel] = useState('');
   const [newItemPath, setNewItemPath] = useState('');
+  const [availablePages, setAvailablePages] = useState<WebsitePage[]>([]);
+  const [selectedPageForMenu, setSelectedPageForMenu] = useState<string>('');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -43,7 +52,33 @@ export const WebsiteMenuManager: React.FC = () => {
         console.error('Erreur lors du chargement du menu:', error);
       }
     }
+
+    // Charger les pages disponibles
+    loadAvailablePages();
+
+    // Écouter les mises à jour des pages
+    const handlePagesUpdate = (event: CustomEvent) => {
+      setAvailablePages(event.detail || []);
+    };
+
+    window.addEventListener('websitePagesUpdated', handlePagesUpdate as EventListener);
+
+    return () => {
+      window.removeEventListener('websitePagesUpdated', handlePagesUpdate as EventListener);
+    };
   }, []);
+
+  const loadAvailablePages = () => {
+    const savedPages = localStorage.getItem('websitePages');
+    if (savedPages) {
+      try {
+        const pages = JSON.parse(savedPages);
+        setAvailablePages(pages.filter((page: WebsitePage) => page.status === 'published' || page.status === 'draft'));
+      } catch (error) {
+        console.error('Erreur chargement pages:', error);
+      }
+    }
+  };
 
   const handleDragEnd = (result: any) => {
     if (!result.destination) return;
@@ -85,6 +120,37 @@ export const WebsiteMenuManager: React.FC = () => {
         item.id === id ? { ...item, path: newPath } : item
       )
     );
+  };
+
+  const addPageToMenu = () => {
+    if (!selectedPageForMenu) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez sélectionner une page",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const selectedPage = availablePages.find(page => page.id === selectedPageForMenu);
+    if (!selectedPage) return;
+
+    const newItem: MenuItem = {
+      id: `page-${selectedPage.id}`,
+      label: selectedPage.title,
+      path: selectedPage.slug.startsWith('/') ? `/front${selectedPage.slug}` : `/front/${selectedPage.slug}`,
+      visible: true,
+      order: menuItems.length + 1,
+      isCustom: true
+    };
+
+    setMenuItems([...menuItems, newItem]);
+    setSelectedPageForMenu('');
+    
+    toast({
+      title: "Succès",
+      description: "Page ajoutée au menu"
+    });
   };
 
   const addMenuItem = () => {
@@ -175,6 +241,35 @@ export const WebsiteMenuManager: React.FC = () => {
             </div>
           </div>
 
+          {/* Ajouter une page existante au menu */}
+          {availablePages.length > 0 && (
+            <div className="space-y-3">
+              <Label className="text-base font-medium">Ajouter une page existante au menu</Label>
+              <div className="flex space-x-2">
+                <Select value={selectedPageForMenu} onValueChange={setSelectedPageForMenu}>
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Sélectionner une page" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availablePages.map((page) => (
+                      <SelectItem key={page.id} value={page.id}>
+                        <div className="flex items-center space-x-2">
+                          <FileText className="h-4 w-4" />
+                          <span>{page.title}</span>
+                          <span className="text-xs text-muted-foreground">({page.slug})</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button onClick={addPageToMenu}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Ajouter au menu
+                </Button>
+              </div>
+            </div>
+          )}
+
           {/* Liste des éléments */}
           <div>
             <Label className="text-base font-medium">Éléments du menu</Label>
@@ -244,7 +339,7 @@ export const WebsiteMenuManager: React.FC = () => {
             </DragDropContext>
           </div>
 
-          {/* Ajouter un nouvel élément */}
+          {/* Ajouter un nouvel élément personnalisé */}
           <div className="space-y-3">
             <Label className="text-base font-medium">Ajouter un élément personnalisé</Label>
             <div className="flex space-x-2">

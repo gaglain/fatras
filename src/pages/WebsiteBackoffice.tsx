@@ -64,27 +64,49 @@ export const WebsiteBackoffice: React.FC = () => {
   console.log('🔄 WebsiteBackoffice - Current pages:', pages.length);
   console.log('🔄 WebsiteBackoffice - Editing page:', editingPage?.title);
 
-  // Charger les pages depuis localStorage
+  // Charger les pages depuis localStorage et Supabase
   useEffect(() => {
-    const savedPages = localStorage.getItem('websitePages');
-    if (savedPages) {
-      try {
-        const parsed = JSON.parse(savedPages);
-        console.log('✅ Pages loaded from localStorage:', parsed.length);
-        setPages(parsed);
-      } catch (error) {
-        console.error('❌ Error loading pages from localStorage:', error);
+    const loadPagesFromStorage = () => {
+      const savedPages = localStorage.getItem('websitePages');
+      if (savedPages) {
+        try {
+          const parsed = JSON.parse(savedPages);
+          console.log('✅ Pages loaded from localStorage:', parsed.length);
+          setPages(parsed);
+        } catch (error) {
+          console.error('❌ Error loading pages from localStorage:', error);
+        }
+      } else {
+        console.log('📝 No saved pages found, using defaults');
+        localStorage.setItem('websitePages', JSON.stringify(defaultPages));
       }
-    } else {
-      console.log('📝 No saved pages found, using defaults');
-      localStorage.setItem('websitePages', JSON.stringify(defaultPages));
-    }
+    };
+
+    loadPagesFromStorage();
+
+    // Écouter les mises à jour des pages
+    const handlePagesUpdate = (event: CustomEvent) => {
+      console.log('📡 Pages update received in backoffice');
+      if (event.detail && Array.isArray(event.detail)) {
+        setPages(event.detail);
+      }
+    };
+
+    window.addEventListener('websitePagesUpdated', handlePagesUpdate as EventListener);
+
+    return () => {
+      window.removeEventListener('websitePagesUpdated', handlePagesUpdate as EventListener);
+    };
   }, []);
 
-  // Sauvegarder automatiquement les pages
+  // Sauvegarder automatiquement les pages avec synchronisation
   useEffect(() => {
-    console.log('💾 Saving pages to localStorage:', pages.length);
+    console.log('💾 Saving pages to localStorage and triggering sync:', pages.length);
     localStorage.setItem('websitePages', JSON.stringify(pages));
+    
+    // Déclencher l'événement de synchronisation
+    const event = new CustomEvent('websitePagesUpdated', { detail: pages });
+    window.dispatchEvent(event);
   }, [pages]);
 
   const handleCreatePage = () => {
