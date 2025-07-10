@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,73 +21,29 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
   const [headers, setHeaders] = useState<string[]>([]);
   const [mapping, setMapping] = useState<Record<string, string>>({});
   const [step, setStep] = useState<'upload' | 'mapping' | 'preview'>('upload');
-  const [events, setEvents] = useState<any[]>([]);
-  const [eventTypes, setEventTypes] = useState<any[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const expectedFields = [
-    { key: 'firstName', label: 'Prénom *', required: true },
-    { key: 'lastName', label: 'Nom *', required: true },
+    { key: 'first_name', label: 'Prénom *', required: true },
+    { key: 'last_name', label: 'Nom *', required: true },
     { key: 'email', label: 'Email', required: false },
     { key: 'phone', label: 'Téléphone', required: false },
     { key: 'role', label: 'Rôle/Titre', required: false },
     { key: 'address', label: 'Adresse', required: false },
     { key: 'city', label: 'Ville', required: false },
-    { key: 'postalCode', label: 'Code postal', required: false },
+    { key: 'postal_code', label: 'Code postal', required: false },
     { key: 'country', label: 'Pays', required: false },
-    { key: 'eventId', label: 'ID Événement', required: false },
-    { key: 'eventName', label: 'Nom de l\'événement', required: false },
-    { key: 'eventTypeId', label: 'ID Type d\'événement', required: false },
-    { key: 'eventTypeName', label: 'Type d\'événement', required: false },
-    { key: 'acceptsMarketingEmails', label: 'Marketing (true/false)', required: false },
+    { key: 'status', label: 'Statut (prospect/client/inactive)', required: false },
+    { key: 'source', label: 'Source', required: false },
     { key: 'notes', label: 'Notes', required: false }
   ];
-
-  React.useEffect(() => {
-    if (isOpen) {
-      console.log('📊 Loading events and event types for CSV import');
-      loadEventsAndEventTypes();
-    }
-  }, [isOpen]);
-
-  const loadEventsAndEventTypes = async () => {
-    try {
-      // Charger les événements
-      const { data: eventsData, error: eventsError } = await supabase
-        .from('events')
-        .select('id, title')
-        .order('title');
-
-      if (eventsError) {
-        console.error('Error loading events:', eventsError);
-      } else {
-        setEvents(eventsData || []);
-        console.log('✅ Events loaded:', eventsData?.length);
-      }
-
-      // Charger les types d'événement
-      const { data: eventTypesData, error: eventTypesError } = await supabase
-        .from('event_types')
-        .select('id, name')
-        .order('name');
-
-      if (eventTypesError) {
-        console.error('Error loading event types:', eventTypesError);
-      } else {
-        setEventTypes(eventTypesData || []);
-        console.log('✅ Event types loaded:', eventTypesData?.length);
-      }
-    } catch (error) {
-      console.error('Error in loadEventsAndEventTypes:', error);
-    }
-  };
 
   const generateTemplate = () => {
     console.log('📥 Generating CSV template');
     const csvContent = [
-      expectedFields.map(field => field.label).join(','),
-      'Jean,Dupont,jean.dupont@example.com,06 12 34 56 78,Directeur,"123 rue Example",Paris,75001,France,,Festival d\'été,,Festival,true,"Notes sur ce contact"',
-      'Marie,Martin,marie.martin@example.com,06 23 45 67 89,Manager,"456 avenue Test",Lyon,69000,France,,Concert privé,,Concert,false,"Autre note importante"'
+      expectedFields.map(field => field.label.replace(' *', '')).join(','),
+      'Jean,Dupont,jean.dupont@example.com,06 12 34 56 78,Directeur,"123 rue Example",Paris,75001,France,prospect,Site web,"Notes sur ce contact"',
+      'Marie,Martin,marie.martin@example.com,06 23 45 67 89,Manager,"456 avenue Test",Lyon,69000,France,client,Recommandation,"Autre note importante"'
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -148,9 +105,30 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
       return;
     }
 
-    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+    // Parse CSV with proper handling of quoted fields
+    const parseCSVLine = (line: string): string[] => {
+      const result = [];
+      let current = '';
+      let inQuotes = false;
+      
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+          result.push(current.trim());
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      result.push(current.trim());
+      return result;
+    };
+
+    const headers = parseCSVLine(lines[0]);
     const rows = lines.slice(1).map(line => {
-      const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
+      const values = parseCSVLine(line);
       const row: any = {};
       headers.forEach((header, index) => {
         row[header] = values[index] || '';
@@ -167,9 +145,9 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
     const autoMapping: Record<string, string> = {};
     expectedFields.forEach(field => {
       const matchingHeader = headers.find(h => {
-        const headerLower = h.toLowerCase();
-        const fieldLower = field.key.toLowerCase();
-        const labelLower = field.label.toLowerCase();
+        const headerLower = h.toLowerCase().replace(/[^a-z]/g, '');
+        const fieldLower = field.key.toLowerCase().replace('_', '');
+        const labelLower = field.label.toLowerCase().replace(/[^a-z]/g, '');
         
         return headerLower.includes(fieldLower) ||
                fieldLower.includes(headerLower) ||
@@ -188,49 +166,58 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
     console.log('💾 Starting import process');
     
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('Vous devez être connecté pour importer des contacts');
+        return;
+      }
+
       const mappedData = csvData.map(row => {
-        const mappedRow: any = {};
+        const mappedRow: any = {
+          user_id: user.id,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        
         Object.entries(mapping).forEach(([fieldKey, headerName]) => {
           if (headerName && row[headerName] !== undefined) {
-            if (fieldKey === 'acceptsMarketingEmails') {
-              mappedRow[fieldKey] = row[headerName]?.toLowerCase() === 'true';
+            let value = row[headerName];
+            
+            // Handle special fields
+            if (fieldKey === 'status') {
+              const statusValue = value.toLowerCase();
+              if (['prospect', 'client', 'inactive'].includes(statusValue)) {
+                mappedRow[fieldKey] = statusValue;
+              } else {
+                mappedRow[fieldKey] = 'prospect';
+              }
+            } else if (fieldKey === 'tags' && value) {
+              mappedRow[fieldKey] = value.split(',').map((tag: string) => tag.trim());
             } else {
-              mappedRow[fieldKey] = row[headerName];
+              mappedRow[fieldKey] = value;
             }
           }
         });
+        
+        // Set default values for required fields if not mapped
+        if (!mappedRow.first_name) mappedRow.first_name = 'Prénom';
+        if (!mappedRow.last_name) mappedRow.last_name = 'Nom';
+        if (!mappedRow.status) mappedRow.status = 'prospect';
+        
         return mappedRow;
       });
 
       console.log('📤 Mapped data ready for import:', mappedData.length, 'contacts');
       
       // Importer vers Supabase
-      for (const contact of mappedData) {
-        const contactData = {
-          first_name: contact.firstName,
-          last_name: contact.lastName,
-          email: contact.email,
-          phone: contact.phone,
-          role: contact.role,
-          address: contact.address,
-          city: contact.city,
-          postal_code: contact.postalCode,
-          country: contact.country,
-          accepts_marketing_emails: contact.acceptsMarketingEmails,
-          notes: contact.notes,
-          event_id: contact.eventId || null,
-          event_type_id: contact.eventTypeId || null,
-          user_id: (await supabase.auth.getUser()).data.user?.id
-        };
+      const { error } = await supabase
+        .from('contacts')
+        .insert(mappedData);
 
-        const { error } = await supabase
-          .from('contacts')
-          .insert(contactData);
-
-        if (error) {
-          console.error('Error inserting contact:', error);
-          toast.error(`Erreur lors de l'import du contact ${contact.firstName} ${contact.lastName}`);
-        }
+      if (error) {
+        console.error('Error inserting contacts:', error);
+        toast.error('Erreur lors de l\'import des contacts');
+        return;
       }
 
       toast.success(`${mappedData.length} contacts importés avec succès !`);
@@ -292,7 +279,7 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
               
               <div
                 className={`border-2 border-dashed rounded-lg p-8 text-center ${
-                  dragActive ? 'border-purple-500 bg-purple-50' : 'border-gray-300'
+                  dragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300'
                 }`}
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
@@ -439,7 +426,7 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
               <Button onClick={() => setStep('mapping')} variant="outline" className="flex-1">
                 Retour
               </Button>
-              <Button onClick={handleImport} className="flex-1 bg-purple-600 hover:bg-purple-700">
+              <Button onClick={handleImport} className="flex-1 bg-green-600 hover:bg-green-700">
                 Importer {csvData.length} contacts
               </Button>
             </div>

@@ -4,9 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Filter, Users, Mail, Phone, MapPin, Edit, Trash2, Eye } from 'lucide-react';
+import { Plus, Search, Filter, Users, Mail, Phone, MapPin, Edit, Trash2, Eye, Upload } from 'lucide-react';
 import { GlobalFileUpload } from '@/components/GlobalFileUpload';
+import { CSVImporter } from '@/components/CSVImporter';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Contact {
   id: string;
@@ -29,53 +31,56 @@ export const Contacts: React.FC = () => {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showCSVImporter, setShowCSVImporter] = useState(false);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [loading, setLoading] = useState(true);
 
   console.log('📋 Contacts - Page loaded with', contacts.length, 'contacts');
 
-  // Simulation de données
+  // Charger les contacts depuis Supabase
   useEffect(() => {
-    const mockContacts: Contact[] = [
-      {
-        id: '1',
-        firstName: 'Jean',
-        lastName: 'Dupont',
-        email: 'jean.dupont@example.com',
-        phone: '+33 1 23 45 67 89',
-        company: 'Tech Corp',
-        position: 'Directeur Marketing',
-        address: '123 Rue de la Paix',
-        city: 'Paris',
-        status: 'client',
-        source: 'Site web',
-        notes: 'Contact très intéressé par nos services',
-        tags: ['VIP', 'Tech'],
-        createdAt: '2024-01-15'
-      },
-      {
-        id: '2',
-        firstName: 'Marie',
-        lastName: 'Martin',
-        email: 'marie.martin@example.com',
-        phone: '+33 6 12 34 56 78',
-        company: 'Event Solutions',
-        position: 'Responsable Événements',
-        address: '456 Avenue des Champs',
-        city: 'Lyon',
-        status: 'prospect',
-        source: 'Recommandation',
-        notes: 'À recontacter la semaine prochaine',
-        tags: ['Événementiel'],
-        createdAt: '2024-01-20'
-      }
-    ];
-
-    setTimeout(() => {
-      setContacts(mockContacts);
-      setLoading(false);
-    }, 500);
+    loadContacts();
   }, []);
+
+  const loadContacts = async () => {
+    try {
+      const { data: contactsData, error } = await supabase
+        .from('contacts')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error loading contacts:', error);
+        toast.error('Erreur lors du chargement des contacts');
+        return;
+      }
+
+      const formattedContacts = contactsData?.map(contact => ({
+        id: contact.id,
+        firstName: contact.first_name || '',
+        lastName: contact.last_name || '',
+        email: contact.email || '',
+        phone: contact.phone || '',
+        company: contact.position || '',
+        position: contact.role || '',
+        address: contact.address || '',
+        city: contact.city || '',
+        status: (contact.status as 'prospect' | 'client' | 'inactive') || 'prospect',
+        source: contact.source || '',
+        notes: contact.notes || '',
+        tags: contact.tags || [],
+        createdAt: contact.created_at || new Date().toISOString()
+      })) || [];
+
+      setContacts(formattedContacts);
+      console.log('✅ Contacts loaded successfully:', formattedContacts.length);
+    } catch (error) {
+      console.error('Error in loadContacts:', error);
+      toast.error('Erreur lors du chargement des contacts');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredContacts = contacts.filter(contact =>
     contact.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -95,12 +100,35 @@ export const Contacts: React.FC = () => {
     setShowCreateForm(true);
   };
 
-  const handleDeleteContact = (contactId: string) => {
+  const handleDeleteContact = async (contactId: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer ce contact ?')) {
-      console.log('🗑️ Deleting contact:', contactId);
-      setContacts(prev => prev.filter(c => c.id !== contactId));
-      toast.success('Contact supprimé');
+      try {
+        console.log('🗑️ Deleting contact:', contactId);
+        const { error } = await supabase
+          .from('contacts')
+          .delete()
+          .eq('id', contactId);
+
+        if (error) {
+          console.error('Error deleting contact:', error);
+          toast.error('Erreur lors de la suppression');
+          return;
+        }
+
+        setContacts(prev => prev.filter(c => c.id !== contactId));
+        toast.success('Contact supprimé');
+      } catch (error) {
+        console.error('Error in handleDeleteContact:', error);
+        toast.error('Erreur lors de la suppression');
+      }
     }
+  };
+
+  const handleCSVImport = (importedContacts: any[]) => {
+    console.log('📥 CSV Import completed:', importedContacts.length, 'contacts');
+    toast.success(`${importedContacts.length} contacts importés avec succès !`);
+    loadContacts(); // Recharger la liste
+    setShowCSVImporter(false);
   };
 
   const handleFileUploaded = (file: { url: string; name: string; type: string }) => {
@@ -145,10 +173,20 @@ export const Contacts: React.FC = () => {
             {contacts.length} contact{contacts.length !== 1 ? 's' : ''} enregistré{contacts.length !== 1 ? 's' : ''}
           </p>
         </div>
-        <Button onClick={handleCreateContact} className="bg-blue-600 hover:bg-blue-700">
-          <Plus className="h-4 w-4 mr-2" />
-          Nouveau Contact
-        </Button>
+        <div className="flex space-x-2">
+          <Button 
+            onClick={() => setShowCSVImporter(true)} 
+            variant="outline"
+            className="bg-green-600 hover:bg-green-700 text-white"
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            Importer CSV
+          </Button>
+          <Button onClick={handleCreateContact} className="bg-blue-600 hover:bg-blue-700">
+            <Plus className="h-4 w-4 mr-2" />
+            Nouveau Contact
+          </Button>
+        </div>
       </div>
 
       {/* Search and Filters */}
@@ -282,6 +320,13 @@ export const Contacts: React.FC = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* CSV Importer Dialog */}
+      <CSVImporter
+        isOpen={showCSVImporter}
+        onClose={() => setShowCSVImporter(false)}
+        onImport={handleCSVImport}
+      />
     </div>
   );
 };
