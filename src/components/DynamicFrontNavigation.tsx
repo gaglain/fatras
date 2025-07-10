@@ -103,34 +103,51 @@ export const DynamicFrontNavigation: React.FC = () => {
 
   const renderMenuItem = (item: MenuItem) => {
     const isExternal = item.url.startsWith('http') || item.url.startsWith('//');
-    const Component = isExternal ? 'a' : Link;
-    const props = isExternal 
-      ? { href: item.url, target: item.target, rel: item.target === '_blank' ? 'noopener noreferrer' : undefined }
-      : { to: item.url };
 
     return (
       <div key={item.id} className="relative group">
-        <Component
-          {...props}
-          className="front-link px-3 py-2 text-sm font-medium transition-colors hover:opacity-80"
-          style={{ color: 'var(--site-link-color, #3b82f6)' }}
-        >
-          {item.label}
-        </Component>
+        {isExternal ? (
+          <a
+            href={item.url}
+            target={item.target}
+            rel={item.target === '_blank' ? 'noopener noreferrer' : undefined}
+            className="front-link px-3 py-2 text-sm font-medium transition-colors hover:opacity-80"
+            style={{ color: 'var(--site-link-color, #3b82f6)' }}
+          >
+            {item.label}
+          </a>
+        ) : (
+          <Link
+            to={item.url}
+            className="front-link px-3 py-2 text-sm font-medium transition-colors hover:opacity-80"
+            style={{ color: 'var(--site-link-color, #3b82f6)' }}
+          >
+            {item.label}
+          </Link>
+        )}
         
         {item.children && item.children.length > 0 && (
           <div className="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
             <div className="py-1">
               {item.children.map(child => (
-                <Component
-                  key={child.id}
-                  {...(child.url.startsWith('http') 
-                    ? { href: child.url, target: child.target } 
-                    : { to: child.url })}
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                >
-                  {child.label}
-                </Component>
+                child.url.startsWith('http') ? (
+                  <a
+                    key={child.id}
+                    href={child.url}
+                    target={child.target}
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    {child.label}
+                  </a>
+                ) : (
+                  <Link
+                    key={child.id}
+                    to={child.url}
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    {child.label}
+                  </Link>
+                )
               ))}
             </div>
           </div>

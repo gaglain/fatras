@@ -6,7 +6,7 @@ interface WebsitePage {
   id: string;
   title: string;
   slug: string;
-  content: any[];
+  content: any;
   meta_title?: string;
   meta_description?: string;
   meta_keywords?: string;

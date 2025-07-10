@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useWebsitePagesSync } from '@/hooks/useWebsitePagesSync';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -117,11 +116,11 @@ export const CMSPageManager: React.FC = () => {
 
   const getStatusBadge = (status: string) => {
     const variants = {
-      draft: 'secondary',
-      published: 'default',
-      archived: 'destructive'
+      draft: 'secondary' as const,
+      published: 'default' as const,
+      archived: 'destructive' as const
     };
-    return <Badge variant={variants[status as keyof typeof variants]}>{status}</Badge>;
+    return <Badge variant={variants[status as keyof typeof variants] || 'secondary'}>{status}</Badge>;
   };
 
   if (loading) {
