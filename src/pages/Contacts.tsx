@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +7,7 @@ import { Plus, Search, Filter, Users, Mail, Phone, MapPin, Edit, Trash2, Eye, Up
 import { GlobalFileUpload } from '@/components/GlobalFileUpload';
 import { CSVImporter } from '@/components/CSVImporter';
 import { ContactForm } from '@/components/ContactForm';
+import { useContactsRealtime } from '@/hooks/useContactsRealtime';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -37,6 +37,47 @@ export const Contacts: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   console.log('📋 Contacts - Page loaded with', contacts.length, 'contacts');
+
+  // Callbacks pour la synchronisation temps réel
+  const handleContactAdded = useCallback((newContact: Contact) => {
+    setContacts(prev => {
+      // Éviter les doublons
+      if (prev.some(c => c.id === newContact.id)) {
+        return prev;
+      }
+      console.log('➕ Adding new contact to list:', newContact.first_name, newContact.last_name);
+      toast.success(`Nouveau contact ajouté: ${newContact.first_name} ${newContact.last_name}`);
+      return [newContact, ...prev];
+    });
+  }, []);
+
+  const handleContactUpdated = useCallback((updatedContact: Contact) => {
+    setContacts(prev => {
+      const updated = prev.map(contact => 
+        contact.id === updatedContact.id ? updatedContact : contact
+      );
+      console.log('📝 Contact updated in list:', updatedContact.first_name, updatedContact.last_name);
+      toast.success(`Contact mis à jour: ${updatedContact.first_name} ${updatedContact.last_name}`);
+      return updated;
+    });
+  }, []);
+
+  const handleContactDeleted = useCallback((contactId: string) => {
+    setContacts(prev => {
+      const filtered = prev.filter(c => c.id !== contactId);
+      console.log('🗑️ Contact removed from list:', contactId);
+      toast.success('Contact supprimé');
+      return filtered;
+    });
+  }, []);
+
+  // Activer la synchronisation temps réel
+  useContactsRealtime({
+    onContactAdded: handleContactAdded,
+    onContactUpdated: handleContactUpdated,
+    onContactDeleted: handleContactDeleted,
+    enabled: true
+  });
 
   // Charger les contacts depuis Supabase
   useEffect(() => {
@@ -117,8 +158,8 @@ export const Contacts: React.FC = () => {
           return;
         }
 
-        setContacts(prev => prev.filter(c => c.id !== contactId));
-        toast.success('Contact supprimé');
+        // La suppression sera gérée par le système temps réel
+        console.log('✅ Contact deletion triggered');
       } catch (error) {
         console.error('Error in handleDeleteContact:', error);
         toast.error('Erreur lors de la suppression');
@@ -127,15 +168,16 @@ export const Contacts: React.FC = () => {
   };
 
   const handleFormSave = () => {
-    loadContacts();
+    // Le formulaire déclenchera automatiquement les mises à jour temps réel
     setShowCreateForm(false);
     setEditingContact(null);
+    console.log('✅ Form saved, real-time sync will handle updates');
   };
 
   const handleCSVImport = (importedContacts: any[]) => {
     console.log('📥 CSV Import completed:', importedContacts.length, 'contacts');
     toast.success(`${importedContacts.length} contacts importés avec succès !`);
-    loadContacts(); // Recharger la liste
+    // Les nouveaux contacts seront automatiquement ajoutés via la synchronisation temps réel
     setShowCSVImporter(false);
   };
 
@@ -176,6 +218,9 @@ export const Contacts: React.FC = () => {
           <h1 className="text-3xl font-bold flex items-center">
             <Users className="h-8 w-8 mr-3 text-blue-600" />
             Gestion des Contacts
+            <Badge variant="outline" className="ml-2">
+              Temps réel activé
+            </Badge>
           </h1>
           <p className="mt-2 text-gray-600">
             {contacts.length} contact{contacts.length !== 1 ? 's' : ''} enregistré{contacts.length !== 1 ? 's' : ''}
