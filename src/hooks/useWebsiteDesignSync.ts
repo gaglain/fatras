@@ -1,5 +1,5 @@
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 
 interface SiteDesign {
   logo: string;
@@ -14,16 +14,19 @@ interface SiteDesign {
 }
 
 export const useWebsiteDesignSync = () => {
+  const lastDesignHash = useRef<string>('');
+  const syncInProgress = useRef(false);
+
   const applyDesignStyles = useCallback((design: SiteDesign) => {
-    console.log('🎨 Applying website design styles:', design);
+    console.log('🎨 Applying website design styles');
     
-    // Supprimer l'ancien style
+    // Remove old style efficiently
     const existingStyle = document.getElementById('website-design-styles');
     if (existingStyle) {
       existingStyle.remove();
     }
     
-    // Créer et injecter les nouveaux styles
+    // Create new styles
     const style = document.createElement('style');
     style.id = 'website-design-styles';
     style.innerHTML = `
@@ -37,7 +40,6 @@ export const useWebsiteDesignSync = () => {
         --site-footer-bg: ${design.footerBg} !important;
       }
       
-      /* Styles pour les pages publiques */
       .front-header, [data-theme-element="header"] {
         background: ${design.headerBg} !important;
         color: ${design.textColor} !important;
@@ -65,7 +67,6 @@ export const useWebsiteDesignSync = () => {
         background-color: ${design.secondaryColor} !important;
       }
 
-      /* Logo et nom du site */
       .site-logo {
         max-height: 40px !important;
         width: auto !important;
@@ -80,16 +81,16 @@ export const useWebsiteDesignSync = () => {
     
     document.head.appendChild(style);
     
-    // Mettre à jour le titre
-    if (design.siteName) {
+    // Update title if needed
+    if (design.siteName && document.title !== design.siteName) {
       document.title = design.siteName;
     }
     
-    // Mettre à jour les éléments du logo et nom
+    // Update logos and names efficiently
     const logoElements = document.querySelectorAll('.site-logo');
     logoElements.forEach(el => {
       const imgEl = el as HTMLImageElement;
-      if (design.logo) {
+      if (design.logo && imgEl.src !== design.logo) {
         imgEl.src = design.logo;
         imgEl.style.display = 'block';
       }
@@ -97,47 +98,53 @@ export const useWebsiteDesignSync = () => {
     
     const siteNameElements = document.querySelectorAll('.site-name, [data-site-name]');
     siteNameElements.forEach(el => {
-      el.textContent = design.siteName;
+      if (el.textContent !== design.siteName) {
+        el.textContent = design.siteName;
+      }
     });
     
     console.log('✅ Website design applied successfully');
   }, []);
 
   const syncDesignChanges = useCallback(() => {
+    if (syncInProgress.current) return;
+    
+    const savedDesign = localStorage.getItem('websiteDesign');
+    if (!savedDesign) return;
+    
+    // Prevent redundant syncs
+    if (lastDesignHash.current === savedDesign) return;
+    
+    syncInProgress.current = true;
+    
     try {
-      const savedDesign = localStorage.getItem('websiteDesign');
-      if (savedDesign) {
-        const design: SiteDesign = JSON.parse(savedDesign);
-        console.log('🔄 Syncing website design changes:', design);
-        applyDesignStyles(design);
-        return true;
-      } else {
-        console.log('📭 No website design found in localStorage');
-      }
-      return false;
+      const design: SiteDesign = JSON.parse(savedDesign);
+      applyDesignStyles(design);
+      lastDesignHash.current = savedDesign;
     } catch (error) {
-      console.error('❌ Error syncing website design:', error);
-      return false;
+      console.error('❌ Design sync error:', error);
+    } finally {
+      syncInProgress.current = false;
     }
   }, [applyDesignStyles]);
 
   useEffect(() => {
     console.log('🚀 Website design sync hook initialized');
     
-    // Synchronisation immédiate
+    // Initial sync
     syncDesignChanges();
 
-    // Écouter les changements
+    // Reduced frequency storage checks
     const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === 'websiteDesign') {
-        console.log('💾 Website design storage change detected');
-        setTimeout(syncDesignChanges, 50);
+      if (event.key === 'websiteDesign' && !syncInProgress.current) {
+        setTimeout(syncDesignChanges, 200);
       }
     };
 
     const handleDesignSaved = () => {
-      console.log('🎨 Website design saved event detected');
-      setTimeout(syncDesignChanges, 50);
+      if (!syncInProgress.current) {
+        setTimeout(syncDesignChanges, 200);
+      }
     };
 
     window.addEventListener('storage', handleStorageChange);

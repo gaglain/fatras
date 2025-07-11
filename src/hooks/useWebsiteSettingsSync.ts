@@ -1,5 +1,5 @@
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 
 interface WebsiteSettings {
   siteName: string;
@@ -17,82 +17,88 @@ interface WebsiteSettings {
 }
 
 export const useWebsiteSettingsSync = () => {
+  const lastSyncHash = useRef<string>('');
+  const syncInProgress = useRef(false);
+
   const syncSettingsChanges = useCallback(() => {
+    if (syncInProgress.current) return;
+    
     const savedSettings = localStorage.getItem('websiteSettings');
-    if (savedSettings) {
-      try {
-        const settings: WebsiteSettings = JSON.parse(savedSettings);
-        
-        console.log('⚙️ Applying website settings:', settings);
-        
-        // Mettre à jour le titre immédiatement
-        if (settings.siteName) {
-          document.title = settings.siteName;
-        }
-        
-        // Mettre à jour les meta tags
-        let metaDescription = document.querySelector('meta[name="description"]');
-        if (!metaDescription) {
-          metaDescription = document.createElement('meta');
-          metaDescription.setAttribute('name', 'description');
-          document.getElementsByTagName('head')[0].appendChild(metaDescription);
-        }
-        metaDescription.setAttribute('content', settings.siteDescription || '');
-        
-        // Forcer la mise à jour du nom du site dans tous les éléments
-        const siteNameElements = document.querySelectorAll('.site-name, [data-site-name]');
-        siteNameElements.forEach(el => {
-          el.textContent = settings.siteName;
-        });
-        
-        // Déclencher l'événement de mise à jour
-        const event = new CustomEvent('websiteSettingsUpdated', { detail: settings });
-        window.dispatchEvent(event);
-        
-        console.log('⚙️ Paramètres synchronisés avec succès');
-      } catch (error) {
-        console.error('Erreur sync paramètres:', error);
+    if (!savedSettings) return;
+    
+    // Prevent redundant syncs with same data
+    if (lastSyncHash.current === savedSettings) return;
+    
+    syncInProgress.current = true;
+    
+    try {
+      const settings: WebsiteSettings = JSON.parse(savedSettings);
+      
+      console.log('⚙️ Applying website settings');
+      
+      // Update title only if changed
+      if (settings.siteName && document.title !== settings.siteName) {
+        document.title = settings.siteName;
       }
+      
+      // Update meta description
+      let metaDescription = document.querySelector('meta[name="description"]');
+      if (!metaDescription) {
+        metaDescription = document.createElement('meta');
+        metaDescription.setAttribute('name', 'description');
+        document.head.appendChild(metaDescription);
+      }
+      
+      const currentDescription = metaDescription.getAttribute('content');
+      if (currentDescription !== settings.siteDescription) {
+        metaDescription.setAttribute('content', settings.siteDescription || '');
+      }
+      
+      // Update site name elements efficiently
+      const siteNameElements = document.querySelectorAll('.site-name, [data-site-name]');
+      siteNameElements.forEach(el => {
+        if (el.textContent !== settings.siteName) {
+          el.textContent = settings.siteName;
+        }
+      });
+      
+      lastSyncHash.current = savedSettings;
+      
+      console.log('⚙️ Settings synchronized successfully');
+    } catch (error) {
+      console.error('❌ Settings sync error:', error);
+    } finally {
+      syncInProgress.current = false;
     }
   }, []);
 
   useEffect(() => {
-    // Synchronisation immédiate
+    // Initial sync
     syncSettingsChanges();
 
-    // Polling très fréquent
-    const interval = setInterval(syncSettingsChanges, 100);
+    // Reduced frequency polling
+    const interval = setInterval(syncSettingsChanges, 5000); // 5 seconds instead of 100ms
 
-    // Écouter les changements
+    // Storage change listener
     const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === 'websiteSettings') {
-        setTimeout(syncSettingsChanges, 5);
+      if (event.key === 'websiteSettings' && !syncInProgress.current) {
+        setTimeout(syncSettingsChanges, 100);
       }
     };
 
     const handleSettingsSaved = () => {
-      setTimeout(syncSettingsChanges, 5);
-    };
-
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        setTimeout(syncSettingsChanges, 10);
+      if (!syncInProgress.current) {
+        setTimeout(syncSettingsChanges, 100);
       }
     };
 
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('websiteSettingsSaved', handleSettingsSaved);
-    window.addEventListener('websiteSettingsUpdated', handleSettingsSaved);
-    window.addEventListener('focus', () => setTimeout(syncSettingsChanges, 10));
-    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       clearInterval(interval);
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('websiteSettingsSaved', handleSettingsSaved);
-      window.removeEventListener('websiteSettingsUpdated', handleSettingsSaved);
-      window.removeEventListener('focus', () => setTimeout(syncSettingsChanges, 10));
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [syncSettingsChanges]);
 

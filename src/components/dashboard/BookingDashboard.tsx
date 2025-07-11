@@ -4,10 +4,10 @@ import { DashboardHome } from './DashboardHome';
 import { useWebsiteRealTimeSync } from '@/hooks/useWebsiteRealTimeSync';
 
 export const BookingDashboard: React.FC = () => {
-  console.log('📊 BookingDashboard - Initializing dashboard with real-time sync');
+  console.log('📊 BookingDashboard - Initializing dashboard');
   
-  // Initialiser la synchronisation temps réel
-  useWebsiteRealTimeSync();
+  // Initialize real-time sync with optimized performance
+  const { forceSync } = useWebsiteRealTimeSync();
   
   return <DashboardHome />;
 };
