@@ -211,6 +211,11 @@ export const Events: React.FC = () => {
                     <Badge className={getStatusColor(event.status)}>
                       {event.status}
                     </Badge>
+                    {event.contactName && (
+                      <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                        Contact: {event.contactName}
+                      </Badge>
+                    )}
                   </div>
                   {event.description && (
                     <p className="text-gray-600 mb-3">{event.description}</p>

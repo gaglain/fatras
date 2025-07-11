@@ -10,6 +10,7 @@ import { ContactForm } from '@/components/ContactForm';
 import { useContactsRealtime } from '@/hooks/useContactsRealtime';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { ContactCard } from '@/components/contacts/ContactCard';
 
 interface Contact {
   id: string;
@@ -281,82 +282,12 @@ export const Contacts: React.FC = () => {
       {/* Contacts List */}
       <div className="grid gap-4">
         {filteredContacts.map((contact) => (
-          <Card key={contact.id} className="hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-4 mb-3">
-                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                      <span className="text-blue-600 font-semibold text-lg">
-                        {contact.first_name.charAt(0)}{contact.last_name.charAt(0)}
-                      </span>
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-lg">
-                        {contact.first_name} {contact.last_name}
-                      </h3>
-                      <p className="text-gray-600">{contact.position}</p>
-                    </div>
-                    <Badge className={getStatusColor(contact.status)}>
-                      {contact.status}
-                    </Badge>
-                  </div>
-                  
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
-                    {contact.email && (
-                      <div className="flex items-center space-x-2">
-                        <Mail className="h-4 w-4 text-gray-400" />
-                        <span>{contact.email}</span>
-                      </div>
-                    )}
-                    {contact.phone && (
-                      <div className="flex items-center space-x-2">
-                        <Phone className="h-4 w-4 text-gray-400" />
-                        <span>{contact.phone}</span>
-                      </div>
-                    )}
-                    {contact.city && (
-                      <div className="flex items-center space-x-2">
-                        <MapPin className="h-4 w-4 text-gray-400" />
-                        <span>{contact.city}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {contact.tags.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-1">
-                      {contact.tags.map((tag, index) => (
-                        <Badge key={index} variant="outline" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Button variant="outline" size="sm">
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => handleEditContact(contact)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => handleDeleteContact(contact.id)}
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <ContactCard 
+            key={contact.id} 
+            contact={contact}
+            onEdit={handleEditContact}
+            onDelete={handleDeleteContact}
+          />
         ))}
       </div>
 
