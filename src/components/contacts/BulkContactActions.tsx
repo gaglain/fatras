@@ -43,7 +43,10 @@ export const BulkContactActions: React.FC<BulkContactActionsProps> = ({
             checked={isAllSelected}
             ref={(el) => {
               if (el) {
-                el.indeterminate = isPartiallySelected;
+                const inputElement = el.querySelector('input');
+                if (inputElement) {
+                  inputElement.indeterminate = isPartiallySelected;
+                }
               }
             }}
             onCheckedChange={(checked) => onSelectAll(!!checked)}
