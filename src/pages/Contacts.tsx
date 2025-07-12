@@ -3,9 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Filter, Users, Mail, Phone, MapPin, Edit, Trash2, Eye, Upload } from 'lucide-react';
+import { Plus, Search, Filter, Users, Mail, Phone, MapPin, Edit, Trash2, Eye, Upload, Download } from 'lucide-react';
 import { GlobalFileUpload } from '@/components/GlobalFileUpload';
 import { CSVImporter } from '@/components/CSVImporter';
+import { CSVExporter } from '@/components/CSVExporter';
 import { ContactForm } from '@/components/ContactForm';
 import { useContactsRealtime } from '@/hooks/useContactsRealtime';
 import { toast } from 'sonner';
@@ -34,6 +35,7 @@ export const Contacts: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showCSVImporter, setShowCSVImporter] = useState(false);
+  const [showCSVExporter, setShowCSVExporter] = useState(false);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -229,6 +231,14 @@ export const Contacts: React.FC = () => {
         </div>
         <div className="flex space-x-2">
           <Button 
+            onClick={() => setShowCSVExporter(true)} 
+            variant="outline"
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Exporter CSV
+          </Button>
+          <Button 
             onClick={() => setShowCSVImporter(true)} 
             variant="outline"
             className="bg-green-600 hover:bg-green-700 text-white"
@@ -325,6 +335,13 @@ export const Contacts: React.FC = () => {
         isOpen={showCSVImporter}
         onClose={() => setShowCSVImporter(false)}
         onImport={handleCSVImport}
+      />
+
+      {/* CSV Exporter Dialog */}
+      <CSVExporter
+        isOpen={showCSVExporter}
+        onClose={() => setShowCSVExporter(false)}
+        contacts={filteredContacts}
       />
     </div>
   );
