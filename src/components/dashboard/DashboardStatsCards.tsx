@@ -2,30 +2,102 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Users, Calendar, CheckSquare, Music, Euro, Mail } from 'lucide-react';
-import { useAppData } from '@/contexts/AppDataContext';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 export const DashboardStatsCards: React.FC = () => {
-  const { contacts, events, tasks, contracts, emailCampaigns, revenue } = useAppData();
   const navigate = useNavigate();
 
-  // Calculs des statistiques en temps réel
-  const activeContacts = contacts.filter(c => c.status === 'active').length;
+  // Récupération des contacts depuis Supabase
+  const { data: contacts = [] } = useQuery({
+    queryKey: ['contacts'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('contacts')
+        .select('*')
+        .eq('status', 'active');
+      
+      if (error) {
+        console.error('Erreur lors du chargement des contacts:', error);
+        return [];
+      }
+      return data || [];
+    }
+  });
+
+  // Récupération des événements depuis Supabase
+  const { data: events = [] } = useQuery({
+    queryKey: ['events'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('events')
+        .select('*');
+      
+      if (error) {
+        console.error('Erreur lors du chargement des événements:', error);
+        return [];
+      }
+      return data || [];
+    }
+  });
+
+  // Récupération des campagnes email depuis Supabase
+  const { data: campaigns = [] } = useQuery({
+    queryKey: ['campaigns'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('campaigns')
+        .select('*')
+        .eq('status', 'sent');
+      
+      if (error) {
+        console.error('Erreur lors du chargement des campagnes:', error);
+        return [];
+      }
+      return data || [];
+    }
+  });
+
+  // Récupération des devis depuis Supabase
+  const { data: quotes = [] } = useQuery({
+    queryKey: ['quotes'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('quotes')
+        .select('*')
+        .in('status', ['pending', 'in_progress']);
+      
+      if (error) {
+        console.error('Erreur lors du chargement des devis:', error);
+        return [];
+      }
+      return data || [];
+    }
+  });
+
+  // Calculs des statistiques en temps réel avec les vraies données
+  const activeContacts = contacts.length;
   const thisMonthEvents = events.filter(e => {
-    const eventDate = new Date(e.date);
+    if (!e.start_date) return false;
+    const eventDate = new Date(e.start_date);
     const now = new Date();
     return eventDate.getMonth() === now.getMonth() && eventDate.getFullYear() === now.getFullYear();
   }).length;
-  const pendingTasks = tasks.filter(t => t.status === 'pending' || t.status === 'in_progress').length;
-  const activeArtists = contacts.filter(c => c.type === 'artist' && c.status === 'active').length;
-  const sentCampaigns = emailCampaigns.filter(c => c.status === 'sent').length;
+  
+  const pendingTasks = quotes.length; // Les devis en cours comme tâches
+  const activeArtists = contacts.filter(c => c.role === 'artist').length;
+  const sentCampaigns = campaigns.length;
+  
+  // Calcul du revenu total des devis
+  const revenue = quotes.reduce((total, quote) => total + (Number(quote.total_amount) || 0), 0);
 
   const stats = [
     { 
       name: 'Total Contacts', 
       value: activeContacts.toString(), 
       icon: Users, 
-      change: contacts.length > 0 ? '+12%' : '0%', 
+      change: activeContacts > 0 ? '+12%' : '0%', 
       changeType: 'positive' as const,
       route: '/contacts'
     },
@@ -38,12 +110,12 @@ export const DashboardStatsCards: React.FC = () => {
       route: '/events'
     },
     { 
-      name: 'Tâches en cours', 
+      name: 'Devis en cours', 
       value: pendingTasks.toString(), 
       icon: CheckSquare, 
       change: pendingTasks > 0 ? '-8%' : '0%', 
       changeType: pendingTasks > 10 ? 'negative' as const : 'positive' as const,
-      route: '/tasks'
+      route: '/contracts'
     },
     { 
       name: 'Artistes actifs', 
@@ -54,7 +126,7 @@ export const DashboardStatsCards: React.FC = () => {
       route: '/artists'
     },
     { 
-      name: 'Revenus ce mois', 
+      name: 'Revenus', 
       value: `${revenue.toLocaleString('fr-FR')}€`, 
       icon: Euro, 
       change: revenue > 0 ? '+15%' : '0%', 

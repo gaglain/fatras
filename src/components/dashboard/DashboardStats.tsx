@@ -2,35 +2,86 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Calendar, FileText, TrendingUp } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 export const DashboardStats: React.FC = () => {
+  // Récupération des données réelles depuis Supabase
+  const { data: contacts = [] } = useQuery({
+    queryKey: ['dashboard-contacts'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('contacts')
+        .select('*')
+        .eq('status', 'active');
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
+  const { data: events = [] } = useQuery({
+    queryKey: ['dashboard-events'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('events')
+        .select('*');
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
+  const { data: quotes = [] } = useQuery({
+    queryKey: ['dashboard-quotes'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('quotes')
+        .select('*')
+        .eq('status', 'pending');
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
+  // Calculs basés sur les vraies données
+  const thisMonthEvents = events.filter(e => {
+    if (!e.start_date) return false;
+    const eventDate = new Date(e.start_date);
+    const now = new Date();
+    return eventDate.getMonth() === now.getMonth() && eventDate.getFullYear() === now.getFullYear();
+  }).length;
+
+  const monthlyRevenue = quotes.reduce((total, quote) => total + (Number(quote.total_amount) || 0), 0);
+
   const stats = [
     {
       title: 'Contacts',
-      value: '24',
+      value: contacts.length.toString(),
       icon: Users,
       description: 'Contacts actifs',
       color: 'text-blue-600'
     },
     {
       title: 'Événements',
-      value: '8',
+      value: thisMonthEvents.toString(),
       icon: Calendar,
       description: 'Ce mois',
       color: 'text-green-600'
     },
     {
       title: 'Devis',
-      value: '12',
+      value: quotes.length.toString(),
       icon: FileText,
       description: 'En attente',
       color: 'text-orange-600'
     },
     {
       title: 'Revenus',
-      value: '€15,240',
+      value: `€${monthlyRevenue.toLocaleString('fr-FR')}`,
       icon: TrendingUp,
-      description: 'Ce mois',
+      description: 'Total devis',
       color: 'text-purple-600'
     }
   ];
