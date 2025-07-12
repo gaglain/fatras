@@ -1,7 +1,6 @@
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useRealtimeUpdates } from './useRealtimeUpdates';
 
 interface Contact {
   id: string;
@@ -36,20 +35,27 @@ export const useContactsRealtime = ({
   onContactDeleted,
   enabled = true
 }: UseContactsRealtimeProps) => {
+  const channelRef = useRef<any>(null);
   
   useEffect(() => {
     if (!enabled) return;
 
+    // Nettoyer l'ancien canal s'il existe
+    if (channelRef.current) {
+      console.log('🔌 Cleaning up previous contacts channel');
+      supabase.removeChannel(channelRef.current);
+    }
+
     console.log('🔄 Setting up contacts real-time sync');
 
     const channel = supabase
-      .channel('contacts-realtime')
+      .channel('contacts-realtime-' + Date.now())
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
         table: 'contacts'
       }, (payload) => {
-        console.log('✅ Contact added:', payload.new);
+        console.log('✅ Contact added via real-time:', payload.new);
         if (onContactAdded && payload.new) {
           const newContact = {
             ...payload.new,
@@ -64,7 +70,7 @@ export const useContactsRealtime = ({
         schema: 'public',
         table: 'contacts'
       }, (payload) => {
-        console.log('📝 Contact updated:', payload.new);
+        console.log('📝 Contact updated via real-time:', payload.new);
         if (onContactUpdated && payload.new) {
           const updatedContact = {
             ...payload.new,
@@ -79,16 +85,28 @@ export const useContactsRealtime = ({
         schema: 'public',
         table: 'contacts'
       }, (payload) => {
-        console.log('🗑️ Contact deleted:', payload.old?.id);
+        console.log('🗑️ Contact deleted via real-time:', payload.old?.id);
         if (onContactDeleted && payload.old?.id) {
           onContactDeleted(payload.old.id);
         }
       })
-      .subscribe();
+      .subscribe((status) => {
+        console.log('📡 Contacts real-time subscription status:', status);
+        if (status === 'SUBSCRIBED') {
+          console.log('✅ Contacts real-time active');
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('❌ Contacts real-time channel error');
+        }
+      });
+
+    channelRef.current = channel;
 
     return () => {
       console.log('🔌 Cleaning up contacts real-time sync');
-      supabase.removeChannel(channel);
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
     };
   }, [enabled, onContactAdded, onContactUpdated, onContactDeleted]);
 };

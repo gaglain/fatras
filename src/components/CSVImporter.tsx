@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,6 +20,7 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
   const [headers, setHeaders] = useState<string[]>([]);
   const [mapping, setMapping] = useState<Record<string, string>>({});
   const [step, setStep] = useState<'upload' | 'mapping' | 'preview'>('upload');
+  const [importing, setImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const expectedFields = [
@@ -28,7 +28,7 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
     { key: 'last_name', label: 'Nom *', required: true },
     { key: 'email', label: 'Email', required: false },
     { key: 'phone', label: 'Téléphone', required: false },
-    { key: 'role', label: 'Rôle/Titre', required: false },
+    { key: 'position', label: 'Poste/Titre', required: false },
     { key: 'address', label: 'Adresse', required: false },
     { key: 'city', label: 'Ville', required: false },
     { key: 'postal_code', label: 'Code postal', required: false },
@@ -105,7 +105,6 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
       return;
     }
 
-    // Parse CSV with proper handling of quoted fields
     const parseCSVLine = (line: string): string[] => {
       const result = [];
       let current = '';
@@ -141,7 +140,7 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
     setCsvData(rows);
     setStep('mapping');
 
-    // Auto-mapping intelligent
+    // Auto-mapping intelligent amélioré
     const autoMapping: Record<string, string> = {};
     expectedFields.forEach(field => {
       const matchingHeader = headers.find(h => {
@@ -152,7 +151,10 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
         return headerLower.includes(fieldLower) ||
                fieldLower.includes(headerLower) ||
                labelLower.includes(headerLower) ||
-               headerLower.includes(labelLower.split(' ')[0]);
+               headerLower.includes(labelLower.split(' ')[0]) ||
+               (field.key === 'first_name' && (headerLower.includes('prenom') || headerLower.includes('firstname'))) ||
+               (field.key === 'last_name' && (headerLower.includes('nom') || headerLower.includes('lastname'))) ||
+               (field.key === 'position' && (headerLower.includes('poste') || headerLower.includes('titre') || headerLower.includes('role')));
       });
       if (matchingHeader) {
         autoMapping[field.key] = matchingHeader;
@@ -163,7 +165,10 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
   };
 
   const handleImport = async () => {
+    if (importing) return;
+    
     console.log('💾 Starting import process');
+    setImporting(true);
     
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -181,52 +186,70 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
         
         Object.entries(mapping).forEach(([fieldKey, headerName]) => {
           if (headerName && row[headerName] !== undefined) {
-            let value = row[headerName];
+            let value = row[headerName]?.toString().trim();
             
-            // Handle special fields
             if (fieldKey === 'status') {
-              const statusValue = value.toLowerCase();
+              const statusValue = value?.toLowerCase();
               if (['prospect', 'client', 'inactive'].includes(statusValue)) {
                 mappedRow[fieldKey] = statusValue;
               } else {
                 mappedRow[fieldKey] = 'prospect';
               }
             } else if (fieldKey === 'tags' && value) {
-              mappedRow[fieldKey] = value.split(',').map((tag: string) => tag.trim());
+              mappedRow[fieldKey] = value.split(',').map((tag: string) => tag.trim()).filter(Boolean);
+            } else if (fieldKey === 'accepts_marketing_emails') {
+              mappedRow[fieldKey] = value?.toLowerCase() === 'true' || value === '1';
             } else {
-              mappedRow[fieldKey] = value;
+              mappedRow[fieldKey] = value || '';
             }
           }
         });
         
-        // Set default values for required fields if not mapped
+        // Valeurs par défaut pour les champs requis
         if (!mappedRow.first_name) mappedRow.first_name = 'Prénom';
         if (!mappedRow.last_name) mappedRow.last_name = 'Nom';
         if (!mappedRow.status) mappedRow.status = 'prospect';
+        if (mappedRow.accepts_marketing_emails === undefined) mappedRow.accepts_marketing_emails = true;
         
         return mappedRow;
       });
 
       console.log('📤 Mapped data ready for import:', mappedData.length, 'contacts');
       
-      // Importer vers Supabase
-      const { error } = await supabase
-        .from('contacts')
-        .insert(mappedData);
-
-      if (error) {
-        console.error('Error inserting contacts:', error);
-        toast.error('Erreur lors de l\'import des contacts');
-        return;
+      // Import par lots pour éviter les timeouts
+      const batchSize = 50;
+      const batches = [];
+      for (let i = 0; i < mappedData.length; i += batchSize) {
+        batches.push(mappedData.slice(i, i + batchSize));
       }
 
-      toast.success(`${mappedData.length} contacts importés avec succès !`);
-      onImport(mappedData);
-      resetImporter();
-      onClose();
+      let totalImported = 0;
+      for (const batch of batches) {
+        const { error } = await supabase
+          .from('contacts')
+          .insert(batch);
+
+        if (error) {
+          console.error('Error inserting batch:', error);
+          toast.error(`Erreur lors de l'import du lot (${totalImported}/${mappedData.length})`);
+          break;
+        }
+        
+        totalImported += batch.length;
+        console.log(`✅ Batch imported: ${totalImported}/${mappedData.length}`);
+      }
+
+      if (totalImported === mappedData.length) {
+        toast.success(`${mappedData.length} contacts importés avec succès !`);
+        onImport(mappedData);
+        resetImporter();
+        onClose();
+      }
     } catch (error) {
       console.error('Import error:', error);
       toast.error('Erreur lors de l\'import');
+    } finally {
+      setImporting(false);
     }
   };
 
@@ -236,6 +259,7 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
     setHeaders([]);
     setMapping({});
     setStep('upload');
+    setImporting(false);
   };
 
   const isValid = () => {
@@ -426,8 +450,12 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
               <Button onClick={() => setStep('mapping')} variant="outline" className="flex-1">
                 Retour
               </Button>
-              <Button onClick={handleImport} className="flex-1 bg-green-600 hover:bg-green-700">
-                Importer {csvData.length} contacts
+              <Button 
+                onClick={handleImport} 
+                disabled={importing}
+                className="flex-1 bg-green-600 hover:bg-green-700"
+              >
+                {importing ? 'Import en cours...' : `Importer ${csvData.length} contacts`}
               </Button>
             </div>
           </div>

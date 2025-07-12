@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -45,63 +44,33 @@ export const Contacts: React.FC = () => {
   const [showCSVExporter, setShowCSVExporter] = useState(false);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [loading, setLoading] = useState(true);
+  const [lastLoadTime, setLastLoadTime] = useState(0);
 
   console.log('📋 Contacts - Page loaded with', contacts.length, 'contacts');
 
-  // Callbacks pour la synchronisation temps réel
-  const handleContactAdded = useCallback((newContact: Contact) => {
-    setContacts(prev => {
-      if (prev.some(c => c.id === newContact.id)) {
-        return prev;
-      }
-      console.log('➕ Adding new contact to list:', newContact.first_name, newContact.last_name);
-      toast.success(`Nouveau contact ajouté: ${newContact.first_name} ${newContact.last_name}`);
-      return [newContact, ...prev];
-    });
-  }, []);
-
-  const handleContactUpdated = useCallback((updatedContact: Contact) => {
-    setContacts(prev => {
-      const updated = prev.map(contact => 
-        contact.id === updatedContact.id ? updatedContact : contact
-      );
-      console.log('📝 Contact updated in list:', updatedContact.first_name, updatedContact.last_name);
-      toast.success(`Contact mis à jour: ${updatedContact.first_name} ${updatedContact.last_name}`);
-      return updated;
-    });
-  }, []);
-
-  const handleContactDeleted = useCallback((contactId: string) => {
-    setContacts(prev => {
-      const filtered = prev.filter(c => c.id !== contactId);
-      console.log('🗑️ Contact removed from list:', contactId);
-      toast.success('Contact supprimé');
-      return filtered;
-    });
-  }, []);
-
-  // Activer la synchronisation temps réel
-  useContactsRealtime({
-    onContactAdded: handleContactAdded,
-    onContactUpdated: handleContactUpdated,
-    onContactDeleted: handleContactDeleted,
-    enabled: true
-  });
-
-  // Charger les contacts depuis Supabase
-  useEffect(() => {
-    loadContacts();
-  }, []);
-
-  const loadContacts = async () => {
+  // Fonction de chargement des contacts optimisée
+  const loadContacts = useCallback(async (forceReload = false) => {
+    const now = Date.now();
+    
+    // Éviter les rechargements trop fréquents (sauf si forcé)
+    if (!forceReload && now - lastLoadTime < 2000) {
+      console.log('⏸️ Skipping reload - too recent');
+      return;
+    }
+    
+    setLoading(true);
+    setLastLoadTime(now);
+    
     try {
+      console.log('🔄 Loading contacts from database...');
+      
       const { data: contactsData, error } = await supabase
         .from('contacts')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error loading contacts:', error);
+        console.error('❌ Error loading contacts:', error);
         toast.error('Erreur lors du chargement des contacts');
         return;
       }
@@ -125,13 +94,76 @@ export const Contacts: React.FC = () => {
 
       setContacts(formattedContacts);
       console.log('✅ Contacts loaded successfully:', formattedContacts.length);
+      
+      if (formattedContacts.length > 0) {
+        toast.success(`${formattedContacts.length} contacts chargés`);
+      }
     } catch (error) {
-      console.error('Error in loadContacts:', error);
+      console.error('❌ Error in loadContacts:', error);
       toast.error('Erreur lors du chargement des contacts');
     } finally {
       setLoading(false);
     }
-  };
+  }, [lastLoadTime]);
+
+  // Callbacks pour la synchronisation temps réel
+  const handleContactAdded = useCallback((newContact: Contact) => {
+    setContacts(prev => {
+      // Vérifier si le contact existe déjà
+      const exists = prev.some(c => c.id === newContact.id);
+      if (exists) {
+        console.log('📋 Contact already exists, skipping add');
+        return prev;
+      }
+      
+      console.log('➕ Adding new contact to list:', newContact.first_name, newContact.last_name);
+      toast.success(`Nouveau contact ajouté: ${newContact.first_name} ${newContact.last_name}`);
+      return [newContact, ...prev];
+    });
+  }, []);
+
+  const handleContactUpdated = useCallback((updatedContact: Contact) => {
+    setContacts(prev => {
+      const updated = prev.map(contact => 
+        contact.id === updatedContact.id ? updatedContact : contact
+      );
+      console.log('📝 Contact updated in list:', updatedContact.first_name, updatedContact.last_name);
+      return updated;
+    });
+  }, []);
+
+  const handleContactDeleted = useCallback((contactId: string) => {
+    setContacts(prev => {
+      const filtered = prev.filter(c => c.id !== contactId);
+      console.log('🗑️ Contact removed from list:', contactId);
+      toast.success('Contact supprimé');
+      return filtered;
+    });
+  }, []);
+
+  // Activer la synchronisation temps réel
+  useContactsRealtime({
+    onContactAdded: handleContactAdded,
+    onContactUpdated: handleContactUpdated,
+    onContactDeleted: handleContactDeleted,
+    enabled: true
+  });
+
+  // Charger les contacts au montage du composant
+  useEffect(() => {
+    loadContacts(true);
+  }, []);
+
+  // Actualiser périodiquement
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        loadContacts();
+      }
+    }, 30000); // 30 secondes
+
+    return () => clearInterval(interval);
+  }, [loadContacts]);
 
   // Données pour les filtres
   const filterData = useMemo(() => {
@@ -210,7 +242,7 @@ export const Contacts: React.FC = () => {
           return;
         }
 
-        console.log('✅ Contact deletion triggered');
+        console.log('✅ Contact deletion successful');
       } catch (error) {
         console.error('Error in handleDeleteContact:', error);
         toast.error('Erreur lors de la suppression');
@@ -221,13 +253,18 @@ export const Contacts: React.FC = () => {
   const handleFormSave = () => {
     setShowCreateForm(false);
     setEditingContact(null);
-    console.log('✅ Form saved, real-time sync will handle updates');
+    console.log('✅ Form saved, reloading contacts');
+    // Forcer le rechargement après sauvegarde
+    setTimeout(() => loadContacts(true), 500);
   };
 
   const handleCSVImport = (importedContacts: any[]) => {
     console.log('📥 CSV Import completed:', importedContacts.length, 'contacts');
     toast.success(`${importedContacts.length} contacts importés avec succès !`);
     setShowCSVImporter(false);
+    
+    // Forcer le rechargement après import
+    setTimeout(() => loadContacts(true), 1000);
   };
 
   const handleFileUploaded = (file: { url: string; name: string; type: string }) => {
@@ -247,7 +284,13 @@ export const Contacts: React.FC = () => {
     console.log('🏷️ New tag added to system:', newTag);
   };
 
-  if (loading) {
+  // Fonction pour rafraîchir manuellement
+  const handleRefresh = () => {
+    console.log('🔄 Manual refresh requested');
+    loadContacts(true);
+  };
+
+  if (loading && contacts.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -274,9 +317,19 @@ export const Contacts: React.FC = () => {
               Temps réel activé
             </Badge>
           </h1>
-          <p className="mt-2 text-gray-600">
-            {contacts.length} contact{contacts.length !== 1 ? 's' : ''} enregistré{contacts.length !== 1 ? 's' : ''}
-          </p>
+          <div className="flex items-center space-x-4 mt-2">
+            <p className="text-gray-600">
+              {contacts.length} contact{contacts.length !== 1 ? 's' : ''} enregistré{contacts.length !== 1 ? 's' : ''}
+            </p>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleRefresh}
+              disabled={loading}
+            >
+              {loading ? 'Actualisation...' : 'Actualiser'}
+            </Button>
+          </div>
         </div>
         <div className="flex items-center space-x-2">
           <ViewToggle view={viewMode} onViewChange={setViewMode} />
@@ -357,18 +410,26 @@ export const Contacts: React.FC = () => {
         <Card>
           <CardContent className="p-12 text-center">
             <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium mb-2">Aucun contact trouvé</h3>
+            <h3 className="text-lg font-medium mb-2">
+              {contacts.length === 0 ? 'Aucun contact trouvé' : 'Aucun contact ne correspond aux filtres'}
+            </h3>
             <p className="text-gray-600 mb-4">
               {searchTerm || statusFilter !== 'all' || tagFilters.length > 0 || sourceFilter !== 'all' || cityFilter !== 'all' ? 
                 'Aucun contact ne correspond à vos critères de recherche.' : 
-                'Commencez par ajouter votre premier contact.'
+                'Commencez par ajouter votre premier contact ou importer un fichier CSV.'
               }
             </p>
             {(!searchTerm && statusFilter === 'all' && tagFilters.length === 0 && sourceFilter === 'all' && cityFilter === 'all') && (
-              <Button onClick={handleCreateContact}>
-                <Plus className="h-4 w-4 mr-2" />
-                Créer un contact
-              </Button>
+              <div className="space-x-2">
+                <Button onClick={handleCreateContact}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Créer un contact
+                </Button>
+                <Button variant="outline" onClick={() => setShowCSVImporter(true)}>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Importer CSV
+                </Button>
+              </div>
             )}
           </CardContent>
         </Card>
