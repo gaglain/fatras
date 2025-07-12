@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { DynamicFrontNavigation } from './DynamicFrontNavigation';
-import { useWebsiteSync } from '@/hooks/useWebsiteSync';
+import { useFrontSync } from '@/hooks/useFrontSync';
 import { PublicChatWidget } from './PublicChatWidget';
 import { RGPDModule } from './RGPDModule';
 import { GoogleAnalytics } from './GoogleAnalytics';
@@ -28,7 +28,8 @@ interface WebsiteSettings {
 }
 
 export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
-  useWebsiteSync();
+  // Utiliser le hook de synchronisation front
+  const { forceSync } = useFrontSync();
   
   const [settings, setSettings] = useState<WebsiteSettings>({
     siteName: 'MusiConnect',
@@ -46,33 +47,48 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
   });
 
   useEffect(() => {
+    console.log('🎯 FrontLayout mounted - Starting sync');
+    
     const loadSettings = () => {
       const savedSettings = localStorage.getItem('websiteSettings');
       if (savedSettings) {
         try {
           const parsed = JSON.parse(savedSettings);
+          console.log('⚙️ FrontLayout - Settings loaded:', parsed.siteName);
           setSettings(prev => ({ ...prev, ...parsed }));
         } catch (error) {
-          console.error('Erreur chargement paramètres:', error);
+          console.error('❌ FrontLayout - Error loading settings:', error);
         }
       }
     };
 
+    // Chargement initial
     loadSettings();
+    
+    // Force sync après un délai pour s'assurer que tout est chargé
+    setTimeout(() => {
+      console.log('🔄 FrontLayout - Force sync after mount');
+      forceSync();
+    }, 500);
 
     const handleSettingsUpdate = (event: CustomEvent) => {
-      console.log('🔄 Layout - Mise à jour des paramètres détectée:', event.detail);
+      console.log('🔄 FrontLayout - Settings update detected:', event.detail);
       setSettings(prev => ({ ...prev, ...event.detail }));
     };
 
+    const handleStorageChange = () => {
+      console.log('💾 FrontLayout - Storage change detected');
+      loadSettings();
+    };
+
     window.addEventListener('websiteSettingsUpdated', handleSettingsUpdate as EventListener);
-    window.addEventListener('storage', loadSettings);
+    window.addEventListener('storage', handleStorageChange);
 
     return () => {
       window.removeEventListener('websiteSettingsUpdated', handleSettingsUpdate as EventListener);
-      window.removeEventListener('storage', loadSettings);
+      window.removeEventListener('storage', handleStorageChange);
     };
-  }, []);
+  }, [forceSync]);
 
   return (
     <div className="min-h-screen flex flex-col" data-theme-element="page">

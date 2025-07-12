@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useWebsiteRealTimeSync } from '@/hooks/useWebsiteRealTimeSync';
+import { useFrontSync } from '@/hooks/useFrontSync';
 
 interface MenuItem {
   id: string;
@@ -17,12 +17,12 @@ export const DynamicFrontNavigation: React.FC = () => {
   const [logo, setLogo] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   
-  // Utiliser le système de synchronisation optimisé
-  const { forceSync, isInitialized } = useWebsiteRealTimeSync();
+  // Utiliser le hook de synchronisation front
+  const { forceSync } = useFrontSync();
 
-  // Fonction de chargement des données optimisée
+  // Fonction de chargement des données
   const loadAllData = React.useCallback(() => {
-    console.log('📄 Loading navigation data...');
+    console.log('📄 Navigation - Loading data...');
     setIsLoading(true);
     
     try {
@@ -34,56 +34,55 @@ export const DynamicFrontNavigation: React.FC = () => {
           .filter((item: MenuItem) => item.visible)
           .sort((a: MenuItem, b: MenuItem) => a.order - b.order);
         setMenuItems(visibleItems);
-        console.log('✅ Menu loaded:', visibleItems.length, 'items');
+        console.log('✅ Navigation - Menu loaded:', visibleItems.length, 'items');
       }
 
-      // Charger les paramètres et design
-      loadSiteSettings();
+      // Charger les paramètres
+      const savedSettings = localStorage.getItem('websiteSettings');
+      if (savedSettings) {
+        const settings = JSON.parse(savedSettings);
+        if (settings.siteName) {
+          setSiteName(settings.siteName);
+          console.log('⚙️ Navigation - Site name from settings:', settings.siteName);
+        }
+      }
+      
+      // Charger le design
+      const savedDesign = localStorage.getItem('websiteDesign');
+      if (savedDesign) {
+        const design = JSON.parse(savedDesign);
+        if (design.logo) {
+          setLogo(design.logo);
+          console.log('🎨 Navigation - Logo loaded');
+        }
+        if (design.siteName) {
+          setSiteName(design.siteName);
+          console.log('🎨 Navigation - Site name from design:', design.siteName);
+        }
+      }
     } catch (error) {
-      console.error('❌ Error loading navigation data:', error);
+      console.error('❌ Navigation - Error loading data:', error);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  const loadSiteSettings = React.useCallback(() => {
-    try {
-      const savedSettings = localStorage.getItem('websiteSettings');
-      const savedDesign = localStorage.getItem('websiteDesign');
-      
-      if (savedSettings) {
-        const settings = JSON.parse(savedSettings);
-        if (settings.siteName) {
-          setSiteName(settings.siteName);
-          console.log('⚙️ Site name from settings:', settings.siteName);
-        }
-      }
-      
-      if (savedDesign) {
-        const design = JSON.parse(savedDesign);
-        if (design.logo) {
-          setLogo(design.logo);
-          console.log('🎨 Logo loaded');
-        }
-        if (design.siteName) {
-          setSiteName(design.siteName);
-          console.log('🎨 Site name from design:', design.siteName);
-        }
-      }
-    } catch (error) {
-      console.error('❌ Error loading site settings:', error);
-    }
-  }, []);
-
   // Charger les données initiales
   useEffect(() => {
+    console.log('🚀 Navigation mounted');
     loadAllData();
-  }, [loadAllData]);
+    
+    // Force sync après un délai
+    setTimeout(() => {
+      console.log('🔄 Navigation - Force sync after mount');
+      forceSync();
+    }, 1000);
+  }, [loadAllData, forceSync]);
 
   // Écouter les événements de synchronisation
   useEffect(() => {
     const handleMenuUpdate = (event: CustomEvent) => {
-      console.log('🔄 Menu update received');
+      console.log('🔄 Navigation - Menu update received');
       if (event.detail && Array.isArray(event.detail)) {
         const visibleItems = event.detail
           .filter((item: MenuItem) => item.visible)
@@ -93,21 +92,27 @@ export const DynamicFrontNavigation: React.FC = () => {
     };
 
     const handleSettingsUpdate = (event: CustomEvent) => {
-      console.log('⚙️ Settings update received');
+      console.log('⚙️ Navigation - Settings update received');
       const settings = event.detail;
       if (settings?.siteName) {
         setSiteName(settings.siteName);
       }
     };
 
-    const handleDesignUpdate = () => {
-      console.log('🎨 Design update received');
-      loadSiteSettings();
+    const handleDesignUpdate = (event: CustomEvent) => {
+      console.log('🎨 Navigation - Design update received');
+      const design = event.detail;
+      if (design?.logo) {
+        setLogo(design.logo);
+      }
+      if (design?.siteName) {
+        setSiteName(design.siteName);
+      }
     };
 
     const handleStorageChange = (event: StorageEvent) => {
       if (['websiteMenu', 'websiteSettings', 'websiteDesign'].includes(event.key || '')) {
-        console.log('💾 Storage change detected:', event.key);
+        console.log('💾 Navigation - Storage change detected:', event.key);
         setTimeout(loadAllData, 200);
       }
     };
@@ -115,18 +120,16 @@ export const DynamicFrontNavigation: React.FC = () => {
     // Event listeners
     window.addEventListener('websiteMenuUpdated', handleMenuUpdate as EventListener);
     window.addEventListener('websiteSettingsUpdated', handleSettingsUpdate as EventListener);
-    window.addEventListener('websiteDesignUpdated', handleDesignUpdate);
-    window.addEventListener('websiteDesignSaved', handleDesignUpdate);
+    window.addEventListener('websiteDesignUpdated', handleDesignUpdate as EventListener);
     window.addEventListener('storage', handleStorageChange);
 
     return () => {
       window.removeEventListener('websiteMenuUpdated', handleMenuUpdate as EventListener);
       window.removeEventListener('websiteSettingsUpdated', handleSettingsUpdate as EventListener);
-      window.removeEventListener('websiteDesignUpdated', handleDesignUpdate);
-      window.removeEventListener('websiteDesignSaved', handleDesignUpdate);
+      window.removeEventListener('websiteDesignUpdated', handleDesignUpdate as EventListener);
       window.removeEventListener('storage', handleStorageChange);
     };
-  }, [loadAllData, loadSiteSettings]);
+  }, [loadAllData]);
 
   const renderMenuItem = (item: MenuItem) => {
     const isExternal = item.path.startsWith('http') || item.path.startsWith('//');
@@ -188,7 +191,7 @@ export const DynamicFrontNavigation: React.FC = () => {
                 className="site-logo h-8 w-auto"
                 style={{ maxHeight: '32px' }}
                 onError={(e) => {
-                  console.log('❌ Logo loading error');
+                  console.log('❌ Navigation - Logo loading error');
                   (e.currentTarget as HTMLImageElement).style.display = 'none';
                 }}
               />
@@ -217,7 +220,10 @@ export const DynamicFrontNavigation: React.FC = () => {
           <div className="md:hidden">
             <button 
               className="p-2 hover:bg-gray-100 rounded"
-              onClick={() => forceSync()}
+              onClick={() => {
+                console.log('🔄 Navigation - Manual sync requested');
+                forceSync();
+              }}
               title="Synchroniser et actualiser"
             >
               <svg

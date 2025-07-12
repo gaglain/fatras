@@ -68,6 +68,31 @@ export const WebsiteDesignManager: React.FC = () => {
     }
   };
 
+  const triggerSyncEvents = (designData: SiteDesign) => {
+    console.log('🚀 Triggering ALL sync events for design');
+    
+    // Événements multiples pour maximiser la compatibilité
+    const events = [
+      'websiteDesignUpdated',
+      'websiteDesignSaved',
+      'websiteSettingsUpdated', // Car le design contient aussi siteName
+    ];
+    
+    events.forEach(eventName => {
+      window.dispatchEvent(new CustomEvent(eventName, { detail: designData }));
+      console.log(`✅ Event ${eventName} dispatched`);
+    });
+    
+    // Événement storage pour cross-tab sync
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: 'websiteDesign',
+      newValue: JSON.stringify(designData),
+      storageArea: localStorage
+    }));
+    
+    console.log('✅ Storage event dispatched');
+  };
+
   const saveDesign = () => {
     console.log('💾 Saving design:', design);
     
@@ -75,21 +100,18 @@ export const WebsiteDesignManager: React.FC = () => {
       // Sauvegarder dans localStorage
       localStorage.setItem('websiteDesign', JSON.stringify(design));
       
-      // Déclencher les événements de synchronisation
-      console.log('🚀 Triggering sync events...');
-      
-      window.dispatchEvent(new CustomEvent('websiteDesignUpdated', { detail: design }));
-      window.dispatchEvent(new CustomEvent('websiteDesignSaved', { detail: design }));
-      
-      // Déclencher aussi l'événement storage pour être sûr
-      window.dispatchEvent(new StorageEvent('storage', {
-        key: 'websiteDesign',
-        newValue: JSON.stringify(design),
-        storageArea: localStorage
-      }));
+      // Déclencher TOUS les événements de synchronisation
+      triggerSyncEvents(design);
       
       toast.success('Design sauvegardé avec succès !');
-      console.log('✅ Design saved and events triggered');
+      console.log('✅ Design saved and all events triggered');
+      
+      // Force un reload après un délai pour s'assurer que le front se met à jour
+      setTimeout(() => {
+        console.log('🔄 Force triggering events again after delay');
+        triggerSyncEvents(design);
+      }, 500);
+      
     } catch (error) {
       console.error('❌ Error saving design:', error);
       toast.error('Erreur lors de la sauvegarde');
@@ -101,9 +123,8 @@ export const WebsiteDesignManager: React.FC = () => {
     setDesign(defaultDesign);
     localStorage.removeItem('websiteDesign');
     
-    // Déclencher les événements de synchronisation
-    window.dispatchEvent(new CustomEvent('websiteDesignUpdated', { detail: defaultDesign }));
-    window.dispatchEvent(new CustomEvent('websiteDesignSaved', { detail: defaultDesign }));
+    // Déclencher les événements avec le design par défaut
+    triggerSyncEvents(defaultDesign);
     
     toast.success('Design réinitialisé');
   };
@@ -115,6 +136,9 @@ export const WebsiteDesignManager: React.FC = () => {
         <CardContent className="pt-4">
           <p className="text-sm text-blue-800">
             <strong>Debug:</strong> Nom actuel: "{design.siteName}" | Logo: {design.logo ? 'Défini' : 'Non défini'}
+          </p>
+          <p className="text-sm text-blue-600 mt-1">
+            💡 Après avoir sauvegardé, vérifiez l'aperçu du site pour voir les changements
           </p>
         </CardContent>
       </Card>
