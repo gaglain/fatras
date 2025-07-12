@@ -1,95 +1,213 @@
 
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import type { Tables } from '@/integrations/supabase/types';
+
+type WebsiteMenuItem = Tables<'website_menu'>;
 
 export const useWebsiteMenuSync = () => {
+  const [menu, setMenu] = useState<WebsiteMenuItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const lastSyncTime = useRef(0);
   const syncInProgress = useRef(false);
 
   const loadMenu = useCallback(async () => {
-    if (syncInProgress.current) return [];
+    if (syncInProgress.current) return menu;
     
     syncInProgress.current = true;
+    setLoading(true);
     
     try {
       console.log('🔗 Loading menu from Supabase...');
       
-      const { data: menuItems, error } = await supabase
+      const { data: menuData, error } = await supabase
         .from('website_menu')
         .select('*')
         .order('menu_order', { ascending: true });
 
       if (error) {
-        console.error('Erreur lors du chargement du menu:', error);
+        console.error('❌ Erreur lors du chargement du menu:', error);
         
         // Fallback vers localStorage
         const savedMenu = localStorage.getItem('websiteMenu');
         if (savedMenu) {
-          return JSON.parse(savedMenu);
+          const localMenu = JSON.parse(savedMenu);
+          console.log('🔗 Utilisation du menu en cache:', localMenu.length);
+          setMenu(localMenu);
+          return localMenu;
         }
-        return [];
-      }
-
-      if (menuItems && menuItems.length > 0) {
-        console.log('✅ Menu loaded from Supabase:', menuItems.length);
-        localStorage.setItem('websiteMenu', JSON.stringify(menuItems));
-        return menuItems;
-      } else {
-        // Menu par défaut si aucun menu en base
-        const defaultMenu = [
+        
+        // Menu par défaut si aucune donnée
+        const defaultMenu: WebsiteMenuItem[] = [
           {
             id: '1',
+            user_id: null,
             label: 'Accueil',
             url: '/',
+            target: '_self',
+            parent_id: null,
             menu_order: 0,
             is_visible: true,
-            target: '_self'
-          },
-          {
-            id: '2', 
-            label: 'Artistes',
-            url: '/artists',
-            menu_order: 1,
-            is_visible: true,
-            target: '_self'
-          },
-          {
-            id: '3',
-            label: 'Événements', 
-            url: '/events',
-            menu_order: 2,
-            is_visible: true,
-            target: '_self'
-          },
-          {
-            id: '4',
-            label: 'Contact',
-            url: '/contact',
-            menu_order: 3,
-            is_visible: true,
-            target: '_self'
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
           }
         ];
         
         localStorage.setItem('websiteMenu', JSON.stringify(defaultMenu));
+        setMenu(defaultMenu);
+        console.log('🔗 Menu par défaut créé');
+        return defaultMenu;
+      }
+
+      if (menuData && menuData.length > 0) {
+        console.log('✅ Menu loaded from Supabase:', menuData.length);
+        localStorage.setItem('websiteMenu', JSON.stringify(menuData));
+        setMenu(menuData);
+        
+        // Déclencher l'événement de mise à jour
+        const event = new CustomEvent('websiteMenuUpdated', { detail: menuData });
+        window.dispatchEvent(event);
+        
+        return menuData;
+      } else {
+        // Menu par défaut si pas de données
+        const defaultMenu: WebsiteMenuItem[] = [
+          {
+            id: '1',
+            user_id: null,
+            label: 'Accueil',
+            url: '/',
+            target: '_self',
+            parent_id: null,
+            menu_order: 0,
+            is_visible: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }
+        ];
+        
+        localStorage.setItem('websiteMenu', JSON.stringify(defaultMenu));
+        setMenu(defaultMenu);
         console.log('🔗 Menu par défaut créé');
         return defaultMenu;
       }
     } catch (error) {
-      console.error('Erreur lors du chargement du menu:', error);
+      console.error('❌ Erreur lors du chargement du menu:', error);
       
-      // Fallback vers localStorage
+      // Fallback complet vers localStorage
       const savedMenu = localStorage.getItem('websiteMenu');
       if (savedMenu) {
-        return JSON.parse(savedMenu);
+        const localMenu = JSON.parse(savedMenu);
+        setMenu(localMenu);
+        return localMenu;
       }
+      
+      setMenu([]);
       return [];
     } finally {
       syncInProgress.current = false;
+      setLoading(false);
     }
-  }, []);
+  }, [menu]);
 
   const refreshMenu = useCallback(async () => {
+    const now = Date.now();
+    
+    // Throttle les appels
+    if (now - lastSyncTime.current < 1000) {
+      return menu;
+    }
+    
+    lastSyncTime.current = now;
     return await loadMenu();
+  }, [loadMenu, menu]);
+
+  const saveMenuItem = useCallback(async (menuItem: Partial<WebsiteMenuItem>) => {
+    try {
+      console.log('💾 Saving menu item:', menuItem.label);
+      
+      const { data, error } = await supabase
+        .from('website_menu')
+        .insert([{
+          label: menuItem.label!,
+          url: menuItem.url!,
+          target: menuItem.target || '_self',
+          parent_id: menuItem.parent_id,
+          menu_order: menuItem.menu_order || 0,
+          is_visible: menuItem.is_visible !== false
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Erreur lors de la sauvegarde:', error);
+        throw error;
+      }
+
+      if (data) {
+        console.log('✅ Menu item sauvegardé:', data.label);
+        await loadMenu();
+      }
+    } catch (error) {
+      console.error('❌ Erreur lors de la sauvegarde du menu:', error);
+      throw error;
+    }
+  }, [loadMenu]);
+
+  const updateMenuItem = useCallback(async (id: string, menuItem: Partial<WebsiteMenuItem>) => {
+    try {
+      console.log('🔄 Updating menu item:', id);
+      
+      const { data, error } = await supabase
+        .from('website_menu')
+        .update({
+          label: menuItem.label,
+          url: menuItem.url,
+          target: menuItem.target,
+          parent_id: menuItem.parent_id,
+          menu_order: menuItem.menu_order,
+          is_visible: menuItem.is_visible,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Erreur lors de la mise à jour:', error);
+        throw error;
+      }
+
+      if (data) {
+        console.log('✅ Menu item mis à jour:', data.label);
+        await loadMenu();
+      }
+    } catch (error) {
+      console.error('❌ Erreur lors de la mise à jour du menu:', error);
+      throw error;
+    }
+  }, [loadMenu]);
+
+  const deleteMenuItem = useCallback(async (id: string) => {
+    try {
+      console.log('🗑️ Deleting menu item:', id);
+      
+      const { error } = await supabase
+        .from('website_menu')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('❌ Erreur lors de la suppression:', error);
+        throw error;
+      }
+
+      console.log('✅ Menu item supprimé');
+      await loadMenu();
+    } catch (error) {
+      console.error('❌ Erreur lors de la suppression du menu:', error);
+      throw error;
+    }
   }, [loadMenu]);
 
   const syncMenu = useCallback(async (menuItems: any[]) => {
@@ -98,20 +216,18 @@ export const useWebsiteMenuSync = () => {
     try {
       console.log('💾 Synchronisation du menu vers Supabase...');
       
-      // Supprimer l'ancien menu
-      await supabase.from('website_menu').delete().neq('id', '');
-      
-      // Insérer le nouveau menu
       for (const item of menuItems) {
         const { error } = await supabase
           .from('website_menu')
-          .insert({
+          .upsert({
             id: item.id,
             label: item.label,
             url: item.url,
-            menu_order: item.menu_order || item.order,
+            target: item.target || '_self',
+            parent_id: item.parent_id,
+            menu_order: item.menu_order || 0,
             is_visible: item.is_visible !== false,
-            target: item.target || '_self'
+            updated_at: new Date().toISOString()
           });
 
         if (error) {
@@ -144,8 +260,13 @@ export const useWebsiteMenuSync = () => {
   }, [loadMenu, syncMenu]);
 
   return { 
+    menu,
+    loading,
     loadMenu, 
     refreshMenu, 
-    syncMenu 
+    syncMenu,
+    saveMenuItem,
+    updateMenuItem,
+    deleteMenuItem
   };
 };

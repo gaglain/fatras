@@ -13,12 +13,13 @@ export const useWebsiteRealTimeSync = () => {
   
   const syncInProgress = useRef(false);
   const lastSyncTime = useRef(0);
-  const SYNC_THROTTLE = 1000; // 1 second throttle
+  const isInitialized = useRef(false);
+  const SYNC_THROTTLE = 2000; // Augmentation à 2 secondes
 
-  const performSafeSync = useCallback(() => {
+  const performSafeSync = useCallback(async () => {
     const now = Date.now();
     
-    // Prevent rapid successive syncs
+    // Prévenir les syncs trop rapides
     if (syncInProgress.current || (now - lastSyncTime.current) < SYNC_THROTTLE) {
       return;
     }
@@ -27,9 +28,11 @@ export const useWebsiteRealTimeSync = () => {
     lastSyncTime.current = now;
     
     try {
-      console.log('🔄 Performing throttled sync');
-      syncSettingsChanges();
-      syncDesignChanges();
+      console.log('🔄 Performing optimized sync');
+      await Promise.all([
+        syncSettingsChanges(),
+        syncDesignChanges()
+      ]);
     } catch (error) {
       console.error('❌ Sync error:', error);
     } finally {
@@ -37,45 +40,54 @@ export const useWebsiteRealTimeSync = () => {
     }
   }, [syncSettingsChanges, syncDesignChanges]);
 
-  useEffect(() => {
-    console.log('🔄 Initializing optimized real-time website sync');
-
-    // Initial sync only once
-    if (!syncInProgress.current) {
-      console.log('🚀 Performing initial sync');
-      syncInProgress.current = true;
-      try {
-        syncSettingsChanges();
-        syncDesignChanges();
-        refreshPages();
-        refreshMenu();
-      } finally {
-        syncInProgress.current = false;
-      }
+  const initializeSync = useCallback(async () => {
+    if (isInitialized.current || syncInProgress.current) return;
+    
+    isInitialized.current = true;
+    syncInProgress.current = true;
+    
+    try {
+      console.log('🚀 Initializing website sync system');
+      await Promise.all([
+        syncSettingsChanges(),
+        syncDesignChanges(),
+        refreshPages(),
+        refreshMenu()
+      ]);
+      console.log('✅ Website sync system initialized');
+    } catch (error) {
+      console.error('❌ Initialization error:', error);
+    } finally {
+      syncInProgress.current = false;
     }
+  }, [syncSettingsChanges, syncDesignChanges, refreshPages, refreshMenu]);
 
-    // Debounced event handler
+  useEffect(() => {
+    // Initialisation une seule fois
+    initializeSync();
+
+    // Gestionnaire d'événements avec debounce
     let syncTimeout: NodeJS.Timeout;
     const handleSync = () => {
       clearTimeout(syncTimeout);
-      syncTimeout = setTimeout(performSafeSync, 300);
+      syncTimeout = setTimeout(performSafeSync, 500);
     };
 
-    // Only essential events
+    // Écoute uniquement des événements critiques
     window.addEventListener('websiteSettingsUpdated', handleSync);
     window.addEventListener('websiteDesignUpdated', handleSync);
 
-    // Reduced frequency periodic sync (30 seconds instead of 10)
+    // Sync périodique réduite (60 secondes)
     const syncInterval = setInterval(() => {
-      if (!syncInProgress.current) {
+      if (!syncInProgress.current && isInitialized.current) {
         console.log('⏰ Periodic sync check');
         performSafeSync();
       }
-    }, 30000);
+    }, 60000);
 
-    // Focus sync with throttling
+    // Sync sur focus avec throttling
     const handleFocus = () => {
-      if (!document.hidden && !syncInProgress.current) {
+      if (!document.hidden && !syncInProgress.current && isInitialized.current) {
         console.log('👁️ Window focus - triggering sync');
         performSafeSync();
       }
@@ -90,15 +102,14 @@ export const useWebsiteRealTimeSync = () => {
       window.removeEventListener('focus', handleFocus);
       clearInterval(syncInterval);
     };
-  }, [performSafeSync, refreshPages, refreshMenu]);
+  }, [initializeSync, performSafeSync]);
 
   return {
-    forceSync: () => {
-      if (!syncInProgress.current) {
+    forceSync: async () => {
+      if (!syncInProgress.current && isInitialized.current) {
         console.log('🔄 Force sync requested');
-        performSafeSync();
-        refreshPages();
-        refreshMenu();
+        await performSafeSync();
+        await Promise.all([refreshPages(), refreshMenu()]);
       }
     }
   };
