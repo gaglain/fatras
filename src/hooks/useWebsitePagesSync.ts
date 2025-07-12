@@ -10,8 +10,9 @@ export const useWebsitePagesSync = () => {
   const [loading, setLoading] = useState(true);
   const lastSyncTime = useRef(0);
   const syncInProgress = useRef(false);
+  const isInitialized = useRef(false);
 
-  const loadPages = useCallback(async () => {
+  const loadPages = useCallback(async (): Promise<WebsitePage[]> => {
     if (syncInProgress.current) return pages;
     
     syncInProgress.current = true;
@@ -26,13 +27,12 @@ export const useWebsitePagesSync = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('❌ Erreur lors du chargement des pages:', error);
-        
-        // Fallback vers localStorage en cas d'erreur Supabase
+        console.error('❌ Error loading pages:', error);
+        // Fallback to localStorage
         const savedPages = localStorage.getItem('websitePages');
         if (savedPages) {
           const localPages = JSON.parse(savedPages);
-          console.log('📄 Utilisation des pages en cache:', localPages.length);
+          console.log('📄 Using cached pages:', localPages.length);
           setPages(localPages);
           return localPages;
         }
@@ -44,16 +44,10 @@ export const useWebsitePagesSync = () => {
         console.log('✅ Pages loaded from Supabase:', pagesData.length);
         localStorage.setItem('websitePages', JSON.stringify(pagesData));
         setPages(pagesData);
-        
-        // Déclencher l'événement de mise à jour
-        const event = new CustomEvent('websitePagesUpdated', { detail: pagesData });
-        window.dispatchEvent(event);
-        
         return pagesData;
       } else {
-        // Si pas de pages en base, utiliser les pages par défaut
-        const defaultPages = [{
-          id: '1',
+        // Create default page if none exist
+        const defaultPages: Partial<WebsitePage>[] = [{
           title: 'Accueil',
           slug: '/',
           status: 'published',
@@ -70,48 +64,20 @@ export const useWebsitePagesSync = () => {
             }
           }],
           meta_description: 'Page d\'accueil - Découvrez notre univers musical',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          user_id: null,
-          meta_title: null,
-          meta_keywords: null,
           page_type: 'page'
-        }] as WebsitePage[];
+        }];
         
-        localStorage.setItem('websitePages', JSON.stringify(defaultPages));
-        setPages(defaultPages);
-        console.log('📄 Pages par défaut créées');
-        return defaultPages;
+        console.log('📄 No pages found, using defaults');
+        return [];
       }
     } catch (error) {
-      console.error('❌ Erreur lors du chargement des pages:', error);
-      
-      // Fallback vers localStorage
-      const savedPages = localStorage.getItem('websitePages');
-      if (savedPages) {
-        const localPages = JSON.parse(savedPages);
-        setPages(localPages);
-        return localPages;
-      }
-      setPages([]);
+      console.error('❌ Error loading pages:', error);
       return [];
     } finally {
       syncInProgress.current = false;
       setLoading(false);
     }
-  }, [pages]);
-
-  const refreshPages = useCallback(async () => {
-    const now = Date.now();
-    
-    // Throttle les appels (pas plus d'une fois par seconde)
-    if (now - lastSyncTime.current < 1000) {
-      return pages;
-    }
-    
-    lastSyncTime.current = now;
-    return await loadPages();
-  }, [loadPages, pages]);
+  }, []);
 
   const savePage = useCallback(async (pageData: Partial<WebsitePage>) => {
     try {
@@ -133,20 +99,23 @@ export const useWebsitePagesSync = () => {
         .single();
 
       if (error) {
-        console.error('❌ Erreur lors de la sauvegarde:', error);
+        console.error('❌ Error saving page:', error);
         throw error;
       }
 
       if (data) {
-        console.log('✅ Page sauvegardée:', data.title);
-        // Recharger les pages après sauvegarde
-        await loadPages();
+        console.log('✅ Page saved:', data.title);
+        // Update local state immediately
+        setPages(prev => [data, ...prev]);
+        // Update localStorage
+        const updatedPages = [data, ...pages];
+        localStorage.setItem('websitePages', JSON.stringify(updatedPages));
       }
     } catch (error) {
-      console.error('❌ Erreur lors de la sauvegarde de la page:', error);
+      console.error('❌ Error saving page:', error);
       throw error;
     }
-  }, [loadPages]);
+  }, [pages]);
 
   const updatePage = useCallback(async (id: string, pageData: Partial<WebsitePage>) => {
     try {
@@ -170,20 +139,23 @@ export const useWebsitePagesSync = () => {
         .single();
 
       if (error) {
-        console.error('❌ Erreur lors de la mise à jour:', error);
+        console.error('❌ Error updating page:', error);
         throw error;
       }
 
       if (data) {
-        console.log('✅ Page mise à jour:', data.title);
-        // Recharger les pages après mise à jour
-        await loadPages();
+        console.log('✅ Page updated:', data.title);
+        // Update local state immediately
+        setPages(prev => prev.map(p => p.id === id ? data : p));
+        // Update localStorage
+        const updatedPages = pages.map(p => p.id === id ? data : p);
+        localStorage.setItem('websitePages', JSON.stringify(updatedPages));
       }
     } catch (error) {
-      console.error('❌ Erreur lors de la mise à jour de la page:', error);
+      console.error('❌ Error updating page:', error);
       throw error;
     }
-  }, [loadPages]);
+  }, [pages]);
 
   const deletePage = useCallback(async (id: string) => {
     try {
@@ -195,74 +167,47 @@ export const useWebsitePagesSync = () => {
         .eq('id', id);
 
       if (error) {
-        console.error('❌ Erreur lors de la suppression:', error);
+        console.error('❌ Error deleting page:', error);
         throw error;
       }
 
-      console.log('✅ Page supprimée');
-      // Recharger les pages après suppression
-      await loadPages();
+      console.log('✅ Page deleted');
+      // Update local state immediately
+      setPages(prev => prev.filter(p => p.id !== id));
+      // Update localStorage
+      const updatedPages = pages.filter(p => p.id !== id);
+      localStorage.setItem('websitePages', JSON.stringify(updatedPages));
     } catch (error) {
-      console.error('❌ Erreur lors de la suppression de la page:', error);
+      console.error('❌ Error deleting page:', error);
       throw error;
     }
+  }, [pages]);
+
+  const refreshPages = useCallback(async () => {
+    const now = Date.now();
+    
+    // Throttle requests (max once per 2 seconds)
+    if (now - lastSyncTime.current < 2000) {
+      return pages;
+    }
+    
+    lastSyncTime.current = now;
+    return await loadPages();
   }, [loadPages]);
 
-  const syncPages = useCallback(async (pages: any[]) => {
-    if (syncInProgress.current) return;
-    
-    try {
-      console.log('💾 Synchronisation des pages vers Supabase...');
-      
-      // Sauvegarder chaque page
-      for (const page of pages) {
-        const { error } = await supabase
-          .from('website_pages')
-          .upsert({
-            id: page.id,
-            title: page.title,
-            slug: page.slug,
-            content: page.blocks || page.content,
-            status: page.status,
-            meta_description: page.metaDescription || page.meta_description,
-            updated_at: new Date().toISOString()
-          });
-
-        if (error) {
-          console.error('❌ Erreur lors de la sauvegarde de la page:', page.title, error);
-        }
-      }
-      
-      console.log('✅ Pages synchronisées avec Supabase');
-    } catch (error) {
-      console.error('❌ Erreur lors de la synchronisation:', error);
+  // Initialize once
+  useEffect(() => {
+    if (!isInitialized.current) {
+      isInitialized.current = true;
+      loadPages();
     }
   }, []);
-
-  useEffect(() => {
-    // Chargement initial
-    loadPages();
-
-    // Écouter les mises à jour des pages
-    const handlePagesUpdate = async (event: CustomEvent) => {
-      if (event.detail && Array.isArray(event.detail)) {
-        await syncPages(event.detail);
-      }
-    };
-
-    window.addEventListener('websitePagesUpdated', handlePagesUpdate as EventListener);
-
-    return () => {
-      window.removeEventListener('websitePagesUpdated', handlePagesUpdate as EventListener);
-    };
-  }, [loadPages, syncPages]);
 
   return { 
     pages,
     loading,
     loadPages, 
     refreshPages, 
-    syncPages,
     savePage,
     updatePage,
     deletePage

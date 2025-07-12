@@ -2,24 +2,20 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useWebsiteSettingsSync } from './useWebsiteSettingsSync';
 import { useWebsiteDesignSync } from './useWebsiteDesignSync';
-import { useWebsitePagesSync } from './useWebsitePagesSync';
-import { useWebsiteMenuSync } from './useWebsiteMenuSync';
 
 export const useWebsiteRealTimeSync = () => {
   const { syncSettingsChanges } = useWebsiteSettingsSync();
   const { syncDesignChanges } = useWebsiteDesignSync();
-  const { refreshPages } = useWebsitePagesSync();
-  const { refreshMenu } = useWebsiteMenuSync();
   
   const syncInProgress = useRef(false);
   const lastSyncTime = useRef(0);
   const isInitialized = useRef(false);
-  const SYNC_THROTTLE = 2000; // Augmentation à 2 secondes
+  const SYNC_THROTTLE = 5000; // 5 seconds throttling
 
   const performSafeSync = useCallback(async () => {
     const now = Date.now();
     
-    // Prévenir les syncs trop rapides
+    // Prevent overlapping syncs and throttle
     if (syncInProgress.current || (now - lastSyncTime.current) < SYNC_THROTTLE) {
       return;
     }
@@ -28,8 +24,8 @@ export const useWebsiteRealTimeSync = () => {
     lastSyncTime.current = now;
     
     try {
-      console.log('🔄 Performing optimized sync');
-      await Promise.all([
+      console.log('🔄 Performing website sync');
+      await Promise.allSettled([
         syncSettingsChanges(),
         syncDesignChanges()
       ]);
@@ -44,62 +40,23 @@ export const useWebsiteRealTimeSync = () => {
     if (isInitialized.current || syncInProgress.current) return;
     
     isInitialized.current = true;
-    syncInProgress.current = true;
-    
-    try {
-      console.log('🚀 Initializing website sync system');
-      await Promise.all([
-        syncSettingsChanges(),
-        syncDesignChanges(),
-        refreshPages(),
-        refreshMenu()
-      ]);
-      console.log('✅ Website sync system initialized');
-    } catch (error) {
-      console.error('❌ Initialization error:', error);
-    } finally {
-      syncInProgress.current = false;
-    }
-  }, [syncSettingsChanges, syncDesignChanges, refreshPages, refreshMenu]);
+    console.log('🚀 Initializing website sync system');
+    await performSafeSync();
+  }, [performSafeSync]);
 
   useEffect(() => {
-    // Initialisation une seule fois
+    // Initialize once
     initializeSync();
 
-    // Gestionnaire d'événements avec debounce
-    let syncTimeout: NodeJS.Timeout;
-    const handleSync = () => {
-      clearTimeout(syncTimeout);
-      syncTimeout = setTimeout(performSafeSync, 500);
-    };
-
-    // Écoute uniquement des événements critiques
-    window.addEventListener('websiteSettingsUpdated', handleSync);
-    window.addEventListener('websiteDesignUpdated', handleSync);
-
-    // Sync périodique réduite (60 secondes)
+    // Reduced frequency sync (every 2 minutes instead of 1)
     const syncInterval = setInterval(() => {
       if (!syncInProgress.current && isInitialized.current) {
         console.log('⏰ Periodic sync check');
         performSafeSync();
       }
-    }, 60000);
-
-    // Sync sur focus avec throttling
-    const handleFocus = () => {
-      if (!document.hidden && !syncInProgress.current && isInitialized.current) {
-        console.log('👁️ Window focus - triggering sync');
-        performSafeSync();
-      }
-    };
-
-    window.addEventListener('focus', handleFocus);
+    }, 120000);
 
     return () => {
-      clearTimeout(syncTimeout);
-      window.removeEventListener('websiteSettingsUpdated', handleSync);
-      window.removeEventListener('websiteDesignUpdated', handleSync);
-      window.removeEventListener('focus', handleFocus);
       clearInterval(syncInterval);
     };
   }, [initializeSync, performSafeSync]);
@@ -109,7 +66,6 @@ export const useWebsiteRealTimeSync = () => {
       if (!syncInProgress.current && isInitialized.current) {
         console.log('🔄 Force sync requested');
         await performSafeSync();
-        await Promise.all([refreshPages(), refreshMenu()]);
       }
     }
   };

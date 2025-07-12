@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Edit, Trash2, Eye, Globe, FileText } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Tables } from '@/integrations/supabase/types';
 import { BlockEditor } from '@/components/BlockEditor/BlockEditor';
@@ -155,7 +155,14 @@ export const CMSPageManager: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center p-8">Chargement...</div>;
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+          <p>Chargement des pages...</p>
+        </div>
+      </div>
+    );
   }
 
   // Mode éditeur de blocs
@@ -199,7 +206,6 @@ export const CMSPageManager: React.FC = () => {
         </Button>
       </div>
 
-      {/* Formulaire de création/édition */}
       {(isCreating || (editingPage && !showBlockEditor)) && (
         <Card>
           <CardHeader>
@@ -353,9 +359,10 @@ export const CMSPageManager: React.FC = () => {
         </CardHeader>
         <CardContent>
           {pages.length === 0 ? (
-            <p className="text-center text-gray-500 py-8">
-              Aucune page créée. Créez votre première page !
-            </p>
+            <div className="text-center py-8">
+              <p className="text-gray-500 mb-4">Aucune page créée</p>
+              <p className="text-sm text-gray-400">Créez votre première page pour commencer !</p>
+            </div>
           ) : (
             <div className="space-y-2">
               {pages.map((page) => (
