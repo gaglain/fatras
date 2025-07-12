@@ -1,13 +1,15 @@
-import React, { useState, useEffect, useCallback } from 'react';
+
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Filter, Users, Mail, Phone, MapPin, Edit, Trash2, Eye, Upload, Download } from 'lucide-react';
+import { Plus, Users, Upload, Download } from 'lucide-react';
+import { ViewToggle } from '@/components/ui/view-toggle';
 import { GlobalFileUpload } from '@/components/GlobalFileUpload';
 import { CSVImporter } from '@/components/CSVImporter';
 import { CSVExporter } from '@/components/CSVExporter';
 import { ContactForm } from '@/components/ContactForm';
+import { ContactFilters } from '@/components/contacts/ContactFilters';
 import { useContactsRealtime } from '@/hooks/useContactsRealtime';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -33,6 +35,11 @@ interface Contact {
 export const Contacts: React.FC = () => {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [tagFilters, setTagFilters] = useState<string[]>([]);
+  const [sourceFilter, setSourceFilter] = useState('all');
+  const [cityFilter, setCityFilter] = useState('all');
+  const [viewMode, setViewMode] = useState<'list' | 'compact'>('list');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showCSVImporter, setShowCSVImporter] = useState(false);
   const [showCSVExporter, setShowCSVExporter] = useState(false);
@@ -44,7 +51,6 @@ export const Contacts: React.FC = () => {
   // Callbacks pour la synchronisation temps réel
   const handleContactAdded = useCallback((newContact: Contact) => {
     setContacts(prev => {
-      // Éviter les doublons
       if (prev.some(c => c.id === newContact.id)) {
         return prev;
       }
@@ -127,12 +133,55 @@ export const Contacts: React.FC = () => {
     }
   };
 
-  const filteredContacts = contacts.filter(contact =>
-    contact.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    contact.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    contact.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    contact.position?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Données pour les filtres
+  const filterData = useMemo(() => {
+    const allTags = [...new Set(contacts.flatMap(c => c.tags))].filter(Boolean).sort();
+    const allSources = [...new Set(contacts.map(c => c.source))].filter(Boolean).sort();
+    const allCities = [...new Set(contacts.map(c => c.city))].filter(Boolean).sort();
+    
+    return { allTags, allSources, allCities };
+  }, [contacts]);
+
+  // Filtrage des contacts
+  const filteredContacts = useMemo(() => {
+    return contacts.filter(contact => {
+      // Recherche textuelle
+      if (searchTerm) {
+        const searchLower = searchTerm.toLowerCase();
+        const matchesSearch = 
+          contact.first_name.toLowerCase().includes(searchLower) ||
+          contact.last_name.toLowerCase().includes(searchLower) ||
+          contact.email.toLowerCase().includes(searchLower) ||
+          contact.position?.toLowerCase().includes(searchLower) ||
+          contact.city?.toLowerCase().includes(searchLower);
+        
+        if (!matchesSearch) return false;
+      }
+
+      // Filtre par statut
+      if (statusFilter !== 'all' && contact.status !== statusFilter) {
+        return false;
+      }
+
+      // Filtre par source
+      if (sourceFilter !== 'all' && contact.source !== sourceFilter) {
+        return false;
+      }
+
+      // Filtre par ville
+      if (cityFilter !== 'all' && contact.city !== cityFilter) {
+        return false;
+      }
+
+      // Filtre par tags
+      if (tagFilters.length > 0) {
+        const hasMatchingTag = tagFilters.some(tag => contact.tags.includes(tag));
+        if (!hasMatchingTag) return false;
+      }
+
+      return true;
+    });
+  }, [contacts, searchTerm, statusFilter, sourceFilter, cityFilter, tagFilters]);
 
   const handleCreateContact = () => {
     console.log('➕ Creating new contact');
@@ -161,7 +210,6 @@ export const Contacts: React.FC = () => {
           return;
         }
 
-        // La suppression sera gérée par le système temps réel
         console.log('✅ Contact deletion triggered');
       } catch (error) {
         console.error('Error in handleDeleteContact:', error);
@@ -171,7 +219,6 @@ export const Contacts: React.FC = () => {
   };
 
   const handleFormSave = () => {
-    // Le formulaire déclenchera automatiquement les mises à jour temps réel
     setShowCreateForm(false);
     setEditingContact(null);
     console.log('✅ Form saved, real-time sync will handle updates');
@@ -180,7 +227,6 @@ export const Contacts: React.FC = () => {
   const handleCSVImport = (importedContacts: any[]) => {
     console.log('📥 CSV Import completed:', importedContacts.length, 'contacts');
     toast.success(`${importedContacts.length} contacts importés avec succès !`);
-    // Les nouveaux contacts seront automatiquement ajoutés via la synchronisation temps réel
     setShowCSVImporter(false);
   };
 
@@ -189,13 +235,16 @@ export const Contacts: React.FC = () => {
     toast.success(`Fichier "${file.name}" ajouté aux contacts`);
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'client': return 'bg-green-100 text-green-800';
-      case 'prospect': return 'bg-blue-100 text-blue-800';
-      case 'inactive': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
+  const handleClearFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('all');
+    setTagFilters([]);
+    setSourceFilter('all');
+    setCityFilter('all');
+  };
+
+  const handleNewTagAdded = (newTag: string) => {
+    console.log('🏷️ New tag added to system:', newTag);
   };
 
   if (loading) {
@@ -229,7 +278,8 @@ export const Contacts: React.FC = () => {
             {contacts.length} contact{contacts.length !== 1 ? 's' : ''} enregistré{contacts.length !== 1 ? 's' : ''}
           </p>
         </div>
-        <div className="flex space-x-2">
+        <div className="flex items-center space-x-2">
+          <ViewToggle view={viewMode} onViewChange={setViewMode} />
           <Button 
             onClick={() => setShowCSVExporter(true)} 
             variant="outline"
@@ -253,26 +303,25 @@ export const Contacts: React.FC = () => {
         </div>
       </div>
 
-      {/* Search and Filters */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center space-x-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Rechercher par nom, email ou poste..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Button variant="outline">
-              <Filter className="h-4 w-4 mr-2" />
-              Filtres
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Filtres */}
+      <ContactFilters
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        statusFilter={statusFilter}
+        onStatusFilterChange={setStatusFilter}
+        tagFilters={tagFilters}
+        onTagFiltersChange={setTagFilters}
+        sourceFilter={sourceFilter}
+        onSourceFilterChange={setSourceFilter}
+        cityFilter={cityFilter}
+        onCityFilterChange={setCityFilter}
+        availableTags={filterData.allTags}
+        availableSources={filterData.allSources}
+        availableCities={filterData.allCities}
+        totalContacts={contacts.length}
+        filteredCount={filteredContacts.length}
+        onClearFilters={handleClearFilters}
+      />
 
       {/* Upload de fichiers */}
       <Card>
@@ -290,13 +339,16 @@ export const Contacts: React.FC = () => {
       </Card>
 
       {/* Contacts List */}
-      <div className="grid gap-4">
+      <div className={viewMode === 'list' ? 'grid gap-4' : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'}>
         {filteredContacts.map((contact) => (
           <ContactCard 
             key={contact.id} 
             contact={contact}
             onEdit={handleEditContact}
             onDelete={handleDeleteContact}
+            availableTags={filterData.allTags}
+            onNewTagAdded={handleNewTagAdded}
+            viewMode={viewMode}
           />
         ))}
       </div>
@@ -307,9 +359,12 @@ export const Contacts: React.FC = () => {
             <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium mb-2">Aucun contact trouvé</h3>
             <p className="text-gray-600 mb-4">
-              {searchTerm ? 'Aucun contact ne correspond à votre recherche.' : 'Commencez par ajouter votre premier contact.'}
+              {searchTerm || statusFilter !== 'all' || tagFilters.length > 0 || sourceFilter !== 'all' || cityFilter !== 'all' ? 
+                'Aucun contact ne correspond à vos critères de recherche.' : 
+                'Commencez par ajouter votre premier contact.'
+              }
             </p>
-            {!searchTerm && (
+            {(!searchTerm && statusFilter === 'all' && tagFilters.length === 0 && sourceFilter === 'all' && cityFilter === 'all') && (
               <Button onClick={handleCreateContact}>
                 <Plus className="h-4 w-4 mr-2" />
                 Créer un contact

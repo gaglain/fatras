@@ -7,6 +7,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Users, Mail, Phone, MapPin, Edit, Trash2, Eye, ChevronDown, ChevronUp } from 'lucide-react';
 import { CreateEventFromContact } from './CreateEventFromContact';
 import { ContactEventsList } from './ContactEventsList';
+import { ContactTagManager } from './ContactTagManager';
 
 interface Contact {
   id: string;
@@ -29,10 +30,21 @@ interface ContactCardProps {
   contact: Contact;
   onEdit: (contact: Contact) => void;
   onDelete: (contactId: string) => void;
+  availableTags: string[];
+  onNewTagAdded: (tag: string) => void;
+  viewMode?: 'list' | 'compact';
 }
 
-export const ContactCard: React.FC<ContactCardProps> = ({ contact, onEdit, onDelete }) => {
+export const ContactCard: React.FC<ContactCardProps> = ({ 
+  contact, 
+  onEdit, 
+  onDelete, 
+  availableTags, 
+  onNewTagAdded,
+  viewMode = 'list'
+}) => {
   const [showEvents, setShowEvents] = useState(false);
+  const [currentTags, setCurrentTags] = useState(contact.tags);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -42,6 +54,70 @@ export const ContactCard: React.FC<ContactCardProps> = ({ contact, onEdit, onDel
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+
+  const handleTagsUpdated = (newTags: string[]) => {
+    setCurrentTags(newTags);
+  };
+
+  if (viewMode === 'compact') {
+    return (
+      <Card className="hover:shadow-md transition-shadow">
+        <CardContent className="p-4">
+          <div className="space-y-3">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                <span className="text-blue-600 font-semibold text-sm">
+                  {contact.first_name.charAt(0)}{contact.last_name.charAt(0)}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-sm truncate">
+                  {contact.first_name} {contact.last_name}
+                </h3>
+                <p className="text-xs text-gray-600 truncate">{contact.position}</p>
+              </div>
+              <Badge className={`${getStatusColor(contact.status)} text-xs`}>
+                {contact.status}
+              </Badge>
+            </div>
+            
+            <div className="space-y-1 text-xs">
+              {contact.email && (
+                <div className="flex items-center space-x-2">
+                  <Mail className="h-3 w-3 text-gray-400" />
+                  <span className="truncate">{contact.email}</span>
+                </div>
+              )}
+              {contact.phone && (
+                <div className="flex items-center space-x-2">
+                  <Phone className="h-3 w-3 text-gray-400" />
+                  <span>{contact.phone}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between">
+              <ContactTagManager
+                contactId={contact.id}
+                currentTags={currentTags}
+                onTagsUpdated={handleTagsUpdated}
+                availableTags={availableTags}
+                onNewTagAdded={onNewTagAdded}
+              />
+              <div className="flex items-center space-x-1">
+                <Button variant="outline" size="sm" className="h-7 w-7 p-0">
+                  <Edit className="h-3 w-3" />
+                </Button>
+                <Button variant="outline" size="sm" className="h-7 w-7 p-0 text-red-600">
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="hover:shadow-md transition-shadow">
@@ -65,7 +141,7 @@ export const ContactCard: React.FC<ContactCardProps> = ({ contact, onEdit, onDel
               </Badge>
             </div>
             
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm mb-3">
               {contact.email && (
                 <div className="flex items-center space-x-2">
                   <Mail className="h-4 w-4 text-gray-400" />
@@ -86,15 +162,13 @@ export const ContactCard: React.FC<ContactCardProps> = ({ contact, onEdit, onDel
               )}
             </div>
 
-            {contact.tags.length > 0 && (
-              <div className="mt-3 flex flex-wrap gap-1">
-                {contact.tags.map((tag, index) => (
-                  <Badge key={index} variant="outline" className="text-xs">
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-            )}
+            <ContactTagManager
+              contactId={contact.id}
+              currentTags={currentTags}
+              onTagsUpdated={handleTagsUpdated}
+              availableTags={availableTags}
+              onNewTagAdded={onNewTagAdded}
+            />
           </div>
 
           <div className="flex items-center space-x-2">
