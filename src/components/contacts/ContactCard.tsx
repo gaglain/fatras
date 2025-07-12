@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Users, Mail, Phone, MapPin, Edit, Trash2, Eye, ChevronDown, ChevronUp } from 'lucide-react';
 import { CreateEventFromContact } from './CreateEventFromContact';
@@ -33,6 +34,8 @@ interface ContactCardProps {
   availableTags: string[];
   onNewTagAdded: (tag: string) => void;
   viewMode?: 'list' | 'compact';
+  isSelected?: boolean;
+  onSelectionChange?: (contactId: string, selected: boolean) => void;
 }
 
 export const ContactCard: React.FC<ContactCardProps> = ({ 
@@ -41,7 +44,9 @@ export const ContactCard: React.FC<ContactCardProps> = ({
   onDelete, 
   availableTags, 
   onNewTagAdded,
-  viewMode = 'list'
+  viewMode = 'list',
+  isSelected = false,
+  onSelectionChange
 }) => {
   const [showEvents, setShowEvents] = useState(false);
   const [currentTags, setCurrentTags] = useState(contact.tags);
@@ -59,12 +64,24 @@ export const ContactCard: React.FC<ContactCardProps> = ({
     setCurrentTags(newTags);
   };
 
+  const handleSelectionChange = (checked: boolean) => {
+    if (onSelectionChange) {
+      onSelectionChange(contact.id, checked);
+    }
+  };
+
   if (viewMode === 'compact') {
     return (
-      <Card className="hover:shadow-md transition-shadow">
+      <Card className={`hover:shadow-md transition-shadow ${isSelected ? 'ring-2 ring-blue-500' : ''}`}>
         <CardContent className="p-4">
           <div className="space-y-3">
             <div className="flex items-center space-x-3">
+              {onSelectionChange && (
+                <Checkbox
+                  checked={isSelected}
+                  onCheckedChange={handleSelectionChange}
+                />
+              )}
               <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                 <span className="text-blue-600 font-semibold text-sm">
                   {contact.first_name.charAt(0)}{contact.last_name.charAt(0)}
@@ -105,10 +122,10 @@ export const ContactCard: React.FC<ContactCardProps> = ({
                 onNewTagAdded={onNewTagAdded}
               />
               <div className="flex items-center space-x-1">
-                <Button variant="outline" size="sm" className="h-7 w-7 p-0">
+                <Button variant="outline" size="sm" className="h-7 w-7 p-0" onClick={() => onEdit(contact)}>
                   <Edit className="h-3 w-3" />
                 </Button>
-                <Button variant="outline" size="sm" className="h-7 w-7 p-0 text-red-600">
+                <Button variant="outline" size="sm" className="h-7 w-7 p-0 text-red-600" onClick={() => onDelete(contact.id)}>
                   <Trash2 className="h-3 w-3" />
                 </Button>
               </div>
@@ -120,55 +137,64 @@ export const ContactCard: React.FC<ContactCardProps> = ({
   }
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className={`hover:shadow-md transition-shadow ${isSelected ? 'ring-2 ring-blue-500' : ''}`}>
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <div className="flex items-center space-x-4 mb-3">
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                <span className="text-blue-600 font-semibold text-lg">
-                  {contact.first_name.charAt(0)}{contact.last_name.charAt(0)}
-                </span>
+          <div className="flex-1 flex items-start space-x-4">
+            {onSelectionChange && (
+              <Checkbox
+                checked={isSelected}
+                onCheckedChange={handleSelectionChange}
+                className="mt-2"
+              />
+            )}
+            <div className="flex-1">
+              <div className="flex items-center space-x-4 mb-3">
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                  <span className="text-blue-600 font-semibold text-lg">
+                    {contact.first_name.charAt(0)}{contact.last_name.charAt(0)}
+                  </span>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-lg">
+                    {contact.first_name} {contact.last_name}
+                  </h3>
+                  <p className="text-gray-600">{contact.position}</p>
+                </div>
+                <Badge className={getStatusColor(contact.status)}>
+                  {contact.status}
+                </Badge>
               </div>
-              <div>
-                <h3 className="font-semibold text-lg">
-                  {contact.first_name} {contact.last_name}
-                </h3>
-                <p className="text-gray-600">{contact.position}</p>
+              
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm mb-3">
+                {contact.email && (
+                  <div className="flex items-center space-x-2">
+                    <Mail className="h-4 w-4 text-gray-400" />
+                    <span>{contact.email}</span>
+                  </div>
+                )}
+                {contact.phone && (
+                  <div className="flex items-center space-x-2">
+                    <Phone className="h-4 w-4 text-gray-400" />
+                    <span>{contact.phone}</span>
+                  </div>
+                )}
+                {contact.city && (
+                  <div className="flex items-center space-x-2">
+                    <MapPin className="h-4 w-4 text-gray-400" />
+                    <span>{contact.city}</span>
+                  </div>
+                )}
               </div>
-              <Badge className={getStatusColor(contact.status)}>
-                {contact.status}
-              </Badge>
-            </div>
-            
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm mb-3">
-              {contact.email && (
-                <div className="flex items-center space-x-2">
-                  <Mail className="h-4 w-4 text-gray-400" />
-                  <span>{contact.email}</span>
-                </div>
-              )}
-              {contact.phone && (
-                <div className="flex items-center space-x-2">
-                  <Phone className="h-4 w-4 text-gray-400" />
-                  <span>{contact.phone}</span>
-                </div>
-              )}
-              {contact.city && (
-                <div className="flex items-center space-x-2">
-                  <MapPin className="h-4 w-4 text-gray-400" />
-                  <span>{contact.city}</span>
-                </div>
-              )}
-            </div>
 
-            <ContactTagManager
-              contactId={contact.id}
-              currentTags={currentTags}
-              onTagsUpdated={handleTagsUpdated}
-              availableTags={availableTags}
-              onNewTagAdded={onNewTagAdded}
-            />
+              <ContactTagManager
+                contactId={contact.id}
+                currentTags={currentTags}
+                onTagsUpdated={handleTagsUpdated}
+                availableTags={availableTags}
+                onNewTagAdded={onNewTagAdded}
+              />
+            </div>
           </div>
 
           <div className="flex items-center space-x-2">

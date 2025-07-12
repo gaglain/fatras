@@ -9,6 +9,7 @@ import { CSVImporter } from '@/components/CSVImporter';
 import { CSVExporter } from '@/components/CSVExporter';
 import { ContactForm } from '@/components/ContactForm';
 import { ContactFilters } from '@/components/contacts/ContactFilters';
+import { BulkContactActions } from '@/components/contacts/BulkContactActions';
 import { useContactsRealtime } from '@/hooks/useContactsRealtime';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -45,6 +46,8 @@ export const Contacts: React.FC = () => {
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastLoadTime, setLastLoadTime] = useState(0);
+  const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   console.log('📋 Contacts - Page loaded with', contacts.length, 'contacts');
 
@@ -136,12 +139,12 @@ export const Contacts: React.FC = () => {
     setContacts(prev => {
       const filtered = prev.filter(c => c.id !== contactId);
       console.log('🗑️ Contact removed from list:', contactId);
-      toast.success('Contact supprimé');
       return filtered;
     });
+    // Retirer de la sélection si supprimé
+    setSelectedContacts(prev => prev.filter(id => id !== contactId));
   }, []);
 
-  // Activer la synchronisation temps réel
   useContactsRealtime({
     onContactAdded: handleContactAdded,
     onContactUpdated: handleContactUpdated,
@@ -149,18 +152,16 @@ export const Contacts: React.FC = () => {
     enabled: true
   });
 
-  // Charger les contacts au montage du composant
   useEffect(() => {
     loadContacts(true);
   }, []);
 
-  // Actualiser périodiquement
   useEffect(() => {
     const interval = setInterval(() => {
       if (document.visibilityState === 'visible') {
         loadContacts();
       }
-    }, 30000); // 30 secondes
+    }, 30000);
 
     return () => clearInterval(interval);
   }, [loadContacts]);
@@ -214,6 +215,61 @@ export const Contacts: React.FC = () => {
       return true;
     });
   }, [contacts, searchTerm, statusFilter, sourceFilter, cityFilter, tagFilters]);
+
+  // Gestion de la sélection en masse
+  const handleSelectAll = (selected: boolean) => {
+    if (selected) {
+      setSelectedContacts(filteredContacts.map(c => c.id));
+    } else {
+      setSelectedContacts([]);
+    }
+  };
+
+  const handleContactSelection = (contactId: string, selected: boolean) => {
+    if (selected) {
+      setSelectedContacts(prev => [...prev, contactId]);
+    } else {
+      setSelectedContacts(prev => prev.filter(id => id !== contactId));
+    }
+  };
+
+  const handleClearSelection = () => {
+    setSelectedContacts([]);
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedContacts.length === 0) return;
+
+    setIsDeleting(true);
+    try {
+      console.log('🗑️ Bulk deleting contacts:', selectedContacts);
+      
+      const { error } = await supabase
+        .from('contacts')
+        .delete()
+        .in('id', selectedContacts);
+
+      if (error) {
+        console.error('Error bulk deleting contacts:', error);
+        toast.error('Erreur lors de la suppression en masse');
+        return;
+      }
+
+      console.log('✅ Bulk deletion successful');
+      toast.success(`${selectedContacts.length} contact${selectedContacts.length > 1 ? 's' : ''} supprimé${selectedContacts.length > 1 ? 's' : ''}`);
+      
+      // Vider la sélection
+      setSelectedContacts([]);
+      
+      // Forcer le rechargement des contacts
+      setTimeout(() => loadContacts(true), 500);
+    } catch (error) {
+      console.error('Error in handleBulkDelete:', error);
+      toast.error('Erreur lors de la suppression en masse');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const handleCreateContact = () => {
     console.log('➕ Creating new contact');
@@ -376,6 +432,18 @@ export const Contacts: React.FC = () => {
         onClearFilters={handleClearFilters}
       />
 
+      {/* Actions en masse */}
+      {filteredContacts.length > 0 && (
+        <BulkContactActions
+          selectedContacts={selectedContacts}
+          totalContacts={filteredContacts.length}
+          onSelectAll={handleSelectAll}
+          onClearSelection={handleClearSelection}
+          onBulkDelete={handleBulkDelete}
+          isDeleting={isDeleting}
+        />
+      )}
+
       {/* Upload de fichiers */}
       <Card>
         <CardHeader>
@@ -402,6 +470,8 @@ export const Contacts: React.FC = () => {
             availableTags={filterData.allTags}
             onNewTagAdded={handleNewTagAdded}
             viewMode={viewMode}
+            isSelected={selectedContacts.includes(contact.id)}
+            onSelectionChange={handleContactSelection}
           />
         ))}
       </div>
