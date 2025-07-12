@@ -15,75 +15,81 @@ export const DynamicFrontNavigation: React.FC = () => {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [siteName, setSiteName] = useState('MusiConnect');
   const [logo, setLogo] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
   
-  // Utiliser le système de synchronisation en temps réel
-  const { forceSync } = useWebsiteRealTimeSync();
+  // Utiliser le système de synchronisation optimisé
+  const { forceSync, isInitialized } = useWebsiteRealTimeSync();
 
-  // Charger les données initiales
-  useEffect(() => {
-    loadAllData();
-  }, []);
-
-  const loadAllData = () => {
-    console.log('📄 Loading navigation data');
+  // Fonction de chargement des données optimisée
+  const loadAllData = React.useCallback(() => {
+    console.log('📄 Loading navigation data...');
+    setIsLoading(true);
     
-    // Charger le menu
-    const savedMenu = localStorage.getItem('websiteMenu');
-    if (savedMenu) {
-      try {
+    try {
+      // Charger le menu
+      const savedMenu = localStorage.getItem('websiteMenu');
+      if (savedMenu) {
         const menu = JSON.parse(savedMenu);
-        const visibleItems = menu.filter((item: MenuItem) => item.visible).sort((a: MenuItem, b: MenuItem) => a.order - b.order);
+        const visibleItems = menu
+          .filter((item: MenuItem) => item.visible)
+          .sort((a: MenuItem, b: MenuItem) => a.order - b.order);
         setMenuItems(visibleItems);
         console.log('✅ Menu loaded:', visibleItems.length, 'items');
-      } catch (error) {
-        console.error('❌ Error loading menu:', error);
       }
+
+      // Charger les paramètres et design
+      loadSiteSettings();
+    } catch (error) {
+      console.error('❌ Error loading navigation data:', error);
+    } finally {
+      setIsLoading(false);
     }
+  }, []);
 
-    // Charger les paramètres et design
-    loadSiteSettings();
-  };
-
-  const loadSiteSettings = () => {
-    const savedSettings = localStorage.getItem('websiteSettings');
-    const savedDesign = localStorage.getItem('websiteDesign');
-    
-    if (savedSettings) {
-      try {
+  const loadSiteSettings = React.useCallback(() => {
+    try {
+      const savedSettings = localStorage.getItem('websiteSettings');
+      const savedDesign = localStorage.getItem('websiteDesign');
+      
+      if (savedSettings) {
         const settings = JSON.parse(savedSettings);
         if (settings.siteName) {
           setSiteName(settings.siteName);
           console.log('⚙️ Site name from settings:', settings.siteName);
         }
-      } catch (error) {
-        console.error('❌ Error loading settings:', error);
       }
-    }
-    
-    if (savedDesign) {
-      try {
+      
+      if (savedDesign) {
         const design = JSON.parse(savedDesign);
         if (design.logo) {
           setLogo(design.logo);
-          console.log('🎨 Logo from design loaded');
+          console.log('🎨 Logo loaded');
         }
         if (design.siteName) {
           setSiteName(design.siteName);
           console.log('🎨 Site name from design:', design.siteName);
         }
-      } catch (error) {
-        console.error('❌ Error loading design:', error);
       }
+    } catch (error) {
+      console.error('❌ Error loading site settings:', error);
     }
-  };
+  }, []);
+
+  // Charger les données initiales
+  useEffect(() => {
+    loadAllData();
+  }, [loadAllData]);
 
   // Écouter les événements de synchronisation
   useEffect(() => {
     const handleMenuUpdate = (event: CustomEvent) => {
       console.log('🔄 Menu update received');
-      const menu = event.detail || [];
-      const visibleItems = menu.filter((item: MenuItem) => item.visible).sort((a: MenuItem, b: MenuItem) => a.order - b.order);
-      setMenuItems(visibleItems);
+      if (event.detail && Array.isArray(event.detail)) {
+        const visibleItems = event.detail
+          .filter((item: MenuItem) => item.visible)
+          .sort((a: MenuItem, b: MenuItem) => a.order - b.order);
+        setMenuItems(visibleItems);
+      }
     };
 
     const handleSettingsUpdate = (event: CustomEvent) => {
@@ -100,13 +106,13 @@ export const DynamicFrontNavigation: React.FC = () => {
     };
 
     const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === 'websiteMenu' || event.key === 'websiteSettings' || event.key === 'websiteDesign') {
+      if (['websiteMenu', 'websiteSettings', 'websiteDesign'].includes(event.key || '')) {
         console.log('💾 Storage change detected:', event.key);
-        setTimeout(loadAllData, 100);
+        setTimeout(loadAllData, 200);
       }
     };
 
-    // Ajouter les event listeners
+    // Event listeners
     window.addEventListener('websiteMenuUpdated', handleMenuUpdate as EventListener);
     window.addEventListener('websiteSettingsUpdated', handleSettingsUpdate as EventListener);
     window.addEventListener('websiteDesignUpdated', handleDesignUpdate);
@@ -120,7 +126,7 @@ export const DynamicFrontNavigation: React.FC = () => {
       window.removeEventListener('websiteDesignSaved', handleDesignUpdate);
       window.removeEventListener('storage', handleStorageChange);
     };
-  }, []);
+  }, [loadAllData, loadSiteSettings]);
 
   const renderMenuItem = (item: MenuItem) => {
     const isExternal = item.path.startsWith('http') || item.path.startsWith('//');
@@ -149,6 +155,18 @@ export const DynamicFrontNavigation: React.FC = () => {
       </div>
     );
   };
+
+  if (isLoading) {
+    return (
+      <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur">
+        <div className="container mx-auto px-4">
+          <div className="flex h-16 items-center justify-center">
+            <div className="animate-pulse text-sm text-gray-500">Chargement...</div>
+          </div>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <header 
@@ -195,12 +213,12 @@ export const DynamicFrontNavigation: React.FC = () => {
             {menuItems.map(renderMenuItem)}
           </nav>
 
-          {/* Menu mobile */}
+          {/* Menu mobile avec sync */}
           <div className="md:hidden">
             <button 
-              className="p-2"
+              className="p-2 hover:bg-gray-100 rounded"
               onClick={() => forceSync()}
-              title="Synchroniser"
+              title="Synchroniser et actualiser"
             >
               <svg
                 className="h-6 w-6"
