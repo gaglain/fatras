@@ -147,7 +147,13 @@ export const CSVExporter: React.FC<CSVExporterProps> = ({ isOpen, onClose, conta
                   <Checkbox
                     id={field.key}
                     checked={selectedFields.includes(field.key)}
-                    onCheckedChange={() => handleFieldToggle(field.key)}
+                    onCheckedChange={(checked) => {
+                      if (checked === true) {
+                        handleFieldToggle(field.key);
+                      } else if (checked === false) {
+                        handleFieldToggle(field.key);
+                      }
+                    }}
                   />
                   <label 
                     htmlFor={field.key} 
@@ -165,7 +171,9 @@ export const CSVExporter: React.FC<CSVExporterProps> = ({ isOpen, onClose, conta
               <Checkbox
                 id="includeFiltered"
                 checked={includeFiltered}
-                onCheckedChange={setIncludeFiltered}
+                onCheckedChange={(checked) => {
+                  setIncludeFiltered(checked === true);
+                }}
               />
               <label htmlFor="includeFiltered" className="text-sm font-medium cursor-pointer">
                 Exporter seulement les contacts actuellement affichés ({contacts.length} contacts)
