@@ -1,9 +1,15 @@
 
 import React from 'react';
-import { BookingDashboard } from '@/components/dashboard/BookingDashboard';
+import { DashboardHome } from '@/components/dashboard/DashboardHome';
 
-export const Dashboard: React.FC = () => {
-  console.log('🎯 Dashboard - Rendering Dashboard page...');
+const Dashboard = () => {
+  console.log('📊 Dashboard - Rendering Dashboard page...');
   
-  return <BookingDashboard />;
+  return (
+    <div className="min-h-screen bg-background">
+      <DashboardHome />
+    </div>
+  );
 };
+
+export default Dashboard;
