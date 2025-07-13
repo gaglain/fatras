@@ -1,124 +1,147 @@
-
-import React from "react";
-import { Routes, Route } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ThemeProvider } from "next-themes";
-import { HelmetProvider } from 'react-helmet-async';
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Toaster } from "@/components/ui/sonner";
-import { UserProvider } from "@/contexts/UserContext";
-import { MessagingProvider } from "@/contexts/MessagingContext";
-import { AppDataProvider } from "@/contexts/AppDataContext";
-import { RealtimeProvider } from "@/contexts/RealtimeContext";
-import { CentralizedDataProvider } from "@/contexts/CentralizedDataContext";
-import Index from "./pages/Index";
-import { Dashboard } from "./pages/Dashboard";
-import { Artists } from "./pages/Artists";
-import { Events } from "./pages/Events";
-import { PublicationCalendar } from "./pages/PublicationCalendar";
-import { Contacts } from "./pages/Contacts";
-import { ContactLists } from "./pages/ContactLists";
-import { EventTypes } from "./pages/EventTypes";
-import { Agenda } from "./pages/Agenda";
-import { Opportunities } from "./pages/Opportunities";
-import { Contracts } from "./pages/Contracts";
-import { Tasks } from "./pages/Tasks";
-import { RoadShow } from "./pages/RoadShow";
-import { Email } from "./pages/Email";
-import { EmailCampaigns } from "./pages/EmailCampaigns";
-import { Messagerie } from "./pages/Messagerie";
-import { Forms } from "./pages/Forms";
-import { ShowBible } from "./pages/ShowBible";
-import { Merchandise } from "./pages/Merchandise";
-import { Website } from "./pages/Website";
-import { WebsiteBackoffice } from "./pages/WebsiteBackoffice";
-import { UserManagement } from "./pages/UserManagement";
-import { Application } from "./pages/Application";
-import { Preferences } from "./pages/Preferences";
-import { Layout } from "./components/Layout";
-import { FrontLayout } from "./components/FrontLayout";
-import { FrontHome } from "./pages/FrontHome";
-import { FrontArtists } from "./pages/FrontArtists";
-import { FrontEvents } from "./pages/FrontEvents";
-import { FrontShop } from "./pages/FrontShop";
-import { FrontContact } from "./pages/FrontContact";
-import "./App.css";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { HelmetProvider } from 'react-helmet-async';
+import { ThemeProvider } from "next-themes";
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 1,
-    },
-  },
-});
+import Index from "./pages/index";
+import NotFound from "./pages/404";
+import Login from "./pages/login";
+import Register from "./pages/register";
+import ForgotPassword from "./pages/forgot-password";
+import ResetPassword from "./pages/reset-password";
+import Pricing from "./pages/pricing";
+import Terms from "./pages/terms";
+import Privacy from "./pages/privacy";
+import Contact from "./pages/contact";
+import Blog from "./pages/blog";
+import BlogPost from "./pages/blog/[slug]";
+import Careers from "./pages/careers";
+import Career from "./pages/careers/[slug]";
+import Press from "./pages/press";
+import PressRelease from "./pages/press/[slug]";
 
-function App() {
-  console.log('🚀 App - Rendering App component...');
-  
-  return (
-    <QueryClientProvider client={queryClient}>
-      <HelmetProvider>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-          <TooltipProvider>
-            <UserProvider>
-              <MessagingProvider>
-                <AppDataProvider>
-                  <RealtimeProvider>
-                    <CentralizedDataProvider>
-                      <div className="min-h-screen bg-white">
-                        <Routes>
-                          <Route path="/" element={<Index />} />
-                          
-                          {/* Front-end routes */}
-                          <Route path="/front" element={<FrontLayout />}>
-                            <Route index element={<FrontHome />} />
-                            <Route path="artists" element={<FrontArtists />} />
-                            <Route path="events" element={<FrontEvents />} />
-                            <Route path="shop" element={<FrontShop />} />
-                            <Route path="contact" element={<FrontContact />} />
-                          </Route>
-                          
-                          {/* Back-office routes */}
-                          <Route element={<Layout />}>
-                            <Route path="/dashboard" element={<Dashboard />} />
-                            <Route path="/artists" element={<Artists />} />
-                            <Route path="/contacts" element={<Contacts />} />
-                            <Route path="/contact-lists" element={<ContactLists />} />
-                            <Route path="/events" element={<Events />} />
-                            <Route path="/event-types" element={<EventTypes />} />
-                            <Route path="/agenda" element={<Agenda />} />
-                            <Route path="/opportunities" element={<Opportunities />} />
-                            <Route path="/contracts" element={<Contracts />} />
-                            <Route path="/tasks" element={<Tasks />} />
-                            <Route path="/roadshow" element={<RoadShow />} />
-                            <Route path="/road-show" element={<RoadShow />} />
-                            <Route path="/email" element={<Email />} />
-                            <Route path="/email-campaigns" element={<EmailCampaigns />} />
-                            <Route path="/messagerie" element={<Messagerie />} />
-                            <Route path="/forms" element={<Forms />} />
-                            <Route path="/publication-calendar" element={<PublicationCalendar />} />
-                            <Route path="/show-bible" element={<ShowBible />} />
-                            <Route path="/merchandise" element={<Merchandise />} />
-                            <Route path="/website" element={<Website />} />
-                            <Route path="/website-editor" element={<WebsiteBackoffice />} />
-                            <Route path="/user-management" element={<UserManagement />} />
-                            <Route path="/application" element={<Application />} />
-                            <Route path="/preferences" element={<Preferences />} />
-                          </Route>
-                        </Routes>
-                      </div>
-                      <Toaster />
-                    </CentralizedDataProvider>
-                  </RealtimeProvider>
-                </AppDataProvider>
-              </MessagingProvider>
-            </UserProvider>
-          </TooltipProvider>
-        </ThemeProvider>
-      </HelmetProvider>
-    </QueryClientProvider>
-  );
-}
+import Dashboard from "./pages/dashboard";
+import Artists from "./pages/artists";
+import ArtistDetail from "./pages/artist/[id]";
+import Events from "./pages/events";
+import Contacts from "./pages/contacts";
+import ContactLists from "./pages/contact-lists";
+import Contracts from "./pages/contracts";
+import Email from "./pages/email";
+import EmailCampaigns from "./pages/email-campaigns";
+import Messagerie from "./pages/messagerie";
+import Agenda from "./pages/agenda";
+import RoadShow from "./pages/roadshow";
+import Tasks from "./pages/tasks";
+import Opportunities from "./pages/opportunities";
+import ShowBible from "./pages/show-bible";
+import PublicationCalendar from "./pages/publication-calendar";
+import Merchandise from "./pages/merchandise";
+import MerchandiseBackoffice from "./pages/merchandise-backoffice";
+import Website from "./pages/website";
+import WebsiteBackoffice from "./pages/website-backoffice";
+import WebsitePageEditor from "./pages/website-page-editor";
+import WebsiteWithEditor from "./pages/website-with-editor";
+import EventTypes from "./pages/event-types";
+import Forms from "./pages/forms";
+import Preferences from "./pages/preferences";
+import UserManagement from "./pages/user-management";
+import Application from "./pages/application";
+
+import FrontArtists from "./pages/front/artists";
+import FrontEvents from "./pages/front/events";
+import FrontShop from "./pages/front/shop";
+import FrontContact from "./pages/front/contact";
+import FrontLegalNotices from "./pages/front/mentions-legales";
+import FrontTermsOfService from "./pages/front/cgv";
+import FrontPrivacyPolicy from "./pages/front/politique-confidentialite";
+
+import Layout from "./components/layout";
+import ProtectedRoute from "./components/protected-route";
+
+import { SimpleFrontLayout } from "./components/SimpleFrontLayout";
+import { SimpleFrontHome } from "./pages/SimpleFrontHome";
+
+const queryClient = new QueryClient();
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <HelmetProvider>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<Index />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/pricing" element={<Pricing />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/blog/:slug" element={<BlogPost />} />
+              <Route path="/careers" element={<Careers />} />
+              <Route path="/careers/:slug" element={<Career />} />
+              <Route path="/press" element={<Press />} />
+              <Route path="/press/:slug" element={<PressRelease />} />
+              
+              {/* Front Website Routes - Using simplified components */}
+              <Route path="/front" element={<SimpleFrontLayout />}>
+                <Route index element={<SimpleFrontHome />} />
+                <Route path="artists" element={<FrontArtists />} />
+                <Route path="events" element={<FrontEvents />} />
+                <Route path="shop" element={<FrontShop />} />
+                <Route path="contact" element={<FrontContact />} />
+                <Route path="mentions-legales" element={<FrontLegalNotices />} />
+                <Route path="cgv" element={<FrontTermsOfService />} />
+                <Route path="politique-confidentialite" element={<FrontPrivacyPolicy />} />
+              </Route>
+
+              {/* Protected Routes */}
+              <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
+              <Route path="/artists" element={<ProtectedRoute><Layout><Artists /></Layout></ProtectedRoute>} />
+              <Route path="/artist/:id" element={<ProtectedRoute><Layout><ArtistDetail /></Layout></ProtectedRoute>} />
+              <Route path="/events" element={<ProtectedRoute><Layout><Events /></Layout></ProtectedRoute>} />
+              <Route path="/contacts" element={<ProtectedRoute><Layout><Contacts /></Layout></ProtectedRoute>} />
+              <Route path="/contact-lists" element={<ProtectedRoute><Layout><ContactLists /></Layout></ProtectedRoute>} />
+              <Route path="/contracts" element={<ProtectedRoute><Layout><Contracts /></Layout></ProtectedRoute>} />
+              <Route path="/email" element={<ProtectedRoute><Layout><Email /></Layout></ProtectedRoute>} />
+              <Route path="/email-campaigns" element={<ProtectedRoute><Layout><EmailCampaigns /></Layout></ProtectedRoute>} />
+              <Route path="/messagerie" element={<ProtectedRoute><Layout><Messagerie /></Layout></ProtectedRoute>} />
+              <Route path="/agenda" element={<ProtectedRoute><Layout><Agenda /></Layout></ProtectedRoute>} />
+              <Route path="/roadshow" element={<ProtectedRoute><Layout><RoadShow /></Layout></ProtectedRoute>} />
+              <Route path="/tasks" element={<ProtectedRoute><Layout><Tasks /></Layout></ProtectedRoute>} />
+              <Route path="/opportunities" element={<ProtectedRoute><Layout><Opportunities /></Layout></ProtectedRoute>} />
+              <Route path="/show-bible" element={<ProtectedRoute><Layout><ShowBible /></Layout></ProtectedRoute>} />
+              <Route path="/publication-calendar" element={<ProtectedRoute><Layout><PublicationCalendar /></Layout></ProtectedRoute>} />
+              <Route path="/merchandise" element={<ProtectedRoute><Layout><Merchandise /></Layout></ProtectedRoute>} />
+              <Route path="/merchandise-backoffice" element={<ProtectedRoute><Layout><MerchandiseBackoffice /></Layout></ProtectedRoute>} />
+              <Route path="/website" element={<ProtectedRoute><Layout><Website /></Layout></ProtectedRoute>} />
+              <Route path="/website-backoffice" element={<ProtectedRoute><Layout><WebsiteBackoffice /></Layout></ProtectedRoute>} />
+              <Route path="/website-page-editor" element={<ProtectedRoute><Layout><WebsitePageEditor /></Layout></ProtectedRoute>} />
+              <Route path="/website-with-editor" element={<ProtectedRoute><Layout><WebsiteWithEditor /></Layout></ProtectedRoute>} />
+              <Route path="/event-types" element={<ProtectedRoute><Layout><EventTypes /></Layout></ProtectedRoute>} />
+              <Route path="/forms" element={<ProtectedRoute><Layout><Forms /></Layout></ProtectedRoute>} />
+              <Route path="/preferences" element={<ProtectedRoute><Layout><Preferences /></Layout></ProtectedRoute>} />
+              <Route path="/user-management" element={<ProtectedRoute><Layout><UserManagement /></Layout></ProtectedRoute>} />
+              <Route path="/application" element={<ProtectedRoute><Layout><Application /></Layout></ProtectedRoute>} />
+
+              {/* 404 Route */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </ThemeProvider>
+    </HelmetProvider>
+  </QueryClientProvider>
+);
 
 export default App;
