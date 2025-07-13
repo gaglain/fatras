@@ -7,7 +7,7 @@ import { BackOfficeHeader } from '@/components/BackOfficeHeader';
 import { PublicChatWidget } from '@/components/PublicChatWidget';
 import { ChatWidget } from '@/components/ChatWidget';
 import { useCustomColors } from '@/hooks/useCustomColors';
-import { useUnifiedWebsiteSync } from '@/hooks/useUnifiedWebsiteSync';
+import { useWebsiteUnifiedSync } from '@/hooks/useWebsiteUnifiedSync';
 
 const adminRoutes = [
   '/admin', '/dashboard', '/artists', '/events', '/agenda', '/contacts',
@@ -24,16 +24,21 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   
   // Hook pour les couleurs personnalisées (dashboard uniquement)
-  useCustomColors();
-  
-  // Hook de synchronisation unifié (frontend uniquement)
-  useUnifiedWebsiteSync();
-  
-  console.log('🏗️ Layout - Rendering for path:', location.pathname);
-  
   const isAdminRoute = adminRoutes.some(route =>
     location.pathname === route || location.pathname.startsWith(route + '/')
   );
+  
+  if (isAdminRoute) {
+    useCustomColors();
+  }
+  
+  // Hook de synchronisation unifié (frontend uniquement)
+  const isFrontendPage = location.pathname.startsWith('/front');
+  if (isFrontendPage) {
+    useWebsiteUnifiedSync();
+  }
+  
+  console.log('🏗️ Layout - Path:', location.pathname, 'isAdmin:', isAdminRoute, 'isFrontend:', isFrontendPage);
   
   if (!isAdminRoute) {
     return (

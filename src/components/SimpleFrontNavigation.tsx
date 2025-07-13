@@ -1,7 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useUnifiedWebsiteSync } from '@/hooks/useUnifiedWebsiteSync';
 
 interface MenuItem {
   id: string;
@@ -36,9 +35,6 @@ export const SimpleFrontNavigation: React.FC = () => {
     textColor: '#1f2937',
     linkColor: '#3b82f6'
   });
-
-  // Utiliser le hook de synchronisation unifié
-  const { sync } = useUnifiedWebsiteSync();
 
   useEffect(() => {
     const loadCurrentData = () => {
