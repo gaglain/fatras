@@ -9,7 +9,7 @@ import { ThemeProvider } from "next-themes";
 
 import Index from "./pages/Index";
 import { NotFound } from "./pages/NotFound";
-import Dashboard from "./pages/Dashboard";
+import { Dashboard } from "./pages/Dashboard";
 import { FrontShop } from "./pages/FrontShop";
 import { Merchandise } from "./pages/Merchandise";
 import { FrontArtists } from "./pages/FrontArtists";
@@ -92,7 +92,7 @@ const App = () => (
               <Route path="/merchandise" element={<ProtectedRoute><Layout><Merchandise /></Layout></ProtectedRoute>} />
               <Route path="/merchandise-backoffice" element={<ProtectedRoute><Layout><PlaceholderPage title="Merchandise Backoffice" /></Layout></ProtectedRoute>} />
               <Route path="/website" element={<ProtectedRoute><Layout><PlaceholderPage title="Website" /></Layout></ProtectedRoute>} />
-              <Route path="/website-backoffice" element={<ProtectedRoute><Layout><PlaceholdarPage title="Website Backoffice" /></Layout></ProtectedRoute>} />
+              <Route path="/website-backoffice" element={<ProtectedRoute><Layout><PlaceholderPage title="Website Backoffice" /></Layout></ProtectedRoute>} />
               <Route path="/website-page-editor" element={<ProtectedRoute><Layout><PlaceholderPage title="Website Page Editor" /></Layout></ProtectedRoute>} />
               <Route path="/website-with-editor" element={<ProtectedRoute><Layout><WebsiteWithEditor /></Layout></ProtectedRoute>} />
               <Route path="/event-types" element={<ProtectedRoute><Layout><PlaceholderPage title="Event Types" /></Layout></ProtectedRoute>} />

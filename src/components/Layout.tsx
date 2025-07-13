@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { BackOfficeHeader } from '@/components/BackOfficeHeader';
@@ -16,7 +16,11 @@ const adminRoutes = [
   '/user-management', '/preferences', '/application', '/publication-calendar', '/website', '/website-editor'
 ];
 
-export const Layout: React.FC = () => {
+interface LayoutProps {
+  children: React.ReactNode;
+}
+
+export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   
   // Hooks simplifiés
@@ -32,7 +36,7 @@ export const Layout: React.FC = () => {
   if (!isAdminRoute) {
     return (
       <>
-        <Outlet />
+        {children}
         <PublicChatWidget />
       </>
     );
@@ -50,7 +54,7 @@ export const Layout: React.FC = () => {
           <BackOfficeHeader />
           
           <main className="flex-1 overflow-auto p-4 lg:p-6">
-            <Outlet />
+            {children}
           </main>
         </div>
       </div>
