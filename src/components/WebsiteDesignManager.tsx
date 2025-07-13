@@ -53,35 +53,56 @@ export const WebsiteDesignManager: React.FC = () => {
     setDesign(prev => ({ ...prev, [field]: value }));
   };
 
-  const triggerSyncEvents = (designData: SiteDesign) => {
-    console.log('🚀 Triggering sync events for design');
+  const triggerSync = (designData: SiteDesign) => {
+    console.log('🚀 Triggering sync for design:', designData.siteName);
     
+    // Sauvegarder
     localStorage.setItem('websiteDesign', JSON.stringify(designData));
     
-    const events = ['websiteDesignUpdated', 'websiteDesignSaved'];
+    // Déclencher TOUS les événements possibles pour garantir la synchronisation
+    const events = [
+      'websiteDesignUpdated', 
+      'websiteDesignSaved',
+      'websiteSettingsUpdated' // Pour compatibilité
+    ];
     
     events.forEach(eventName => {
-      window.dispatchEvent(new CustomEvent(eventName, { detail: designData }));
+      const event = new CustomEvent(eventName, { detail: designData });
+      window.dispatchEvent(event);
       console.log(`✅ Event ${eventName} dispatched`);
     });
     
-    // Événement storage
-    window.dispatchEvent(new StorageEvent('storage', {
+    // Événement storage manuel pour forcer la mise à jour
+    const storageEvent = new StorageEvent('storage', {
       key: 'websiteDesign',
       newValue: JSON.stringify(designData),
       oldValue: null,
       storageArea: localStorage,
       url: window.location.href
-    }));
+    });
+    window.dispatchEvent(storageEvent);
+    
+    // Force un refresh des éléments DOM après un délai
+    setTimeout(() => {
+      // Forcer la mise à jour du titre
+      document.title = designData.siteName;
+      
+      // Forcer la mise à jour des éléments
+      document.querySelectorAll('.site-name, [data-site-name]').forEach(el => {
+        el.textContent = designData.siteName;
+      });
+      
+      console.log('🔄 DOM force updated');
+    }, 100);
   };
 
   const saveDesign = () => {
     console.log('💾 Saving design:', design);
     
     try {
-      triggerSyncEvents(design);
-      toast.success('Design sauvegardé avec succès !');
-      console.log('✅ Design saved and events triggered');
+      triggerSync(design);
+      toast.success('Design sauvegardé et synchronisé !');
+      console.log('✅ Design saved and synced');
     } catch (error) {
       console.error('❌ Error saving design:', error);
       toast.error('Erreur lors de la sauvegarde');
@@ -92,20 +113,20 @@ export const WebsiteDesignManager: React.FC = () => {
     console.log('🔄 Resetting design to default');
     setDesign(defaultDesign);
     localStorage.removeItem('websiteDesign');
-    triggerSyncEvents(defaultDesign);
-    toast.success('Design réinitialisé');
+    triggerSync(defaultDesign);
+    toast.success('Design réinitialisé et synchronisé');
   };
 
   return (
     <div className="space-y-6">
       {/* Debug info */}
-      <Card className="bg-blue-50 border-blue-200">
+      <Card className="bg-green-50 border-green-200">
         <CardContent className="pt-4">
-          <p className="text-sm text-blue-800">
+          <p className="text-sm text-green-800">
             <strong>Debug:</strong> Nom actuel: "{design.siteName}" | Logo: {design.logo ? 'Défini' : 'Non défini'}
           </p>
-          <p className="text-sm text-blue-600 mt-1">
-            💡 Les changements sont maintenant synchronisés en temps réel avec le frontend
+          <p className="text-sm text-green-600 mt-1">
+            💡 <strong>Synchronisation simplifiée :</strong> Les changements sont maintenant synchronisés directement
           </p>
         </CardContent>
       </Card>

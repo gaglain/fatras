@@ -1,6 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useWebsiteSync } from '@/hooks/useWebsiteSync';
 
 interface MenuItem {
   id: string;
@@ -36,25 +37,13 @@ export const SimpleFrontNavigation: React.FC = () => {
     linkColor: '#3b82f6'
   });
 
+  // Utiliser le hook de synchronisation simplifié
+  const { sync } = useWebsiteSync();
+
   useEffect(() => {
     const loadData = () => {
       console.log('🔄 SimpleFrontNavigation - Loading data');
       
-      // Charger le menu
-      const savedMenu = localStorage.getItem('websiteMenu');
-      if (savedMenu) {
-        try {
-          const menu = JSON.parse(savedMenu);
-          const visibleItems = menu
-            .filter((item: MenuItem) => item.visible)
-            .sort((a: MenuItem, b: MenuItem) => a.order - b.order);
-          setMenuItems(visibleItems);
-          console.log('📋 Navigation - Menu loaded:', visibleItems.length, 'items');
-        } catch (error) {
-          console.error('❌ Navigation - Menu error:', error);
-        }
-      }
-
       // Charger le design
       const savedDesign = localStorage.getItem('websiteDesign');
       if (savedDesign) {
@@ -83,26 +72,33 @@ export const SimpleFrontNavigation: React.FC = () => {
     // Chargement initial
     loadData();
 
-    // Écouter les changements de localStorage uniquement
-    const handleStorageChange = (event: StorageEvent) => {
-      if (['websiteSettings', 'websiteDesign', 'websiteMenu'].includes(event.key || '')) {
-        console.log('💾 Navigation - Storage change detected for:', event.key);
-        setTimeout(loadData, 50);
-      }
+    // Écouter TOUS les événements de changement
+    const handleChange = () => {
+      console.log('💾 Navigation - Change detected, reloading...');
+      loadData();
+      sync(); // Force sync
     };
 
-    window.addEventListener('storage', handleStorageChange);
+    // Écouter les événements storage ET custom
+    window.addEventListener('storage', handleChange);
+    window.addEventListener('websiteDesignUpdated', handleChange);
+    window.addEventListener('websiteDesignSaved', handleChange);
+    window.addEventListener('websiteSettingsUpdated', handleChange);
     
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('storage', handleChange);
+      window.removeEventListener('websiteDesignUpdated', handleChange);
+      window.removeEventListener('websiteDesignSaved', handleChange);
+      window.removeEventListener('websiteSettingsUpdated', handleChange);
     };
-  }, []);
+  }, [sync]);
 
   console.log('🎨 SimpleFrontNavigation render - Current design:', design.siteName);
 
   return (
     <header 
-      className="fixed top-0 left-0 right-0 z-50 w-full shadow-lg border-b"
+      className="fixed top-0 left-0 right-0 z-50 w-full shadow-lg border-b front-header"
+      data-theme-element="header"
       style={{
         backgroundColor: design.headerBg,
         color: design.textColor
@@ -121,9 +117,8 @@ export const SimpleFrontNavigation: React.FC = () => {
                   console.warn('⚠️ Navigation - Logo failed to load:', design.logo);
                   (e.currentTarget as HTMLImageElement).style.display = 'none';
                 }}
-                onLoad={(e) => {
+                onLoad={() => {
                   console.log('🖼️ Navigation - Logo loaded successfully:', design.logo);
-                  (e.currentTarget as HTMLImageElement).style.display = 'block';
                 }}
               />
             ) : (
@@ -151,7 +146,7 @@ export const SimpleFrontNavigation: React.FC = () => {
               <Link
                 key={item.id}
                 to={item.path}
-                className="hover:opacity-80 transition-opacity"
+                className="hover:opacity-80 transition-opacity front-link"
                 style={{ color: design.linkColor }}
               >
                 {item.label}
