@@ -167,7 +167,7 @@ export const SimpleFrontNavigation: React.FC = () => {
                   console.warn('⚠️ Navigation - Logo failed to load:', design.logo);
                   (e.currentTarget as HTMLImageElement).style.display = 'none';
                 }}
-                onLoad={() => {
+                onLoad={(e) => {
                   console.log('🖼️ Navigation - Logo loaded successfully:', design.logo);
                   (e.currentTarget as HTMLImageElement).style.display = 'block';
                 }}
