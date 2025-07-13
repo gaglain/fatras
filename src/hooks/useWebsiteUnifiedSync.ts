@@ -32,14 +32,14 @@ export const useWebsiteUnifiedSync = () => {
   const lastSyncTime = useRef(0);
   const syncInProgress = useRef(false);
   const styleElementRef = useRef<HTMLStyleElement | null>(null);
-  const THROTTLE_DELAY = 100; // Réduit encore plus pour une synchronisation quasi-instantanée
+  const THROTTLE_DELAY = 500;
 
   const applyAllChanges = useCallback(async () => {
     const now = Date.now();
     
-    // Throttle plus agressif mais permet la synchronisation
-    if (syncInProgress.current && (now - lastSyncTime.current) < THROTTLE_DELAY) {
-      console.log('🔄 Sync skipped - throttled');
+    // Éviter la boucle infinie avec un throttle plus strict
+    if (syncInProgress.current || (now - lastSyncTime.current) < THROTTLE_DELAY) {
+      console.log('🔄 Sync skipped - throttled or in progress');
       return;
     }
     
@@ -47,9 +47,9 @@ export const useWebsiteUnifiedSync = () => {
     lastSyncTime.current = now;
     
     try {
-      console.log('🚀 Starting AGGRESSIVE unified website sync');
+      console.log('🚀 Starting unified website sync');
       
-      // Charger les paramètres avec détection des changements
+      // Charger les paramètres
       const savedSettings = localStorage.getItem('websiteSettings');
       const savedDesign = localStorage.getItem('websiteDesign');
       
@@ -58,21 +58,23 @@ export const useWebsiteUnifiedSync = () => {
       
       if (savedSettings) {
         settings = JSON.parse(savedSettings);
-        console.log('⚙️ Settings loaded from localStorage:', settings?.siteName);
+        console.log('⚙️ Settings loaded:', settings?.siteName);
       }
       
       if (savedDesign) {
         design = JSON.parse(savedDesign);
-        console.log('🎨 Design loaded from localStorage:', design?.siteName, design?.logo ? 'with logo' : 'no logo');
+        console.log('🎨 Design loaded:', design?.siteName, design?.logo ? 'with logo' : 'no logo');
       }
       
-      // Déterminer le nom du site à utiliser (priorité absolue au design)
+      // Déterminer le nom du site (priorité au design)
       const finalSiteName = design?.siteName || settings?.siteName || 'MusiConnect';
-      console.log('🏷️ Final site name determined:', finalSiteName);
+      console.log('🏷️ Final site name:', finalSiteName);
       
-      // FORCER la mise à jour du titre de la page
-      document.title = finalSiteName;
-      console.log('📄 Page title FORCED to:', finalSiteName);
+      // Mettre à jour le titre de la page
+      if (document.title !== finalSiteName) {
+        document.title = finalSiteName;
+        console.log('📄 Page title updated to:', finalSiteName);
+      }
       
       // Mettre à jour la description meta
       if (settings?.siteDescription) {
@@ -86,18 +88,17 @@ export const useWebsiteUnifiedSync = () => {
         console.log('📝 Meta description updated');
       }
       
-      // Appliquer les styles CSS de façon plus agressive
+      // Appliquer les styles CSS
       if (design) {
-        // Nettoyer TOUS les anciens styles
-        const existingStyles = document.querySelectorAll('#unified-website-styles, #website-design-styles');
-        existingStyles.forEach(style => style.remove());
-        
+        // Nettoyer les anciens styles
         if (styleElementRef.current) {
           styleElementRef.current.remove();
-          styleElementRef.current = null;
         }
         
-        // Créer le nouveau style avec une priorité maximale
+        const existingStyles = document.querySelectorAll('#unified-website-styles');
+        existingStyles.forEach(style => style.remove());
+        
+        // Créer le nouveau style
         const style = document.createElement('style');
         style.id = 'unified-website-styles';
         styleElementRef.current = style;
@@ -154,95 +155,39 @@ export const useWebsiteUnifiedSync = () => {
         `;
         
         document.head.appendChild(style);
-        console.log('🎨 CSS styles applied with maximum priority');
+        console.log('🎨 CSS styles applied');
       }
       
-      // FORCER la mise à jour de TOUS les éléments du nom du site de façon AGRESSIVE
+      // Mettre à jour les éléments du nom du site
       const updateSiteNameElements = () => {
         const siteNameElements = document.querySelectorAll('.site-name, [data-site-name]');
-        console.log('📝 FORCING update of', siteNameElements.length, 'site name elements');
-        
-        siteNameElements.forEach((el, index) => {
-          const oldText = el.textContent;
-          el.textContent = finalSiteName;
-          console.log(`📝 Site name element ${index + 1} FORCED from "${oldText}" to "${finalSiteName}"`);
-          
-          // Force re-render
-          if (el instanceof HTMLElement) {
-            el.style.display = 'none';
-            el.offsetHeight; // Force reflow
-            el.style.display = '';
+        siteNameElements.forEach((el) => {
+          if (el.textContent !== finalSiteName) {
+            el.textContent = finalSiteName;
+            console.log('📝 Site name element updated to:', finalSiteName);
           }
         });
       };
       
-      // FORCER la mise à jour de TOUS les logos de façon AGRESSIVE
+      // Mettre à jour les logos
       const updateLogoElements = () => {
         if (design?.logo) {
           const logoElements = document.querySelectorAll('.site-logo');
-          console.log('🖼️ FORCING update of', logoElements.length, 'logo elements');
-          
-          logoElements.forEach((el, index) => {
+          logoElements.forEach((el) => {
             const imgEl = el as HTMLImageElement;
-            const oldSrc = imgEl.src;
-            
             if (imgEl.src !== design.logo) {
               imgEl.src = design.logo;
               imgEl.style.display = 'block';
-              imgEl.style.maxHeight = '40px';
-              imgEl.style.width = 'auto';
-              
-              console.log(`🖼️ Logo element ${index + 1} FORCED from "${oldSrc}" to "${design.logo}"`);
-              
-              imgEl.onload = () => {
-                console.log(`🖼️ Logo ${index + 1} loaded successfully`);
-                imgEl.style.display = 'block';
-              };
-              
-              imgEl.onerror = () => {
-                console.warn(`⚠️ Logo ${index + 1} failed to load:`, design.logo);
-                imgEl.style.display = 'none';
-              };
+              console.log('🖼️ Logo element updated');
             }
-          });
-        } else {
-          // Masquer tous les logos si pas de logo défini
-          const logoElements = document.querySelectorAll('.site-logo');
-          logoElements.forEach(el => {
-            (el as HTMLElement).style.display = 'none';
           });
         }
       };
       
-      // Appliquer les changements immédiatement
       updateSiteNameElements();
       updateLogoElements();
       
-      // Répéter après un délai pour s'assurer que les éléments dynamiques sont mis à jour
-      setTimeout(() => {
-        updateSiteNameElements();
-        updateLogoElements();
-        console.log('🔄 Secondary update applied');
-      }, 100);
-      
-      // Déclencher TOUS les événements personnalisés
-      const events = [
-        'websiteFullSync',
-        'websiteDesignUpdated',
-        'websiteSettingsUpdated',
-        'websiteDesignSaved',
-        'websiteSettingsSaved'
-      ];
-      
-      events.forEach(eventName => {
-        const syncEvent = new CustomEvent(eventName, { 
-          detail: { settings, design, siteName: finalSiteName, forceUpdate: true } 
-        });
-        window.dispatchEvent(syncEvent);
-        console.log(`✅ Event ${eventName} dispatched with force update`);
-      });
-      
-      console.log('✅ AGGRESSIVE unified sync completed successfully');
+      console.log('✅ Unified sync completed successfully');
       
     } catch (error) {
       console.error('❌ Unified sync error:', error);
@@ -252,64 +197,35 @@ export const useWebsiteUnifiedSync = () => {
   }, []);
 
   useEffect(() => {
-    console.log('🚀 AGGRESSIVE unified website sync hook initialized');
+    console.log('🚀 Unified website sync hook initialized');
     
-    // Sync initial IMMÉDIAT
+    // Sync initial
     applyAllChanges();
 
-    // Écouter les changements de localStorage avec une fréquence élevée
+    // Écouter les changements de localStorage seulement
     const handleStorageChange = (event: StorageEvent) => {
       if (['websiteSettings', 'websiteDesign'].includes(event.key || '')) {
         console.log('💾 Storage change detected for:', event.key);
-        // Sync immédiat sans délai
-        setTimeout(applyAllChanges, 10);
+        setTimeout(() => {
+          if (!syncInProgress.current) {
+            applyAllChanges();
+          }
+        }, 100);
       }
     };
 
-    // Écouter TOUS les événements personnalisés possibles
-    const eventTypes = [
-      'websiteDesignSaved',
-      'websiteDesignUpdated', 
-      'websiteSettingsSaved',
-      'websiteSettingsUpdated',
-      'websiteFullSync'
-    ];
-
-    const handleCustomEvents = (event: Event) => {
-      console.log('🔔 Custom event received:', event.type);
-      setTimeout(applyAllChanges, 10);
-    };
-
-    // Ajouter TOUS les listeners
     window.addEventListener('storage', handleStorageChange);
-    eventTypes.forEach(eventType => {
-      window.addEventListener(eventType, handleCustomEvents);
-    });
-
-    // Sync périodique très fréquent pour s'assurer que tout reste synchronisé
+    
+    // Polling de sécurité moins fréquent
     const interval = setInterval(() => {
       if (!syncInProgress.current) {
         applyAllChanges();
       }
-    }, 1000); // Toutes les secondes
-
-    // Sync lors des changements de visibilité
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        console.log('👁️ Page became visible, forcing sync');
-        setTimeout(applyAllChanges, 50);
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
+    }, 5000); // Toutes les 5 secondes seulement
+    
     return () => {
       clearInterval(interval);
       window.removeEventListener('storage', handleStorageChange);
-      eventTypes.forEach(eventType => {
-        window.removeEventListener(eventType, handleCustomEvents);
-      });
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
       
       // Nettoyer les styles
       if (styleElementRef.current) {
@@ -320,9 +236,9 @@ export const useWebsiteUnifiedSync = () => {
   }, [applyAllChanges]);
 
   const forceSync = useCallback(() => {
-    console.log('🔄 FORCE sync requested - resetting all flags');
-    syncInProgress.current = false; // Reset le flag pour permettre le sync
-    lastSyncTime.current = 0; // Reset le timestamp
+    console.log('🔄 Force sync requested');
+    syncInProgress.current = false;
+    lastSyncTime.current = 0;
     return applyAllChanges();
   }, [applyAllChanges]);
 

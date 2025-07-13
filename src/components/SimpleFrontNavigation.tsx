@@ -38,7 +38,7 @@ export const SimpleFrontNavigation: React.FC = () => {
 
   useEffect(() => {
     const loadData = () => {
-      console.log('🔄 SimpleFrontNavigation - AGGRESSIVE data loading');
+      console.log('🔄 SimpleFrontNavigation - Loading data');
       
       // Charger le menu
       const savedMenu = localStorage.getItem('websiteMenu');
@@ -55,96 +55,50 @@ export const SimpleFrontNavigation: React.FC = () => {
         }
       }
 
-      // Charger le design avec priorité absolue
+      // Charger le design
       const savedDesign = localStorage.getItem('websiteDesign');
       if (savedDesign) {
         try {
           const designData = JSON.parse(savedDesign);
-          console.log('🎨 Navigation - Design data loaded:', designData);
+          console.log('🎨 Navigation - Design loaded:', designData.siteName);
           setDesign(prev => ({ ...prev, ...designData }));
-          console.log('🎨 Navigation - Design state updated to:', designData.siteName, designData.logo ? 'with logo' : 'no logo');
         } catch (error) {
           console.error('❌ Navigation - Design error:', error);
         }
       }
 
-      // Charger les paramètres seulement si pas de design
+      // Charger les paramètres en fallback
       const savedSettings = localStorage.getItem('websiteSettings');
       if (savedSettings && !savedDesign) {
         try {
           const settings = JSON.parse(savedSettings);
           setDesign(prev => ({ ...prev, siteName: settings.siteName }));
-          console.log('⚙️ Navigation - Settings siteName loaded as fallback:', settings.siteName);
+          console.log('⚙️ Navigation - Settings loaded:', settings.siteName);
         } catch (error) {
           console.error('❌ Navigation - Settings error:', error);
         }
       }
     };
 
-    // Chargement initial IMMÉDIAT
+    // Chargement initial
     loadData();
 
-    // Écouter les événements de synchronisation unifiée avec PRIORITÉ
-    const handleUnifiedSync = (event: CustomEvent) => {
-      console.log('🔄 Navigation - UNIFIED SYNC EVENT received with data:', event.detail);
-      const { settings, design: newDesign, siteName, forceUpdate } = event.detail;
-      
-      if (newDesign) {
-        console.log('🎨 Navigation - Applying design from unified sync:', newDesign.siteName, newDesign.logo ? 'with logo' : 'no logo');
-        setDesign(prev => {
-          const updated = { ...prev, ...newDesign };
-          console.log('🎨 Navigation - Design state will be updated to:', updated);
-          return updated;
-        });
-      } else if (settings && settings.siteName) {
-        console.log('⚙️ Navigation - Applying settings from unified sync:', settings.siteName);
-        setDesign(prev => ({ ...prev, siteName: settings.siteName }));
-      }
-
-      if (forceUpdate) {
-        console.log('🔄 Navigation - Force update requested, reloading data');
-        setTimeout(loadData, 10);
-      }
-    };
-
-    // Écouter les changements de storage avec réaction immédiate
+    // Écouter les changements de localStorage uniquement
     const handleStorageChange = (event: StorageEvent) => {
       if (['websiteSettings', 'websiteDesign', 'websiteMenu'].includes(event.key || '')) {
         console.log('💾 Navigation - Storage change detected for:', event.key);
-        setTimeout(loadData, 10);
+        setTimeout(loadData, 50);
       }
     };
 
-    // Ajouter TOUS les listeners possibles
-    const eventTypes = [
-      'websiteFullSync',
-      'websiteDesignUpdated',
-      'websiteDesignSaved',
-      'websiteSettingsUpdated',
-      'websiteSettingsSaved'
-    ];
-
-    eventTypes.forEach(eventType => {
-      window.addEventListener(eventType, handleUnifiedSync as EventListener);
-    });
-    
     window.addEventListener('storage', handleStorageChange);
     
-    // Polling de sécurité pour s'assurer de la synchronisation
-    const interval = setInterval(() => {
-      loadData();
-    }, 2000);
-    
     return () => {
-      clearInterval(interval);
-      eventTypes.forEach(eventType => {
-        window.removeEventListener(eventType, handleUnifiedSync as EventListener);
-      });
       window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
 
-  console.log('🎨 SimpleFrontNavigation render - Current design:', design.siteName, design.logo ? 'with logo' : 'no logo');
+  console.log('🎨 SimpleFrontNavigation render - Current design:', design.siteName);
 
   return (
     <header 
