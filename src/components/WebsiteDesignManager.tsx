@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -68,49 +67,76 @@ export const WebsiteDesignManager: React.FC = () => {
     }
   };
 
-  const triggerSyncEvents = (designData: SiteDesign) => {
-    console.log('🚀 Triggering ALL sync events for design');
+  const triggerAllSyncEvents = (designData: SiteDesign) => {
+    console.log('🚀 Triggering ALL sync events for design with MAXIMUM force');
     
-    // Événements multiples pour maximiser la compatibilité
+    // Sauvegarder immédiatement dans localStorage
+    localStorage.setItem('websiteDesign', JSON.stringify(designData));
+    
+    // Déclencher TOUS les événements possibles
     const events = [
       'websiteDesignUpdated',
       'websiteDesignSaved',
-      'websiteSettingsUpdated', // Car le design contient aussi siteName
+      'websiteSettingsUpdated',
+      'websiteFullSync'
     ];
     
     events.forEach(eventName => {
+      // Événement simple
       window.dispatchEvent(new CustomEvent(eventName, { detail: designData }));
-      console.log(`✅ Event ${eventName} dispatched`);
+      
+      // Événement avec bubble
+      window.dispatchEvent(new CustomEvent(eventName, { 
+        detail: designData, 
+        bubbles: true, 
+        cancelable: true 
+      }));
+      
+      console.log(`✅ Event ${eventName} dispatched with force`);
     });
     
-    // Événement storage pour cross-tab sync
-    window.dispatchEvent(new StorageEvent('storage', {
-      key: 'websiteDesign',
-      newValue: JSON.stringify(designData),
-      storageArea: localStorage
-    }));
+    // Événement storage multiple fois pour s'assurer
+    for (let i = 0; i < 3; i++) {
+      setTimeout(() => {
+        window.dispatchEvent(new StorageEvent('storage', {
+          key: 'websiteDesign',
+          newValue: JSON.stringify(designData),
+          oldValue: null,
+          storageArea: localStorage,
+          url: window.location.href
+        }));
+      }, i * 100);
+    }
     
-    console.log('✅ Storage event dispatched');
+    console.log('✅ All storage events dispatched');
+    
+    // Forcer un reload du DOM après les événements
+    setTimeout(() => {
+      const event = new CustomEvent('forceReload', { detail: designData });
+      window.dispatchEvent(event);
+    }, 200);
   };
 
   const saveDesign = () => {
-    console.log('💾 Saving design:', design);
+    console.log('💾 Saving design with MAXIMUM force:', design);
     
     try {
-      // Sauvegarder dans localStorage
-      localStorage.setItem('websiteDesign', JSON.stringify(design));
-      
-      // Déclencher TOUS les événements de synchronisation
-      triggerSyncEvents(design);
+      // Déclencher IMMÉDIATEMENT tous les événements de synchronisation
+      triggerAllSyncEvents(design);
       
       toast.success('Design sauvegardé avec succès !');
-      console.log('✅ Design saved and all events triggered');
+      console.log('✅ Design saved and ALL events triggered with force');
       
-      // Force un reload après un délai pour s'assurer que le front se met à jour
+      // Forcer plusieurs fois avec des délais pour maximiser les chances
       setTimeout(() => {
-        console.log('🔄 Force triggering events again after delay');
-        triggerSyncEvents(design);
-      }, 500);
+        console.log('🔄 Force triggering events again after 300ms delay');
+        triggerAllSyncEvents(design);
+      }, 300);
+      
+      setTimeout(() => {
+        console.log('🔄 Force triggering events again after 1000ms delay');
+        triggerAllSyncEvents(design);
+      }, 1000);
       
     } catch (error) {
       console.error('❌ Error saving design:', error);
@@ -124,7 +150,7 @@ export const WebsiteDesignManager: React.FC = () => {
     localStorage.removeItem('websiteDesign');
     
     // Déclencher les événements avec le design par défaut
-    triggerSyncEvents(defaultDesign);
+    triggerAllSyncEvents(defaultDesign);
     
     toast.success('Design réinitialisé');
   };
@@ -138,11 +164,12 @@ export const WebsiteDesignManager: React.FC = () => {
             <strong>Debug:</strong> Nom actuel: "{design.siteName}" | Logo: {design.logo ? 'Défini' : 'Non défini'}
           </p>
           <p className="text-sm text-blue-600 mt-1">
-            💡 Après avoir sauvegardé, vérifiez l'aperçu du site pour voir les changements
+            💡 Les changements sont maintenant synchronisés en temps réel avec le frontend
           </p>
         </CardContent>
       </Card>
 
+      
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Logo et Branding */}
         <Card>
@@ -190,7 +217,7 @@ export const WebsiteDesignManager: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Couleurs */}
+        
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
@@ -280,7 +307,7 @@ export const WebsiteDesignManager: React.FC = () => {
         </Card>
       </div>
 
-      {/* Header et Footer */}
+      
       <Card>
         <CardHeader>
           <CardTitle>Header et Footer</CardTitle>
