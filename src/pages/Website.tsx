@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,12 +12,12 @@ import { SEOManager } from '@/components/SEOManager';
 import { LegalContentManager } from '@/components/LegalContentManager';
 import { CMSPageManager } from '@/components/CMSPageManager';
 import { GoogleIntegrationDiagnostic } from '@/components/integrations/GoogleIntegrationDiagnostic';
-import { useWebsiteSync } from '@/hooks/useWebsiteSync';
+import { useWebsiteUnifiedSync } from '@/hooks/useWebsiteUnifiedSync';
 
 export const Website: React.FC = () => {
   const [activeTab, setActiveTab] = useState('pages');
   const navigate = useNavigate();
-  const { forceSync } = useWebsiteSync();
+  const { forceSync, isActiveSyncing } = useWebsiteUnifiedSync();
 
   const handleSEOSave = (seoData: any) => {
     console.log('Saving SEO data:', seoData);
@@ -31,6 +32,11 @@ export const Website: React.FC = () => {
   const handlePreviewSite = () => {
     console.log('👁️ Opening preview in new tab');
     window.open('/front', '_blank');
+  };
+
+  const handleForceSync = async () => {
+    console.log('🔄 Force sync requested by user');
+    await forceSync();
   };
 
   return (
@@ -50,13 +56,14 @@ export const Website: React.FC = () => {
         </div>
         <div className="flex items-center space-x-3">
           <Button 
-            onClick={forceSync}
+            onClick={handleForceSync}
             variant="outline"
             className="flex items-center space-x-2"
-            title="Forcer la synchronisation"
+            title="Forcer la synchronisation complète"
+            disabled={isActiveSyncing}
           >
-            <Wrench className="h-4 w-4" />
-            <span>Sync</span>
+            <Wrench className={`h-4 w-4 ${isActiveSyncing ? 'animate-spin' : ''}`} />
+            <span>{isActiveSyncing ? 'Sync...' : 'Synchroniser'}</span>
           </Button>
           <Button 
             onClick={handlePreviewSite}
@@ -75,6 +82,16 @@ export const Website: React.FC = () => {
           </Button>
         </div>
       </div>
+
+      {/* Indicateur de synchronisation */}
+      {isActiveSyncing && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+          <div className="flex items-center space-x-2">
+            <Wrench className="h-4 w-4 animate-spin text-blue-600" />
+            <span className="text-blue-800 text-sm">Synchronisation en cours...</span>
+          </div>
+        </div>
+      )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="grid w-full grid-cols-7">
@@ -153,6 +170,11 @@ export const Website: React.FC = () => {
               <p style={{ color: 'var(--app-text, #666666)' }}>
                 Personnalisez l'apparence de votre site web
               </p>
+              <div className="bg-green-50 border border-green-200 rounded p-3 mt-2">
+                <p className="text-sm text-green-800">
+                  💡 <strong>Synchronisation améliorée :</strong> Vos changements de design seront automatiquement appliqués au site front.
+                </p>
+              </div>
             </CardHeader>
             <CardContent>
               <WebsiteDesignManager />

@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { SimpleFrontNavigation } from './SimpleFrontNavigation';
+import { useWebsiteUnifiedSync } from '@/hooks/useWebsiteUnifiedSync';
 
 interface WebsiteSettings {
   siteName: string;
@@ -34,6 +35,9 @@ export const SimpleFrontLayout: React.FC = () => {
     }
   });
 
+  // Utiliser le hook de synchronisation unifié
+  const { forceSync } = useWebsiteUnifiedSync();
+
   useEffect(() => {
     const loadSettings = () => {
       const savedSettings = localStorage.getItem('websiteSettings');
@@ -41,9 +45,7 @@ export const SimpleFrontLayout: React.FC = () => {
         try {
           const parsed = JSON.parse(savedSettings);
           setSettings(prev => ({ ...prev, ...parsed }));
-          if (parsed.siteName) {
-            document.title = parsed.siteName;
-          }
+          console.log('⚙️ Front Layout - Settings loaded:', parsed.siteName);
         } catch (error) {
           console.error('Erreur chargement paramètres:', error);
         }
@@ -52,11 +54,26 @@ export const SimpleFrontLayout: React.FC = () => {
 
     loadSettings();
     
-    // Rechargement périodique simple
-    const interval = setInterval(loadSettings, 2000);
+    // Force sync après le chargement initial
+    setTimeout(() => {
+      forceSync();
+    }, 500);
 
-    return () => clearInterval(interval);
-  }, []);
+    // Écouter les événements de synchronisation unifiée
+    const handleUnifiedSync = (event: CustomEvent) => {
+      console.log('🔄 Front Layout - Unified sync received');
+      const { settings: newSettings } = event.detail;
+      if (newSettings) {
+        setSettings(prev => ({ ...prev, ...newSettings }));
+      }
+    };
+
+    window.addEventListener('websiteFullSync', handleUnifiedSync as EventListener);
+    
+    return () => {
+      window.removeEventListener('websiteFullSync', handleUnifiedSync as EventListener);
+    };
+  }, [forceSync]);
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
