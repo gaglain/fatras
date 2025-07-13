@@ -1,21 +1,21 @@
 
 import { useEffect, useRef, useCallback } from 'react';
 import { useWebsiteSettingsSync } from './useWebsiteSettingsSync';
-import { useWebsiteDesignSync } from './useWebsiteDesignSync';
+import { useWebsiteUnifiedSync } from './useWebsiteUnifiedSync';
 
 export const useWebsiteRealTimeSync = () => {
   const { syncSettingsChanges } = useWebsiteSettingsSync();
-  const { syncDesignChanges } = useWebsiteDesignSync();
+  const { forceSync: forceUnifiedSync } = useWebsiteUnifiedSync();
   
   const syncInProgress = useRef(false);
   const lastSyncTime = useRef(0);
   const isInitialized = useRef(false);
-  const SYNC_THROTTLE = 2000; // Réduit à 2 secondes pour plus de réactivité
+  const SYNC_THROTTLE = 2000; // 2 seconds for responsiveness
 
   const performSafeSync = useCallback(async () => {
     const now = Date.now();
     
-    // Prévenir les synchronisations simultanées mais réduire le throttle
+    // Prevent simultaneous synchronizations but reduce throttle
     if (syncInProgress.current || (now - lastSyncTime.current) < SYNC_THROTTLE) {
       console.log('🔄 Sync skipped - throttled or in progress');
       return;
@@ -27,13 +27,13 @@ export const useWebsiteRealTimeSync = () => {
     try {
       console.log('🔄 Performing comprehensive website sync');
       
-      // Synchronisation parallèle pour plus d'efficacité
+      // Synchronization with both settings and unified design sync
       const results = await Promise.allSettled([
         syncSettingsChanges(),
-        syncDesignChanges()
+        forceUnifiedSync()
       ]);
       
-      // Log des résultats pour debugging
+      // Log results for debugging
       results.forEach((result, index) => {
         const type = index === 0 ? 'Settings' : 'Design';
         if (result.status === 'rejected') {
@@ -49,7 +49,7 @@ export const useWebsiteRealTimeSync = () => {
     } finally {
       syncInProgress.current = false;
     }
-  }, [syncSettingsChanges, syncDesignChanges]);
+  }, [syncSettingsChanges, forceUnifiedSync]);
 
   const initializeSync = useCallback(async () => {
     if (isInitialized.current || syncInProgress.current) {
@@ -60,7 +60,7 @@ export const useWebsiteRealTimeSync = () => {
     isInitialized.current = true;
     console.log('🚀 Initializing enhanced website sync system');
     
-    // Délai court pour s'assurer que le DOM est prêt
+    // Short delay to ensure DOM is ready
     setTimeout(() => {
       performSafeSync();
     }, 500);
@@ -69,18 +69,18 @@ export const useWebsiteRealTimeSync = () => {
   useEffect(() => {
     console.log('🎯 WebsiteRealTimeSync hook mounted');
     
-    // Initialisation immédiate
+    // Immediate initialization
     initializeSync();
 
-    // Synchronisation périodique plus fréquente pour l'aperçu
+    // More frequent periodic synchronization for preview
     const syncInterval = setInterval(() => {
       if (!syncInProgress.current && isInitialized.current) {
         console.log('⏰ Periodic sync triggered');
         performSafeSync();
       }
-    }, 10000); // 10 secondes au lieu de 2 minutes
+    }, 10000); // 10 seconds instead of 2 minutes
 
-    // Nettoyage à la désinscription
+    // Cleanup on unmount
     return () => {
       console.log('🧹 Cleaning up WebsiteRealTimeSync');
       clearInterval(syncInterval);
@@ -88,7 +88,7 @@ export const useWebsiteRealTimeSync = () => {
     };
   }, [initializeSync, performSafeSync]);
 
-  // Force sync public avec meilleure gestion d'erreurs
+  // Force sync public with better error handling
   const forceSync = useCallback(async () => {
     if (syncInProgress.current) {
       console.log('🔄 Force sync already in progress');
