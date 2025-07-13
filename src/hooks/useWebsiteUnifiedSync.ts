@@ -32,13 +32,13 @@ export const useWebsiteUnifiedSync = () => {
   const lastSyncTime = useRef(0);
   const syncInProgress = useRef(false);
   const styleElementRef = useRef<HTMLStyleElement | null>(null);
-  const THROTTLE_DELAY = 500; // Réduit à 500ms pour plus de réactivité
+  const THROTTLE_DELAY = 100; // Réduit encore plus pour une synchronisation quasi-instantanée
 
   const applyAllChanges = useCallback(async () => {
     const now = Date.now();
     
-    // Throttle pour éviter trop de synchronisations
-    if (syncInProgress.current || (now - lastSyncTime.current) < THROTTLE_DELAY) {
+    // Throttle plus agressif mais permet la synchronisation
+    if (syncInProgress.current && (now - lastSyncTime.current) < THROTTLE_DELAY) {
       console.log('🔄 Sync skipped - throttled');
       return;
     }
@@ -47,9 +47,9 @@ export const useWebsiteUnifiedSync = () => {
     lastSyncTime.current = now;
     
     try {
-      console.log('🚀 Starting unified website sync');
+      console.log('🚀 Starting AGGRESSIVE unified website sync');
       
-      // Charger les paramètres
+      // Charger les paramètres avec détection des changements
       const savedSettings = localStorage.getItem('websiteSettings');
       const savedDesign = localStorage.getItem('websiteDesign');
       
@@ -58,22 +58,21 @@ export const useWebsiteUnifiedSync = () => {
       
       if (savedSettings) {
         settings = JSON.parse(savedSettings);
-        console.log('⚙️ Settings loaded:', settings?.siteName);
+        console.log('⚙️ Settings loaded from localStorage:', settings?.siteName);
       }
       
       if (savedDesign) {
         design = JSON.parse(savedDesign);
-        console.log('🎨 Design loaded:', design?.siteName);
+        console.log('🎨 Design loaded from localStorage:', design?.siteName, design?.logo ? 'with logo' : 'no logo');
       }
       
-      // Déterminer le nom du site à utiliser (priorité au design puis aux settings)
+      // Déterminer le nom du site à utiliser (priorité absolue au design)
       const finalSiteName = design?.siteName || settings?.siteName || 'MusiConnect';
+      console.log('🏷️ Final site name determined:', finalSiteName);
       
-      // Mettre à jour le titre de la page
-      if (document.title !== finalSiteName) {
-        document.title = finalSiteName;
-        console.log('📄 Page title updated to:', finalSiteName);
-      }
+      // FORCER la mise à jour du titre de la page
+      document.title = finalSiteName;
+      console.log('📄 Page title FORCED to:', finalSiteName);
       
       // Mettre à jour la description meta
       if (settings?.siteDescription) {
@@ -84,17 +83,21 @@ export const useWebsiteUnifiedSync = () => {
           document.head.appendChild(metaDescription);
         }
         metaDescription.setAttribute('content', settings.siteDescription);
+        console.log('📝 Meta description updated');
       }
       
-      // Appliquer les styles CSS si le design existe
+      // Appliquer les styles CSS de façon plus agressive
       if (design) {
-        // Nettoyer l'ancien style
+        // Nettoyer TOUS les anciens styles
+        const existingStyles = document.querySelectorAll('#unified-website-styles, #website-design-styles');
+        existingStyles.forEach(style => style.remove());
+        
         if (styleElementRef.current) {
           styleElementRef.current.remove();
           styleElementRef.current = null;
         }
         
-        // Créer le nouveau style
+        // Créer le nouveau style avec une priorité maximale
         const style = document.createElement('style');
         style.id = 'unified-website-styles';
         styleElementRef.current = style;
@@ -140,55 +143,106 @@ export const useWebsiteUnifiedSync = () => {
           .site-logo {
             max-height: 40px !important;
             width: auto !important;
-            display: block !important;
+            display: ${design.logo ? 'block' : 'none'} !important;
           }
           
           .site-name, [data-site-name] {
             color: ${design.textColor} !important;
             font-weight: bold !important;
+            font-size: 1.25rem !important;
           }
         `;
         
         document.head.appendChild(style);
-        console.log('🎨 CSS styles applied');
+        console.log('🎨 CSS styles applied with maximum priority');
       }
       
-      // Forcer la mise à jour de tous les éléments du nom du site
-      const siteNameElements = document.querySelectorAll('.site-name, [data-site-name]');
-      console.log('📝 Found', siteNameElements.length, 'site name elements to update');
-      siteNameElements.forEach((el, index) => {
-        if (el.textContent !== finalSiteName) {
+      // FORCER la mise à jour de TOUS les éléments du nom du site de façon AGRESSIVE
+      const updateSiteNameElements = () => {
+        const siteNameElements = document.querySelectorAll('.site-name, [data-site-name]');
+        console.log('📝 FORCING update of', siteNameElements.length, 'site name elements');
+        
+        siteNameElements.forEach((el, index) => {
+          const oldText = el.textContent;
           el.textContent = finalSiteName;
-          console.log(`📝 Site name element ${index + 1} updated to:`, finalSiteName);
-        }
-      });
-      
-      // Forcer la mise à jour de tous les logos
-      if (design?.logo) {
-        const logoElements = document.querySelectorAll('.site-logo');
-        console.log('🖼️ Found', logoElements.length, 'logo elements to update');
-        logoElements.forEach((el, index) => {
-          const imgEl = el as HTMLImageElement;
-          if (imgEl.src !== design.logo) {
-            imgEl.src = design.logo;
-            imgEl.style.display = 'block';
-            console.log(`🖼️ Logo element ${index + 1} updated`);
-            imgEl.onload = () => console.log(`🖼️ Logo ${index + 1} loaded successfully`);
-            imgEl.onerror = () => {
-              console.warn(`⚠️ Logo ${index + 1} failed to load:`, design.logo);
-              imgEl.style.display = 'none';
-            };
+          console.log(`📝 Site name element ${index + 1} FORCED from "${oldText}" to "${finalSiteName}"`);
+          
+          // Force re-render
+          if (el instanceof HTMLElement) {
+            el.style.display = 'none';
+            el.offsetHeight; // Force reflow
+            el.style.display = '';
           }
         });
-      }
+      };
       
-      // Déclencher des événements personnalisés pour notifier les autres composants
-      const syncEvent = new CustomEvent('websiteFullSync', { 
-        detail: { settings, design, siteName: finalSiteName } 
+      // FORCER la mise à jour de TOUS les logos de façon AGRESSIVE
+      const updateLogoElements = () => {
+        if (design?.logo) {
+          const logoElements = document.querySelectorAll('.site-logo');
+          console.log('🖼️ FORCING update of', logoElements.length, 'logo elements');
+          
+          logoElements.forEach((el, index) => {
+            const imgEl = el as HTMLImageElement;
+            const oldSrc = imgEl.src;
+            
+            if (imgEl.src !== design.logo) {
+              imgEl.src = design.logo;
+              imgEl.style.display = 'block';
+              imgEl.style.maxHeight = '40px';
+              imgEl.style.width = 'auto';
+              
+              console.log(`🖼️ Logo element ${index + 1} FORCED from "${oldSrc}" to "${design.logo}"`);
+              
+              imgEl.onload = () => {
+                console.log(`🖼️ Logo ${index + 1} loaded successfully`);
+                imgEl.style.display = 'block';
+              };
+              
+              imgEl.onerror = () => {
+                console.warn(`⚠️ Logo ${index + 1} failed to load:`, design.logo);
+                imgEl.style.display = 'none';
+              };
+            }
+          });
+        } else {
+          // Masquer tous les logos si pas de logo défini
+          const logoElements = document.querySelectorAll('.site-logo');
+          logoElements.forEach(el => {
+            (el as HTMLElement).style.display = 'none';
+          });
+        }
+      };
+      
+      // Appliquer les changements immédiatement
+      updateSiteNameElements();
+      updateLogoElements();
+      
+      // Répéter après un délai pour s'assurer que les éléments dynamiques sont mis à jour
+      setTimeout(() => {
+        updateSiteNameElements();
+        updateLogoElements();
+        console.log('🔄 Secondary update applied');
+      }, 100);
+      
+      // Déclencher TOUS les événements personnalisés
+      const events = [
+        'websiteFullSync',
+        'websiteDesignUpdated',
+        'websiteSettingsUpdated',
+        'websiteDesignSaved',
+        'websiteSettingsSaved'
+      ];
+      
+      events.forEach(eventName => {
+        const syncEvent = new CustomEvent(eventName, { 
+          detail: { settings, design, siteName: finalSiteName, forceUpdate: true } 
+        });
+        window.dispatchEvent(syncEvent);
+        console.log(`✅ Event ${eventName} dispatched with force update`);
       });
-      window.dispatchEvent(syncEvent);
       
-      console.log('✅ Unified sync completed successfully');
+      console.log('✅ AGGRESSIVE unified sync completed successfully');
       
     } catch (error) {
       console.error('❌ Unified sync error:', error);
@@ -198,48 +252,64 @@ export const useWebsiteUnifiedSync = () => {
   }, []);
 
   useEffect(() => {
-    console.log('🚀 Unified website sync hook initialized');
+    console.log('🚀 AGGRESSIVE unified website sync hook initialized');
     
-    // Sync initial immédiat
-    setTimeout(() => {
-      applyAllChanges();
-    }, 100);
+    // Sync initial IMMÉDIAT
+    applyAllChanges();
 
-    // Écouter les changements de localStorage
+    // Écouter les changements de localStorage avec une fréquence élevée
     const handleStorageChange = (event: StorageEvent) => {
       if (['websiteSettings', 'websiteDesign'].includes(event.key || '')) {
-        console.log('💾 Storage change detected:', event.key);
-        setTimeout(applyAllChanges, 100);
+        console.log('💾 Storage change detected for:', event.key);
+        // Sync immédiat sans délai
+        setTimeout(applyAllChanges, 10);
       }
     };
 
-    // Écouter les événements personnalisés
-    const handleCustomEvents = (event: CustomEvent) => {
+    // Écouter TOUS les événements personnalisés possibles
+    const eventTypes = [
+      'websiteDesignSaved',
+      'websiteDesignUpdated', 
+      'websiteSettingsSaved',
+      'websiteSettingsUpdated',
+      'websiteFullSync'
+    ];
+
+    const handleCustomEvents = (event: Event) => {
       console.log('🔔 Custom event received:', event.type);
-      setTimeout(applyAllChanges, 100);
+      setTimeout(applyAllChanges, 10);
     };
 
-    // Ajouter les listeners
+    // Ajouter TOUS les listeners
     window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('websiteDesignSaved', handleCustomEvents as EventListener);
-    window.addEventListener('websiteDesignUpdated', handleCustomEvents as EventListener);
-    window.addEventListener('websiteSettingsSaved', handleCustomEvents as EventListener);
-    window.addEventListener('websiteSettingsUpdated', handleCustomEvents as EventListener);
+    eventTypes.forEach(eventType => {
+      window.addEventListener(eventType, handleCustomEvents);
+    });
 
-    // Sync périodique pour s'assurer que tout reste synchronisé
+    // Sync périodique très fréquent pour s'assurer que tout reste synchronisé
     const interval = setInterval(() => {
       if (!syncInProgress.current) {
         applyAllChanges();
       }
-    }, 3000); // Toutes les 3 secondes
+    }, 1000); // Toutes les secondes
+
+    // Sync lors des changements de visibilité
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log('👁️ Page became visible, forcing sync');
+        setTimeout(applyAllChanges, 50);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       clearInterval(interval);
       window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('websiteDesignSaved', handleCustomEvents as EventListener);
-      window.removeEventListener('websiteDesignUpdated', handleCustomEvents as EventListener);
-      window.removeEventListener('websiteSettingsSaved', handleCustomEvents as EventListener);
-      window.removeEventListener('websiteSettingsUpdated', handleCustomEvents as EventListener);
+      eventTypes.forEach(eventType => {
+        window.removeEventListener(eventType, handleCustomEvents);
+      });
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       
       // Nettoyer les styles
       if (styleElementRef.current) {
@@ -250,8 +320,9 @@ export const useWebsiteUnifiedSync = () => {
   }, [applyAllChanges]);
 
   const forceSync = useCallback(() => {
-    console.log('🔄 Force sync requested');
+    console.log('🔄 FORCE sync requested - resetting all flags');
     syncInProgress.current = false; // Reset le flag pour permettre le sync
+    lastSyncTime.current = 0; // Reset le timestamp
     return applyAllChanges();
   }, [applyAllChanges]);
 
