@@ -50,10 +50,10 @@ const App = () => {
       <HelmetProvider>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <TooltipProvider>
-            <UserProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <UserProvider>
                 <Routes>
                   {/* Public Routes */}
                   <Route path="/" element={<Index />} />
@@ -116,8 +116,8 @@ const App = () => {
                   {/* 404 Route */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
-              </BrowserRouter>
-            </UserProvider>
+              </UserProvider>
+            </BrowserRouter>
           </TooltipProvider>
         </ThemeProvider>
       </HelmetProvider>
