@@ -32,7 +32,7 @@ export const useWebsiteUnifiedSync = () => {
   const lastSyncTime = useRef(0);
   const syncInProgress = useRef(false);
   const styleElementRef = useRef<HTMLStyleElement | null>(null);
-  const THROTTLE_DELAY = 1000; // 1 seconde
+  const THROTTLE_DELAY = 500; // Réduit à 500ms pour plus de réactivité
 
   const applyAllChanges = useCallback(async () => {
     const now = Date.now();
@@ -153,26 +153,29 @@ export const useWebsiteUnifiedSync = () => {
         console.log('🎨 CSS styles applied');
       }
       
-      // Mettre à jour tous les éléments du nom du site
+      // Forcer la mise à jour de tous les éléments du nom du site
       const siteNameElements = document.querySelectorAll('.site-name, [data-site-name]');
-      siteNameElements.forEach(el => {
+      console.log('📝 Found', siteNameElements.length, 'site name elements to update');
+      siteNameElements.forEach((el, index) => {
         if (el.textContent !== finalSiteName) {
           el.textContent = finalSiteName;
-          console.log('📝 Site name element updated');
+          console.log(`📝 Site name element ${index + 1} updated to:`, finalSiteName);
         }
       });
       
-      // Mettre à jour tous les logos
+      // Forcer la mise à jour de tous les logos
       if (design?.logo) {
         const logoElements = document.querySelectorAll('.site-logo');
-        logoElements.forEach(el => {
+        console.log('🖼️ Found', logoElements.length, 'logo elements to update');
+        logoElements.forEach((el, index) => {
           const imgEl = el as HTMLImageElement;
           if (imgEl.src !== design.logo) {
             imgEl.src = design.logo;
             imgEl.style.display = 'block';
-            imgEl.onload = () => console.log('🖼️ Logo loaded successfully');
+            console.log(`🖼️ Logo element ${index + 1} updated`);
+            imgEl.onload = () => console.log(`🖼️ Logo ${index + 1} loaded successfully`);
             imgEl.onerror = () => {
-              console.warn('⚠️ Logo failed to load:', design.logo);
+              console.warn(`⚠️ Logo ${index + 1} failed to load:`, design.logo);
               imgEl.style.display = 'none';
             };
           }
@@ -180,9 +183,10 @@ export const useWebsiteUnifiedSync = () => {
       }
       
       // Déclencher des événements personnalisés pour notifier les autres composants
-      window.dispatchEvent(new CustomEvent('websiteFullSync', { 
+      const syncEvent = new CustomEvent('websiteFullSync', { 
         detail: { settings, design, siteName: finalSiteName } 
-      }));
+      });
+      window.dispatchEvent(syncEvent);
       
       console.log('✅ Unified sync completed successfully');
       
@@ -205,14 +209,14 @@ export const useWebsiteUnifiedSync = () => {
     const handleStorageChange = (event: StorageEvent) => {
       if (['websiteSettings', 'websiteDesign'].includes(event.key || '')) {
         console.log('💾 Storage change detected:', event.key);
-        setTimeout(applyAllChanges, 200);
+        setTimeout(applyAllChanges, 100);
       }
     };
 
     // Écouter les événements personnalisés
     const handleCustomEvents = (event: CustomEvent) => {
       console.log('🔔 Custom event received:', event.type);
-      setTimeout(applyAllChanges, 200);
+      setTimeout(applyAllChanges, 100);
     };
 
     // Ajouter les listeners
@@ -222,12 +226,12 @@ export const useWebsiteUnifiedSync = () => {
     window.addEventListener('websiteSettingsSaved', handleCustomEvents as EventListener);
     window.addEventListener('websiteSettingsUpdated', handleCustomEvents as EventListener);
 
-    // Sync périodique plus fréquent pour s'assurer que tout reste synchronisé
+    // Sync périodique pour s'assurer que tout reste synchronisé
     const interval = setInterval(() => {
       if (!syncInProgress.current) {
         applyAllChanges();
       }
-    }, 5000); // Toutes les 5 secondes
+    }, 3000); // Toutes les 3 secondes
 
     return () => {
       clearInterval(interval);

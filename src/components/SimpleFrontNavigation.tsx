@@ -38,6 +38,8 @@ export const SimpleFrontNavigation: React.FC = () => {
 
   useEffect(() => {
     const loadData = () => {
+      console.log('🔄 SimpleFrontNavigation - Loading data');
+      
       // Charger le menu
       const savedMenu = localStorage.getItem('websiteMenu');
       if (savedMenu) {
@@ -47,8 +49,9 @@ export const SimpleFrontNavigation: React.FC = () => {
             .filter((item: MenuItem) => item.visible)
             .sort((a: MenuItem, b: MenuItem) => a.order - b.order);
           setMenuItems(visibleItems);
+          console.log('📋 Navigation - Menu loaded:', visibleItems.length, 'items');
         } catch (error) {
-          console.error('Erreur menu:', error);
+          console.error('❌ Navigation - Menu error:', error);
         }
       }
 
@@ -58,31 +61,61 @@ export const SimpleFrontNavigation: React.FC = () => {
         try {
           const designData = JSON.parse(savedDesign);
           setDesign(prev => ({ ...prev, ...designData }));
+          console.log('🎨 Navigation - Design loaded:', designData.siteName);
         } catch (error) {
-          console.error('Erreur design:', error);
+          console.error('❌ Navigation - Design error:', error);
         }
       }
 
-      // Charger les paramètres pour le nom du site
+      // Charger les paramètres pour le nom du site (priorité plus basse que le design)
       const savedSettings = localStorage.getItem('websiteSettings');
       if (savedSettings) {
         try {
           const settings = JSON.parse(savedSettings);
-          if (settings.siteName) {
+          if (settings.siteName && !savedDesign) {
+            // Seulement si pas de design sauvegardé
             setDesign(prev => ({ ...prev, siteName: settings.siteName }));
+            console.log('⚙️ Navigation - Settings siteName loaded:', settings.siteName);
           }
         } catch (error) {
-          console.error('Erreur paramètres:', error);
+          console.error('❌ Navigation - Settings error:', error);
         }
       }
     };
 
+    // Chargement initial
     loadData();
-    
-    // Rechargement périodique
-    const interval = setInterval(loadData, 2000);
 
-    return () => clearInterval(interval);
+    // Écouter les événements de synchronisation unifiée
+    const handleUnifiedSync = (event: CustomEvent) => {
+      console.log('🔄 Navigation - Unified sync received');
+      const { settings, design: newDesign, siteName } = event.detail;
+      
+      if (newDesign) {
+        setDesign(prev => ({ ...prev, ...newDesign }));
+        console.log('🎨 Navigation - Design updated from sync:', newDesign.siteName);
+      } else if (settings && settings.siteName) {
+        setDesign(prev => ({ ...prev, siteName: settings.siteName }));
+        console.log('⚙️ Navigation - Settings updated from sync:', settings.siteName);
+      }
+    };
+
+    // Écouter les changements de storage
+    const handleStorageChange = (event: StorageEvent) => {
+      if (['websiteSettings', 'websiteDesign', 'websiteMenu'].includes(event.key || '')) {
+        console.log('💾 Navigation - Storage change detected:', event.key);
+        setTimeout(loadData, 100);
+      }
+    };
+
+    // Ajouter les listeners
+    window.addEventListener('websiteFullSync', handleUnifiedSync as EventListener);
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('websiteFullSync', handleUnifiedSync as EventListener);
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   return (
@@ -100,10 +133,12 @@ export const SimpleFrontNavigation: React.FC = () => {
               <img 
                 src={design.logo} 
                 alt={design.siteName}
-                className="h-8 w-auto"
+                className="site-logo h-8 w-auto"
                 onError={(e) => {
+                  console.warn('⚠️ Navigation - Logo failed to load:', design.logo);
                   (e.currentTarget as HTMLImageElement).style.display = 'none';
                 }}
+                onLoad={() => console.log('🖼️ Navigation - Logo loaded successfully')}
               />
             ) : (
               <div className="h-8 w-8 rounded bg-blue-600 flex items-center justify-center">
@@ -113,7 +148,8 @@ export const SimpleFrontNavigation: React.FC = () => {
               </div>
             )}
             <span 
-              className="font-bold text-xl"
+              className="site-name font-bold text-xl"
+              data-site-name
               style={{ color: design.textColor }}
             >
               {design.siteName}
