@@ -17,6 +17,7 @@ import { FrontLegalNotices } from "./pages/FrontLegalNotices";
 import { FrontPrivacyPolicy } from "./pages/FrontPrivacyPolicy";
 import { FrontTermsOfService } from "./pages/FrontTermsOfService";
 import { WebsiteWithEditor } from "./pages/WebsiteWithEditor";
+import { Website } from "./pages/Website";
 import { Preferences } from "./pages/Preferences";
 
 import { Layout } from "./components/Layout";
@@ -56,8 +57,8 @@ const App = () => {
             <Sonner />
             <BrowserRouter>
               <RealtimeProvider>
-                <UserProvider>
-                  <MessagingProvider>
+                <MessagingProvider>
+                  <UserProvider>
                     <Routes>
                       {/* Public Routes */}
                       <Route path="/" element={<Index />} />
@@ -107,7 +108,7 @@ const App = () => {
                       <Route path="/publication-calendar" element={<ProtectedRoute><Layout><PlaceholderPage title="Publication Calendar" /></Layout></ProtectedRoute>} />
                       <Route path="/merchandise" element={<ProtectedRoute><Layout><Merchandise /></Layout></ProtectedRoute>} />
                       <Route path="/merchandise-backoffice" element={<ProtectedRoute><Layout><PlaceholderPage title="Merchandise Backoffice" /></Layout></ProtectedRoute>} />
-                      <Route path="/website" element={<ProtectedRoute><Layout><PlaceholderPage title="Website" /></Layout></ProtectedRoute>} />
+                      <Route path="/website" element={<ProtectedRoute><Layout><Website /></Layout></ProtectedRoute>} />
                       <Route path="/website-backoffice" element={<ProtectedRoute><Layout><PlaceholderPage title="Website Backoffice" /></Layout></ProtectedRoute>} />
                       <Route path="/website-page-editor" element={<ProtectedRoute><Layout><PlaceholderPage title="Website Page Editor" /></Layout></ProtectedRoute>} />
                       <Route path="/website-with-editor" element={<ProtectedRoute><Layout><WebsiteWithEditor /></Layout></ProtectedRoute>} />
@@ -120,8 +121,8 @@ const App = () => {
                       {/* 404 Route */}
                       <Route path="*" element={<NotFound />} />
                     </Routes>
-                  </MessagingProvider>
-                </UserProvider>
+                  </UserProvider>
+                </MessagingProvider>
               </RealtimeProvider>
             </BrowserRouter>
           </TooltipProvider>
