@@ -9,7 +9,7 @@ import { ThemeProvider } from "next-themes";
 
 import Index from "./pages/Index";
 import { NotFound } from "./pages/NotFound";
-import { Dashboard } from "./pages/Dashboard";
+import Dashboard from "./pages/Dashboard";
 import { FrontShop } from "./pages/FrontShop";
 import { Merchandise } from "./pages/Merchandise";
 import { FrontArtists } from "./pages/FrontArtists";
