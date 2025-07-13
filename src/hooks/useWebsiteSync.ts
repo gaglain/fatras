@@ -1,5 +1,6 @@
 
 import { useEffect, useCallback, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 
 interface WebsiteSettings {
   siteName: string;
@@ -30,6 +31,10 @@ interface SiteDesign {
 
 export const useWebsiteSync = () => {
   const styleElementRef = useRef<HTMLStyleElement | null>(null);
+  const location = useLocation();
+  
+  // Vérifier si on est sur une page frontend
+  const isFrontendPage = location.pathname.startsWith('/front');
 
   const loadData = useCallback(() => {
     let settings: WebsiteSettings | null = null;
@@ -59,13 +64,19 @@ export const useWebsiteSync = () => {
   }, []);
 
   const applyStyles = useCallback((design: SiteDesign) => {
+    // NE PAS appliquer les styles si on n'est pas sur une page frontend
+    if (!isFrontendPage) {
+      console.log('🚫 Styles not applied - not on frontend page');
+      return;
+    }
+
     // Supprimer les anciens styles
     if (styleElementRef.current) {
       styleElementRef.current.remove();
     }
     document.querySelectorAll('#website-sync-styles').forEach(el => el.remove());
 
-    // Créer les nouveaux styles
+    // Créer les nouveaux styles SEULEMENT pour les pages frontend
     const style = document.createElement('style');
     style.id = 'website-sync-styles';
     styleElementRef.current = style;
@@ -80,8 +91,14 @@ export const useWebsiteSync = () => {
         --site-footer-bg: ${design.footerBg} !important;
       }
       
-      .front-header, [data-theme-element="header"], header {
+      /* SEULEMENT pour les éléments frontend avec classes spécifiques */
+      .front-header, [data-theme-element="header"] {
         background: ${design.headerBg} !important;
+        color: ${design.textColor} !important;
+      }
+      
+      .front-footer, [data-theme-element="footer"] {
+        background: ${design.footerBg} !important;
         color: ${design.textColor} !important;
       }
       
@@ -90,7 +107,7 @@ export const useWebsiteSync = () => {
         font-weight: bold !important;
       }
       
-      .front-link, [data-theme-element="link"], nav a {
+      .front-link, [data-theme-element="link"] {
         color: ${design.linkColor} !important;
       }
       
@@ -102,11 +119,17 @@ export const useWebsiteSync = () => {
     `;
 
     document.head.appendChild(style);
-    console.log('✅ Styles applied:', design.siteName);
-  }, []);
+    console.log('✅ Frontend styles applied:', design.siteName);
+  }, [isFrontendPage]);
 
   const updateDOM = useCallback((siteName: string, logo?: string) => {
-    // Mettre à jour le titre
+    // NE PAS modifier le DOM si on n'est pas sur une page frontend
+    if (!isFrontendPage) {
+      console.log('🚫 DOM not updated - not on frontend page');
+      return;
+    }
+
+    // Mettre à jour le titre SEULEMENT pour les pages frontend
     if (document.title !== siteName) {
       document.title = siteName;
     }
@@ -128,10 +151,16 @@ export const useWebsiteSync = () => {
         }
       });
     }
-  }, []);
+  }, [isFrontendPage]);
 
   const sync = useCallback(() => {
-    console.log('🔄 Starting website sync');
+    // NE synchroniser QUE si on est sur une page frontend
+    if (!isFrontendPage) {
+      console.log('🚫 Sync skipped - not on frontend page');
+      return;
+    }
+
+    console.log('🔄 Starting frontend website sync');
     const { settings, design } = loadData();
     
     const finalSiteName = design?.siteName || settings?.siteName || 'MusiConnect';
@@ -144,14 +173,27 @@ export const useWebsiteSync = () => {
     // Mettre à jour le DOM
     updateDOM(finalSiteName, design?.logo);
     
-    console.log('✅ Sync completed for:', finalSiteName);
-  }, [loadData, applyStyles, updateDOM]);
+    console.log('✅ Frontend sync completed for:', finalSiteName);
+  }, [isFrontendPage, loadData, applyStyles, updateDOM]);
+
+  const cleanup = useCallback(() => {
+    if (styleElementRef.current) {
+      styleElementRef.current.remove();
+      styleElementRef.current = null;
+    }
+  }, []);
 
   useEffect(() => {
-    // Sync initial
+    // Nettoyer les styles existants si on quitte une page frontend
+    if (!isFrontendPage) {
+      cleanup();
+      return;
+    }
+
+    // Sync initial seulement si on est sur une page frontend
     sync();
 
-    // Écouter les changements
+    // Écouter les changements seulement si on est sur une page frontend
     const handleStorageChange = (event: StorageEvent) => {
       if (['websiteSettings', 'websiteDesign'].includes(event.key || '')) {
         console.log('💾 Storage change detected:', event.key);
@@ -164,21 +206,21 @@ export const useWebsiteSync = () => {
       setTimeout(sync, 100);
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('websiteDesignUpdated', handleCustomEvents);
-    window.addEventListener('websiteDesignSaved', handleCustomEvents);
-    window.addEventListener('websiteSettingsUpdated', handleCustomEvents);
+    if (isFrontendPage) {
+      window.addEventListener('storage', handleStorageChange);
+      window.addEventListener('websiteDesignUpdated', handleCustomEvents);
+      window.addEventListener('websiteDesignSaved', handleCustomEvents);
+      window.addEventListener('websiteSettingsUpdated', handleCustomEvents);
+    }
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('websiteDesignUpdated', handleCustomEvents);
       window.removeEventListener('websiteDesignSaved', handleCustomEvents);
       window.removeEventListener('websiteSettingsUpdated', handleCustomEvents);
-      if (styleElementRef.current) {
-        styleElementRef.current.remove();
-      }
+      cleanup();
     };
-  }, [sync]);
+  }, [sync, cleanup, isFrontendPage]);
 
   return { sync };
 };

@@ -23,7 +23,7 @@ interface LayoutProps {
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   
-  // Hooks simplifiés
+  // Hooks - le useWebsiteSync ne s'appliquera que sur les pages /front/*
   useCustomColors();
   useWebsiteSync();
   
