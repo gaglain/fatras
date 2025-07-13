@@ -51,26 +51,23 @@ export const useUnifiedWebsiteSync = () => {
       const savedSettings = localStorage.getItem('websiteSettings');
       if (savedSettings) {
         settings = JSON.parse(savedSettings);
+        console.log('⚙️ Settings loaded:', settings?.siteName);
       }
 
       const savedDesign = localStorage.getItem('websiteDesign');
       if (savedDesign) {
         design = JSON.parse(savedDesign);
+        console.log('🎨 Design loaded:', design?.siteName);
       }
     } catch (error) {
       console.error('❌ Error loading data:', error);
       return;
     }
 
-    if (!design && !settings) {
-      console.log('⚠️ No data found to sync');
-      return;
-    }
-
     const finalSiteName = design?.siteName || settings?.siteName || 'MusiConnect';
     const finalLogo = design?.logo || '';
 
-    // 1. Appliquer les styles CSS
+    // 1. Appliquer les styles CSS TOUJOURS
     if (design) {
       // Supprimer les anciens styles
       if (styleElementRef.current) {
@@ -157,6 +154,11 @@ export const useUnifiedWebsiteSync = () => {
     console.log('✅ Unified sync completed');
   }, [isFrontendPage]);
 
+  const forceSync = useCallback(() => {
+    console.log('🔄 Force sync requested');
+    applyStylesAndContent();
+  }, [applyStylesAndContent]);
+
   const cleanup = useCallback(() => {
     if (styleElementRef.current) {
       styleElementRef.current.remove();
@@ -177,7 +179,9 @@ export const useUnifiedWebsiteSync = () => {
     // Écouter TOUS les événements possibles
     const handleChange = () => {
       console.log('📡 Change detected, resyncing...');
-      setTimeout(applyStylesAndContent, 50);
+      setTimeout(() => {
+        applyStylesAndContent();
+      }, 100);
     };
 
     // Storage events
@@ -189,7 +193,14 @@ export const useUnifiedWebsiteSync = () => {
     window.addEventListener('websiteSettingsUpdated', handleChange);
     window.addEventListener('websiteSettingsSaved', handleChange);
 
+    // Polling de sécurité pour s'assurer que la sync se fait
+    const interval = setInterval(() => {
+      console.log('🔄 Security polling sync');
+      applyStylesAndContent();
+    }, 2000);
+
     return () => {
+      clearInterval(interval);
       window.removeEventListener('storage', handleChange);
       window.removeEventListener('websiteDesignUpdated', handleChange);
       window.removeEventListener('websiteDesignSaved', handleChange);
@@ -199,5 +210,5 @@ export const useUnifiedWebsiteSync = () => {
     };
   }, [applyStylesAndContent, cleanup, isFrontendPage]);
 
-  return { sync: applyStylesAndContent };
+  return { sync: forceSync };
 };
