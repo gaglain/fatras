@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useWebsiteSync } from '@/hooks/useWebsiteSync';
+import { useUnifiedWebsiteSync } from '@/hooks/useUnifiedWebsiteSync';
 
 interface MenuItem {
   id: string;
@@ -21,7 +21,7 @@ interface SiteDesign {
 }
 
 export const SimpleFrontNavigation: React.FC = () => {
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([
+  const [menuItems] = useState<MenuItem[]>([
     { id: '1', label: 'Accueil', path: '/front', visible: true, order: 1 },
     { id: '2', label: 'Artistes', path: '/front/artists', visible: true, order: 2 },
     { id: '3', label: 'Événements', path: '/front/events', visible: true, order: 3 },
@@ -37,12 +37,12 @@ export const SimpleFrontNavigation: React.FC = () => {
     linkColor: '#3b82f6'
   });
 
-  // Utiliser le hook de synchronisation simplifié
-  const { sync } = useWebsiteSync();
+  // Utiliser le hook de synchronisation unifié
+  const { sync } = useUnifiedWebsiteSync();
 
   useEffect(() => {
-    const loadData = () => {
-      console.log('🔄 SimpleFrontNavigation - Loading data');
+    const loadCurrentData = () => {
+      console.log('🔄 Navigation - Loading current data');
       
       // Charger le design
       const savedDesign = localStorage.getItem('websiteDesign');
@@ -70,39 +70,33 @@ export const SimpleFrontNavigation: React.FC = () => {
     };
 
     // Chargement initial
-    loadData();
+    loadCurrentData();
 
-    // Écouter TOUS les événements de changement
-    const handleChange = () => {
-      console.log('💾 Navigation - Change detected, reloading...');
-      loadData();
-      sync(); // Force sync
+    // Écouter les changements et recharger les données locales
+    const handleDataChange = () => {
+      console.log('📡 Navigation - Data change detected');
+      loadCurrentData();
     };
 
-    // Écouter les événements storage ET custom
-    window.addEventListener('storage', handleChange);
-    window.addEventListener('websiteDesignUpdated', handleChange);
-    window.addEventListener('websiteDesignSaved', handleChange);
-    window.addEventListener('websiteSettingsUpdated', handleChange);
+    window.addEventListener('storage', handleDataChange);
+    window.addEventListener('websiteDesignUpdated', handleDataChange);
+    window.addEventListener('websiteDesignSaved', handleDataChange);
+    window.addEventListener('websiteSettingsUpdated', handleDataChange);
     
     return () => {
-      window.removeEventListener('storage', handleChange);
-      window.removeEventListener('websiteDesignUpdated', handleChange);
-      window.removeEventListener('websiteDesignSaved', handleChange);
-      window.removeEventListener('websiteSettingsUpdated', handleChange);
+      window.removeEventListener('storage', handleDataChange);
+      window.removeEventListener('websiteDesignUpdated', handleDataChange);
+      window.removeEventListener('websiteDesignSaved', handleDataChange);
+      window.removeEventListener('websiteSettingsUpdated', handleDataChange);
     };
-  }, [sync]);
+  }, []);
 
-  console.log('🎨 SimpleFrontNavigation render - Current design:', design.siteName);
+  console.log('🎨 Navigation render - Current design:', design.siteName);
 
   return (
     <header 
       className="fixed top-0 left-0 right-0 z-50 w-full shadow-lg border-b front-header"
       data-theme-element="header"
-      style={{
-        backgroundColor: design.headerBg,
-        color: design.textColor
-      }}
     >
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
@@ -111,14 +105,13 @@ export const SimpleFrontNavigation: React.FC = () => {
               <img 
                 src={design.logo} 
                 alt={design.siteName}
-                className="site-logo h-8 w-auto max-h-10"
-                style={{ display: 'block', maxHeight: '40px', width: 'auto' }}
+                className="site-logo"
                 onError={(e) => {
-                  console.warn('⚠️ Navigation - Logo failed to load:', design.logo);
+                  console.warn('⚠️ Logo failed to load:', design.logo);
                   (e.currentTarget as HTMLImageElement).style.display = 'none';
                 }}
                 onLoad={() => {
-                  console.log('🖼️ Navigation - Logo loaded successfully:', design.logo);
+                  console.log('🖼️ Logo loaded successfully');
                 }}
               />
             ) : (
@@ -129,13 +122,8 @@ export const SimpleFrontNavigation: React.FC = () => {
               </div>
             )}
             <span 
-              className="site-name font-bold text-xl"
+              className="site-name"
               data-site-name
-              style={{ 
-                color: design.textColor,
-                fontSize: '1.25rem',
-                fontWeight: 'bold'
-              }}
             >
               {design.siteName}
             </span>
@@ -147,7 +135,7 @@ export const SimpleFrontNavigation: React.FC = () => {
                 key={item.id}
                 to={item.path}
                 className="hover:opacity-80 transition-opacity front-link"
-                style={{ color: design.linkColor }}
+                data-theme-element="link"
               >
                 {item.label}
               </Link>

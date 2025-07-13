@@ -41,7 +41,7 @@ export const WebsiteDesignManager: React.FC = () => {
       try {
         const parsed = JSON.parse(savedDesign);
         setDesign(prev => ({ ...prev, ...parsed }));
-        console.log('🎨 Loaded saved design:', parsed);
+        console.log('🎨 Design loaded:', parsed.siteName);
       } catch (error) {
         console.error('❌ Error loading design:', error);
       }
@@ -53,17 +53,17 @@ export const WebsiteDesignManager: React.FC = () => {
     setDesign(prev => ({ ...prev, [field]: value }));
   };
 
-  const triggerSync = (designData: SiteDesign) => {
-    console.log('🚀 Triggering sync for design:', designData.siteName);
+  const triggerSyncEvents = (designData: SiteDesign) => {
+    console.log('🚀 Triggering all sync events for:', designData.siteName);
     
     // Sauvegarder
     localStorage.setItem('websiteDesign', JSON.stringify(designData));
     
-    // Déclencher TOUS les événements possibles pour garantir la synchronisation
+    // Déclencher TOUS les événements
     const events = [
-      'websiteDesignUpdated', 
+      'websiteDesignUpdated',
       'websiteDesignSaved',
-      'websiteSettingsUpdated' // Pour compatibilité
+      'websiteSettingsUpdated'
     ];
     
     events.forEach(eventName => {
@@ -72,7 +72,7 @@ export const WebsiteDesignManager: React.FC = () => {
       console.log(`✅ Event ${eventName} dispatched`);
     });
     
-    // Événement storage manuel pour forcer la mise à jour
+    // Événement storage manuel
     const storageEvent = new StorageEvent('storage', {
       key: 'websiteDesign',
       newValue: JSON.stringify(designData),
@@ -82,27 +82,16 @@ export const WebsiteDesignManager: React.FC = () => {
     });
     window.dispatchEvent(storageEvent);
     
-    // Force un refresh des éléments DOM après un délai
-    setTimeout(() => {
-      // Forcer la mise à jour du titre
-      document.title = designData.siteName;
-      
-      // Forcer la mise à jour des éléments
-      document.querySelectorAll('.site-name, [data-site-name]').forEach(el => {
-        el.textContent = designData.siteName;
-      });
-      
-      console.log('🔄 DOM force updated');
-    }, 100);
+    console.log('✅ All sync events triggered');
   };
 
   const saveDesign = () => {
     console.log('💾 Saving design:', design);
     
     try {
-      triggerSync(design);
+      triggerSyncEvents(design);
       toast.success('Design sauvegardé et synchronisé !');
-      console.log('✅ Design saved and synced');
+      console.log('✅ Design saved and synced successfully');
     } catch (error) {
       console.error('❌ Error saving design:', error);
       toast.error('Erreur lors de la sauvegarde');
@@ -113,7 +102,7 @@ export const WebsiteDesignManager: React.FC = () => {
     console.log('🔄 Resetting design to default');
     setDesign(defaultDesign);
     localStorage.removeItem('websiteDesign');
-    triggerSync(defaultDesign);
+    triggerSyncEvents(defaultDesign);
     toast.success('Design réinitialisé et synchronisé');
   };
 
@@ -123,10 +112,10 @@ export const WebsiteDesignManager: React.FC = () => {
       <Card className="bg-green-50 border-green-200">
         <CardContent className="pt-4">
           <p className="text-sm text-green-800">
-            <strong>Debug:</strong> Nom actuel: "{design.siteName}" | Logo: {design.logo ? 'Défini' : 'Non défini'}
+            <strong>🎯 Synchronisation Unifiée :</strong> Nom: "{design.siteName}" | Logo: {design.logo ? '✅' : '❌'}
           </p>
           <p className="text-sm text-green-600 mt-1">
-            💡 <strong>Synchronisation simplifiée :</strong> Les changements sont maintenant synchronisés directement
+            💡 Les changements sont maintenant synchronisés via un système unifié
           </p>
         </CardContent>
       </Card>
@@ -156,7 +145,7 @@ export const WebsiteDesignManager: React.FC = () => {
       <div className="flex gap-4">
         <Button onClick={saveDesign} className="bg-green-600 hover:bg-green-700">
           <Save className="h-4 w-4 mr-2" />
-          Sauvegarder le design
+          Sauvegarder et Synchroniser
         </Button>
         <Button variant="outline" onClick={resetDesign}>
           <RotateCcw className="h-4 w-4 mr-2" />

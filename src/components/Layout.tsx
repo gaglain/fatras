@@ -7,7 +7,7 @@ import { BackOfficeHeader } from '@/components/BackOfficeHeader';
 import { PublicChatWidget } from '@/components/PublicChatWidget';
 import { ChatWidget } from '@/components/ChatWidget';
 import { useCustomColors } from '@/hooks/useCustomColors';
-import { useWebsiteSync } from '@/hooks/useWebsiteSync';
+import { useUnifiedWebsiteSync } from '@/hooks/useUnifiedWebsiteSync';
 
 const adminRoutes = [
   '/admin', '/dashboard', '/artists', '/events', '/agenda', '/contacts',
@@ -23,9 +23,11 @@ interface LayoutProps {
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   
-  // Hooks - le useWebsiteSync ne s'appliquera que sur les pages /front/*
+  // Hook pour les couleurs personnalisées (dashboard uniquement)
   useCustomColors();
-  useWebsiteSync();
+  
+  // Hook de synchronisation unifié (frontend uniquement)
+  useUnifiedWebsiteSync();
   
   console.log('🏗️ Layout - Rendering for path:', location.pathname);
   
