@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { SimpleFrontNavigation } from './SimpleFrontNavigation';
-import { useWebsiteUnifiedSync } from '@/hooks/useWebsiteUnifiedSync';
+import { ForceFrontendSync } from './ForceFrontendSync';
 
 interface WebsiteSettings {
   siteName: string;
@@ -20,6 +20,8 @@ interface WebsiteSettings {
 }
 
 export const SimpleFrontLayout: React.FC = () => {
+  console.log('🏗️ SimpleFrontLayout - Rendering with FORCE sync');
+  
   const [settings, setSettings] = useState<WebsiteSettings>({
     siteName: 'MusiConnect',
     siteDescription: 'Plateforme de gestion artistique',
@@ -35,48 +37,59 @@ export const SimpleFrontLayout: React.FC = () => {
     }
   });
 
-  // Utiliser le hook de synchronisation unifié
-  const { forceSync } = useWebsiteUnifiedSync();
-
   useEffect(() => {
     const loadSettings = () => {
       const savedSettings = localStorage.getItem('websiteSettings');
+      const savedDesign = localStorage.getItem('websiteDesign');
+      
+      // Priorité au design, puis settings
+      if (savedDesign) {
+        try {
+          const design = JSON.parse(savedDesign);
+          if (design.siteName) {
+            setSettings(prev => ({ ...prev, siteName: design.siteName }));
+            console.log('🎨 Layout - Design siteName loaded:', design.siteName);
+          }
+        } catch (e) {
+          console.error('Design parse error:', e);
+        }
+      }
+      
       if (savedSettings) {
         try {
           const parsed = JSON.parse(savedSettings);
           setSettings(prev => ({ ...prev, ...parsed }));
-          console.log('⚙️ Front Layout - Settings loaded:', parsed.siteName);
+          console.log('⚙️ Layout - Settings loaded:', parsed.siteName);
         } catch (error) {
-          console.error('Erreur chargement paramètres:', error);
+          console.error('Settings parse error:', error);
         }
       }
     };
 
     loadSettings();
     
-    // Force sync après le chargement initial
-    setTimeout(() => {
-      forceSync();
-    }, 500);
-
-    // Écouter les événements de synchronisation unifiée
-    const handleUnifiedSync = (event: CustomEvent) => {
-      console.log('🔄 Front Layout - Unified sync received');
-      const { settings: newSettings } = event.detail;
-      if (newSettings) {
-        setSettings(prev => ({ ...prev, ...newSettings }));
-      }
+    // Écouter les changements
+    const handleDataChange = () => {
+      console.log('📡 Layout - Data change detected');
+      loadSettings();
     };
 
-    window.addEventListener('websiteFullSync', handleUnifiedSync as EventListener);
+    window.addEventListener('storage', handleDataChange);
+    window.addEventListener('websiteDesignUpdated', handleDataChange);
+    window.addEventListener('websiteDesignSaved', handleDataChange);
+    window.addEventListener('websiteSettingsUpdated', handleDataChange);
     
     return () => {
-      window.removeEventListener('websiteFullSync', handleUnifiedSync as EventListener);
+      window.removeEventListener('storage', handleDataChange);
+      window.removeEventListener('websiteDesignUpdated', handleDataChange);
+      window.removeEventListener('websiteDesignSaved', handleDataChange);
+      window.removeEventListener('websiteSettingsUpdated', handleDataChange);
     };
-  }, [forceSync]);
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
+      <ForceFrontendSync />
       <SimpleFrontNavigation />
       
       <main className="flex-1 pt-16">

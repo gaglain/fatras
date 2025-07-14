@@ -7,7 +7,6 @@ import { BackOfficeHeader } from '@/components/BackOfficeHeader';
 import { PublicChatWidget } from '@/components/PublicChatWidget';
 import { ChatWidget } from '@/components/ChatWidget';
 import { useCustomColors } from '@/hooks/useCustomColors';
-import { useWebsiteUnifiedSync } from '@/hooks/useWebsiteUnifiedSync';
 
 const adminRoutes = [
   '/admin', '/dashboard', '/artists', '/events', '/agenda', '/contacts',
@@ -33,14 +32,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     useCustomColors();
   }
   
-  // ISOLATION COMPLETE: Synchronisation UNIQUEMENT pour le frontend
-  const isFrontendPage = location.pathname.startsWith('/front');
-  if (isFrontendPage) {
-    console.log('🎯 Frontend page detected, activating sync');
-    useWebsiteUnifiedSync();
-  }
-  
-  console.log('🏗️ Layout - Path:', location.pathname, 'isAdmin:', isAdminRoute, 'isFrontend:', isFrontendPage);
+  console.log('🏗️ Layout - Path:', location.pathname, 'isAdmin:', isAdminRoute, 'NO FRONTEND SYNC HERE');
   
   if (!isAdminRoute) {
     return (
