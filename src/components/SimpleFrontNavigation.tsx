@@ -37,10 +37,10 @@ export const SimpleFrontNavigation: React.FC = () => {
   });
 
   useEffect(() => {
-    console.log('🔥 NAVIGATION - Starting IMMEDIATE sync');
+    console.log('🔥 NAVIGATION - Starting SUPER AGGRESSIVE sync');
     
     const loadAndApplyData = () => {
-      // Charger le design en priorité
+      // Charger le design en priorité ABSOLUE
       const savedDesign = localStorage.getItem('websiteDesign');
       const savedSettings = localStorage.getItem('websiteSettings');
       
@@ -54,41 +54,59 @@ export const SimpleFrontNavigation: React.FC = () => {
         linkColor: '#3b82f6'
       };
       
+      // PRIORITÉ ABSOLUE au design
       if (savedDesign) {
         try {
           const designData = JSON.parse(savedDesign);
           newDesign = { ...newDesign, ...designData };
-          newSiteName = designData.siteName || 'MusiConnect';
-          console.log('🔥 NAVIGATION - Design loaded:', designData.siteName);
+          if (designData.siteName) {
+            newSiteName = designData.siteName;
+            console.log('🔥 NAVIGATION - Design loaded with siteName:', newSiteName);
+          }
         } catch (error) {
           console.error('❌ Design parse error:', error);
         }
-      } else if (savedSettings) {
-        try {
-          const settingsData = JSON.parse(savedSettings);
-          newSiteName = settingsData.siteName || 'MusiConnect';
-          console.log('🔥 NAVIGATION - Settings loaded:', settingsData.siteName);
-        } catch (error) {
-          console.error('❌ Settings parse error:', error);
+      }
+      
+      // Fallback vers settings SEULEMENT si pas de siteName dans design
+      if (!newSiteName || newSiteName === 'MusiConnect') {
+        if (savedSettings) {
+          try {
+            const settingsData = JSON.parse(savedSettings);
+            if (settingsData.siteName) {
+              newSiteName = settingsData.siteName;
+              console.log('🔥 NAVIGATION - Settings fallback loaded:', newSiteName);
+            }
+          } catch (error) {
+            console.error('❌ Settings parse error:', error);
+          }
         }
       }
       
       // FORCER la mise à jour immédiate
-      setDesign({ ...newDesign, siteName: newSiteName });
+      const finalDesign = { ...newDesign, siteName: newSiteName };
+      setDesign(finalDesign);
       
       // FORCER le titre de la page
-      document.title = newSiteName;
+      if (document.title !== newSiteName) {
+        document.title = newSiteName;
+        console.log('📄 NAVIGATION - Title FORCED to:', newSiteName);
+      }
       
       console.log('🔥 NAVIGATION - Applied siteName:', newSiteName);
+      console.log('🔥 NAVIGATION - Full design:', finalDesign);
     };
 
-    // Charger immédiatement
+    // Charger immédiatement ET de manière répétée
     loadAndApplyData();
+    setTimeout(loadAndApplyData, 50);
+    setTimeout(loadAndApplyData, 200);
+    setTimeout(loadAndApplyData, 500);
     
     // Écouter tous les changements possibles
     const handleDataChange = (event?: any) => {
       console.log('📡 NAVIGATION - Data change detected:', event?.type || 'manual');
-      setTimeout(loadAndApplyData, 50);
+      setTimeout(loadAndApplyData, 10); // Très rapide
     };
 
     window.addEventListener('storage', handleDataChange);
@@ -96,11 +114,15 @@ export const SimpleFrontNavigation: React.FC = () => {
     window.addEventListener('websiteDesignSaved', handleDataChange);
     window.addEventListener('websiteSettingsUpdated', handleDataChange);
     
+    // Vérification périodique très agressive
+    const aggressiveInterval = setInterval(loadAndApplyData, 1000); // Toutes les secondes
+    
     return () => {
       window.removeEventListener('storage', handleDataChange);
       window.removeEventListener('websiteDesignUpdated', handleDataChange);
       window.removeEventListener('websiteDesignSaved', handleDataChange);
       window.removeEventListener('websiteSettingsUpdated', handleDataChange);
+      clearInterval(aggressiveInterval);
     };
   }, []);
 
@@ -135,8 +157,9 @@ export const SimpleFrontNavigation: React.FC = () => {
               </div>
             )}
             <span 
-              className="site-name"
+              className="site-name font-bold text-xl"
               data-site-name
+              key={design.siteName} // Forcer le re-render quand le nom change
             >
               {design.siteName}
             </span>
