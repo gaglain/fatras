@@ -29,7 +29,7 @@ export const SimpleFrontNavigation: React.FC = () => {
 
   const [design, setDesign] = useState<SiteDesign>({
     logo: '',
-    siteName: 'MusiConnect',
+    siteName: 'MusiConnect', // valeur par défaut
     primaryColor: '#1632f4',
     headerBg: '#ffffff',
     textColor: '#1f2937',
@@ -37,41 +37,58 @@ export const SimpleFrontNavigation: React.FC = () => {
   });
 
   useEffect(() => {
-    const loadCurrentData = () => {
-      console.log('🔄 Navigation - Loading current data');
-      
-      // Charger le design
+    console.log('🔥 NAVIGATION - Starting IMMEDIATE sync');
+    
+    const loadAndApplyData = () => {
+      // Charger le design en priorité
       const savedDesign = localStorage.getItem('websiteDesign');
+      const savedSettings = localStorage.getItem('websiteSettings');
+      
+      let newSiteName = 'MusiConnect';
+      let newDesign = {
+        logo: '',
+        siteName: 'MusiConnect',
+        primaryColor: '#1632f4',
+        headerBg: '#ffffff',
+        textColor: '#1f2937',
+        linkColor: '#3b82f6'
+      };
+      
       if (savedDesign) {
         try {
           const designData = JSON.parse(savedDesign);
-          console.log('🎨 Navigation - Design loaded:', designData.siteName);
-          setDesign(prev => ({ ...prev, ...designData }));
+          newDesign = { ...newDesign, ...designData };
+          newSiteName = designData.siteName || 'MusiConnect';
+          console.log('🔥 NAVIGATION - Design loaded:', designData.siteName);
         } catch (error) {
-          console.error('❌ Navigation - Design error:', error);
+          console.error('❌ Design parse error:', error);
         }
-      }
-
-      // Charger les paramètres en fallback
-      const savedSettings = localStorage.getItem('websiteSettings');
-      if (savedSettings && !savedDesign) {
+      } else if (savedSettings) {
         try {
-          const settings = JSON.parse(savedSettings);
-          setDesign(prev => ({ ...prev, siteName: settings.siteName }));
-          console.log('⚙️ Navigation - Settings loaded:', settings.siteName);
+          const settingsData = JSON.parse(savedSettings);
+          newSiteName = settingsData.siteName || 'MusiConnect';
+          console.log('🔥 NAVIGATION - Settings loaded:', settingsData.siteName);
         } catch (error) {
-          console.error('❌ Navigation - Settings error:', error);
+          console.error('❌ Settings parse error:', error);
         }
       }
+      
+      // FORCER la mise à jour immédiate
+      setDesign({ ...newDesign, siteName: newSiteName });
+      
+      // FORCER le titre de la page
+      document.title = newSiteName;
+      
+      console.log('🔥 NAVIGATION - Applied siteName:', newSiteName);
     };
 
-    // Chargement initial
-    loadCurrentData();
-
-    // Écouter les changements et recharger les données locales
-    const handleDataChange = () => {
-      console.log('📡 Navigation - Data change detected');
-      loadCurrentData();
+    // Charger immédiatement
+    loadAndApplyData();
+    
+    // Écouter tous les changements possibles
+    const handleDataChange = (event?: any) => {
+      console.log('📡 NAVIGATION - Data change detected:', event?.type || 'manual');
+      setTimeout(loadAndApplyData, 50);
     };
 
     window.addEventListener('storage', handleDataChange);

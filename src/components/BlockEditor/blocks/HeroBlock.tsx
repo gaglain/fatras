@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,49 @@ interface HeroBlockProps {
 
 export const HeroBlock: React.FC<HeroBlockProps> = ({ content, isEditing, onChange }) => {
   const [isEditingHero, setIsEditingHero] = useState(false);
+  const [siteName, setSiteName] = useState('MusiConnect');
+
+  // Charger le nom du site dynamiquement
+  useEffect(() => {
+    const loadSiteName = () => {
+      const savedDesign = localStorage.getItem('websiteDesign');
+      const savedSettings = localStorage.getItem('websiteSettings');
+      
+      let finalSiteName = 'MusiConnect';
+      
+      if (savedDesign) {
+        try {
+          const design = JSON.parse(savedDesign);
+          if (design.siteName) finalSiteName = design.siteName;
+        } catch (e) {
+          console.error('Error parsing design:', e);
+        }
+      } else if (savedSettings) {
+        try {
+          const settings = JSON.parse(savedSettings);
+          if (settings.siteName) finalSiteName = settings.siteName;
+        } catch (e) {
+          console.error('Error parsing settings:', e);
+        }
+      }
+      
+      setSiteName(finalSiteName);
+      console.log('🎯 HERO BLOCK - Site name loaded:', finalSiteName);
+    };
+
+    loadSiteName();
+    
+    // Écouter les changements
+    window.addEventListener('websiteDesignUpdated', loadSiteName);
+    window.addEventListener('websiteDesignSaved', loadSiteName);
+    window.addEventListener('websiteSettingsUpdated', loadSiteName);
+    
+    return () => {
+      window.removeEventListener('websiteDesignUpdated', loadSiteName);
+      window.removeEventListener('websiteDesignSaved', loadSiteName);
+      window.removeEventListener('websiteSettingsUpdated', loadSiteName);
+    };
+  }, []);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -101,7 +144,9 @@ export const HeroBlock: React.FC<HeroBlockProps> = ({ content, isEditing, onChan
     >
       <div className="absolute inset-0 bg-black bg-opacity-40"></div>
       <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-4">
-        <h1 className="text-4xl md:text-6xl font-bold mb-6">{content.title}</h1>
+        <h1 className="text-4xl md:text-6xl font-bold mb-6">
+          Bienvenue sur {siteName}
+        </h1>
         <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto">{content.subtitle}</p>
         {content.buttonText && content.buttonLink && (
           <Button size="lg" className="bg-white text-gray-900 hover:bg-gray-100">
