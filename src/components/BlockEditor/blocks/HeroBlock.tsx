@@ -145,7 +145,7 @@ export const HeroBlock: React.FC<HeroBlockProps> = ({ content, isEditing, onChan
       <div className="absolute inset-0 bg-black bg-opacity-40"></div>
       <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-4">
         <h1 className="text-4xl md:text-6xl font-bold mb-6">
-          Bienvenue sur {siteName}
+          Bienvenue sur FATRAS (TEST DIRECT)
         </h1>
         <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto">{content.subtitle}</p>
         {content.buttonText && content.buttonLink && (
