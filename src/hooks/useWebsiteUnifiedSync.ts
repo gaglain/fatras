@@ -31,10 +31,12 @@ export const useWebsiteUnifiedSync = () => {
       // Créer un hash pour détecter les vrais changements
       const currentDataHash = `${JSON.stringify(settings)}-${JSON.stringify(design)}`;
       
-      // Si les données n'ont pas changé, ne pas refaire la sync
+      // Forcer la sync à chaque fois pour garantir la synchronisation
+      console.log('🔄 Data hash:', currentDataHash);
+      console.log('🔄 Last hash:', lastDataHash.current);
+      
       if (currentDataHash === lastDataHash.current && lastDataHash.current !== '') {
-        console.log('🔄 No data changes detected, skipping sync');
-        return;
+        console.log('🔄 Same data hash, but forcing sync for reliability');
       }
       
       lastDataHash.current = currentDataHash;

@@ -28,13 +28,15 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     location.pathname === route || location.pathname.startsWith(route + '/')
   );
   
+  // ISOLATION COMPLETE: Couleurs personnalisées UNIQUEMENT pour le dashboard
   if (isAdminRoute) {
     useCustomColors();
   }
   
-  // Hook de synchronisation unifié (frontend uniquement)
+  // ISOLATION COMPLETE: Synchronisation UNIQUEMENT pour le frontend
   const isFrontendPage = location.pathname.startsWith('/front');
   if (isFrontendPage) {
+    console.log('🎯 Frontend page detected, activating sync');
     useWebsiteUnifiedSync();
   }
   

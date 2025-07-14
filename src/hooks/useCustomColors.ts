@@ -214,15 +214,20 @@ export const useCustomColors = () => {
     // Appliquer immédiatement
     applyColors();
 
-    // Écouter les changements
-    const handleColorChange = () => {
+    // ISOLATION: Écouter SEULEMENT les changements de couleurs personnalisées, PAS les events de website
+    const handleColorChange = (e?: StorageEvent) => {
+      // Vérifier qu'on est bien sur une page admin pour éviter les conflits
+      if (window.location.pathname.startsWith('/front')) {
+        console.log('🚫 Ignoring color change on frontend page');
+        return;
+      }
       setTimeout(applyColors, 50);
     };
 
     window.addEventListener('storage', (e) => {
-      if (e.key === 'customColors') handleColorChange();
+      if (e.key === 'customColors') handleColorChange(e);
     });
-    window.addEventListener('customColorsChanged', handleColorChange);
+    window.addEventListener('customColorsChanged', () => handleColorChange());
 
     // Observer les changements de thème
     const observer = new MutationObserver(() => {
