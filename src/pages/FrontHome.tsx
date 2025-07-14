@@ -104,10 +104,54 @@ export const FrontHome: React.FC = () => {
     );
   };
 
+  // État pour synchroniser le nom du site
+  const [siteName, setSiteName] = useState('MusiConnect');
+
+  useEffect(() => {
+    const updateSiteName = () => {
+      const savedDesign = localStorage.getItem('websiteDesign');
+      const savedSettings = localStorage.getItem('websiteSettings');
+      
+      let finalSiteName = 'MusiConnect';
+      
+      if (savedDesign) {
+        try {
+          const design = JSON.parse(savedDesign);
+          if (design.siteName) finalSiteName = design.siteName;
+        } catch (e) {
+          console.error('Error parsing design:', e);
+        }
+      } else if (savedSettings) {
+        try {
+          const settings = JSON.parse(savedSettings);
+          if (settings.siteName) finalSiteName = settings.siteName;
+        } catch (e) {
+          console.error('Error parsing settings:', e);
+        }
+      }
+      
+      setSiteName(finalSiteName);
+      console.log('🏠 FrontHome - Site name updated to:', finalSiteName);
+    };
+
+    updateSiteName();
+    
+    // Écouter les changements
+    window.addEventListener('websiteDesignUpdated', updateSiteName);
+    window.addEventListener('websiteDesignSaved', updateSiteName);
+    window.addEventListener('websiteSettingsUpdated', updateSiteName);
+    
+    return () => {
+      window.removeEventListener('websiteDesignUpdated', updateSiteName);
+      window.removeEventListener('websiteDesignSaved', updateSiteName);
+      window.removeEventListener('websiteSettingsUpdated', updateSiteName);
+    };
+  }, []);
+
   return (
     <>
       <SEOHead 
-        title={pageData.title + ' - MusiConnect'}
+        title={pageData.title + ' - ' + siteName}
         description={pageData.metaDescription}
       />
       

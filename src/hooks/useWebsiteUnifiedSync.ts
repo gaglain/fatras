@@ -14,8 +14,8 @@ export const useWebsiteUnifiedSync = () => {
   const applyAllChanges = useCallback(async () => {
     const now = Date.now();
     
-    // Throttle pour les changements rapides
-    if (syncInProgress.current || (now - lastSyncTime.current) < 200) {
+    // Throttle pour éviter les appels trop rapides
+    if (syncInProgress.current || (now - lastSyncTime.current) < 100) {
       return;
     }
     
@@ -28,17 +28,15 @@ export const useWebsiteUnifiedSync = () => {
       const settings = loadSettings();
       const design = loadDesign();
       
-      // Créer un hash pour détecter les vrais changements
-      const currentDataHash = `${JSON.stringify(settings)}-${JSON.stringify(design)}`;
+      // DEBUG: Log des données chargées
+      console.log('📊 Settings loaded:', settings?.siteName);
+      console.log('🎨 Design loaded:', design?.siteName);
       
-      // Forcer la sync à chaque fois pour garantir la synchronisation
-      console.log('🔄 Data hash:', currentDataHash);
-      console.log('🔄 Last hash:', lastDataHash.current);
+      // Créer un hash simplifié pour détecter les vrais changements
+      const currentDataHash = `${design?.siteName || 'default'}-${design?.primaryColor || 'default'}`;
+      console.log('🔄 Current hash:', currentDataHash, 'Last hash:', lastDataHash.current);
       
-      if (currentDataHash === lastDataHash.current && lastDataHash.current !== '') {
-        console.log('🔄 Same data hash, but forcing sync for reliability');
-      }
-      
+      // Toujours appliquer les changements pour garantir la synchronisation
       lastDataHash.current = currentDataHash;
       
       // Déterminer le nom du site
