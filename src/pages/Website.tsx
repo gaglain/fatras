@@ -12,12 +12,10 @@ import { SEOManager } from '@/components/SEOManager';
 import { LegalContentManager } from '@/components/LegalContentManager';
 import { CMSPageManager } from '@/components/CMSPageManager';
 import { GoogleIntegrationDiagnostic } from '@/components/integrations/GoogleIntegrationDiagnostic';
-import { useWebsiteUnifiedSync } from '@/hooks/useWebsiteUnifiedSync';
 
 export const Website: React.FC = () => {
   const [activeTab, setActiveTab] = useState('pages');
   const navigate = useNavigate();
-  const { forceSync, isActiveSyncing } = useWebsiteUnifiedSync();
 
   const handleSEOSave = (seoData: any) => {
     console.log('Saving SEO data:', seoData);
@@ -34,10 +32,6 @@ export const Website: React.FC = () => {
     window.open('/front', '_blank');
   };
 
-  const handleForceSync = async () => {
-    console.log('🔄 Force sync requested by user');
-    await forceSync();
-  };
 
   return (
     <div className="space-y-6" style={{
@@ -56,16 +50,6 @@ export const Website: React.FC = () => {
         </div>
         <div className="flex items-center space-x-3">
           <Button 
-            onClick={handleForceSync}
-            variant="outline"
-            className="flex items-center space-x-2"
-            title="Forcer la synchronisation complète"
-            disabled={isActiveSyncing}
-          >
-            <Wrench className={`h-4 w-4 ${isActiveSyncing ? 'animate-spin' : ''}`} />
-            <span>{isActiveSyncing ? 'Sync...' : 'Synchroniser'}</span>
-          </Button>
-          <Button 
             onClick={handlePreviewSite}
             variant="outline"
             className="flex items-center space-x-2"
@@ -83,15 +67,6 @@ export const Website: React.FC = () => {
         </div>
       </div>
 
-      {/* Indicateur de synchronisation */}
-      {isActiveSyncing && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-          <div className="flex items-center space-x-2">
-            <Wrench className="h-4 w-4 animate-spin text-blue-600" />
-            <span className="text-blue-800 text-sm">Synchronisation en cours...</span>
-          </div>
-        </div>
-      )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="grid w-full grid-cols-7">
