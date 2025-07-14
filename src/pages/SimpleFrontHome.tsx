@@ -13,74 +13,60 @@ export const SimpleFrontHome: React.FC = () => {
   });
 
   useEffect(() => {
-    console.log('🚀 SIMPLE FRONT HOME - Loading');
+    console.log('🚀 SIMPLE FRONT HOME - Loading with aggressive sync');
     
     const loadSiteData = () => {
-      const savedSettings = localStorage.getItem('websiteSettings');
-      const savedDesign = localStorage.getItem('websiteDesign');
-      
-      let finalSiteName = 'MusiConnect';
-      let finalDescription = 'Plateforme de gestion artistique';
-      
-      // Priorité au design
-      if (savedDesign) {
-        try {
+      try {
+        const savedSettings = localStorage.getItem('websiteSettings');
+        const savedDesign = localStorage.getItem('websiteDesign');
+        
+        let finalSiteName = 'MusiConnect';
+        let finalDescription = 'Plateforme de gestion artistique';
+        
+        // Priorité ABSOLUE au design
+        if (savedDesign) {
           const design = JSON.parse(savedDesign);
-          if (design.siteName) finalSiteName = design.siteName;
-          console.log('🚀 SIMPLE FRONT HOME - Design loaded:', design.siteName);
-        } catch (error) {
-          console.error('Design parse error:', error);
-        }
-      }
-      
-      // Ensuite les settings
-      if (savedSettings) {
-        try {
+          if (design.siteName) {
+            finalSiteName = design.siteName;
+            console.log('🚀 SIMPLE FRONT HOME - Design loaded:', design.siteName);
+          }
+        } else if (savedSettings) {
+          // Fallback vers settings SEULEMENT si pas de design
           const parsed = JSON.parse(savedSettings);
-          if (parsed.siteName && !savedDesign) finalSiteName = parsed.siteName;
+          if (parsed.siteName) finalSiteName = parsed.siteName;
           if (parsed.siteDescription) finalDescription = parsed.siteDescription;
           console.log('🚀 SIMPLE FRONT HOME - Settings loaded:', parsed.siteName);
-        } catch (error) {
-          console.error('Settings parse error:', error);
         }
+        
+        setSettings({
+          siteName: finalSiteName,
+          siteDescription: finalDescription
+        });
+        
+        document.title = finalSiteName;
+        console.log('🚀 SIMPLE FRONT HOME - Final siteName:', finalSiteName);
+      } catch (error) {
+        console.error('❌ SIMPLE FRONT HOME - Error loading data:', error);
       }
-      
-      setSettings({
-        siteName: finalSiteName,
-        siteDescription: finalDescription
-      });
-      
-      document.title = finalSiteName;
-      console.log('🚀 SIMPLE FRONT HOME - Final siteName:', finalSiteName);
     };
     
+    // Charger immédiatement et vérifier TOUTES les 500ms
     loadSiteData();
-    
-    // Écouter les changements
-    const handleDataChange = () => {
-      console.log('📡 SIMPLE FRONT HOME - Data change detected');
-      loadSiteData();
-    };
-
-    window.addEventListener('storage', handleDataChange);
-    window.addEventListener('websiteDesignUpdated', handleDataChange);
-    window.addEventListener('websiteDesignSaved', handleDataChange);
-    window.addEventListener('websiteSettingsUpdated', handleDataChange);
+    const aggressiveInterval = setInterval(loadSiteData, 500);
     
     return () => {
-      window.removeEventListener('storage', handleDataChange);
-      window.removeEventListener('websiteDesignUpdated', handleDataChange);
-      window.removeEventListener('websiteDesignSaved', handleDataChange);
-      window.removeEventListener('websiteSettingsUpdated', handleDataChange);
+      clearInterval(aggressiveInterval);
     };
   }, []);
+
+  console.log('🎯 SIMPLE FRONT HOME - Current settings:', settings.siteName);
 
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-20">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-5xl font-bold mb-6">
+          <h1 className="text-5xl font-bold mb-6" key={`${settings.siteName}-${Date.now()}`}>
             Bienvenue sur {settings.siteName}
           </h1>
           <p className="text-xl mb-8 max-w-2xl mx-auto">

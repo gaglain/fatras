@@ -29,7 +29,7 @@ export const SimpleFrontNavigation: React.FC = () => {
 
   const [design, setDesign] = useState<SiteDesign>({
     logo: '',
-    siteName: 'MusiConnect', // valeur par défaut
+    siteName: 'MusiConnect',
     primaryColor: '#1632f4',
     headerBg: '#ffffff',
     textColor: '#1f2937',
@@ -40,88 +40,51 @@ export const SimpleFrontNavigation: React.FC = () => {
     console.log('🔥 NAVIGATION - Starting SUPER AGGRESSIVE sync');
     
     const loadAndApplyData = () => {
-      // Charger le design en priorité ABSOLUE
-      const savedDesign = localStorage.getItem('websiteDesign');
-      const savedSettings = localStorage.getItem('websiteSettings');
-      
-      let newSiteName = 'MusiConnect';
-      let newDesign = {
-        logo: '',
-        siteName: 'MusiConnect',
-        primaryColor: '#1632f4',
-        headerBg: '#ffffff',
-        textColor: '#1f2937',
-        linkColor: '#3b82f6'
-      };
-      
-      // PRIORITÉ ABSOLUE au design
-      if (savedDesign) {
-        try {
+      try {
+        const savedDesign = localStorage.getItem('websiteDesign');
+        const savedSettings = localStorage.getItem('websiteSettings');
+        
+        let newSiteName = 'MusiConnect';
+        let newDesign = { ...design };
+        
+        // PRIORITÉ ABSOLUE au design
+        if (savedDesign) {
           const designData = JSON.parse(savedDesign);
           newDesign = { ...newDesign, ...designData };
           if (designData.siteName) {
             newSiteName = designData.siteName;
             console.log('🔥 NAVIGATION - Design loaded with siteName:', newSiteName);
           }
-        } catch (error) {
-          console.error('❌ Design parse error:', error);
-        }
-      }
-      
-      // Fallback vers settings SEULEMENT si pas de siteName dans design
-      if (!newSiteName || newSiteName === 'MusiConnect') {
-        if (savedSettings) {
-          try {
-            const settingsData = JSON.parse(savedSettings);
-            if (settingsData.siteName) {
-              newSiteName = settingsData.siteName;
-              console.log('🔥 NAVIGATION - Settings fallback loaded:', newSiteName);
-            }
-          } catch (error) {
-            console.error('❌ Settings parse error:', error);
+        } else if (savedSettings) {
+          // Fallback vers settings SEULEMENT si pas de design
+          const settingsData = JSON.parse(savedSettings);
+          if (settingsData.siteName) {
+            newSiteName = settingsData.siteName;
+            console.log('🔥 NAVIGATION - Settings fallback loaded:', newSiteName);
           }
         }
+        
+        // FORCER la mise à jour immédiate
+        const finalDesign = { ...newDesign, siteName: newSiteName };
+        setDesign(finalDesign);
+        
+        // FORCER le titre de la page
+        if (document.title !== newSiteName) {
+          document.title = newSiteName;
+          console.log('📄 NAVIGATION - Title FORCED to:', newSiteName);
+        }
+        
+        console.log('🔥 NAVIGATION - Applied siteName:', newSiteName);
+      } catch (error) {
+        console.error('❌ NAVIGATION - Error loading data:', error);
       }
-      
-      // FORCER la mise à jour immédiate
-      const finalDesign = { ...newDesign, siteName: newSiteName };
-      setDesign(finalDesign);
-      
-      // FORCER le titre de la page
-      if (document.title !== newSiteName) {
-        document.title = newSiteName;
-        console.log('📄 NAVIGATION - Title FORCED to:', newSiteName);
-      }
-      
-      console.log('🔥 NAVIGATION - Applied siteName:', newSiteName);
-      console.log('🔥 NAVIGATION - Full design:', finalDesign);
     };
 
-    // Charger immédiatement ET de manière répétée
+    // Charger immédiatement et vérifier TOUTES les 500ms
     loadAndApplyData();
-    setTimeout(loadAndApplyData, 50);
-    setTimeout(loadAndApplyData, 200);
-    setTimeout(loadAndApplyData, 500);
-    
-    // Écouter tous les changements possibles
-    const handleDataChange = (event?: any) => {
-      console.log('📡 NAVIGATION - Data change detected:', event?.type || 'manual');
-      setTimeout(loadAndApplyData, 10); // Très rapide
-    };
-
-    window.addEventListener('storage', handleDataChange);
-    window.addEventListener('websiteDesignUpdated', handleDataChange);
-    window.addEventListener('websiteDesignSaved', handleDataChange);
-    window.addEventListener('websiteSettingsUpdated', handleDataChange);
-    
-    // Vérification périodique très agressive
-    const aggressiveInterval = setInterval(loadAndApplyData, 1000); // Toutes les secondes
+    const aggressiveInterval = setInterval(loadAndApplyData, 500);
     
     return () => {
-      window.removeEventListener('storage', handleDataChange);
-      window.removeEventListener('websiteDesignUpdated', handleDataChange);
-      window.removeEventListener('websiteDesignSaved', handleDataChange);
-      window.removeEventListener('websiteSettingsUpdated', handleDataChange);
       clearInterval(aggressiveInterval);
     };
   }, []);
@@ -140,7 +103,7 @@ export const SimpleFrontNavigation: React.FC = () => {
               <img 
                 src={design.logo} 
                 alt={design.siteName}
-                className="site-logo"
+                className="site-logo h-8 w-auto"
                 onError={(e) => {
                   console.warn('⚠️ Logo failed to load:', design.logo);
                   (e.currentTarget as HTMLImageElement).style.display = 'none';
@@ -159,7 +122,7 @@ export const SimpleFrontNavigation: React.FC = () => {
             <span 
               className="site-name font-bold text-xl"
               data-site-name
-              key={design.siteName} // Forcer le re-render quand le nom change
+              key={`${design.siteName}-${Date.now()}`}
             >
               {design.siteName}
             </span>
