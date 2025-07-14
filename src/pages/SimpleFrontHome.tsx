@@ -14,32 +14,65 @@ export const SimpleFrontHome: React.FC = () => {
 
   useEffect(() => {
     console.log('🚀 SIMPLE FRONT HOME - Loading');
-    const savedSettings = localStorage.getItem('websiteSettings');
-    const savedDesign = localStorage.getItem('websiteDesign');
     
-    let finalSiteName = 'MusiConnect';
-    
-    if (savedDesign) {
-      try {
-        const design = JSON.parse(savedDesign);
-        if (design.siteName) finalSiteName = design.siteName;
-        console.log('🚀 SIMPLE FRONT HOME - Design loaded:', design.siteName);
-      } catch (error) {
-        console.error('Design parse error:', error);
+    const loadSiteData = () => {
+      const savedSettings = localStorage.getItem('websiteSettings');
+      const savedDesign = localStorage.getItem('websiteDesign');
+      
+      let finalSiteName = 'MusiConnect';
+      let finalDescription = 'Plateforme de gestion artistique';
+      
+      // Priorité au design
+      if (savedDesign) {
+        try {
+          const design = JSON.parse(savedDesign);
+          if (design.siteName) finalSiteName = design.siteName;
+          console.log('🚀 SIMPLE FRONT HOME - Design loaded:', design.siteName);
+        } catch (error) {
+          console.error('Design parse error:', error);
+        }
       }
-    } else if (savedSettings) {
-      try {
-        const parsed = JSON.parse(savedSettings);
-        if (parsed.siteName) finalSiteName = parsed.siteName;
-        console.log('🚀 SIMPLE FRONT HOME - Settings loaded:', parsed.siteName);
-      } catch (error) {
-        console.error('Settings parse error:', error);
+      
+      // Ensuite les settings
+      if (savedSettings) {
+        try {
+          const parsed = JSON.parse(savedSettings);
+          if (parsed.siteName && !savedDesign) finalSiteName = parsed.siteName;
+          if (parsed.siteDescription) finalDescription = parsed.siteDescription;
+          console.log('🚀 SIMPLE FRONT HOME - Settings loaded:', parsed.siteName);
+        } catch (error) {
+          console.error('Settings parse error:', error);
+        }
       }
-    }
+      
+      setSettings({
+        siteName: finalSiteName,
+        siteDescription: finalDescription
+      });
+      
+      document.title = finalSiteName;
+      console.log('🚀 SIMPLE FRONT HOME - Final siteName:', finalSiteName);
+    };
     
-    setSettings(prev => ({ ...prev, siteName: finalSiteName }));
-    document.title = finalSiteName;
-    console.log('🚀 SIMPLE FRONT HOME - Final siteName:', finalSiteName);
+    loadSiteData();
+    
+    // Écouter les changements
+    const handleDataChange = () => {
+      console.log('📡 SIMPLE FRONT HOME - Data change detected');
+      loadSiteData();
+    };
+
+    window.addEventListener('storage', handleDataChange);
+    window.addEventListener('websiteDesignUpdated', handleDataChange);
+    window.addEventListener('websiteDesignSaved', handleDataChange);
+    window.addEventListener('websiteSettingsUpdated', handleDataChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleDataChange);
+      window.removeEventListener('websiteDesignUpdated', handleDataChange);
+      window.removeEventListener('websiteDesignSaved', handleDataChange);
+      window.removeEventListener('websiteSettingsUpdated', handleDataChange);
+    };
   }, []);
 
   return (
@@ -48,7 +81,7 @@ export const SimpleFrontHome: React.FC = () => {
       <section className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-20">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-5xl font-bold mb-6">
-            Bienvenue sur FATRAS (TEST DIRECT)
+            Bienvenue sur {settings.siteName}
           </h1>
           <p className="text-xl mb-8 max-w-2xl mx-auto">
             {settings.siteDescription}

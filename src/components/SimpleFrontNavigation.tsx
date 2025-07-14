@@ -138,7 +138,7 @@ export const SimpleFrontNavigation: React.FC = () => {
               className="site-name"
               data-site-name
             >
-              FATRAS (TEST DIRECT)
+              {design.siteName}
             </span>
           </Link>
 
