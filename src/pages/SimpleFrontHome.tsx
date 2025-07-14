@@ -1,76 +1,22 @@
 
-import React, { useEffect, useState } from 'react';
-
-interface WebsiteSettings {
-  siteName: string;
-  siteDescription: string;
-}
+import React from 'react';
+import { useUnifiedSiteData } from '@/hooks/useUnifiedSiteData';
 
 export const SimpleFrontHome: React.FC = () => {
-  const [settings, setSettings] = useState<WebsiteSettings>({
-    siteName: 'MusiConnect',
-    siteDescription: 'Plateforme de gestion artistique'
-  });
+  const siteData = useUnifiedSiteData();
 
-  useEffect(() => {
-    console.log('🚀 SIMPLE FRONT HOME - Loading with aggressive sync');
-    
-    const loadSiteData = () => {
-      try {
-        const savedSettings = localStorage.getItem('websiteSettings');
-        const savedDesign = localStorage.getItem('websiteDesign');
-        
-        let finalSiteName = 'MusiConnect';
-        let finalDescription = 'Plateforme de gestion artistique';
-        
-        // Priorité ABSOLUE au design
-        if (savedDesign) {
-          const design = JSON.parse(savedDesign);
-          if (design.siteName) {
-            finalSiteName = design.siteName;
-            console.log('🚀 SIMPLE FRONT HOME - Design loaded:', design.siteName);
-          }
-        } else if (savedSettings) {
-          // Fallback vers settings SEULEMENT si pas de design
-          const parsed = JSON.parse(savedSettings);
-          if (parsed.siteName) finalSiteName = parsed.siteName;
-          if (parsed.siteDescription) finalDescription = parsed.siteDescription;
-          console.log('🚀 SIMPLE FRONT HOME - Settings loaded:', parsed.siteName);
-        }
-        
-        setSettings({
-          siteName: finalSiteName,
-          siteDescription: finalDescription
-        });
-        
-        document.title = finalSiteName;
-        console.log('🚀 SIMPLE FRONT HOME - Final siteName:', finalSiteName);
-      } catch (error) {
-        console.error('❌ SIMPLE FRONT HOME - Error loading data:', error);
-      }
-    };
-    
-    // Charger immédiatement et vérifier TOUTES les 500ms
-    loadSiteData();
-    const aggressiveInterval = setInterval(loadSiteData, 500);
-    
-    return () => {
-      clearInterval(aggressiveInterval);
-    };
-  }, []);
-
-  console.log('🎯 SIMPLE FRONT HOME - Current settings:', settings.siteName);
+  console.log('🎯 SIMPLE FRONT HOME - Current siteName:', siteData.siteName);
 
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-20">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-5xl font-bold mb-6" key={`${settings.siteName}-${Date.now()}`}>
-            Bienvenue sur {settings.siteName}
+          <h1 className="text-5xl font-bold mb-6" key={`welcome-${siteData.siteName}-${Date.now()}`}>
+            Bienvenue sur {siteData.siteName}
           </h1>
           <p className="text-xl mb-8 max-w-2xl mx-auto">
-            {settings.siteDescription}
+            Plateforme de gestion artistique
           </p>
           <button className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
             Découvrir
