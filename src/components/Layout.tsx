@@ -7,6 +7,7 @@ import { BackOfficeHeader } from '@/components/BackOfficeHeader';
 import { PublicChatWidget } from '@/components/PublicChatWidget';
 import { ChatWidget } from '@/components/ChatWidget';
 import { useCustomColors } from '@/hooks/useCustomColors';
+import { ForceFrontendSync } from '@/components/ForceFrontendSync';
 
 const adminRoutes = [
   '/admin', '/dashboard', '/artists', '/events', '/agenda', '/contacts',
@@ -32,11 +33,12 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     useCustomColors();
   }
   
-  console.log('🏗️ Layout - Path:', location.pathname, 'isAdmin:', isAdminRoute, 'NO FRONTEND SYNC HERE');
+  console.log('🏗️ Layout - Path:', location.pathname, 'isAdmin:', isAdminRoute);
   
   if (!isAdminRoute) {
     return (
       <>
+        <ForceFrontendSync />
         {children}
         <PublicChatWidget />
       </>
@@ -45,6 +47,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <SidebarProvider>
+      <ForceFrontendSync />
       <div className="flex h-screen w-full">
         {/* Sidebar desktop seulement */}
         <div className="hidden lg:block">
