@@ -4,47 +4,27 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Globe, Menu, Palette, Settings, Eye, Code, Edit, FileText, ExternalLink, Wrench } from 'lucide-react';
-import { WebsiteMenuManager } from '@/components/WebsiteMenuManager';
-import { WebsiteDesignManager } from '@/components/WebsiteDesignManager';
-import { WebsiteSettingsManager } from '@/components/WebsiteSettingsManager';
-import { SEOManager } from '@/components/SEOManager';
-import { LegalContentManager } from '@/components/LegalContentManager';
-import { CMSPageManager } from '@/components/CMSPageManager';
-import { GoogleIntegrationDiagnostic } from '@/components/integrations/GoogleIntegrationDiagnostic';
+import { Globe, Settings, Eye, ExternalLink, Edit } from 'lucide-react';
+import { WebsiteConfigManager } from '@/components/WebsiteConfigManager';
 
 export const Website: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('pages');
+  const [activeTab, setActiveTab] = useState('config');
   const navigate = useNavigate();
 
-  const handleSEOSave = (seoData: any) => {
-    console.log('Saving SEO data:', seoData);
-    // TODO: Implement SEO data saving to backend
-  };
-
   const handleOpenEditor = () => {
-    console.log('🚀 Opening website editor');
     navigate('/website-editor');
   };
 
   const handlePreviewSite = () => {
-    console.log('👁️ Opening preview in new tab');
     window.open('/front', '_blank');
   };
 
-
   return (
-    <div className="space-y-6" style={{
-      backgroundColor: 'var(--app-background, #ffffff)',
-      color: 'var(--app-text, #18181b)',
-      minHeight: '100vh'
-    }}>
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold" style={{ color: 'var(--app-text, #18181b)' }}>
-            Gestion du Site Web
-          </h1>
-          <p className="mt-2" style={{ color: 'var(--app-text, #666666)' }}>
+          <h1 className="text-3xl font-bold">Gestion du Site Web</h1>
+          <p className="mt-2 text-gray-600">
             Configurez et personnalisez votre site web public
           </p>
         </div>
@@ -67,172 +47,54 @@ export const Website: React.FC = () => {
         </div>
       </div>
 
-
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-7">
-          <TabsTrigger value="pages">
-            <FileText className="h-4 w-4 mr-2" />
-            Pages
-          </TabsTrigger>
-          <TabsTrigger value="menu">
-            <Menu className="h-4 w-4 mr-2" />
-            Menu
-          </TabsTrigger>
-          <TabsTrigger value="design">
-            <Palette className="h-4 w-4 mr-2" />
-            Design
-          </TabsTrigger>
-          <TabsTrigger value="settings">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="config">
             <Settings className="h-4 w-4 mr-2" />
-            Paramètres
+            Configuration
           </TabsTrigger>
-          <TabsTrigger value="seo">
-            <Code className="h-4 w-4 mr-2" />
-            SEO
-          </TabsTrigger>
-          <TabsTrigger value="legal">
+          <TabsTrigger value="preview">
             <Eye className="h-4 w-4 mr-2" />
-            Légal
-          </TabsTrigger>
-          <TabsTrigger value="integrations">
-            <Wrench className="h-4 w-4 mr-2" />
-            Intégrations
+            Aperçu
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="pages">
-          <Card style={{
-            backgroundColor: 'var(--app-card-bg, #ffffff)',
-            color: 'var(--app-card-text, #18181b)',
-            border: '1px solid var(--notification-border, #e5e7eb)'
-          }}>
-            <CardContent className="p-6">
-              <CMSPageManager />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="menu">
-          <Card style={{
-            backgroundColor: 'var(--app-card-bg, #ffffff)',
-            color: 'var(--app-card-text, #18181b)',
-            border: '1px solid var(--notification-border, #e5e7eb)'
-          }}>
+        <TabsContent value="config">
+          <Card>
             <CardHeader>
-              <CardTitle style={{ color: 'var(--app-card-text, #18181b)' }}>
-                Gestion du Menu
+              <CardTitle className="flex items-center">
+                <Globe className="h-5 w-5 mr-2" />
+                Configuration du site web
               </CardTitle>
-              <p style={{ color: 'var(--app-text, #666666)' }}>
-                Personnalisez la navigation de votre site web
+              <p className="text-gray-600">
+                Modifiez les paramètres de votre site web. Les changements seront appliqués immédiatement.
               </p>
             </CardHeader>
             <CardContent>
-              <WebsiteMenuManager />
+              <WebsiteConfigManager />
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="design">
-          <Card style={{
-            backgroundColor: 'var(--app-card-bg, #ffffff)',
-            color: 'var(--app-card-text, #18181b)',
-            border: '1px solid var(--notification-border, #e5e7eb)'
-          }}>
+        <TabsContent value="preview">
+          <Card>
             <CardHeader>
-              <CardTitle style={{ color: 'var(--app-card-text, #18181b)' }}>
-                Design et Apparence
-              </CardTitle>
-              <p style={{ color: 'var(--app-text, #666666)' }}>
-                Personnalisez l'apparence de votre site web
-              </p>
-              <div className="bg-green-50 border border-green-200 rounded p-3 mt-2">
-                <p className="text-sm text-green-800">
-                  💡 <strong>Synchronisation améliorée :</strong> Vos changements de design seront automatiquement appliqués au site front.
-                </p>
+              <CardTitle>Aperçu du site</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-96 border rounded-lg overflow-hidden">
+                <iframe
+                  src="/front"
+                  className="w-full h-full"
+                  title="Aperçu du site"
+                />
               </div>
-            </CardHeader>
-            <CardContent>
-              <WebsiteDesignManager />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="settings">
-          <Card style={{
-            backgroundColor: 'var(--app-card-bg, #ffffff)',
-            color: 'var(--app-card-text, #18181b)',
-            border: '1px solid var(--notification-border, #e5e7eb)'
-          }}>
-            <CardHeader>
-              <CardTitle style={{ color: 'var(--app-card-text, #18181b)' }}>
-                Paramètres Généraux
-              </CardTitle>
-              <p style={{ color: 'var(--app-text, #666666)' }}>
-                Configuration générale du site web
-              </p>
-            </CardHeader>
-            <CardContent>
-              <WebsiteSettingsManager />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="seo">
-          <Card style={{
-            backgroundColor: 'var(--app-card-bg, #ffffff)',
-            color: 'var(--app-card-text, #18181b)',
-            border: '1px solid var(--notification-border, #e5e7eb)'
-          }}>
-            <CardHeader>
-              <CardTitle style={{ color: 'var(--app-card-text, #18181b)' }}>
-                SEO et Référencement
-              </CardTitle>
-              <p style={{ color: 'var(--app-text, #666666)' }}>
-                Optimisez le référencement de votre site
-              </p>
-            </CardHeader>
-            <CardContent>
-              <SEOManager onSave={handleSEOSave} />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="legal">
-          <Card style={{
-            backgroundColor: 'var(--app-card-bg, #ffffff)',
-            color: 'var(--app-card-text, #18181b)',
-            border: '1px solid var(--notification-border, #e5e7eb)'
-          }}>
-            <CardHeader>
-              <CardTitle style={{ color: 'var(--app-card-text, #18181b)' }}>
-                Contenu Légal
-              </CardTitle>
-              <p style={{ color: 'var(--app-text, #666666)' }}>
-                Gérez les mentions légales et CGV
-              </p>
-            </CardHeader>
-            <CardContent>
-              <LegalContentManager />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="integrations">
-          <Card style={{
-            backgroundColor: 'var(--app-card-bg, #ffffff)',
-            color: 'var(--app-card-text, #18181b)',
-            border: '1px solid var(--notification-border, #e5e7eb)'
-          }}>
-            <CardHeader>
-              <CardTitle style={{ color: 'var(--app-card-text, #18181b)' }}>
-                Intégrations Google
-              </CardTitle>
-              <p style={{ color: 'var(--app-text, #666666)' }}>
-                Diagnostiquez et testez vos intégrations Google
-              </p>
-            </CardHeader>
-            <CardContent>
-              <GoogleIntegrationDiagnostic />
+              <div className="mt-4 text-center">
+                <Button onClick={handlePreviewSite} variant="outline">
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Ouvrir dans un nouvel onglet
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
