@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -25,8 +24,9 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { UserProvider } from "./contexts/UserContext";
 import { RealtimeProvider } from "./contexts/RealtimeContext";
 import { MessagingProvider } from "./contexts/MessagingContext";
+import { WebsiteConfigProvider } from "./contexts/WebsiteConfigContext";
 
-import { SimpleFrontLayout } from "./components/SimpleFrontLayout";
+import { NewSimpleFrontLayout } from "./components/NewSimpleFrontLayout";
 import { SimpleFrontHome } from "./pages/SimpleFrontHome";
 
 const queryClient = new QueryClient({
@@ -59,68 +59,70 @@ const App = () => {
               <RealtimeProvider>
                 <MessagingProvider>
                   <UserProvider>
-                    <Routes>
-                      {/* Public Routes */}
-                      <Route path="/" element={<Index />} />
-                      <Route path="/login" element={<PlaceholderPage title="Login" />} />
-                      <Route path="/register" element={<PlaceholderPage title="Register" />} />
-                      <Route path="/forgot-password" element={<PlaceholderPage title="Forgot Password" />} />
-                      <Route path="/reset-password" element={<PlaceholderPage title="Reset Password" />} />
-                      <Route path="/pricing" element={<PlaceholderPage title="Pricing" />} />
-                      <Route path="/terms" element={<PlaceholderPage title="Terms" />} />
-                      <Route path="/privacy" element={<PlaceholderPage title="Privacy" />} />
-                      <Route path="/contact" element={<PlaceholderPage title="Contact" />} />
-                      <Route path="/blog" element={<PlaceholderPage title="Blog" />} />
-                      <Route path="/blog/:slug" element={<PlaceholderPage title="Blog Post" />} />
-                      <Route path="/careers" element={<PlaceholderPage title="Careers" />} />
-                      <Route path="/careers/:slug" element={<PlaceholderPage title="Career" />} />
-                      <Route path="/press" element={<PlaceholderPage title="Press" />} />
-                      <Route path="/press/:slug" element={<PlaceholderPage title="Press Release" />} />
-                      
-                      {/* Front Website Routes - Using simplified components */}
-                      <Route path="/front" element={<SimpleFrontLayout />}>
-                        <Route index element={<SimpleFrontHome />} />
-                        <Route path="artists" element={<FrontArtists />} />
-                        <Route path="events" element={<PlaceholderPage title="Events" />} />
-                        <Route path="shop" element={<FrontShop />} />
-                        <Route path="contact" element={<PlaceholderPage title="Contact" />} />
-                        <Route path="mentions-legales" element={<FrontLegalNotices />} />
-                        <Route path="cgv" element={<FrontTermsOfService />} />
-                        <Route path="politique-confidentialite" element={<FrontPrivacyPolicy />} />
-                      </Route>
+                    <WebsiteConfigProvider>
+                      <Routes>
+                        {/* Public Routes */}
+                        <Route path="/" element={<Index />} />
+                        <Route path="/login" element={<PlaceholderPage title="Login" />} />
+                        <Route path="/register" element={<PlaceholderPage title="Register" />} />
+                        <Route path="/forgot-password" element={<PlaceholderPage title="Forgot Password" />} />
+                        <Route path="/reset-password" element={<PlaceholderPage title="Reset Password" />} />
+                        <Route path="/pricing" element={<PlaceholderPage title="Pricing" />} />
+                        <Route path="/terms" element={<PlaceholderPage title="Terms" />} />
+                        <Route path="/privacy" element={<PlaceholderPage title="Privacy" />} />
+                        <Route path="/contact" element={<PlaceholderPage title="Contact" />} />
+                        <Route path="/blog" element={<PlaceholderPage title="Blog" />} />
+                        <Route path="/blog/:slug" element={<PlaceholderPage title="Blog Post" />} />
+                        <Route path="/careers" element={<PlaceholderPage title="Careers" />} />
+                        <Route path="/careers/:slug" element={<PlaceholderPage title="Career" />} />
+                        <Route path="/press" element={<PlaceholderPage title="Press" />} />
+                        <Route path="/press/:slug" element={<PlaceholderPage title="Press Release" />} />
+                        
+                        {/* Front Website Routes - Using new simplified components */}
+                        <Route path="/front" element={<NewSimpleFrontLayout />}>
+                          <Route index element={<SimpleFrontHome />} />
+                          <Route path="artists" element={<FrontArtists />} />
+                          <Route path="events" element={<PlaceholderPage title="Events" />} />
+                          <Route path="shop" element={<FrontShop />} />
+                          <Route path="contact" element={<PlaceholderPage title="Contact" />} />
+                          <Route path="mentions-legales" element={<FrontLegalNotices />} />
+                          <Route path="cgv" element={<FrontTermsOfService />} />
+                          <Route path="politique-confidentialite" element={<FrontPrivacyPolicy />} />
+                        </Route>
 
-                      {/* Protected Routes */}
-                      <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
-                      <Route path="/artists" element={<ProtectedRoute><Layout><PlaceholderPage title="Artists" /></Layout></ProtectedRoute>} />
-                      <Route path="/artist/:id" element={<ProtectedRoute><Layout><PlaceholderPage title="Artist Detail" /></Layout></ProtectedRoute>} />
-                      <Route path="/events" element={<ProtectedRoute><Layout><PlaceholderPage title="Events" /></Layout></ProtectedRoute>} />
-                      <Route path="/contacts" element={<ProtectedRoute><Layout><PlaceholderPage title="Contacts" /></Layout></ProtectedRoute>} />
-                      <Route path="/contact-lists" element={<ProtectedRoute><Layout><PlaceholderPage title="Contact Lists" /></Layout></ProtectedRoute>} />
-                      <Route path="/contracts" element={<ProtectedRoute><Layout><PlaceholderPage title="Contracts" /></Layout></ProtectedRoute>} />
-                      <Route path="/email" element={<ProtectedRoute><Layout><PlaceholderPage title="Email" /></Layout></ProtectedRoute>} />
-                      <Route path="/email-campaigns" element={<ProtectedRoute><Layout><PlaceholderPage title="Email Campaigns" /></Layout></ProtectedRoute>} />
-                      <Route path="/messagerie" element={<ProtectedRoute><Layout><PlaceholderPage title="Messages" /></Layout></ProtectedRoute>} />
-                      <Route path="/agenda" element={<ProtectedRoute><Layout><PlaceholderPage title="Agenda" /></Layout></ProtectedRoute>} />
-                      <Route path="/roadshow" element={<ProtectedRoute><Layout><PlaceholderPage title="Road Show" /></Layout></ProtectedRoute>} />
-                      <Route path="/tasks" element={<ProtectedRoute><Layout><PlaceholderPage title="Tasks" /></Layout></ProtectedRoute>} />
-                      <Route path="/opportunities" element={<ProtectedRoute><Layout><PlaceholderPage title="Opportunities" /></Layout></ProtectedRoute>} />
-                      <Route path="/show-bible" element={<ProtectedRoute><Layout><PlaceholderPage title="Show Bible" /></Layout></ProtectedRoute>} />
-                      <Route path="/publication-calendar" element={<ProtectedRoute><Layout><PlaceholderPage title="Publication Calendar" /></Layout></ProtectedRoute>} />
-                      <Route path="/merchandise" element={<ProtectedRoute><Layout><Merchandise /></Layout></ProtectedRoute>} />
-                      <Route path="/merchandise-backoffice" element={<ProtectedRoute><Layout><PlaceholderPage title="Merchandise Backoffice" /></Layout></ProtectedRoute>} />
-                      <Route path="/website" element={<ProtectedRoute><Layout><Website /></Layout></ProtectedRoute>} />
-                      <Route path="/website-backoffice" element={<ProtectedRoute><Layout><PlaceholderPage title="Website Backoffice" /></Layout></ProtectedRoute>} />
-                      <Route path="/website-page-editor" element={<ProtectedRoute><Layout><PlaceholderPage title="Website Page Editor" /></Layout></ProtectedRoute>} />
-                      <Route path="/website-with-editor" element={<ProtectedRoute><Layout><WebsiteWithEditor /></Layout></ProtectedRoute>} />
-                      <Route path="/event-types" element={<ProtectedRoute><Layout><PlaceholderPage title="Event Types" /></Layout></ProtectedRoute>} />
-                      <Route path="/forms" element={<ProtectedRoute><Layout><PlaceholderPage title="Forms" /></Layout></ProtectedRoute>} />
-                      <Route path="/preferences" element={<ProtectedRoute><Layout><Preferences /></Layout></ProtectedRoute>} />
-                      <Route path="/user-management" element={<ProtectedRoute><Layout><PlaceholderPage title="User Management" /></Layout></ProtectedRoute>} />
-                      <Route path="/application" element={<ProtectedRoute><Layout><PlaceholderPage title="Application" /></Layout></ProtectedRoute>} />
+                        {/* Protected Routes */}
+                        <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
+                        <Route path="/artists" element={<ProtectedRoute><Layout><PlaceholderPage title="Artists" /></Layout></ProtectedRoute>} />
+                        <Route path="/artist/:id" element={<ProtectedRoute><Layout><PlaceholderPage title="Artist Detail" /></Layout></ProtectedRoute>} />
+                        <Route path="/events" element={<ProtectedRoute><Layout><PlaceholderPage title="Events" /></Layout></ProtectedRoute>} />
+                        <Route path="/contacts" element={<ProtectedRoute><Layout><PlaceholderPage title="Contacts" /></Layout></ProtectedRoute>} />
+                        <Route path="/contact-lists" element={<ProtectedRoute><Layout><PlaceholderPage title="Contact Lists" /></Layout></ProtectedRoute>} />
+                        <Route path="/contracts" element={<ProtectedRoute><Layout><PlaceholderPage title="Contracts" /></Layout></ProtectedRoute>} />
+                        <Route path="/email" element={<ProtectedRoute><Layout><PlaceholderPage title="Email" /></Layout></ProtectedRoute>} />
+                        <Route path="/email-campaigns" element={<ProtectedRoute><Layout><PlaceholderPage title="Email Campaigns" /></Layout></ProtectedRoute>} />
+                        <Route path="/messagerie" element={<ProtectedRoute><Layout><PlaceholderPage title="Messages" /></Layout></ProtectedRoute>} />
+                        <Route path="/agenda" element={<ProtectedRoute><Layout><PlaceholderPage title="Agenda" /></Layout></ProtectedRoute>} />
+                        <Route path="/roadshow" element={<ProtectedRoute><Layout><PlaceholderPage title="Road Show" /></Layout></ProtectedRoute>} />
+                        <Route path="/tasks" element={<ProtectedRoute><Layout><PlaceholderPage title="Tasks" /></Layout></ProtectedRoute>} />
+                        <Route path="/opportunities" element={<ProtectedRoute><Layout><PlaceholderPage title="Opportunities" /></Layout></ProtectedRoute>} />
+                        <Route path="/show-bible" element={<ProtectedRoute><Layout><PlaceholderPage title="Show Bible" /></Layout></ProtectedRoute>} />
+                        <Route path="/publication-calendar" element={<ProtectedRoute><Layout><PlaceholderPage title="Publication Calendar" /></Layout></ProtectedRoute>} />
+                        <Route path="/merchandise" element={<ProtectedRoute><Layout><Merchandise /></Layout></ProtectedRoute>} />
+                        <Route path="/merchandise-backoffice" element={<ProtectedRoute><Layout><PlaceholderPage title="Merchandise Backoffice" /></Layout></ProtectedRoute>} />
+                        <Route path="/website" element={<ProtectedRoute><Layout><Website /></Layout></ProtectedRoute>} />
+                        <Route path="/website-backoffice" element={<ProtectedRoute><Layout><PlaceholderPage title="Website Backoffice" /></Layout></ProtectedRoute>} />
+                        <Route path="/website-page-editor" element={<ProtectedRoute><Layout><PlaceholderPage title="Website Page Editor" /></Layout></ProtectedRoute>} />
+                        <Route path="/website-with-editor" element={<ProtectedRoute><Layout><WebsiteWithEditor /></Layout></ProtectedRoute>} />
+                        <Route path="/event-types" element={<ProtectedRoute><Layout><PlaceholderPage title="Event Types" /></Layout></ProtectedRoute>} />
+                        <Route path="/forms" element={<ProtectedRoute><Layout><PlaceholderPage title="Forms" /></Layout></ProtectedRoute>} />
+                        <Route path="/preferences" element={<ProtectedRoute><Layout><Preferences /></Layout></ProtectedRoute>} />
+                        <Route path="/user-management" element={<ProtectedRoute><Layout><PlaceholderPage title="User Management" /></Layout></ProtectedRoute>} />
+                        <Route path="/application" element={<ProtectedRoute><Layout><PlaceholderPage title="Application" /></Layout></ProtectedRoute>} />
 
-                      {/* 404 Route */}
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
+                        {/* 404 Route */}
+                        <Route path="*" element={<NotFound />} />
+                      </Routes>
+                    </WebsiteConfigProvider>
                   </UserProvider>
                 </MessagingProvider>
               </RealtimeProvider>
