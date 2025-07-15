@@ -34,6 +34,7 @@ const defaultDesign: SiteDesign = {
 
 export const WebsiteDesignManager: React.FC = () => {
   const [design, setDesign] = useState<SiteDesign>(defaultDesign);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     console.log('🔄 WebsiteDesignManager - Loading saved design...');
@@ -59,7 +60,8 @@ export const WebsiteDesignManager: React.FC = () => {
     }));
   };
 
-  const saveDesign = () => {
+  const saveDesign = async () => {
+    setIsSaving(true);
     console.log('💾 WebsiteDesignManager - SAVING DESIGN:', design);
     
     try {
@@ -70,27 +72,66 @@ export const WebsiteDesignManager: React.FC = () => {
         logo: design.logo
       };
 
-      // 2. Sauvegarder avec vérification immédiate
+      // 2. Supprimer les anciennes données pour éviter les conflits
+      localStorage.removeItem('websiteDesign');
+      localStorage.removeItem('websiteSettings');
+      
+      // 3. Attendre un tick pour s'assurer que la suppression est effective
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      // 4. Sauvegarder les nouvelles données
       localStorage.setItem('websiteDesign', JSON.stringify(designData));
-      const checkDesign = localStorage.getItem('websiteDesign');
-      console.log('🔍 Immediate check websiteDesign:', checkDesign ? 'EXISTS' : 'MISSING');
-
       localStorage.setItem('websiteSettings', JSON.stringify(settingsData));
+      
+      // 5. Vérification immédiate
+      const checkDesign = localStorage.getItem('websiteDesign');
       const checkSettings = localStorage.getItem('websiteSettings');
-      console.log('🔍 Immediate check websiteSettings:', checkSettings ? 'EXISTS' : 'MISSING');
+      
+      console.log('🔍 Immediate verification:');
+      console.log('  - websiteDesign:', checkDesign ? 'EXISTS' : 'MISSING');
+      console.log('  - websiteSettings:', checkSettings ? 'EXISTS' : 'MISSING');
 
-      // 3. Mettre à jour le titre
+      if (!checkDesign || !checkSettings) {
+        throw new Error('Failed to save to localStorage');
+      }
+
+      // 6. Mettre à jour le titre
       document.title = design.siteName;
       console.log('✅ Document title updated to:', design.siteName);
 
-      // 4. Force un re-render immédiat de cette page
-      window.location.reload();
+      // 7. Déclencher tous les événements de synchronisation
+      const events = [
+        'websiteDesignUpdated',
+        'websiteDesignSaved', 
+        'websiteSettingsUpdated',
+        'siteConfigChanged'
+      ];
+      
+      events.forEach(eventName => {
+        const event = new CustomEvent(eventName, { 
+          detail: { siteName: design.siteName, design: designData, settings: settingsData }
+        });
+        window.dispatchEvent(event);
+        console.log(`📡 Event dispatched: ${eventName}`);
+      });
+
+      // 8. Déclencher l'événement storage manuellement
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'websiteDesign',
+        newValue: JSON.stringify(designData),
+        storageArea: localStorage
+      }));
+
+      // 9. Forcer le re-render de cette page
+      setDesign({ ...design });
 
       toast.success(`✅ Design sauvegardé ! Site: "${design.siteName}"`);
 
     } catch (error) {
       console.error('❌ Error saving design:', error);
       toast.error('❌ Erreur lors de la sauvegarde');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -153,11 +194,15 @@ export const WebsiteDesignManager: React.FC = () => {
 
       {/* Actions */}
       <div className="flex gap-4">
-        <Button onClick={saveDesign} className="bg-green-600 hover:bg-green-700 text-white">
+        <Button 
+          onClick={saveDesign} 
+          disabled={isSaving}
+          className="bg-green-600 hover:bg-green-700 text-white"
+        >
           <Save className="h-4 w-4 mr-2" />
-          💾 SAUVEGARDER AVEC RELOAD
+          {isSaving ? '💾 SAUVEGARDE...' : '💾 SAUVEGARDER (SANS RELOAD)'}
         </Button>
-        <Button variant="outline" onClick={resetDesign}>
+        <Button variant="outline" onClick={resetDesign} disabled={isSaving}>
           <RotateCcw className="h-4 w-4 mr-2" />
           Réinitialiser
         </Button>
@@ -166,13 +211,13 @@ export const WebsiteDesignManager: React.FC = () => {
       {/* Test instructions */}
       <Card className="bg-blue-50 border-blue-200">
         <CardContent className="pt-4">
-          <h3 className="font-semibold text-blue-800">🧪 NOUVEAU Test:</h3>
+          <h3 className="font-semibold text-blue-800">🧪 TEST FINAL:</h3>
           <p className="text-sm text-blue-600 mt-1">
             1. Changez le nom ci-dessus en "Fatras"<br/>
-            2. Cliquez sur "SAUVEGARDER AVEC RELOAD"<br/>
-            3. La page va se recharger automatiquement<br/>
-            4. Vérifiez que les localStorage passent à "EXISTS"<br/>
-            5. Allez sur /front - le nom devrait changer
+            2. Cliquez sur "SAUVEGARDER (SANS RELOAD)"<br/>
+            3. Vérifiez que les localStorage passent à "EXISTS"<br/>
+            4. Allez sur /front - le nom devrait changer immédiatement<br/>
+            5. Si ça ne marche toujours pas, il y a un problème de navigateur
           </p>
         </CardContent>
       </Card>
