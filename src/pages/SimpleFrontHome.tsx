@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Music, Calendar, Phone } from 'lucide-react';
@@ -8,17 +7,10 @@ import { useSiteConfig } from '@/hooks/useSiteConfig';
 export const SimpleFrontHome: React.FC = () => {
   const { siteName } = useSiteConfig();
 
-  console.log('🎯 SimpleFrontHome - RENDERING with siteName:', siteName);
-
-  // Forcer la mise à jour du titre de la page
-  React.useEffect(() => {
-    document.title = siteName;
-  }, [siteName]);
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-600 to-purple-700">
-      {/* Debug info - TEMPORAIRE */}
-      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 text-center">
+      {/* Debug banner temporaire */}
+      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 text-center text-sm">
         <strong>DEBUG MODE:</strong> Site Name = "{siteName}" | 
         websiteDesign = {localStorage.getItem('websiteDesign') ? 'EXISTS' : 'MISSING'} | 
         websiteSettings = {localStorage.getItem('websiteSettings') ? 'EXISTS' : 'MISSING'}

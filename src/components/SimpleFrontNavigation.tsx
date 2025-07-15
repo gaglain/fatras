@@ -18,8 +18,6 @@ export const SimpleFrontNavigation: React.FC = () => {
     { name: 'Contact', path: '/front/contact' }
   ];
 
-  console.log('🎯 SimpleFrontNavigation - RENDERING with siteName:', siteName, 'logo:', logo);
-
   return (
     <nav className="bg-white shadow-lg border-b">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -33,7 +31,6 @@ export const SimpleFrontNavigation: React.FC = () => {
                   alt="Logo"
                   className="h-10 w-auto"
                   onError={(e) => {
-                    console.log('❌ SimpleFrontNavigation - Logo loading error');
                     (e.currentTarget as HTMLImageElement).style.display = 'none';
                   }}
                 />
@@ -50,7 +47,7 @@ export const SimpleFrontNavigation: React.FC = () => {
             </Link>
           </div>
 
-          {/* Debug info - TEMPORAIRE */}
+          {/* Debug info temporaire */}
           <div className="hidden md:flex items-center space-x-4">
             <div className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded">
               DEBUG: {siteName}

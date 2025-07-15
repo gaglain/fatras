@@ -13,23 +13,17 @@ export const useSiteConfig = () => {
   });
 
   const loadConfig = () => {
-    console.log('🔍 useSiteConfig - CHARGEMENT CONFIG...');
-    
     try {
       // PRIORITÉ 1 : websiteDesign
       const savedDesign = localStorage.getItem('websiteDesign');
-      console.log('🎨 useSiteConfig - websiteDesign raw:', savedDesign);
-      
       if (savedDesign) {
         const design = JSON.parse(savedDesign);
-        console.log('🎨 useSiteConfig - websiteDesign parsed:', design);
-        
         if (design.siteName) {
           const newConfig = {
             siteName: design.siteName,
             logo: design.logo || ''
           };
-          console.log('✅ useSiteConfig - CONFIG DEPUIS DESIGN:', newConfig);
+          console.log('✅ useSiteConfig - CONFIG LOADED FROM DESIGN:', newConfig);
           setConfig(newConfig);
           document.title = newConfig.siteName;
           return newConfig;
@@ -38,77 +32,63 @@ export const useSiteConfig = () => {
 
       // PRIORITÉ 2 : websiteSettings
       const savedSettings = localStorage.getItem('websiteSettings');
-      console.log('⚙️ useSiteConfig - websiteSettings raw:', savedSettings);
-      
       if (savedSettings) {
         const settings = JSON.parse(savedSettings);
-        console.log('⚙️ useSiteConfig - websiteSettings parsed:', settings);
-        
         if (settings.siteName) {
           const newConfig = {
             siteName: settings.siteName,
             logo: settings.logo || ''
           };
-          console.log('✅ useSiteConfig - CONFIG DEPUIS SETTINGS:', newConfig);
+          console.log('✅ useSiteConfig - CONFIG LOADED FROM SETTINGS:', newConfig);
           setConfig(newConfig);
           document.title = newConfig.siteName;
           return newConfig;
         }
       }
 
-      console.log('⚠️ useSiteConfig - AUCUNE CONFIG TROUVÉE, garde MusiConnect par défaut');
+      console.log('⚠️ useSiteConfig - NO CONFIG FOUND, keeping default');
       return null;
 
     } catch (error) {
-      console.error('❌ useSiteConfig - Erreur:', error);
+      console.error('❌ useSiteConfig - Error loading config:', error);
       return null;
     }
   };
 
   useEffect(() => {
-    console.log('🚀 useSiteConfig - INITIALISATION...');
-    
-    // Chargement immédiat
+    // Chargement initial
     loadConfig();
 
-    // Écouter les événements
-    const handleUpdate = (e?: any) => {
-      console.log('📡 useSiteConfig - Événement reçu:', e?.type || 'manual');
-      setTimeout(() => {
-        const result = loadConfig();
-        if (result) {
-          console.log('✅ useSiteConfig - Config mise à jour:', result);
-        }
-      }, 10);
+    // Écouter les événements storage
+    const handleStorageChange = () => {
+      console.log('📡 useSiteConfig - Storage event received');
+      setTimeout(loadConfig, 50);
     };
 
-    // Tous les événements possibles
-    window.addEventListener('storage', handleUpdate);
-    window.addEventListener('websiteDesignUpdated', handleUpdate);
-    window.addEventListener('websiteDesignSaved', handleUpdate);
-    window.addEventListener('websiteSettingsUpdated', handleUpdate);
-    window.addEventListener('siteConfigChanged', handleUpdate);
+    // Écouter les événements personnalisés
+    const handleCustomEvent = () => {
+      console.log('📡 useSiteConfig - Custom event received');
+      setTimeout(loadConfig, 50);
+    };
 
-    // Polling toutes les 2 secondes (plus agressif)
-    const interval = setInterval(() => {
-      const currentDesign = localStorage.getItem('websiteDesign');
-      const currentSettings = localStorage.getItem('websiteSettings');
-      
-      if (currentDesign || currentSettings) {
-        loadConfig();
-      }
-    }, 2000);
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('websiteDesignUpdated', handleCustomEvent);
+    window.addEventListener('websiteDesignSaved', handleCustomEvent);
+    window.addEventListener('websiteSettingsUpdated', handleCustomEvent);
+    window.addEventListener('siteConfigChanged', handleCustomEvent);
+
+    // Polling pour sécurité
+    const interval = setInterval(loadConfig, 3000);
 
     return () => {
-      window.removeEventListener('storage', handleUpdate);
-      window.removeEventListener('websiteDesignUpdated', handleUpdate);
-      window.removeEventListener('websiteDesignSaved', handleUpdate);
-      window.removeEventListener('websiteSettingsUpdated', handleUpdate);
-      window.removeEventListener('siteConfigChanged', handleUpdate);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('websiteDesignUpdated', handleCustomEvent);
+      window.removeEventListener('websiteDesignSaved', handleCustomEvent);
+      window.removeEventListener('websiteSettingsUpdated', handleCustomEvent);
+      window.removeEventListener('siteConfigChanged', handleCustomEvent);
       clearInterval(interval);
     };
   }, []);
 
-  console.log('🎯 useSiteConfig - Config actuelle:', config);
   return config;
 };

@@ -37,66 +37,50 @@ export const WebsiteDesignManager: React.FC = () => {
 
   useEffect(() => {
     const savedDesign = localStorage.getItem('websiteDesign');
-    console.log('🎨 WebsiteDesignManager - Loading savedDesign:', savedDesign);
-    
     if (savedDesign) {
       try {
         const parsed = JSON.parse(savedDesign);
-        console.log('🎨 WebsiteDesignManager - Parsed design:', parsed);
         setDesign(prev => ({ ...prev, ...parsed }));
       } catch (error) {
-        console.error('❌ WebsiteDesignManager - Error loading design:', error);
+        console.error('Error loading design:', error);
       }
-    } else {
-      console.log('⚠️ WebsiteDesignManager - No saved design found');
     }
   }, []);
 
   const handleInputChange = (field: keyof SiteDesign, value: string) => {
-    console.log(`🔧 WebsiteDesignManager - Changing ${field} to:`, value);
-    setDesign(prev => {
-      const newDesign = { ...prev, [field]: value };
-      console.log('🔧 WebsiteDesignManager - New design state:', newDesign);
-      return newDesign;
-    });
+    setDesign(prev => ({ ...prev, [field]: value }));
   };
 
   const saveDesign = () => {
-    console.log('💾 WebsiteDesignManager - SAVING DESIGN:', design);
-    
     try {
-      // ÉTAPE 1: Sauvegarder dans localStorage
+      console.log('💾 SAVING DESIGN:', design);
+      
+      // Sauvegarder websiteDesign
       const designString = JSON.stringify(design);
       localStorage.setItem('websiteDesign', designString);
-      console.log('✅ WebsiteDesignManager - Saved to localStorage:', designString);
+      console.log('✅ websiteDesign saved:', designString);
       
-      // ÉTAPE 2: Vérifier immédiatement que c'est bien sauvegardé
-      const verification = localStorage.getItem('websiteDesign');
-      console.log('🔍 WebsiteDesignManager - Verification read:', verification);
+      // Sauvegarder websiteSettings pour compatibilité
+      const settingsData = {
+        siteName: design.siteName,
+        logo: design.logo
+      };
+      const settingsString = JSON.stringify(settingsData);
+      localStorage.setItem('websiteSettings', settingsString);
+      console.log('✅ websiteSettings saved:', settingsString);
       
-      if (!verification) {
-        throw new Error('Failed to save to localStorage');
-      }
-      
-      // ÉTAPE 3: Mettre à jour le titre immédiatement
+      // Mettre à jour le titre immédiatement
       document.title = design.siteName;
-      console.log('📝 WebsiteDesignManager - Updated document title to:', design.siteName);
       
-      // ÉTAPE 4: Déclencher TOUS les événements
-      const events = [
-        'websiteDesignUpdated',
-        'websiteDesignSaved', 
-        'websiteSettingsUpdated',
-        'siteConfigChanged'
-      ];
-      
+      // Déclencher tous les événements
+      const events = ['websiteDesignUpdated', 'websiteDesignSaved', 'websiteSettingsUpdated', 'siteConfigChanged'];
       events.forEach(eventName => {
         const event = new CustomEvent(eventName, { detail: design });
         window.dispatchEvent(event);
-        console.log(`✅ WebsiteDesignManager - Event ${eventName} dispatched`);
+        console.log(`✅ Event ${eventName} dispatched`);
       });
       
-      // ÉTAPE 5: Forcer l'événement storage
+      // Déclencher l'événement storage manuellement
       const storageEvent = new StorageEvent('storage', {
         key: 'websiteDesign',
         newValue: designString,
@@ -105,32 +89,20 @@ export const WebsiteDesignManager: React.FC = () => {
         url: window.location.href
       });
       window.dispatchEvent(storageEvent);
-      console.log('✅ WebsiteDesignManager - Storage event dispatched');
       
-      // ÉTAPE 6: Aussi sauvegarder dans websiteSettings pour compatibilité
-      const websiteSettings = {
-        siteName: design.siteName,
-        logo: design.logo
-      };
-      localStorage.setItem('websiteSettings', JSON.stringify(websiteSettings));
-      console.log('✅ WebsiteDesignManager - Also saved websiteSettings for compatibility');
-      
-      toast.success(`✅ DESIGN SAUVEGARDÉ ! Site: "${design.siteName}"`);
-      console.log('✅ WebsiteDesignManager - Design saved successfully');
+      toast.success(`✅ Design sauvegardé ! Site: "${design.siteName}"`);
       
     } catch (error) {
-      console.error('❌ WebsiteDesignManager - Error saving design:', error);
+      console.error('❌ Error saving design:', error);
       toast.error('❌ Erreur lors de la sauvegarde');
     }
   };
 
   const resetDesign = () => {
-    console.log('🔄 WebsiteDesignManager - Resetting design to default');
     setDesign(defaultDesign);
     localStorage.removeItem('websiteDesign');
     localStorage.removeItem('websiteSettings');
     
-    // Déclencher les événements de reset
     const event = new CustomEvent('websiteDesignUpdated', { detail: defaultDesign });
     window.dispatchEvent(event);
     
@@ -139,7 +111,7 @@ export const WebsiteDesignManager: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Debug info ULTRA détaillé */}
+      {/* Debug info détaillé */}
       <Card className="bg-red-50 border-red-200">
         <CardContent className="pt-4">
           <p className="text-sm text-red-800">
@@ -154,8 +126,8 @@ export const WebsiteDesignManager: React.FC = () => {
           <p className="text-sm text-red-600">
             📄 Document title: "{document.title}"
           </p>
-          <div className="mt-2 p-2 bg-red-100 rounded text-xs">
-            <strong>Raw websiteDesign:</strong> {localStorage.getItem('websiteDesign') || 'NULL'}
+          <div className="mt-2 p-2 bg-red-100 rounded text-xs overflow-hidden">
+            <strong>Raw websiteDesign:</strong> {localStorage.getItem('websiteDesign')?.substring(0, 100) || 'NULL'}...
           </div>
         </CardContent>
       </Card>
@@ -193,15 +165,15 @@ export const WebsiteDesignManager: React.FC = () => {
         </Button>
       </div>
       
-      {/* Test rapide */}
+      {/* Test instructions */}
       <Card className="bg-blue-50 border-blue-200">
         <CardContent className="pt-4">
-          <h3 className="font-semibold text-blue-800">🧪 Test rapide:</h3>
+          <h3 className="font-semibold text-blue-800">🧪 Test:</h3>
           <p className="text-sm text-blue-600 mt-1">
             1. Changez le nom ci-dessus en "Fatras"<br/>
             2. Cliquez sur "SAUVEGARDER MAINTENANT"<br/>
-            3. Allez immédiatement sur /front<br/>
-            4. Le nom devrait apparaître partout
+            3. Vérifiez que les deux localStorage passent à "EXISTS"<br/>
+            4. Allez sur /front - le nom devrait changer
           </p>
         </CardContent>
       </Card>
