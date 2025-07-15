@@ -37,137 +37,91 @@ export const WebsiteDesignManager: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    console.log('🔄 WebsiteDesignManager - Loading saved design...');
     const savedDesign = localStorage.getItem('websiteDesign');
     if (savedDesign) {
       try {
         const parsed = JSON.parse(savedDesign);
-        console.log('✅ WebsiteDesignManager - Loaded design:', parsed);
         setDesign(prev => ({ ...prev, ...parsed }));
       } catch (error) {
-        console.error('❌ WebsiteDesignManager - Error loading design:', error);
+        console.error('Error loading design:', error);
       }
-    } else {
-      console.log('⚠️ WebsiteDesignManager - No saved design found');
     }
   }, []);
 
   const handleInputChange = (field: keyof SiteDesign, value: string) => {
-    console.log(`📝 WebsiteDesignManager - Changing ${field} to:`, value);
     setDesign(prev => ({ 
       ...prev, 
       [field]: value 
     }));
   };
 
-  const saveDesign = async () => {
+  const saveDesign = () => {
     setIsSaving(true);
-    console.log('💾 WebsiteDesignManager - SAVING DESIGN:', design);
+    console.log('💾 SAVING DESIGN:', design);
     
     try {
-      // 1. Créer les objets à sauvegarder
-      const designData = { ...design };
-      const settingsData = {
+      // Sauvegarder dans localStorage
+      localStorage.setItem('websiteDesign', JSON.stringify(design));
+      localStorage.setItem('websiteSettings', JSON.stringify({
         siteName: design.siteName,
         logo: design.logo
-      };
-
-      // 2. Supprimer les anciennes données pour éviter les conflits
-      localStorage.removeItem('websiteDesign');
-      localStorage.removeItem('websiteSettings');
-      
-      // 3. Attendre un tick pour s'assurer que la suppression est effective
-      await new Promise(resolve => setTimeout(resolve, 10));
-
-      // 4. Sauvegarder les nouvelles données
-      localStorage.setItem('websiteDesign', JSON.stringify(designData));
-      localStorage.setItem('websiteSettings', JSON.stringify(settingsData));
-      
-      // 5. Vérification immédiate
-      const checkDesign = localStorage.getItem('websiteDesign');
-      const checkSettings = localStorage.getItem('websiteSettings');
-      
-      console.log('🔍 Immediate verification:');
-      console.log('  - websiteDesign:', checkDesign ? 'EXISTS' : 'MISSING');
-      console.log('  - websiteSettings:', checkSettings ? 'EXISTS' : 'MISSING');
-
-      if (!checkDesign || !checkSettings) {
-        throw new Error('Failed to save to localStorage');
-      }
-
-      // 6. Mettre à jour le titre
-      document.title = design.siteName;
-      console.log('✅ Document title updated to:', design.siteName);
-
-      // 7. Déclencher tous les événements de synchronisation
-      const events = [
-        'websiteDesignUpdated',
-        'websiteDesignSaved', 
-        'websiteSettingsUpdated',
-        'siteConfigChanged'
-      ];
-      
-      events.forEach(eventName => {
-        const event = new CustomEvent(eventName, { 
-          detail: { siteName: design.siteName, design: designData, settings: settingsData }
-        });
-        window.dispatchEvent(event);
-        console.log(`📡 Event dispatched: ${eventName}`);
-      });
-
-      // 8. Déclencher l'événement storage manuellement
-      window.dispatchEvent(new StorageEvent('storage', {
-        key: 'websiteDesign',
-        newValue: JSON.stringify(designData),
-        storageArea: localStorage
       }));
 
-      // 9. Forcer le re-render de cette page
-      setDesign({ ...design });
+      // Mettre à jour le titre immédiatement
+      document.title = design.siteName;
 
-      toast.success(`✅ Design sauvegardé ! Site: "${design.siteName}"`);
+      // Déclencher l'événement de synchronisation
+      const event = new CustomEvent('siteConfigChanged', { 
+        detail: design 
+      });
+      window.dispatchEvent(event);
+
+      console.log('✅ Design saved successfully');
+      toast.success(`Design sauvegardé ! Site: "${design.siteName}"`);
 
     } catch (error) {
       console.error('❌ Error saving design:', error);
-      toast.error('❌ Erreur lors de la sauvegarde');
+      toast.error('Erreur lors de la sauvegarde');
     } finally {
       setIsSaving(false);
     }
   };
 
   const resetDesign = () => {
-    console.log('🔄 WebsiteDesignManager - Resetting design...');
     setDesign(defaultDesign);
     localStorage.removeItem('websiteDesign');
     localStorage.removeItem('websiteSettings');
     document.title = defaultDesign.siteName;
+    
+    const event = new CustomEvent('siteConfigChanged', { 
+      detail: defaultDesign 
+    });
+    window.dispatchEvent(event);
+    
     toast.success('Design réinitialisé');
   };
 
-  // Vérification en temps réel du localStorage
+  // Vérification en temps réel
   const designExists = localStorage.getItem('websiteDesign') !== null;
   const settingsExists = localStorage.getItem('websiteSettings') !== null;
 
   return (
     <div className="space-y-6">
-      {/* Debug info détaillé */}
-      <Card className="bg-red-50 border-red-200">
+      {/* Debug info */}
+      <Card className="bg-blue-50 border-blue-200">
         <CardContent className="pt-4">
-          <p className="text-sm text-red-800">
+          <p className="text-sm text-blue-800">
             <strong>🎯 ÉTAT ACTUEL:</strong> Nom: "{design.siteName}"
           </p>
-          <p className="text-sm text-red-600 mt-1">
-            💾 localStorage websiteDesign: {designExists ? '✅ EXISTS' : '❌ MISSING'}
+          <p className="text-sm text-blue-600 mt-1">
+            💾 websiteDesign: {designExists ? '✅ EXISTS' : '❌ MISSING'}
           </p>
-          <p className="text-sm text-red-600">
-            💾 localStorage websiteSettings: {settingsExists ? '✅ EXISTS' : '❌ MISSING'}
+          <p className="text-sm text-blue-600">
+            💾 websiteSettings: {settingsExists ? '✅ EXISTS' : '❌ MISSING'}
           </p>
-          <p className="text-sm text-red-600">
+          <p className="text-sm text-blue-600">
             📄 Document title: "{document.title}"
           </p>
-          <div className="mt-2 p-2 bg-red-100 rounded text-xs overflow-hidden">
-            <strong>Raw websiteDesign:</strong> {localStorage.getItem('websiteDesign')?.substring(0, 100) || 'NULL'}...
-          </div>
         </CardContent>
       </Card>
 
@@ -192,7 +146,6 @@ export const WebsiteDesignManager: React.FC = () => {
         onFooterBgChange={(value) => handleInputChange('footerBg', value)}
       />
 
-      {/* Actions */}
       <div className="flex gap-4">
         <Button 
           onClick={saveDesign} 
@@ -200,7 +153,7 @@ export const WebsiteDesignManager: React.FC = () => {
           className="bg-green-600 hover:bg-green-700 text-white"
         >
           <Save className="h-4 w-4 mr-2" />
-          {isSaving ? '💾 SAUVEGARDE...' : '💾 SAUVEGARDER (SANS RELOAD)'}
+          {isSaving ? 'Sauvegarde...' : 'Sauvegarder'}
         </Button>
         <Button variant="outline" onClick={resetDesign} disabled={isSaving}>
           <RotateCcw className="h-4 w-4 mr-2" />
@@ -208,16 +161,14 @@ export const WebsiteDesignManager: React.FC = () => {
         </Button>
       </div>
       
-      {/* Test instructions */}
-      <Card className="bg-blue-50 border-blue-200">
+      <Card className="bg-green-50 border-green-200">
         <CardContent className="pt-4">
-          <h3 className="font-semibold text-blue-800">🧪 TEST FINAL:</h3>
-          <p className="text-sm text-blue-600 mt-1">
-            1. Changez le nom ci-dessus en "Fatras"<br/>
-            2. Cliquez sur "SAUVEGARDER (SANS RELOAD)"<br/>
+          <h3 className="font-semibold text-green-800">🧪 TEST SIMPLE:</h3>
+          <p className="text-sm text-green-600 mt-1">
+            1. Changez le nom ci-dessus<br/>
+            2. Cliquez sur "Sauvegarder"<br/>
             3. Vérifiez que les localStorage passent à "EXISTS"<br/>
-            4. Allez sur /front - le nom devrait changer immédiatement<br/>
-            5. Si ça ne marche toujours pas, il y a un problème de navigateur
+            4. Allez sur /front - le nom devrait changer
           </p>
         </CardContent>
       </Card>
