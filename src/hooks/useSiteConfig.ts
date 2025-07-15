@@ -13,10 +13,10 @@ export const useSiteConfig = () => {
   });
 
   const loadConfig = () => {
-    console.log('🔍 useSiteConfig - LOADING CONFIG...');
+    console.log('🔍 useSiteConfig - CHARGEMENT CONFIG...');
     
     try {
-      // PRIORITÉ ABSOLUE : websiteDesign
+      // PRIORITÉ 1 : websiteDesign
       const savedDesign = localStorage.getItem('websiteDesign');
       console.log('🎨 useSiteConfig - websiteDesign raw:', savedDesign);
       
@@ -24,19 +24,19 @@ export const useSiteConfig = () => {
         const design = JSON.parse(savedDesign);
         console.log('🎨 useSiteConfig - websiteDesign parsed:', design);
         
-        if (design.siteName && design.siteName !== 'MusiConnect') {
+        if (design.siteName) {
           const newConfig = {
             siteName: design.siteName,
             logo: design.logo || ''
           };
-          console.log('✅ useSiteConfig - APPLYING DESIGN CONFIG:', newConfig);
+          console.log('✅ useSiteConfig - CONFIG DEPUIS DESIGN:', newConfig);
           setConfig(newConfig);
           document.title = newConfig.siteName;
-          return;
+          return newConfig;
         }
       }
 
-      // Fallback : websiteSettings
+      // PRIORITÉ 2 : websiteSettings
       const savedSettings = localStorage.getItem('websiteSettings');
       console.log('⚙️ useSiteConfig - websiteSettings raw:', savedSettings);
       
@@ -44,67 +44,71 @@ export const useSiteConfig = () => {
         const settings = JSON.parse(savedSettings);
         console.log('⚙️ useSiteConfig - websiteSettings parsed:', settings);
         
-        if (settings.siteName && settings.siteName !== 'MusiConnect') {
+        if (settings.siteName) {
           const newConfig = {
             siteName: settings.siteName,
-            logo: config.logo
+            logo: settings.logo || ''
           };
-          console.log('✅ useSiteConfig - APPLYING SETTINGS CONFIG:', newConfig);
+          console.log('✅ useSiteConfig - CONFIG DEPUIS SETTINGS:', newConfig);
           setConfig(newConfig);
           document.title = newConfig.siteName;
-          return;
+          return newConfig;
         }
       }
 
-      console.log('⚠️ useSiteConfig - NO VALID CONFIG FOUND, keeping default');
+      console.log('⚠️ useSiteConfig - AUCUNE CONFIG TROUVÉE, garde MusiConnect par défaut');
+      return null;
+
     } catch (error) {
-      console.error('❌ useSiteConfig - Error loading config:', error);
+      console.error('❌ useSiteConfig - Erreur:', error);
+      return null;
     }
   };
 
   useEffect(() => {
-    console.log('🚀 useSiteConfig - INITIALIZING...');
+    console.log('🚀 useSiteConfig - INITIALISATION...');
     
     // Chargement immédiat
     loadConfig();
 
-    // Écouter TOUS les événements possibles
-    const handleStorageChange = (e: StorageEvent) => {
-      console.log('📡 useSiteConfig - Storage event:', e.key, e.newValue);
-      if (e.key === 'websiteDesign' || e.key === 'websiteSettings') {
-        setTimeout(loadConfig, 10);
+    // Écouter les événements
+    const handleUpdate = (e?: any) => {
+      console.log('📡 useSiteConfig - Événement reçu:', e?.type || 'manual');
+      setTimeout(() => {
+        const result = loadConfig();
+        if (result) {
+          console.log('✅ useSiteConfig - Config mise à jour:', result);
+        }
+      }, 10);
+    };
+
+    // Tous les événements possibles
+    window.addEventListener('storage', handleUpdate);
+    window.addEventListener('websiteDesignUpdated', handleUpdate);
+    window.addEventListener('websiteDesignSaved', handleUpdate);
+    window.addEventListener('websiteSettingsUpdated', handleUpdate);
+    window.addEventListener('siteConfigChanged', handleUpdate);
+
+    // Polling toutes les 2 secondes (plus agressif)
+    const interval = setInterval(() => {
+      const currentDesign = localStorage.getItem('websiteDesign');
+      const currentSettings = localStorage.getItem('websiteSettings');
+      
+      if (currentDesign || currentSettings) {
+        loadConfig();
       }
-    };
-
-    const handleCustomEvent = (e: CustomEvent) => {
-      console.log('📡 useSiteConfig - Custom event:', e.type, e.detail);
-      setTimeout(loadConfig, 10);
-    };
-
-    // Ajouter tous les listeners
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('websiteDesignUpdated', handleCustomEvent as EventListener);
-    window.addEventListener('websiteDesignSaved', handleCustomEvent as EventListener);
-    window.addEventListener('websiteSettingsUpdated', handleCustomEvent as EventListener);
-
-    // Polling très agressif au début, puis plus modéré
-    const aggressiveInterval = setInterval(loadConfig, 1000);
-    const moderateInterval = setTimeout(() => {
-      clearInterval(aggressiveInterval);
-      const normalInterval = setInterval(loadConfig, 5000);
-      return () => clearInterval(normalInterval);
-    }, 10000);
+    }, 2000);
 
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('websiteDesignUpdated', handleCustomEvent as EventListener);
-      window.removeEventListener('websiteDesignSaved', handleCustomEvent as EventListener);
-      window.removeEventListener('websiteSettingsUpdated', handleCustomEvent as EventListener);
-      clearInterval(aggressiveInterval);
-      clearTimeout(moderateInterval);
+      window.removeEventListener('storage', handleUpdate);
+      window.removeEventListener('websiteDesignUpdated', handleUpdate);
+      window.removeEventListener('websiteDesignSaved', handleUpdate);
+      window.removeEventListener('websiteSettingsUpdated', handleUpdate);
+      window.removeEventListener('siteConfigChanged', handleUpdate);
+      clearInterval(interval);
     };
   }, []);
 
-  console.log('🎯 useSiteConfig - Current config:', config);
+  console.log('🎯 useSiteConfig - Config actuelle:', config);
   return config;
 };
