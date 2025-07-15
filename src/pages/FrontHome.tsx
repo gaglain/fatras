@@ -52,10 +52,53 @@ const defaultHomePage: WebPage = {
 
 export const FrontHome: React.FC = () => {
   const [pageData, setPageData] = useState<WebPage>(defaultHomePage);
+  const [siteName, setSiteName] = useState('MusiConnect');
   const { artists, loading } = useBackofficeArtists();
 
+  // FONCTION DE CHARGEMENT UNIFIÉE ET AGRESSIVE POUR LE SITE NAME
+  const loadSiteName = () => {
+    console.log('🔍 FrontHome - Loading site name...');
+    
+    try {
+      // PRIORITÉ ABSOLUE : websiteDesign
+      const savedDesign = localStorage.getItem('websiteDesign');
+      if (savedDesign) {
+        const design = JSON.parse(savedDesign);
+        console.log('✅ FrontHome - Design found:', design);
+        
+        if (design.siteName) {
+          setSiteName(design.siteName);
+          document.title = design.siteName;
+          console.log('🎯 FrontHome - Applied siteName:', design.siteName);
+          return;
+        }
+      }
+
+      // Fallback vers websiteSettings
+      const savedSettings = localStorage.getItem('websiteSettings');
+      if (savedSettings) {
+        const settings = JSON.parse(savedSettings);
+        console.log('📋 FrontHome - Settings fallback:', settings);
+        
+        if (settings.siteName) {
+          setSiteName(settings.siteName);
+          document.title = settings.siteName;
+          console.log('🎯 FrontHome - Applied siteName from settings:', settings.siteName);
+        }
+      }
+
+    } catch (error) {
+      console.error('❌ FrontHome - Error loading site name:', error);
+    }
+  };
+
   useEffect(() => {
-    // Charger les données de la page depuis localStorage
+    console.log('🚀 FrontHome - Initializing...');
+    
+    // Chargement immédiat
+    loadSiteName();
+    
+    // Charger les données de la page
     const savedPages = localStorage.getItem('websitePages');
     if (savedPages) {
       try {
@@ -68,6 +111,28 @@ export const FrontHome: React.FC = () => {
         console.error('Error loading page data:', e);
       }
     }
+
+    const handleUpdate = () => {
+      console.log('📡 FrontHome - Event received, reloading...');
+      setTimeout(loadSiteName, 10);
+    };
+
+    // Écouter TOUS les événements
+    window.addEventListener('websiteDesignUpdated', handleUpdate);
+    window.addEventListener('websiteDesignSaved', handleUpdate);
+    window.addEventListener('websiteSettingsUpdated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    
+    // Polling agressif toutes les secondes
+    const interval = setInterval(loadSiteName, 1000);
+
+    return () => {
+      window.removeEventListener('websiteDesignUpdated', handleUpdate);
+      window.removeEventListener('websiteDesignSaved', handleUpdate);
+      window.removeEventListener('websiteSettingsUpdated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+      clearInterval(interval);
+    };
   }, []);
 
   const renderBlock = (block: Block) => {
@@ -89,7 +154,6 @@ export const FrontHome: React.FC = () => {
         return null;
     }
 
-    // Passer les données d'artistes synchronisées au block artist-grid
     const blockProps = {
       content: block.content,
       isEditing: false,
@@ -103,50 +167,6 @@ export const FrontHome: React.FC = () => {
       </div>
     );
   };
-
-  // État pour synchroniser le nom du site
-  const [siteName, setSiteName] = useState('MusiConnect');
-
-  useEffect(() => {
-    const updateSiteName = () => {
-      const savedDesign = localStorage.getItem('websiteDesign');
-      const savedSettings = localStorage.getItem('websiteSettings');
-      
-      let finalSiteName = 'MusiConnect';
-      
-      if (savedDesign) {
-        try {
-          const design = JSON.parse(savedDesign);
-          if (design.siteName) finalSiteName = design.siteName;
-        } catch (e) {
-          console.error('Error parsing design:', e);
-        }
-      } else if (savedSettings) {
-        try {
-          const settings = JSON.parse(savedSettings);
-          if (settings.siteName) finalSiteName = settings.siteName;
-        } catch (e) {
-          console.error('Error parsing settings:', e);
-        }
-      }
-      
-      setSiteName(finalSiteName);
-      console.log('🏠 FrontHome - Site name updated to:', finalSiteName);
-    };
-
-    updateSiteName();
-    
-    // Écouter les changements
-    window.addEventListener('websiteDesignUpdated', updateSiteName);
-    window.addEventListener('websiteDesignSaved', updateSiteName);
-    window.addEventListener('websiteSettingsUpdated', updateSiteName);
-    
-    return () => {
-      window.removeEventListener('websiteDesignUpdated', updateSiteName);
-      window.removeEventListener('websiteDesignSaved', updateSiteName);
-      window.removeEventListener('websiteSettingsUpdated', updateSiteName);
-    };
-  }, []);
 
   return (
     <>

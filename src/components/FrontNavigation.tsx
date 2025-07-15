@@ -34,21 +34,7 @@ interface SiteDesign {
 
 export const FrontNavigation: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [settings, setSettings] = useState<WebsiteSettings>({
-    siteName: 'MusiConnect',
-    siteDescription: 'Plateforme de gestion artistique',
-    contactEmail: 'contact@musiconnect.com',
-    contactPhone: '+33 1 23 45 67 89',
-    address: '123 Rue de la Musique, 75001 Paris',
-    socialLinks: {
-      facebook: '',
-      instagram: '',
-      twitter: '',
-      youtube: '',
-      linkedin: ''
-    }
-  });
-
+  const [siteName, setSiteName] = useState('MusiConnect');
   const [design, setDesign] = useState<SiteDesign>({
     logo: '/logo.svg',
     siteName: 'MusiConnect',
@@ -63,61 +49,70 @@ export const FrontNavigation: React.FC = () => {
 
   const location = useLocation();
 
-  useEffect(() => {
-    const loadSettings = () => {
-      const savedSettings = localStorage.getItem('websiteSettings');
-      if (savedSettings) {
-        try {
-          const parsed = JSON.parse(savedSettings);
-          setSettings(prev => ({ ...prev, ...parsed }));
-        } catch (error) {
-          console.error('Erreur chargement paramètres:', error);
-        }
-      }
-    };
-
-    const loadDesign = () => {
+  // FONCTION DE CHARGEMENT UNIFIÉE ET AGRESSIVE
+  const loadSiteData = () => {
+    console.log('🔍 FrontNavigation - Loading site data...');
+    
+    try {
+      // PRIORITÉ ABSOLUE : websiteDesign
       const savedDesign = localStorage.getItem('websiteDesign');
       if (savedDesign) {
-        try {
-          const parsed = JSON.parse(savedDesign);
-          setDesign(prev => ({ ...prev, ...parsed }));
-        } catch (error) {
-          console.error('Erreur chargement design:', error);
+        const design = JSON.parse(savedDesign);
+        console.log('✅ FrontNavigation - Design found:', design);
+        
+        if (design.siteName) {
+          setSiteName(design.siteName);
+          setDesign(prev => ({ ...prev, ...design }));
+          document.title = design.siteName;
+          console.log('🎯 FrontNavigation - Applied siteName:', design.siteName);
+          return;
         }
       }
+
+      // Fallback vers websiteSettings
+      const savedSettings = localStorage.getItem('websiteSettings');
+      if (savedSettings) {
+        const settings = JSON.parse(savedSettings);
+        console.log('📋 FrontNavigation - Settings fallback:', settings);
+        
+        if (settings.siteName) {
+          setSiteName(settings.siteName);
+          document.title = settings.siteName;
+          console.log('🎯 FrontNavigation - Applied siteName from settings:', settings.siteName);
+        }
+      }
+
+    } catch (error) {
+      console.error('❌ FrontNavigation - Error loading data:', error);
+    }
+  };
+
+  useEffect(() => {
+    console.log('🚀 FrontNavigation - Initializing...');
+    
+    // Chargement immédiat
+    loadSiteData();
+
+    const handleUpdate = () => {
+      console.log('📡 FrontNavigation - Event received, reloading...');
+      setTimeout(loadSiteData, 10);
     };
 
-    loadSettings();
-    loadDesign();
+    // Écouter TOUS les événements
+    window.addEventListener('websiteDesignUpdated', handleUpdate);
+    window.addEventListener('websiteDesignSaved', handleUpdate);
+    window.addEventListener('websiteSettingsUpdated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
 
-    const handleSettingsUpdate = (event: CustomEvent) => {
-      console.log('🔄 Navigation - Mise à jour des paramètres:', event.detail);
-      setSettings(prev => ({ ...prev, ...event.detail }));
-    };
-
-    const handleDesignUpdate = (event: CustomEvent) => {
-      console.log('🎨 Navigation - Mise à jour du design:', event.detail);
-      setDesign(prev => ({ ...prev, ...event.detail }));
-    };
-
-    window.addEventListener('websiteSettingsUpdated', handleSettingsUpdate as EventListener);
-    window.addEventListener('websiteDesignUpdated', handleDesignUpdate as EventListener);
-    window.addEventListener('storage', () => {
-      loadSettings();
-      loadDesign();
-    });
-
-    // Polling pour s'assurer de la synchronisation
-    const interval = setInterval(() => {
-      loadSettings();
-      loadDesign();
-    }, 1000);
+    // Polling agressif toutes les secondes
+    const interval = setInterval(loadSiteData, 1000);
 
     return () => {
+      window.removeEventListener('websiteDesignUpdated', handleUpdate);
+      window.removeEventListener('websiteDesignSaved', handleUpdate);
+      window.removeEventListener('websiteSettingsUpdated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
       clearInterval(interval);
-      window.removeEventListener('websiteSettingsUpdated', handleSettingsUpdate as EventListener);
-      window.removeEventListener('websiteDesignUpdated', handleDesignUpdate as EventListener);
     };
   }, []);
 
@@ -157,8 +152,9 @@ export const FrontNavigation: React.FC = () => {
               className="site-name font-bold text-xl hover:opacity-80 transition-opacity"
               data-site-name
               style={{ color: design.textColor }}
+              key={`site-name-${siteName}-${Date.now()}`}
             >
-              {design.siteName || settings.siteName}
+              {siteName}
             </Link>
           </div>
 
