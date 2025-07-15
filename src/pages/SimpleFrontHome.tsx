@@ -7,22 +7,17 @@ import { Button } from '@/components/ui/button';
 export const SimpleFrontHome: React.FC = () => {
   const [siteName, setSiteName] = useState('MusiConnect');
 
-  // FONCTION DE CHARGEMENT UNIFIÉE ET AGRESSIVE POUR LE SITE NAME
   const loadSiteName = () => {
-    console.log('🔍 SimpleFrontHome - Loading site name...');
-    
     try {
-      // PRIORITÉ ABSOLUE : websiteDesign
+      // Charger depuis websiteDesign en priorité
       const savedDesign = localStorage.getItem('websiteDesign');
       if (savedDesign) {
         const design = JSON.parse(savedDesign);
-        console.log('✅ SimpleFrontHome - Design found:', design);
-        
-        if (design.siteName) {
+        if (design.siteName && design.siteName !== siteName) {
+          console.log('✅ SimpleFrontHome - Loading siteName:', design.siteName);
           setSiteName(design.siteName);
           document.title = design.siteName;
-          console.log('🎯 SimpleFrontHome - Applied siteName:', design.siteName);
-          return;
+          return design.siteName;
         }
       }
 
@@ -30,48 +25,53 @@ export const SimpleFrontHome: React.FC = () => {
       const savedSettings = localStorage.getItem('websiteSettings');
       if (savedSettings) {
         const settings = JSON.parse(savedSettings);
-        console.log('📋 SimpleFrontHome - Settings fallback:', settings);
-        
-        if (settings.siteName) {
+        if (settings.siteName && settings.siteName !== siteName) {
+          console.log('✅ SimpleFrontHome - Loading siteName from settings:', settings.siteName);
           setSiteName(settings.siteName);
           document.title = settings.siteName;
-          console.log('🎯 SimpleFrontHome - Applied siteName from settings:', settings.siteName);
+          return settings.siteName;
         }
       }
-
     } catch (error) {
-      console.error('❌ SimpleFrontHome - Error loading site name:', error);
+      console.error('❌ SimpleFrontHome - Error:', error);
     }
+    return null;
   };
 
   useEffect(() => {
-    console.log('🚀 SimpleFrontHome - Initializing...');
-    
-    // Chargement immédiat
-    loadSiteName();
+    // Chargement initial
+    const loadedName = loadSiteName();
+    console.log('🚀 SimpleFrontHome - Initial load result:', loadedName);
 
+    // Écouter les événements
     const handleUpdate = () => {
-      console.log('📡 SimpleFrontHome - Event received, reloading...');
-      setTimeout(loadSiteName, 10);
+      console.log('📡 SimpleFrontHome - Event received');
+      setTimeout(loadSiteName, 50);
     };
 
-    // Écouter TOUS les événements
+    window.addEventListener('storage', handleUpdate);
     window.addEventListener('websiteDesignUpdated', handleUpdate);
     window.addEventListener('websiteDesignSaved', handleUpdate);
     window.addEventListener('websiteSettingsUpdated', handleUpdate);
-    window.addEventListener('storage', handleUpdate);
 
-    // Polling agressif toutes les secondes
-    const interval = setInterval(loadSiteName, 1000);
+    // Vérification périodique
+    const interval = setInterval(() => {
+      const currentName = loadSiteName();
+      if (currentName) {
+        console.log('🔄 SimpleFrontHome - Interval check found update:', currentName);
+      }
+    }, 2000);
 
     return () => {
+      window.removeEventListener('storage', handleUpdate);
       window.removeEventListener('websiteDesignUpdated', handleUpdate);
       window.removeEventListener('websiteDesignSaved', handleUpdate);
       window.removeEventListener('websiteSettingsUpdated', handleUpdate);
-      window.removeEventListener('storage', handleUpdate);
       clearInterval(interval);
     };
-  }, []);
+  }, [siteName]);
+
+  console.log('🎯 SimpleFrontHome - Current siteName:', siteName);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-600 to-purple-700">
@@ -81,10 +81,7 @@ export const SimpleFrontHome: React.FC = () => {
           <div className="relative z-10 pb-8 sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32">
             <main className="mt-10 mx-auto max-w-7xl px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-8 xl:mt-28">
               <div className="sm:text-center lg:text-left">
-                <h1 
-                  className="text-4xl tracking-tight font-extrabold text-white sm:text-5xl md:text-6xl"
-                  key={`welcome-${siteName}-${Date.now()}`}
-                >
+                <h1 className="text-4xl tracking-tight font-extrabold text-white sm:text-5xl md:text-6xl">
                   <span className="block xl:inline">Bienvenue sur</span>{' '}
                   <span className="block text-yellow-400 xl:inline">{siteName}</span>
                 </h1>

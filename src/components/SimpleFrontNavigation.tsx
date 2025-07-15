@@ -14,80 +14,77 @@ export const SimpleFrontNavigation: React.FC<SimpleFrontNavigationProps> = ({ si
   const [logo, setLogo] = useState('');
   const location = useLocation();
 
-  // FONCTION DE CHARGEMENT UNIFIÉE ET AGRESSIVE
   const loadSiteData = () => {
-    console.log('🔍 SimpleFrontNavigation - Loading site data...');
-    
     try {
-      // PRIORITÉ ABSOLUE : websiteDesign
+      // Charger depuis websiteDesign en priorité
       const savedDesign = localStorage.getItem('websiteDesign');
       if (savedDesign) {
         const design = JSON.parse(savedDesign);
-        console.log('✅ SimpleFrontNavigation - Design found:', design);
+        let updated = false;
         
-        if (design.siteName) {
+        if (design.siteName && design.siteName !== siteName) {
+          console.log('✅ SimpleFrontNavigation - Loading siteName:', design.siteName);
           setSiteName(design.siteName);
           document.title = design.siteName;
-          console.log('🎯 SimpleFrontNavigation - Applied siteName:', design.siteName);
+          updated = true;
         }
-        if (design.logo) {
+        
+        if (design.logo && design.logo !== logo) {
+          console.log('✅ SimpleFrontNavigation - Loading logo');
           setLogo(design.logo);
-          console.log('🎨 SimpleFrontNavigation - Applied logo');
+          updated = true;
         }
-        return;
+        
+        if (updated) return;
       }
 
       // Fallback vers websiteSettings
       const savedSettings = localStorage.getItem('websiteSettings');
       if (savedSettings) {
         const settings = JSON.parse(savedSettings);
-        console.log('📋 SimpleFrontNavigation - Settings fallback:', settings);
-        
-        if (settings.siteName) {
+        if (settings.siteName && settings.siteName !== siteName) {
+          console.log('✅ SimpleFrontNavigation - Loading siteName from settings:', settings.siteName);
           setSiteName(settings.siteName);
           document.title = settings.siteName;
-          console.log('🎯 SimpleFrontNavigation - Applied siteName from settings:', settings.siteName);
         }
       }
-
     } catch (error) {
-      console.error('❌ SimpleFrontNavigation - Error loading data:', error);
+      console.error('❌ SimpleFrontNavigation - Error:', error);
     }
   };
 
   // Utiliser le prop si fourni
   useEffect(() => {
-    if (propSiteName) {
-      setSiteName(propSiteName);
+    if (propSiteName && propSiteName !== siteName) {
       console.log('🎯 SimpleFrontNavigation - Using prop siteName:', propSiteName);
+      setSiteName(propSiteName);
+      document.title = propSiteName;
     }
-  }, [propSiteName]);
+  }, [propSiteName, siteName]);
 
   useEffect(() => {
-    console.log('🚀 SimpleFrontNavigation - Initializing...');
-    
-    // Chargement immédiat
+    // Chargement initial
     loadSiteData();
 
+    // Écouter les événements
     const handleUpdate = () => {
-      console.log('📡 SimpleFrontNavigation - Event received, reloading...');
-      setTimeout(loadSiteData, 10);
+      console.log('📡 SimpleFrontNavigation - Event received');
+      setTimeout(loadSiteData, 50);
     };
 
-    // Écouter TOUS les événements
+    window.addEventListener('storage', handleUpdate);
     window.addEventListener('websiteDesignUpdated', handleUpdate);
     window.addEventListener('websiteDesignSaved', handleUpdate);
     window.addEventListener('websiteSettingsUpdated', handleUpdate);
-    window.addEventListener('storage', handleUpdate);
 
-    // Polling agressif toutes les secondes
-    const interval = setInterval(loadSiteData, 1000);
+    // Vérification périodique
+    const interval = setInterval(loadSiteData, 2000);
 
     return () => {
+      window.removeEventListener('storage', handleUpdate);
       window.removeEventListener('websiteDesignUpdated', handleUpdate);
       window.removeEventListener('websiteDesignSaved', handleUpdate);
       window.removeEventListener('websiteSettingsUpdated', handleUpdate);
-      window.removeEventListener('storage', handleUpdate);
       clearInterval(interval);
     };
   }, []);
@@ -100,6 +97,8 @@ export const SimpleFrontNavigation: React.FC<SimpleFrontNavigationProps> = ({ si
     { name: 'Contact', path: '/front/contact' }
   ];
 
+  console.log('🎯 SimpleFrontNavigation - Rendering with siteName:', siteName);
+
   return (
     <nav className="bg-white shadow-lg border-b">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -111,7 +110,7 @@ export const SimpleFrontNavigation: React.FC<SimpleFrontNavigationProps> = ({ si
                 <img
                   src={logo}
                   alt="Logo"
-                  className="site-logo h-10 w-auto"
+                  className="h-10 w-auto"
                   onError={(e) => {
                     console.log('❌ SimpleFrontNavigation - Logo loading error');
                     (e.currentTarget as HTMLImageElement).style.display = 'none';
@@ -124,11 +123,7 @@ export const SimpleFrontNavigation: React.FC<SimpleFrontNavigationProps> = ({ si
                   </span>
                 </div>
               )}
-              <span 
-                className="site-name text-xl font-bold text-gray-900"
-                data-site-name
-                key={`site-name-${siteName}-${Date.now()}`}
-              >
+              <span className="text-xl font-bold text-gray-900">
                 {siteName}
               </span>
             </Link>
@@ -140,7 +135,7 @@ export const SimpleFrontNavigation: React.FC<SimpleFrontNavigationProps> = ({ si
               <Link
                 key={item.path}
                 to={item.path}
-                className={`front-link text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors ${
+                className={`text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors ${
                   location.pathname === item.path ? 'text-blue-600 font-semibold' : ''
                 }`}
               >
@@ -170,7 +165,7 @@ export const SimpleFrontNavigation: React.FC<SimpleFrontNavigationProps> = ({ si
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`front-link block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100 rounded-md transition-colors ${
+                  className={`block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100 rounded-md transition-colors ${
                     location.pathname === item.path ? 'text-blue-600 font-semibold bg-blue-50' : ''
                   }`}
                   onClick={() => setIsMenuOpen(false)}

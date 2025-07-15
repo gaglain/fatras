@@ -6,22 +6,17 @@ import { SimpleFrontNavigation } from './SimpleFrontNavigation';
 export const SimpleFrontLayout: React.FC = () => {
   const [siteName, setSiteName] = useState('MusiConnect');
 
-  // FONCTION DE CHARGEMENT UNIFIÉE ET AGRESSIVE POUR LE SITE NAME
   const loadSiteName = () => {
-    console.log('🔍 SimpleFrontLayout - Loading site name...');
-    
     try {
-      // PRIORITÉ ABSOLUE : websiteDesign
+      // Charger depuis websiteDesign en priorité
       const savedDesign = localStorage.getItem('websiteDesign');
       if (savedDesign) {
         const design = JSON.parse(savedDesign);
-        console.log('✅ SimpleFrontLayout - Design found:', design);
-        
-        if (design.siteName) {
+        if (design.siteName && design.siteName !== siteName) {
+          console.log('✅ SimpleFrontLayout - Loading siteName from design:', design.siteName);
           setSiteName(design.siteName);
           document.title = design.siteName;
-          console.log('🎯 SimpleFrontLayout - Applied siteName:', design.siteName);
-          return;
+          return design.siteName;
         }
       }
 
@@ -29,48 +24,59 @@ export const SimpleFrontLayout: React.FC = () => {
       const savedSettings = localStorage.getItem('websiteSettings');
       if (savedSettings) {
         const settings = JSON.parse(savedSettings);
-        console.log('📋 SimpleFrontLayout - Settings fallback:', settings);
-        
-        if (settings.siteName) {
+        if (settings.siteName && settings.siteName !== siteName) {
+          console.log('✅ SimpleFrontLayout - Loading siteName from settings:', settings.siteName);
           setSiteName(settings.siteName);
           document.title = settings.siteName;
-          console.log('🎯 SimpleFrontLayout - Applied siteName from settings:', settings.siteName);
+          return settings.siteName;
         }
       }
-
     } catch (error) {
-      console.error('❌ SimpleFrontLayout - Error loading site name:', error);
+      console.error('❌ SimpleFrontLayout - Error:', error);
     }
+    return null;
   };
 
   useEffect(() => {
-    console.log('🚀 SimpleFrontLayout - Initializing...');
-    
-    // Chargement immédiat
-    loadSiteName();
+    // Chargement initial
+    const loadedName = loadSiteName();
+    console.log('🚀 SimpleFrontLayout - Initial load result:', loadedName);
 
-    const handleUpdate = () => {
-      console.log('📡 SimpleFrontLayout - Event received, reloading...');
-      setTimeout(loadSiteName, 10);
+    // Écouter les événements de stockage
+    const handleStorageChange = () => {
+      console.log('📡 SimpleFrontLayout - Storage change detected');
+      setTimeout(loadSiteName, 50);
     };
 
-    // Écouter TOUS les événements
-    window.addEventListener('websiteDesignUpdated', handleUpdate);
-    window.addEventListener('websiteDesignSaved', handleUpdate);
-    window.addEventListener('websiteSettingsUpdated', handleUpdate);
-    window.addEventListener('storage', handleUpdate);
+    // Écouter les événements personnalisés
+    const handleCustomEvent = () => {
+      console.log('📡 SimpleFrontLayout - Custom event detected');
+      setTimeout(loadSiteName, 50);
+    };
 
-    // Polling agressif toutes les secondes
-    const interval = setInterval(loadSiteName, 1000);
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('websiteDesignUpdated', handleCustomEvent);
+    window.addEventListener('websiteDesignSaved', handleCustomEvent);
+    window.addEventListener('websiteSettingsUpdated', handleCustomEvent);
+
+    // Vérification toutes les 2 secondes
+    const interval = setInterval(() => {
+      const currentName = loadSiteName();
+      if (currentName) {
+        console.log('🔄 SimpleFrontLayout - Interval check found update:', currentName);
+      }
+    }, 2000);
 
     return () => {
-      window.removeEventListener('websiteDesignUpdated', handleUpdate);
-      window.removeEventListener('websiteDesignSaved', handleUpdate);
-      window.removeEventListener('websiteSettingsUpdated', handleUpdate);
-      window.removeEventListener('storage', handleUpdate);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('websiteDesignUpdated', handleCustomEvent);
+      window.removeEventListener('websiteDesignSaved', handleCustomEvent);
+      window.removeEventListener('websiteSettingsUpdated', handleCustomEvent);
       clearInterval(interval);
     };
-  }, []);
+  }, [siteName]);
+
+  console.log('🎯 SimpleFrontLayout - Current siteName:', siteName);
 
   return (
     <div className="min-h-screen flex flex-col">
