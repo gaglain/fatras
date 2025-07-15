@@ -41,81 +41,104 @@ export const WebsiteDesignManager: React.FC = () => {
       try {
         const parsed = JSON.parse(savedDesign);
         setDesign(prev => ({ ...prev, ...parsed }));
-        console.log('🎨 Design loaded:', parsed.siteName);
+        console.log('🎨 WebsiteDesignManager - Design loaded:', parsed.siteName);
       } catch (error) {
-        console.error('❌ Error loading design:', error);
+        console.error('❌ WebsiteDesignManager - Error loading design:', error);
       }
     }
   }, []);
 
   const handleInputChange = (field: keyof SiteDesign, value: string) => {
-    console.log(`🔧 Changing ${field} to:`, value);
+    console.log(`🔧 WebsiteDesignManager - Changing ${field} to:`, value);
     setDesign(prev => ({ ...prev, [field]: value }));
   };
 
   const triggerSyncEvents = (designData: SiteDesign) => {
-    console.log('🚀 Triggering all sync events for:', designData.siteName);
+    console.log('🚀 WebsiteDesignManager - MASSIVE SYNC OPERATION for:', designData.siteName);
     
-    // Sauvegarder
+    // Sauvegarder d'abord
     localStorage.setItem('websiteDesign', JSON.stringify(designData));
+    console.log('💾 WebsiteDesignManager - Saved to localStorage');
     
-    // Déclencher TOUS les événements
+    // Forcer la mise à jour du titre immédiatement
+    document.title = designData.siteName;
+    console.log('📝 WebsiteDesignManager - Updated document title to:', designData.siteName);
+    
+    // Déclencher TOUS les événements possibles
     const events = [
       'websiteDesignUpdated',
       'websiteDesignSaved',
-      'websiteSettingsUpdated'
+      'websiteSettingsUpdated',
+      'siteConfigChanged'
     ];
     
     events.forEach(eventName => {
       const event = new CustomEvent(eventName, { detail: designData });
       window.dispatchEvent(event);
-      console.log(`✅ Event ${eventName} dispatched`);
+      console.log(`✅ WebsiteDesignManager - Event ${eventName} dispatched`);
     });
     
-    // Événement storage manuel
-    const storageEvent = new StorageEvent('storage', {
-      key: 'websiteDesign',
-      newValue: JSON.stringify(designData),
-      oldValue: null,
-      storageArea: localStorage,
-      url: window.location.href
-    });
-    window.dispatchEvent(storageEvent);
+    // Forcer l'événement storage manuellement plusieurs fois
+    for (let i = 0; i < 3; i++) {
+      setTimeout(() => {
+        const storageEvent = new StorageEvent('storage', {
+          key: 'websiteDesign',
+          newValue: JSON.stringify(designData),
+          oldValue: null,
+          storageArea: localStorage,
+          url: window.location.href
+        });
+        window.dispatchEvent(storageEvent);
+        console.log(`✅ WebsiteDesignManager - Storage event dispatched #${i + 1}`);
+      }, i * 100);
+    }
     
-    console.log('✅ All sync events triggered');
+    // Forcer un reload de la page front si elle est ouverte dans un autre onglet
+    if (window.opener || window.parent !== window) {
+      try {
+        window.postMessage({ type: 'SITE_CONFIG_UPDATE', data: designData }, '*');
+      } catch (e) {
+        console.log('Could not post message to parent window');
+      }
+    }
+    
+    console.log('✅ WebsiteDesignManager - ALL SYNC EVENTS TRIGGERED');
   };
 
   const saveDesign = () => {
-    console.log('💾 Saving design:', design);
+    console.log('💾 WebsiteDesignManager - SAVING DESIGN:', design);
     
     try {
       triggerSyncEvents(design);
-      toast.success('Design sauvegardé et synchronisé !');
-      console.log('✅ Design saved and synced successfully');
+      toast.success(`Design sauvegardé ! Site: "${design.siteName}"`);
+      console.log('✅ WebsiteDesignManager - Design saved successfully');
     } catch (error) {
-      console.error('❌ Error saving design:', error);
+      console.error('❌ WebsiteDesignManager - Error saving design:', error);
       toast.error('Erreur lors de la sauvegarde');
     }
   };
 
   const resetDesign = () => {
-    console.log('🔄 Resetting design to default');
+    console.log('🔄 WebsiteDesignManager - Resetting design to default');
     setDesign(defaultDesign);
     localStorage.removeItem('websiteDesign');
     triggerSyncEvents(defaultDesign);
-    toast.success('Design réinitialisé et synchronisé');
+    toast.success('Design réinitialisé');
   };
 
   return (
     <div className="space-y-6">
-      {/* Debug info */}
+      {/* Debug info plus détaillé */}
       <Card className="bg-green-50 border-green-200">
         <CardContent className="pt-4">
           <p className="text-sm text-green-800">
-            <strong>🎯 Synchronisation Unifiée :</strong> Nom: "{design.siteName}" | Logo: {design.logo ? '✅' : '❌'}
+            <strong>🎯 CURRENT STATE:</strong> Nom: "{design.siteName}" | Logo: {design.logo ? '✅' : '❌'}
           </p>
           <p className="text-sm text-green-600 mt-1">
-            💡 Les changements sont maintenant synchronisés via un système unifié
+            💾 localStorage websiteDesign: {localStorage.getItem('websiteDesign') ? 'EXISTS' : 'MISSING'}
+          </p>
+          <p className="text-sm text-green-600">
+            🎯 Document title: "{document.title}"
           </p>
         </CardContent>
       </Card>
@@ -145,7 +168,7 @@ export const WebsiteDesignManager: React.FC = () => {
       <div className="flex gap-4">
         <Button onClick={saveDesign} className="bg-green-600 hover:bg-green-700">
           <Save className="h-4 w-4 mr-2" />
-          Sauvegarder et Synchroniser
+          FORCER LA SAUVEGARDE
         </Button>
         <Button variant="outline" onClick={resetDesign}>
           <RotateCcw className="h-4 w-4 mr-2" />

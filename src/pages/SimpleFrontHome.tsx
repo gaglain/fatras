@@ -8,10 +8,22 @@ import { useSiteConfig } from '@/hooks/useSiteConfig';
 export const SimpleFrontHome: React.FC = () => {
   const { siteName } = useSiteConfig();
 
-  console.log('🎯 SimpleFrontHome - Current siteName:', siteName);
+  console.log('🎯 SimpleFrontHome - RENDERING with siteName:', siteName);
+
+  // Forcer la mise à jour du titre de la page
+  React.useEffect(() => {
+    document.title = siteName;
+  }, [siteName]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-600 to-purple-700">
+      {/* Debug info - TEMPORAIRE */}
+      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 text-center">
+        <strong>DEBUG MODE:</strong> Site Name = "{siteName}" | 
+        websiteDesign = {localStorage.getItem('websiteDesign') ? 'EXISTS' : 'MISSING'} | 
+        websiteSettings = {localStorage.getItem('websiteSettings') ? 'EXISTS' : 'MISSING'}
+      </div>
+
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="max-w-7xl mx-auto">

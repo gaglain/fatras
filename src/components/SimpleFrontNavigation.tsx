@@ -18,7 +18,7 @@ export const SimpleFrontNavigation: React.FC = () => {
     { name: 'Contact', path: '/front/contact' }
   ];
 
-  console.log('🎯 SimpleFrontNavigation - Rendering with siteName:', siteName);
+  console.log('🎯 SimpleFrontNavigation - RENDERING with siteName:', siteName, 'logo:', logo);
 
   return (
     <nav className="bg-white shadow-lg border-b">
@@ -48,6 +48,13 @@ export const SimpleFrontNavigation: React.FC = () => {
                 {siteName}
               </span>
             </Link>
+          </div>
+
+          {/* Debug info - TEMPORAIRE */}
+          <div className="hidden md:flex items-center space-x-4">
+            <div className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded">
+              DEBUG: {siteName}
+            </div>
           </div>
 
           {/* Navigation desktop */}
