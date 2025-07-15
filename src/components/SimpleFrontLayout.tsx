@@ -2,142 +2,82 @@
 import React, { useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { SimpleFrontNavigation } from './SimpleFrontNavigation';
-import { ForceFrontendSync } from './ForceFrontendSync';
-
-interface WebsiteSettings {
-  siteName: string;
-  siteDescription: string;
-  contactEmail: string;
-  contactPhone: string;
-  address: string;
-  socialLinks: {
-    facebook: string;
-    instagram: string;
-    twitter: string;
-    youtube: string;
-    linkedin: string;
-  };
-}
 
 export const SimpleFrontLayout: React.FC = () => {
-  console.log('🏗️ SimpleFrontLayout - Rendering with FORCE sync');
-  
-  const [settings, setSettings] = useState<WebsiteSettings>({
-    siteName: 'MusiConnect',
-    siteDescription: 'Plateforme de gestion artistique',
-    contactEmail: 'contact@musiconnect.com',
-    contactPhone: '+33 1 23 45 67 89',
-    address: '123 Rue de la Musique, 75001 Paris',
-    socialLinks: {
-      facebook: '',
-      instagram: '',
-      twitter: '',
-      youtube: '',
-      linkedin: ''
+  const [siteName, setSiteName] = useState('MusiConnect');
+
+  // FONCTION DE CHARGEMENT UNIFIÉE ET AGRESSIVE POUR LE SITE NAME
+  const loadSiteName = () => {
+    console.log('🔍 SimpleFrontLayout - Loading site name...');
+    
+    try {
+      // PRIORITÉ ABSOLUE : websiteDesign
+      const savedDesign = localStorage.getItem('websiteDesign');
+      if (savedDesign) {
+        const design = JSON.parse(savedDesign);
+        console.log('✅ SimpleFrontLayout - Design found:', design);
+        
+        if (design.siteName) {
+          setSiteName(design.siteName);
+          document.title = design.siteName;
+          console.log('🎯 SimpleFrontLayout - Applied siteName:', design.siteName);
+          return;
+        }
+      }
+
+      // Fallback vers websiteSettings
+      const savedSettings = localStorage.getItem('websiteSettings');
+      if (savedSettings) {
+        const settings = JSON.parse(savedSettings);
+        console.log('📋 SimpleFrontLayout - Settings fallback:', settings);
+        
+        if (settings.siteName) {
+          setSiteName(settings.siteName);
+          document.title = settings.siteName;
+          console.log('🎯 SimpleFrontLayout - Applied siteName from settings:', settings.siteName);
+        }
+      }
+
+    } catch (error) {
+      console.error('❌ SimpleFrontLayout - Error loading site name:', error);
     }
-  });
+  };
 
   useEffect(() => {
-    const loadSettings = () => {
-      const savedSettings = localStorage.getItem('websiteSettings');
-      const savedDesign = localStorage.getItem('websiteDesign');
-      
-      // Priorité au design, puis settings
-      if (savedDesign) {
-        try {
-          const design = JSON.parse(savedDesign);
-          if (design.siteName) {
-            setSettings(prev => ({ ...prev, siteName: design.siteName }));
-            console.log('🎨 Layout - Design siteName loaded:', design.siteName);
-          }
-        } catch (e) {
-          console.error('Design parse error:', e);
-        }
-      }
-      
-      if (savedSettings) {
-        try {
-          const parsed = JSON.parse(savedSettings);
-          setSettings(prev => ({ ...prev, ...parsed }));
-          console.log('⚙️ Layout - Settings loaded:', parsed.siteName);
-        } catch (error) {
-          console.error('Settings parse error:', error);
-        }
-      }
+    console.log('🚀 SimpleFrontLayout - Initializing...');
+    
+    // Chargement immédiat
+    loadSiteName();
+
+    const handleUpdate = () => {
+      console.log('📡 SimpleFrontLayout - Event received, reloading...');
+      setTimeout(loadSiteName, 10);
     };
 
-    loadSettings();
-    
-    // Écouter les changements
-    const handleDataChange = () => {
-      console.log('📡 Layout - Data change detected');
-      loadSettings();
-    };
+    // Écouter TOUS les événements
+    window.addEventListener('websiteDesignUpdated', handleUpdate);
+    window.addEventListener('websiteDesignSaved', handleUpdate);
+    window.addEventListener('websiteSettingsUpdated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
 
-    window.addEventListener('storage', handleDataChange);
-    window.addEventListener('websiteDesignUpdated', handleDataChange);
-    window.addEventListener('websiteDesignSaved', handleDataChange);
-    window.addEventListener('websiteSettingsUpdated', handleDataChange);
-    
+    // Polling agressif toutes les secondes
+    const interval = setInterval(loadSiteName, 1000);
+
     return () => {
-      window.removeEventListener('storage', handleDataChange);
-      window.removeEventListener('websiteDesignUpdated', handleDataChange);
-      window.removeEventListener('websiteDesignSaved', handleDataChange);
-      window.removeEventListener('websiteSettingsUpdated', handleDataChange);
+      window.removeEventListener('websiteDesignUpdated', handleUpdate);
+      window.removeEventListener('websiteDesignSaved', handleUpdate);
+      window.removeEventListener('websiteSettingsUpdated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+      clearInterval(interval);
     };
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
-      <ForceFrontendSync />
-      <SimpleFrontNavigation />
-      
-      <main className="flex-1 pt-16">
+    <div className="min-h-screen flex flex-col">
+      <SimpleFrontNavigation siteName={siteName} />
+      <main className="flex-1">
         <Outlet />
       </main>
-      
-      <footer className="bg-gray-800 text-white py-8 px-4 mt-auto">
-        <div className="container mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div>
-              <h3 className="font-semibold mb-4 text-lg">Contact</h3>
-              <div className="space-y-2 text-sm">
-                <p>{settings.contactEmail}</p>
-                <p>{settings.contactPhone}</p>
-                <p>{settings.address}</p>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="font-semibold mb-4 text-lg">Suivez-nous</h3>
-              <div className="flex space-x-4">
-                {settings.socialLinks.facebook && (
-                  <a href={settings.socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">
-                    Facebook
-                  </a>
-                )}
-                {settings.socialLinks.instagram && (
-                  <a href={settings.socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="text-pink-400 hover:text-pink-300">
-                    Instagram
-                  </a>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <h3 className="font-semibold mb-4 text-lg">Informations légales</h3>
-              <div className="space-y-2 text-sm">
-                <div><a href="/mentions-legales" className="text-blue-400 hover:text-blue-300">Mentions légales</a></div>
-                <div><a href="/cgv" className="text-blue-400 hover:text-blue-300">CGV</a></div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="border-t border-gray-600 mt-8 pt-8 text-center text-sm">
-            <p>© 2024 {settings.siteName}. Tous droits réservés.</p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 };

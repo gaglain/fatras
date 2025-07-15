@@ -1,65 +1,165 @@
 
-import React from 'react';
-import { useUnifiedSiteData } from '@/hooks/useUnifiedSiteData';
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Music, Calendar, Phone } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export const SimpleFrontHome: React.FC = () => {
-  const siteData = useUnifiedSiteData();
+  const [siteName, setSiteName] = useState('MusiConnect');
 
-  console.log('🎯 SIMPLE FRONT HOME - Current siteName:', siteData.siteName);
+  // FONCTION DE CHARGEMENT UNIFIÉE ET AGRESSIVE POUR LE SITE NAME
+  const loadSiteName = () => {
+    console.log('🔍 SimpleFrontHome - Loading site name...');
+    
+    try {
+      // PRIORITÉ ABSOLUE : websiteDesign
+      const savedDesign = localStorage.getItem('websiteDesign');
+      if (savedDesign) {
+        const design = JSON.parse(savedDesign);
+        console.log('✅ SimpleFrontHome - Design found:', design);
+        
+        if (design.siteName) {
+          setSiteName(design.siteName);
+          document.title = design.siteName;
+          console.log('🎯 SimpleFrontHome - Applied siteName:', design.siteName);
+          return;
+        }
+      }
+
+      // Fallback vers websiteSettings
+      const savedSettings = localStorage.getItem('websiteSettings');
+      if (savedSettings) {
+        const settings = JSON.parse(savedSettings);
+        console.log('📋 SimpleFrontHome - Settings fallback:', settings);
+        
+        if (settings.siteName) {
+          setSiteName(settings.siteName);
+          document.title = settings.siteName;
+          console.log('🎯 SimpleFrontHome - Applied siteName from settings:', settings.siteName);
+        }
+      }
+
+    } catch (error) {
+      console.error('❌ SimpleFrontHome - Error loading site name:', error);
+    }
+  };
+
+  useEffect(() => {
+    console.log('🚀 SimpleFrontHome - Initializing...');
+    
+    // Chargement immédiat
+    loadSiteName();
+
+    const handleUpdate = () => {
+      console.log('📡 SimpleFrontHome - Event received, reloading...');
+      setTimeout(loadSiteName, 10);
+    };
+
+    // Écouter TOUS les événements
+    window.addEventListener('websiteDesignUpdated', handleUpdate);
+    window.addEventListener('websiteDesignSaved', handleUpdate);
+    window.addEventListener('websiteSettingsUpdated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+
+    // Polling agressif toutes les secondes
+    const interval = setInterval(loadSiteName, 1000);
+
+    return () => {
+      window.removeEventListener('websiteDesignUpdated', handleUpdate);
+      window.removeEventListener('websiteDesignSaved', handleUpdate);
+      window.removeEventListener('websiteSettingsUpdated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+      clearInterval(interval);
+    };
+  }, []);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-blue-600 to-purple-700">
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-20">
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="text-5xl font-bold mb-6" key={`welcome-${siteData.siteName}-${Date.now()}`}>
-            Bienvenue sur {siteData.siteName}
-          </h1>
-          <p className="text-xl mb-8 max-w-2xl mx-auto">
-            Plateforme de gestion artistique
-          </p>
-          <button className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
-            Découvrir
-          </button>
+      <div className="relative overflow-hidden">
+        <div className="max-w-7xl mx-auto">
+          <div className="relative z-10 pb-8 sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32">
+            <main className="mt-10 mx-auto max-w-7xl px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-8 xl:mt-28">
+              <div className="sm:text-center lg:text-left">
+                <h1 
+                  className="text-4xl tracking-tight font-extrabold text-white sm:text-5xl md:text-6xl"
+                  key={`welcome-${siteName}-${Date.now()}`}
+                >
+                  <span className="block xl:inline">Bienvenue sur</span>{' '}
+                  <span className="block text-yellow-400 xl:inline">{siteName}</span>
+                </h1>
+                <p className="mt-3 text-base text-gray-300 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
+                  Plateforme de gestion artistique complète pour découvrir les talents, 
+                  organiser des événements et créer des expériences musicales exceptionnelles.
+                </p>
+                <div className="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
+                  <div className="rounded-md shadow">
+                    <Button asChild size="lg" className="bg-yellow-400 hover:bg-yellow-500 text-gray-900">
+                      <Link to="/front/artists">
+                        Découvrir
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </main>
+          </div>
         </div>
-      </section>
+      </div>
 
-      {/* Content Section */}
-      <section className="py-16">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center p-6">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Artistes</h3>
-              <p className="text-gray-600">Découvrez nos artistes talentueux</p>
-            </div>
+      {/* Features Section */}
+      <div className="py-12 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="lg:text-center">
+            <h2 className="text-base text-blue-600 font-semibold tracking-wide uppercase">
+              Services
+            </h2>
+            <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+              Tout ce dont vous avez besoin
+            </p>
+            <p className="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-auto">
+              Découvrez nos services pour une expérience musicale complète
+            </p>
+          </div>
 
-            <div className="text-center p-6">
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
+          <div className="mt-10">
+            <div className="space-y-10 md:space-y-0 md:grid md:grid-cols-3 md:gap-x-8 md:gap-y-10">
+              {/* Feature 1 */}
+              <div className="relative">
+                <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
+                  <Music className="h-6 w-6" />
+                </div>
+                <p className="ml-16 text-lg leading-6 font-medium text-gray-900">Artistes</p>
+                <p className="mt-2 ml-16 text-base text-gray-500">
+                  Découvrez nos artistes talentueux et leurs créations uniques
+                </p>
               </div>
-              <h3 className="text-xl font-semibold mb-2">Événements</h3>
-              <p className="text-gray-600">Retrouvez tous nos événements</p>
-            </div>
 
-            <div className="text-center p-6">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                </svg>
+              {/* Feature 2 */}
+              <div className="relative">
+                <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-purple-500 text-white">
+                  <Calendar className="h-6 w-6" />
+                </div>
+                <p className="ml-16 text-lg leading-6 font-medium text-gray-900">Événements</p>
+                <p className="mt-2 ml-16 text-base text-gray-500">
+                  Retrouvez tous nos événements et réservez votre place
+                </p>
               </div>
-              <h3 className="text-xl font-semibold mb-2">Contact</h3>
-              <p className="text-gray-600">Contactez-nous facilement</p>
+
+              {/* Feature 3 */}
+              <div className="relative">
+                <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-green-500 text-white">
+                  <Phone className="h-6 w-6" />
+                </div>
+                <p className="ml-16 text-lg leading-6 font-medium text-gray-900">Contact</p>
+                <p className="mt-2 ml-16 text-base text-gray-500">
+                  Contactez-nous facilement pour tous vos besoins
+                </p>
+              </div>
             </div>
           </div>
         </div>
-      </section>
+      </div>
     </div>
   );
 };
