@@ -6,10 +6,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Globe, Settings, Eye, ExternalLink, Edit } from 'lucide-react';
 import { WebsiteConfigManager } from '@/components/WebsiteConfigManager';
+import { useWebsiteConfig } from '@/contexts/WebsiteConfigContext';
 
 export const Website: React.FC = () => {
   const [activeTab, setActiveTab] = useState('config');
   const navigate = useNavigate();
+  // This line ensures that we're actually within the context before using WebsiteConfigManager
+  const { config } = useWebsiteConfig();
 
   const handleOpenEditor = () => {
     navigate('/website-editor');

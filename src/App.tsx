@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -18,6 +19,7 @@ import { FrontTermsOfService } from "./pages/FrontTermsOfService";
 import { WebsiteWithEditor } from "./pages/WebsiteWithEditor";
 import { Website } from "./pages/Website";
 import { Preferences } from "./pages/Preferences";
+import { FrontContact } from "./pages/FrontContact";
 
 import { Layout } from "./components/Layout";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -84,7 +86,7 @@ const App = () => {
                           <Route path="artists" element={<FrontArtists />} />
                           <Route path="events" element={<PlaceholderPage title="Events" />} />
                           <Route path="shop" element={<FrontShop />} />
-                          <Route path="contact" element={<PlaceholderPage title="Contact" />} />
+                          <Route path="contact" element={<FrontContact />} />
                           <Route path="mentions-legales" element={<FrontLegalNotices />} />
                           <Route path="cgv" element={<FrontTermsOfService />} />
                           <Route path="politique-confidentialite" element={<FrontPrivacyPolicy />} />
