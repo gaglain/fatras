@@ -1,75 +1,12 @@
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { Music, Calendar, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useSiteConfig } from '@/hooks/useSiteConfig';
 
 export const SimpleFrontHome: React.FC = () => {
-  const [siteName, setSiteName] = useState('MusiConnect');
-
-  const loadSiteName = () => {
-    try {
-      // Charger depuis websiteDesign en priorité
-      const savedDesign = localStorage.getItem('websiteDesign');
-      if (savedDesign) {
-        const design = JSON.parse(savedDesign);
-        if (design.siteName && design.siteName !== siteName) {
-          console.log('✅ SimpleFrontHome - Loading siteName:', design.siteName);
-          setSiteName(design.siteName);
-          document.title = design.siteName;
-          return design.siteName;
-        }
-      }
-
-      // Fallback vers websiteSettings
-      const savedSettings = localStorage.getItem('websiteSettings');
-      if (savedSettings) {
-        const settings = JSON.parse(savedSettings);
-        if (settings.siteName && settings.siteName !== siteName) {
-          console.log('✅ SimpleFrontHome - Loading siteName from settings:', settings.siteName);
-          setSiteName(settings.siteName);
-          document.title = settings.siteName;
-          return settings.siteName;
-        }
-      }
-    } catch (error) {
-      console.error('❌ SimpleFrontHome - Error:', error);
-    }
-    return null;
-  };
-
-  useEffect(() => {
-    // Chargement initial
-    const loadedName = loadSiteName();
-    console.log('🚀 SimpleFrontHome - Initial load result:', loadedName);
-
-    // Écouter les événements
-    const handleUpdate = () => {
-      console.log('📡 SimpleFrontHome - Event received');
-      setTimeout(loadSiteName, 50);
-    };
-
-    window.addEventListener('storage', handleUpdate);
-    window.addEventListener('websiteDesignUpdated', handleUpdate);
-    window.addEventListener('websiteDesignSaved', handleUpdate);
-    window.addEventListener('websiteSettingsUpdated', handleUpdate);
-
-    // Vérification périodique
-    const interval = setInterval(() => {
-      const currentName = loadSiteName();
-      if (currentName) {
-        console.log('🔄 SimpleFrontHome - Interval check found update:', currentName);
-      }
-    }, 2000);
-
-    return () => {
-      window.removeEventListener('storage', handleUpdate);
-      window.removeEventListener('websiteDesignUpdated', handleUpdate);
-      window.removeEventListener('websiteDesignSaved', handleUpdate);
-      window.removeEventListener('websiteSettingsUpdated', handleUpdate);
-      clearInterval(interval);
-    };
-  }, [siteName]);
+  const { siteName } = useSiteConfig();
 
   console.log('🎯 SimpleFrontHome - Current siteName:', siteName);
 

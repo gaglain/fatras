@@ -1,93 +1,14 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useSiteConfig } from '@/hooks/useSiteConfig';
 
-interface SimpleFrontNavigationProps {
-  siteName?: string;
-}
-
-export const SimpleFrontNavigation: React.FC<SimpleFrontNavigationProps> = ({ siteName: propSiteName }) => {
+export const SimpleFrontNavigation: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [siteName, setSiteName] = useState(propSiteName || 'MusiConnect');
-  const [logo, setLogo] = useState('');
+  const { siteName, logo } = useSiteConfig();
   const location = useLocation();
-
-  const loadSiteData = () => {
-    try {
-      // Charger depuis websiteDesign en priorité
-      const savedDesign = localStorage.getItem('websiteDesign');
-      if (savedDesign) {
-        const design = JSON.parse(savedDesign);
-        let updated = false;
-        
-        if (design.siteName && design.siteName !== siteName) {
-          console.log('✅ SimpleFrontNavigation - Loading siteName:', design.siteName);
-          setSiteName(design.siteName);
-          document.title = design.siteName;
-          updated = true;
-        }
-        
-        if (design.logo && design.logo !== logo) {
-          console.log('✅ SimpleFrontNavigation - Loading logo');
-          setLogo(design.logo);
-          updated = true;
-        }
-        
-        if (updated) return;
-      }
-
-      // Fallback vers websiteSettings
-      const savedSettings = localStorage.getItem('websiteSettings');
-      if (savedSettings) {
-        const settings = JSON.parse(savedSettings);
-        if (settings.siteName && settings.siteName !== siteName) {
-          console.log('✅ SimpleFrontNavigation - Loading siteName from settings:', settings.siteName);
-          setSiteName(settings.siteName);
-          document.title = settings.siteName;
-        }
-      }
-    } catch (error) {
-      console.error('❌ SimpleFrontNavigation - Error:', error);
-    }
-  };
-
-  // Utiliser le prop si fourni
-  useEffect(() => {
-    if (propSiteName && propSiteName !== siteName) {
-      console.log('🎯 SimpleFrontNavigation - Using prop siteName:', propSiteName);
-      setSiteName(propSiteName);
-      document.title = propSiteName;
-    }
-  }, [propSiteName, siteName]);
-
-  useEffect(() => {
-    // Chargement initial
-    loadSiteData();
-
-    // Écouter les événements
-    const handleUpdate = () => {
-      console.log('📡 SimpleFrontNavigation - Event received');
-      setTimeout(loadSiteData, 50);
-    };
-
-    window.addEventListener('storage', handleUpdate);
-    window.addEventListener('websiteDesignUpdated', handleUpdate);
-    window.addEventListener('websiteDesignSaved', handleUpdate);
-    window.addEventListener('websiteSettingsUpdated', handleUpdate);
-
-    // Vérification périodique
-    const interval = setInterval(loadSiteData, 2000);
-
-    return () => {
-      window.removeEventListener('storage', handleUpdate);
-      window.removeEventListener('websiteDesignUpdated', handleUpdate);
-      window.removeEventListener('websiteDesignSaved', handleUpdate);
-      window.removeEventListener('websiteSettingsUpdated', handleUpdate);
-      clearInterval(interval);
-    };
-  }, []);
 
   const navItems = [
     { name: 'Accueil', path: '/front' },
