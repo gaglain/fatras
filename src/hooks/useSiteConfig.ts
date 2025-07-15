@@ -16,7 +16,21 @@ export const useSiteConfig = () => {
 
   const loadConfig = () => {
     try {
-      // Essayer d'abord websiteDesign
+      // Utiliser websiteConfig comme source principale
+      const configData = localStorage.getItem('websiteConfig');
+      if (configData) {
+        const parsed = JSON.parse(configData);
+        const newConfig = {
+          siteName: parsed.siteName || DEFAULT_CONFIG.siteName,
+          logo: parsed.logo || DEFAULT_CONFIG.logo
+        };
+        console.log('✅ useSiteConfig - Loaded from websiteConfig:', newConfig);
+        setConfig(newConfig);
+        document.title = newConfig.siteName;
+        return;
+      }
+
+      // Fallback vers websiteDesign
       const designData = localStorage.getItem('websiteDesign');
       if (designData) {
         const design = JSON.parse(designData);
@@ -71,10 +85,12 @@ export const useSiteConfig = () => {
     };
 
     window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('websiteConfigChanged', handleCustomEvent);
     window.addEventListener('siteConfigChanged', handleCustomEvent);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('websiteConfigChanged', handleCustomEvent);
       window.removeEventListener('siteConfigChanged', handleCustomEvent);
     };
   }, []);

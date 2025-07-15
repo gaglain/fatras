@@ -68,16 +68,66 @@ export const WebsiteConfigManager: React.FC = () => {
   };
 
   const saveConfig = () => {
+    // Sauvegarder dans le contexte principal
     updateConfig(localConfig);
     
-    // Déclencher l'événement de synchronisation
+    // Synchroniser avec les anciens systèmes pour compatibilité
+    const legacyDesign = {
+      siteName: localConfig.siteName,
+      logo: localConfig.logo,
+      primaryColor: localConfig.primaryColor,
+      secondaryColor: localConfig.secondaryColor,
+      accentColor: localConfig.accentColor,
+      headerBg: localConfig.headerBg,
+      footerBg: localConfig.footerBg,
+      textColor: localConfig.textColor,
+      linkColor: localConfig.linkColor
+    };
+    
+    const legacySettings = {
+      siteName: localConfig.siteName,
+      logo: localConfig.logo
+    };
+    
+    // Sauvegarder dans les anciens formats
+    localStorage.setItem('websiteDesign', JSON.stringify(legacyDesign));
+    localStorage.setItem('websiteSettings', JSON.stringify(legacySettings));
+    
+    // Déclencher tous les événements de synchronisation
     window.dispatchEvent(new CustomEvent('websiteConfigChanged', { detail: localConfig }));
+    window.dispatchEvent(new CustomEvent('siteConfigChanged', { detail: legacyDesign }));
     
     toast.success(`Configuration sauvegardée ! Site: "${localConfig.siteName}"`);
   };
 
+  // Vérification en temps réel pour le debug
+  const configExists = localStorage.getItem('websiteConfig') !== null;
+  const designExists = localStorage.getItem('websiteDesign') !== null;
+  const settingsExists = localStorage.getItem('websiteSettings') !== null;
+
   return (
     <div className="space-y-6">
+      {/* Debug info */}
+      <Card className="bg-blue-50 border-blue-200">
+        <CardContent className="pt-4">
+          <p className="text-sm text-blue-800">
+            <strong>🎯 ÉTAT ACTUEL:</strong> Nom: "{localConfig.siteName}"
+          </p>
+          <p className="text-sm text-blue-600 mt-1">
+            💾 websiteConfig: {configExists ? '✅ EXISTS' : '❌ MISSING'}
+          </p>
+          <p className="text-sm text-blue-600">
+            💾 websiteDesign: {designExists ? '✅ EXISTS' : '❌ MISSING'}
+          </p>
+          <p className="text-sm text-blue-600">
+            💾 websiteSettings: {settingsExists ? '✅ EXISTS' : '❌ MISSING'}
+          </p>
+          <p className="text-sm text-blue-600">
+            📄 Document title: "{document.title}"
+          </p>
+        </CardContent>
+      </Card>
+
       {/* Branding */}
       <Card>
         <CardHeader>
