@@ -60,52 +60,34 @@ export const WebsiteDesignManager: React.FC = () => {
   };
 
   const saveDesign = () => {
+    console.log('💾 WebsiteDesignManager - SAVING DESIGN:', design);
+    
     try {
-      console.log('💾 WebsiteDesignManager - SAVING DESIGN:', design);
-      
-      // 1. Sauvegarder websiteDesign (priorité absolue)
-      const designString = JSON.stringify(design);
-      localStorage.setItem('websiteDesign', designString);
-      console.log('✅ websiteDesign SAVED:', designString);
-      
-      // 2. Sauvegarder websiteSettings pour compatibilité
+      // 1. Créer les objets à sauvegarder
+      const designData = { ...design };
       const settingsData = {
         siteName: design.siteName,
         logo: design.logo
       };
-      const settingsString = JSON.stringify(settingsData);
-      localStorage.setItem('websiteSettings', settingsString);
-      console.log('✅ websiteSettings SAVED:', settingsString);
-      
-      // 3. Mettre à jour le titre immédiatement
+
+      // 2. Sauvegarder avec vérification immédiate
+      localStorage.setItem('websiteDesign', JSON.stringify(designData));
+      const checkDesign = localStorage.getItem('websiteDesign');
+      console.log('🔍 Immediate check websiteDesign:', checkDesign ? 'EXISTS' : 'MISSING');
+
+      localStorage.setItem('websiteSettings', JSON.stringify(settingsData));
+      const checkSettings = localStorage.getItem('websiteSettings');
+      console.log('🔍 Immediate check websiteSettings:', checkSettings ? 'EXISTS' : 'MISSING');
+
+      // 3. Mettre à jour le titre
       document.title = design.siteName;
       console.log('✅ Document title updated to:', design.siteName);
-      
-      // 4. Vérification immédiate
-      const check1 = localStorage.getItem('websiteDesign');
-      const check2 = localStorage.getItem('websiteSettings');
-      console.log('🔍 VERIFICATION - websiteDesign:', check1 ? 'EXISTS' : 'MISSING');
-      console.log('🔍 VERIFICATION - websiteSettings:', check2 ? 'EXISTS' : 'MISSING');
-      
-      // 5. Déclencher les événements de synchronisation
-      window.dispatchEvent(new CustomEvent('websiteDesignUpdated', { detail: design }));
-      window.dispatchEvent(new CustomEvent('websiteDesignSaved', { detail: design }));
-      window.dispatchEvent(new CustomEvent('websiteSettingsUpdated', { detail: settingsData }));
-      window.dispatchEvent(new CustomEvent('siteConfigChanged', { detail: design }));
-      
-      // 6. Déclencher l'événement storage
-      window.dispatchEvent(new StorageEvent('storage', {
-        key: 'websiteDesign',
-        newValue: designString,
-        oldValue: null,
-        storageArea: localStorage,
-        url: window.location.href
-      }));
-      
-      console.log('✅ All events dispatched');
-      
+
+      // 4. Force un re-render immédiat de cette page
+      window.location.reload();
+
       toast.success(`✅ Design sauvegardé ! Site: "${design.siteName}"`);
-      
+
     } catch (error) {
       console.error('❌ Error saving design:', error);
       toast.error('❌ Erreur lors de la sauvegarde');
@@ -117,12 +99,13 @@ export const WebsiteDesignManager: React.FC = () => {
     setDesign(defaultDesign);
     localStorage.removeItem('websiteDesign');
     localStorage.removeItem('websiteSettings');
-    
-    window.dispatchEvent(new CustomEvent('websiteDesignUpdated', { detail: defaultDesign }));
-    window.dispatchEvent(new CustomEvent('siteConfigChanged', { detail: defaultDesign }));
-    
+    document.title = defaultDesign.siteName;
     toast.success('Design réinitialisé');
   };
+
+  // Vérification en temps réel du localStorage
+  const designExists = localStorage.getItem('websiteDesign') !== null;
+  const settingsExists = localStorage.getItem('websiteSettings') !== null;
 
   return (
     <div className="space-y-6">
@@ -133,10 +116,10 @@ export const WebsiteDesignManager: React.FC = () => {
             <strong>🎯 ÉTAT ACTUEL:</strong> Nom: "{design.siteName}"
           </p>
           <p className="text-sm text-red-600 mt-1">
-            💾 localStorage websiteDesign: {localStorage.getItem('websiteDesign') ? '✅ EXISTS' : '❌ MISSING'}
+            💾 localStorage websiteDesign: {designExists ? '✅ EXISTS' : '❌ MISSING'}
           </p>
           <p className="text-sm text-red-600">
-            💾 localStorage websiteSettings: {localStorage.getItem('websiteSettings') ? '✅ EXISTS' : '❌ MISSING'}
+            💾 localStorage websiteSettings: {settingsExists ? '✅ EXISTS' : '❌ MISSING'}
           </p>
           <p className="text-sm text-red-600">
             📄 Document title: "{document.title}"
@@ -172,7 +155,7 @@ export const WebsiteDesignManager: React.FC = () => {
       <div className="flex gap-4">
         <Button onClick={saveDesign} className="bg-green-600 hover:bg-green-700 text-white">
           <Save className="h-4 w-4 mr-2" />
-          💾 FORCER LA SAUVEGARDE
+          💾 SAUVEGARDER AVEC RELOAD
         </Button>
         <Button variant="outline" onClick={resetDesign}>
           <RotateCcw className="h-4 w-4 mr-2" />
@@ -183,12 +166,13 @@ export const WebsiteDesignManager: React.FC = () => {
       {/* Test instructions */}
       <Card className="bg-blue-50 border-blue-200">
         <CardContent className="pt-4">
-          <h3 className="font-semibold text-blue-800">🧪 Test:</h3>
+          <h3 className="font-semibold text-blue-800">🧪 NOUVEAU Test:</h3>
           <p className="text-sm text-blue-600 mt-1">
             1. Changez le nom ci-dessus en "Fatras"<br/>
-            2. Cliquez sur "FORCER LA SAUVEGARDE"<br/>
-            3. Vérifiez que les deux localStorage passent à "EXISTS"<br/>
-            4. Allez sur /front - le nom devrait changer immédiatement
+            2. Cliquez sur "SAUVEGARDER AVEC RELOAD"<br/>
+            3. La page va se recharger automatiquement<br/>
+            4. Vérifiez que les localStorage passent à "EXISTS"<br/>
+            5. Allez sur /front - le nom devrait changer
           </p>
         </CardContent>
       </Card>
