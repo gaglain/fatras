@@ -1,13 +1,13 @@
 
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageManager } from '@/components/website/PageManager';
 import { MenuManager } from '@/components/website/MenuManager';
 import { SEOManager } from '@/components/website/SEOManager';
 import { LegalManager } from '@/components/website/LegalManager';
 import { AnalyticsManager } from '@/components/website/AnalyticsManager';
 import { SiteSettings } from '@/components/website/SiteSettings';
+import { LayoutSection } from '@/components/website-design/LayoutSection';
 import { 
   FileText, 
   Menu, 
@@ -16,12 +16,13 @@ import {
   BarChart3, 
   Settings,
   Eye,
-  Globe
+  Globe,
+  Layout as LayoutIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export const WebsiteManager: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('pages');
+  const [activeTab, setActiveTab] = useState('layout');
 
   const handlePreviewSite = () => {
     window.open('/front', '_blank');
@@ -49,7 +50,11 @@ export const WebsiteManager: React.FC = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
+          <TabsTrigger value="layout" className="flex items-center space-x-2">
+            <LayoutIcon className="h-4 w-4" />
+            <span>Header/Footer</span>
+          </TabsTrigger>
           <TabsTrigger value="pages" className="flex items-center space-x-2">
             <FileText className="h-4 w-4" />
             <span>Pages</span>
@@ -75,6 +80,10 @@ export const WebsiteManager: React.FC = () => {
             <span>Paramètres</span>
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="layout">
+          <LayoutSection />
+        </TabsContent>
 
         <TabsContent value="pages">
           <PageManager />
