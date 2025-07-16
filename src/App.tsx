@@ -1,10 +1,9 @@
-
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Layout } from "./components/Layout";
-import { SimpleFrontLayout } from "./components/SimpleFrontLayout";
+import { NewSimpleFrontLayout } from "./components/NewSimpleFrontLayout";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import { Artists } from "./pages/Artists";
@@ -87,15 +86,31 @@ const App = () => {
                       <Route path="/website" element={<Layout><WebsiteManager /></Layout>} />
                       <Route path="/preferences" element={<Layout><Preferences /></Layout>} />
                       
-                      {/* Routes du site web public */}
-                      <Route path="/front" element={<SimpleFrontLayout><SimpleFrontHome /></SimpleFrontLayout>} />
-                      <Route path="/front/artists" element={<SimpleFrontLayout><FrontArtists /></SimpleFrontLayout>} />
-                      <Route path="/front/events" element={<SimpleFrontLayout><FrontEvents /></SimpleFrontLayout>} />
-                      <Route path="/front/contact" element={<SimpleFrontLayout><FrontContact /></SimpleFrontLayout>} />
-                      <Route path="/front/shop" element={<SimpleFrontLayout><FrontShop /></SimpleFrontLayout>} />
-                      <Route path="/front/legal/notices" element={<SimpleFrontLayout><FrontLegalNotices /></SimpleFrontLayout>} />
-                      <Route path="/front/legal/privacy" element={<SimpleFrontLayout><FrontPrivacyPolicy /></SimpleFrontLayout>} />
-                      <Route path="/front/legal/terms" element={<SimpleFrontLayout><FrontTermsOfService /></SimpleFrontLayout>} />
+                      {/* Routes du site web public - utilisation du nouveau layout */}
+                      <Route path="/front" element={<NewSimpleFrontLayout />}>
+                        <Route index element={<SimpleFrontHome />} />
+                      </Route>
+                      <Route path="/front/artists" element={<NewSimpleFrontLayout />}>
+                        <Route index element={<FrontArtists />} />
+                      </Route>
+                      <Route path="/front/events" element={<NewSimpleFrontLayout />}>
+                        <Route index element={<FrontEvents />} />
+                      </Route>
+                      <Route path="/front/contact" element={<NewSimpleFrontLayout />}>
+                        <Route index element={<FrontContact />} />
+                      </Route>
+                      <Route path="/front/shop" element={<NewSimpleFrontLayout />}>
+                        <Route index element={<FrontShop />} />
+                      </Route>
+                      <Route path="/front/legal/notices" element={<NewSimpleFrontLayout />}>
+                        <Route index element={<FrontLegalNotices />} />
+                      </Route>
+                      <Route path="/front/legal/privacy" element={<NewSimpleFrontLayout />}>
+                        <Route index element={<FrontPrivacyPolicy />} />
+                      </Route>
+                      <Route path="/front/legal/terms" element={<NewSimpleFrontLayout />}>
+                        <Route index element={<FrontTermsOfService />} />
+                      </Route>
                       
                       {/* Page 404 */}
                       <Route path="*" element={<NotFound />} />

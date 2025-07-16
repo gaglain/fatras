@@ -40,14 +40,18 @@ export const LayoutSection: React.FC = () => {
   }, [config]);
 
   const handleSave = () => {
+    console.log('💾 Sauvegarde de la configuration:', localConfig);
     updateConfig(localConfig);
     toast.success('Configuration du header et footer sauvegardée');
   };
 
   const handlePreview = () => {
-    // Appliquer temporairement les changements pour prévisualisation
+    // Sauvegarder d'abord
     updateConfig(localConfig);
-    window.open('/front', '_blank');
+    // Ouvrir la prévisualisation
+    setTimeout(() => {
+      window.open('/front', '_blank');
+    }, 500);
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -60,6 +64,28 @@ export const LayoutSection: React.FC = () => {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  // Auto-save lors des changements
+  const handleInputChange = (field: string, value: any) => {
+    const newConfig = { ...localConfig, [field]: value };
+    setLocalConfig(newConfig);
+    
+    // Auto-save avec un délai
+    setTimeout(() => {
+      updateConfig(newConfig);
+    }, 1000);
+  };
+
+  const handleSocialChange = (platform: string, value: string) => {
+    const newSocialLinks = { ...localConfig.socialLinks, [platform]: value };
+    const newConfig = { ...localConfig, socialLinks: newSocialLinks };
+    setLocalConfig(newConfig);
+    
+    // Auto-save avec un délai
+    setTimeout(() => {
+      updateConfig(newConfig);
+    }, 1000);
   };
 
   return (
@@ -78,7 +104,7 @@ export const LayoutSection: React.FC = () => {
               <Input
                 id="siteName"
                 value={localConfig.siteName}
-                onChange={(e) => setLocalConfig(prev => ({ ...prev, siteName: e.target.value }))}
+                onChange={(e) => handleInputChange('siteName', e.target.value)}
                 placeholder="ex: Mon Site Web"
               />
             </div>
@@ -111,7 +137,7 @@ export const LayoutSection: React.FC = () => {
                 <Input
                   id="headerBg"
                   value={localConfig.headerBg}
-                  onChange={(e) => setLocalConfig(prev => ({ ...prev, headerBg: e.target.value }))}
+                  onChange={(e) => handleInputChange('headerBg', e.target.value)}
                   placeholder="ex: #1a1f2e ou linear-gradient(...)"
                 />
               </div>
@@ -121,7 +147,7 @@ export const LayoutSection: React.FC = () => {
                 <Input
                   id="footerBg"
                   value={localConfig.footerBg}
-                  onChange={(e) => setLocalConfig(prev => ({ ...prev, footerBg: e.target.value }))}
+                  onChange={(e) => handleInputChange('footerBg', e.target.value)}
                   placeholder="ex: #1a1f2e ou linear-gradient(...)"
                 />
               </div>
@@ -131,7 +157,7 @@ export const LayoutSection: React.FC = () => {
                 <Input
                   id="textColor"
                   value={localConfig.textColor}
-                  onChange={(e) => setLocalConfig(prev => ({ ...prev, textColor: e.target.value }))}
+                  onChange={(e) => handleInputChange('textColor', e.target.value)}
                   placeholder="ex: #ffffff"
                 />
               </div>
@@ -141,7 +167,7 @@ export const LayoutSection: React.FC = () => {
                 <Input
                   id="linkColor"
                   value={localConfig.linkColor}
-                  onChange={(e) => setLocalConfig(prev => ({ ...prev, linkColor: e.target.value }))}
+                  onChange={(e) => handleInputChange('linkColor', e.target.value)}
                   placeholder="ex: #60a5fa"
                 />
               </div>
@@ -158,7 +184,7 @@ export const LayoutSection: React.FC = () => {
                 <Input
                   id="contactEmail"
                   value={localConfig.contactEmail}
-                  onChange={(e) => setLocalConfig(prev => ({ ...prev, contactEmail: e.target.value }))}
+                  onChange={(e) => handleInputChange('contactEmail', e.target.value)}
                   placeholder="ex: contact@monsite.com"
                 />
               </div>
@@ -168,7 +194,7 @@ export const LayoutSection: React.FC = () => {
                 <Input
                   id="contactPhone"
                   value={localConfig.contactPhone}
-                  onChange={(e) => setLocalConfig(prev => ({ ...prev, contactPhone: e.target.value }))}
+                  onChange={(e) => handleInputChange('contactPhone', e.target.value)}
                   placeholder="ex: +33 1 23 45 67 89"
                 />
               </div>
@@ -178,7 +204,7 @@ export const LayoutSection: React.FC = () => {
                 <Input
                   id="address"
                   value={localConfig.address}
-                  onChange={(e) => setLocalConfig(prev => ({ ...prev, address: e.target.value }))}
+                  onChange={(e) => handleInputChange('address', e.target.value)}
                   placeholder="ex: 123 Rue Example, 75001 Paris"
                 />
               </div>
@@ -195,10 +221,7 @@ export const LayoutSection: React.FC = () => {
                 <Input
                   id="facebook"
                   value={localConfig.socialLinks.facebook}
-                  onChange={(e) => setLocalConfig(prev => ({ 
-                    ...prev, 
-                    socialLinks: { ...prev.socialLinks, facebook: e.target.value }
-                  }))}
+                  onChange={(e) => handleSocialChange('facebook', e.target.value)}
                   placeholder="https://facebook.com/monsite"
                 />
               </div>
@@ -208,10 +231,7 @@ export const LayoutSection: React.FC = () => {
                 <Input
                   id="instagram"
                   value={localConfig.socialLinks.instagram}
-                  onChange={(e) => setLocalConfig(prev => ({ 
-                    ...prev, 
-                    socialLinks: { ...prev.socialLinks, instagram: e.target.value }
-                  }))}
+                  onChange={(e) => handleSocialChange('instagram', e.target.value)}
                   placeholder="https://instagram.com/monsite"
                 />
               </div>
@@ -221,10 +241,7 @@ export const LayoutSection: React.FC = () => {
                 <Input
                   id="twitter"
                   value={localConfig.socialLinks.twitter}
-                  onChange={(e) => setLocalConfig(prev => ({ 
-                    ...prev, 
-                    socialLinks: { ...prev.socialLinks, twitter: e.target.value }
-                  }))}
+                  onChange={(e) => handleSocialChange('twitter', e.target.value)}
                   placeholder="https://twitter.com/monsite"
                 />
               </div>
@@ -234,10 +251,7 @@ export const LayoutSection: React.FC = () => {
                 <Input
                   id="linkedin"
                   value={localConfig.socialLinks.linkedin}
-                  onChange={(e) => setLocalConfig(prev => ({ 
-                    ...prev, 
-                    socialLinks: { ...prev.socialLinks, linkedin: e.target.value }
-                  }))}
+                  onChange={(e) => handleSocialChange('linkedin', e.target.value)}
                   placeholder="https://linkedin.com/company/monsite"
                 />
               </div>
@@ -247,10 +261,7 @@ export const LayoutSection: React.FC = () => {
                 <Input
                   id="youtube"
                   value={localConfig.socialLinks.youtube}
-                  onChange={(e) => setLocalConfig(prev => ({ 
-                    ...prev, 
-                    socialLinks: { ...prev.socialLinks, youtube: e.target.value }
-                  }))}
+                  onChange={(e) => handleSocialChange('youtube', e.target.value)}
                   placeholder="https://youtube.com/monsite"
                 />
               </div>

@@ -150,6 +150,11 @@ export const WebsiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({
     // Déclencher les événements pour synchronisation
     window.dispatchEvent(new CustomEvent('websiteConfigChanged', { detail: updatedConfig }));
     window.dispatchEvent(new CustomEvent('siteConfigChanged', { detail: legacyDesign }));
+    
+    // Forcer un re-render immédiat pour les composants
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('websiteConfigReload'));
+    }, 100);
   };
 
   const reloadConfig = () => {
@@ -173,10 +178,12 @@ export const WebsiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({
 
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('websiteConfigChanged', handleConfigChange);
+    window.addEventListener('websiteConfigReload', handleConfigChange);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('websiteConfigChanged', handleConfigChange);
+      window.removeEventListener('websiteConfigReload', handleConfigChange);
     };
   }, []);
 

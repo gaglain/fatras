@@ -5,9 +5,11 @@ import { useWebsiteConfig } from '@/contexts/WebsiteConfigContext';
 export const SimpleFrontFooter: React.FC = () => {
   const { config } = useWebsiteConfig();
 
+  console.log('🦶 Footer rendering with config:', config.siteName);
+
   return (
     <footer 
-      className="mt-auto py-8 px-4"
+      className="mt-auto py-8 px-4 min-h-[200px]"
       style={{
         background: config.footerBg,
         color: config.textColor
@@ -32,7 +34,7 @@ export const SimpleFrontFooter: React.FC = () => {
             <h3 className="font-semibold mb-4 text-lg" style={{ color: config.textColor }}>
               Suivez-nous
             </h3>
-            <div className="flex space-x-4">
+            <div className="flex flex-wrap gap-4">
               {config.socialLinks.facebook && (
                 <a 
                   href={config.socialLinks.facebook}
