@@ -2,7 +2,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Moon, Sun } from 'lucide-react';
-import { useTheme } from 'next-themes';
 
 interface FrontThemeToggleProps {
   className?: string;
@@ -13,12 +12,45 @@ export const FrontThemeToggle: React.FC<FrontThemeToggleProps> = ({
   className = '', 
   variant = 'front' 
 }) => {
-  const { theme, setTheme, resolvedTheme } = useTheme();
+  const [isDark, setIsDark] = React.useState(false);
+
+  React.useEffect(() => {
+    // Vérifier le thème actuel au montage
+    const checkTheme = () => {
+      const isDarkMode = document.documentElement.classList.contains('dark');
+      setIsDark(isDarkMode);
+      console.log('🌓 Front theme check:', isDarkMode ? 'dark' : 'light');
+    };
+    
+    checkTheme();
+    
+    // Observer les changements de classe sur l'élément HTML
+    const observer = new MutationObserver(checkTheme);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+
+    return () => observer.disconnect();
+  }, []);
 
   const toggleTheme = () => {
-    const newTheme = resolvedTheme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
+    const newTheme = isDark ? 'light' : 'dark';
+    
+    if (newTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    
+    // Sauvegarder dans localStorage
+    localStorage.setItem('theme', newTheme);
+    
+    setIsDark(!isDark);
     console.log('🌓 Front theme toggled to:', newTheme);
+    
+    // Déclencher un événement pour forcer la re-application des couleurs
+    window.dispatchEvent(new CustomEvent('themeChanged', { detail: newTheme }));
   };
 
   if (variant === 'front') {
@@ -33,13 +65,13 @@ export const FrontThemeToggle: React.FC<FrontThemeToggleProps> = ({
           backdrop-blur-sm
           ${className}
         `}
-        title={`Basculer vers le mode ${resolvedTheme === 'light' ? 'sombre' : 'clair'}`}
-        aria-label={`Basculer vers le mode ${resolvedTheme === 'light' ? 'sombre' : 'clair'}`}
+        title={`Basculer vers le mode ${isDark ? 'clair' : 'sombre'}`}
+        aria-label={`Basculer vers le mode ${isDark ? 'clair' : 'sombre'}`}
       >
-        {resolvedTheme === 'light' ? (
-          <Moon className="h-5 w-5" />
-        ) : (
+        {isDark ? (
           <Sun className="h-5 w-5" />
+        ) : (
+          <Moon className="h-5 w-5" />
         )}
       </button>
     );
@@ -51,12 +83,12 @@ export const FrontThemeToggle: React.FC<FrontThemeToggleProps> = ({
       size="sm"
       onClick={toggleTheme}
       className="h-8 w-8 p-0 bg-white text-[#1632f4] hover:bg-gray-100 hover:text-[#1632f4] border border-gray-200"
-      title={`Basculer vers le mode ${resolvedTheme === 'light' ? 'sombre' : 'clair'}`}
+      title={`Basculer vers le mode ${isDark ? 'clair' : 'sombre'}`}
     >
-      {resolvedTheme === 'light' ? (
-        <Moon className="h-4 w-4 text-[#1632f4]" />
-      ) : (
+      {isDark ? (
         <Sun className="h-4 w-4 text-[#1632f4]" />
+      ) : (
+        <Moon className="h-4 w-4 text-[#1632f4]" />
       )}
       <span className="sr-only">Basculer le thème</span>
     </Button>

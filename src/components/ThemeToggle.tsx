@@ -2,15 +2,47 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Moon, Sun } from 'lucide-react';
-import { useTheme } from 'next-themes';
 
 export const ThemeToggle: React.FC = () => {
-  const { theme, setTheme, resolvedTheme } = useTheme();
+  const [isDark, setIsDark] = React.useState(false);
+
+  React.useEffect(() => {
+    // Vérifier le thème actuel au montage
+    const checkTheme = () => {
+      const isDarkMode = document.documentElement.classList.contains('dark');
+      setIsDark(isDarkMode);
+      console.log('🌓 Current theme:', isDarkMode ? 'dark' : 'light');
+    };
+    
+    checkTheme();
+    
+    // Observer les changements de classe sur l'élément HTML
+    const observer = new MutationObserver(checkTheme);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+
+    return () => observer.disconnect();
+  }, []);
 
   const toggleTheme = () => {
-    const newTheme = resolvedTheme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
+    const newTheme = isDark ? 'light' : 'dark';
+    
+    if (newTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    
+    // Sauvegarder dans localStorage
+    localStorage.setItem('theme', newTheme);
+    
+    setIsDark(!isDark);
     console.log('🌓 Theme toggled to:', newTheme);
+    
+    // Déclencher un événement pour forcer la re-application des couleurs
+    window.dispatchEvent(new CustomEvent('themeChanged', { detail: newTheme }));
   };
 
   return (
@@ -19,12 +51,12 @@ export const ThemeToggle: React.FC = () => {
       size="sm"
       onClick={toggleTheme}
       className="h-8 w-8 p-0"
-      title={`Basculer vers le mode ${resolvedTheme === 'light' ? 'sombre' : 'clair'}`}
+      title={`Basculer vers le mode ${isDark ? 'clair' : 'sombre'}`}
     >
-      {resolvedTheme === 'light' ? (
-        <Moon className="h-4 w-4" />
-      ) : (
+      {isDark ? (
         <Sun className="h-4 w-4" />
+      ) : (
+        <Moon className="h-4 w-4" />
       )}
       <span className="sr-only">Basculer le thème</span>
     </Button>
