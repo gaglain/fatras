@@ -139,12 +139,7 @@ export const WebsiteDesignManager: React.FC = () => {
         />
       </div>
 
-      <LayoutSection
-        headerBg={design.headerBg}
-        footerBg={design.footerBg}
-        onHeaderBgChange={(value) => handleInputChange('headerBg', value)}
-        onFooterBgChange={(value) => handleInputChange('footerBg', value)}
-      />
+      <LayoutSection />
 
       <div className="flex gap-4">
         <Button 
