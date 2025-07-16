@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -42,48 +41,70 @@ export const LayoutSection: React.FC = () => {
   }, [config]);
 
   const handleSave = () => {
-    console.log('💾 Sauvegarde de la configuration:', localConfig);
+    console.log('💾 SAVING CONFIG:', localConfig.siteName);
     updateConfig(localConfig);
     
-    // Force la synchronisation immédiate avec plusieurs méthodes
+    // Multiple tentatives de synchronisation
     setTimeout(() => {
-      window.dispatchEvent(new CustomEvent('websiteConfigForceReload', {
-        detail: localConfig
-      }));
-      window.dispatchEvent(new CustomEvent('websiteConfigChanged', {
-        detail: localConfig
-      }));
-      window.dispatchEvent(new CustomEvent('websiteConfigReload'));
-      
-      // Forcer un refresh de la page de preview si elle est ouverte
-      try {
-        const previewWindow = window.open('', '_blank');
-        if (previewWindow && !previewWindow.closed) {
-          previewWindow.location.reload();
-        }
-      } catch (e) {
-        // Ignorer les erreurs de cross-origin
-      }
+      console.log('🔥 FORCE SYNC 1');
+      window.dispatchEvent(new CustomEvent('websiteConfigForceReload', { detail: localConfig }));
+    }, 50);
+    
+    setTimeout(() => {
+      console.log('🔥 FORCE SYNC 2');
+      window.dispatchEvent(new CustomEvent('websiteConfigChanged', { detail: localConfig }));
     }, 100);
     
-    toast.success('Configuration sauvegardée et synchronisée');
+    setTimeout(() => {
+      console.log('🔥 FORCE SYNC 3');
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'websiteConfig',
+        newValue: JSON.stringify(localConfig),
+        storageArea: localStorage
+      }));
+    }, 150);
+    
+    toast.success('Configuration sauvegardée et synchronisée !');
   };
 
   const handlePreview = () => {
     // Sauvegarder d'abord
-    updateConfig(localConfig);
+    handleSave();
     
-    // Force la synchronisation
+    // Ouvrir la prévisualisation après un délai
     setTimeout(() => {
-      window.dispatchEvent(new CustomEvent('websiteConfigForceReload', {
-        detail: localConfig
-      }));
-    }, 100);
+      const previewUrl = '/front';
+      console.log('🌐 Opening preview:', previewUrl);
+      window.open(previewUrl, '_blank');
+    }, 200);
+  };
+
+  const handleInputChange = (field: string, value: any) => {
+    const newConfig = { ...localConfig, [field]: value };
+    setLocalConfig(newConfig);
     
-    // Ouvrir la prévisualisation
+    // Sauvegarde immédiate et agressive
+    console.log('⚡ IMMEDIATE SAVE:', field, value);
+    updateConfig(newConfig);
+    
+    // Force la synchronisation immédiate
     setTimeout(() => {
-      window.open('/front', '_blank');
-    }, 500);
+      window.dispatchEvent(new CustomEvent('websiteConfigChanged', { detail: newConfig }));
+      window.dispatchEvent(new CustomEvent('websiteConfigForceReload', { detail: newConfig }));
+    }, 10);
+  };
+
+  const handleSocialChange = (platform: string, value: string) => {
+    const newSocialLinks = { ...localConfig.socialLinks, [platform]: value };
+    const newConfig = { ...localConfig, socialLinks: newSocialLinks };
+    setLocalConfig(newConfig);
+    
+    // Sauvegarde immédiate
+    updateConfig(newConfig);
+    
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('websiteConfigChanged', { detail: newConfig }));
+    }, 10);
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -96,29 +117,6 @@ export const LayoutSection: React.FC = () => {
       };
       reader.readAsDataURL(file);
     }
-  };
-
-  const handleInputChange = (field: string, value: any) => {
-    const newConfig = { ...localConfig, [field]: value };
-    setLocalConfig(newConfig);
-    
-    // Auto-save après chaque changement
-    setTimeout(() => {
-      updateConfig(newConfig);
-      window.dispatchEvent(new CustomEvent('websiteConfigChanged', { detail: newConfig }));
-    }, 500);
-  };
-
-  const handleSocialChange = (platform: string, value: string) => {
-    const newSocialLinks = { ...localConfig.socialLinks, [platform]: value };
-    const newConfig = { ...localConfig, socialLinks: newSocialLinks };
-    setLocalConfig(newConfig);
-    
-    // Auto-save après chaque changement
-    setTimeout(() => {
-      updateConfig(newConfig);
-      window.dispatchEvent(new CustomEvent('websiteConfigChanged', { detail: newConfig }));
-    }, 500);
   };
 
   return (
