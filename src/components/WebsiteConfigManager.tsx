@@ -68,6 +68,8 @@ export const WebsiteConfigManager: React.FC = () => {
   };
 
   const saveConfig = () => {
+    console.log('💾 SAVING CONFIG:', localConfig.siteName);
+    
     // Sauvegarder dans le contexte principal
     updateConfig(localConfig);
     
@@ -93,17 +95,44 @@ export const WebsiteConfigManager: React.FC = () => {
     localStorage.setItem('websiteDesign', JSON.stringify(legacyDesign));
     localStorage.setItem('websiteSettings', JSON.stringify(legacySettings));
     
+    console.log('✅ Saved websiteDesign:', legacyDesign);
+    console.log('✅ Saved websiteSettings:', legacySettings);
+    
+    // Mettre à jour le titre immédiatement
+    document.title = localConfig.siteName;
+    
     // Déclencher tous les événements de synchronisation
     window.dispatchEvent(new CustomEvent('websiteConfigChanged', { detail: localConfig }));
     window.dispatchEvent(new CustomEvent('siteConfigChanged', { detail: legacyDesign }));
+    
+    console.log('🚀 Events dispatched for:', localConfig.siteName);
     
     toast.success(`Configuration sauvegardée ! Site: "${localConfig.siteName}"`);
   };
 
   // Vérification en temps réel pour le debug
-  const configExists = localStorage.getItem('websiteConfig') !== null;
-  const designExists = localStorage.getItem('websiteDesign') !== null;
-  const settingsExists = localStorage.getItem('websiteSettings') !== null;
+  const [debugInfo, setDebugInfo] = useState({
+    configExists: false,
+    designExists: false,
+    settingsExists: false
+  });
+
+  useEffect(() => {
+    const updateDebugInfo = () => {
+      setDebugInfo({
+        configExists: localStorage.getItem('websiteConfig') !== null,
+        designExists: localStorage.getItem('websiteDesign') !== null,
+        settingsExists: localStorage.getItem('websiteSettings') !== null
+      });
+    };
+
+    updateDebugInfo();
+    
+    // Mettre à jour toutes les secondes pour le debug
+    const interval = setInterval(updateDebugInfo, 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -114,13 +143,13 @@ export const WebsiteConfigManager: React.FC = () => {
             <strong>🎯 ÉTAT ACTUEL:</strong> Nom: "{localConfig.siteName}"
           </p>
           <p className="text-sm text-blue-600 mt-1">
-            💾 websiteConfig: {configExists ? '✅ EXISTS' : '❌ MISSING'}
+            💾 websiteConfig: {debugInfo.configExists ? '✅ EXISTS' : '❌ MISSING'}
           </p>
           <p className="text-sm text-blue-600">
-            💾 websiteDesign: {designExists ? '✅ EXISTS' : '❌ MISSING'}
+            💾 websiteDesign: {debugInfo.designExists ? '✅ EXISTS' : '❌ MISSING'}
           </p>
           <p className="text-sm text-blue-600">
-            💾 websiteSettings: {settingsExists ? '✅ EXISTS' : '❌ MISSING'}
+            💾 websiteSettings: {debugInfo.settingsExists ? '✅ EXISTS' : '❌ MISSING'}
           </p>
           <p className="text-sm text-blue-600">
             📄 Document title: "{document.title}"

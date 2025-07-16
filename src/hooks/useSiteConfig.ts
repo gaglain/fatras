@@ -79,19 +79,19 @@ export const useSiteConfig = () => {
     };
 
     // Écouter les événements personnalisés
-    const handleCustomEvent = () => {
-      console.log('🔄 useSiteConfig - Custom event received');
+    const handleCustomEvent = (event: CustomEvent) => {
+      console.log('🔄 useSiteConfig - Custom event received:', event.type, event.detail);
       setTimeout(loadConfig, 100);
     };
 
     window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('websiteConfigChanged', handleCustomEvent);
-    window.addEventListener('siteConfigChanged', handleCustomEvent);
+    window.addEventListener('websiteConfigChanged', handleCustomEvent as EventListener);
+    window.addEventListener('siteConfigChanged', handleCustomEvent as EventListener);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('websiteConfigChanged', handleCustomEvent);
-      window.removeEventListener('siteConfigChanged', handleCustomEvent);
+      window.removeEventListener('websiteConfigChanged', handleCustomEvent as EventListener);
+      window.removeEventListener('siteConfigChanged', handleCustomEvent as EventListener);
     };
   }, []);
 
