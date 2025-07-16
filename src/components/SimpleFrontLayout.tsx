@@ -2,12 +2,12 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import { SimpleFrontNavigation } from './SimpleFrontNavigation';
-import { useSiteConfig } from '@/hooks/useSiteConfig';
+import { useWebsiteConfig } from '@/contexts/WebsiteConfigContext';
 
 export const SimpleFrontLayout: React.FC = () => {
-  const { siteName } = useSiteConfig();
+  const { config } = useWebsiteConfig();
 
-  console.log('🎯 SimpleFrontLayout - Current siteName:', siteName);
+  console.log('🎯 SimpleFrontLayout - Current siteName:', config.siteName);
 
   return (
     <div className="min-h-screen flex flex-col">

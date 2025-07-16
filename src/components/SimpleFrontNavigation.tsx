@@ -1,103 +1,120 @@
 
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useSiteConfig } from '@/hooks/useSiteConfig';
+import { useWebsiteConfig } from '@/contexts/WebsiteConfigContext';
 
 export const SimpleFrontNavigation: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { siteName, logo } = useSiteConfig();
-  const location = useLocation();
+  const { config } = useWebsiteConfig();
 
-  const navItems = [
-    { name: 'Accueil', path: '/front' },
-    { name: 'Artistes', path: '/front/artists' },
-    { name: 'Événements', path: '/front/events' },
-    { name: 'Boutique', path: '/front/shop' },
-    { name: 'Contact', path: '/front/contact' }
-  ];
+  console.log('🎯 SimpleFrontNavigation - Current siteName:', config.siteName);
 
   return (
-    <nav className="bg-white shadow-lg border-b">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
+    <nav 
+      className="sticky top-0 z-50 w-full shadow-md"
+      style={{
+        background: config.headerBg,
+        color: config.textColor
+      }}
+    >
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-16">
           {/* Logo et nom */}
-          <div className="flex items-center">
-            <Link to="/front" className="flex items-center space-x-3">
-              {logo ? (
-                <img
-                  src={logo}
-                  alt="Logo"
-                  className="h-10 w-auto"
-                  onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).style.display = 'none';
-                  }}
-                />
-              ) : (
-                <div className="h-10 w-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">
-                    {siteName.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-              )}
-              <span className="text-xl font-bold text-gray-900">
-                {siteName}
-              </span>
+          <Link to="/front" className="flex items-center space-x-3">
+            {config.logo && (
+              <img
+                src={config.logo}
+                alt="Logo"
+                className="h-10 w-auto"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).style.display = 'none';
+                }}
+              />
+            )}
+            <span className="text-xl font-bold" style={{ color: config.textColor }}>
+              {config.siteName}
+            </span>
+          </Link>
+
+          {/* Menu desktop */}
+          <div className="hidden md:flex items-center space-x-6">
+            <Link 
+              to="/front" 
+              className="hover:opacity-80 transition-opacity"
+              style={{ color: config.linkColor }}
+            >
+              Accueil
+            </Link>
+            <Link 
+              to="/front/artists" 
+              className="hover:opacity-80 transition-opacity"
+              style={{ color: config.linkColor }}
+            >
+              Artistes
+            </Link>
+            <Link 
+              to="/front/events" 
+              className="hover:opacity-80 transition-opacity"
+              style={{ color: config.linkColor }}
+            >
+              Événements
+            </Link>
+            <Link 
+              to="/front/contact" 
+              className="hover:opacity-80 transition-opacity"
+              style={{ color: config.linkColor }}
+            >
+              Contact
             </Link>
           </div>
 
-          {/* Debug info temporaire */}
-          <div className="hidden md:flex items-center space-x-4">
-            <div className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded">
-              DEBUG: {siteName}
-            </div>
-          </div>
-
-          {/* Navigation desktop */}
-          <div className="hidden md:flex items-center space-x-8">
-            {navItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors ${
-                  location.pathname === item.path ? 'text-blue-600 font-semibold' : ''
-                }`}
-              >
-                {item.name}
-              </Link>
-            ))}
-          </div>
-
-          {/* Menu mobile */}
-          <div className="md:hidden flex items-center">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-gray-700"
-            >
-              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </Button>
-          </div>
+          {/* Bouton menu mobile */}
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="md:hidden p-2"
+            style={{ color: config.textColor }}
+          >
+            {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
         </div>
 
-        {/* Menu mobile ouvert */}
+        {/* Menu mobile */}
         {isMenuOpen && (
-          <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-gray-50 border-t">
-              {navItems.map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100 rounded-md transition-colors ${
-                    location.pathname === item.path ? 'text-blue-600 font-semibold bg-blue-50' : ''
-                  }`}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {item.name}
-                </Link>
-              ))}
+          <div className="md:hidden pb-4">
+            <div className="flex flex-col space-y-2">
+              <Link 
+                to="/front" 
+                className="block py-2 hover:opacity-80 transition-opacity"
+                style={{ color: config.linkColor }}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Accueil
+              </Link>
+              <Link 
+                to="/front/artists" 
+                className="block py-2 hover:opacity-80 transition-opacity"
+                style={{ color: config.linkColor }}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Artistes
+              </Link>
+              <Link 
+                to="/front/events" 
+                className="block py-2 hover:opacity-80 transition-opacity"
+                style={{ color: config.linkColor }}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Événements
+              </Link>
+              <Link 
+                to="/front/contact" 
+                className="block py-2 hover:opacity-80 transition-opacity"
+                style={{ color: config.linkColor }}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Contact
+              </Link>
             </div>
           </div>
         )}
