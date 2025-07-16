@@ -45,14 +45,28 @@ export const LayoutSection: React.FC = () => {
     console.log('💾 Sauvegarde de la configuration:', localConfig);
     updateConfig(localConfig);
     
-    // Force la synchronisation immédiate
+    // Force la synchronisation immédiate avec plusieurs méthodes
     setTimeout(() => {
       window.dispatchEvent(new CustomEvent('websiteConfigForceReload', {
         detail: localConfig
       }));
+      window.dispatchEvent(new CustomEvent('websiteConfigChanged', {
+        detail: localConfig
+      }));
+      window.dispatchEvent(new CustomEvent('websiteConfigReload'));
+      
+      // Forcer un refresh de la page de preview si elle est ouverte
+      try {
+        const previewWindow = window.open('', '_blank');
+        if (previewWindow && !previewWindow.closed) {
+          previewWindow.location.reload();
+        }
+      } catch (e) {
+        // Ignorer les erreurs de cross-origin
+      }
     }, 100);
     
-    toast.success('Configuration du header et footer sauvegardée');
+    toast.success('Configuration sauvegardée et synchronisée');
   };
 
   const handlePreview = () => {
@@ -87,12 +101,24 @@ export const LayoutSection: React.FC = () => {
   const handleInputChange = (field: string, value: any) => {
     const newConfig = { ...localConfig, [field]: value };
     setLocalConfig(newConfig);
+    
+    // Auto-save après chaque changement
+    setTimeout(() => {
+      updateConfig(newConfig);
+      window.dispatchEvent(new CustomEvent('websiteConfigChanged', { detail: newConfig }));
+    }, 500);
   };
 
   const handleSocialChange = (platform: string, value: string) => {
     const newSocialLinks = { ...localConfig.socialLinks, [platform]: value };
     const newConfig = { ...localConfig, socialLinks: newSocialLinks };
     setLocalConfig(newConfig);
+    
+    // Auto-save après chaque changement
+    setTimeout(() => {
+      updateConfig(newConfig);
+      window.dispatchEvent(new CustomEvent('websiteConfigChanged', { detail: newConfig }));
+    }, 500);
   };
 
   return (

@@ -30,7 +30,7 @@ export const SimpleFrontHome: React.FC = () => {
             {config.siteName}
           </h2>
           <p className="text-xl md:text-2xl mb-8 opacity-90">
-            {config.siteDescription || 'Plateforme de gestion artistique complète pour découvrir les talents, organiser des événements et créer des expériences musicales exceptionnelles.'}
+            {config.siteDescription}
           </p>
           <button className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-4 px-8 rounded-lg text-lg transition-colors">
             Découvrir

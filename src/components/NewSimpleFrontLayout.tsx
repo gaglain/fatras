@@ -12,23 +12,27 @@ export const NewSimpleFrontLayout: React.FC = () => {
 
   console.log('🏗️ Layout rendering with config:', config.siteName);
 
-  // Force reload when component mounts or config changes
+  // Force reload when component mounts
   useEffect(() => {
-    console.log('🔄 Layout effect - forcing config reload');
+    console.log('🔄 Layout mounted - forcing config reload');
     forceSync();
   }, [forceSync]);
 
-  // Listen for force reload events
+  // Listen for configuration changes
   useEffect(() => {
-    const handleForceReload = () => {
-      console.log('🔄 Force reload event received in layout');
+    const handleConfigUpdate = () => {
+      console.log('🔄 Config update event received in layout');
       reloadConfig();
     };
 
-    window.addEventListener('websiteConfigForceReload', handleForceReload);
+    window.addEventListener('websiteConfigChanged', handleConfigUpdate);
+    window.addEventListener('websiteConfigReload', handleConfigUpdate);
+    window.addEventListener('websiteConfigForceReload', handleConfigUpdate);
     
     return () => {
-      window.removeEventListener('websiteConfigForceReload', handleForceReload);
+      window.removeEventListener('websiteConfigChanged', handleConfigUpdate);
+      window.removeEventListener('websiteConfigReload', handleConfigUpdate);
+      window.removeEventListener('websiteConfigForceReload', handleConfigUpdate);
     };
   }, [reloadConfig]);
 

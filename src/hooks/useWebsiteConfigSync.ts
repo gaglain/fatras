@@ -1,64 +1,45 @@
 
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useWebsiteConfig } from '@/contexts/WebsiteConfigContext';
 
 export const useWebsiteConfigSync = () => {
-  const { config, reloadConfig } = useWebsiteConfig();
-  const isInitialized = useRef(false);
+  const { reloadConfig } = useWebsiteConfig();
 
   const forceSync = useCallback(() => {
     console.log('🔄 Force synchronization requested');
-    
-    // Recharger la configuration depuis localStorage
     reloadConfig();
-    
-    // Mettre à jour le titre de la page
-    if (config.siteName) {
-      document.title = config.siteName;
-    }
-    
-    // Déclencher un événement pour forcer le re-render
-    window.dispatchEvent(new CustomEvent('websiteConfigForceReload', { 
-      detail: config 
-    }));
-    
-  }, [config, reloadConfig]);
-
-  useEffect(() => {
-    if (!isInitialized.current) {
-      console.log('🚀 Initializing website config sync');
-      isInitialized.current = true;
-      forceSync();
-    }
-  }, [forceSync]);
+  }, [reloadConfig]);
 
   useEffect(() => {
     // Écouter les changements de localStorage
     const handleStorageChange = (event: StorageEvent) => {
       if (event.key === 'websiteConfig') {
         console.log('💾 Website config changed in storage, reloading...');
-        setTimeout(() => {
-          reloadConfig();
-        }, 100);
+        reloadConfig();
       }
     };
 
     // Écouter les événements personnalisés
     const handleConfigChanged = () => {
       console.log('🎉 Website config changed event received');
-      setTimeout(() => {
-        reloadConfig();
-      }, 100);
+      reloadConfig();
+    };
+
+    const handleForceReload = () => {
+      console.log('🔄 Force reload event received');
+      reloadConfig();
     };
 
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('websiteConfigChanged', handleConfigChanged);
     window.addEventListener('websiteConfigReload', handleConfigChanged);
+    window.addEventListener('websiteConfigForceReload', handleForceReload);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('websiteConfigChanged', handleConfigChanged);
       window.removeEventListener('websiteConfigReload', handleConfigChanged);
+      window.removeEventListener('websiteConfigForceReload', handleForceReload);
     };
   }, [reloadConfig]);
 
