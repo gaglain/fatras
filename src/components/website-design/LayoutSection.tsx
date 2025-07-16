@@ -21,6 +21,7 @@ export const LayoutSection: React.FC = () => {
     contactEmail: config.contactEmail,
     contactPhone: config.contactPhone,
     address: config.address,
+    siteDescription: config.siteDescription,
     socialLinks: config.socialLinks
   });
 
@@ -35,6 +36,7 @@ export const LayoutSection: React.FC = () => {
       contactEmail: config.contactEmail,
       contactPhone: config.contactPhone,
       address: config.address,
+      siteDescription: config.siteDescription,
       socialLinks: config.socialLinks
     });
   }, [config]);
@@ -42,12 +44,28 @@ export const LayoutSection: React.FC = () => {
   const handleSave = () => {
     console.log('💾 Sauvegarde de la configuration:', localConfig);
     updateConfig(localConfig);
+    
+    // Force la synchronisation immédiate
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('websiteConfigForceReload', {
+        detail: localConfig
+      }));
+    }, 100);
+    
     toast.success('Configuration du header et footer sauvegardée');
   };
 
   const handlePreview = () => {
     // Sauvegarder d'abord
     updateConfig(localConfig);
+    
+    // Force la synchronisation
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('websiteConfigForceReload', {
+        detail: localConfig
+      }));
+    }, 100);
+    
     // Ouvrir la prévisualisation
     setTimeout(() => {
       window.open('/front', '_blank');
@@ -66,26 +84,15 @@ export const LayoutSection: React.FC = () => {
     }
   };
 
-  // Auto-save lors des changements
   const handleInputChange = (field: string, value: any) => {
     const newConfig = { ...localConfig, [field]: value };
     setLocalConfig(newConfig);
-    
-    // Auto-save avec un délai
-    setTimeout(() => {
-      updateConfig(newConfig);
-    }, 1000);
   };
 
   const handleSocialChange = (platform: string, value: string) => {
     const newSocialLinks = { ...localConfig.socialLinks, [platform]: value };
     const newConfig = { ...localConfig, socialLinks: newSocialLinks };
     setLocalConfig(newConfig);
-    
-    // Auto-save avec un délai
-    setTimeout(() => {
-      updateConfig(newConfig);
-    }, 1000);
   };
 
   return (
@@ -106,6 +113,16 @@ export const LayoutSection: React.FC = () => {
                 value={localConfig.siteName}
                 onChange={(e) => handleInputChange('siteName', e.target.value)}
                 placeholder="ex: Mon Site Web"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="siteDescription">Description du site</Label>
+              <Input
+                id="siteDescription"
+                value={localConfig.siteDescription}
+                onChange={(e) => handleInputChange('siteDescription', e.target.value)}
+                placeholder="ex: Votre site web professionnel"
               />
             </div>
 
