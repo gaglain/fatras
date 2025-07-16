@@ -184,6 +184,50 @@ export const LayoutSection: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Aperçu du footer */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Aperçu du footer</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div 
+            className="p-4 rounded border"
+            style={{
+              background: localConfig.footerBg,
+              color: localConfig.textColor
+            }}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div>
+                <h3 className="font-semibold mb-4 text-lg">Contact</h3>
+                <div className="space-y-2 text-sm">
+                  <p>contact@example.com</p>
+                  <p>+33 1 23 45 67 89</p>
+                  <p>123 Rue de la Musique, Paris</p>
+                </div>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-4 text-lg">Suivez-nous</h3>
+                <div className="flex space-x-4">
+                  <a href="#" style={{ color: localConfig.linkColor }}>Facebook</a>
+                  <a href="#" style={{ color: localConfig.linkColor }}>Instagram</a>
+                </div>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-4 text-lg">Informations légales</h3>
+                <div className="space-y-2 text-sm">
+                  <a href="#" style={{ color: localConfig.linkColor }}>Mentions légales</a>
+                  <a href="#" style={{ color: localConfig.linkColor }}>CGV</a>
+                </div>
+              </div>
+            </div>
+            <div className="border-t border-gray-600 mt-8 pt-8 text-center text-sm">
+              <p>© 2024 {localConfig.siteName}. Tous droits réservés.</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

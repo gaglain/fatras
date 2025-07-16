@@ -48,7 +48,7 @@ interface WebsiteConfig {
 }
 
 const defaultConfig: WebsiteConfig = {
-  siteName: 'MusiConnect',
+  siteName: 'Mon Site Web',
   logo: '/logo.svg',
   primaryColor: '#1632f4',
   secondaryColor: '#ec5f65',
@@ -57,12 +57,12 @@ const defaultConfig: WebsiteConfig = {
   footerBg: 'linear-gradient(to right, #1a1f2e, #222c45)',
   textColor: '#ffffff',
   linkColor: '#60a5fa',
-  siteDescription: 'Votre plateforme de gestion musicale complète',
-  metaKeywords: 'musique, artistes, événements, booking',
+  siteDescription: 'Votre site web professionnel',
+  metaKeywords: 'site web, professionnel',
   favicon: '/favicon.ico',
-  contactEmail: 'contact@musiconnect.com',
+  contactEmail: 'contact@monsite.com',
   contactPhone: '+33 1 23 45 67 89',
-  address: '123 Rue de la Musique, 75001 Paris',
+  address: '123 Rue Example, 75001 Paris',
   socialLinks: {
     facebook: '',
     instagram: '',
@@ -101,6 +101,9 @@ export const WebsiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({
         document.title = parsed.siteName || defaultConfig.siteName;
         
         console.log('✅ Website config loaded:', parsed.siteName);
+      } else {
+        // Si pas de config sauvée, utiliser la config par défaut
+        document.title = defaultConfig.siteName;
       }
     } catch (error) {
       console.error('❌ Error loading website config:', error);
@@ -119,7 +122,34 @@ export const WebsiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({
       document.title = newConfig.siteName;
     }
     
+    // Synchroniser avec les anciens systèmes pour compatibilité
+    if (newConfig.siteName || newConfig.logo) {
+      const legacySettings = {
+        siteName: updatedConfig.siteName,
+        logo: updatedConfig.logo
+      };
+      localStorage.setItem('websiteSettings', JSON.stringify(legacySettings));
+    }
+    
+    // Synchroniser le design
+    const legacyDesign = {
+      siteName: updatedConfig.siteName,
+      logo: updatedConfig.logo,
+      primaryColor: updatedConfig.primaryColor,
+      secondaryColor: updatedConfig.secondaryColor,
+      accentColor: updatedConfig.accentColor,
+      headerBg: updatedConfig.headerBg,
+      footerBg: updatedConfig.footerBg,
+      textColor: updatedConfig.textColor,
+      linkColor: updatedConfig.linkColor
+    };
+    localStorage.setItem('websiteDesign', JSON.stringify(legacyDesign));
+    
     console.log('💾 Website config updated:', updatedConfig.siteName);
+    
+    // Déclencher les événements pour synchronisation
+    window.dispatchEvent(new CustomEvent('websiteConfigChanged', { detail: updatedConfig }));
+    window.dispatchEvent(new CustomEvent('siteConfigChanged', { detail: legacyDesign }));
   };
 
   const reloadConfig = () => {
