@@ -7,7 +7,7 @@ export const SimpleFrontHome: React.FC = () => {
   const { config } = useWebsiteConfig();
   const { forceSync } = useWebsiteConfigSync();
 
-  console.log('🏠 Home page rendering with config:', config.siteName);
+  console.log('🏠 Home rendering with:', config.siteName);
 
   useEffect(() => {
     forceSync();

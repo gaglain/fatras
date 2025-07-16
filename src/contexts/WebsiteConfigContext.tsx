@@ -87,146 +87,67 @@ const WebsiteConfigContext = createContext<WebsiteConfigContextType | undefined>
 
 export const WebsiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [config, setConfig] = useState<WebsiteConfig>(defaultConfig);
-  const [lastLoadTime, setLastLoadTime] = useState<number>(Date.now());
 
   const loadConfig = useCallback(() => {
     try {
-      console.log('🔄 Loading website config...');
       const savedConfig = localStorage.getItem('websiteConfig');
-      
       if (savedConfig) {
         const parsed = JSON.parse(savedConfig);
-        console.log('✅ Website config loaded from localStorage:', parsed.siteName);
+        console.log('✅ Config loaded:', parsed.siteName);
+        setConfig({ ...defaultConfig, ...parsed });
         
-        setConfig(prev => {
-          const newConfig = { ...prev, ...parsed };
-          console.log('🎯 Config updated in state:', newConfig.siteName);
-          return newConfig;
-        });
-        
-        // Mettre à jour le titre de la page immédiatement
+        // Update page title immediately
         if (parsed.siteName) {
           document.title = parsed.siteName;
-          console.log('📄 Page title updated to:', parsed.siteName);
         }
-        
-        setLastLoadTime(Date.now());
       } else {
-        console.log('⚠️ No saved config found, using default');
-        document.title = defaultConfig.siteName;
+        console.log('📝 Using default config');
         setConfig(defaultConfig);
+        document.title = defaultConfig.siteName;
       }
     } catch (error) {
-      console.error('❌ Error loading website config:', error);
+      console.error('❌ Error loading config:', error);
       setConfig(defaultConfig);
     }
   }, []);
 
   const updateConfig = useCallback((newConfig: Partial<WebsiteConfig>) => {
-    console.log('💾 Updating website config:', newConfig);
+    console.log('💾 Updating config:', newConfig);
     
     const updatedConfig = { ...config, ...newConfig };
     setConfig(updatedConfig);
     
-    // Sauvegarder dans localStorage
+    // Save to localStorage
     localStorage.setItem('websiteConfig', JSON.stringify(updatedConfig));
     
-    // Mettre à jour le titre immédiatement
+    // Update page title immediately if siteName changed
     if (newConfig.siteName) {
       document.title = newConfig.siteName;
-      console.log('📄 Page title updated immediately to:', newConfig.siteName);
     }
     
-    // Synchroniser avec les anciens systèmes pour compatibilité
-    if (newConfig.siteName || newConfig.logo) {
-      const legacySettings = {
-        siteName: updatedConfig.siteName,
-        logo: updatedConfig.logo
-      };
-      localStorage.setItem('websiteSettings', JSON.stringify(legacySettings));
-    }
-    
-    // Synchroniser le design
-    const legacyDesign = {
-      siteName: updatedConfig.siteName,
-      logo: updatedConfig.logo,
-      primaryColor: updatedConfig.primaryColor,
-      secondaryColor: updatedConfig.secondaryColor,
-      accentColor: updatedConfig.accentColor,
-      headerBg: updatedConfig.headerBg,
-      footerBg: updatedConfig.footerBg,
-      textColor: updatedConfig.textColor,
-      linkColor: updatedConfig.linkColor
-    };
-    localStorage.setItem('websiteDesign', JSON.stringify(legacyDesign));
-    
-    console.log('🔥 Dispatching sync events...');
-    
-    // Déclencher les événements pour synchronisation IMMÉDIATE
+    // Dispatch events for synchronization
     window.dispatchEvent(new CustomEvent('websiteConfigChanged', { detail: updatedConfig }));
-    window.dispatchEvent(new CustomEvent('siteConfigChanged', { detail: legacyDesign }));
     window.dispatchEvent(new StorageEvent('storage', {
       key: 'websiteConfig',
       newValue: JSON.stringify(updatedConfig),
       storageArea: localStorage
     }));
     
-    // Forcer un re-render immédiat multiple fois
-    setTimeout(() => {
-      window.dispatchEvent(new CustomEvent('websiteConfigReload', { detail: updatedConfig }));
-      window.dispatchEvent(new CustomEvent('websiteConfigForceReload', { detail: updatedConfig }));
-    }, 10);
-    
-    setTimeout(() => {
-      window.dispatchEvent(new CustomEvent('websiteConfigForceReload', { detail: updatedConfig }));
-    }, 50);
-    
-    setTimeout(() => {
-      window.dispatchEvent(new CustomEvent('websiteConfigForceReload', { detail: updatedConfig }));
-    }, 100);
-    
-    setLastLoadTime(Date.now());
+    console.log('🚀 Config updated and events dispatched');
   }, [config]);
 
   const reloadConfig = useCallback(() => {
-    console.log('🔄 Manual config reload requested');
+    console.log('🔄 Reloading config');
     loadConfig();
   }, [loadConfig]);
 
   useEffect(() => {
-    // Chargement initial
     loadConfig();
+  }, [loadConfig]);
 
-    // Écouter les changements externes
-    const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === 'websiteConfig' && Date.now() - lastLoadTime > 100) {
-        console.log('📡 Storage change detected, reloading...');
-        loadConfig();
-      }
-    };
-
-    const handleConfigChange = (event: any) => {
-      console.log('📡 Config change event received, reloading...', event.detail);
-      loadConfig();
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('websiteConfigChanged', handleConfigChange);
-    window.addEventListener('websiteConfigReload', handleConfigChange);
-    window.addEventListener('websiteConfigForceReload', handleConfigChange);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('websiteConfigChanged', handleConfigChange);
-      window.removeEventListener('websiteConfigReload', handleConfigChange);
-      window.removeEventListener('websiteConfigForceReload', handleConfigChange);
-    };
-  }, [loadConfig, lastLoadTime]);
-
-  // Debug log pour voir les changements de config
   useEffect(() => {
-    console.log('🎯 Config state changed:', config.siteName);
-  }, [config.siteName]);
+    console.log('🎯 Config state updated:', config.siteName);
+  }, [config]);
 
   return (
     <WebsiteConfigContext.Provider value={{ config, updateConfig, reloadConfig }}>

@@ -7,34 +7,14 @@ import { useWebsiteConfig } from '@/contexts/WebsiteConfigContext';
 import { useWebsiteConfigSync } from '@/hooks/useWebsiteConfigSync';
 
 export const NewSimpleFrontLayout: React.FC = () => {
-  const { config, reloadConfig } = useWebsiteConfig();
+  const { config } = useWebsiteConfig();
   const { forceSync } = useWebsiteConfigSync();
 
-  console.log('🏗️ Layout rendering with config:', config.siteName);
+  console.log('🏗️ Layout rendering with:', config.siteName);
 
-  // Force reload when component mounts
   useEffect(() => {
-    console.log('🔄 Layout mounted - forcing config reload');
     forceSync();
   }, [forceSync]);
-
-  // Listen for configuration changes
-  useEffect(() => {
-    const handleConfigUpdate = () => {
-      console.log('🔄 Config update event received in layout');
-      reloadConfig();
-    };
-
-    window.addEventListener('websiteConfigChanged', handleConfigUpdate);
-    window.addEventListener('websiteConfigReload', handleConfigUpdate);
-    window.addEventListener('websiteConfigForceReload', handleConfigUpdate);
-    
-    return () => {
-      window.removeEventListener('websiteConfigChanged', handleConfigUpdate);
-      window.removeEventListener('websiteConfigReload', handleConfigUpdate);
-      window.removeEventListener('websiteConfigForceReload', handleConfigUpdate);
-    };
-  }, [reloadConfig]);
 
   return (
     <div className="min-h-screen flex flex-col bg-white">

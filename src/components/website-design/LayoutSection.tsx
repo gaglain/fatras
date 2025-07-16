@@ -41,70 +41,30 @@ export const LayoutSection: React.FC = () => {
   }, [config]);
 
   const handleSave = () => {
-    console.log('💾 SAVING CONFIG:', localConfig.siteName);
+    console.log('💾 Saving config:', localConfig.siteName);
     updateConfig(localConfig);
-    
-    // Multiple tentatives de synchronisation
-    setTimeout(() => {
-      console.log('🔥 FORCE SYNC 1');
-      window.dispatchEvent(new CustomEvent('websiteConfigForceReload', { detail: localConfig }));
-    }, 50);
-    
-    setTimeout(() => {
-      console.log('🔥 FORCE SYNC 2');
-      window.dispatchEvent(new CustomEvent('websiteConfigChanged', { detail: localConfig }));
-    }, 100);
-    
-    setTimeout(() => {
-      console.log('🔥 FORCE SYNC 3');
-      window.dispatchEvent(new StorageEvent('storage', {
-        key: 'websiteConfig',
-        newValue: JSON.stringify(localConfig),
-        storageArea: localStorage
-      }));
-    }, 150);
-    
-    toast.success('Configuration sauvegardée et synchronisée !');
+    toast.success('Configuration sauvegardée !');
   };
 
   const handlePreview = () => {
-    // Sauvegarder d'abord
-    handleSave();
+    // Save first
+    updateConfig(localConfig);
     
-    // Ouvrir la prévisualisation après un délai
+    // Open preview
     setTimeout(() => {
-      const previewUrl = '/front';
-      console.log('🌐 Opening preview:', previewUrl);
-      window.open(previewUrl, '_blank');
-    }, 200);
+      window.open('/front', '_blank');
+    }, 100);
   };
 
   const handleInputChange = (field: string, value: any) => {
-    const newConfig = { ...localConfig, [field]: value };
-    setLocalConfig(newConfig);
-    
-    // Sauvegarde immédiate et agressive
-    console.log('⚡ IMMEDIATE SAVE:', field, value);
-    updateConfig(newConfig);
-    
-    // Force la synchronisation immédiate
-    setTimeout(() => {
-      window.dispatchEvent(new CustomEvent('websiteConfigChanged', { detail: newConfig }));
-      window.dispatchEvent(new CustomEvent('websiteConfigForceReload', { detail: newConfig }));
-    }, 10);
+    setLocalConfig(prev => ({ ...prev, [field]: value }));
   };
 
   const handleSocialChange = (platform: string, value: string) => {
-    const newSocialLinks = { ...localConfig.socialLinks, [platform]: value };
-    const newConfig = { ...localConfig, socialLinks: newSocialLinks };
-    setLocalConfig(newConfig);
-    
-    // Sauvegarde immédiate
-    updateConfig(newConfig);
-    
-    setTimeout(() => {
-      window.dispatchEvent(new CustomEvent('websiteConfigChanged', { detail: newConfig }));
-    }, 10);
+    setLocalConfig(prev => ({
+      ...prev,
+      socialLinks: { ...prev.socialLinks, [platform]: value }
+    }));
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
