@@ -1,10 +1,13 @@
 
 import React from 'react';
-import { Outlet } from 'react-router-dom';
 import { SimpleFrontNavigation } from './SimpleFrontNavigation';
 import { useWebsiteConfig } from '@/contexts/WebsiteConfigContext';
 
-export const SimpleFrontLayout: React.FC = () => {
+interface SimpleFrontLayoutProps {
+  children: React.ReactNode;
+}
+
+export const SimpleFrontLayout: React.FC<SimpleFrontLayoutProps> = ({ children }) => {
   const { config } = useWebsiteConfig();
 
   console.log('🎯 SimpleFrontLayout - Current siteName:', config.siteName);
@@ -13,7 +16,7 @@ export const SimpleFrontLayout: React.FC = () => {
     <div className="min-h-screen flex flex-col">
       <SimpleFrontNavigation />
       <main className="flex-1">
-        <Outlet />
+        {children}
       </main>
     </div>
   );
