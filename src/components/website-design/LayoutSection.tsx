@@ -17,7 +17,11 @@ export const LayoutSection: React.FC = () => {
     footerBg: config.footerBg,
     textColor: config.textColor,
     linkColor: config.linkColor,
-    logo: config.logo
+    logo: config.logo,
+    contactEmail: config.contactEmail,
+    contactPhone: config.contactPhone,
+    address: config.address,
+    socialLinks: config.socialLinks
   });
 
   React.useEffect(() => {
@@ -27,7 +31,11 @@ export const LayoutSection: React.FC = () => {
       footerBg: config.footerBg,
       textColor: config.textColor,
       linkColor: config.linkColor,
-      logo: config.logo
+      logo: config.logo,
+      contactEmail: config.contactEmail,
+      contactPhone: config.contactPhone,
+      address: config.address,
+      socialLinks: config.socialLinks
     });
   }, [config]);
 
@@ -71,7 +79,7 @@ export const LayoutSection: React.FC = () => {
                 id="siteName"
                 value={localConfig.siteName}
                 onChange={(e) => setLocalConfig(prev => ({ ...prev, siteName: e.target.value }))}
-                placeholder="ex: Fatras"
+                placeholder="ex: Mon Site Web"
               />
             </div>
 
@@ -140,6 +148,115 @@ export const LayoutSection: React.FC = () => {
             </div>
           </div>
 
+          {/* Informations de contact pour le footer */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Informations de contact (Footer)</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="contactEmail">Email de contact</Label>
+                <Input
+                  id="contactEmail"
+                  value={localConfig.contactEmail}
+                  onChange={(e) => setLocalConfig(prev => ({ ...prev, contactEmail: e.target.value }))}
+                  placeholder="ex: contact@monsite.com"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="contactPhone">Téléphone</Label>
+                <Input
+                  id="contactPhone"
+                  value={localConfig.contactPhone}
+                  onChange={(e) => setLocalConfig(prev => ({ ...prev, contactPhone: e.target.value }))}
+                  placeholder="ex: +33 1 23 45 67 89"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <Label htmlFor="address">Adresse</Label>
+                <Input
+                  id="address"
+                  value={localConfig.address}
+                  onChange={(e) => setLocalConfig(prev => ({ ...prev, address: e.target.value }))}
+                  placeholder="ex: 123 Rue Example, 75001 Paris"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Réseaux sociaux */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Réseaux sociaux</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="facebook">Facebook</Label>
+                <Input
+                  id="facebook"
+                  value={localConfig.socialLinks.facebook}
+                  onChange={(e) => setLocalConfig(prev => ({ 
+                    ...prev, 
+                    socialLinks: { ...prev.socialLinks, facebook: e.target.value }
+                  }))}
+                  placeholder="https://facebook.com/monsite"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="instagram">Instagram</Label>
+                <Input
+                  id="instagram"
+                  value={localConfig.socialLinks.instagram}
+                  onChange={(e) => setLocalConfig(prev => ({ 
+                    ...prev, 
+                    socialLinks: { ...prev.socialLinks, instagram: e.target.value }
+                  }))}
+                  placeholder="https://instagram.com/monsite"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="twitter">Twitter</Label>
+                <Input
+                  id="twitter"
+                  value={localConfig.socialLinks.twitter}
+                  onChange={(e) => setLocalConfig(prev => ({ 
+                    ...prev, 
+                    socialLinks: { ...prev.socialLinks, twitter: e.target.value }
+                  }))}
+                  placeholder="https://twitter.com/monsite"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="linkedin">LinkedIn</Label>
+                <Input
+                  id="linkedin"
+                  value={localConfig.socialLinks.linkedin}
+                  onChange={(e) => setLocalConfig(prev => ({ 
+                    ...prev, 
+                    socialLinks: { ...prev.socialLinks, linkedin: e.target.value }
+                  }))}
+                  placeholder="https://linkedin.com/company/monsite"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="youtube">YouTube</Label>
+                <Input
+                  id="youtube"
+                  value={localConfig.socialLinks.youtube}
+                  onChange={(e) => setLocalConfig(prev => ({ 
+                    ...prev, 
+                    socialLinks: { ...prev.socialLinks, youtube: e.target.value }
+                  }))}
+                  placeholder="https://youtube.com/monsite"
+                />
+              </div>
+            </div>
+          </div>
+
           {/* Actions */}
           <div className="flex space-x-4 pt-4">
             <Button onClick={handleSave} className="flex-1">
@@ -202,23 +319,37 @@ export const LayoutSection: React.FC = () => {
               <div>
                 <h3 className="font-semibold mb-4 text-lg">Contact</h3>
                 <div className="space-y-2 text-sm">
-                  <p>contact@example.com</p>
-                  <p>+33 1 23 45 67 89</p>
-                  <p>123 Rue de la Musique, Paris</p>
+                  <p>{localConfig.contactEmail}</p>
+                  <p>{localConfig.contactPhone}</p>
+                  <p>{localConfig.address}</p>
                 </div>
               </div>
               <div>
                 <h3 className="font-semibold mb-4 text-lg">Suivez-nous</h3>
                 <div className="flex space-x-4">
-                  <a href="#" style={{ color: localConfig.linkColor }}>Facebook</a>
-                  <a href="#" style={{ color: localConfig.linkColor }}>Instagram</a>
+                  {localConfig.socialLinks.facebook && (
+                    <a href={localConfig.socialLinks.facebook} style={{ color: localConfig.linkColor }}>Facebook</a>
+                  )}
+                  {localConfig.socialLinks.instagram && (
+                    <a href={localConfig.socialLinks.instagram} style={{ color: localConfig.linkColor }}>Instagram</a>
+                  )}
+                  {localConfig.socialLinks.twitter && (
+                    <a href={localConfig.socialLinks.twitter} style={{ color: localConfig.linkColor }}>Twitter</a>
+                  )}
+                  {localConfig.socialLinks.linkedin && (
+                    <a href={localConfig.socialLinks.linkedin} style={{ color: localConfig.linkColor }}>LinkedIn</a>
+                  )}
+                  {localConfig.socialLinks.youtube && (
+                    <a href={localConfig.socialLinks.youtube} style={{ color: localConfig.linkColor }}>YouTube</a>
+                  )}
                 </div>
               </div>
               <div>
                 <h3 className="font-semibold mb-4 text-lg">Informations légales</h3>
                 <div className="space-y-2 text-sm">
-                  <a href="#" style={{ color: localConfig.linkColor }}>Mentions légales</a>
-                  <a href="#" style={{ color: localConfig.linkColor }}>CGV</a>
+                  <a href="/mentions-legales" style={{ color: localConfig.linkColor }}>Mentions légales</a>
+                  <a href="/cgv" style={{ color: localConfig.linkColor }}>CGV</a>
+                  <a href="/politique-confidentialite" style={{ color: localConfig.linkColor }}>Politique de confidentialité</a>
                 </div>
               </div>
             </div>
