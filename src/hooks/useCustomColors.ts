@@ -10,45 +10,45 @@ export const useCustomColors = () => {
         // Couleurs par défaut étendues
         const defaultColors = {
           // Mode clair
-          background: '#ffffff',
-          text: '#18181b',
-          cardBg: '#ffffff',
-          cardText: '#18181b',
-          buttonBg: '#1632f4',
-          buttonText: '#ffffff',
-          headerBg: '#ffffff',
-          headerText: '#18181b',
-          sidebarBg: '#f8fafc',
-          sidebarText: '#374151',
-          inputBg: '#ffffff',
-          inputText: '#18181b',
-          borderColor: '#e5e7eb',
-          messageBg: '#f0f9ff',
-          messageText: '#1e40af',
-          notificationBg: '#ffffff',
-          notificationText: '#18181b',
-          widgetBg: '#1632f4',
-          widgetText: '#ffffff',
+          background: 'hsl(0, 0%, 100%)',
+          text: 'hsl(240, 10%, 3.9%)',
+          cardBg: 'hsl(0, 0%, 100%)',
+          cardText: 'hsl(240, 10%, 3.9%)',
+          buttonBg: 'hsl(221, 83%, 53%)',
+          buttonText: 'hsl(0, 0%, 100%)',
+          headerBg: 'hsl(0, 0%, 100%)',
+          headerText: 'hsl(240, 10%, 3.9%)',
+          sidebarBg: 'hsl(210, 40%, 98%)',
+          sidebarText: 'hsl(215, 25%, 27%)',
+          inputBg: 'hsl(0, 0%, 100%)',
+          inputText: 'hsl(240, 10%, 3.9%)',
+          borderColor: 'hsl(214, 32%, 91%)',
+          messageBg: 'hsl(214, 100%, 97%)',
+          messageText: 'hsl(221, 83%, 53%)',
+          notificationBg: 'hsl(0, 0%, 100%)',
+          notificationText: 'hsl(240, 10%, 3.9%)',
+          widgetBg: 'hsl(221, 83%, 53%)',
+          widgetText: 'hsl(0, 0%, 100%)',
           // Mode sombre
-          backgroundDark: '#0f0f0f',
-          textDark: '#ffffff',
-          cardBgDark: '#1a1a1a',
-          cardTextDark: '#ffffff',
-          buttonBgDark: '#ffffff',
-          buttonTextDark: '#000000',
-          headerBgDark: '#1a1a1a',
-          headerTextDark: '#ffffff',
-          sidebarBgDark: '#111827',
-          sidebarTextDark: '#d1d5db',
-          inputBgDark: '#1f2937',
-          inputTextDark: '#ffffff',
-          borderColorDark: '#374151',
-          messageBgDark: '#1e3a8a',
-          messageTextDark: '#bfdbfe',
-          notificationBgDark: '#1a1a1a',
-          notificationTextDark: '#ffffff',
-          widgetBgDark: '#1632f4',
-          widgetTextDark: '#ffffff'
+          backgroundDark: 'hsl(240, 10%, 3.9%)',
+          textDark: 'hsl(0, 0%, 100%)',
+          cardBgDark: 'hsl(240, 10%, 8%)',
+          cardTextDark: 'hsl(0, 0%, 100%)',
+          buttonBgDark: 'hsl(0, 0%, 100%)',
+          buttonTextDark: 'hsl(240, 10%, 3.9%)',
+          headerBgDark: 'hsl(240, 10%, 8%)',
+          headerTextDark: 'hsl(0, 0%, 100%)',
+          sidebarBgDark: 'hsl(240, 5%, 6%)',
+          sidebarTextDark: 'hsl(240, 5%, 84%)',
+          inputBgDark: 'hsl(240, 6%, 10%)',
+          inputTextDark: 'hsl(0, 0%, 100%)',
+          borderColorDark: 'hsl(240, 6%, 10%)',
+          messageBgDark: 'hsl(221, 83%, 53%)',
+          messageTextDark: 'hsl(210, 40%, 80%)',
+          notificationBgDark: 'hsl(240, 10%, 8%)',
+          notificationTextDark: 'hsl(0, 0%, 100%)',
+          widgetBgDark: 'hsl(221, 83%, 53%)',
+          widgetTextDark: 'hsl(0, 0%, 100%)'
         };
 
         // Charger les couleurs sauvegardées
@@ -148,55 +148,10 @@ export const useCustomColors = () => {
             border-color: var(--app-border) !important;
           }
 
-          /* Buttons */
-          .btn-primary, .button-primary, [data-primary-button] {
-            background-color: var(--app-button-bg) !important;
-            color: var(--app-button-text) !important;
-          }
-
-          /* Inputs */
-          input, textarea, select {
-            background-color: var(--app-input-bg) !important;
-            color: var(--app-input-text) !important;
-            border-color: var(--app-border) !important;
-          }
-
-          /* Messagerie */
-          .message, .chat-message, [data-message] {
-            background-color: var(--app-message-bg) !important;
-            color: var(--app-message-text) !important;
-            border-color: var(--app-border) !important;
-          }
-
-          /* Widget de messagerie */
-          .chat-widget, .messaging-widget, [data-chat-widget] {
-            background-color: var(--app-widget-bg) !important;
-            color: var(--app-widget-text) !important;
-            border-color: var(--app-border) !important;
-          }
-
           /* Notifications - FIX TRANSPARENCY */
           .notification, [data-sonner-toaster], [data-sonner-toast] {
             background-color: var(--app-notification-bg) !important;
             color: var(--app-notification-text) !important;
-            border: 1px solid var(--app-border) !important;
-            backdrop-filter: none !important;
-            z-index: 9999 !important;
-          }
-
-          /* Pop-up de notifications */
-          .notification-popup, [data-notification-popup] {
-            background-color: var(--app-notification-bg) !important;
-            color: var(--app-notification-text) !important;
-            border: 1px solid var(--app-border) !important;
-            backdrop-filter: none !important;
-            z-index: 9999 !important;
-          }
-
-          /* Dropdowns - FIX TRANSPARENCY */
-          .dropdown-menu, [data-radix-popper-content-wrapper] {
-            background-color: var(--app-card-bg) !important;
-            color: var(--app-card-text) !important;
             border: 1px solid var(--app-border) !important;
             backdrop-filter: none !important;
             z-index: 9999 !important;
@@ -214,9 +169,8 @@ export const useCustomColors = () => {
     // Appliquer immédiatement
     applyColors();
 
-    // ISOLATION: Écouter SEULEMENT les changements de couleurs personnalisées, PAS les events de website
+    // Écouter les changements de couleurs personnalisées
     const handleColorChange = (e?: StorageEvent) => {
-      // Vérifier qu'on est bien sur une page admin pour éviter les conflits
       if (window.location.pathname.startsWith('/front')) {
         console.log('🚫 Ignoring color change on frontend page');
         return;

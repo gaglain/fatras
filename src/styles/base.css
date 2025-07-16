@@ -4,23 +4,23 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 240 10% 3.9%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 240 10% 3.9%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 240 10% 3.9%;
     --primary: 221 83% 53%;
     --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96%;
-    --secondary-foreground: 222.2 84% 4.9%;
+    --secondary-foreground: 240 10% 3.9%;
     --muted: 210 40% 96%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted-foreground: 215 16% 47%;
     --accent: 210 40% 96%;
-    --accent-foreground: 222.2 84% 4.9%;
-    --destructive: 0 84.2% 60.2%;
+    --accent-foreground: 240 10% 3.9%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
     --ring: 221 83% 53%;
     --radius: 0.75rem;
     --chart-1: 12 76% 61%;
@@ -30,66 +30,66 @@
     --chart-5: 27 87% 67%;
     
     /* VARIABLES PERSONNALISÉES FORCÉES */
-    --app-background: #ffffff;
-    --app-text: #18181b;
-    --app-card-bg: #ffffff;
-    --app-card-text: #18181b;
-    --app-button-bg: #1632f4;
-    --app-button-text: #ffffff;
-    --app-chat-widget-bg: #ec5f65;
-    --app-chat-widget-icon: #ffffff;
+    --app-background: hsl(0, 0%, 100%);
+    --app-text: hsl(240, 10%, 3.9%);
+    --app-card-bg: hsl(0, 0%, 100%);
+    --app-card-text: hsl(240, 10%, 3.9%);
+    --app-button-bg: hsl(221, 83%, 53%);
+    --app-button-text: hsl(0, 0%, 100%);
+    --app-chat-widget-bg: hsl(348, 83%, 67%);
+    --app-chat-widget-icon: hsl(0, 0%, 100%);
     
     /* Sidebar tokens */
-    --sidebar-background: #ffffff;
-    --sidebar-foreground: #1632f4;
-    --sidebar-primary: #1632f4;
-    --sidebar-primary-foreground: #ffffff;
-    --sidebar-accent: #f1f5f9;
-    --sidebar-accent-foreground: #1632f4;
-    --sidebar-border: #e2e8f0;
-    --sidebar-ring: #1632f4;
+    --sidebar-background: hsl(0, 0%, 100%);
+    --sidebar-foreground: hsl(221, 83%, 53%);
+    --sidebar-primary: hsl(221, 83%, 53%);
+    --sidebar-primary-foreground: hsl(0, 0%, 100%);
+    --sidebar-accent: hsl(210, 40%, 96%);
+    --sidebar-accent-foreground: hsl(221, 83%, 53%);
+    --sidebar-border: hsl(214, 32%, 91%);
+    --sidebar-ring: hsl(221, 83%, 53%);
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
     --primary: 221 83% 53%;
     --primary-foreground: 255 255 255;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
+    --secondary: 240 4% 16%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 4% 16%;
+    --muted-foreground: 240 5% 65%;
+    --accent: 240 4% 16%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 4% 16%;
+    --input: 240 4% 16%;
     --ring: 221 83% 53%;
     
     /* VARIABLES PERSONNALISÉES MODE SOMBRE */
-    --app-background: #18181b;
-    --app-text: #ffffff;
-    --app-card-bg: #22223a;
-    --app-card-text: #ffffff;
-    --app-button-bg: #ffffff;
-    --app-button-text: #1632f4;
-    --app-chat-widget-bg: #ec5f65;
-    --app-chat-widget-icon: #ffffff;
+    --app-background: hsl(240, 10%, 3.9%);
+    --app-text: hsl(0, 0%, 100%);
+    --app-card-bg: hsl(240, 10%, 8%);
+    --app-card-text: hsl(0, 0%, 100%);
+    --app-button-bg: hsl(0, 0%, 100%);
+    --app-button-text: hsl(221, 83%, 53%);
+    --app-chat-widget-bg: hsl(348, 83%, 67%);
+    --app-chat-widget-icon: hsl(0, 0%, 100%);
     
     /* Sidebar en mode sombre */
-    --sidebar-background: #22223a;
-    --sidebar-foreground: #ffffff;
-    --sidebar-primary: #ffffff;
-    --sidebar-primary-foreground: #1632f4;
-    --sidebar-accent: #2d2d4a;
-    --sidebar-accent-foreground: #ffffff;
-    --sidebar-border: #2d2d4a;
-    --sidebar-ring: #ffffff;
+    --sidebar-background: hsl(240, 10%, 8%);
+    --sidebar-foreground: hsl(0, 0%, 100%);
+    --sidebar-primary: hsl(0, 0%, 100%);
+    --sidebar-primary-foreground: hsl(221, 83%, 53%);
+    --sidebar-accent: hsl(240, 4%, 16%);
+    --sidebar-accent-foreground: hsl(0, 0%, 100%);
+    --sidebar-border: hsl(240, 4%, 16%);
+    --sidebar-ring: hsl(0, 0%, 100%);
   }
 }
 

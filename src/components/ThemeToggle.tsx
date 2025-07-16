@@ -5,10 +5,12 @@ import { Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
 export const ThemeToggle: React.FC = () => {
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, resolvedTheme } = useTheme();
 
   const toggleTheme = () => {
-    setTheme(theme === 'light' ? 'dark' : 'light');
+    const newTheme = resolvedTheme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+    console.log('🌓 Theme toggled to:', newTheme);
   };
 
   return (
@@ -17,9 +19,9 @@ export const ThemeToggle: React.FC = () => {
       size="sm"
       onClick={toggleTheme}
       className="h-8 w-8 p-0"
-      title={`Basculer vers le mode ${theme === 'light' ? 'sombre' : 'clair'}`}
+      title={`Basculer vers le mode ${resolvedTheme === 'light' ? 'sombre' : 'clair'}`}
     >
-      {theme === 'light' ? (
+      {resolvedTheme === 'light' ? (
         <Moon className="h-4 w-4" />
       ) : (
         <Sun className="h-4 w-4" />
