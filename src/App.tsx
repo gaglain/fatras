@@ -4,7 +4,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Layout } from "./components/Layout";
-import { FrontLayout } from "./components/FrontLayout";
 import { SimpleFrontLayout } from "./components/SimpleFrontLayout";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
@@ -52,13 +51,13 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <UserProvider>
-          <CentralizedDataProvider>
-            <RealtimeProvider>
-              <MessagingProvider>
-                <WebsiteConfigProvider>
-                  <Toaster />
-                  <BrowserRouter>
+        <BrowserRouter>
+          <UserProvider>
+            <CentralizedDataProvider>
+              <RealtimeProvider>
+                <MessagingProvider>
+                  <WebsiteConfigProvider>
+                    <Toaster />
                     <Routes>
                       {/* Route d'accueil */}
                       <Route path="/" element={<Index />} />
@@ -101,12 +100,12 @@ const App = () => {
                       {/* Page 404 */}
                       <Route path="*" element={<NotFound />} />
                     </Routes>
-                  </BrowserRouter>
-                </WebsiteConfigProvider>
-              </MessagingProvider>
-            </RealtimeProvider>
-          </CentralizedDataProvider>
-        </UserProvider>
+                  </WebsiteConfigProvider>
+                </MessagingProvider>
+              </RealtimeProvider>
+            </CentralizedDataProvider>
+          </UserProvider>
+        </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
   );
