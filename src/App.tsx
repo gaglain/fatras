@@ -6,14 +6,14 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import { FrontLayout } from "./components/FrontLayout";
 import { SimpleFrontLayout } from "./components/SimpleFrontLayout";
-import { Index } from "./pages/Index";
-import { Dashboard } from "./pages/Dashboard";
-import { Artists } from "./pages/Artists";
+import Index from "./pages/Index";
+import Dashboard from "./pages/Dashboard";
+import Artists from "./pages/Artists";
 import { ArtistDetail } from "./pages/ArtistDetail";
-import { Events } from "./pages/Events";
-import { Contacts } from "./pages/Contacts";
-import { Preferences } from "./pages/Preferences";
-import { Tasks } from "./pages/Tasks";
+import Events from "./pages/Events";
+import Contacts from "./pages/Contacts";
+import Preferences from "./pages/Preferences";
+import Tasks from "./pages/Tasks";
 import { NotFound } from "./pages/NotFound";
 import { RoadShow } from "./pages/RoadShow";
 import { Messagerie } from "./pages/Messagerie";
@@ -40,11 +40,11 @@ import { FrontLegalNotices } from "./pages/FrontLegalNotices";
 import { FrontPrivacyPolicy } from "./pages/FrontPrivacyPolicy";
 import { FrontTermsOfService } from "./pages/FrontTermsOfService";
 import { SimpleFrontHome } from "./pages/SimpleFrontHome";
-import { UserContext } from "./contexts/UserContext";
+import { UserProvider } from "./contexts/UserContext";
 import { WebsiteConfigProvider } from "./contexts/WebsiteConfigContext";
-import { RealtimeContext } from "./contexts/RealtimeContext";
-import { CentralizedDataContext } from "./contexts/CentralizedDataContext";
-import { MessagingContext } from "./contexts/MessagingContext";
+import { RealtimeProvider } from "./contexts/RealtimeContext";
+import { CentralizedDataProvider } from "./contexts/CentralizedDataContext";
+import { MessagingProvider } from "./contexts/MessagingContext";
 
 const queryClient = new QueryClient();
 
@@ -52,10 +52,10 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <UserContext>
-          <CentralizedDataContext>
-            <RealtimeContext>
-              <MessagingContext>
+        <UserProvider>
+          <CentralizedDataProvider>
+            <RealtimeProvider>
+              <MessagingProvider>
                 <WebsiteConfigProvider>
                   <Toaster />
                   <BrowserRouter>
@@ -103,10 +103,10 @@ const App = () => {
                     </Routes>
                   </BrowserRouter>
                 </WebsiteConfigProvider>
-              </MessagingContext>
-            </RealtimeContext>
-          </CentralizedDataContext>
-        </UserContext>
+              </MessagingProvider>
+            </RealtimeProvider>
+          </CentralizedDataProvider>
+        </UserProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );
