@@ -1,17 +1,13 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useWebsiteConfig } from '@/contexts/WebsiteConfigContext';
-import { useWebsiteConfigSync } from '@/hooks/useWebsiteConfigSync';
+import { useSimpleWebsiteSync } from '@/hooks/useSimpleWebsiteSync';
 
 export const SimpleFrontHome: React.FC = () => {
   const { config } = useWebsiteConfig();
-  const { forceSync } = useWebsiteConfigSync();
+  const { forceReload } = useSimpleWebsiteSync();
 
   console.log('🏠 Home rendering with:', config.siteName);
-
-  useEffect(() => {
-    forceSync();
-  }, [forceSync]);
 
   return (
     <div className="space-y-16">

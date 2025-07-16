@@ -1,9 +1,13 @@
 
 import React from 'react';
 import { useWebsiteConfig } from '@/contexts/WebsiteConfigContext';
+import { useSimpleWebsiteSync } from '@/hooks/useSimpleWebsiteSync';
 
 export const SimpleFrontHeader: React.FC = () => {
   const { config } = useWebsiteConfig();
+  const { forceReload } = useSimpleWebsiteSync();
+
+  console.log('🏠 Header rendering with config:', config.siteName);
 
   return (
     <header 
@@ -21,6 +25,10 @@ export const SimpleFrontHeader: React.FC = () => {
                 src={config.logo} 
                 alt="Logo" 
                 className="h-8 w-auto"
+                onError={(e) => { 
+                  console.error('❌ Logo loading error');
+                  (e.currentTarget as HTMLImageElement).style.display = 'none'; 
+                }}
               />
             )}
             <h1 className="text-xl font-bold" style={{ color: config.textColor }}>

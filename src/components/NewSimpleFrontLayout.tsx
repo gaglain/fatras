@@ -1,20 +1,16 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Outlet } from 'react-router-dom';
 import { SimpleFrontHeader } from './SimpleFrontHeader';
 import { SimpleFrontFooter } from './SimpleFrontFooter';
 import { useWebsiteConfig } from '@/contexts/WebsiteConfigContext';
-import { useWebsiteConfigSync } from '@/hooks/useWebsiteConfigSync';
+import { useSimpleWebsiteSync } from '@/hooks/useSimpleWebsiteSync';
 
 export const NewSimpleFrontLayout: React.FC = () => {
   const { config } = useWebsiteConfig();
-  const { forceSync } = useWebsiteConfigSync();
+  const { forceReload } = useSimpleWebsiteSync();
 
   console.log('🏗️ Layout rendering with:', config.siteName);
-
-  useEffect(() => {
-    forceSync();
-  }, [forceSync]);
 
   return (
     <div className="min-h-screen flex flex-col bg-white">

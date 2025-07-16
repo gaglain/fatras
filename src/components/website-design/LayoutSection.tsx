@@ -43,6 +43,21 @@ export const LayoutSection: React.FC = () => {
   const handleSave = () => {
     console.log('💾 Saving config:', localConfig.siteName);
     updateConfig(localConfig);
+    
+    // Force un événement de synchronisation
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('websiteConfigChanged', { 
+        detail: localConfig 
+      }));
+      
+      // Force reload pour tous les composants
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'websiteConfig',
+        newValue: JSON.stringify(localConfig),
+        storageArea: localStorage
+      }));
+    }, 100);
+    
     toast.success('Configuration sauvegardée !');
   };
 
@@ -50,9 +65,16 @@ export const LayoutSection: React.FC = () => {
     // Save first
     updateConfig(localConfig);
     
-    // Open preview
+    // Force sync events
     setTimeout(() => {
-      window.open('/front', '_blank');
+      window.dispatchEvent(new CustomEvent('websiteConfigChanged', { 
+        detail: localConfig 
+      }));
+      
+      // Open preview after a short delay
+      setTimeout(() => {
+        window.open('/front', '_blank');
+      }, 200);
     }, 100);
   };
 
@@ -128,7 +150,6 @@ export const LayoutSection: React.FC = () => {
             </div>
           </div>
 
-          {/* Couleurs */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Couleurs et style</h3>
             
@@ -175,7 +196,6 @@ export const LayoutSection: React.FC = () => {
             </div>
           </div>
 
-          {/* Informations de contact pour le footer */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Informations de contact (Footer)</h3>
             
@@ -212,7 +232,6 @@ export const LayoutSection: React.FC = () => {
             </div>
           </div>
 
-          {/* Réseaux sociaux */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Réseaux sociaux</h3>
             
@@ -283,7 +302,6 @@ export const LayoutSection: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Aperçu en temps réel */}
       <Card>
         <CardHeader>
           <CardTitle>Aperçu du header</CardTitle>
@@ -314,7 +332,6 @@ export const LayoutSection: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Aperçu du footer */}
       <Card>
         <CardHeader>
           <CardTitle>Aperçu du footer</CardTitle>
