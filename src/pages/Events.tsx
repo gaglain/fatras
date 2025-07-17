@@ -6,6 +6,7 @@ import { Plus, Search, Calendar, Clock, CheckCircle, XCircle, Upload } from 'luc
 import { EventCard } from '@/components/events/EventCard';
 import { EventDialog } from '@/components/events/EventDialog';
 import { CSVEventImporter } from '@/components/events/CSVEventImporter';
+import { CSVEventExporter } from '@/components/events/CSVEventExporter';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -104,7 +105,7 @@ export const Events: React.FC = () => {
 
   const handleImportComplete = (importedEvents: any[]) => {
     console.log('Import completed:', importedEvents.length, 'events');
-    fetchEvents(); // Refresh the events list
+    fetchEvents();
     setCsvImportOpen(false);
   };
 
@@ -148,6 +149,7 @@ export const Events: React.FC = () => {
           </p>
         </div>
         <div className="flex space-x-2">
+          <CSVEventExporter events={filteredEvents} />
           <Button onClick={() => setCsvImportOpen(true)} variant="outline">
             <Upload className="h-4 w-4 mr-2" />
             Importer CSV
