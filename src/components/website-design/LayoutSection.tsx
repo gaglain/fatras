@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -43,60 +42,20 @@ export const LayoutSection: React.FC = () => {
 
   const handleSave = () => {
     console.log('💾 Saving layout config:', localConfig.siteName);
-    
-    // Mettre à jour la configuration
     updateConfig(localConfig);
-    
-    // Force les événements de synchronisation supplémentaires
-    setTimeout(() => {
-      // Déclencher tous les événements pour garantir la synchronisation
-      window.dispatchEvent(new CustomEvent('websiteConfigChanged', { 
-        detail: localConfig 
-      }));
-      window.dispatchEvent(new CustomEvent('siteConfigChanged', { 
-        detail: localConfig 
-      }));
-      
-      // Storage event pour inter-tab sync
-      window.dispatchEvent(new StorageEvent('storage', {
-        key: 'websiteConfig',
-        newValue: JSON.stringify(localConfig),
-        storageArea: localStorage
-      }));
-      
-      console.log('🚀 Layout config saved and events dispatched');
-    }, 150);
-    
     toast.success(`Configuration sauvegardée ! Site: "${localConfig.siteName}"`);
   };
 
   const handlePreview = () => {
-    console.log('👁️ Preview requested, saving first...');
+    console.log('👁️ Preview requested');
     
     // Sauvegarder d'abord
     updateConfig(localConfig);
     
-    // Attendre un peu puis déclencher les événements et ouvrir
+    // Ouvrir la preview après un court délai
     setTimeout(() => {
-      // Force sync events
-      window.dispatchEvent(new CustomEvent('websiteConfigChanged', { 
-        detail: localConfig 
-      }));
-      window.dispatchEvent(new CustomEvent('siteConfigChanged', { 
-        detail: localConfig 
-      }));
-      
-      // Ouvrir la preview après synchronisation
-      setTimeout(() => {
-        const previewWindow = window.open('/front', '_blank');
-        if (previewWindow) {
-          // Force un reload de la fenêtre de preview après un court délai
-          setTimeout(() => {
-            previewWindow.location.reload();
-          }, 500);
-        }
-      }, 200);
-    }, 100);
+      window.open('/front', '_blank');
+    }, 300);
   };
 
   const handleInputChange = (field: string, value: any) => {

@@ -1,17 +1,15 @@
 
 import React from 'react';
 import { useWebsiteConfig } from '@/contexts/WebsiteConfigContext';
-import { useUnifiedWebsiteSync } from '@/hooks/useUnifiedWebsiteSync';
+import { useSimpleWebsiteSync } from '@/hooks/useSimpleWebsiteSync';
 
 export const SimpleFrontFooter: React.FC = () => {
   const { config } = useWebsiteConfig();
-  const { forceSync } = useUnifiedWebsiteSync();
-
-  console.log('🦶 Footer rendering with config:', config.siteName);
+  useSimpleWebsiteSync();
 
   return (
     <footer 
-      className="mt-auto py-8 px-4 min-h-[200px]"
+      className="py-8 px-6 mt-auto"
       style={{
         background: config.footerBg,
         color: config.textColor
@@ -19,117 +17,45 @@ export const SimpleFrontFooter: React.FC = () => {
     >
       <div className="container mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Contact */}
           <div>
-            <h3 className="font-semibold mb-4 text-lg" style={{ color: config.textColor }}>
-              Contact
-            </h3>
+            <h3 className="font-semibold mb-4 text-lg">Contact</h3>
             <div className="space-y-2 text-sm">
-              <p style={{ color: config.textColor }}>{config.contactEmail}</p>
-              <p style={{ color: config.textColor }}>{config.contactPhone}</p>
-              <p style={{ color: config.textColor }}>{config.address}</p>
+              <p>{config.contactEmail}</p>
+              <p>{config.contactPhone}</p>
+              <p>{config.address}</p>
             </div>
           </div>
-
-          {/* Réseaux sociaux */}
           <div>
-            <h3 className="font-semibold mb-4 text-lg" style={{ color: config.textColor }}>
-              Suivez-nous
-            </h3>
-            <div className="flex flex-wrap gap-4">
+            <h3 className="font-semibold mb-4 text-lg">Suivez-nous</h3>
+            <div className="flex space-x-4">
               {config.socialLinks.facebook && (
-                <a 
-                  href={config.socialLinks.facebook}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:opacity-80 transition-opacity"
-                  style={{ color: config.linkColor }}
-                >
-                  Facebook
-                </a>
+                <a href={config.socialLinks.facebook} style={{ color: config.linkColor }}>Facebook</a>
               )}
               {config.socialLinks.instagram && (
-                <a 
-                  href={config.socialLinks.instagram}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:opacity-80 transition-opacity"
-                  style={{ color: config.linkColor }}
-                >
-                  Instagram
-                </a>
+                <a href={config.socialLinks.instagram} style={{ color: config.linkColor }}>Instagram</a>
               )}
               {config.socialLinks.twitter && (
-                <a 
-                  href={config.socialLinks.twitter}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:opacity-80 transition-opacity"
-                  style={{ color: config.linkColor }}
-                >
-                  Twitter
-                </a>
-              )}
-              {config.socialLinks.youtube && (
-                <a 
-                  href={config.socialLinks.youtube}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:opacity-80 transition-opacity"
-                  style={{ color: config.linkColor }}
-                >
-                  YouTube
-                </a>
+                <a href={config.socialLinks.twitter} style={{ color: config.linkColor }}>Twitter</a>
               )}
               {config.socialLinks.linkedin && (
-                <a 
-                  href={config.socialLinks.linkedin}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:opacity-80 transition-opacity"
-                  style={{ color: config.linkColor }}
-                >
-                  LinkedIn
-                </a>
+                <a href={config.socialLinks.linkedin} style={{ color: config.linkColor }}>LinkedIn</a>
+              )}
+              {config.socialLinks.youtube && (
+                <a href={config.socialLinks.youtube} style={{ color: config.linkColor }}>YouTube</a>
               )}
             </div>
           </div>
-
-          {/* Informations légales */}
           <div>
-            <h3 className="font-semibold mb-4 text-lg" style={{ color: config.textColor }}>
-              Informations légales
-            </h3>
+            <h3 className="font-semibold mb-4 text-lg">Informations légales</h3>
             <div className="space-y-2 text-sm">
-              <a 
-                href="/mentions-legales"
-                className="block hover:opacity-80 transition-opacity"
-                style={{ color: config.linkColor }}
-              >
-                Mentions légales
-              </a>
-              <a 
-                href="/cgv"
-                className="block hover:opacity-80 transition-opacity"
-                style={{ color: config.linkColor }}
-              >
-                CGV
-              </a>
-              <a 
-                href="/politique-confidentialite"
-                className="block hover:opacity-80 transition-opacity"
-                style={{ color: config.linkColor }}
-              >
-                Politique de confidentialité
-              </a>
+              <a href="/mentions-legales" style={{ color: config.linkColor }}>Mentions légales</a>
+              <a href="/cgv" style={{ color: config.linkColor }}>CGV</a>
+              <a href="/politique-confidentialite" style={{ color: config.linkColor }}>Politique de confidentialité</a>
             </div>
           </div>
         </div>
-        
         <div className="border-t border-gray-600 mt-8 pt-8 text-center text-sm">
-          <p style={{ color: config.textColor }}>
-            © 2024 {config.siteName}. Tous droits réservés.
-          </p>
+          <p>© 2024 {config.siteName}. Tous droits réservés.</p>
         </div>
       </div>
     </footer>

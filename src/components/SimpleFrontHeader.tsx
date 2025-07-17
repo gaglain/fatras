@@ -1,11 +1,11 @@
 
 import React from 'react';
 import { useWebsiteConfig } from '@/contexts/WebsiteConfigContext';
-import { useUnifiedWebsiteSync } from '@/hooks/useUnifiedWebsiteSync';
+import { useSimpleWebsiteSync } from '@/hooks/useSimpleWebsiteSync';
 
 export const SimpleFrontHeader: React.FC = () => {
   const { config } = useWebsiteConfig();
-  const { forceSync } = useUnifiedWebsiteSync();
+  useSimpleWebsiteSync();
 
   console.log('🏠 Header rendering with config:', config.siteName);
 

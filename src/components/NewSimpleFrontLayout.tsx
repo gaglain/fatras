@@ -3,14 +3,10 @@ import React from 'react';
 import { Outlet } from 'react-router-dom';
 import { SimpleFrontHeader } from './SimpleFrontHeader';
 import { SimpleFrontFooter } from './SimpleFrontFooter';
-import { useWebsiteConfig } from '@/contexts/WebsiteConfigContext';
-import { useUnifiedWebsiteSync } from '@/hooks/useUnifiedWebsiteSync';
+import { useSimpleWebsiteSync } from '@/hooks/useSimpleWebsiteSync';
 
 export const NewSimpleFrontLayout: React.FC = () => {
-  const { config } = useWebsiteConfig();
-  const { forceSync } = useUnifiedWebsiteSync();
-
-  console.log('🏗️ Layout rendering with:', config.siteName);
+  useSimpleWebsiteSync();
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
