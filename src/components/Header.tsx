@@ -8,11 +8,14 @@ import { ThemeToggle } from './ThemeToggle';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/hooks/useAuth';
 import { Link } from 'react-router-dom';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import { toast } from 'sonner';
 
 export const Header: React.FC = () => {
   const { currentUser } = useUser();
+  const { signOut } = useAuth();
   const [showUserProfile, setShowUserProfile] = useState(false);
   const [showNotificationTest, setShowNotificationTest] = useState(false);
   const [unreadCount, setUnreadCount] = useState(3);
@@ -57,6 +60,17 @@ export const Header: React.FC = () => {
     });
   };
 
+  const handleSignOut = async () => {
+    try {
+      const { error } = await signOut();
+      if (error) throw error;
+      toast.success('Déconnexion réussie');
+    } catch (error: any) {
+      console.error('❌ Sign out error:', error);
+      toast.error('Erreur lors de la déconnexion');
+    }
+  };
+
   console.log('🔔 RENDER Header - showNotificationTest:', showNotificationTest);
 
   return (
@@ -90,7 +104,6 @@ export const Header: React.FC = () => {
             <div className="flex items-center space-x-1 lg:space-x-2">
               <ThemeToggle />
               
-              {/* BOUTON TEST ULTRA SIMPLE */}
               <Button
                 onClick={handleNotificationClick}
                 className="relative h-10 w-10 p-0 bg-red-500 hover:bg-red-600 text-white border-2 border-white"
@@ -139,7 +152,7 @@ export const Header: React.FC = () => {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={handleSignOut}>
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Déconnexion</span>
                 </DropdownMenuItem>

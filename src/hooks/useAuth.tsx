@@ -19,7 +19,7 @@ export const useAuth = () => {
       setLoading(false);
       
       // Redirection automatique si connecté
-      if (session?.user && window.location.pathname === '/' || window.location.pathname === '/admin') {
+      if (session?.user && (window.location.pathname === '/' || window.location.pathname === '/admin')) {
         console.log('🔄 Auto-redirect to dashboard');
         navigate('/dashboard');
       }

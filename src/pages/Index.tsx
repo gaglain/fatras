@@ -1,13 +1,10 @@
 
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { LoginForm } from '@/components/auth/LoginForm';
 
 const Index = () => {
   console.log('🏠 Index - Rendering Index page...');
-  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
@@ -22,22 +19,7 @@ const Index = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-0">
-            <div className="space-y-4">
-              <p className="text-center text-gray-600">
-                Connectez-vous pour accéder à votre espace de travail
-              </p>
-              <Button 
-                variant="default" 
-                onClick={() => {
-                  console.log('🔄 Navigating to dashboard...');
-                  navigate('/dashboard');
-                }}
-                className="w-full"
-                size="lg"
-              >
-                Accéder au Dashboard
-              </Button>
-            </div>
+            <LoginForm />
           </CardContent>
         </Card>
       </div>
