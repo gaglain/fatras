@@ -9,19 +9,7 @@ import { ContactDialog } from '@/components/contacts/ContactDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-
-interface Contact {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email?: string;
-  phone?: string;
-  position?: string;
-  city?: string;
-  status: string;
-  role: string;
-  tags?: string[];
-}
+import { Contact } from '@/types/contact.types';
 
 export const Contacts: React.FC = () => {
   const { user } = useAuth();

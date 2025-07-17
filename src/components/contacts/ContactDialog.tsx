@@ -11,24 +11,7 @@ import { X, Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-
-interface Contact {
-  id?: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  phone: string;
-  position: string;
-  address: string;
-  city: string;
-  postal_code: string;
-  country: string;
-  status: string;
-  source: string;
-  notes: string;
-  tags: string[];
-  role: string;
-}
+import { Contact } from '@/types/contact.types';
 
 interface ContactDialogProps {
   open: boolean;
@@ -125,10 +108,10 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
   };
 
   const addTag = () => {
-    if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
+    if (newTag.trim() && !formData.tags?.includes(newTag.trim())) {
       setFormData(prev => ({
         ...prev,
-        tags: [...prev.tags, newTag.trim()]
+        tags: [...(prev.tags || []), newTag.trim()]
       }));
       setNewTag('');
     }
@@ -137,7 +120,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
   const removeTag = (tagToRemove: string) => {
     setFormData(prev => ({
       ...prev,
-      tags: prev.tags.filter(tag => tag !== tagToRemove)
+      tags: prev.tags?.filter(tag => tag !== tagToRemove) || []
     }));
   };
 
@@ -178,7 +161,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
               <Input
                 id="email"
                 type="email"
-                value={formData.email}
+                value={formData.email || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
               />
             </div>
@@ -186,7 +169,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
               <Label htmlFor="phone">Téléphone</Label>
               <Input
                 id="phone"
-                value={formData.phone}
+                value={formData.phone || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
               />
             </div>
@@ -197,7 +180,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
               <Label htmlFor="position">Poste/Fonction</Label>
               <Input
                 id="position"
-                value={formData.position}
+                value={formData.position || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, position: e.target.value }))}
               />
             </div>
@@ -223,7 +206,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
             <Label htmlFor="address">Adresse</Label>
             <Input
               id="address"
-              value={formData.address}
+              value={formData.address || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
             />
           </div>
@@ -233,7 +216,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
               <Label htmlFor="city">Ville</Label>
               <Input
                 id="city"
-                value={formData.city}
+                value={formData.city || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
               />
             </div>
@@ -241,7 +224,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
               <Label htmlFor="postal_code">Code postal</Label>
               <Input
                 id="postal_code"
-                value={formData.postal_code}
+                value={formData.postal_code || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, postal_code: e.target.value }))}
               />
             </div>
@@ -249,7 +232,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
               <Label htmlFor="country">Pays</Label>
               <Input
                 id="country"
-                value={formData.country}
+                value={formData.country || 'France'}
                 onChange={(e) => setFormData(prev => ({ ...prev, country: e.target.value }))}
               />
             </div>
@@ -274,7 +257,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
               <Label htmlFor="source">Source</Label>
               <Input
                 id="source"
-                value={formData.source}
+                value={formData.source || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, source: e.target.value }))}
                 placeholder="Référence, réseau social..."
               />
@@ -295,7 +278,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
               </Button>
             </div>
             <div className="flex flex-wrap gap-2">
-              {formData.tags.map((tag, index) => (
+              {formData.tags?.map((tag, index) => (
                 <Badge key={index} variant="secondary" className="flex items-center gap-1">
                   {tag}
                   <X 
@@ -311,7 +294,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
             <Label htmlFor="notes">Notes</Label>
             <Textarea
               id="notes"
-              value={formData.notes}
+              value={formData.notes || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
               rows={3}
             />

@@ -5,19 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Mail, Phone, MapPin, MoreVertical, Edit, Trash2, User } from 'lucide-react';
-
-interface Contact {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email?: string;
-  phone?: string;
-  position?: string;
-  city?: string;
-  status: string;
-  role: string;
-  tags?: string[];
-}
+import { Contact } from '@/types/contact.types';
 
 interface ContactCardProps {
   contact: Contact;
@@ -80,7 +68,7 @@ export const ContactCard: React.FC<ContactCardProps> = ({ contact, onEdit, onDel
                   Modifier
                 </DropdownMenuItem>
                 <DropdownMenuItem 
-                  onClick={() => onDelete(contact.id)}
+                  onClick={() => contact.id && onDelete(contact.id)}
                   className="text-destructive"
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
