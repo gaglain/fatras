@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,9 +6,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Calendar, Plus, Settings, Clock, MapPin, Users, Edit, Trash2, X, User } from 'lucide-react';
+import { Calendar, Plus, Settings, Clock, MapPin, Users, Edit, Trash2, X, User, Upload } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import { AgendaCSVImporter } from '@/components/agenda/AgendaCSVImporter';
+import { AgendaCSVExporter } from '@/components/agenda/AgendaCSVExporter';
 
 interface Event {
   id: string;
@@ -172,6 +173,7 @@ export const Agenda: React.FC = () => {
   const [users, setUsers] = useState<User[]>(mockUsers);
   const [showEventForm, setShowEventForm] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [csvImportOpen, setCsvImportOpen] = useState(false);
 
   const handleSaveEvent = (event: Event) => {
     if (editingEvent) {
@@ -200,6 +202,11 @@ export const Agenda: React.FC = () => {
   const handleCreateNew = () => {
     setEditingEvent(null);
     setShowEventForm(true);
+  };
+
+  const handleImportComplete = (importedEvents: Event[]) => {
+    setEvents([...events, ...importedEvents]);
+    setCsvImportOpen(false);
   };
 
   const toggleUserVisibility = (userId: string) => {
@@ -242,6 +249,11 @@ export const Agenda: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center space-x-3">
+          <AgendaCSVExporter events={filteredEvents} />
+          <Button onClick={() => setCsvImportOpen(true)} variant="outline">
+            <Upload className="h-4 w-4 mr-2" />
+            Importer CSV
+          </Button>
           <Button variant="outline" asChild>
             <Link to="/preferences?tab=calendar">
               <Settings className="h-4 w-4 mr-2" />
@@ -411,6 +423,13 @@ export const Agenda: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* CSV Import Dialog */}
+      <AgendaCSVImporter
+        isOpen={csvImportOpen}
+        onClose={() => setCsvImportOpen(false)}
+        onImportComplete={handleImportComplete}
+      />
     </div>
   );
 };
