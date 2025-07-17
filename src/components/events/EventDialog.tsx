@@ -88,7 +88,7 @@ export const EventDialog: React.FC<EventDialogProps> = ({
     try {
       const { data, error } = await supabase
         .from('contacts')
-        .select('id, first_name, last_name')
+        .select('id, first_name, last_name, status, role')
         .eq('user_id', user?.id)
         .order('first_name');
 
@@ -219,12 +219,12 @@ export const EventDialog: React.FC<EventDialogProps> = ({
 
           <div>
             <Label htmlFor="contact_id">Contact associé</Label>
-            <Select value={formData.contact_id || ''} onValueChange={(value) => setFormData(prev => ({ ...prev, contact_id: value }))}>
+            <Select value={formData.contact_id || 'none'} onValueChange={(value) => setFormData(prev => ({ ...prev, contact_id: value === 'none' ? '' : value }))}>
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner un contact" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Aucun contact</SelectItem>
+                <SelectItem value="none">Aucun contact</SelectItem>
                 {contacts.map((contact) => (
                   <SelectItem key={contact.id} value={contact.id!}>
                     {contact.first_name} {contact.last_name}
