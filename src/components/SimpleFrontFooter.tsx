@@ -1,11 +1,11 @@
 
 import React from 'react';
 import { useWebsiteConfig } from '@/contexts/WebsiteConfigContext';
-import { useSimpleWebsiteSync } from '@/hooks/useSimpleWebsiteSync';
+import { useUnifiedWebsiteSync } from '@/hooks/useUnifiedWebsiteSync';
 
 export const SimpleFrontFooter: React.FC = () => {
   const { config } = useWebsiteConfig();
-  const { forceReload } = useSimpleWebsiteSync();
+  const { forceSync } = useUnifiedWebsiteSync();
 
   console.log('🦶 Footer rendering with config:', config.siteName);
 

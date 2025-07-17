@@ -4,11 +4,11 @@ import { Outlet } from 'react-router-dom';
 import { SimpleFrontHeader } from './SimpleFrontHeader';
 import { SimpleFrontFooter } from './SimpleFrontFooter';
 import { useWebsiteConfig } from '@/contexts/WebsiteConfigContext';
-import { useSimpleWebsiteSync } from '@/hooks/useSimpleWebsiteSync';
+import { useUnifiedWebsiteSync } from '@/hooks/useUnifiedWebsiteSync';
 
 export const NewSimpleFrontLayout: React.FC = () => {
   const { config } = useWebsiteConfig();
-  const { forceReload } = useSimpleWebsiteSync();
+  const { forceSync } = useUnifiedWebsiteSync();
 
   console.log('🏗️ Layout rendering with:', config.siteName);
 

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -41,39 +42,59 @@ export const LayoutSection: React.FC = () => {
   }, [config]);
 
   const handleSave = () => {
-    console.log('💾 Saving config:', localConfig.siteName);
+    console.log('💾 Saving layout config:', localConfig.siteName);
+    
+    // Mettre à jour la configuration
     updateConfig(localConfig);
     
-    // Force un événement de synchronisation
+    // Force les événements de synchronisation supplémentaires
     setTimeout(() => {
+      // Déclencher tous les événements pour garantir la synchronisation
       window.dispatchEvent(new CustomEvent('websiteConfigChanged', { 
         detail: localConfig 
       }));
+      window.dispatchEvent(new CustomEvent('siteConfigChanged', { 
+        detail: localConfig 
+      }));
       
-      // Force reload pour tous les composants
+      // Storage event pour inter-tab sync
       window.dispatchEvent(new StorageEvent('storage', {
         key: 'websiteConfig',
         newValue: JSON.stringify(localConfig),
         storageArea: localStorage
       }));
-    }, 100);
+      
+      console.log('🚀 Layout config saved and events dispatched');
+    }, 150);
     
-    toast.success('Configuration sauvegardée !');
+    toast.success(`Configuration sauvegardée ! Site: "${localConfig.siteName}"`);
   };
 
   const handlePreview = () => {
-    // Save first
+    console.log('👁️ Preview requested, saving first...');
+    
+    // Sauvegarder d'abord
     updateConfig(localConfig);
     
-    // Force sync events
+    // Attendre un peu puis déclencher les événements et ouvrir
     setTimeout(() => {
+      // Force sync events
       window.dispatchEvent(new CustomEvent('websiteConfigChanged', { 
         detail: localConfig 
       }));
+      window.dispatchEvent(new CustomEvent('siteConfigChanged', { 
+        detail: localConfig 
+      }));
       
-      // Open preview after a short delay
+      // Ouvrir la preview après synchronisation
       setTimeout(() => {
-        window.open('/front', '_blank');
+        const previewWindow = window.open('/front', '_blank');
+        if (previewWindow) {
+          // Force un reload de la fenêtre de preview après un court délai
+          setTimeout(() => {
+            previewWindow.location.reload();
+          }, 500);
+        }
       }, 200);
     }, 100);
   };

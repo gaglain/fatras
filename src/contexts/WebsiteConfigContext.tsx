@@ -91,38 +91,34 @@ export const WebsiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const loadConfig = useCallback(() => {
     try {
-      console.log('🔄 Loading website config...');
+      console.log('🔄 Loading website config from storage...');
       
-      // Essayer plusieurs sources de données
-      const websiteConfig = localStorage.getItem('websiteConfig');
-      const websiteSettings = localStorage.getItem('websiteSettings');
-      const websiteDesign = localStorage.getItem('websiteDesign');
-      
+      // Charger de toutes les sources possibles
+      const sources = [
+        localStorage.getItem('websiteConfig'),
+        localStorage.getItem('websiteSettings'),
+        localStorage.getItem('websiteDesign')
+      ].filter(Boolean);
+
       let mergedConfig = { ...defaultConfig };
       
-      // Fusionner les différentes sources
-      if (websiteConfig) {
-        const parsed = JSON.parse(websiteConfig);
-        mergedConfig = { ...mergedConfig, ...parsed };
-        console.log('✅ Loaded websiteConfig:', parsed.siteName);
-      }
+      // Fusionner tous les configs trouvés
+      sources.forEach((source) => {
+        if (source) {
+          try {
+            const parsed = JSON.parse(source);
+            mergedConfig = { ...mergedConfig, ...parsed };
+          } catch (e) {
+            console.warn('Failed to parse config:', e);
+          }
+        }
+      });
       
-      if (websiteSettings) {
-        const parsed = JSON.parse(websiteSettings);
-        mergedConfig = { ...mergedConfig, ...parsed };
-        console.log('✅ Loaded websiteSettings:', parsed.siteName);
-      }
-      
-      if (websiteDesign) {
-        const parsed = JSON.parse(websiteDesign);
-        mergedConfig = { ...mergedConfig, ...parsed };
-        console.log('✅ Loaded websiteDesign:', parsed.siteName);
-      }
-      
+      console.log('✅ Config loaded successfully:', mergedConfig.siteName);
       setConfig(mergedConfig);
       
-      // Mettre à jour le titre de la page immédiatement
-      if (mergedConfig.siteName) {
+      // Mettre à jour le titre immédiatement
+      if (mergedConfig.siteName && mergedConfig.siteName !== document.title) {
         document.title = mergedConfig.siteName;
         console.log('📄 Page title updated to:', mergedConfig.siteName);
       }
@@ -140,34 +136,38 @@ export const WebsiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({
     const updatedConfig = { ...config, ...newConfig };
     setConfig(updatedConfig);
     
-    // Sauvegarder dans localStorage (toutes les clés pour la compatibilité)
+    // Sauvegarder dans toutes les clés pour compatibilité
     const configData = JSON.stringify(updatedConfig);
     localStorage.setItem('websiteConfig', configData);
     localStorage.setItem('websiteSettings', configData);
     localStorage.setItem('websiteDesign', configData);
     
-    // Mettre à jour le titre de la page immédiatement
+    // Mettre à jour le titre immédiatement
     if (newConfig.siteName) {
       document.title = newConfig.siteName;
       console.log('📄 Page title updated to:', newConfig.siteName);
     }
     
-    // Déclencher tous les événements de synchronisation
+    // Déclencher les événements de synchronisation après un court délai
     setTimeout(() => {
-      window.dispatchEvent(new CustomEvent('websiteConfigChanged', { detail: updatedConfig }));
-      window.dispatchEvent(new CustomEvent('siteConfigChanged', { detail: updatedConfig }));
+      // Événement de storage
       window.dispatchEvent(new StorageEvent('storage', {
         key: 'websiteConfig',
         newValue: configData,
         storageArea: localStorage
       }));
-      console.log('🚀 Config updated and events dispatched');
-    }, 50);
+      
+      // Événements personnalisés
+      window.dispatchEvent(new CustomEvent('websiteConfigChanged', { detail: updatedConfig }));
+      window.dispatchEvent(new CustomEvent('siteConfigChanged', { detail: updatedConfig }));
+      
+      console.log('🚀 Config events dispatched');
+    }, 100);
     
   }, [config]);
 
   const reloadConfig = useCallback(() => {
-    console.log('🔄 Reloading config from storage');
+    console.log('🔄 Reloading config requested');
     loadConfig();
   }, [loadConfig]);
 
