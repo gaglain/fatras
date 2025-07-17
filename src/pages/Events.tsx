@@ -1,316 +1,280 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Plus, Calendar, Search, MapPin, Users, Clock, Edit, Trash2, Eye } from 'lucide-react';
-import { GlobalFileUpload } from '@/components/GlobalFileUpload';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Plus, Search, Calendar, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { EventCard } from '@/components/events/EventCard';
+import { EventDialog } from '@/components/events/EventDialog';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-
-interface Event {
-  id: string;
-  title: string;
-  description?: string;
-  startDate: string;
-  endDate: string;
-  venue?: string;
-  address?: string;
-  city?: string;
-  attendeesCount?: number;
-  budgetMin?: number;
-  budgetMax?: number;
-  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
-  eventType?: string;
-  contactName?: string;
-  requirements?: string;
-  notes?: string;
-}
+import { Event } from '@/types/event.types';
 
 export const Events: React.FC = () => {
+  const { user } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
 
-  console.log('🎪 Events - Page loaded with', events.length, 'events');
-
-  // Simulation de données
   useEffect(() => {
-    const mockEvents: Event[] = [
-      {
-        id: '1',
-        title: 'Concert Jazz Festival',
-        description: 'Concert de jazz en plein air',
-        startDate: '2024-07-15T20:00:00',
-        endDate: '2024-07-15T23:00:00',
-        venue: 'Parc de la Musique',
-        address: '123 Avenue des Arts',
-        city: 'Paris',
-        attendeesCount: 500,
-        budgetMin: 5000,
-        budgetMax: 8000,
-        status: 'confirmed',
-        eventType: 'Concert',
-        contactName: 'Jean Dupont',
-        requirements: 'Scène couverte, éclairage professionnel',
-        notes: 'Prévoir plan B en cas de pluie'
-      },
-      {
-        id: '2',
-        title: 'Mariage Sarah & Pierre',
-        description: 'Cérémonie et réception de mariage',
-        startDate: '2024-08-20T16:00:00',
-        endDate: '2024-08-21T02:00:00',
-        venue: 'Château de Versailles',
-        address: 'Place d\'Armes',
-        city: 'Versailles',
-        attendeesCount: 120,
-        budgetMin: 15000,
-        budgetMax: 20000,
-        status: 'pending',
-        eventType: 'Mariage',
-        contactName: 'Marie Martin',
-        requirements: 'DJ, éclairage romantique, sonorisation',
-        notes: 'Thème champêtre chic'
-      }
-    ];
+    if (user) {
+      fetchEvents();
+    }
+  }, [user]);
 
-    setTimeout(() => {
-      setEvents(mockEvents);
+  useEffect(() => {
+    filterEvents();
+  }, [events, searchTerm, statusFilter, typeFilter]);
+
+  const fetchEvents = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('start_date', { ascending: true });
+
+      if (error) throw error;
+      setEvents(data || []);
+    } catch (error: any) {
+      console.error('Erreur lors du chargement des événements:', error);
+      toast.error('Erreur lors du chargement des événements');
+    } finally {
       setLoading(false);
-    }, 500);
-  }, []);
-
-  const filteredEvents = events.filter(event =>
-    event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    event.venue?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    event.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    event.contactName?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const handleCreateEvent = () => {
-    console.log('➕ Creating new event');
-    setShowCreateForm(true);
-    toast.info('Formulaire de création d\'événement (à implémenter)');
-  };
-
-  const handleEditEvent = (eventId: string) => {
-    console.log('✏️ Editing event:', eventId);
-    toast.info('Édition d\'événement (à implémenter)');
-  };
-
-  const handleDeleteEvent = (eventId: string) => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer cet événement ?')) {
-      console.log('🗑️ Deleting event:', eventId);
-      setEvents(prev => prev.filter(e => e.id !== eventId));
-      toast.success('Événement supprimé');
     }
   };
 
-  const handleFileUploaded = (file: { url: string; name: string; type: string }) => {
-    console.log('📎 File uploaded for events:', file);
-    toast.success(`Document "${file.name}" ajouté à l'événement`);
+  const filterEvents = () => {
+    let filtered = events;
+
+    if (searchTerm) {
+      filtered = filtered.filter(event => 
+        event.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        event.venue?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        event.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        event.event_type?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(event => event.status === statusFilter);
+    }
+
+    if (typeFilter !== 'all') {
+      filtered = filtered.filter(event => event.event_type === typeFilter);
+    }
+
+    setFilteredEvents(filtered);
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'confirmed': return 'bg-green-100 text-green-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
-      case 'completed': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
+  const handleEdit = (event: Event) => {
+    setEditingEvent(event);
+    setDialogOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cet événement ?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('events')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      toast.success('Événement supprimé avec succès');
+      fetchEvents();
+    } catch (error: any) {
+      console.error('Erreur lors de la suppression:', error);
+      toast.error('Erreur lors de la suppression de l\'événement');
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  const handleDialogClose = () => {
+    setDialogOpen(false);
+    setEditingEvent(null);
   };
+
+  const getEventStats = () => {
+    const total = events.length;
+    const pending = events.filter(e => e.status === 'pending').length;
+    const confirmed = events.filter(e => e.status === 'confirmed').length;
+    const completed = events.filter(e => e.status === 'completed').length;
+    const cancelled = events.filter(e => e.status === 'cancelled').length;
+    
+    return { total, pending, confirmed, completed, cancelled };
+  };
+
+  const getUniqueEventTypes = () => {
+    const types = events
+      .map(e => e.event_type)
+      .filter(Boolean)
+      .filter((type, index, array) => array.indexOf(type) === index);
+    return types;
+  };
+
+  const stats = getEventStats();
+  const eventTypes = getUniqueEventTypes();
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p>Chargement des événements...</p>
-        </div>
+      <div className="flex items-center justify-center min-h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 p-6" style={{
-      background: 'var(--custom-background, #ffffff)',
-      color: 'var(--custom-text, #18181b)',
-      minHeight: '100vh'
-    }}>
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold flex items-center">
-            <Calendar className="h-8 w-8 mr-3 text-purple-600" />
-            Gestion des Événements
-          </h1>
-          <p className="mt-2 text-gray-600">
-            {events.length} événement{events.length !== 1 ? 's' : ''} planifié{events.length !== 1 ? 's' : ''}
+          <h1 className="text-3xl font-bold">Événements</h1>
+          <p className="text-muted-foreground mt-1">
+            Gérez vos concerts, festivals et événements
           </p>
         </div>
-        <Button onClick={handleCreateEvent} className="bg-purple-600 hover:bg-purple-700">
+        <Button onClick={() => setDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Nouvel Événement
+          Nouvel événement
         </Button>
       </div>
 
-      {/* Search */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Rechercher par titre, lieu ou contact..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div className="bg-card p-4 rounded-lg border">
+          <div className="flex items-center space-x-2">
+            <Calendar className="h-5 w-5 text-primary" />
+            <div>
+              <p className="text-sm text-muted-foreground">Total</p>
+              <p className="text-2xl font-bold">{stats.total}</p>
+            </div>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Upload de documents */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Documents d'Événements</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <GlobalFileUpload
-            onFileUploaded={handleFileUploaded}
-            acceptedTypes=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-            label="Télécharger des documents (contrats, plans, photos...)"
-            maxSize={10}
-            multiple={true}
-          />
-        </CardContent>
-      </Card>
-
-      {/* Events List */}
-      <div className="grid gap-6">
-        {filteredEvents.map((event) => (
-          <Card key={event.id} className="hover:shadow-lg transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <h3 className="text-xl font-semibold">{event.title}</h3>
-                    <Badge className={getStatusColor(event.status)}>
-                      {event.status}
-                    </Badge>
-                    {event.contactName && (
-                      <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                        Contact: {event.contactName}
-                      </Badge>
-                    )}
-                  </div>
-                  {event.description && (
-                    <p className="text-gray-600 mb-3">{event.description}</p>
-                  )}
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Button variant="outline" size="sm">
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => handleEditEvent(event.id)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => handleDeleteEvent(event.id)}
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-                <div className="flex items-center space-x-2 text-sm">
-                  <Clock className="h-4 w-4 text-gray-400" />
-                  <div>
-                    <div>Début: {formatDate(event.startDate)}</div>
-                    <div>Fin: {formatDate(event.endDate)}</div>
-                  </div>
-                </div>
-                
-                {event.venue && (
-                  <div className="flex items-center space-x-2 text-sm">
-                    <MapPin className="h-4 w-4 text-gray-400" />
-                    <div>
-                      <div>{event.venue}</div>
-                      <div className="text-gray-500">{event.city}</div>
-                    </div>
-                  </div>
-                )}
-
-                {event.attendeesCount && (
-                  <div className="flex items-center space-x-2 text-sm">
-                    <Users className="h-4 w-4 text-gray-400" />
-                    <span>{event.attendeesCount} participants</span>
-                  </div>
-                )}
-              </div>
-
-              {(event.budgetMin || event.budgetMax) && (
-                <div className="mb-4">
-                  <span className="text-sm font-medium">Budget: </span>
-                  <span className="text-sm">
-                    {event.budgetMin && event.budgetMax 
-                      ? `${event.budgetMin}€ - ${event.budgetMax}€`
-                      : event.budgetMin 
-                        ? `À partir de ${event.budgetMin}€`
-                        : `Jusqu'à ${event.budgetMax}€`
-                    }
-                  </span>
-                </div>
-              )}
-
-              {event.requirements && (
-                <div className="bg-gray-50 p-3 rounded text-sm">
-                  <strong>Exigences:</strong> {event.requirements}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
+        </div>
+        <div className="bg-card p-4 rounded-lg border">
+          <div className="flex items-center space-x-2">
+            <Clock className="h-5 w-5 text-yellow-600" />
+            <div>
+              <p className="text-sm text-muted-foreground">En attente</p>
+              <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-card p-4 rounded-lg border">
+          <div className="flex items-center space-x-2">
+            <CheckCircle className="h-5 w-5 text-green-600" />
+            <div>
+              <p className="text-sm text-muted-foreground">Confirmés</p>
+              <p className="text-2xl font-bold text-green-600">{stats.confirmed}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-card p-4 rounded-lg border">
+          <div className="flex items-center space-x-2">
+            <CheckCircle className="h-5 w-5 text-blue-600" />
+            <div>
+              <p className="text-sm text-muted-foreground">Terminés</p>
+              <p className="text-2xl font-bold text-blue-600">{stats.completed}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-card p-4 rounded-lg border">
+          <div className="flex items-center space-x-2">
+            <XCircle className="h-5 w-5 text-red-600" />
+            <div>
+              <p className="text-sm text-muted-foreground">Annulés</p>
+              <p className="text-2xl font-bold text-red-600">{stats.cancelled}</p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {filteredEvents.length === 0 && (
-        <Card>
-          <CardContent className="p-12 text-center">
-            <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium mb-2">Aucun événement trouvé</h3>
-            <p className="text-gray-600 mb-4">
-              {searchTerm ? 'Aucun événement ne correspond à votre recherche.' : 'Commencez par planifier votre premier événement.'}
-            </p>
-            {!searchTerm && (
-              <Button onClick={handleCreateEvent}>
-                <Plus className="h-4 w-4 mr-2" />
-                Créer un événement
-              </Button>
-            )}
-          </CardContent>
-        </Card>
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Rechercher un événement..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-full sm:w-48">
+            <SelectValue placeholder="Filtrer par statut" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tous les statuts</SelectItem>
+            <SelectItem value="pending">En attente</SelectItem>
+            <SelectItem value="confirmed">Confirmés</SelectItem>
+            <SelectItem value="completed">Terminés</SelectItem>
+            <SelectItem value="cancelled">Annulés</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={typeFilter} onValueChange={setTypeFilter}>
+          <SelectTrigger className="w-full sm:w-48">
+            <SelectValue placeholder="Filtrer par type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tous les types</SelectItem>
+            {eventTypes.map((type) => (
+              <SelectItem key={type} value={type!}>
+                {type}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Events Grid */}
+      {filteredEvents.length === 0 ? (
+        <div className="text-center py-12">
+          <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-lg font-semibold mb-2">
+            {events.length === 0 ? 'Aucun événement' : 'Aucun résultat'}
+          </h3>
+          <p className="text-muted-foreground mb-4">
+            {events.length === 0 
+              ? 'Commencez par créer votre premier événement'
+              : 'Essayez de modifier vos filtres de recherche'
+            }
+          </p>
+          {events.length === 0 && (
+            <Button onClick={() => setDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Créer un événement
+            </Button>
+          )}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredEvents.map((event) => (
+            <EventCard
+              key={event.id}
+              event={event}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          ))}
+        </div>
       )}
+
+      <EventDialog
+        open={dialogOpen}
+        onOpenChange={handleDialogClose}
+        event={editingEvent}
+        onSave={() => {
+          fetchEvents();
+          handleDialogClose();
+        }}
+      />
     </div>
   );
 };
