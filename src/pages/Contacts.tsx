@@ -1,11 +1,12 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Search, Filter, Users, UserCheck, UserX } from 'lucide-react';
+import { Plus, Search, Filter, Users, UserCheck, UserX, Upload, Download } from 'lucide-react';
 import { ContactCard } from '@/components/contacts/ContactCard';
 import { ContactDialog } from '@/components/contacts/ContactDialog';
+import { CSVImporter } from '@/components/CSVImporter';
+import { CSVExporter } from '@/components/CSVExporter';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -21,6 +22,8 @@ export const Contacts: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [roleFilter, setRoleFilter] = useState('all');
+  const [csvImportOpen, setCsvImportOpen] = useState(false);
+  const [csvExportOpen, setCsvExportOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -100,6 +103,12 @@ export const Contacts: React.FC = () => {
     setEditingContact(null);
   };
 
+  const handleImportComplete = (importedContacts: any[]) => {
+    console.log('Import completed:', importedContacts.length, 'contacts');
+    fetchContacts(); // Refresh the contacts list
+    setCsvImportOpen(false);
+  };
+
   const getContactStats = () => {
     const total = contacts.length;
     const clients = contacts.filter(c => c.status === 'client').length;
@@ -129,10 +138,20 @@ export const Contacts: React.FC = () => {
             Gérez vos contacts, artistes, venues et partenaires
           </p>
         </div>
-        <Button onClick={() => setDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nouveau contact
-        </Button>
+        <div className="flex space-x-2">
+          <Button onClick={() => setCsvImportOpen(true)} variant="outline">
+            <Upload className="h-4 w-4 mr-2" />
+            Importer CSV
+          </Button>
+          <Button onClick={() => setCsvExportOpen(true)} variant="outline">
+            <Download className="h-4 w-4 mr-2" />
+            Exporter CSV
+          </Button>
+          <Button onClick={() => setDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nouveau contact
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -255,6 +274,18 @@ export const Contacts: React.FC = () => {
           fetchContacts();
           handleDialogClose();
         }}
+      />
+
+      <CSVImporter
+        isOpen={csvImportOpen}
+        onClose={() => setCsvImportOpen(false)}
+        onImport={handleImportComplete}
+      />
+
+      <CSVExporter
+        isOpen={csvExportOpen}
+        onClose={() => setCsvExportOpen(false)}
+        contacts={filteredContacts}
       />
     </div>
   );
