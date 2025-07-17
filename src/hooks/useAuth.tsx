@@ -2,13 +2,14 @@
 import { useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     // Get initial session
@@ -18,9 +19,9 @@ export const useAuth = () => {
       setUser(session?.user ?? null);
       setLoading(false);
       
-      // Redirection automatique si connecté
-      if (session?.user && (window.location.pathname === '/' || window.location.pathname === '/admin')) {
-        console.log('🔄 Auto-redirect to dashboard');
+      // Redirection automatique SEULEMENT depuis la page d'accueil ou admin
+      if (session?.user && (location.pathname === '/' || location.pathname === '/admin')) {
+        console.log('🔄 Auto-redirect to dashboard from:', location.pathname);
         navigate('/dashboard');
       }
     });
@@ -33,10 +34,13 @@ export const useAuth = () => {
         setUser(session?.user ?? null);
         setLoading(false);
         
-        // Redirection après connexion
+        // Redirection après connexion SEULEMENT depuis certaines pages
         if (event === 'SIGNED_IN' && session?.user) {
-          console.log('✅ User signed in, redirecting to dashboard');
-          navigate('/dashboard');
+          const currentPath = window.location.pathname;
+          if (currentPath === '/' || currentPath === '/admin') {
+            console.log('✅ User signed in, redirecting to dashboard from:', currentPath);
+            navigate('/dashboard');
+          }
         }
         
         // Redirection après déconnexion
@@ -48,7 +52,7 @@ export const useAuth = () => {
     );
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, location.pathname]);
 
   const signIn = async (email: string, password: string) => {
     console.log('🔑 Attempting sign in for:', email);
