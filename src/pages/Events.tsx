@@ -1,11 +1,11 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Search, Calendar, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Plus, Search, Calendar, Clock, CheckCircle, XCircle, Upload } from 'lucide-react';
 import { EventCard } from '@/components/events/EventCard';
 import { EventDialog } from '@/components/events/EventDialog';
+import { CSVEventImporter } from '@/components/events/CSVEventImporter';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -21,6 +21,7 @@ export const Events: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
+  const [csvImportOpen, setCsvImportOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -101,6 +102,12 @@ export const Events: React.FC = () => {
     setEditingEvent(null);
   };
 
+  const handleImportComplete = (importedEvents: any[]) => {
+    console.log('Import completed:', importedEvents.length, 'events');
+    fetchEvents(); // Refresh the events list
+    setCsvImportOpen(false);
+  };
+
   const getEventStats = () => {
     const total = events.length;
     const pending = events.filter(e => e.status === 'pending').length;
@@ -140,10 +147,16 @@ export const Events: React.FC = () => {
             Gérez vos concerts, festivals et événements
           </p>
         </div>
-        <Button onClick={() => setDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nouvel événement
-        </Button>
+        <div className="flex space-x-2">
+          <Button onClick={() => setCsvImportOpen(true)} variant="outline">
+            <Upload className="h-4 w-4 mr-2" />
+            Importer CSV
+          </Button>
+          <Button onClick={() => setDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nouvel événement
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -274,6 +287,12 @@ export const Events: React.FC = () => {
           fetchEvents();
           handleDialogClose();
         }}
+      />
+
+      <CSVEventImporter
+        isOpen={csvImportOpen}
+        onClose={() => setCsvImportOpen(false)}
+        onImport={handleImportComplete}
       />
     </div>
   );
