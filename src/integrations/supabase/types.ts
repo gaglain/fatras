@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      campaign_contact_lists: {
+        Row: {
+          campaign_id: string
+          contact_list_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          campaign_id: string
+          contact_list_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          campaign_id?: string
+          contact_list_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_contact_lists_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_contact_lists_contact_list_id_fkey"
+            columns: ["contact_list_id"]
+            isOneToOne: false
+            referencedRelation: "contact_lists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaigns: {
         Row: {
           click_rate: number | null
@@ -61,6 +97,69 @@ export type Database = {
           target_audience?: Json | null
           type?: string
           updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      contact_list_members: {
+        Row: {
+          contact_id: string
+          contact_list_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          contact_id: string
+          contact_list_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          contact_id?: string
+          contact_list_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_list_members_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contact_list_members_contact_list_id_fkey"
+            columns: ["contact_list_id"]
+            isOneToOne: false
+            referencedRelation: "contact_lists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contact_lists: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
