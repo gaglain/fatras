@@ -6,13 +6,16 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Calendar, Plus, Settings, Clock, MapPin, Users, Edit, Trash2, X, User, Upload } from 'lucide-react';
+import { Calendar, Plus, Settings, Clock, MapPin, Users, Edit, Trash2, User, Upload } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { AgendaCSVImporter } from '@/components/agenda/AgendaCSVImporter';
 import { AgendaCSVExporter } from '@/components/agenda/AgendaCSVExporter';
+import { useEvents } from '@/hooks/useEvents';
+import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/hooks/useAuth';
 
-interface Event {
+interface AgendaEvent {
   id: string;
   title: string;
   description: string;
@@ -26,26 +29,12 @@ interface Event {
   userName: string;
 }
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  color: string;
-  isVisible: boolean;
-}
-
-const mockUsers: User[] = [
-  { id: '1', name: 'Alice Martin', email: 'alice@example.com', color: '#3B82F6', isVisible: true },
-  { id: '2', name: 'Bob Dupont', email: 'bob@example.com', color: '#10B981', isVisible: true },
-  { id: '3', name: 'Claire Durand', email: 'claire@example.com', color: '#F59E0B', isVisible: true },
-  { id: '4', name: 'David Moreau', email: 'david@example.com', color: '#EF4444', isVisible: false },
-];
-
 const EventForm = ({ onSave, onCancel, event }: { 
-  onSave: (event: Event) => void; 
+  onSave: (event: AgendaEvent) => void; 
   onCancel: () => void; 
-  event?: Event 
+  event?: AgendaEvent 
 }) => {
+  const { currentUser } = useUser();
   const [title, setTitle] = useState(event?.title || '');
   const [description, setDescription] = useState(event?.description || '');
   const [startDate, setStartDate] = useState(event?.startDate || '');
@@ -62,7 +51,7 @@ const EventForm = ({ onSave, onCancel, event }: {
       return;
     }
 
-    const newEvent: Event = {
+    const newEvent: AgendaEvent = {
       id: event?.id || Date.now().toString(),
       title: title.trim(),
       description: description.trim(),
@@ -72,8 +61,8 @@ const EventForm = ({ onSave, onCancel, event }: {
       attendees,
       type,
       status: 'confirmed',
-      userId: '1', // Current user
-      userName: 'Alice Martin'
+      userId: currentUser?.id || '',
+      userName: `${currentUser?.name || ''} ${currentUser?.lastName || ''}`.trim() || 'Utilisateur inconnu'
     };
 
     onSave(newEvent);
@@ -169,32 +158,69 @@ const EventForm = ({ onSave, onCancel, event }: {
 };
 
 export const Agenda: React.FC = () => {
-  const [events, setEvents] = useState<Event[]>([]);
-  const [users, setUsers] = useState<User[]>(mockUsers);
+  const { currentUser, users } = useUser();
+  const { events, addEvent, updateEvent, deleteEvent } = useEvents();
   const [showEventForm, setShowEventForm] = useState(false);
-  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [editingEvent, setEditingEvent] = useState<AgendaEvent | null>(null);
   const [csvImportOpen, setCsvImportOpen] = useState(false);
+  const [visibleUsers, setVisibleUsers] = useState<string[]>(users.map(u => u.id));
+  
+  // Transformer les événements Supabase en événements de l'agenda
+  const agendaEvents: AgendaEvent[] = events.map(event => ({
+    id: event.id,
+    title: event.title,
+    description: event.description || '',
+    startDate: event.start_date || '',
+    endDate: event.end_date || '',
+    location: event.venue || '',
+    attendees: event.attendees_count || 0,
+    type: 'other' as const,
+    status: event.status as 'confirmed' | 'pending' | 'cancelled',
+    userId: event.user_id,
+    userName: users.find(u => u.id === event.user_id) ? `${users.find(u => u.id === event.user_id)!.name} ${users.find(u => u.id === event.user_id)!.lastName}`.trim() : 'Utilisateur inconnu'
+  }));
 
-  const handleSaveEvent = (event: Event) => {
+  const handleSaveEvent = async (event: AgendaEvent) => {
+    if (!currentUser) return;
+
     if (editingEvent) {
-      setEvents(events.map(e => e.id === event.id ? event : e));
+      // Modifier un événement existant
+      await updateEvent(event.id, {
+        title: event.title,
+        description: event.description,
+        start_date: event.startDate,
+        end_date: event.endDate,
+        venue: event.location,
+        attendees_count: event.attendees,
+        status: event.status
+      });
       toast.success('Événement modifié');
     } else {
-      setEvents([...events, event]);
+      // Créer un nouvel événement
+      await addEvent({
+        user_id: currentUser.id,
+        title: event.title,
+        description: event.description,
+        start_date: event.startDate,
+        end_date: event.endDate,
+        venue: event.location,
+        attendees_count: event.attendees,
+        status: event.status
+      });
       toast.success('Événement créé');
     }
     setShowEventForm(false);
     setEditingEvent(null);
   };
 
-  const handleEditEvent = (event: Event) => {
+  const handleEditEvent = (event: AgendaEvent) => {
     setEditingEvent(event);
     setShowEventForm(true);
   };
 
-  const handleDeleteEvent = (eventId: string) => {
+  const handleDeleteEvent = async (eventId: string) => {
     if (confirm('Supprimer cet événement ?')) {
-      setEvents(events.filter(e => e.id !== eventId));
+      await deleteEvent(eventId);
       toast.success('Événement supprimé');
     }
   };
@@ -204,15 +230,17 @@ export const Agenda: React.FC = () => {
     setShowEventForm(true);
   };
 
-  const handleImportComplete = (importedEvents: Event[]) => {
-    setEvents([...events, ...importedEvents]);
+  const handleImportComplete = (importedEvents: AgendaEvent[]) => {
+    // TODO: Implémenter l'import CSV avec Supabase
     setCsvImportOpen(false);
   };
 
   const toggleUserVisibility = (userId: string) => {
-    setUsers(users.map(user => 
-      user.id === userId ? { ...user, isVisible: !user.isVisible } : user
-    ));
+    setVisibleUsers(prev => 
+      prev.includes(userId)
+        ? prev.filter(id => id !== userId)
+        : [...prev, userId]
+    );
   };
 
   const getEventTypeColor = (type: string) => {
@@ -232,8 +260,8 @@ export const Agenda: React.FC = () => {
     }
   };
 
-  const filteredEvents = events.filter(event => 
-    users.find(user => user.id === event.userId)?.isVisible
+  const filteredEvents = agendaEvents.filter(event => 
+    visibleUsers.includes(event.userId)
   );
 
   return (
@@ -267,7 +295,7 @@ export const Agenda: React.FC = () => {
         </div>
       </div>
 
-      {/* Sélecteur d'utilisateurs à la Notion */}
+      {/* Sélecteur d'utilisateurs */}
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className="flex items-center">
@@ -281,20 +309,17 @@ export const Agenda: React.FC = () => {
               <div
                 key={user.id}
                 className={`flex items-center space-x-2 px-3 py-2 rounded-lg border cursor-pointer transition-all ${
-                  user.isVisible 
+                  visibleUsers.includes(user.id)
                     ? 'bg-white shadow-sm border-gray-200' 
                     : 'bg-gray-50 border-gray-100 opacity-50'
                 }`}
                 onClick={() => toggleUserVisibility(user.id)}
               >
-                <div
-                  className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: user.color }}
-                />
+                <div className="w-3 h-3 rounded-full bg-blue-500" />
                 <User className="h-4 w-4" />
-                <span className="text-sm font-medium">{user.name}</span>
+                <span className="text-sm font-medium">{`${user.name} ${user.lastName}`.trim()}</span>
                 <Switch
-                  checked={user.isVisible}
+                  checked={visibleUsers.includes(user.id)}
                   onCheckedChange={() => toggleUserVisibility(user.id)}
                   className="ml-2"
                 />
@@ -341,19 +366,14 @@ export const Agenda: React.FC = () => {
               {filteredEvents
                 .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
                 .map((event) => {
-                  const user = users.find(u => u.id === event.userId);
+                  const eventUser = users.find(u => u.id === event.userId);
                   return (
                     <Card key={event.id} className="hover:shadow-md transition-shadow">
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <div className="flex items-center space-x-2 mb-2">
-                              {user && (
-                                <div
-                                  className="w-3 h-3 rounded-full"
-                                  style={{ backgroundColor: user.color }}
-                                />
-                              )}
+                              <div className="w-3 h-3 rounded-full bg-blue-500" />
                               <h3 className="text-lg font-semibold">{event.title}</h3>
                               <Badge className={getEventTypeColor(event.type)}>
                                 {event.type === 'concert' ? 'Concert' : 
