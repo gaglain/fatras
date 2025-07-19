@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, Calendar, CheckSquare, Mail } from 'lucide-react';
+import { Users, Calendar, CheckSquare, Mail, Send, List } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -29,6 +29,14 @@ export const QuickActionsCard: React.FC = () => {
         navigate('/email');
         toast.success('Redirection vers l\'email');
         break;
+      case 'campagne-email':
+        navigate('/email-campaigns');
+        toast.success('Redirection vers les campagnes email');
+        break;
+      case 'listes-contacts':
+        navigate('/contact-lists');
+        toast.success('Redirection vers les listes de contacts');
+        break;
       default:
         toast.info(`Action ${action} en cours de développement`);
     }
@@ -48,7 +56,7 @@ export const QuickActionsCard: React.FC = () => {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           <Button 
             variant="outline" 
             className="h-20 flex flex-col items-center justify-center hover:scale-105 transition-all cursor-pointer"
@@ -68,6 +76,47 @@ export const QuickActionsCard: React.FC = () => {
               Nouveau Contact
             </span>
           </Button>
+          
+          <Button 
+            variant="outline" 
+            className="h-20 flex flex-col items-center justify-center hover:scale-105 transition-all cursor-pointer"
+            style={{
+              border: `1px solid rgb(var(--custom-buttonBg))`,
+              color: `rgb(var(--custom-buttonBg))`,
+              background: 'transparent'
+            }}
+            onClick={() => handleQuickAction('campagne-email')}
+          >
+            <Send className="h-6 w-6 mb-2" style={{
+              color: `rgb(var(--custom-buttonBg))`
+            }} />
+            <span style={{
+              color: `rgb(var(--custom-buttonBg))`
+            }}>
+              Campagne Email
+            </span>
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            className="h-20 flex flex-col items-center justify-center hover:scale-105 transition-all cursor-pointer"
+            style={{
+              border: `1px solid rgb(var(--custom-buttonBg))`,
+              color: `rgb(var(--custom-buttonBg))`,
+              background: 'transparent'
+            }}
+            onClick={() => handleQuickAction('listes-contacts')}
+          >
+            <List className="h-6 w-6 mb-2" style={{
+              color: `rgb(var(--custom-buttonBg))`
+            }} />
+            <span style={{
+              color: `rgb(var(--custom-buttonBg))`
+            }}>
+              Listes Contacts
+            </span>
+          </Button>
+          
           <Button 
             variant="outline" 
             className="h-20 flex flex-col items-center justify-center hover:scale-105 transition-all cursor-pointer"
@@ -87,6 +136,7 @@ export const QuickActionsCard: React.FC = () => {
               Planifier Événement
             </span>
           </Button>
+          
           <Button 
             variant="outline" 
             className="h-20 flex flex-col items-center justify-center hover:scale-105 transition-all cursor-pointer"
@@ -106,6 +156,7 @@ export const QuickActionsCard: React.FC = () => {
               Créer Tâche
             </span>
           </Button>
+          
           <Button 
             variant="outline" 
             className="h-20 flex flex-col items-center justify-center hover:scale-105 transition-all cursor-pointer"
