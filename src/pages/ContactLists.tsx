@@ -1,200 +1,115 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Users, Edit, Trash2, Search, Filter } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
-
-interface Contact {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  company?: string;
-  eventType?: string;
-  zipCode?: string;
-  city?: string;
-}
-
-interface ContactList {
-  id: string;
-  name: string;
-  description: string;
-  contacts: string[];
-  criteria: {
-    eventTypes: string[];
-    zipCodes: string[];
-    cities: string[];
-  };
-  createdAt: string;
-  updatedAt: string;
-}
-
-const sampleContacts: Contact[] = [
-  {
-    id: 'contact-1',
-    firstName: 'Jean',
-    lastName: 'Dupont',
-    email: 'jean.dupont@example.com',
-    phone: '06 12 34 56 78',
-    company: 'Productions Musicales',
-    eventType: 'Festival',
-    zipCode: '75001',
-    city: 'Paris'
-  },
-  {
-    id: 'contact-2',
-    firstName: 'Marie',
-    lastName: 'Martin',
-    email: 'marie.martin@example.com',
-    phone: '06 23 45 67 89',
-    company: 'Festival d\'été',
-    eventType: 'Concert',
-    zipCode: '69001',
-    city: 'Lyon'
-  },
-  {
-    id: 'contact-3',
-    firstName: 'Pierre',
-    lastName: 'Bernard',
-    email: 'pierre.bernard@example.com',
-    phone: '06 34 56 78 90',
-    company: 'Événements Corporate',
-    eventType: 'Événement d\'entreprise',
-    zipCode: '75002',
-    city: 'Paris'
-  }
-];
-
-const eventTypes = [
-  'Festival', 'Concert', 'Événement d\'entreprise', 'Événement privé', 'Mariage'
-];
+import { Plus, Users, Edit, Trash2, Search, Loader2 } from 'lucide-react';
+import { useContactLists } from '@/hooks/useContactLists';
 
 export const ContactLists: React.FC = () => {
-  const [contactLists, setContactLists] = useState<ContactList[]>([]);
-  const [contacts] = useState<Contact[]>(sampleContacts);
+  const {
+    contactLists,
+    contacts,
+    loading,
+    createContactList,
+    updateContactList,
+    deleteContactList
+  } = useContactLists();
+
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const [selectedList, setSelectedList] = useState<ContactList | null>(null);
+  const [selectedList, setSelectedList] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [creating, setCreating] = useState(false);
   
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    selectedContacts: [] as string[],
-    eventTypes: [] as string[],
-    zipCodes: [] as string[],
-    cities: [] as string[]
+    selectedContacts: [] as string[]
   });
 
   const resetForm = () => {
     setFormData({
       name: '',
       description: '',
-      selectedContacts: [],
-      eventTypes: [],
-      zipCodes: [],
-      cities: []
+      selectedContacts: []
     });
   };
 
-  const handleCreateList = () => {
-    const newList: ContactList = {
-      id: Date.now().toString(),
-      name: formData.name,
-      description: formData.description,
-      contacts: formData.selectedContacts,
-      criteria: {
-        eventTypes: formData.eventTypes,
-        zipCodes: formData.zipCodes,
-        cities: formData.cities
-      },
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    setContactLists([...contactLists, newList]);
-    setShowCreateDialog(false);
-    resetForm();
-    toast({ title: "Liste de contacts créée avec succès !" });
+  const handleCreateList = async () => {
+    if (!formData.name.trim()) return;
+    
+    setCreating(true);
+    try {
+      await createContactList({
+        name: formData.name,
+        description: formData.description || undefined,
+        contactIds: formData.selectedContacts
+      });
+      setShowCreateDialog(false);
+      resetForm();
+    } catch (error) {
+      // Error handling is done in the hook
+    } finally {
+      setCreating(false);
+    }
   };
 
-  const handleEditList = (list: ContactList) => {
+  const handleEditList = (list: any) => {
     setSelectedList(list);
     setFormData({
       name: list.name,
-      description: list.description,
-      selectedContacts: list.contacts,
-      eventTypes: list.criteria.eventTypes,
-      zipCodes: list.criteria.zipCodes,
-      cities: list.criteria.cities
+      description: list.description || '',
+      selectedContacts: []
     });
     setShowEditDialog(true);
   };
 
-  const handleUpdateList = () => {
-    if (!selectedList) return;
-    const updatedLists = contactLists.map(list => 
-      list.id === selectedList.id 
-        ? { 
-            ...list, 
-            name: formData.name,
-            description: formData.description,
-            contacts: formData.selectedContacts,
-            criteria: {
-              eventTypes: formData.eventTypes,
-              zipCodes: formData.zipCodes,
-              cities: formData.cities
-            },
-            updatedAt: new Date().toISOString()
-          }
-        : list
-    );
-    setContactLists(updatedLists);
-    setShowEditDialog(false);
-    setSelectedList(null);
-    resetForm();
-    toast({ title: "Liste de contacts mise à jour !" });
-  };
-
-  const handleDeleteList = (listId: string) => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer cette liste ?')) {
-      setContactLists(contactLists.filter(list => list.id !== listId));
-      toast({ title: "Liste supprimée !" });
+  const handleUpdateList = async () => {
+    if (!selectedList || !formData.name.trim()) return;
+    
+    try {
+      await updateContactList(selectedList.id, {
+        name: formData.name,
+        description: formData.description || undefined
+      });
+      setShowEditDialog(false);
+      setSelectedList(null);
+      resetForm();
+    } catch (error) {
+      // Error handling is done in the hook
     }
   };
 
-  const getFilteredContacts = () => {
-    return contacts.filter(contact => {
-      const matchesEventType = formData.eventTypes.length === 0 || 
-        formData.eventTypes.includes(contact.eventType || '');
-      const matchesZipCode = formData.zipCodes.length === 0 || 
-        formData.zipCodes.includes(contact.zipCode || '');
-      const matchesCity = formData.cities.length === 0 || 
-        formData.cities.includes(contact.city || '');
-      
-      return matchesEventType && matchesZipCode && matchesCity;
-    });
+  const handleDeleteList = async (listId: string) => {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette liste ?')) {
+      await deleteContactList(listId);
+    }
   };
-
-  const availableZipCodes = [...new Set(contacts.map(c => c.zipCode).filter(Boolean))];
-  const availableCities = [...new Set(contacts.map(c => c.city).filter(Boolean))];
 
   const filteredLists = contactLists.filter(list =>
     list.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    list.description.toLowerCase().includes(searchTerm.toLowerCase())
+    (list.description && list.description.toLowerCase().includes(searchTerm.toLowerCase()))
   );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Listes de Contacts</h1>
-          <p className="text-gray-600 mt-2">Créez et gérez vos listes pour les campagnes email</p>
+          <h1 className="text-3xl font-bold">Listes de Contacts</h1>
+          <p className="text-muted-foreground mt-2">
+            Créez et gérez vos listes pour les campagnes email
+          </p>
         </div>
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogTrigger asChild>
@@ -203,14 +118,14 @@ export const ContactLists: React.FC = () => {
               Nouvelle Liste
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Créer une nouvelle liste de contacts</DialogTitle>
             </DialogHeader>
             <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Nom de la liste</label>
+                  <label className="block text-sm font-medium mb-2">Nom de la liste</label>
                   <Input
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -218,7 +133,7 @@ export const ContactLists: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                  <label className="block text-sm font-medium mb-2">Description</label>
                   <Input
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -228,81 +143,12 @@ export const ContactLists: React.FC = () => {
               </div>
 
               <div>
-                <h3 className="text-lg font-semibold mb-4">Filtres automatiques</h3>
-                
-                <div className="grid grid-cols-3 gap-4 mb-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Types d'événements</label>
-                    <div className="space-y-2 max-h-32 overflow-y-auto">
-                      {eventTypes.map((type) => (
-                        <div key={type} className="flex items-center space-x-2">
-                          <Checkbox
-                            checked={formData.eventTypes.includes(type)}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                setFormData({ ...formData, eventTypes: [...formData.eventTypes, type] });
-                              } else {
-                                setFormData({ ...formData, eventTypes: formData.eventTypes.filter(t => t !== type) });
-                              }
-                            }}
-                          />
-                          <span className="text-sm">{type}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Codes postaux</label>
-                    <div className="space-y-2 max-h-32 overflow-y-auto">
-                      {availableZipCodes.map((zipCode) => (
-                        <div key={zipCode} className="flex items-center space-x-2">
-                          <Checkbox
-                            checked={formData.zipCodes.includes(zipCode)}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                setFormData({ ...formData, zipCodes: [...formData.zipCodes, zipCode] });
-                              } else {
-                                setFormData({ ...formData, zipCodes: formData.zipCodes.filter(z => z !== zipCode) });
-                              }
-                            }}
-                          />
-                          <span className="text-sm">{zipCode}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Villes</label>
-                    <div className="space-y-2 max-h-32 overflow-y-auto">
-                      {availableCities.map((city) => (
-                        <div key={city} className="flex items-center space-x-2">
-                          <Checkbox
-                            checked={formData.cities.includes(city)}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                setFormData({ ...formData, cities: [...formData.cities, city] });
-                              } else {
-                                setFormData({ ...formData, cities: formData.cities.filter(c => c !== city) });
-                              }
-                            }}
-                          />
-                          <span className="text-sm">{city}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div>
                 <h3 className="text-lg font-semibold mb-4">
-                  Contacts correspondants ({getFilteredContacts().length})
+                  Sélectionner les contacts ({contacts.length} disponibles)
                 </h3>
                 
                 <div className="space-y-2 max-h-64 overflow-y-auto border rounded-lg p-4">
-                  {getFilteredContacts().map((contact) => (
+                  {contacts.map((contact) => (
                     <div key={contact.id} className="flex items-center justify-between p-2 border rounded">
                       <div className="flex items-center space-x-3">
                         <Checkbox
@@ -316,16 +162,17 @@ export const ContactLists: React.FC = () => {
                           }}
                         />
                         <div>
-                          <p className="font-medium">{contact.firstName} {contact.lastName}</p>
-                          <p className="text-sm text-gray-500">{contact.email}</p>
+                          <p className="font-medium">{contact.first_name} {contact.last_name}</p>
+                          <p className="text-sm text-muted-foreground">{contact.email}</p>
                         </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm">{contact.company}</p>
-                        <p className="text-xs text-gray-500">{contact.eventType} - {contact.city}</p>
                       </div>
                     </div>
                   ))}
+                  {contacts.length === 0 && (
+                    <p className="text-muted-foreground text-center py-4">
+                      Aucun contact disponible pour les campagnes email
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -333,7 +180,8 @@ export const ContactLists: React.FC = () => {
                 <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
                   Annuler
                 </Button>
-                <Button onClick={handleCreateList}>
+                <Button onClick={handleCreateList} disabled={creating || !formData.name.trim()}>
+                  {creating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   Créer la liste
                 </Button>
               </div>
@@ -343,7 +191,7 @@ export const ContactLists: React.FC = () => {
       </div>
 
       <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
         <Input
           placeholder="Rechercher des listes..."
           value={searchTerm}
@@ -359,37 +207,18 @@ export const ContactLists: React.FC = () => {
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 mb-2">
-                    <Users className="h-5 w-5 text-purple-600" />
+                    <Users className="h-5 w-5 text-primary" />
                     <h3 className="text-lg font-semibold">{list.name}</h3>
                     <Badge variant="outline">
-                      {list.contacts.length} contacts
+                      {list.contactCount || 0} contacts
                     </Badge>
                   </div>
-                  <p className="text-gray-600 mb-3">{list.description}</p>
+                  {list.description && (
+                    <p className="text-muted-foreground mb-3">{list.description}</p>
+                  )}
                   
-                  <div className="space-y-2">
-                    {list.criteria.eventTypes.length > 0 && (
-                      <div>
-                        <span className="text-sm font-medium text-gray-700">Types d'événements: </span>
-                        <span className="text-sm text-gray-600">{list.criteria.eventTypes.join(', ')}</span>
-                      </div>
-                    )}
-                    {list.criteria.cities.length > 0 && (
-                      <div>
-                        <span className="text-sm font-medium text-gray-700">Villes: </span>
-                        <span className="text-sm text-gray-600">{list.criteria.cities.join(', ')}</span>
-                      </div>
-                    )}
-                    {list.criteria.zipCodes.length > 0 && (
-                      <div>
-                        <span className="text-sm font-medium text-gray-700">Codes postaux: </span>
-                        <span className="text-sm text-gray-600">{list.criteria.zipCodes.join(', ')}</span>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="text-sm text-gray-500 mt-3">
-                    Créée le {new Date(list.createdAt).toLocaleDateString('fr-FR')}
+                  <div className="text-sm text-muted-foreground mt-3">
+                    Créée le {new Date(list.created_at).toLocaleDateString('fr-FR')}
                   </div>
                 </div>
                 
@@ -401,7 +230,7 @@ export const ContactLists: React.FC = () => {
                     variant="outline" 
                     size="sm" 
                     onClick={() => handleDeleteList(list.id)}
-                    className="text-red-600 hover:text-red-700"
+                    className="text-destructive hover:text-destructive"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -410,19 +239,34 @@ export const ContactLists: React.FC = () => {
             </CardContent>
           </Card>
         ))}
+        
+        {filteredLists.length === 0 && (
+          <Card>
+            <CardContent className="p-6 text-center">
+              <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Aucune liste de contacts</h3>
+              <p className="text-muted-foreground mb-4">
+                Commencez par créer votre première liste de contacts pour vos campagnes email.
+              </p>
+              <Button onClick={() => setShowCreateDialog(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Créer une liste
+              </Button>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Dialog de modification */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Modifier la liste de contacts</DialogTitle>
           </DialogHeader>
           <div className="space-y-6">
-            
-            <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Nom de la liste</label>
+                <label className="block text-sm font-medium mb-2">Nom de la liste</label>
                 <Input
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -430,7 +274,7 @@ export const ContactLists: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                <label className="block text-sm font-medium mb-2">Description</label>
                 <Input
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -443,7 +287,7 @@ export const ContactLists: React.FC = () => {
               <Button variant="outline" onClick={() => setShowEditDialog(false)}>
                 Annuler
               </Button>
-              <Button onClick={handleUpdateList}>
+              <Button onClick={handleUpdateList} disabled={!formData.name.trim()}>
                 Sauvegarder
               </Button>
             </div>
