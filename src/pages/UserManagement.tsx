@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,360 +17,275 @@ import {
   Save
 } from 'lucide-react';
 import { toast } from 'sonner';
-
-interface UserProfile {
-  id: string;
-  email: string;
-  username: string;
-  firstName: string;
-  lastName: string;
-  phone?: string;
-  role: 'admin' | 'user' | 'moderator';
-  status: 'active' | 'inactive';
-  createdAt: string;
-}
-
-const mockUsers: UserProfile[] = [
-  {
-    id: '1',
-    email: 'admin@musiconnect.com',
-    username: 'admin',
-    firstName: 'Admin',
-    lastName: 'Principal',
-    phone: '+33123456789',
-    role: 'admin',
-    status: 'active',
-    createdAt: '2024-01-01'
-  }
-];
+import { useUser, UserRole } from '@/contexts/UserContext';
+import { useEmailSender } from '@/hooks/useEmailSender';
 
 export const UserManagement: React.FC = () => {
-  const [users, setUsers] = useState<UserProfile[]>(mockUsers);
+  const { users, currentUser, addUser, updateUser, removeUser } = useUser();
+  const { sendUserWelcomeEmail, sending } = useEmailSender();
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
+  const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [userForm, setUserForm] = useState<Partial<UserProfile>>({
+  const [userForm, setUserForm] = useState({
     email: '',
     username: '',
-    firstName: '',
+    name: '',
     lastName: '',
     phone: '',
-    role: 'user',
-    status: 'active'
+    role: 'utilisateur' as UserRole,
+    address: '',
+    city: '',
+    function_title: '',
+    show_name: ''
   });
+
+  const roleLabels = {
+    super_admin: 'Super Admin',
+    admin: 'Admin', 
+    manager: 'Manager / Booker',
+    artiste: 'Artiste',
+    utilisateur: 'Utilisateur'
+  };
 
   const getRoleColor = (role: string) => {
     switch (role) {
+      case 'super_admin': return 'bg-purple-100 text-purple-800';
       case 'admin': return 'bg-red-100 text-red-800';
-      case 'moderator': return 'bg-yellow-100 text-yellow-800';
-      case 'user': return 'bg-blue-100 text-blue-800';
+      case 'manager': return 'bg-orange-100 text-orange-800';
+      case 'artiste': return 'bg-green-100 text-green-800';
+      case 'utilisateur': return 'bg-blue-100 text-blue-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'bg-green-100 text-green-800';
-      case 'inactive': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
+  const generateTempPassword = () => {
+    return Math.random().toString(36).slice(-8);
   };
 
-  const handleSaveUser = () => {
-    if (!userForm.email || !userForm.username || !userForm.firstName || !userForm.lastName) {
+  const handleSaveUser = async () => {
+    if (!userForm.email || !userForm.name || !userForm.lastName) {
       toast.error('Veuillez remplir tous les champs obligatoires');
       return;
     }
 
-    if (selectedUser) {
-      // Modification
-      setUsers(prev => prev.map(u => 
-        u.id === selectedUser.id 
-          ? { ...selectedUser, ...userForm } as UserProfile
-          : u
-      ));
-      toast.success('Utilisateur modifié avec succès');
-    } else {
-      // Création
-      const newUser: UserProfile = {
-        id: Date.now().toString(),
-        ...userForm as Omit<UserProfile, 'id' | 'createdAt'>,
-        createdAt: new Date().toISOString().split('T')[0]
-      };
-      setUsers(prev => [...prev, newUser]);
-      toast.success('Utilisateur créé avec succès');
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(userForm.email)) {
+      toast.error('Veuillez entrer une adresse email valide');
+      return;
     }
 
-    setIsFormOpen(false);
-    setSelectedUser(null);
+    try {
+      if (selectedUser) {
+        // Modification
+        await updateUser(selectedUser.id, userForm);
+        toast.success('Utilisateur modifié avec succès');
+      } else {
+        // Création
+        const tempPassword = generateTempPassword();
+        
+        await addUser({
+          ...userForm,
+          isActive: true
+        });
+
+        // Envoyer l'email de bienvenue
+        try {
+          await sendUserWelcomeEmail(
+            userForm.email,
+            `${userForm.name} ${userForm.lastName}`,
+            tempPassword
+          );
+          toast.success('Utilisateur créé et email de bienvenue envoyé !');
+        } catch (emailError) {
+          console.error('Erreur envoi email:', emailError);
+          toast.success('Utilisateur créé (erreur envoi email)');
+        }
+      }
+
+      resetForm();
+    } catch (error) {
+      console.error('Erreur:', error);
+      toast.error('Erreur lors de la sauvegarde');
+    }
+  };
+
+  const resetForm = () => {
     setUserForm({
       email: '',
       username: '',
-      firstName: '',
+      name: '',
       lastName: '',
       phone: '',
-      role: 'user',
-      status: 'active'
+      role: 'utilisateur',
+      address: '',
+      city: '',
+      function_title: '',
+      show_name: ''
     });
+    setIsFormOpen(false);
+    setSelectedUser(null);
   };
 
-  const handleEditUser = (user: UserProfile) => {
+  const handleEdit = (user: any) => {
     setSelectedUser(user);
-    setUserForm(user);
+    setUserForm({
+      email: user.email || '',
+      username: user.username || '',
+      name: user.name || '',
+      lastName: user.lastName || '',
+      phone: user.phone || '',
+      role: user.role || 'utilisateur',
+      address: user.address || '',
+      city: user.city || '',
+      function_title: user.function_title || '',
+      show_name: user.show_name || ''
+    });
     setIsFormOpen(true);
   };
 
-  const handleDeleteUser = (userId: string) => {
+  const handleDelete = async (userId: string) => {
+    if (userId === currentUser?.id) {
+      toast.error('Vous ne pouvez pas supprimer votre propre compte');
+      return;
+    }
+    
     if (confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) {
-      setUsers(prev => prev.filter(u => u.id !== userId));
+      removeUser(userId);
       toast.success('Utilisateur supprimé');
     }
   };
 
-  const handleNewUser = () => {
-    setSelectedUser(null);
-    setUserForm({
-      email: '',
-      username: '',
-      firstName: '',
-      lastName: '',
-      phone: '',
-      role: 'user',
-      status: 'active'
-    });
-    setIsFormOpen(true);
-  };
-
-  const filteredUsers = users.filter(user =>
-    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.lastName.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredUsers = users.filter(user => 
+    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
-    <div className="space-y-6" style={{
-      backgroundColor: 'var(--app-background, #ffffff)',
-      color: 'var(--app-text, #18181b)',
-      minHeight: '100vh'
-    }}>
-      <div className="flex justify-between items-center">
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold" style={{ color: 'var(--app-text, #18181b)' }}>
+          <h1 className="text-3xl font-bold flex items-center">
+            <Users className="h-8 w-8 mr-3 text-blue-600" />
             Gestion des Utilisateurs
           </h1>
-          <p className="mt-2" style={{ color: 'var(--app-text, #666666)' }}>
-            Gérez les comptes utilisateurs et leurs permissions
+          <p className="text-muted-foreground mt-2">
+            Gérez les utilisateurs et leurs permissions
           </p>
         </div>
-        <Button 
-          onClick={handleNewUser}
-          style={{
-            backgroundColor: 'var(--app-button-bg, #1632f4)',
-            color: 'var(--app-button-text, #ffffff)'
-          }}
-        >
+        <Button onClick={() => setIsFormOpen(true)} className="bg-blue-600 hover:bg-blue-700">
           <Plus className="h-4 w-4 mr-2" />
           Nouvel Utilisateur
         </Button>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card style={{
-          backgroundColor: 'var(--app-card-bg, #ffffff)',
-          color: 'var(--app-card-text, #18181b)',
-          border: '1px solid var(--notification-border, #e5e7eb)'
-        }}>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <Users className="h-8 w-8" style={{ color: 'var(--app-button-bg, #1632f4)' }} />
-              <div>
-                <p className="text-2xl font-bold">{users.length}</p>
-                <p className="text-sm" style={{ color: 'var(--app-text, #666666)' }}>Total</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card style={{
-          backgroundColor: 'var(--app-card-bg, #ffffff)',
-          color: 'var(--app-card-text, #18181b)',
-          border: '1px solid var(--notification-border, #e5e7eb)'
-        }}>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <User className="h-8 w-8 text-green-600" />
-              <div>
-                <p className="text-2xl font-bold">{users.filter(u => u.status === 'active').length}</p>
-                <p className="text-sm" style={{ color: 'var(--app-text, #666666)' }}>Actifs</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card style={{
-          backgroundColor: 'var(--app-card-bg, #ffffff)',
-          color: 'var(--app-card-text, #18181b)',
-          border: '1px solid var(--notification-border, #e5e7eb)'
-        }}>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <User className="h-8 w-8 text-red-600" />
-              <div>
-                <p className="text-2xl font-bold">{users.filter(u => u.role === 'admin').length}</p>
-                <p className="text-sm" style={{ color: 'var(--app-text, #666666)' }}>Admins</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card style={{
-          backgroundColor: 'var(--app-card-bg, #ffffff)',
-          color: 'var(--app-card-text, #18181b)',
-          border: '1px solid var(--notification-border, #e5e7eb)'
-        }}>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <User className="h-8 w-8 text-gray-600" />
-              <div>
-                <p className="text-2xl font-bold">{users.filter(u => u.status === 'inactive').length}</p>
-                <p className="text-sm" style={{ color: 'var(--app-text, #666666)' }}>Inactifs</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Users List */}
-      <Card style={{
-        backgroundColor: 'var(--app-card-bg, #ffffff)',
-        color: 'var(--app-card-text, #18181b)',
-        border: '1px solid var(--notification-border, #e5e7eb)'
-      }}>
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle style={{ color: 'var(--app-card-text, #18181b)' }}>
-              Liste des Utilisateurs
-            </CardTitle>
-            <Input
-              placeholder="Rechercher un utilisateur..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="max-w-sm"
-              style={{
-                color: 'var(--app-text, #18181b)',
-                borderColor: 'var(--notification-border, #e5e7eb)'
-              }}
-            />
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {filteredUsers.map((user) => (
-              <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg" style={{
-                borderColor: 'var(--notification-border, #e5e7eb)'
-              }}>
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{
-                      backgroundColor: 'var(--app-button-bg, #1632f4)',
-                      color: 'var(--app-button-text, #ffffff)'
-                    }}>
-                      {user.firstName.charAt(0)}{user.lastName.charAt(0)}
-                    </div>
-                    <div>
-                      <h3 className="font-medium" style={{ color: 'var(--app-card-text, #18181b)' }}>
-                        {user.firstName} {user.lastName}
-                      </h3>
-                      <p className="text-sm" style={{ color: 'var(--app-text, #666666)' }}>
-                        @{user.username}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-4 mt-2">
-                    <div className="flex items-center text-sm" style={{ color: 'var(--app-text, #666666)' }}>
-                      <Mail className="h-4 w-4 mr-1" />
-                      {user.email}
-                    </div>
-                    {user.phone && (
-                      <div className="flex items-center text-sm" style={{ color: 'var(--app-text, #666666)' }}>
-                        <Phone className="h-4 w-4 mr-1" />
-                        {user.phone}
-                      </div>
-                    )}
-                    <Badge className={getRoleColor(user.role)}>
-                      {user.role}
-                    </Badge>
-                    <Badge className={getStatusColor(user.status)}>
-                      {user.status}
-                    </Badge>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => handleEditUser(user)}
-                    style={{
-                      color: 'var(--app-button-bg, #1632f4)',
-                      borderColor: 'var(--app-button-bg, #1632f4)'
-                    }}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => handleDeleteUser(user.id)}
-                    className="text-red-600 border-red-600 hover:bg-red-50"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
+      {/* Barre de recherche */}
+      <Card className="mb-6">
+        <CardContent className="p-4">
+          <Input
+            placeholder="Rechercher un utilisateur..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="max-w-md"
+          />
         </CardContent>
       </Card>
 
-      {/* Dialog pour le formulaire utilisateur */}
+      {/* Liste des utilisateurs */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredUsers.map((user) => (
+          <Card key={user.id} className="hover:shadow-lg transition-shadow">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <User className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold">
+                      {user.name} {user.lastName}
+                    </h3>
+                    <p className="text-gray-600 text-sm">@{user.username || user.email?.split('@')[0]}</p>
+                  </div>
+                </div>
+                <Badge className={getRoleColor(user.role)}>
+                  {roleLabels[user.role as UserRole] || user.role}
+                </Badge>
+              </div>
+
+              <div className="space-y-2 mb-4">
+                <div className="flex items-center text-sm text-gray-600">
+                  <Mail className="h-4 w-4 mr-2" />
+                  {user.email}
+                </div>
+                {user.phone && (
+                  <div className="flex items-center text-sm text-gray-600">
+                    <Phone className="h-4 w-4 mr-2" />
+                    {user.phone}
+                  </div>
+                )}
+                {user.function_title && (
+                  <div className="text-sm text-gray-600">
+                    <strong>Fonction:</strong> {user.function_title}
+                  </div>
+                )}
+                {user.show_name && (
+                  <div className="text-sm text-gray-600">
+                    <strong>Nom de scène:</strong> {user.show_name}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex space-x-2">
+                <Button variant="outline" size="sm" onClick={() => handleEdit(user)} className="flex-1">
+                  <Edit className="h-3 w-3 mr-1" />
+                  Modifier
+                </Button>
+                {user.id !== currentUser?.id && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleDelete(user.id)}
+                    className="text-red-600 hover:text-red-800 hover:bg-red-50"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Dialog de création/modification */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {selectedUser ? 'Modifier l\'utilisateur' : 'Nouvel utilisateur'}
+              {selectedUser ? 'Modifier l\'utilisateur' : 'Créer un nouvel utilisateur'}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="firstName">Prénom *</Label>
-                <Input
-                  id="firstName"
-                  value={userForm.firstName || ''}
-                  onChange={(e) => setUserForm(prev => ({ ...prev, firstName: e.target.value }))}
-                  placeholder="Prénom"
-                />
-              </div>
-              <div>
-                <Label htmlFor="lastName">Nom *</Label>
-                <Input
-                  id="lastName"
-                  value={userForm.lastName || ''}
-                  onChange={(e) => setUserForm(prev => ({ ...prev, lastName: e.target.value }))}
-                  placeholder="Nom"
-                />
-              </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="name">Prénom *</Label>
+              <Input
+                id="name"
+                value={userForm.name}
+                onChange={(e) => setUserForm(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="Prénom"
+                required
+              />
             </div>
 
             <div>
-              <Label htmlFor="username">Pseudo *</Label>
+              <Label htmlFor="lastName">Nom *</Label>
               <Input
-                id="username"
-                value={userForm.username || ''}
-                onChange={(e) => setUserForm(prev => ({ ...prev, username: e.target.value }))}
-                placeholder="Pseudo unique"
+                id="lastName"
+                value={userForm.lastName}
+                onChange={(e) => setUserForm(prev => ({ ...prev, lastName: e.target.value }))}
+                placeholder="Nom de famille"
+                required
               />
             </div>
 
@@ -380,9 +294,20 @@ export const UserManagement: React.FC = () => {
               <Input
                 id="email"
                 type="email"
-                value={userForm.email || ''}
+                value={userForm.email}
                 onChange={(e) => setUserForm(prev => ({ ...prev, email: e.target.value }))}
                 placeholder="email@exemple.com"
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="username">Nom d'utilisateur</Label>
+              <Input
+                id="username"
+                value={userForm.username}
+                onChange={(e) => setUserForm(prev => ({ ...prev, username: e.target.value }))}
+                placeholder="nom_utilisateur"
               />
             </div>
 
@@ -390,52 +315,77 @@ export const UserManagement: React.FC = () => {
               <Label htmlFor="phone">Téléphone</Label>
               <Input
                 id="phone"
-                value={userForm.phone || ''}
+                value={userForm.phone}
                 onChange={(e) => setUserForm(prev => ({ ...prev, phone: e.target.value }))}
-                placeholder="+33123456789"
+                placeholder="+33 1 23 45 67 89"
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="role">Rôle</Label>
-                <Select value={userForm.role} onValueChange={(value: any) => setUserForm(prev => ({ ...prev, role: value }))}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="user">Utilisateur</SelectItem>
-                    <SelectItem value="moderator">Modérateur</SelectItem>
-                    <SelectItem value="admin">Administrateur</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="status">Statut</Label>
-                <Select value={userForm.status} onValueChange={(value: any) => setUserForm(prev => ({ ...prev, status: value }))}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">Actif</SelectItem>
-                    <SelectItem value="inactive">Inactif</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div>
+              <Label htmlFor="role">Rôle *</Label>
+              <Select value={userForm.role} onValueChange={(value: UserRole) => setUserForm(prev => ({ ...prev, role: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un rôle" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="super_admin">Super Admin</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="manager">Manager / Booker</SelectItem>
+                  <SelectItem value="artiste">Artiste</SelectItem>
+                  <SelectItem value="utilisateur">Utilisateur</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
-            <div className="flex space-x-2 pt-4">
-              <Button variant="outline" onClick={() => setIsFormOpen(false)} className="flex-1">
-                Annuler
-              </Button>
-              <Button onClick={handleSaveUser} className="flex-1" style={{
-                backgroundColor: 'var(--app-button-bg, #1632f4)',
-                color: 'var(--app-button-text, #ffffff)'
-              }}>
-                <Save className="h-4 w-4 mr-2" />
-                {selectedUser ? 'Modifier' : 'Créer'}
-              </Button>
+            <div>
+              <Label htmlFor="function_title">Fonction</Label>
+              <Input
+                id="function_title"
+                value={userForm.function_title}
+                onChange={(e) => setUserForm(prev => ({ ...prev, function_title: e.target.value }))}
+                placeholder="Titre de fonction"
+              />
             </div>
+
+            <div>
+              <Label htmlFor="show_name">Nom de scène</Label>
+              <Input
+                id="show_name"
+                value={userForm.show_name}
+                onChange={(e) => setUserForm(prev => ({ ...prev, show_name: e.target.value }))}
+                placeholder="Nom d'artiste"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <Label htmlFor="address">Adresse</Label>
+              <Input
+                id="address"
+                value={userForm.address}
+                onChange={(e) => setUserForm(prev => ({ ...prev, address: e.target.value }))}
+                placeholder="Adresse complète"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="city">Ville</Label>
+              <Input
+                id="city"
+                value={userForm.city}
+                onChange={(e) => setUserForm(prev => ({ ...prev, city: e.target.value }))}
+                placeholder="Ville"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button variant="outline" onClick={resetForm}>
+              Annuler
+            </Button>
+            <Button onClick={handleSaveUser} disabled={sending} className="bg-blue-600 hover:bg-blue-700">
+              <Save className="h-4 w-4 mr-2" />
+              {sending ? 'Envoi...' : (selectedUser ? 'Modifier' : 'Créer')}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
