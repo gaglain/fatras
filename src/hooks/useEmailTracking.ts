@@ -31,7 +31,7 @@ export const useEmailTracking = () => {
       const { error: updateError } = await supabase.rpc('update_campaign_stats', {
         campaign_id: event.campaignId,
         event_type: event.eventType,
-      });
+      } as any);
 
       if (updateError) throw updateError;
 

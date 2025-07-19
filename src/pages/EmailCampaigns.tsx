@@ -3,10 +3,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Mail, Send, Search, Edit, Trash2, Loader2, Calendar } from 'lucide-react';
+import { Plus, Mail, Send, Search, Edit, Trash2, Loader2, Calendar, Eye, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { EmailCampaignEditor } from '@/components/EmailCampaignEditor';
+import { EmailAnalytics } from '@/components/EmailAnalytics';
 import { useContactLists } from '@/hooks/useContactLists';
 
 interface Campaign {
@@ -25,6 +26,7 @@ export const EmailCampaigns: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showEditor, setShowEditor] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
 
   const { contactLists } = useContactLists();
@@ -248,6 +250,26 @@ export const EmailCampaigns: React.FC = () => {
     );
   }
 
+  if (showAnalytics && selectedCampaign) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <Button variant="ghost" onClick={() => setShowAnalytics(false)}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Retour
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold">{selectedCampaign.name}</h1>
+              <p className="text-muted-foreground">Analytics de la campagne</p>
+            </div>
+          </div>
+        </div>
+        <EmailAnalytics campaignId={selectedCampaign.id} />
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -359,6 +381,19 @@ export const EmailCampaigns: React.FC = () => {
                   </p>
                 </div>
                 <div className="flex space-x-2">
+                  {campaign.status === 'sent' && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => {
+                        setSelectedCampaign(campaign);
+                        setShowAnalytics(true);
+                      }}
+                      className="text-blue-600 hover:text-blue-700"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  )}
                   {campaign.status === 'draft' && (
                     <Button 
                       variant="outline" 
