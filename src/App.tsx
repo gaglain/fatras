@@ -31,6 +31,7 @@ import { Agenda } from "./pages/Agenda";
 import { Merchandise } from "./pages/Merchandise";
 import { MerchandiseBackoffice } from "./pages/MerchandiseBackoffice";
 import { WebsiteManager } from "./pages/WebsiteManager";
+import { Application } from "./pages/Application";
 import { FrontHome } from "./pages/FrontHome";
 import { FrontArtists } from "./pages/FrontArtists";
 import { FrontEvents } from "./pages/FrontEvents";
@@ -86,6 +87,7 @@ const App = () => {
                       <Route path="/merchandise" element={<ProtectedRoute><Layout><Merchandise /></Layout></ProtectedRoute>} />
                       <Route path="/merchandise-backoffice" element={<ProtectedRoute><Layout><MerchandiseBackoffice /></Layout></ProtectedRoute>} />
                       <Route path="/website" element={<ProtectedRoute><Layout><WebsiteManager /></Layout></ProtectedRoute>} />
+                      <Route path="/application" element={<ProtectedRoute><Layout><Application /></Layout></ProtectedRoute>} />
                       <Route path="/preferences" element={<ProtectedRoute><Layout><Preferences /></Layout></ProtectedRoute>} />
                       
                       {/* Routes du site web public - utilisation du nouveau layout */}
