@@ -3,33 +3,39 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { Plus, Eye, Save, Type, Heading1, Link, Minus, Space, Image as ImageIcon, BarChart3 } from 'lucide-react';
-import { EmailBlock, TextBlockContent, HeadingBlockContent, ButtonBlockContent, DividerBlockContent, SpacerBlockContent, ImageBlockContent } from './types';
+import { Plus, Eye, Save, Type, Heading1, Link, Minus, Space, Image as ImageIcon, BarChart3, Share2, FileText } from 'lucide-react';
+import { EmailBlock, TextBlockContent, HeadingBlockContent, ButtonBlockContent, DividerBlockContent, SpacerBlockContent, ImageBlockContent, SocialBlockContent, FooterBlockContent } from './types';
 import { TextBlock } from './blocks/TextBlock';
 import { HeadingBlock } from './blocks/HeadingBlock';
 import { ButtonBlock } from './blocks/ButtonBlock';
 import { DividerBlock } from './blocks/DividerBlock';
 import { SpacerBlock } from './blocks/SpacerBlock';
 import { ImageBlock } from './blocks/ImageBlock';
+import { SocialBlock } from './blocks/SocialBlock';
+import { FooterBlock } from './blocks/FooterBlock';
 import { BlockToolbar } from './BlockToolbar';
 import { EmailPreview } from './EmailPreview';
+import { EmailTemplates } from './EmailTemplates';
 import { toast } from 'sonner';
 
 interface EmailEditorProps {
   initialBlocks?: EmailBlock[];
   onSave: (blocks: EmailBlock[]) => void;
   onPreview: (blocks: EmailBlock[]) => void;
+  showTemplates?: boolean;
 }
 
 export const EmailEditor: React.FC<EmailEditorProps> = ({ 
   initialBlocks = [], 
   onSave, 
-  onPreview 
+  onPreview,
+  showTemplates = false
 }) => {
   const [blocks, setBlocks] = useState<EmailBlock[]>(initialBlocks);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [showStats, setShowStats] = useState(false);
+  const [showTemplateSelector, setShowTemplateSelector] = useState(showTemplates);
 
   const addBlock = (type: EmailBlock['type']) => {
     const id = Date.now().toString();
@@ -84,6 +90,33 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
           width: 100,
           alignment: 'center' as const
         } as ImageBlockContent;
+        break;
+      case 'social':
+        content = {
+          platforms: {
+            facebook: { url: '', enabled: false },
+            twitter: { url: '', enabled: false },
+            instagram: { url: '', enabled: false },
+            linkedin: { url: '', enabled: false }
+          },
+          alignment: 'center' as const,
+          iconSize: 24,
+          spacing: 12
+        } as SocialBlockContent;
+        break;
+      case 'footer':
+        content = {
+          companyName: 'Mon Entreprise',
+          address: '123 Rue Example, 75001 Paris',
+          phone: '+33 1 23 45 67 89',
+          email: 'contact@entreprise.com',
+          website: 'https://www.entreprise.com',
+          unsubscribeText: 'Se désabonner',
+          showUnsubscribe: true,
+          showSocialLinks: false,
+          backgroundColor: '#f8f9fa',
+          textColor: '#666666'
+        } as FooterBlockContent;
         break;
     }
 
@@ -161,6 +194,20 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
             onChange={(content) => updateBlock(block.id, content)}
           />
         );
+      case 'social':
+        return (
+          <SocialBlock
+            content={block.content as SocialBlockContent}
+            onChange={(content) => updateBlock(block.id, content)}
+          />
+        );
+      case 'footer':
+        return (
+          <FooterBlock
+            content={block.content as FooterBlockContent}
+            onChange={(content) => updateBlock(block.id, content)}
+          />
+        );
       default:
         return null;
     }
@@ -176,6 +223,12 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
     setShowPreview(true);
   };
 
+  const handleSelectTemplate = (templateBlocks: EmailBlock[]) => {
+    setBlocks(templateBlocks);
+    setShowTemplateSelector(false);
+    toast.success('Modèle appliqué avec succès');
+  };
+
   const mockStats = {
     sent: 1250,
     delivered: 1205,
@@ -186,6 +239,15 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
     openRate: 45,
     clickRate: 16
   };
+
+  if (showTemplateSelector) {
+    return (
+      <EmailTemplates 
+        onSelectTemplate={handleSelectTemplate}
+        onBack={() => setShowTemplateSelector(false)}
+      />
+    );
+  }
 
   if (showPreview) {
     return (
@@ -320,6 +382,22 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
             <Space className="h-4 w-4 mr-2" />
             Espacement
           </Button>
+          <Button
+            variant="outline"
+            className="w-full justify-start"
+            onClick={() => addBlock('social')}
+          >
+            <Share2 className="h-4 w-4 mr-2" />
+            Réseaux sociaux
+          </Button>
+          <Button
+            variant="outline"
+            className="w-full justify-start"
+            onClick={() => addBlock('footer')}
+          >
+            <FileText className="h-4 w-4 mr-2" />
+            Pied de page
+          </Button>
         </div>
       </div>
 
@@ -328,6 +406,10 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
         <div className="border-b p-4 flex items-center justify-between">
           <h2 className="text-xl font-semibold">Éditeur d'email</h2>
           <div className="flex space-x-2">
+            <Button variant="outline" onClick={() => setShowTemplateSelector(true)}>
+              <FileText className="h-4 w-4 mr-2" />
+              Modèles
+            </Button>
             <Button variant="outline" onClick={() => setShowStats(true)}>
               <BarChart3 className="h-4 w-4 mr-2" />
               Statistiques

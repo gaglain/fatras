@@ -1,8 +1,33 @@
 
 export interface EmailBlock {
   id: string;
-  type: 'text' | 'heading' | 'button' | 'divider' | 'spacer' | 'image';
-  content: TextBlockContent | HeadingBlockContent | ButtonBlockContent | DividerBlockContent | SpacerBlockContent | ImageBlockContent;
+  type: 'text' | 'heading' | 'button' | 'divider' | 'spacer' | 'image' | 'social' | 'footer';
+  content: TextBlockContent | HeadingBlockContent | ButtonBlockContent | DividerBlockContent | SpacerBlockContent | ImageBlockContent | SocialBlockContent | FooterBlockContent;
+}
+
+export interface SocialBlockContent {
+  platforms: {
+    facebook?: { url: string; enabled: boolean };
+    twitter?: { url: string; enabled: boolean };
+    instagram?: { url: string; enabled: boolean };
+    linkedin?: { url: string; enabled: boolean };
+  };
+  alignment: 'left' | 'center' | 'right';
+  iconSize: number;
+  spacing: number;
+}
+
+export interface FooterBlockContent {
+  companyName: string;
+  address: string;
+  phone: string;
+  email: string;
+  website: string;
+  unsubscribeText: string;
+  showUnsubscribe: boolean;
+  showSocialLinks: boolean;
+  backgroundColor: string;
+  textColor: string;
 }
 
 export interface TextBlockContent {
