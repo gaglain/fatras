@@ -52,50 +52,68 @@ export type Database = {
       }
       campaigns: {
         Row: {
+          bounced_count: number | null
           click_rate: number | null
+          clicked_count: number | null
           content: string | null
           created_at: string | null
+          delivered_count: number | null
           id: string
           name: string
           open_rate: number | null
+          opened_count: number | null
           scheduled_at: string | null
           sent_at: string | null
+          sent_count: number | null
           status: string | null
           subject: string | null
           target_audience: Json | null
           type: string
+          unsubscribed_count: number | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
+          bounced_count?: number | null
           click_rate?: number | null
+          clicked_count?: number | null
           content?: string | null
           created_at?: string | null
+          delivered_count?: number | null
           id?: string
           name: string
           open_rate?: number | null
+          opened_count?: number | null
           scheduled_at?: string | null
           sent_at?: string | null
+          sent_count?: number | null
           status?: string | null
           subject?: string | null
           target_audience?: Json | null
           type: string
+          unsubscribed_count?: number | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
+          bounced_count?: number | null
           click_rate?: number | null
+          clicked_count?: number | null
           content?: string | null
           created_at?: string | null
+          delivered_count?: number | null
           id?: string
           name?: string
           open_rate?: number | null
+          opened_count?: number | null
           scheduled_at?: string | null
           sent_at?: string | null
+          sent_count?: number | null
           status?: string | null
           subject?: string | null
           target_audience?: Json | null
           type?: string
+          unsubscribed_count?: number | null
           updated_at?: string | null
           user_id?: string
         }
@@ -253,6 +271,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      email_analytics: {
+        Row: {
+          campaign_id: string
+          contact_id: string
+          created_at: string
+          event_data: Json | null
+          event_type: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          campaign_id: string
+          contact_id: string
+          created_at?: string
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          campaign_id?: string
+          contact_id?: string
+          created_at?: string
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       event_types: {
         Row: {
