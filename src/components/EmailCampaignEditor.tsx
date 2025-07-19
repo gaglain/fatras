@@ -56,12 +56,19 @@ export const EmailCampaignEditor: React.FC<EmailCampaignEditorProps> = ({
   };
 
   const handleSend = () => {
-    handleSave();
-    // Logique d'envoi simulée
-    setTimeout(() => {
-      toast.success('Campagne envoyée avec succès !');
-      onBack();
-    }, 1500);
+    if (!editedCampaign.name.trim() || !editedCampaign.subject.trim()) {
+      toast.error('Veuillez remplir le nom et l\'objet de la campagne');
+      return;
+    }
+    
+    if (editedCampaign.contactListIds.length === 0) {
+      toast.error('Veuillez sélectionner au moins une liste de contacts');
+      return;
+    }
+
+    // Save first, then send
+    const campaignToSend = { ...editedCampaign, status: 'draft' as const };
+    onSave(campaignToSend);
   };
 
   const handleBlocksChange = (blocks: EmailBlock[]) => {

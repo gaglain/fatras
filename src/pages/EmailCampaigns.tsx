@@ -141,6 +141,29 @@ export const EmailCampaigns: React.FC = () => {
     }
   };
 
+  const handleSendCampaign = async (campaignId: string) => {
+    try {
+      const { error } = await supabase.functions.invoke('send-campaign-emails', {
+        body: { campaignId }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "Campagne envoyée avec succès"
+      });
+      await fetchCampaigns();
+    } catch (error: any) {
+      console.error('Error sending campaign:', error);
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de l'envoi de la campagne",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleDeleteCampaign = async (campaignId: string) => {
     if (!confirm('Êtes-vous sûr de vouloir supprimer cette campagne ?')) return;
 
@@ -336,6 +359,16 @@ export const EmailCampaigns: React.FC = () => {
                   </p>
                 </div>
                 <div className="flex space-x-2">
+                  {campaign.status === 'draft' && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleSendCampaign(campaign.id)}
+                      className="text-green-600 hover:text-green-700"
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  )}
                   <Button variant="outline" size="sm" onClick={() => handleEditCampaign(campaign)}>
                     <Edit className="h-4 w-4" />
                   </Button>
