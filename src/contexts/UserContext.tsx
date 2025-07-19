@@ -50,8 +50,8 @@ interface UserContextType {
   setCurrentUser: (user: User | null) => void;
   getUserById: (id: string) => User | undefined;
   getUserPermissions: (user: User) => UserPermissions;
-  addUser: (user: Omit<User, 'id'>) => void;
-  updateUser: (id: string, updates: Partial<User>) => void;
+  addUser: (user: Omit<User, 'id'>) => Promise<void>;
+  updateUser: (id: string, updates: Partial<User>) => Promise<void>;
   deactivateUser: (id: string) => void;
   removeUser: (id: string) => void;
   changeOwnership: (itemType: string, itemId: string, newOwnerId: string) => void;
@@ -64,29 +64,106 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const { user: authUser, loading } = useAuth();
 
+  // Charger tous les utilisateurs depuis Supabase
+  useEffect(() => {
+    const fetchUsers = async () => {
+      const { data: profiles } = await supabase
+        .from('user_profiles')
+        .select('*');
+      
+      if (profiles) {
+        const usersData: User[] = profiles.map(profile => ({
+          id: profile.user_id,
+          name: profile.first_name || '',
+          lastName: profile.last_name || '',
+          email: profile.email || '',
+          role: profile.role as UserRole,
+          isActive: true,
+          username: profile.username || '',
+          phone: profile.phone || '',
+          address: profile.address || '',
+          postal_code: profile.postal_code || '',
+          city: profile.city || '',
+          birth_date: profile.birth_date || '',
+          birth_place: profile.birth_place || '',
+          social_security_number: profile.social_security_number || '',
+          guso_id: profile.guso_id || '',
+          function_title: profile.function_title || '',
+          nationality: profile.nationality || '',
+          show_name: profile.show_name || ''
+        }));
+        setUsers(usersData);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
   // Synchroniser l'utilisateur authentifié avec le contexte utilisateur
   useEffect(() => {
     console.log('Auth user changed:', authUser);
     if (authUser && !loading) {
-      // Créer un utilisateur par défaut avec les données d'auth
-      const defaultUser: User = {
-        id: authUser.id,
-        name: authUser.user_metadata?.first_name || 'Laurent',
-        lastName: authUser.user_metadata?.last_name || 'Guillet',
-        email: authUser.email || '',
-        role: 'admin',
-        isActive: true,
-        username: authUser.email?.split('@')[0] || 'user',
-        avatar: authUser.user_metadata?.avatar_url || '',
-        phone: authUser.phone || '',
-        department: 'Administration',
-        bio: 'Utilisateur administrateur',
-        googleCalendarConnected: false,
-        gmailConnected: false
+      const fetchCurrentUserProfile = async () => {
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('user_id', authUser.id)
+          .single();
+
+        if (profile) {
+          const userData: User = {
+            id: profile.user_id,
+            name: profile.first_name || '',
+            lastName: profile.last_name || '',
+            email: profile.email || '',
+            role: profile.role as UserRole,
+            isActive: true,
+            username: profile.username || '',
+            phone: profile.phone || '',
+            address: profile.address || '',
+            postal_code: profile.postal_code || '',
+            city: profile.city || '',
+            birth_date: profile.birth_date || '',
+            birth_place: profile.birth_place || '',
+            social_security_number: profile.social_security_number || '',
+            guso_id: profile.guso_id || '',
+            function_title: profile.function_title || '',
+            nationality: profile.nationality || '',
+            show_name: profile.show_name || ''
+          };
+          setCurrentUser(userData);
+          console.log('Current user set to:', userData);
+        } else {
+          // Créer un profil par défaut si il n'existe pas
+          const { data: newProfile } = await supabase
+            .from('user_profiles')
+            .insert({
+              user_id: authUser.id,
+              username: authUser.email?.split('@')[0] || 'user',
+              email: authUser.email,
+              first_name: authUser.user_metadata?.first_name || '',
+              last_name: authUser.user_metadata?.last_name || '',
+              role: 'admin'
+            })
+            .select()
+            .single();
+
+          if (newProfile) {
+            const userData: User = {
+              id: newProfile.user_id,
+              name: newProfile.first_name || '',
+              lastName: newProfile.last_name || '',
+              email: newProfile.email || '',
+              role: newProfile.role as UserRole,
+              isActive: true,
+              username: newProfile.username || ''
+            };
+            setCurrentUser(userData);
+          }
+        }
       };
-      
-      setCurrentUser(defaultUser);
-      console.log('Current user set to:', defaultUser);
+
+      fetchCurrentUserProfile();
     } else if (!authUser && !loading) {
       setCurrentUser(null);
       console.log('User logged out, current user set to null');
@@ -161,20 +238,89 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const addUser = (userData: Omit<User, 'id'>) => {
-    const newUser: User = {
-      ...userData,
-      id: `user-${Date.now()}`,
-    };
-    setUsers(prev => [...prev, newUser]);
+  const addUser = async (userData: Omit<User, 'id'>) => {
+    // Générer un UUID temporaire pour les nouveaux utilisateurs non-authentifiés
+    const tempUserId = crypto.randomUUID();
+    
+    const { data: newProfile, error } = await supabase
+      .from('user_profiles')
+      .insert({
+        user_id: tempUserId,
+        username: userData.username || userData.email?.split('@')[0] || 'user',
+        first_name: userData.name,
+        last_name: userData.lastName,
+        email: userData.email,
+        phone: userData.phone || '',
+        role: userData.role,
+        address: userData.address || '',
+        postal_code: userData.postal_code || '',
+        city: userData.city || '',
+        birth_date: userData.birth_date || '',
+        birth_place: userData.birth_place || '',
+        social_security_number: userData.social_security_number || '',
+        guso_id: userData.guso_id || '',
+        function_title: userData.function_title || '',
+        nationality: userData.nationality || '',
+        show_name: userData.show_name || ''
+      })
+      .select()
+      .single();
+
+    if (newProfile && !error) {
+      const newUser: User = {
+        id: newProfile.user_id,
+        name: newProfile.first_name || '',
+        lastName: newProfile.last_name || '',
+        email: newProfile.email || '',
+        role: newProfile.role as UserRole,
+        isActive: true,
+        username: newProfile.username || '',
+        phone: newProfile.phone || '',
+        address: newProfile.address || '',
+        postal_code: newProfile.postal_code || '',
+        city: newProfile.city || '',
+        birth_date: newProfile.birth_date || '',
+        birth_place: newProfile.birth_place || '',
+        social_security_number: newProfile.social_security_number || '',
+        guso_id: newProfile.guso_id || '',
+        function_title: newProfile.function_title || '',
+        nationality: newProfile.nationality || '',
+        show_name: newProfile.show_name || ''
+      };
+      setUsers(prev => [...prev, newUser]);
+    }
   };
 
-  const updateUser = (id: string, updates: Partial<User>) => {
-    setUsers(prev => prev.map(user => 
-      user.id === id ? { ...user, ...updates } : user
-    ));
-    if (currentUser?.id === id) {
-      setCurrentUser(prev => prev ? { ...prev, ...updates } : null);
+  const updateUser = async (id: string, updates: Partial<User>) => {
+    const { error } = await supabase
+      .from('user_profiles')
+      .update({
+        first_name: updates.name,
+        last_name: updates.lastName,
+        email: updates.email,
+        phone: updates.phone,
+        role: updates.role,
+        username: updates.username,
+        address: updates.address,
+        postal_code: updates.postal_code,
+        city: updates.city,
+        birth_date: updates.birth_date,
+        birth_place: updates.birth_place,
+        social_security_number: updates.social_security_number,
+        guso_id: updates.guso_id,
+        function_title: updates.function_title,
+        nationality: updates.nationality,
+        show_name: updates.show_name
+      })
+      .eq('user_id', id);
+
+    if (!error) {
+      setUsers(prev => prev.map(user => 
+        user.id === id ? { ...user, ...updates } : user
+      ));
+      if (currentUser?.id === id) {
+        setCurrentUser(prev => prev ? { ...prev, ...updates } : null);
+      }
     }
   };
 
