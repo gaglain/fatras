@@ -3,8 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useUser } from '@/contexts/UserContext';
+import { useArtists } from '@/hooks/useArtists';
 
-import { sampleArtists, sampleTourStops } from '@/data/sampleData';
 import { SearchBar } from '@/components/roadshow/SearchBar';
 import { RoadShowForm } from '@/components/roadshow/RoadShowForm';
 import { TourStopCard } from '@/components/roadshow/TourStopCard';
@@ -13,7 +13,15 @@ import { TourStop } from '@/types/roadshow.types';
 
 export const RoadShow: React.FC = () => {
   const { users, getUserById, currentUser } = useUser();
-  const [tourStops, setTourStops] = useState<TourStop[]>(sampleTourStops);
+  const { artists: artistsData } = useArtists();
+  const [tourStops, setTourStops] = useState<TourStop[]>([]);
+  
+  // Transformer les données des artistes pour correspondre au type roadshow
+  const artists = artistsData.map(artist => ({
+    id: artist.id,
+    name: `${artist.first_name} ${artist.last_name}`,
+    genre: artist.function_title || 'Artiste'
+  }));
   const [searchTerm, setSearchTerm] = useState('');
   const [filterArtist, setFilterArtist] = useState<string>('all');
   const [filterUser, setFilterUser] = useState<string>('all');
@@ -92,7 +100,7 @@ export const RoadShow: React.FC = () => {
         setFilterArtist={setFilterArtist}
         filterUser={filterUser}
         setFilterUser={setFilterUser}
-        artists={sampleArtists}
+        artists={artists}
         users={users}
       />
 
@@ -102,7 +110,7 @@ export const RoadShow: React.FC = () => {
           <TourStopCard
             key={stop.id}
             stop={stop}
-            artists={sampleArtists}
+            artists={artists}
             creator={getUserById(stop.createdBy)}
             onEdit={handleEditStop}
             onDelete={handleDeleteStop}

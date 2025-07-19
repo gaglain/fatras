@@ -30,10 +30,31 @@ export const useTasks = () => {
 
     const fetchTasks = async () => {
       setLoading(true);
-      // Pour le moment, nous allons créer une table tasks simple
-      // En attendant, utilisons une structure locale
-      const sampleTasks: Task[] = [];
-      setTasks(sampleTasks);
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .or(`user_id.eq.${user.id},assigned_to.eq.${user.id}`);
+
+      if (data && !error) {
+        const tasksData: Task[] = data.map(task => ({
+          id: task.id,
+          user_id: task.user_id,
+          assigned_to: task.assigned_to || undefined,
+          contact_id: task.contact_id || undefined,
+          event_id: task.event_id || undefined,
+          artist_id: task.artist_id || undefined,
+          title: task.title,
+          description: task.description || '',
+          priority: task.priority as 'low' | 'medium' | 'high' | 'urgent',
+          status: task.status as 'todo' | 'in_progress' | 'completed' | 'cancelled',
+          due_date: task.due_date || undefined,
+          completed_at: task.completed_at || undefined,
+          tags: task.tags || [],
+          created_at: task.created_at,
+          updated_at: task.updated_at
+        }));
+        setTasks(tasksData);
+      }
       setLoading(false);
     };
 
@@ -41,25 +62,85 @@ export const useTasks = () => {
   }, [user]);
 
   const addTask = async (taskData: Omit<Task, 'id' | 'created_at' | 'updated_at'>) => {
-    // Pour le moment, créons une tâche locale
-    const newTask: Task = {
-      ...taskData,
-      id: crypto.randomUUID(),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-    setTasks(prev => [...prev, newTask]);
-    return newTask;
+    const { data, error } = await supabase
+      .from('tasks')
+      .insert({
+        user_id: taskData.user_id,
+        assigned_to: taskData.assigned_to,
+        contact_id: taskData.contact_id,
+        event_id: taskData.event_id,
+        artist_id: taskData.artist_id,
+        title: taskData.title,
+        description: taskData.description,
+        priority: taskData.priority,
+        status: taskData.status,
+        due_date: taskData.due_date,
+        completed_at: taskData.completed_at,
+        tags: taskData.tags
+      })
+      .select()
+      .single();
+
+    if (data && !error) {
+      const newTask: Task = {
+        id: data.id,
+        user_id: data.user_id,
+        assigned_to: data.assigned_to || undefined,
+        contact_id: data.contact_id || undefined,
+        event_id: data.event_id || undefined,
+        artist_id: data.artist_id || undefined,
+        title: data.title,
+        description: data.description || '',
+        priority: data.priority as 'low' | 'medium' | 'high' | 'urgent',
+        status: data.status as 'todo' | 'in_progress' | 'completed' | 'cancelled',
+        due_date: data.due_date || undefined,
+        completed_at: data.completed_at || undefined,
+        tags: data.tags || [],
+        created_at: data.created_at,
+        updated_at: data.updated_at
+      };
+      setTasks(prev => [...prev, newTask]);
+      return newTask;
+    }
+    return null;
   };
 
   const updateTask = async (id: string, updates: Partial<Task>) => {
-    setTasks(prev => prev.map(task => 
-      task.id === id ? { ...task, ...updates, updated_at: new Date().toISOString() } : task
-    ));
+    const { data, error } = await supabase
+      .from('tasks')
+      .update({
+        assigned_to: updates.assigned_to,
+        contact_id: updates.contact_id,
+        event_id: updates.event_id,
+        artist_id: updates.artist_id,
+        title: updates.title,
+        description: updates.description,
+        priority: updates.priority,
+        status: updates.status,
+        due_date: updates.due_date,
+        completed_at: updates.completed_at,
+        tags: updates.tags
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (data && !error) {
+      setTasks(prev => prev.map(task => 
+        task.id === id ? { ...task, ...updates } : task
+      ));
+    }
   };
 
   const deleteTask = async (id: string) => {
-    setTasks(prev => prev.filter(task => task.id !== id));
+    const { error } = await supabase
+      .from('tasks')
+      .delete()
+      .eq('id', id);
+
+    if (!error) {
+      setTasks(prev => prev.filter(task => task.id !== id));
+    }
   };
 
   return {
