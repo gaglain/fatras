@@ -51,10 +51,14 @@ export const Website: React.FC = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="config">
             <Settings className="h-4 w-4 mr-2" />
             Configuration
+          </TabsTrigger>
+          <TabsTrigger value="advanced">
+            <Globe className="h-4 w-4 mr-2" />
+            Gestion avancée
           </TabsTrigger>
           <TabsTrigger value="preview">
             <Eye className="h-4 w-4 mr-2" />
@@ -75,6 +79,80 @@ export const Website: React.FC = () => {
             </CardHeader>
             <CardContent>
               <WebsiteConfigManager />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="advanced">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <Button 
+              onClick={() => navigate('/website-manager')} 
+              variant="outline" 
+              className="h-24 flex flex-col items-center gap-2"
+            >
+              <Globe className="h-8 w-8" />
+              <span className="text-sm">Pages & Menu</span>
+            </Button>
+            <Button 
+              onClick={() => navigate('/website-editor')} 
+              variant="outline"
+              className="h-24 flex flex-col items-center gap-2"
+            >
+              <Edit className="h-8 w-8" />
+              <span className="text-sm">Éditeur</span>
+            </Button>
+            <Button 
+              onClick={handlePreviewSite}
+              variant="outline"
+              className="h-24 flex flex-col items-center gap-2"
+            >
+              <Eye className="h-8 w-8" />
+              <span className="text-sm">Aperçu</span>
+            </Button>
+            <Button 
+              onClick={handlePreviewSite}
+              className="h-24 flex flex-col items-center gap-2"
+            >
+              <ExternalLink className="h-8 w-8" />
+              <span className="text-sm">Voir le site</span>
+            </Button>
+          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Fonctionnalités avancées</CardTitle>
+              <p className="text-muted-foreground">
+                Gestion complète de votre site web avec toutes les fonctionnalités
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-4 border rounded-lg">
+                  <h3 className="font-semibold mb-2">Pages et contenu</h3>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Créez et gérez vos pages web avec un éditeur de contenu
+                  </p>
+                  <Button 
+                    onClick={() => navigate('/website-manager')} 
+                    variant="outline" 
+                    size="sm"
+                  >
+                    Gérer les pages
+                  </Button>
+                </div>
+                <div className="p-4 border rounded-lg">
+                  <h3 className="font-semibold mb-2">Éditeur visuel</h3>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Modifiez vos pages avec un éditeur visuel par blocs
+                  </p>
+                  <Button 
+                    onClick={() => navigate('/website-editor')} 
+                    variant="outline" 
+                    size="sm"
+                  >
+                    Ouvrir l'éditeur
+                  </Button>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
