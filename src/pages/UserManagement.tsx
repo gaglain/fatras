@@ -19,10 +19,12 @@ import {
 import { toast } from 'sonner';
 import { useUser, UserRole } from '@/contexts/UserContext';
 import { useEmailSender } from '@/hooks/useEmailSender';
+import { useUserManagement } from '@/hooks/useUserManagement';
 
 export const UserManagement: React.FC = () => {
-  const { users, currentUser, addUser, updateUser, removeUser } = useUser();
+  const { currentUser } = useUser();
   const { sendUserWelcomeEmail, sending } = useEmailSender();
+  const { users, loading, fetchUsers, createUser, updateUserProfile, deactivateUser } = useUserManagement();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -77,28 +79,48 @@ export const UserManagement: React.FC = () => {
     try {
       if (selectedUser) {
         // Modification
-        await updateUser(selectedUser.id, userForm);
-        toast.success('Utilisateur modifié avec succès');
+        await updateUserProfile(selectedUser.user_id, {
+          first_name: userForm.name,
+          last_name: userForm.lastName,
+          username: userForm.username,
+          phone: userForm.phone,
+          role: userForm.role,
+          address: userForm.address,
+          city: userForm.city,
+          function_title: userForm.function_title,
+          show_name: userForm.show_name
+        });
       } else {
         // Création
         const tempPassword = generateTempPassword();
         
-        await addUser({
-          ...userForm,
-          isActive: true
+        const success = await createUser({
+          email: userForm.email,
+          password: tempPassword,
+          first_name: userForm.name,
+          last_name: userForm.lastName,
+          username: userForm.username,
+          phone: userForm.phone,
+          role: userForm.role,
+          address: userForm.address,
+          city: userForm.city,
+          function_title: userForm.function_title,
+          show_name: userForm.show_name
         });
 
-        // Envoyer l'email de bienvenue
-        try {
-          await sendUserWelcomeEmail(
-            userForm.email,
-            `${userForm.name} ${userForm.lastName}`,
-            tempPassword
-          );
-          toast.success('Utilisateur créé et email de bienvenue envoyé !');
-        } catch (emailError) {
-          console.error('Erreur envoi email:', emailError);
-          toast.success('Utilisateur créé (erreur envoi email)');
+        if (success) {
+          // Envoyer l'email de bienvenue
+          try {
+            await sendUserWelcomeEmail(
+              userForm.email,
+              `${userForm.name} ${userForm.lastName}`,
+              tempPassword
+            );
+            toast.success('Utilisateur créé et email de bienvenue envoyé !');
+          } catch (emailError) {
+            console.error('Erreur envoi email:', emailError);
+            toast.success('Utilisateur créé (erreur envoi email)');
+          }
         }
       }
 
@@ -131,8 +153,8 @@ export const UserManagement: React.FC = () => {
     setUserForm({
       email: user.email || '',
       username: user.username || '',
-      name: user.name || '',
-      lastName: user.lastName || '',
+      name: user.first_name || '',
+      lastName: user.last_name || '',
       phone: user.phone || '',
       role: user.role || 'utilisateur',
       address: user.address || '',
@@ -149,17 +171,21 @@ export const UserManagement: React.FC = () => {
       return;
     }
     
-    if (confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) {
-      removeUser(userId);
-      toast.success('Utilisateur supprimé');
+    if (confirm('Êtes-vous sûr de vouloir désactiver cet utilisateur ?')) {
+      await deactivateUser(userId);
     }
   };
 
   const filteredUsers = users.filter(user => 
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
+    user.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Charger les utilisateurs au montage du composant
+  React.useEffect(() => {
+    fetchUsers();
+  }, []);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -203,7 +229,7 @@ export const UserManagement: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold">
-                      {user.name} {user.lastName}
+                      {user.first_name} {user.last_name}
                     </h3>
                     <p className="text-gray-600 text-sm">@{user.username || user.email?.split('@')[0]}</p>
                   </div>
@@ -241,11 +267,11 @@ export const UserManagement: React.FC = () => {
                   <Edit className="h-3 w-3 mr-1" />
                   Modifier
                 </Button>
-                {user.id !== currentUser?.id && (
+                {user.user_id !== currentUser?.id && (
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={() => handleDelete(user.id)}
+                    onClick={() => handleDelete(user.user_id)}
                     className="text-red-600 hover:text-red-800 hover:bg-red-50"
                   >
                     <Trash2 className="h-3 w-3" />

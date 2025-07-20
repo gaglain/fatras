@@ -1113,6 +1113,7 @@ export type Database = {
         Row: {
           address: string | null
           associated_artists: string[] | null
+          avatar_url: string | null
           birth_date: string | null
           birth_place: string | null
           city: string | null
@@ -1122,6 +1123,7 @@ export type Database = {
           function_title: string | null
           guso_id: string | null
           id: string
+          is_active: boolean | null
           last_name: string | null
           nationality: string | null
           phone: string | null
@@ -1136,6 +1138,7 @@ export type Database = {
         Insert: {
           address?: string | null
           associated_artists?: string[] | null
+          avatar_url?: string | null
           birth_date?: string | null
           birth_place?: string | null
           city?: string | null
@@ -1145,6 +1148,7 @@ export type Database = {
           function_title?: string | null
           guso_id?: string | null
           id?: string
+          is_active?: boolean | null
           last_name?: string | null
           nationality?: string | null
           phone?: string | null
@@ -1159,6 +1163,7 @@ export type Database = {
         Update: {
           address?: string | null
           associated_artists?: string[] | null
+          avatar_url?: string | null
           birth_date?: string | null
           birth_place?: string | null
           city?: string | null
@@ -1168,6 +1173,7 @@ export type Database = {
           function_title?: string | null
           guso_id?: string | null
           id?: string
+          is_active?: boolean | null
           last_name?: string | null
           nationality?: string | null
           phone?: string | null
@@ -1323,9 +1329,30 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_user_profiles: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          user_id: string
+          username: string
+          first_name: string
+          last_name: string
+          email: string
+          phone: string
+          role: string
+          avatar_url: string
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }[]
+      }
       update_campaign_stats: {
         Args: { campaign_id: string; event_type: string }
         Returns: undefined
+      }
+      update_user_profile_data: {
+        Args: { profile_user_id: string; profile_data: Json }
+        Returns: Json
       }
     }
     Enums: {

@@ -8,6 +8,7 @@ import { X, User, Save, Camera, Upload, ImageIcon } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useUser } from '@/contexts/UserContext';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface UserProfileProps {
@@ -80,12 +81,26 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
         return;
       }
 
-      if (currentUser?.id) {
-        await updateUser(currentUser.id, formData);
-        setIsEditing(false);
-        toast.success('Profil mis à jour avec succès');
+      if (authUser?.id) {
+        const { data, error } = await supabase.rpc('update_user_profile_data', {
+          profile_user_id: authUser.id,
+          profile_data: {
+            first_name: formData.name,
+            last_name: formData.lastName,
+            phone: formData.phone,
+            avatar_url: formData.avatar
+          }
+        });
+
+        if (error) {
+          console.error('Erreur:', error);
+          toast.error('Erreur lors de la sauvegarde');
+        } else {
+          setIsEditing(false);
+          toast.success('Profil mis à jour avec succès');
+        }
       } else {
-        toast.error('Impossible de sauvegarder : utilisateur non trouvé');
+        toast.error('Impossible de sauvegarder : utilisateur non connecté');
       }
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
