@@ -62,26 +62,28 @@ export const useTasks = () => {
   }, [user]);
 
   const addTask = async (taskData: Omit<Task, 'id' | 'created_at' | 'updated_at'>) => {
-    const { data, error } = await supabase
-      .from('tasks')
-      .insert({
-        user_id: taskData.user_id,
-        assigned_to: taskData.assigned_to,
-        contact_id: taskData.contact_id,
-        event_id: taskData.event_id,
-        artist_id: taskData.artist_id,
-        title: taskData.title,
-        description: taskData.description,
-        priority: taskData.priority,
-        status: taskData.status,
-        due_date: taskData.due_date,
-        completed_at: taskData.completed_at,
-        tags: taskData.tags
-      })
-      .select()
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .insert({
+          user_id: taskData.user_id,
+          assigned_to: taskData.assigned_to,
+          contact_id: taskData.contact_id,
+          event_id: taskData.event_id,
+          artist_id: taskData.artist_id,
+          title: taskData.title,
+          description: taskData.description,
+          priority: taskData.priority,
+          status: taskData.status,
+          due_date: taskData.due_date,
+          completed_at: taskData.completed_at,
+          tags: taskData.tags
+        })
+        .select()
+        .single();
 
-    if (data && !error) {
+      if (error) throw error;
+
       const newTask: Task = {
         id: data.id,
         user_id: data.user_id,
@@ -101,8 +103,10 @@ export const useTasks = () => {
       };
       setTasks(prev => [...prev, newTask]);
       return newTask;
+    } catch (error) {
+      console.error('Erreur lors de la création de la tâche:', error);
+      throw error;
     }
-    return null;
   };
 
   const updateTask = async (id: string, updates: Partial<Task>) => {

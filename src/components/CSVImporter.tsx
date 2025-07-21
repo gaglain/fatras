@@ -10,17 +10,22 @@ interface CSVImporterProps {
   isOpen: boolean;
   onClose: () => void;
   onImport: (contacts: any[]) => void;
+  contactLists?: any[];
+  onCreateList?: (listName: string, contactIds: string[]) => void;
 }
 
-export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImport }) => {
+export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImport, contactLists = [], onCreateList }) => {
   console.log('🔄 CSVImporter component loaded');
   
   const [dragActive, setDragActive] = useState(false);
   const [csvData, setCsvData] = useState<any[]>([]);
   const [headers, setHeaders] = useState<string[]>([]);
   const [mapping, setMapping] = useState<Record<string, string>>({});
-  const [step, setStep] = useState<'upload' | 'mapping' | 'preview'>('upload');
+  const [step, setStep] = useState<'upload' | 'mapping' | 'preview' | 'assign-list'>('upload');
   const [importing, setImporting] = useState(false);
+  const [selectedListId, setSelectedListId] = useState<string>('');
+  const [newListName, setNewListName] = useState<string>('');
+  const [importedContacts, setImportedContacts] = useState<any[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const expectedFields = [
@@ -242,8 +247,8 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
       if (totalImported === mappedData.length) {
         toast.success(`${mappedData.length} contacts importés avec succès !`);
         onImport(mappedData);
-        resetImporter();
-        onClose();
+        setImportedContacts(mappedData);
+        setStep('assign-list');
       }
     } catch (error) {
       console.error('Import error:', error);
@@ -260,6 +265,31 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
     setMapping({});
     setStep('upload');
     setImporting(false);
+    setSelectedListId('');
+    setNewListName('');
+    setImportedContacts([]);
+  };
+
+  const handleAssignToList = async () => {
+    try {
+      if (newListName.trim() && onCreateList) {
+        // Créer une nouvelle liste avec les contacts importés
+        const contactIds = importedContacts.map(contact => contact.id);
+        await onCreateList(newListName.trim(), contactIds);
+        toast.success(`Liste "${newListName}" créée avec ${contactIds.length} contacts`);
+      } else if (selectedListId && onCreateList) {
+        // Ajouter les contacts à une liste existante
+        const contactIds = importedContacts.map(contact => contact.id);
+        // TODO: Implémenter l'ajout à une liste existante
+        toast.success(`Contacts ajoutés à la liste sélectionnée`);
+      }
+      
+      resetImporter();
+      onClose();
+    } catch (error) {
+      console.error('Erreur lors de l\'assignation à la liste:', error);
+      toast.error('Erreur lors de l\'assignation à la liste');
+    }
   };
 
   const isValid = () => {

@@ -11,6 +11,7 @@ import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { AgendaCSVImporter } from '@/components/agenda/AgendaCSVImporter';
 import { AgendaCSVExporter } from '@/components/agenda/AgendaCSVExporter';
+import { GoogleCalendarDisplay } from '@/components/integrations/GoogleCalendarDisplay';
 import { useEvents } from '@/hooks/useEvents';
 import { useUser } from '@/contexts/UserContext';
 import { useAuth } from '@/hooks/useAuth';
@@ -328,6 +329,9 @@ export const Agenda: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Google Calendar Integration */}
+      <GoogleCalendarDisplay />
 
       {/* Liste des événements */}
       <Card>

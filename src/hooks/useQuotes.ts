@@ -76,27 +76,29 @@ export const useQuotes = () => {
   }, [user]);
 
   const addQuote = async (quoteData: Omit<Quote, 'id' | 'created_at' | 'updated_at'>) => {
-    const { data, error } = await supabase
-      .from('quotes')
-      .insert({
-        user_id: quoteData.user_id,
-        contact_id: quoteData.contact_id,
-        event_id: quoteData.event_id,
-        quote_number: quoteData.quote_number,
-        title: quoteData.title,
-        description: quoteData.description,
-        status: quoteData.status,
-        total_amount: quoteData.total_amount,
-        tax_amount: quoteData.tax_amount,
-        discount_amount: quoteData.discount_amount,
-        valid_until: quoteData.valid_until,
-        terms: quoteData.terms,
-        notes: quoteData.notes
-      })
-      .select()
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('quotes')
+        .insert({
+          user_id: quoteData.user_id,
+          contact_id: quoteData.contact_id,
+          event_id: quoteData.event_id,
+          quote_number: quoteData.quote_number,
+          title: quoteData.title,
+          description: quoteData.description,
+          status: quoteData.status,
+          total_amount: quoteData.total_amount,
+          tax_amount: quoteData.tax_amount,
+          discount_amount: quoteData.discount_amount,
+          valid_until: quoteData.valid_until,
+          terms: quoteData.terms,
+          notes: quoteData.notes
+        })
+        .select()
+        .single();
 
-    if (data && !error) {
+      if (error) throw error;
+
       const newQuote: Quote = {
         id: data.id,
         user_id: data.user_id,
@@ -113,12 +115,14 @@ export const useQuotes = () => {
         terms: data.terms || '',
         notes: data.notes || '',
         created_at: data.created_at,
-        updated_at: data.updated_at
+        updated_data.updated_at
       };
       setQuotes(prev => [newQuote, ...prev]);
       return newQuote;
+    } catch (error) {
+      console.error('Erreur lors de la création du devis:', error);
+      throw error;
     }
-    return null;
   };
 
   const updateQuote = async (id: string, updates: Partial<Quote>) => {
