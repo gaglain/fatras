@@ -115,7 +115,7 @@ export const useQuotes = () => {
         terms: data.terms || '',
         notes: data.notes || '',
         created_at: data.created_at,
-        updated_data.updated_at
+        updated_at: data.updated_at
       };
       setQuotes(prev => [newQuote, ...prev]);
       return newQuote;

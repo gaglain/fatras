@@ -85,11 +85,11 @@ export const CastingSelector: React.FC<CastingSelectorProps> = ({
           {Object.entries(groupedUsers).map(([role, roleUsers]) => (
             <div key={role} className="space-y-2">
               <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                {getRoleLabel(role)} ({roleUsers.length})
+                {getRoleLabel(role)} ({(roleUsers as any[]).length})
               </h4>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {roleUsers.map(user => (
+                {(roleUsers as any[]).map(user => (
                   <div
                     key={user.id}
                     className={`flex items-center space-x-3 p-3 rounded-lg border transition-colors ${
