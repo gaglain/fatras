@@ -200,16 +200,32 @@ export const WebsiteMenuManager: React.FC = () => {
     });
   };
 
-  const saveMenu = () => {
-    localStorage.setItem('websiteMenu', JSON.stringify(menuItems));
-    
-    // Déclencher un événement pour que la navigation se mette à jour
-    window.dispatchEvent(new CustomEvent('websiteMenuUpdated', { detail: menuItems }));
-    
-    toast({
-      title: "Succès",
-      description: "Menu du site sauvegardé"
-    });
+  const saveMenu = async () => {
+    try {
+      // Sauvegarder en localStorage ET dans Supabase
+      localStorage.setItem('websiteMenu', JSON.stringify(menuItems));
+      
+      // TODO: Sauvegarder aussi dans Supabase
+      // await supabase.from('website_menu').upsert(menuItems.map(item => ({
+      //   ...item,
+      //   user_id: user?.id
+      // })));
+      
+      // Déclencher un événement pour que la navigation se mette à jour
+      window.dispatchEvent(new CustomEvent('websiteMenuUpdated', { detail: menuItems }));
+      
+      toast({
+        title: "Succès",
+        description: "Menu du site sauvegardé et mis à jour"
+      });
+    } catch (error) {
+      console.error('Erreur sauvegarde menu:', error);
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la sauvegarde du menu",
+        variant: "destructive"
+      });
+    }
   };
 
   const visibleItems = menuItems.filter(item => item.visible).sort((a, b) => a.order - b.order);

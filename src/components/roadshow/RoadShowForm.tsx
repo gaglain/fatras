@@ -40,7 +40,16 @@ export const RoadShowForm: React.FC<RoadShowFormProps> = ({
       </TabsContent>
 
       <TabsContent value="lineup">
-        <LineupForm formData={formData} setFormData={setFormData} users={users} />
+        <div className="space-y-4">
+          <div className="mb-4">
+            <h3 className="text-lg font-medium mb-2">Sélection du casting</h3>
+            <p className="text-sm text-muted-foreground">
+              Choisissez les utilisateurs qui feront partie de cette étape de tournée
+            </p>
+          </div>
+          {/* CastingSelector sera intégré ici */}
+          <LineupForm formData={formData} setFormData={setFormData} users={users} />
+        </div>
       </TabsContent>
     </Tabs>
   );
