@@ -240,6 +240,7 @@ export type Database = {
           accepts_marketing_emails: boolean | null
           address: string | null
           city: string | null
+          company: string | null
           country: string | null
           created_at: string | null
           email: string | null
@@ -264,6 +265,7 @@ export type Database = {
           accepts_marketing_emails?: boolean | null
           address?: string | null
           city?: string | null
+          company?: string | null
           country?: string | null
           created_at?: string | null
           email?: string | null
@@ -288,6 +290,7 @@ export type Database = {
           accepts_marketing_emails?: boolean | null
           address?: string | null
           city?: string | null
+          company?: string | null
           country?: string | null
           created_at?: string | null
           email?: string | null

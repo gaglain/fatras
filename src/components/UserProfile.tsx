@@ -98,12 +98,15 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
         } else {
           // Forcer le rafraîchissement des données utilisateur
           if (updateUser) {
-            updateUser({
-              name: formData.name,
-              lastName: formData.lastName,
-              phone: formData.phone,
-              avatar: formData.avatar
-            }, {});
+            try {
+              await updateUser(formData.name, {
+                lastName: formData.lastName,
+                phone: formData.phone,
+                avatar: formData.avatar
+              });
+            } catch (updateError) {
+              console.error('Erreur lors de la mise à jour du contexte utilisateur:', updateError);
+            }
           }
           
           setIsEditing(false);
