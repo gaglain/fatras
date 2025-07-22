@@ -273,15 +273,46 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
   const handleAssignToList = async () => {
     try {
       if (newListName.trim() && onCreateList) {
-        // Créer une nouvelle liste avec les contacts importés
-        const contactIds = importedContacts.map(contact => contact.id);
+        // Récupérer les IDs des contacts importés depuis la base de données
+        const { data: insertedContacts, error } = await supabase
+          .from('contacts')
+          .select('id')
+          .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+          .order('created_at', { ascending: false })
+          .limit(importedContacts.length);
+
+        if (error || !insertedContacts) {
+          throw new Error('Erreur lors de la récupération des contacts importés');
+        }
+
+        const contactIds = insertedContacts.map(contact => contact.id);
         await onCreateList(newListName.trim(), contactIds);
         toast.success(`Liste "${newListName}" créée avec ${contactIds.length} contacts`);
-      } else if (selectedListId && onCreateList) {
+      } else if (selectedListId) {
         // Ajouter les contacts à une liste existante
-        const contactIds = importedContacts.map(contact => contact.id);
-        // TODO: Implémenter l'ajout à une liste existante
-        toast.success(`Contacts ajoutés à la liste sélectionnée`);
+        const { data: insertedContacts, error } = await supabase
+          .from('contacts')
+          .select('id')
+          .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+          .order('created_at', { ascending: false })
+          .limit(importedContacts.length);
+
+        if (!error && insertedContacts) {
+          const members = insertedContacts.map(contact => ({
+            contact_list_id: selectedListId,
+            contact_id: contact.id
+          }));
+
+          const { error: memberError } = await supabase
+            .from('contact_list_members')
+            .insert(members);
+
+          if (!memberError) {
+            toast.success(`${insertedContacts.length} contacts ajoutés à la liste`);
+          } else {
+            throw memberError;
+          }
+        }
       }
       
       resetImporter();

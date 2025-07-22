@@ -6,6 +6,7 @@ export interface Contact {
   email?: string;
   phone?: string;
   position?: string;
+  company?: string;
   address?: string;
   city?: string;
   postal_code?: string;

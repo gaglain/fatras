@@ -96,8 +96,21 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
           console.error('Erreur:', error);
           toast.error('Erreur lors de la sauvegarde');
         } else {
+          // Forcer le rafraîchissement des données utilisateur
+          if (updateUser) {
+            updateUser({
+              name: formData.name,
+              lastName: formData.lastName,
+              phone: formData.phone,
+              avatar: formData.avatar
+            }, {});
+          }
+          
           setIsEditing(false);
           toast.success('Profil mis à jour avec succès');
+          
+          // Rafraîchir la page pour voir les changements
+          window.location.reload();
         }
       } else {
         toast.error('Impossible de sauvegarder : utilisateur non connecté');

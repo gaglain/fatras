@@ -41,7 +41,8 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
     source: '',
     notes: '',
     tags: [],
-    role: 'contact'
+    role: 'contact',
+    company: ''
   });
   const [newTag, setNewTag] = useState('');
   const [loading, setLoading] = useState(false);
@@ -200,6 +201,16 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div>
+            <Label htmlFor="company">Entreprise/Organisation</Label>
+            <Input
+              id="company"
+              value={formData.company || ''}
+              onChange={(e) => setFormData(prev => ({ ...prev, company: e.target.value }))}
+              placeholder="Nom de l'entreprise ou organisation"
+            />
           </div>
 
           <div>

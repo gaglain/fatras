@@ -52,41 +52,33 @@ export const GoogleCalendarDisplay: React.FC = () => {
   const fetchEvents = async () => {
     setLoading(true);
     try {
-      // Simuler des événements Google Calendar car l'API réelle nécessite une authentification complète
-      const mockEvents: GoogleCalendarEvent[] = [
-        {
-          id: '1',
-          summary: 'Concert à Paris',
-          description: 'Concert de jazz dans le 6ème arrondissement',
-          start: { dateTime: '2024-01-15T20:00:00Z' },
-          end: { dateTime: '2024-01-15T23:00:00Z' },
-          location: 'Le Procope, Paris',
-          status: 'confirmed'
-        },
-        {
-          id: '2',
-          summary: 'Réunion avec l\'artiste',
-          description: 'Préparation de la tournée',
-          start: { dateTime: '2024-01-16T14:00:00Z' },
-          end: { dateTime: '2024-01-16T15:30:00Z' },
-          location: 'Bureau',
-          status: 'confirmed'
-        },
-        {
-          id: '3',
-          summary: 'Festival de musique',
-          start: { date: '2024-01-20' },
-          end: { date: '2024-01-22' },
-          location: 'Lyon',
-          status: 'tentative'
-        }
-      ];
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-      // Simulation d'un délai réseau
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setEvents(mockEvents);
-      toast.success('Événements Google Calendar synchronisés');
+      // Récupérer les événements de l'utilisateur depuis la base de données
+      const { data: userEvents, error } = await supabase
+        .from('events')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('start_date', { ascending: true });
+
+      if (error) {
+        throw error;
+      }
+
+      // Convertir les événements au format Google Calendar
+      const calendarEvents: GoogleCalendarEvent[] = userEvents?.map(event => ({
+        id: event.id,
+        summary: event.title,
+        description: event.description,
+        start: event.start_date ? { dateTime: event.start_date } : { date: new Date().toISOString().split('T')[0] },
+        end: event.end_date ? { dateTime: event.end_date } : { date: new Date().toISOString().split('T')[0] },
+        location: `${event.venue || ''} ${event.address || ''} ${event.city || ''}`.trim(),
+        status: event.status === 'confirmed' ? 'confirmed' : event.status === 'pending' ? 'tentative' : 'tentative'
+      })) || [];
+
+      setEvents(calendarEvents);
+      toast.success(`${calendarEvents.length} événements synchronisés`);
     } catch (error) {
       console.error('Erreur lors de la récupération des événements:', error);
       toast.error('Erreur lors de la synchronisation');

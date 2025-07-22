@@ -16,38 +16,7 @@ interface Notification {
   linkTo?: string;
 }
 
-const sampleNotifications: Notification[] = [
-  {
-    id: '1',
-    type: 'message',
-    title: 'Nouveau message',
-    message: 'Marie Martin vous a envoyé un message',
-    timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-    isRead: false,
-    priority: 'medium',
-    linkTo: '/messagerie'
-  },
-  {
-    id: '2',
-    type: 'task',
-    title: 'Tâche en retard',
-    message: 'Finaliser le contrat pour la tournée d\'été',
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-    isRead: false,
-    priority: 'high',
-    linkTo: '/tasks'
-  },
-  {
-    id: '3',
-    type: 'event',
-    title: 'Événement à venir',
-    message: 'Concert prévu demain à 20h',
-    timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-    isRead: true,
-    priority: 'medium',
-    linkTo: '/events'
-  }
-];
+const sampleNotifications: Notification[] = [];
 
 interface NotificationCenterProps {
   onClose: () => void;
