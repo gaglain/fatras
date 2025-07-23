@@ -55,30 +55,71 @@ export const GoogleCalendarDisplay: React.FC = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Récupérer les événements de l'utilisateur depuis la base de données
-      const { data: userEvents, error } = await supabase
-        .from('events')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('start_date', { ascending: true });
+      // Vérifier s'il y a une intégration Google Calendar active
+      const { data: integration } = await supabase
+        .from('integrations')
+        .select('settings')
+        .eq('service', 'google_calendar')
+        .eq('is_active', true)
+        .single();
 
-      if (error) {
-        throw error;
+      if (!integration) {
+        // Fallback: récupérer les événements de l'utilisateur depuis la base de données
+        const { data: userEvents, error } = await supabase
+          .from('events')
+          .select('*')
+          .eq('user_id', user.id)
+          .gte('start_date', new Date().toISOString())
+          .order('start_date', { ascending: true })
+          .limit(10);
+
+        if (error) throw error;
+
+        // Convertir les événements au format Google Calendar
+        const calendarEvents: GoogleCalendarEvent[] = userEvents?.map(event => ({
+          id: event.id,
+          summary: event.title,
+          description: event.description,
+          start: event.start_date ? { dateTime: event.start_date } : { date: new Date().toISOString().split('T')[0] },
+          end: event.end_date ? { dateTime: event.end_date } : { date: new Date().toISOString().split('T')[0] },
+          location: `${event.venue || ''} ${event.address || ''} ${event.city || ''}`.trim(),
+          status: event.status === 'confirmed' ? 'confirmed' : event.status === 'pending' ? 'tentative' : 'tentative'
+        })) || [];
+
+        setEvents(calendarEvents);
+        return;
       }
 
-      // Convertir les événements au format Google Calendar
-      const calendarEvents: GoogleCalendarEvent[] = userEvents?.map(event => ({
-        id: event.id,
-        summary: event.title,
-        description: event.description,
-        start: event.start_date ? { dateTime: event.start_date } : { date: new Date().toISOString().split('T')[0] },
-        end: event.end_date ? { dateTime: event.end_date } : { date: new Date().toISOString().split('T')[0] },
-        location: `${event.venue || ''} ${event.address || ''} ${event.city || ''}`.trim(),
-        status: event.status === 'confirmed' ? 'confirmed' : event.status === 'pending' ? 'tentative' : 'tentative'
-      })) || [];
+      // Si Google Calendar est connecté, utiliser l'API Google
+      try {
+        // Ici on pourrait faire un appel à une edge function pour récupérer les événements Google
+        // Pour l'instant, on utilise les événements locaux comme fallback
+        const { data: userEvents, error } = await supabase
+          .from('events')
+          .select('*')
+          .eq('user_id', user.id)
+          .gte('start_date', new Date().toISOString())
+          .order('start_date', { ascending: true })
+          .limit(10);
 
-      setEvents(calendarEvents);
-      toast.success(`${calendarEvents.length} événements synchronisés`);
+        if (error) throw error;
+
+        const calendarEvents: GoogleCalendarEvent[] = userEvents?.map(event => ({
+          id: event.id,
+          summary: event.title,
+          description: event.description,
+          start: event.start_date ? { dateTime: event.start_date } : { date: new Date().toISOString().split('T')[0] },
+          end: event.end_date ? { dateTime: event.end_date } : { date: new Date().toISOString().split('T')[0] },
+          location: `${event.venue || ''} ${event.address || ''} ${event.city || ''}`.trim(),
+          status: event.status === 'confirmed' ? 'confirmed' : event.status === 'pending' ? 'tentative' : 'tentative'
+        })) || [];
+
+        setEvents(calendarEvents);
+        toast.success(`${calendarEvents.length} événements synchronisés`);
+      } catch (calendarError) {
+        console.error('Erreur Google Calendar API:', calendarError);
+        throw calendarError;
+      }
     } catch (error) {
       console.error('Erreur lors de la récupération des événements:', error);
       toast.error('Erreur lors de la synchronisation');

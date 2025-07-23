@@ -11,9 +11,17 @@ interface ContactCardProps {
   contact: Contact;
   onEdit: (contact: Contact) => void;
   onDelete: (id: string) => void;
+  isSelected?: boolean;
+  onSelect?: (selected: boolean) => void;
 }
 
-export const ContactCard: React.FC<ContactCardProps> = ({ contact, onEdit, onDelete }) => {
+export const ContactCard: React.FC<ContactCardProps> = ({ 
+  contact, 
+  onEdit, 
+  onDelete,
+  isSelected = false,
+  onSelect
+}) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'client': return 'bg-green-100 text-green-800';
@@ -36,10 +44,18 @@ export const ContactCard: React.FC<ContactCardProps> = ({ contact, onEdit, onDel
   };
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className={`hover:shadow-md transition-shadow ${isSelected ? 'ring-2 ring-blue-500' : ''}`}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center space-x-3">
+            {onSelect && (
+              <input
+                type="checkbox"
+                checked={isSelected}
+                onChange={(e) => onSelect(e.target.checked)}
+                className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+              />
+            )}
             <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
               <span className="text-lg">{getRoleIcon(contact.role)}</span>
             </div>
@@ -95,6 +111,12 @@ export const ContactCard: React.FC<ContactCardProps> = ({ contact, onEdit, onDel
               <a href={`tel:${contact.phone}`} className="hover:text-primary">
                 {contact.phone}
               </a>
+            </div>
+          )}
+          {contact.company && (
+            <div className="flex items-center text-sm text-muted-foreground">
+              <User className="h-4 w-4 mr-2" />
+              {contact.company}
             </div>
           )}
           {contact.city && (

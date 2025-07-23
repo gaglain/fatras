@@ -40,7 +40,8 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
     { key: 'country', label: 'Pays', required: false },
     { key: 'status', label: 'Statut (prospect/client/inactive)', required: false },
     { key: 'source', label: 'Source', required: false },
-    { key: 'notes', label: 'Notes', required: false }
+    { key: 'notes', label: 'Notes', required: false },
+    { key: 'company', label: 'Entreprise', required: false }
   ];
 
   const generateTemplate = () => {
@@ -211,10 +212,12 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
         });
         
         // Valeurs par défaut pour les champs requis
-        if (!mappedRow.first_name) mappedRow.first_name = 'Prénom';
-        if (!mappedRow.last_name) mappedRow.last_name = 'Nom';
-        if (!mappedRow.status) mappedRow.status = 'prospect';
-        if (mappedRow.accepts_marketing_emails === undefined) mappedRow.accepts_marketing_emails = true;
+          // Valeurs par défaut pour les champs requis
+          if (!mappedRow.first_name) mappedRow.first_name = 'Prénom';
+          if (!mappedRow.last_name) mappedRow.last_name = 'Nom';
+          if (!mappedRow.status) mappedRow.status = 'prospect';
+          if (!mappedRow.role) mappedRow.role = 'contact';
+          if (mappedRow.accepts_marketing_emails === undefined) mappedRow.accepts_marketing_emails = true;
         
         return mappedRow;
       });

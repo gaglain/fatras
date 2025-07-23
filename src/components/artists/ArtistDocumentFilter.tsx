@@ -77,7 +77,10 @@ export const ArtistDocumentFilter: React.FC = () => {
 
       const { data: filesData, error } = await supabase
         .from('artist_files')
-        .select('*, contacts(first_name, last_name)')
+        .select(`
+          *,
+          contacts!artist_files_artist_id_fkey(first_name, last_name)
+        `)
         .eq('user_id', user.id);
 
       if (error) throw error;

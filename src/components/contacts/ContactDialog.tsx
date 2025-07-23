@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -14,15 +13,15 @@ import { toast } from 'sonner';
 import { Contact } from '@/types/contact.types';
 
 interface ContactDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  isOpen: boolean;
+  onClose: () => void;
   contact?: Contact | null;
   onSave: () => void;
 }
 
 export const ContactDialog: React.FC<ContactDialogProps> = ({
-  open,
-  onOpenChange,
+  isOpen,
+  onClose,
   contact,
   onSave
 }) => {
@@ -33,6 +32,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
     email: '',
     phone: '',
     position: '',
+    company: '',
     address: '',
     city: '',
     postal_code: '',
@@ -41,8 +41,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
     source: '',
     notes: '',
     tags: [],
-    role: 'contact',
-    company: ''
+    role: 'contact'
   });
   const [newTag, setNewTag] = useState('');
   const [loading, setLoading] = useState(false);
@@ -57,6 +56,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
         email: '',
         phone: '',
         position: '',
+        company: '',
         address: '',
         city: '',
         postal_code: '',
@@ -68,7 +68,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
         role: 'contact'
       });
     }
-  }, [contact, open]);
+  }, [contact, isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,7 +99,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
       }
 
       onSave();
-      onOpenChange(false);
+      onClose();
     } catch (error: any) {
       console.error('Erreur:', error);
       toast.error('Erreur lors de la sauvegarde du contact');
@@ -126,7 +126,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
@@ -186,6 +186,32 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
               />
             </div>
             <div>
+              <Label htmlFor="company">Entreprise</Label>
+              <Input
+                id="company"
+                value={formData.company || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, company: e.target.value }))}
+                placeholder="Nom de l'entreprise"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="status">Statut</Label>
+              <Select value={formData.status} onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="prospect">Prospect</SelectItem>
+                  <SelectItem value="client">Client</SelectItem>
+                  <SelectItem value="partenaire">Partenaire</SelectItem>
+                  <SelectItem value="inactive">Inactif</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
               <Label htmlFor="role">Type de contact</Label>
               <Select value={formData.role} onValueChange={(value) => setFormData(prev => ({ ...prev, role: value }))}>
                 <SelectTrigger>
@@ -201,16 +227,6 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
                 </SelectContent>
               </Select>
             </div>
-          </div>
-
-          <div>
-            <Label htmlFor="company">Entreprise/Organisation</Label>
-            <Input
-              id="company"
-              value={formData.company || ''}
-              onChange={(e) => setFormData(prev => ({ ...prev, company: e.target.value }))}
-              placeholder="Nom de l'entreprise ou organisation"
-            />
           </div>
 
           <div>
@@ -249,30 +265,14 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="status">Statut</Label>
-              <Select value={formData.status} onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="prospect">Prospect</SelectItem>
-                  <SelectItem value="client">Client</SelectItem>
-                  <SelectItem value="partenaire">Partenaire</SelectItem>
-                  <SelectItem value="inactif">Inactif</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="source">Source</Label>
-              <Input
-                id="source"
-                value={formData.source || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, source: e.target.value }))}
-                placeholder="Référence, réseau social..."
-              />
-            </div>
+          <div>
+            <Label htmlFor="source">Source</Label>
+            <Input
+              id="source"
+              value={formData.source || ''}
+              onChange={(e) => setFormData(prev => ({ ...prev, source: e.target.value }))}
+              placeholder="Référence, réseau social..."
+            />
           </div>
 
           <div>
@@ -312,7 +312,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="outline" onClick={onClose}>
               Annuler
             </Button>
             <Button type="submit" disabled={loading}>

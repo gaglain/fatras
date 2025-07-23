@@ -91,7 +91,7 @@ export const UserManagement: React.FC = () => {
           show_name: userForm.show_name
         });
       } else {
-        // Création
+        // Création avec informations étendues
         const tempPassword = generateTempPassword();
         
         const success = await createUser({
@@ -99,7 +99,7 @@ export const UserManagement: React.FC = () => {
           password: tempPassword,
           first_name: userForm.name,
           last_name: userForm.lastName,
-          username: userForm.username,
+          username: userForm.username || userForm.email.split('@')[0],
           phone: userForm.phone,
           role: userForm.role,
           address: userForm.address,
