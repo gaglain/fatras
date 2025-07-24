@@ -9,8 +9,12 @@ import { ContactDialog } from '@/components/contacts/ContactDialog';
 import { CSVImporter } from '@/components/CSVImporter';
 import { CSVExporter } from '@/components/CSVExporter';
 import { ContactLists } from '@/pages/ContactLists';
+import { ContactFilters } from '@/components/contacts/ContactFilters';
+import { BulkContactActions } from '@/components/contacts/BulkContactActions';
+import { BulkContactListAssignment } from '@/components/contacts/BulkContactListAssignment';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useContactLists } from '@/hooks/useContactLists';
 import { toast } from 'sonner';
 import { Contact } from '@/types/contact.types';
 import { useNavigate } from 'react-router-dom';
@@ -18,6 +22,7 @@ import { useNavigate } from 'react-router-dom';
 export const Contacts: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { contactLists } = useContactLists();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [filteredContacts, setFilteredContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,9 +31,15 @@ export const Contacts: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [roleFilter, setRoleFilter] = useState('all');
+  const [tagFilters, setTagFilters] = useState<string[]>([]);
+  const [sourceFilter, setSourceFilter] = useState('all');
+  const [cityFilter, setCityFilter] = useState('all');
   const [csvImportOpen, setCsvImportOpen] = useState(false);
   const [csvExportOpen, setCsvExportOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('contacts');
+  const [selectedContactIds, setSelectedContactIds] = useState<string[]>([]);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [bulkListAssignmentOpen, setBulkListAssignmentOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -38,7 +49,7 @@ export const Contacts: React.FC = () => {
 
   useEffect(() => {
     filterContacts();
-  }, [contacts, searchTerm, statusFilter, roleFilter]);
+  }, [contacts, searchTerm, statusFilter, roleFilter, tagFilters, sourceFilter, cityFilter]);
 
   const fetchContacts = async () => {
     try {
@@ -65,7 +76,9 @@ export const Contacts: React.FC = () => {
       filtered = filtered.filter(contact => 
         `${contact.first_name} ${contact.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
         contact.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        contact.position?.toLowerCase().includes(searchTerm.toLowerCase())
+        contact.position?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        contact.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        contact.company?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -75,6 +88,20 @@ export const Contacts: React.FC = () => {
 
     if (roleFilter !== 'all') {
       filtered = filtered.filter(contact => contact.role === roleFilter);
+    }
+
+    if (tagFilters.length > 0) {
+      filtered = filtered.filter(contact => 
+        contact.tags && contact.tags.some(tag => tagFilters.includes(tag))
+      );
+    }
+
+    if (sourceFilter !== 'all') {
+      filtered = filtered.filter(contact => contact.source === sourceFilter);
+    }
+
+    if (cityFilter !== 'all') {
+      filtered = filtered.filter(contact => contact.city === cityFilter);
     }
 
     setFilteredContacts(filtered);
@@ -113,6 +140,68 @@ export const Contacts: React.FC = () => {
     fetchContacts(); // Refresh the contacts list
     setCsvImportOpen(false);
   };
+
+  // Bulk selection functions
+  const handleSelectAll = (selected: boolean) => {
+    if (selected) {
+      setSelectedContactIds(filteredContacts.map(c => c.id!).filter(Boolean));
+    } else {
+      setSelectedContactIds([]);
+    }
+  };
+
+  const handleContactSelect = (contactId: string, selected: boolean) => {
+    if (selected) {
+      setSelectedContactIds(prev => [...prev, contactId]);
+    } else {
+      setSelectedContactIds(prev => prev.filter(id => id !== contactId));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedContactIds.length === 0) return;
+    
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('contacts')
+        .delete()
+        .in('id', selectedContactIds);
+
+      if (error) throw error;
+      
+      toast.success(`${selectedContactIds.length} contact(s) supprimé(s) avec succès`);
+      setSelectedContactIds([]);
+      fetchContacts();
+    } catch (error: any) {
+      console.error('Erreur lors de la suppression en masse:', error);
+      toast.error('Erreur lors de la suppression des contacts');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleBulkListAssignment = () => {
+    setBulkListAssignmentOpen(true);
+  };
+
+  const clearAllFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('all');
+    setRoleFilter('all');
+    setTagFilters([]);
+    setSourceFilter('all');
+    setCityFilter('all');
+  };
+
+  // Get unique values for filters
+  const getUniqueValues = (key: keyof Contact) => {
+    return Array.from(new Set(contacts.map(contact => contact[key]).filter(Boolean)));
+  };
+
+  const availableTags = Array.from(new Set(contacts.flatMap(c => c.tags || [])));
+  const availableSources = getUniqueValues('source') as string[];
+  const availableCities = getUniqueValues('city') as string[];
 
   const getContactStats = () => {
     const total = contacts.length;
@@ -221,44 +310,47 @@ export const Contacts: React.FC = () => {
             </div>
           </div>
 
-          {/* Filters */}
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Rechercher un contact..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+          {/* Advanced Filters */}
+          <ContactFilters
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            statusFilter={statusFilter}
+            onStatusFilterChange={setStatusFilter}
+            tagFilters={tagFilters}
+            onTagFiltersChange={setTagFilters}
+            sourceFilter={sourceFilter}
+            onSourceFilterChange={setSourceFilter}
+            cityFilter={cityFilter}
+            onCityFilterChange={setCityFilter}
+            availableTags={availableTags}
+            availableSources={availableSources}
+            availableCities={availableCities}
+            totalContacts={contacts.length}
+            filteredCount={filteredContacts.length}
+            onClearFilters={clearAllFilters}
+          />
+
+          {/* Bulk Actions */}
+          {filteredContacts.length > 0 && (
+            <BulkContactActions
+              selectedContacts={selectedContactIds}
+              totalContacts={filteredContacts.length}
+              onSelectAll={handleSelectAll}
+              onClearSelection={() => setSelectedContactIds([])}
+              onBulkDelete={handleBulkDelete}
+              isDeleting={isDeleting}
+            />
+          )}
+
+          {/* Bulk Action Buttons */}
+          {selectedContactIds.length > 0 && (
+            <div className="flex gap-2">
+              <Button onClick={handleBulkListAssignment} variant="outline">
+                <List className="h-4 w-4 mr-2" />
+                Ajouter à une liste
+              </Button>
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder="Filtrer par statut" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous les statuts</SelectItem>
-                <SelectItem value="prospect">Prospects</SelectItem>
-                <SelectItem value="client">Clients</SelectItem>
-                <SelectItem value="partenaire">Partenaires</SelectItem>
-                <SelectItem value="inactif">Inactifs</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={roleFilter} onValueChange={setRoleFilter}>
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder="Filtrer par type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous les types</SelectItem>
-                <SelectItem value="artiste">Artistes</SelectItem>
-                <SelectItem value="manager">Managers</SelectItem>
-                <SelectItem value="venue">Venues</SelectItem>
-                <SelectItem value="organisateur">Organisateurs</SelectItem>
-                <SelectItem value="media">Médias</SelectItem>
-                <SelectItem value="contact">Contacts généraux</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          )}
 
           {/* Contacts Grid */}
           {filteredContacts.length === 0 ? (
@@ -288,6 +380,8 @@ export const Contacts: React.FC = () => {
                   contact={contact}
                   onEdit={handleEdit}
                   onDelete={handleDelete}
+                  isSelected={selectedContactIds.includes(contact.id!)}
+                  onSelect={(selected) => handleContactSelect(contact.id!, selected)}
                 />
               ))}
             </div>
@@ -319,6 +413,17 @@ export const Contacts: React.FC = () => {
         isOpen={csvExportOpen}
         onClose={() => setCsvExportOpen(false)}
         contacts={filteredContacts}
+      />
+
+      <BulkContactListAssignment
+        isOpen={bulkListAssignmentOpen}
+        onClose={() => setBulkListAssignmentOpen(false)}
+        selectedContactIds={selectedContactIds}
+        contactLists={contactLists}
+        onListCreated={() => {
+          setSelectedContactIds([]);
+          setBulkListAssignmentOpen(false);
+        }}
       />
     </div>
   );
