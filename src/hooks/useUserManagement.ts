@@ -122,10 +122,22 @@ export const useUserManagement = () => {
     try {
       setLoading(true);
       
-      const { data, error } = await supabase.rpc('update_user_profile_data', {
-        profile_user_id: userId,
-        profile_data: userData
-      });
+      // Mise à jour directe de la table user_profiles
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({
+          first_name: userData.first_name,
+          last_name: userData.last_name,
+          username: userData.username,
+          phone: userData.phone,
+          address: userData.address,
+          city: userData.city,
+          function_title: userData.function_title,
+          show_name: userData.show_name,
+          avatar_url: userData.avatar_url,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', userId);
 
       if (error) {
         console.error('Erreur mise à jour:', error);

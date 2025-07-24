@@ -33,19 +33,30 @@ export const GoogleCalendarDisplay: React.FC = () => {
 
   const checkConnection = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
       const { data, error } = await supabase
         .from('integrations')
         .select('*')
         .eq('service', 'google_calendar')
+        .eq('user_id', user.id)
         .eq('is_active', true)
         .single();
 
       if (!error && data) {
         setIsConnected(true);
         await fetchEvents();
+      } else {
+        // Toujours charger les événements locaux même sans Google Calendar
+        setIsConnected(true);
+        await fetchEvents();
       }
     } catch (error) {
       console.error('Erreur lors de la vérification de la connexion:', error);
+      // En cas d'erreur, charger quand même les événements locaux
+      setIsConnected(true);
+      await fetchEvents();
     }
   };
 

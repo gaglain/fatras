@@ -1136,7 +1136,7 @@ export type Database = {
           social_security_number: string | null
           updated_at: string
           user_id: string
-          username: string
+          username: string | null
         }
         Insert: {
           address?: string | null
@@ -1161,7 +1161,7 @@ export type Database = {
           social_security_number?: string | null
           updated_at?: string
           user_id: string
-          username: string
+          username?: string | null
         }
         Update: {
           address?: string | null
@@ -1186,7 +1186,7 @@ export type Database = {
           social_security_number?: string | null
           updated_at?: string
           user_id?: string
-          username?: string
+          username?: string | null
         }
         Relationships: []
       }
@@ -1345,6 +1345,10 @@ export type Database = {
           role: string
           avatar_url: string
           is_active: boolean
+          address: string
+          city: string
+          function_title: string
+          show_name: string
           created_at: string
           updated_at: string
         }[]
