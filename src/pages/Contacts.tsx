@@ -300,8 +300,8 @@ export const Contacts: React.FC = () => {
       </Tabs>
 
       <ContactDialog
-        open={dialogOpen}
-        onOpenChange={handleDialogClose}
+        isOpen={dialogOpen}
+        onClose={handleDialogClose}
         contact={editingContact}
         onSave={() => {
           fetchContacts();
