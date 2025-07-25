@@ -21,7 +21,7 @@ export const BackOfficeHeader: React.FC = () => {
   const [showUserProfile, setShowUserProfile] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [unreadCount] = useState(3);
+  const [unreadCount] = useState(0);
 
   const isDark = theme === "dark";
 
