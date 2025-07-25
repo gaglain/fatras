@@ -82,17 +82,16 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
       }
 
       if (authUser?.id) {
-        // Mise à jour directe de la table user_profiles
-        const { error } = await supabase
-          .from('user_profiles')
-          .update({
+        // Utiliser la fonction RPC sécurisée pour la mise à jour
+        const { data, error } = await supabase.rpc('update_user_profile_data', {
+          profile_user_id: authUser.id,
+          profile_data: {
             first_name: formData.name,
             last_name: formData.lastName,
             phone: formData.phone,
-            avatar_url: formData.avatar,
-            updated_at: new Date().toISOString()
-          })
-          .eq('user_id', authUser.id);
+            avatar_url: formData.avatar
+          }
+        });
 
         if (error) {
           console.error('Erreur:', error);
