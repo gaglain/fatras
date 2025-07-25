@@ -18,7 +18,7 @@ export const Header: React.FC = () => {
   const { signOut } = useAuth();
   const [showUserProfile, setShowUserProfile] = useState(false);
   const [showNotificationTest, setShowNotificationTest] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(3);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [companySettings, setCompanySettings] = useState({
     name: 'Fatras Booking',
     logo: '',
