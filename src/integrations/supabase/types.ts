@@ -1332,6 +1332,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_user_with_profile: {
+        Args: { user_email: string; user_password: string; profile_data: Json }
+        Returns: Json
+      }
       get_user_profiles: {
         Args: Record<PropertyKey, never>
         Returns: {
