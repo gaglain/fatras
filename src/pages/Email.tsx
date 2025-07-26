@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, Mail, Send, Calendar, Phone, FileText, Edit, Trash2, Inbox, Search, Star, Archive } from 'lucide-react';
 import { EmailViewer } from '@/components/EmailViewer';
 import { toast } from 'sonner';
+import { useEmailSender } from '@/hooks/useEmailSender';
 
 interface Email {
   id: string;
@@ -141,6 +142,7 @@ export const Email: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
+  const { sendEmail, sending } = useEmailSender();
   
   // Nouveaux états pour la composition d'email
   const [composeData, setComposeData] = useState({
@@ -208,8 +210,18 @@ export const Email: React.FC = () => {
     }
 
     try {
-      // Simuler l'envoi d'email
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      console.log('Tentative d\'envoi d\'email via handleSendEmail...', { 
+        to: composeData.to, 
+        subject: composeData.subject, 
+        content: composeData.content 
+      });
+      
+      // Utiliser le vrai service d'envoi d'emails
+      await sendEmail({
+        to: [composeData.to],
+        subject: composeData.subject,
+        html: `<div style="font-family: Arial, sans-serif;">${composeData.content.replace(/\n/g, '<br>')}</div>`
+      });
       
       // Ajouter l'email envoyé à la liste
       const newEmail: Email = {
@@ -237,7 +249,8 @@ export const Email: React.FC = () => {
       setShowCompose(false);
       toast.success('Email envoyé avec succès !');
     } catch (error) {
-      toast.error('Erreur lors de l\'envoi de l\'email');
+      console.error('Erreur lors de l\'envoi de l\'email:', error);
+      toast.error(`Erreur lors de l'envoi de l'email: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
     }
   };
 
