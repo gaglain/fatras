@@ -8,13 +8,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Mail, Send, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { useEmailSender } from '@/hooks/useEmailSender';
 
 export const EmailSenderComponent: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [to, setTo] = useState('');
   const [subject, setSubject] = useState('');
   const [content, setContent] = useState('');
-  const [sending, setSending] = useState(false);
+  const { sendEmail, sending } = useEmailSender();
 
   const handleSendEmail = async () => {
     if (!to.trim() || !subject.trim() || !content.trim()) {
@@ -22,10 +23,14 @@ export const EmailSenderComponent: React.FC = () => {
       return;
     }
 
-    setSending(true);
     try {
-      // Simulation d'envoi d'email car RESEND_API_KEY n'est pas configurée
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log('Tentative d\'envoi d\'email...', { to, subject, content });
+      
+      await sendEmail({
+        to: [to],
+        subject,
+        html: `<div style="font-family: Arial, sans-serif;">${content.replace(/\n/g, '<br>')}</div>`
+      });
       
       toast.success('Email envoyé avec succès !');
       
@@ -36,9 +41,7 @@ export const EmailSenderComponent: React.FC = () => {
       setIsOpen(false);
     } catch (error) {
       console.error('Erreur envoi email:', error);
-      toast.error('Erreur lors de l\'envoi de l\'email');
-    } finally {
-      setSending(false);
+      toast.error(`Erreur lors de l'envoi de l'email: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
     }
   };
 
