@@ -4,7 +4,13 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Mail, Send, Calendar, Phone, FileText, Edit, Trash2, Inbox, Search, Star, Archive } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Plus, Mail, Send, Calendar, Phone, FileText, Edit, Trash2, Inbox, Search, Star, Archive, 
+         Paperclip, Reply, Forward, MoreHorizontal, Clock, Users, TrendingUp, Filter,
+         Settings, RefreshCw, AlertCircle, CheckCircle, Zap } from 'lucide-react';
 import { EmailViewer } from '@/components/EmailViewer';
 import { toast } from 'sonner';
 import { useEmailSender } from '@/hooks/useEmailSender';
@@ -273,153 +279,385 @@ export const Email: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Gestion Email</h1>
-          <p className="text-gray-600 mt-2">Envoyer des emails, programmer des communications et gérer les modèles</p>
-        </div>
-        <div className="flex space-x-3">
-          <Button onClick={() => setShowScheduled(!showScheduled)} variant="outline">
-            <Calendar className="h-4 w-4 mr-2" />
-            Programmés ({scheduledEmails.length})
-          </Button>
-          <Button onClick={() => setShowCompose(true)} className="bg-purple-600 hover:bg-purple-700">
-            <Plus className="h-4 w-4 mr-2" />
-            Composer Email
-          </Button>
+    <div className="h-full bg-gradient-to-br from-background via-background to-muted/20">
+      {/* Modern Header with glass effect */}
+      <div className="bg-background/80 backdrop-blur-sm border-b border-border/50 p-6 sticky top-0 z-10">
+        <div className="flex items-center justify-between max-w-7xl mx-auto">
+          <div className="space-y-1">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-primary/10 text-primary">
+                <Mail className="h-6 w-6" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                  Centre Email Pro
+                </h1>
+                <p className="text-muted-foreground text-sm">
+                  Gestion avancée des communications email
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <Button variant="outline" size="sm" onClick={() => setShowScheduled(!showScheduled)} 
+                    className="border-primary/20 hover:border-primary/40 hover:bg-primary/5">
+              <Clock className="h-4 w-4 mr-2" />
+              Programmés ({scheduledEmails.length})
+            </Button>
+            
+            <Dialog open={showCompose} onOpenChange={setShowCompose}>
+              <DialogTrigger asChild>
+                <Button className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 
+                                 shadow-lg hover:shadow-xl transition-all duration-200">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Composer
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+                <div className="bg-gradient-to-r from-primary/5 to-primary/10 p-6 border-b">
+                  <DialogHeader>
+                    <DialogTitle className="text-xl font-semibold flex items-center gap-2">
+                      <Edit className="h-5 w-5 text-primary" />
+                      Composer un nouveau message
+                    </DialogTitle>
+                  </DialogHeader>
+                </div>
+                
+                <div className="p-6 space-y-6">
+                  {/* Enhanced Compose Form */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-muted-foreground">Destinataire</label>
+                      <Input 
+                        placeholder="email@exemple.com"
+                        value={composeData.to}
+                        onChange={(e) => setComposeData(prev => ({ ...prev, to: e.target.value }))}
+                        className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-muted-foreground">CC (optionnel)</label>
+                      <Input 
+                        placeholder="cc@exemple.com"
+                        value={composeData.cc}
+                        onChange={(e) => setComposeData(prev => ({ ...prev, cc: e.target.value }))}
+                        className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-muted-foreground">Objet</label>
+                    <Input 
+                      placeholder="Objet de votre message"
+                      value={composeData.subject}
+                      onChange={(e) => setComposeData(prev => ({ ...prev, subject: e.target.value }))}
+                      className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-muted-foreground">Template (optionnel)</label>
+                    <Select value={composeData.selectedTemplateId} onValueChange={handleTemplateSelect}>
+                      <SelectTrigger className="transition-all duration-200 focus:ring-2 focus:ring-primary/20">
+                        <SelectValue placeholder="Choisir un modèle..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {emailTemplates.map((template) => (
+                          <SelectItem key={template.id} value={template.id}>
+                            <div className="flex items-center gap-2">
+                              <FileText className="h-4 w-4" />
+                              {template.name}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-muted-foreground">Message</label>
+                    <Textarea 
+                      placeholder="Rédigez votre message..."
+                      value={composeData.content}
+                      onChange={(e) => setComposeData(prev => ({ ...prev, content: e.target.value }))}
+                      className="min-h-[200px] transition-all duration-200 focus:ring-2 focus:ring-primary/20"
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between pt-4 border-t">
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" size="sm">
+                        <Paperclip className="h-4 w-4 mr-2" />
+                        Joindre
+                      </Button>
+                      <Button variant="outline" size="sm">
+                        <Settings className="h-4 w-4 mr-2" />
+                        Options
+                      </Button>
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      <Button variant="outline" onClick={() => setShowCompose(false)}>
+                        Annuler
+                      </Button>
+                      <Button onClick={handleSendEmail} disabled={sending}
+                              className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70">
+                        {sending ? (
+                          <>
+                            <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                            Envoi...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="h-4 w-4 mr-2" />
+                            Envoyer
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
       </div>
 
-      {/* Email Inbox */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center">
-                  <Inbox className="h-5 w-5 mr-2" />
-                  Boîte de réception
-                </CardTitle>
-                <div className="flex items-center space-x-2">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                    <Input
-                      placeholder="Rechercher..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10 w-64"
-                    />
-                  </div>
-                  <Select value={filterType} onValueChange={setFilterType}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue placeholder="Filtre" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Tous</SelectItem>
-                      <SelectItem value="unread">Non lus</SelectItem>
-                      <SelectItem value="starred">Favoris</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="space-y-0">
-                {filteredEmails.map((email) => (
-                  <div
-                    key={email.id}
-                    className={`p-4 border-b hover:bg-gray-50 cursor-pointer transition-colors ${
-                      !email.isRead ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
-                    }`}
-                    onClick={() => handleEmailClick(email)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center space-x-2 mb-1">
-                          {email.isStarred && <Star className="h-4 w-4 text-yellow-500 fill-current" />}
-                          {!email.isRead && <div className="w-2 h-2 bg-blue-500 rounded-full" />}
-                          <span className={`font-medium ${!email.isRead ? 'text-gray-900' : 'text-gray-700'}`}>
-                            {email.from}
-                          </span>
-                        </div>
-                        <h4 className={`font-medium truncate ${!email.isRead ? 'text-gray-900' : 'text-gray-800'}`}>
-                          {email.subject}
-                        </h4>
-                        <p className="text-sm text-gray-600 truncate mt-1">
-                          {email.content.substring(0, 100)}...
-                        </p>
-                      </div>
-                      <div className="text-right ml-4">
-                        <p className="text-sm text-gray-500">
-                          {new Date(email.date).toLocaleDateString('fr-FR')}
-                        </p>
-                        {email.attachments && email.attachments.length > 0 && (
-                          <Badge variant="outline" className="mt-1 text-xs">
-                            {email.attachments.length} pièce(s) jointe(s)
-                          </Badge>
-                        )}
-                      </div>
+      {/* Enhanced Email Dashboard */}
+      <div className="max-w-7xl mx-auto p-6 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Main Email List */}
+          <div className="lg:col-span-3">
+            <Card className="h-full border-0 shadow-lg bg-card/50 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 border-b">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                      <Inbox className="h-5 w-5" />
                     </div>
+                    <div>
+                      <span className="text-lg font-semibold">Boîte de réception</span>
+                      <p className="text-sm text-muted-foreground font-normal">
+                        {filteredEmails.length} message{filteredEmails.length > 1 ? 's' : ''}
+                      </p>
+                    </div>
+                  </CardTitle>
+                  
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                      <Input
+                        placeholder="Rechercher dans les emails..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10 w-80 border-primary/20 focus:border-primary/40"
+                      />
+                    </div>
+                    
+                    <Select value={filterType} onValueChange={setFilterType}>
+                      <SelectTrigger className="w-40 border-primary/20 focus:border-primary/40">
+                        <Filter className="h-4 w-4 mr-2" />
+                        <SelectValue placeholder="Filtre" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">
+                          <div className="flex items-center gap-2">
+                            <Inbox className="h-4 w-4" />
+                            Tous les emails
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="unread">
+                          <div className="flex items-center gap-2">
+                            <AlertCircle className="h-4 w-4" />
+                            Non lus
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="starred">
+                          <div className="flex items-center gap-2">
+                            <Star className="h-4 w-4" />
+                            Favoris
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                </div>
+              </CardHeader>
+              
+              <CardContent className="p-0">
+                <ScrollArea className="h-[calc(100vh-20rem)]">
+                  <div className="divide-y divide-border/50">
+                    {filteredEmails.map((email, index) => (
+                      <div
+                        key={email.id}
+                        className={`p-4 hover:bg-muted/30 cursor-pointer transition-all duration-200 group
+                          ${!email.isRead ? 'bg-primary/5 border-l-4 border-l-primary' : ''}`}
+                        onClick={() => handleEmailClick(email)}
+                      >
+                        <div className="flex items-start gap-4">
+                          <div className="flex items-center gap-3">
+                            {!email.isRead && <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />}
+                            {email.isStarred && <Star className="h-4 w-4 text-yellow-500 fill-current" />}
+                          </div>
+                          
+                          <div className="flex-1 min-w-0 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <span className={`font-medium text-sm
+                                  ${!email.isRead ? 'text-foreground' : 'text-muted-foreground'}`}>
+                                  {email.from}
+                                </span>
+                                {email.attachments && email.attachments.length > 0 && (
+                                  <Paperclip className="h-3 w-3 text-muted-foreground" />
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-muted-foreground">
+                                  {new Date(email.date).toLocaleDateString('fr-FR', {
+                                    day: 'numeric',
+                                    month: 'short',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </span>
+                                <MoreHorizontal className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                              </div>
+                            </div>
+                            
+                            <h4 className={`font-medium truncate text-sm
+                              ${!email.isRead ? 'text-foreground' : 'text-muted-foreground'}`}>
+                              {email.subject}
+                            </h4>
+                            
+                            <p className="text-xs text-muted-foreground truncate leading-relaxed">
+                              {email.content.substring(0, 120)}...
+                            </p>
+                            
+                            {email.attachments && email.attachments.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-2">
+                                {email.attachments.map((attachment, i) => (
+                                  <Badge key={i} variant="secondary" className="text-xs">
+                                    {attachment}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {filteredEmails.length === 0 && (
+                      <div className="p-12 text-center">
+                        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+                          <Search className="h-8 w-8 text-muted-foreground" />
+                        </div>
+                        <h3 className="font-medium text-foreground mb-2">Aucun email trouvé</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Essayez de modifier vos critères de recherche
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          </div>
 
-        <div className="space-y-6">
-          {/* Quick Actions */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Actions rapides</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button onClick={() => setShowCompose(true)} className="w-full bg-purple-600 hover:bg-purple-700">
-                <Mail className="h-4 w-4 mr-2" />
-                Composer
-              </Button>
-              <Button variant="outline" className="w-full">
-                <Calendar className="h-4 w-4 mr-2" />
-                Programmer
-              </Button>
-              <Button variant="outline" className="w-full">
-                <Phone className="h-4 w-4 mr-2" />
-                Appel rapide
-              </Button>
-            </CardContent>
-          </Card>
+          {/* Enhanced Sidebar */}
+          <div className="space-y-6">
+            {/* Quick Actions */}
+            <Card className="border-0 shadow-lg bg-card/50 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 border-b">
+                <CardTitle className="flex items-center gap-2">
+                  <Zap className="h-5 w-5 text-primary" />
+                  Actions rapides
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 space-y-3">
+                <Button 
+                  onClick={() => setShowCompose(true)} 
+                  className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 
+                           shadow-md hover:shadow-lg transition-all duration-200"
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Composer
+                </Button>
+                <Button variant="outline" className="w-full border-primary/20 hover:border-primary/40 hover:bg-primary/5">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Programmer
+                </Button>
+                <Button variant="outline" className="w-full border-primary/20 hover:border-primary/40 hover:bg-primary/5">
+                  <Users className="h-4 w-4 mr-2" />
+                  Listes diffusion
+                </Button>
+                <Button variant="outline" className="w-full border-primary/20 hover:border-primary/40 hover:bg-primary/5">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Templates
+                </Button>
+              </CardContent>
+            </Card>
 
-          {/* Email Stats */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Statistiques</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Total</span>
-                <span className="font-medium">{emails.length}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Non lus</span>
-                <span className="font-medium text-blue-600">
-                  {emails.filter(e => !e.isRead).length}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Favoris</span>
-                <span className="font-medium text-yellow-600">
-                  {emails.filter(e => e.isStarred).length}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Programmés</span>
-                <span className="font-medium text-purple-600">
-                  {scheduledEmails.length}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
+            {/* Enhanced Stats */}
+            <Card className="border-0 shadow-lg bg-card/50 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 border-b">
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-primary" />
+                  Statistiques
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-3 rounded-lg bg-muted/30 text-center">
+                    <div className="text-2xl font-bold text-foreground">{emails.length}</div>
+                    <div className="text-xs text-muted-foreground">Total</div>
+                  </div>
+                  <div className="p-3 rounded-lg bg-primary/10 text-center">
+                    <div className="text-2xl font-bold text-primary">
+                      {emails.filter(e => !e.isRead).length}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Non lus</div>
+                  </div>
+                </div>
+                
+                <Separator />
+                
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Star className="h-4 w-4 text-yellow-500" />
+                      <span className="text-sm font-medium">Favoris</span>
+                    </div>
+                    <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+                      {emails.filter(e => e.isStarred).length}
+                    </Badge>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-blue-500" />
+                      <span className="text-sm font-medium">Programmés</span>
+                    </div>
+                    <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                      {scheduledEmails.length}
+                    </Badge>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <span className="text-sm font-medium">Envoyés</span>
+                    </div>
+                    <Badge variant="secondary" className="bg-green-100 text-green-800">
+                      12
+                    </Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
 
