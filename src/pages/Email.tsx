@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditor } from '@/components/RichTextEditor';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -378,11 +378,11 @@ export const Email: React.FC = () => {
                   
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-muted-foreground">Message</label>
-                    <Textarea 
+                    <RichTextEditor
                       placeholder="Rédigez votre message..."
                       value={composeData.content}
-                      onChange={(e) => setComposeData(prev => ({ ...prev, content: e.target.value }))}
-                      className="min-h-[200px] transition-all duration-200 focus:ring-2 focus:ring-primary/20"
+                      onChange={(content) => setComposeData(prev => ({ ...prev, content }))}
+                      className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
                     />
                   </div>
                   
