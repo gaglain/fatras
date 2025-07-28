@@ -158,6 +158,13 @@ export const Email: React.FC = () => {
     content: '',
     selectedTemplateId: ''
   });
+  
+  // État pour la gestion d'erreurs
+  const [validationErrors, setValidationErrors] = useState<{
+    to?: string;
+    subject?: string;
+    content?: string;
+  }>({});
 
   const categories = ['all', 'Contrat', 'Réservation', 'Technique', 'Commercial', 'Finance'];
 
@@ -209,9 +216,30 @@ export const Email: React.FC = () => {
     }
   };
 
+  const validateForm = () => {
+    const errors: typeof validationErrors = {};
+    
+    if (!composeData.to.trim()) {
+      errors.to = 'L\'adresse email du destinataire est requise';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(composeData.to.trim())) {
+      errors.to = 'Format d\'email invalide';
+    }
+    
+    if (!composeData.subject.trim()) {
+      errors.subject = 'L\'objet de l\'email est requis';
+    }
+    
+    if (!composeData.content.trim()) {
+      errors.content = 'Le contenu de l\'email est requis';
+    }
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSendEmail = async () => {
-    if (!composeData.to.trim() || !composeData.subject.trim() || !composeData.content.trim()) {
-      toast.error('Veuillez remplir tous les champs obligatoires');
+    if (!validateForm()) {
+      toast.error('Veuillez corriger les erreurs dans le formulaire');
       return;
     }
 
@@ -243,7 +271,7 @@ export const Email: React.FC = () => {
 
       setEmails(prev => [newEmail, ...prev]);
       
-      // Réinitialiser le formulaire
+      // Réinitialiser le formulaire et les erreurs
       setComposeData({
         to: '',
         cc: '',
@@ -251,12 +279,27 @@ export const Email: React.FC = () => {
         content: '',
         selectedTemplateId: ''
       });
+      setValidationErrors({});
       
       setShowCompose(false);
-      toast.success('Email envoyé avec succès !');
+      toast.success('✅ Email envoyé avec succès !');
     } catch (error) {
       console.error('Erreur lors de l\'envoi de l\'email:', error);
-      toast.error(`Erreur lors de l'envoi de l'email: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+      
+      // Gestion d'erreurs améliorée
+      if (error instanceof Error) {
+        if (error.message.includes('RESEND_API_KEY')) {
+          toast.error('⚠️ Configuration email manquante. Contactez l\'administrateur.');
+        } else if (error.message.includes('rate limit')) {
+          toast.error('⏰ Limite d\'envoi atteinte. Réessayez plus tard.');
+        } else if (error.message.includes('invalid')) {
+          toast.error('❌ Données d\'email invalides. Vérifiez le format.');
+        } else {
+          toast.error(`❌ Erreur d'envoi: ${error.message}`);
+        }
+      } else {
+        toast.error('❌ Erreur inconnue lors de l\'envoi');
+      }
     }
   };
 
@@ -327,15 +370,27 @@ export const Email: React.FC = () => {
                 <div className="p-6 space-y-6">
                   {/* Enhanced Compose Form */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-muted-foreground">Destinataire</label>
-                      <Input 
-                        placeholder="email@exemple.com"
-                        value={composeData.to}
-                        onChange={(e) => setComposeData(prev => ({ ...prev, to: e.target.value }))}
-                        className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
-                      />
-                    </div>
+                     <div className="space-y-2">
+                       <label className="text-sm font-medium text-muted-foreground">Destinataire *</label>
+                       <Input 
+                         placeholder="email@exemple.com"
+                         value={composeData.to}
+                         onChange={(e) => {
+                           setComposeData(prev => ({ ...prev, to: e.target.value }));
+                           if (validationErrors.to) {
+                             setValidationErrors(prev => ({ ...prev, to: undefined }));
+                           }
+                         }}
+                         className={`transition-all duration-200 focus:ring-2 focus:ring-primary/20 
+                           ${validationErrors.to ? 'border-destructive focus:ring-destructive/20' : ''}`}
+                       />
+                       {validationErrors.to && (
+                         <p className="text-xs text-destructive flex items-center gap-1">
+                           <AlertCircle className="h-3 w-3" />
+                           {validationErrors.to}
+                         </p>
+                       )}
+                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-muted-foreground">CC (optionnel)</label>
                       <Input 
@@ -347,15 +402,27 @@ export const Email: React.FC = () => {
                     </div>
                   </div>
                   
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-muted-foreground">Objet</label>
-                    <Input 
-                      placeholder="Objet de votre message"
-                      value={composeData.subject}
-                      onChange={(e) => setComposeData(prev => ({ ...prev, subject: e.target.value }))}
-                      className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
-                    />
-                  </div>
+                   <div className="space-y-2">
+                     <label className="text-sm font-medium text-muted-foreground">Objet *</label>
+                     <Input 
+                       placeholder="Objet de votre message"
+                       value={composeData.subject}
+                       onChange={(e) => {
+                         setComposeData(prev => ({ ...prev, subject: e.target.value }));
+                         if (validationErrors.subject) {
+                           setValidationErrors(prev => ({ ...prev, subject: undefined }));
+                         }
+                       }}
+                       className={`transition-all duration-200 focus:ring-2 focus:ring-primary/20 
+                         ${validationErrors.subject ? 'border-destructive focus:ring-destructive/20' : ''}`}
+                     />
+                     {validationErrors.subject && (
+                       <p className="text-xs text-destructive flex items-center gap-1">
+                         <AlertCircle className="h-3 w-3" />
+                         {validationErrors.subject}
+                       </p>
+                     )}
+                   </div>
                   
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-muted-foreground">Template (optionnel)</label>
@@ -376,15 +443,27 @@ export const Email: React.FC = () => {
                     </Select>
                   </div>
                   
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-muted-foreground">Message</label>
-                    <RichTextEditor
-                      placeholder="Rédigez votre message..."
-                      value={composeData.content}
-                      onChange={(content) => setComposeData(prev => ({ ...prev, content }))}
-                      className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
-                    />
-                  </div>
+                   <div className="space-y-2">
+                     <label className="text-sm font-medium text-muted-foreground">Message *</label>
+                     <RichTextEditor
+                       placeholder="Rédigez votre message..."
+                       value={composeData.content}
+                       onChange={(content) => {
+                         setComposeData(prev => ({ ...prev, content }));
+                         if (validationErrors.content) {
+                           setValidationErrors(prev => ({ ...prev, content: undefined }));
+                         }
+                       }}
+                       className={`transition-all duration-200 focus:ring-2 focus:ring-primary/20 
+                         ${validationErrors.content ? 'border-destructive focus:ring-destructive/20' : ''}`}
+                     />
+                     {validationErrors.content && (
+                       <p className="text-xs text-destructive flex items-center gap-1">
+                         <AlertCircle className="h-3 w-3" />
+                         {validationErrors.content}
+                       </p>
+                     )}
+                   </div>
                   
                   <div className="flex items-center justify-between pt-4 border-t">
                     <div className="flex items-center gap-2">
