@@ -10,7 +10,8 @@ import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Plus, Mail, Send, Calendar, Phone, FileText, Edit, Trash2, Inbox, Search, Star, Archive, 
          Paperclip, Reply, Forward, MoreHorizontal, Clock, Users, TrendingUp, Filter,
-         Settings, RefreshCw, AlertCircle, CheckCircle, Zap } from 'lucide-react';
+         Settings, RefreshCw, AlertCircle, CheckCircle, Zap, Layout } from 'lucide-react';
+import EmailTemplates from '@/components/EmailTemplates';
 import { EmailViewer } from '@/components/EmailViewer';
 import { toast } from 'sonner';
 import { useEmailSender } from '@/hooks/useEmailSender';
@@ -144,6 +145,7 @@ export const Email: React.FC = () => {
   const [showCompose, setShowCompose] = useState(false);
   const [showScheduled, setShowScheduled] = useState(false);
   const [showTemplateEditor, setShowTemplateEditor] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -307,6 +309,26 @@ export const Email: React.FC = () => {
     setSelectedTemplate(template);
     setShowTemplateEditor(true);
   };
+
+  const handleTemplateFromLibrary = (template: any) => {
+    setComposeData(prev => ({
+      ...prev,
+      subject: template.subject,
+      content: template.content
+    }));
+    setShowTemplates(false);
+    setShowCompose(true);
+    toast.success(`Template "${template.name}" appliqué`);
+  };
+
+  if (showTemplates) {
+    return (
+      <EmailTemplates
+        onSelectTemplate={handleTemplateFromLibrary}
+        onBack={() => setShowTemplates(false)}
+      />
+    );
+  }
 
   if (selectedEmail) {
     return (
@@ -672,8 +694,12 @@ export const Email: React.FC = () => {
                   <Users className="h-4 w-4 mr-2" />
                   Listes diffusion
                 </Button>
-                <Button variant="outline" className="w-full border-primary/20 hover:border-primary/40 hover:bg-primary/5">
-                  <FileText className="h-4 w-4 mr-2" />
+                <Button 
+                  variant="outline" 
+                  className="w-full border-primary/20 hover:border-primary/40 hover:bg-primary/5"
+                  onClick={() => setShowTemplates(true)}
+                >
+                  <Layout className="h-4 w-4 mr-2" />
                   Templates
                 </Button>
               </CardContent>
