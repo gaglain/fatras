@@ -13,6 +13,7 @@ import { Plus, Mail, Send, Calendar, Phone, FileText, Edit, Trash2, Inbox, Searc
          Settings, RefreshCw, AlertCircle, CheckCircle, Zap, Layout } from 'lucide-react';
 import EmailTemplates from '@/components/EmailTemplates';
 import { EmailViewer } from '@/components/EmailViewer';
+import { EmailAnalytics } from '@/components/EmailAnalytics';
 import { toast } from 'sonner';
 import { useEmailSender } from '@/hooks/useEmailSender';
 
@@ -146,6 +147,7 @@ export const Email: React.FC = () => {
   const [showScheduled, setShowScheduled] = useState(false);
   const [showTemplateEditor, setShowTemplateEditor] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -330,6 +332,27 @@ export const Email: React.FC = () => {
     );
   }
 
+  if (showAnalytics) {
+    return (
+      <div className="h-full">
+        <div className="bg-background/80 backdrop-blur-sm border-b border-border/50 p-6 sticky top-0 z-10">
+          <div className="flex items-center gap-4 max-w-7xl mx-auto">
+            <Button variant="outline" onClick={() => setShowAnalytics(false)}>
+              ← Retour
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold">Analytics Email</h1>
+              <p className="text-muted-foreground">Statistiques et performances des campagnes</p>
+            </div>
+          </div>
+        </div>
+        <div className="max-w-7xl mx-auto p-6">
+          <EmailAnalytics />
+        </div>
+      </div>
+    );
+  }
+
   if (selectedEmail) {
     return (
       <div className="h-full">
@@ -365,6 +388,12 @@ export const Email: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-3">
+            <Button variant="outline" size="sm" onClick={() => setShowAnalytics(true)} 
+                    className="border-primary/20 hover:border-primary/40 hover:bg-primary/5">
+              <TrendingUp className="h-4 w-4 mr-2" />
+              Analytics
+            </Button>
+            
             <Button variant="outline" size="sm" onClick={() => setShowScheduled(!showScheduled)} 
                     className="border-primary/20 hover:border-primary/40 hover:bg-primary/5">
               <Clock className="h-4 w-4 mr-2" />

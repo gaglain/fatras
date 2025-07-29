@@ -265,7 +265,7 @@ export const EmailCampaigns: React.FC = () => {
             </div>
           </div>
         </div>
-        <EmailAnalytics campaignId={selectedCampaign.id} />
+        <EmailAnalytics />
       </div>
     );
   }

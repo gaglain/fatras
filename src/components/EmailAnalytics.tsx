@@ -1,203 +1,389 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useEmailSystem } from '@/hooks/useEmailSystem';
+import { useEmailTracking } from '@/hooks/useEmailTracking';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/components/ui/use-toast';
-import { Mail, Eye, MousePointer, Ban, UserMinus, TrendingUp } from 'lucide-react';
-
-interface EmailAnalyticsProps {
-  campaignId: string;
-}
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { Mail, MousePointer, Eye, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 interface AnalyticsData {
-  sent_count: number;
-  delivered_count: number;
-  opened_count: number;
-  clicked_count: number;
-  bounced_count: number;
-  unsubscribed_count: number;
+  campaign_id: string;
+  campaign_name: string;
+  total_sent: number;
+  total_delivered: number;
+  total_opened: number;
+  total_clicked: number;
+  total_bounced: number;
+  total_unsubscribed: number;
   open_rate: number;
   click_rate: number;
+  bounce_rate: number;
 }
 
-export const EmailAnalytics: React.FC<EmailAnalyticsProps> = ({ campaignId }) => {
-  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
+interface EventData {
+  id: string;
+  event_type: string;
+  created_at: string;
+  contact_id: string;
+  event_data: any;
+}
 
-  useEffect(() => {
-    fetchAnalytics();
-  }, [campaignId]);
+const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--muted))', 'hsl(var(--accent))'];
 
+export const EmailAnalytics: React.FC = () => {
+  const { campaigns } = useEmailSystem();
+  const [selectedCampaign, setSelectedCampaign] = useState<string>('all');
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData[]>([]);
+  const [eventHistory, setEventHistory] = useState<EventData[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // Charger les données d'analytics
   const fetchAnalytics = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      
-      // Fetch campaign data with analytics
-      const { data: campaign, error: campaignError } = await supabase
-        .from('campaigns')
-        .select('*')
-        .eq('id', campaignId)
-        .single();
+      let query = supabase
+        .from('email_campaigns')
+        .select('*');
 
-      if (campaignError) throw campaignError;
-
-      if (campaign) {
-        const openRate = campaign.sent_count > 0 ? (campaign.opened_count / campaign.sent_count) * 100 : 0;
-        const clickRate = campaign.opened_count > 0 ? (campaign.clicked_count / campaign.opened_count) * 100 : 0;
-
-        setAnalytics({
-          sent_count: campaign.sent_count || 0,
-          delivered_count: campaign.delivered_count || 0,
-          opened_count: campaign.opened_count || 0,
-          clicked_count: campaign.clicked_count || 0,
-          bounced_count: campaign.bounced_count || 0,
-          unsubscribed_count: campaign.unsubscribed_count || 0,
-          open_rate: openRate,
-          click_rate: clickRate,
-        });
+      if (selectedCampaign !== 'all') {
+        query = query.eq('id', selectedCampaign);
       }
-    } catch (error: any) {
-      console.error('Error fetching analytics:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de charger les analytics",
-        variant: "destructive",
-      });
+
+      const { data: campaignData, error } = await query;
+      
+      if (error) throw error;
+
+      const analytics: AnalyticsData[] = campaignData?.map(campaign => ({
+        campaign_id: campaign.id,
+        campaign_name: campaign.name,
+        total_sent: campaign.sent_count || 0,
+        total_delivered: campaign.delivered_count || 0,
+        total_opened: campaign.opened_count || 0,
+        total_clicked: campaign.clicked_count || 0,
+        total_bounced: campaign.bounced_count || 0,
+        total_unsubscribed: campaign.unsubscribed_count || 0,
+        open_rate: campaign.open_rate || 0,
+        click_rate: campaign.click_rate || 0,
+        bounce_rate: campaign.sent_count ? ((campaign.bounced_count || 0) / campaign.sent_count) * 100 : 0,
+      })) || [];
+
+      setAnalyticsData(analytics);
+    } catch (error) {
+      console.error('Erreur lors du chargement des analytics:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="text-center">Chargement des analytics...</div>
-        </CardContent>
-      </Card>
-    );
-  }
+  // Charger l'historique des événements
+  const fetchEventHistory = async () => {
+    try {
+      let query = supabase
+        .from('email_analytics')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(100);
 
-  if (!analytics) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="text-center">Aucune donnée disponible</div>
-        </CardContent>
-      </Card>
-    );
-  }
+      if (selectedCampaign !== 'all') {
+        query = query.eq('campaign_id', selectedCampaign);
+      }
 
-  const stats = [
-    {
-      title: "Envoyés",
-      value: analytics.sent_count,
-      icon: Mail,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50",
-    },
-    {
-      title: "Ouverts",
-      value: analytics.opened_count,
-      icon: Eye,
-      color: "text-green-600",
-      bgColor: "bg-green-50",
-      percentage: `${analytics.open_rate.toFixed(1)}%`,
-    },
-    {
-      title: "Clics",
-      value: analytics.clicked_count,
-      icon: MousePointer,
-      color: "text-purple-600",
-      bgColor: "bg-purple-50",
-      percentage: `${analytics.click_rate.toFixed(1)}%`,
-    },
-    {
-      title: "Rebonds",
-      value: analytics.bounced_count,
-      icon: Ban,
-      color: "text-red-600",
-      bgColor: "bg-red-50",
-    },
-    {
-      title: "Désabonnements",
-      value: analytics.unsubscribed_count,
-      icon: UserMinus,
-      color: "text-orange-600",
-      bgColor: "bg-orange-50",
-    },
-  ];
+      const { data, error } = await query;
+      
+      if (error) throw error;
+      setEventHistory(data || []);
+    } catch (error) {
+      console.error('Erreur lors du chargement de l\'historique:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchAnalytics();
+    fetchEventHistory();
+  }, [selectedCampaign]);
+
+  // Calculer les totaux globaux
+  const globalStats = analyticsData.reduce((acc, data) => ({
+    total_sent: acc.total_sent + data.total_sent,
+    total_delivered: acc.total_delivered + data.total_delivered,
+    total_opened: acc.total_opened + data.total_opened,
+    total_clicked: acc.total_clicked + data.total_clicked,
+    total_bounced: acc.total_bounced + data.total_bounced,
+    total_unsubscribed: acc.total_unsubscribed + data.total_unsubscribed,
+  }), {
+    total_sent: 0,
+    total_delivered: 0,
+    total_opened: 0,
+    total_clicked: 0,
+    total_bounced: 0,
+    total_unsubscribed: 0,
+  });
+
+  const globalOpenRate = globalStats.total_sent ? (globalStats.total_opened / globalStats.total_sent) * 100 : 0;
+  const globalClickRate = globalStats.total_sent ? (globalStats.total_clicked / globalStats.total_sent) * 100 : 0;
+  const globalBounceRate = globalStats.total_sent ? (globalStats.total_bounced / globalStats.total_sent) * 100 : 0;
+
+  // Données pour les graphiques
+  const chartData = analyticsData.map(data => ({
+    name: data.campaign_name,
+    Envoyés: data.total_sent,
+    Livrés: data.total_delivered,
+    Ouverts: data.total_opened,
+    Cliqués: data.total_clicked,
+  }));
+
+  const pieData = [
+    { name: 'Ouverts', value: globalStats.total_opened },
+    { name: 'Non ouverts', value: globalStats.total_sent - globalStats.total_opened },
+    { name: 'Cliqués', value: globalStats.total_clicked },
+    { name: 'Rebonds', value: globalStats.total_bounced },
+  ].filter(item => item.value > 0);
+
+  const getTrendIcon = (rate: number, benchmark: number) => {
+    if (rate > benchmark) return <TrendingUp className="h-4 w-4 text-green-500" />;
+    if (rate < benchmark) return <TrendingDown className="h-4 w-4 text-red-500" />;
+    return <Minus className="h-4 w-4 text-muted-foreground" />;
+  };
+
+  const formatEventType = (type: string) => {
+    const types = {
+      'sent': 'Envoyé',
+      'delivered': 'Livré',
+      'opened': 'Ouvert',
+      'clicked': 'Cliqué',
+      'bounced': 'Rebond',
+      'unsubscribed': 'Désabonnement'
+    };
+    return types[type as keyof typeof types] || type;
+  };
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5" />
-            Analytics de la campagne
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            {stats.map((stat) => {
-              const Icon = stat.icon;
-              return (
-                <div key={stat.title} className={`p-4 rounded-lg ${stat.bgColor}`}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600">{stat.title}</p>
-                      <p className="text-2xl font-bold">{stat.value}</p>
-                      {stat.percentage && (
-                        <Badge variant="secondary" className="mt-1">
-                          {stat.percentage}
-                        </Badge>
-                      )}
-                    </div>
-                    <Icon className={`h-8 w-8 ${stat.color}`} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Filtres */}
+      <div className="flex gap-4 items-center">
+        <Select value={selectedCampaign} onValueChange={setSelectedCampaign}>
+          <SelectTrigger className="w-64">
+            <SelectValue placeholder="Sélectionner une campagne" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Toutes les campagnes</SelectItem>
+            {campaigns.map(campaign => (
+              <SelectItem key={campaign.id} value={campaign.id}>
+                {campaign.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button variant="outline" onClick={() => { fetchAnalytics(); fetchEventHistory(); }}>
+          Actualiser
+        </Button>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Performance</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span>Taux d'ouverture</span>
-                <span>{analytics.open_rate.toFixed(1)}%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-green-600 h-2 rounded-full" 
-                  style={{ width: `${Math.min(analytics.open_rate, 100)}%` }}
-                ></div>
-              </div>
+      {/* Statistiques globales */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Emails envoyés</CardTitle>
+            <Mail className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{globalStats.total_sent.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">
+              {globalStats.total_delivered} livrés ({globalStats.total_sent ? ((globalStats.total_delivered / globalStats.total_sent) * 100).toFixed(1) : 0}%)
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Taux d'ouverture</CardTitle>
+            <div className="flex items-center gap-1">
+              <Eye className="h-4 w-4 text-muted-foreground" />
+              {getTrendIcon(globalOpenRate, 20)}
             </div>
-            
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span>Taux de clic</span>
-                <span>{analytics.click_rate.toFixed(1)}%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-purple-600 h-2 rounded-full" 
-                  style={{ width: `${Math.min(analytics.click_rate, 100)}%` }}
-                ></div>
-              </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{globalOpenRate.toFixed(1)}%</div>
+            <p className="text-xs text-muted-foreground">
+              {globalStats.total_opened} ouvertures
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Taux de clic</CardTitle>
+            <div className="flex items-center gap-1">
+              <MousePointer className="h-4 w-4 text-muted-foreground" />
+              {getTrendIcon(globalClickRate, 3)}
             </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{globalClickRate.toFixed(1)}%</div>
+            <p className="text-xs text-muted-foreground">
+              {globalStats.total_clicked} clics
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Taux de rebond</CardTitle>
+            <div className="flex items-center gap-1">
+              <TrendingDown className="h-4 w-4 text-muted-foreground" />
+              {getTrendIcon(5 - globalBounceRate, 5)}
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{globalBounceRate.toFixed(1)}%</div>
+            <p className="text-xs text-muted-foreground">
+              {globalStats.total_bounced} rebonds
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Graphiques et données détaillées */}
+      <Tabs defaultValue="charts" className="w-full">
+        <TabsList>
+          <TabsTrigger value="charts">Graphiques</TabsTrigger>
+          <TabsTrigger value="campaigns">Campagnes</TabsTrigger>
+          <TabsTrigger value="events">Événements</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="charts" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Graphique en barres */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Performance par campagne</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="Envoyés" fill="hsl(var(--primary))" />
+                    <Bar dataKey="Ouverts" fill="hsl(var(--secondary))" />
+                    <Bar dataKey="Cliqués" fill="hsl(var(--accent))" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            {/* Graphique en secteurs */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Répartition des engagements</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {pieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
           </div>
-        </CardContent>
-      </Card>
+        </TabsContent>
+
+        <TabsContent value="campaigns">
+          <Card>
+            <CardHeader>
+              <CardTitle>Détails des campagnes</CardTitle>
+              <CardDescription>
+                Performance détaillée de chaque campagne
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {analyticsData.map(campaign => (
+                  <div key={campaign.campaign_id} className="p-4 border rounded-lg">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="font-semibold">{campaign.campaign_name}</h3>
+                      <div className="flex gap-2">
+                        <Badge variant="secondary">{campaign.total_sent} envoyés</Badge>
+                        <Badge variant="outline">{campaign.open_rate.toFixed(1)}% ouverture</Badge>
+                        <Badge variant="outline">{campaign.click_rate.toFixed(1)}% clic</Badge>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Livrés:</span>
+                        <div className="font-medium">{campaign.total_delivered}</div>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Ouverts:</span>
+                        <div className="font-medium">{campaign.total_opened}</div>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Cliqués:</span>
+                        <div className="font-medium">{campaign.total_clicked}</div>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Rebonds:</span>
+                        <div className="font-medium">{campaign.total_bounced}</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="events">
+          <Card>
+            <CardHeader>
+              <CardTitle>Historique des événements</CardTitle>
+              <CardDescription>
+                Événements de tracking en temps réel
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {eventHistory.map(event => (
+                  <div key={event.id} className="flex items-center justify-between p-3 border rounded">
+                    <div className="flex items-center gap-3">
+                      <Badge variant={
+                        event.event_type === 'opened' ? 'default' :
+                        event.event_type === 'clicked' ? 'secondary' :
+                        event.event_type === 'bounced' ? 'destructive' : 'outline'
+                      }>
+                        {formatEventType(event.event_type)}
+                      </Badge>
+                      <span className="text-sm">Contact: {event.contact_id.slice(0, 8)}...</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(event.created_at).toLocaleString()}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
