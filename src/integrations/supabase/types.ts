@@ -358,6 +358,233 @@ export type Database = {
         }
         Relationships: []
       }
+      email_campaigns: {
+        Row: {
+          bounced_count: number | null
+          click_rate: number | null
+          clicked_count: number | null
+          content: string
+          created_at: string
+          delivered_count: number | null
+          id: string
+          name: string
+          open_rate: number | null
+          opened_count: number | null
+          recipient_count: number | null
+          scheduled_at: string | null
+          sent_at: string | null
+          sent_count: number | null
+          status: string
+          subject: string
+          template_id: string | null
+          unsubscribed_count: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bounced_count?: number | null
+          click_rate?: number | null
+          clicked_count?: number | null
+          content: string
+          created_at?: string
+          delivered_count?: number | null
+          id?: string
+          name: string
+          open_rate?: number | null
+          opened_count?: number | null
+          recipient_count?: number | null
+          scheduled_at?: string | null
+          sent_at?: string | null
+          sent_count?: number | null
+          status?: string
+          subject: string
+          template_id?: string | null
+          unsubscribed_count?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bounced_count?: number | null
+          click_rate?: number | null
+          clicked_count?: number | null
+          content?: string
+          created_at?: string
+          delivered_count?: number | null
+          id?: string
+          name?: string
+          open_rate?: number | null
+          opened_count?: number | null
+          recipient_count?: number | null
+          scheduled_at?: string | null
+          sent_at?: string | null
+          sent_count?: number | null
+          status?: string
+          subject?: string
+          template_id?: string | null
+          unsubscribed_count?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      email_contacts: {
+        Row: {
+          company: string | null
+          created_at: string
+          email: string
+          first_name: string | null
+          id: string
+          is_subscribed: boolean | null
+          last_name: string | null
+          tags: Json | null
+          unsubscribed_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string
+          email: string
+          first_name?: string | null
+          id?: string
+          is_subscribed?: boolean | null
+          last_name?: string | null
+          tags?: Json | null
+          unsubscribed_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company?: string | null
+          created_at?: string
+          email?: string
+          first_name?: string | null
+          id?: string
+          is_subscribed?: boolean | null
+          last_name?: string | null
+          tags?: Json | null
+          unsubscribed_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      email_templates: {
+        Row: {
+          category: string
+          content: string
+          created_at: string
+          id: string
+          is_system: boolean | null
+          name: string
+          subject: string
+          updated_at: string
+          user_id: string
+          variables: Json | null
+        }
+        Insert: {
+          category: string
+          content: string
+          created_at?: string
+          id?: string
+          is_system?: boolean | null
+          name: string
+          subject: string
+          updated_at?: string
+          user_id: string
+          variables?: Json | null
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string
+          id?: string
+          is_system?: boolean | null
+          name?: string
+          subject?: string
+          updated_at?: string
+          user_id?: string
+          variables?: Json | null
+        }
+        Relationships: []
+      }
+      emails: {
+        Row: {
+          attachments: Json | null
+          campaign_id: string | null
+          cc_email: string | null
+          content: string
+          created_at: string
+          delivered_at: string | null
+          from_email: string
+          html_content: string | null
+          id: string
+          is_read: boolean | null
+          is_starred: boolean | null
+          metadata: Json | null
+          opened_at: string | null
+          scheduled_at: string | null
+          sent_at: string | null
+          status: string
+          subject: string
+          to_email: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attachments?: Json | null
+          campaign_id?: string | null
+          cc_email?: string | null
+          content: string
+          created_at?: string
+          delivered_at?: string | null
+          from_email: string
+          html_content?: string | null
+          id?: string
+          is_read?: boolean | null
+          is_starred?: boolean | null
+          metadata?: Json | null
+          opened_at?: string | null
+          scheduled_at?: string | null
+          sent_at?: string | null
+          status?: string
+          subject: string
+          to_email: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attachments?: Json | null
+          campaign_id?: string | null
+          cc_email?: string | null
+          content?: string
+          created_at?: string
+          delivered_at?: string | null
+          from_email?: string
+          html_content?: string | null
+          id?: string
+          is_read?: boolean | null
+          is_starred?: boolean | null
+          metadata?: Json | null
+          opened_at?: string | null
+          scheduled_at?: string | null
+          sent_at?: string | null
+          status?: string
+          subject?: string
+          to_email?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emails_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "email_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_types: {
         Row: {
           color: string | null
