@@ -14,6 +14,7 @@ import { Plus, Mail, Send, Calendar, Phone, FileText, Edit, Trash2, Inbox, Searc
 import EmailTemplates from '@/components/EmailTemplates';
 import { EmailViewer } from '@/components/EmailViewer';
 import { EmailAnalytics } from '@/components/EmailAnalytics';
+import { EmailSender } from '@/components/EmailSender';
 import { toast } from 'sonner';
 import { useEmailSender } from '@/hooks/useEmailSender';
 
@@ -148,6 +149,7 @@ export const Email: React.FC = () => {
   const [showTemplateEditor, setShowTemplateEditor] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
+  const [showEmailSender, setShowEmailSender] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -332,6 +334,27 @@ export const Email: React.FC = () => {
     );
   }
 
+  if (showEmailSender) {
+    return (
+      <div className="h-full">
+        <div className="bg-background/80 backdrop-blur-sm border-b border-border/50 p-6 sticky top-0 z-10">
+          <div className="flex items-center gap-4 max-w-7xl mx-auto">
+            <Button variant="outline" onClick={() => setShowEmailSender(false)}>
+              ← Retour
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold">Envoi d'Email Rapide</h1>
+              <p className="text-muted-foreground">Composez et envoyez un email directement</p>
+            </div>
+          </div>
+        </div>
+        <div className="max-w-4xl mx-auto p-6">
+          <EmailSender />
+        </div>
+      </div>
+    );
+  }
+
   if (showAnalytics) {
     return (
       <div className="h-full">
@@ -388,6 +411,12 @@ export const Email: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-3">
+            <Button variant="outline" size="sm" onClick={() => setShowEmailSender(true)} 
+                    className="border-primary/20 hover:border-primary/40 hover:bg-primary/5">
+              <Send className="h-4 w-4 mr-2" />
+              Email Rapide
+            </Button>
+            
             <Button variant="outline" size="sm" onClick={() => setShowAnalytics(true)} 
                     className="border-primary/20 hover:border-primary/40 hover:bg-primary/5">
               <TrendingUp className="h-4 w-4 mr-2" />
