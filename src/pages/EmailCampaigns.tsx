@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { EmailCampaignEditor } from '@/components/EmailCampaignEditor';
 import { EmailAnalytics } from '@/components/EmailAnalytics';
+import { EmailCampaignManager } from '@/components/EmailCampaignManager';
 import { useContactLists } from '@/hooks/useContactLists';
 
 interface Campaign {
@@ -27,6 +28,7 @@ export const EmailCampaigns: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showEditor, setShowEditor] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
+  const [showCampaignManager, setShowCampaignManager] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
 
   const { contactLists } = useContactLists();
@@ -58,12 +60,12 @@ export const EmailCampaigns: React.FC = () => {
 
   const handleCreateCampaign = () => {
     setSelectedCampaign(null);
-    setShowEditor(true);
+    setShowCampaignManager(true);
   };
 
   const handleEditCampaign = (campaign: Campaign) => {
     setSelectedCampaign(campaign);
-    setShowEditor(true);
+    setShowCampaignManager(true);
   };
 
   const handleSaveCampaign = async (campaignData: any) => {
@@ -131,7 +133,7 @@ export const EmailCampaigns: React.FC = () => {
       }
 
       await fetchCampaigns();
-      setShowEditor(false);
+      setShowCampaignManager(false);
       setSelectedCampaign(null);
     } catch (error) {
       console.error('Error saving campaign:', error);
@@ -218,6 +220,18 @@ export const EmailCampaigns: React.FC = () => {
       default: return status;
     }
   };
+
+  if (showCampaignManager) {
+    return (
+      <EmailCampaignManager
+        campaignId={selectedCampaign?.id}
+        onBack={() => {
+          setShowCampaignManager(false);
+          setSelectedCampaign(null);
+        }}
+      />
+    );
+  }
 
   if (showEditor) {
     return (
