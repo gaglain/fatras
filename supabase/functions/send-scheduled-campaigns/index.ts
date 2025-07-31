@@ -103,17 +103,21 @@ const handler = async (req: Request): Promise<Response> => {
           continue;
         }
 
-        // Send emails
+        // Send emails with tracking
         let sentCount = 0;
         let deliveredCount = 0;
         
         for (const recipient of recipients) {
           try {
+            // Add tracking to the HTML
+            const trackedHtml = addEmailTracking(campaign.content, campaign.id, recipient.contact_id);
+            const personalizedHtml = trackedHtml.replace(/{{first_name}}/g, recipient.first_name || 'there');
+            
             const emailResponse = await resend.emails.send({
               from: "Campaign <campaign@resend.dev>",
               to: [recipient.email],
               subject: campaign.subject,
-              html: campaign.content,
+              html: personalizedHtml,
             });
 
             if (emailResponse.data?.id) {
@@ -195,5 +199,28 @@ const handler = async (req: Request): Promise<Response> => {
     );
   }
 };
+
+function addEmailTracking(html: string, campaignId: string, contactId: string): string {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  
+  // Add tracking pixel for opens
+  const trackingPixel = `<img src="${supabaseUrl}/functions/v1/track-email-open?campaign=${campaignId}&contact=${contactId}" width="1" height="1" style="display:none;" alt="">`;
+  
+  // Wrap URLs for click tracking - look for href attributes
+  const wrappedHtml = html.replace(
+    /href="([^"]+)"/g,
+    (match, url) => {
+      // Don't track tracking URLs or mailto links
+      if (url.includes('track-email-') || url.startsWith('mailto:') || url.startsWith('#')) {
+        return match;
+      }
+      const trackingUrl = `${supabaseUrl}/functions/v1/track-email-click?campaign=${campaignId}&contact=${contactId}&url=${encodeURIComponent(url)}`;
+      return `href="${trackingUrl}"`;
+    }
+  );
+  
+  // Add tracking pixel before closing body tag
+  return wrappedHtml.replace('</body>', `${trackingPixel}</body>`);
+}
 
 serve(handler);

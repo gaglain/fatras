@@ -51,9 +51,13 @@ const handler = async (req: Request): Promise<Response> => {
       });
 
     // Update campaign stats
-    await supabase.rpc('update_campaign_stats', {
-      campaign_id: campaignId,
-      event_type: 'opened'
+    await supabase.functions.invoke('update-campaign-stats', {
+      body: {},
+      method: 'GET',
+      query: {
+        campaign: campaignId,
+        event_type: 'opened'
+      }
     });
 
     // Return 1x1 transparent pixel

@@ -110,10 +110,12 @@ const handler = async (req: Request): Promise<Response> => {
     // Convert blocks to HTML
     const htmlContent = convertBlocksToHtml(campaign.content || []);
 
-    // Send emails
+    // Send emails with tracking
     const emailPromises = uniqueContacts.map(async (contact) => {
       try {
-        const personalizedHtml = htmlContent.replace(/{{first_name}}/g, contact.first_name || 'there');
+        // Add tracking to the HTML
+        const trackedHtml = addEmailTracking(htmlContent, campaign.id, contact.id);
+        const personalizedHtml = trackedHtml.replace(/{{first_name}}/g, contact.first_name || 'there');
         
         const result = await resend.emails.send({
           from: "Campaign <onboarding@resend.dev>",
@@ -121,6 +123,17 @@ const handler = async (req: Request): Promise<Response> => {
           subject: campaign.subject || "Newsletter",
           html: personalizedHtml,
         });
+
+        // Log email analytics
+        if (result.data?.id) {
+          await supabase.from('email_analytics').insert({
+            user_id: campaign.user_id,
+            campaign_id: campaign.id,
+            contact_id: contact.id,
+            event_type: 'sent',
+            event_data: { email_id: result.data.id }
+          });
+        }
 
         console.log(`Email sent to ${contact.email}:`, result);
         return { success: true, email: contact.email, result };
@@ -134,12 +147,15 @@ const handler = async (req: Request): Promise<Response> => {
     const successCount = results.filter(r => r.success).length;
     const failCount = results.filter(r => !r.success).length;
 
-    // Update campaign status
+    // Update campaign status and stats
     await supabase
       .from('campaigns')
       .update({ 
         status: 'sent',
-        sent_at: new Date().toISOString()
+        sent_at: new Date().toISOString(),
+        sent_count: successCount,
+        delivered_count: successCount,
+        recipient_count: uniqueContacts.length
       })
       .eq('id', campaignId);
 
@@ -189,7 +205,8 @@ function convertBlocksToHtml(blocks: EmailBlock[]): string {
         html += `
           <div style="text-align: center; margin: 24px 0;">
             <a href="${block.content.url || '#'}" 
-               style="background-color: #3498db; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold;">
+               style="background-color: #3498db; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold;"
+               data-track-url="${block.content.url || '#'}">
               ${block.content.text || 'Click here'}
             </a>
           </div>
@@ -220,6 +237,25 @@ function convertBlocksToHtml(blocks: EmailBlock[]): string {
   `;
 
   return html;
+}
+
+function addEmailTracking(html: string, campaignId: string, contactId: string): string {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  
+  // Add tracking pixel for opens
+  const trackingPixel = `<img src="${supabaseUrl}/functions/v1/track-email-open?campaign=${campaignId}&contact=${contactId}" width="1" height="1" style="display:none;" alt="">`;
+  
+  // Wrap URLs for click tracking
+  const wrappedHtml = html.replace(
+    /data-track-url="([^"]+)"/g,
+    (match, url) => {
+      const trackingUrl = `${supabaseUrl}/functions/v1/track-email-click?campaign=${campaignId}&contact=${contactId}&url=${encodeURIComponent(url)}`;
+      return `href="${trackingUrl}"`;
+    }
+  );
+  
+  // Add tracking pixel before closing body tag
+  return wrappedHtml.replace('</body>', `${trackingPixel}</body>`);
 }
 
 serve(handler);
