@@ -360,6 +360,7 @@ export type Database = {
       }
       email_campaigns: {
         Row: {
+          auto_send: boolean | null
           bounced_count: number | null
           click_rate: number | null
           clicked_count: number | null
@@ -372,6 +373,7 @@ export type Database = {
           opened_count: number | null
           recipient_count: number | null
           scheduled_at: string | null
+          scheduled_for: string | null
           sent_at: string | null
           sent_count: number | null
           status: string
@@ -382,6 +384,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          auto_send?: boolean | null
           bounced_count?: number | null
           click_rate?: number | null
           clicked_count?: number | null
@@ -394,6 +397,7 @@ export type Database = {
           opened_count?: number | null
           recipient_count?: number | null
           scheduled_at?: string | null
+          scheduled_for?: string | null
           sent_at?: string | null
           sent_count?: number | null
           status?: string
@@ -404,6 +408,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          auto_send?: boolean | null
           bounced_count?: number | null
           click_rate?: number | null
           clicked_count?: number | null
@@ -416,6 +421,7 @@ export type Database = {
           opened_count?: number | null
           recipient_count?: number | null
           scheduled_at?: string | null
+          scheduled_for?: string | null
           sent_at?: string | null
           sent_count?: number | null
           status?: string

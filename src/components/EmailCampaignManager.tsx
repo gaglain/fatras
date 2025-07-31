@@ -10,12 +10,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { EmailEditor } from '@/components/EmailEditor/EmailEditor';
 import { EmailPreview } from '@/components/EmailEditor/EmailPreview';
+import { EmailScheduler } from '@/components/EmailScheduler';
 import { EmailBlock } from '@/components/EmailEditor/types';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { ArrowLeft, Send, Save, Eye } from 'lucide-react';
+import { ArrowLeft, Send, Save, Eye, Clock } from 'lucide-react';
 
 interface EmailCampaignManagerProps {
   campaignId?: string;
@@ -69,7 +70,51 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({
     }
   };
 
-  const handleSend = async () => {
+  const handleSchedule = async (scheduledFor: Date, autoSend: boolean) => {
+    if (!campaignData.selectedLists.length) {
+      toast.error('Sélectionnez au moins une liste de contacts');
+      return;
+    }
+
+    try {
+      let finalCampaignId = campaignId;
+      
+      if (!finalCampaignId) {
+        const campaign = await createCampaign({
+          name: campaignData.name,
+          subject: campaignData.subject,
+          content: JSON.stringify(campaignData.content),
+          status: 'scheduled'
+        });
+        finalCampaignId = campaign.id;
+      }
+
+      // Add campaign-contact-list associations
+      for (const listId of campaignData.selectedLists) {
+        await supabase
+          .from('campaign_contact_lists')
+          .insert({
+            campaign_id: finalCampaignId,
+            contact_list_id: listId
+          });
+      }
+
+      // Update campaign with schedule info
+      await supabase
+        .from('email_campaigns')
+        .update({
+          status: 'scheduled',
+          scheduled_for: scheduledFor.toISOString(),
+          auto_send: autoSend
+        })
+        .eq('id', finalCampaignId);
+
+    } catch (error: any) {
+      throw new Error('Erreur lors de la programmation: ' + error.message);
+    }
+  };
+
+  const handleSendNow = async () => {
     if (!campaignData.selectedLists.length) {
       toast.error('Sélectionnez au moins une liste de contacts');
       return;
@@ -159,7 +204,7 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({
             <Save className="h-4 w-4 mr-2" />
             Sauvegarder
           </Button>
-          <Button onClick={handleSend} disabled={sending}>
+          <Button onClick={handleSendNow} disabled={sending}>
             <Send className="h-4 w-4 mr-2" />
             {sending ? 'Envoi...' : 'Envoyer'}
           </Button>
@@ -171,6 +216,10 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({
           <TabsTrigger value="settings">Paramètres</TabsTrigger>
           <TabsTrigger value="design">Design</TabsTrigger>
           <TabsTrigger value="preview">Aperçu</TabsTrigger>
+          <TabsTrigger value="schedule">
+            <Clock className="h-4 w-4 mr-2" />
+            Programmation
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="settings" className="space-y-6">
@@ -284,6 +333,18 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="schedule">
+          <EmailScheduler
+            campaignId={campaignId || ''}
+            onSchedule={handleSchedule}
+            onSendNow={handleSendNow}
+            currentSchedule={{
+              scheduled_for: existingCampaign?.scheduled_for,
+              auto_send: existingCampaign?.auto_send
+            }}
+          />
         </TabsContent>
       </Tabs>
     </div>

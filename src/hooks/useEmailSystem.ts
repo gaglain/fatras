@@ -19,6 +19,8 @@ interface EmailCampaign {
   open_rate: number;
   click_rate: number;
   scheduled_at?: string;
+  scheduled_for?: string;
+  auto_send?: boolean;
   sent_at?: string;
   created_at: string;
   updated_at: string;
