@@ -3,6 +3,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "next-themes";
 import { Layout } from "./components/Layout";
 import { NewSimpleFrontLayout } from "./components/NewSimpleFrontLayout";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -53,9 +54,16 @@ const queryClient = new QueryClient();
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <BrowserRouter>
-          <UserProvider>
+      <ThemeProvider 
+        attribute="class"
+        defaultTheme="system"
+        enableSystem
+        disableTransitionOnChange={false}
+        storageKey="lovable-theme"
+      >
+        <TooltipProvider>
+          <BrowserRouter>
+            <UserProvider>
             <CentralizedDataProvider>
               <RealtimeProvider>
                 <MessagingProvider>
@@ -125,9 +133,10 @@ const App = () => {
                 </MessagingProvider>
               </RealtimeProvider>
             </CentralizedDataProvider>
-          </UserProvider>
-        </BrowserRouter>
-      </TooltipProvider>
+            </UserProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 };

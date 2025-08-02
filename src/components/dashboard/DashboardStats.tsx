@@ -89,28 +89,20 @@ export const DashboardStats: React.FC = () => {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       {stats.map((stat, index) => (
-        <Card key={index} className="hover:shadow-md transition-shadow" style={{
-          background: 'var(--custom-cardBg, #ffffff)',
-          color: 'var(--custom-cardText, #18181b)',
-          border: '1px solid rgba(0,0,0,0.1)'
+        <Card key={index} className="hover:shadow-elegant transition-all duration-300 border-border bg-card animate-fade-in" style={{
+          animationDelay: `${index * 100}ms`
         }}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium" style={{
-              color: 'var(--custom-cardText, #18181b)'
-            }}>
+            <CardTitle className="text-sm font-medium text-card-foreground">
               {stat.title}
             </CardTitle>
             <stat.icon className={`h-4 w-4 ${stat.color}`} />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold" style={{
-              color: 'var(--custom-cardText, #18181b)'
-            }}>
+            <div className="text-2xl font-bold text-card-foreground">
               {stat.value}
             </div>
-            <p className="text-xs" style={{
-              color: 'var(--custom-text, #666666)'
-            }}>
+            <p className="text-xs text-muted-foreground">
               {stat.description}
             </p>
           </CardContent>

@@ -3,7 +3,8 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Bell, Menu } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { FrontThemeToggle } from './FrontThemeToggle';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { CommandPalette } from '@/components/ui/command-palette';
 import { useTheme } from 'next-themes';
 import { useCompanySettings } from '@/hooks/useCompanySettings';
 import { useUser } from '@/contexts/UserContext';
@@ -31,7 +32,7 @@ export const BackOfficeHeader: React.FC = () => {
 
   return (
     <>
-      <header className="shadow-sm relative border-b transition-colors duration-300 bg-white border-gray-200">
+      <header className="shadow-elegant relative border-b transition-all duration-300 bg-background border-border backdrop-blur-sm supports-[backdrop-filter]:bg-background/95">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
@@ -62,13 +63,17 @@ export const BackOfficeHeader: React.FC = () => {
                   style={{ filter: "drop-shadow(0 2px 7px #1632f4)" }}
                   onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                 />
-                <span className="text-lg font-bold tracking-tight transition-colors duration-300 text-gray-900">
+                <span className="text-lg font-bold tracking-tight transition-colors duration-300 text-foreground">
                   {name || "MusiConnect"}
                 </span>
               </Link>
             </div>
             
             <div className="flex items-center space-x-4">
+              {/* Palette de commandes */}
+              <div className="hidden md:block w-64">
+                <CommandPalette />
+              </div>
               <RealtimeIndicator />
               
               <div className="relative">
@@ -76,7 +81,7 @@ export const BackOfficeHeader: React.FC = () => {
                   onClick={handleNotificationClick}
                   variant="ghost"
                   size="icon"
-                  className="relative hover:opacity-80 transition-all duration-300 text-gray-900"
+                  className="relative hover:opacity-80 transition-all duration-300 text-foreground"
                 >
                   <Bell className="h-5 w-5" />
                   {unreadCount > 0 && (
@@ -96,21 +101,21 @@ export const BackOfficeHeader: React.FC = () => {
                 )}
               </div>
               
-              <FrontThemeToggle variant="back-office" />
+              <ThemeToggle />
               
               <button
-                className="flex items-center space-x-2 focus:outline-none group transition-all duration-300 hover:bg-gray-100 rounded-lg p-2"
+                className="flex items-center space-x-2 focus:outline-none group transition-all duration-300 hover:bg-accent rounded-lg p-2"
                 onClick={() => setShowUserProfile(true)}
                 aria-label="Voir le profil"
               >
-                <Avatar className="h-8 w-8 border-2 border-gray-300 hover:border-blue-500 transition-colors">
+                <Avatar className="h-8 w-8 border-2 border-border hover:border-primary transition-colors">
                   <AvatarImage src={currentUser?.avatar} alt={currentUser?.name} />
                   <AvatarFallback className="text-base bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold">
                     {currentUser?.name?.charAt(0) || 'U'}
                     {currentUser?.lastName?.charAt(0) || ''}
                   </AvatarFallback>
                 </Avatar>
-                <span className="hidden md:block text-sm font-medium transition-colors duration-300 text-gray-900 group-hover:text-blue-600">
+                <span className="hidden md:block text-sm font-medium transition-colors duration-300 text-foreground group-hover:text-primary">
                   {currentUser?.name || 'Utilisateur'}
                 </span>
               </button>
