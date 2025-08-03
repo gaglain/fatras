@@ -8,6 +8,14 @@
     <title>ArtistCRM - Professional Booker Management System</title>
     <meta name="description" content="Comprehensive CRM solution for artist bookers managing contacts, events, tasks, and tours" />
     <meta name="author" content="Lovable" />
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#8b5cf6" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="ArtistCRM" />
+    <link rel="apple-touch-icon" href="/lovable-uploads/favicon.png" />
+    <link rel="manifest" href="/manifest.json" />
 
     <meta property="og:title" content="ArtistCRM - Professional Booker Management System" />
     <meta property="og:description" content="Comprehensive CRM solution for artist bookers managing contacts, events, tasks, and tours" />
@@ -24,5 +32,20 @@
     <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- PWA Service Worker -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+              console.log('SW registered: ', registration);
+            })
+            .catch((registrationError) => {
+              console.log('SW registration failed: ', registrationError);
+            });
+        });
+      }
+    </script>
   </body>
 </html>
