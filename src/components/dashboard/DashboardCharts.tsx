@@ -120,21 +120,26 @@ export const DashboardCharts: React.FC = () => {
   });
 
   return (
-    <div className="grid gap-6 md:grid-cols-2">
+    <div className="grid gap-4 md:gap-6 grid-cols-1 xl:grid-cols-2">
       {/* Revenus mensuels */}
       <Card>
-        <CardHeader>
-          <CardTitle>Revenus Mensuels</CardTitle>
+        <CardHeader className="pb-3 md:pb-6">
+          <CardTitle className="text-base md:text-lg">Revenus Mensuels</CardTitle>
         </CardHeader>
-        <CardContent>
-          <ChartContainer config={chartConfig} className="h-[300px]">
+        <CardContent className="px-3 md:px-6">
+          <ChartContainer config={chartConfig} className="h-[250px] md:h-[300px]">
             <AreaChart data={monthlyRevenue}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
+              <XAxis 
+                dataKey="month" 
+                tick={{ fontSize: 12 }}
+                interval="preserveStartEnd"
+              />
+              <YAxis tick={{ fontSize: 12 }} />
               <ChartTooltip 
                 content={<ChartTooltipContent />}
                 formatter={(value) => [`€${Number(value).toLocaleString('fr-FR')}`, 'Revenus']}
+                contentStyle={{ fontSize: '12px' }}
               />
               <Area 
                 type="monotone" 
@@ -150,16 +155,23 @@ export const DashboardCharts: React.FC = () => {
 
       {/* Activité hebdomadaire */}
       <Card>
-        <CardHeader>
-          <CardTitle>Activité Hebdomadaire</CardTitle>
+        <CardHeader className="pb-3 md:pb-6">
+          <CardTitle className="text-base md:text-lg">Activité Hebdomadaire</CardTitle>
         </CardHeader>
-        <CardContent>
-          <ChartContainer config={chartConfig} className="h-[300px]">
+        <CardContent className="px-3 md:px-6">
+          <ChartContainer config={chartConfig} className="h-[250px] md:h-[300px]">
             <BarChart data={weeklyActivity}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="day" />
-              <YAxis />
-              <ChartTooltip content={<ChartTooltipContent />} />
+              <XAxis 
+                dataKey="day" 
+                tick={{ fontSize: 12 }}
+                interval="preserveStartEnd"
+              />
+              <YAxis tick={{ fontSize: 12 }} />
+              <ChartTooltip 
+                content={<ChartTooltipContent />} 
+                contentStyle={{ fontSize: '12px' }}
+              />
               <Bar dataKey="events" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
               <Bar dataKey="contacts" fill="hsl(var(--secondary))" radius={[4, 4, 0, 0]} />
             </BarChart>
@@ -169,18 +181,18 @@ export const DashboardCharts: React.FC = () => {
 
       {/* Statuts des événements */}
       <Card>
-        <CardHeader>
-          <CardTitle>Statuts des Événements</CardTitle>
+        <CardHeader className="pb-3 md:pb-6">
+          <CardTitle className="text-base md:text-lg">Statuts des Événements</CardTitle>
         </CardHeader>
-        <CardContent>
-          <ChartContainer config={chartConfig} className="h-[300px]">
+        <CardContent className="px-3 md:px-6">
+          <ChartContainer config={chartConfig} className="h-[250px] md:h-[300px]">
             <PieChart>
               <Pie
                 data={eventStatus}
                 cx="50%"
                 cy="50%"
-                innerRadius={60}
-                outerRadius={100}
+                innerRadius={window.innerWidth < 768 ? 40 : 60}
+                outerRadius={window.innerWidth < 768 ? 80 : 100}
                 paddingAngle={5}
                 dataKey="count"
               >
@@ -191,6 +203,7 @@ export const DashboardCharts: React.FC = () => {
               <ChartTooltip 
                 content={<ChartTooltipContent />}
                 formatter={(value, name) => [value, name]}
+                contentStyle={{ fontSize: '12px' }}
               />
             </PieChart>
           </ChartContainer>
@@ -198,27 +211,32 @@ export const DashboardCharts: React.FC = () => {
       </Card>
 
       {/* Performance mensuelle détaillée */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Performance Mensuelle</CardTitle>
+      <Card className="xl:col-span-2">
+        <CardHeader className="pb-3 md:pb-6">
+          <CardTitle className="text-base md:text-lg">Performance Mensuelle</CardTitle>
         </CardHeader>
-        <CardContent>
-          <ChartContainer config={chartConfig} className="h-[300px]">
+        <CardContent className="px-3 md:px-6">
+          <ChartContainer config={chartConfig} className="h-[250px] md:h-[300px]">
             <LineChart data={monthlyRevenue}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
+              <XAxis 
+                dataKey="month" 
+                tick={{ fontSize: 12 }}
+                interval="preserveStartEnd"
+              />
+              <YAxis tick={{ fontSize: 12 }} />
               <ChartTooltip 
                 content={<ChartTooltipContent />}
                 formatter={(value) => [`€${Number(value).toLocaleString('fr-FR')}`, 'Revenus']}
+                contentStyle={{ fontSize: '12px' }}
               />
               <Line 
                 type="monotone" 
                 dataKey="revenue" 
                 stroke="hsl(var(--primary))" 
-                strokeWidth={3}
-                dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6, stroke: 'hsl(var(--primary))', strokeWidth: 2 }}
+                strokeWidth={window.innerWidth < 768 ? 2 : 3}
+                dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: window.innerWidth < 768 ? 3 : 4 }}
+                activeDot={{ r: window.innerWidth < 768 ? 4 : 6, stroke: 'hsl(var(--primary))', strokeWidth: 2 }}
               />
             </LineChart>
           </ChartContainer>

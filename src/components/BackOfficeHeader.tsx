@@ -70,9 +70,28 @@ export const BackOfficeHeader: React.FC = () => {
             </div>
             
             <div className="flex items-center space-x-4">
-              {/* Palette de commandes */}
-              <div className="hidden md:block w-64">
+              {/* Palette de commandes - Responsive */}
+              <div className="hidden sm:block w-32 md:w-64">
                 <CommandPalette />
+              </div>
+              <div className="sm:hidden">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    // Trigger command palette on mobile
+                    document.dispatchEvent(new KeyboardEvent('keydown', {
+                      key: 'k',
+                      ctrlKey: true,
+                      bubbles: true
+                    }));
+                  }}
+                  className="text-foreground"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                  </svg>
+                </Button>
               </div>
               <RealtimeIndicator />
               

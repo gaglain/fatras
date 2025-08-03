@@ -9,28 +9,29 @@ import { Link } from 'react-router-dom';
 
 export const DashboardHome: React.FC = () => {
   return (
-    <div className="space-y-6 min-h-screen p-6" style={{
+    <div className="space-y-4 md:space-y-6 min-h-screen p-4 md:p-6" style={{
       background: 'var(--custom-background, #ffffff)',
       color: 'var(--custom-text, #18181b)'
     }}>
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold" style={{
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="text-2xl md:text-3xl font-bold truncate" style={{
             color: 'var(--custom-text, #18181b)'
           }}>
             Tableau de Bord
           </h1>
-          <p className="mt-2" style={{
+          <p className="mt-2 text-sm md:text-base" style={{
             color: 'var(--custom-text, #666666)'
           }}>
             Bienvenue sur votre plateforme de booking d'artistes
           </p>
         </div>
-        <div className="flex space-x-3">
-          <Link to="/events">
-            <Button className="back-office-button">
+        <div className="flex space-x-3 flex-shrink-0">
+          <Link to="/events" className="w-full sm:w-auto">
+            <Button className="back-office-button w-full sm:w-auto justify-center">
               <Plus className="h-4 w-4 mr-2" />
-              Nouvel Événement
+              <span className="hidden sm:inline">Nouvel Événement</span>
+              <span className="sm:hidden">Événement</span>
             </Button>
           </Link>
         </div>
@@ -43,23 +44,23 @@ export const DashboardHome: React.FC = () => {
       <DashboardCharts />
 
       {/* Quick Actions */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:gap-6 grid-cols-2 lg:grid-cols-4">
         <Card className="hover:shadow-md hover:scale-105 transition-all cursor-pointer" style={{
           background: 'var(--custom-cardBg, #ffffff)',
           color: 'var(--custom-cardText, #18181b)',
           border: '1px solid rgba(0,0,0,0.1)'
         }}>
           <Link to="/contacts">
-            <CardContent className="p-6 text-center">
-              <Users className="h-8 w-8 mx-auto mb-3" style={{
+            <CardContent className="p-3 md:p-6 text-center">
+              <Users className="h-6 w-6 md:h-8 md:w-8 mx-auto mb-2 md:mb-3" style={{
                 color: 'var(--custom-buttonBg, #1632f4)'
               }} />
-              <h3 className="font-semibold" style={{
+              <h3 className="text-sm md:text-base font-semibold truncate" style={{
                 color: 'var(--custom-cardText, #18181b)'
               }}>
-                Gestion Contacts
+                Contacts
               </h3>
-              <p className="text-sm mt-1" style={{
+              <p className="text-xs md:text-sm mt-1 hidden md:block" style={{
                 color: 'var(--custom-text, #666666)'
               }}>
                 Gérer vos contacts et prospects
@@ -74,16 +75,16 @@ export const DashboardHome: React.FC = () => {
           border: '1px solid rgba(0,0,0,0.1)'
         }}>
           <Link to="/events">
-            <CardContent className="p-6 text-center">
-              <Calendar className="h-8 w-8 mx-auto mb-3" style={{
+            <CardContent className="p-3 md:p-6 text-center">
+              <Calendar className="h-6 w-6 md:h-8 md:w-8 mx-auto mb-2 md:mb-3" style={{
                 color: 'var(--custom-secondary, #ec5f65)'
               }} />
-              <h3 className="font-semibold" style={{
+              <h3 className="text-sm md:text-base font-semibold truncate" style={{
                 color: 'var(--custom-cardText, #18181b)'
               }}>
                 Événements
               </h3>
-              <p className="text-sm mt-1" style={{
+              <p className="text-xs md:text-sm mt-1 hidden md:block" style={{
                 color: 'var(--custom-text, #666666)'
               }}>
                 Planifier et gérer vos événements
@@ -98,16 +99,16 @@ export const DashboardHome: React.FC = () => {
           border: '1px solid rgba(0,0,0,0.1)'
         }}>
           <Link to="/contracts">
-            <CardContent className="p-6 text-center">
-              <FileText className="h-8 w-8 mx-auto mb-3" style={{
+            <CardContent className="p-3 md:p-6 text-center">
+              <FileText className="h-6 w-6 md:h-8 md:w-8 mx-auto mb-2 md:mb-3" style={{
                 color: 'var(--custom-accent, #f5a623)'
               }} />
-              <h3 className="font-semibold" style={{
+              <h3 className="text-sm md:text-base font-semibold truncate" style={{
                 color: 'var(--custom-cardText, #18181b)'
               }}>
-                Devis & Contrats
+                Devis
               </h3>
-              <p className="text-sm mt-1" style={{
+              <p className="text-xs md:text-sm mt-1 hidden md:block" style={{
                 color: 'var(--custom-text, #666666)'
               }}>
                 Créer et suivre vos devis
@@ -122,16 +123,16 @@ export const DashboardHome: React.FC = () => {
           border: '1px solid rgba(0,0,0,0.1)'
         }}>
           <Link to="/email-campaigns">
-            <CardContent className="p-6 text-center">
-              <Mail className="h-8 w-8 mx-auto mb-3" style={{
+            <CardContent className="p-3 md:p-6 text-center">
+              <Mail className="h-6 w-6 md:h-8 md:w-8 mx-auto mb-2 md:mb-3" style={{
                 color: 'var(--custom-buttonBg, #1632f4)'
               }} />
-              <h3 className="font-semibold" style={{
+              <h3 className="text-sm md:text-base font-semibold truncate" style={{
                 color: 'var(--custom-cardText, #18181b)'
               }}>
                 Marketing
               </h3>
-              <p className="text-sm mt-1" style={{
+              <p className="text-xs md:text-sm mt-1 hidden md:block" style={{
                 color: 'var(--custom-text, #666666)'
               }}>
                 Campagnes et automatisation
@@ -142,7 +143,7 @@ export const DashboardHome: React.FC = () => {
       </div>
 
       {/* Recent Activity */}
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2">
         <Card style={{
           background: 'var(--custom-cardBg, #ffffff)',
           color: 'var(--custom-cardText, #18181b)',
