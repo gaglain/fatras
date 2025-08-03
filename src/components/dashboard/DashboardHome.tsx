@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { DashboardStats } from './DashboardStats';
+import { DashboardCharts } from './DashboardCharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, Calendar, Users, FileText, Mail } from 'lucide-react';
@@ -37,6 +38,9 @@ export const DashboardHome: React.FC = () => {
 
       {/* Stats Cards */}
       <DashboardStats />
+
+      {/* Interactive Charts */}
+      <DashboardCharts />
 
       {/* Quick Actions */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
