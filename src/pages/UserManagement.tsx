@@ -189,19 +189,19 @@ export const UserManagement: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold flex items-center">
-            <Users className="h-8 w-8 mr-3 text-blue-600" />
+          <h1 className="text-2xl sm:text-3xl font-bold flex items-center">
+            <Users className="h-6 w-6 sm:h-8 sm:w-8 mr-3 text-primary" />
             Gestion des Utilisateurs
           </h1>
           <p className="text-muted-foreground mt-2">
             Gérez les utilisateurs et leurs permissions
           </p>
         </div>
-        <Button onClick={() => setIsFormOpen(true)} className="bg-blue-600 hover:bg-blue-700">
+        <Button onClick={() => setIsFormOpen(true)} className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
-          Nouvel Utilisateur
+          <span className="hidden sm:inline">Nouvel </span>Utilisateur
         </Button>
       </div>
 
@@ -218,46 +218,47 @@ export const UserManagement: React.FC = () => {
       </Card>
 
       {/* Liste des utilisateurs */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
         {filteredUsers.map((user) => (
           <Card key={user.id} className="hover:shadow-lg transition-shadow">
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                    <User className="h-5 w-5 text-blue-600" />
+                <div className="flex items-center space-x-3 min-w-0 flex-1">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                    <User className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                   </div>
-                  <div>
-                    <h3 className="text-lg font-semibold">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-base sm:text-lg font-semibold truncate">
                       {user.first_name} {user.last_name}
                     </h3>
-                    <p className="text-gray-600 text-sm">@{user.username || user.email?.split('@')[0]}</p>
+                    <p className="text-muted-foreground text-xs sm:text-sm truncate">@{user.username || user.email?.split('@')[0]}</p>
                   </div>
                 </div>
-                <Badge className={getRoleColor(user.role)}>
-                  {roleLabels[user.role as UserRole] || user.role}
+                <Badge className={getRoleColor(user.role)} variant="secondary">
+                  <span className="hidden sm:inline">{roleLabels[user.role as UserRole] || user.role}</span>
+                  <span className="sm:hidden">{(roleLabels[user.role as UserRole] || user.role).substring(0, 3)}</span>
                 </Badge>
               </div>
 
               <div className="space-y-2 mb-4">
-                <div className="flex items-center text-sm text-gray-600">
-                  <Mail className="h-4 w-4 mr-2" />
-                  {user.email}
+                <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
+                  <Mail className="h-3 w-3 sm:h-4 sm:w-4 mr-2 flex-shrink-0" />
+                  <span className="truncate">{user.email}</span>
                 </div>
                 {user.phone && (
-                  <div className="flex items-center text-sm text-gray-600">
-                    <Phone className="h-4 w-4 mr-2" />
-                    {user.phone}
+                  <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
+                    <Phone className="h-3 w-3 sm:h-4 sm:w-4 mr-2 flex-shrink-0" />
+                    <span className="truncate">{user.phone}</span>
                   </div>
                 )}
                 {user.function_title && (
-                  <div className="text-sm text-gray-600">
-                    <strong>Fonction:</strong> {user.function_title}
+                  <div className="text-xs sm:text-sm text-muted-foreground">
+                    <strong>Fonction:</strong> <span className="truncate">{user.function_title}</span>
                   </div>
                 )}
                 {user.show_name && (
-                  <div className="text-sm text-gray-600">
-                    <strong>Nom de scène:</strong> {user.show_name}
+                  <div className="text-xs sm:text-sm text-muted-foreground">
+                    <strong>Nom de scène:</strong> <span className="truncate">{user.show_name}</span>
                   </div>
                 )}
               </div>
@@ -265,14 +266,15 @@ export const UserManagement: React.FC = () => {
               <div className="flex space-x-2">
                 <Button variant="outline" size="sm" onClick={() => handleEdit(user)} className="flex-1">
                   <Edit className="h-3 w-3 mr-1" />
-                  Modifier
+                  <span className="hidden sm:inline">Modifier</span>
+                  <span className="sm:hidden">Edit</span>
                 </Button>
                 {user.user_id !== currentUser?.id && (
                   <Button 
                     variant="outline" 
                     size="sm" 
                     onClick={() => handleDelete(user.user_id)}
-                    className="text-red-600 hover:text-red-800 hover:bg-red-50"
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
                   >
                     <Trash2 className="h-3 w-3" />
                   </Button>
@@ -285,9 +287,9 @@ export const UserManagement: React.FC = () => {
 
       {/* Dialog de création/modification */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto mx-4">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="text-lg sm:text-xl">
               {selectedUser ? 'Modifier l\'utilisateur' : 'Créer un nouvel utilisateur'}
             </DialogTitle>
           </DialogHeader>
@@ -404,11 +406,11 @@ export const UserManagement: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button variant="outline" onClick={resetForm}>
+          <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 pt-4">
+            <Button variant="outline" onClick={resetForm} className="w-full sm:w-auto">
               Annuler
             </Button>
-            <Button onClick={handleSaveUser} disabled={sending} className="bg-blue-600 hover:bg-blue-700">
+            <Button onClick={handleSaveUser} disabled={sending} className="w-full sm:w-auto">
               <Save className="h-4 w-4 mr-2" />
               {sending ? 'Envoi...' : (selectedUser ? 'Modifier' : 'Créer')}
             </Button>
