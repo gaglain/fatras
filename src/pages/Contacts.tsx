@@ -225,21 +225,23 @@ export const Contacts: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
         <div>
-          <h1 className="text-3xl font-bold">Contacts & Listes</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Contacts & Listes</h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-1">
             Gérez vos contacts et organisez-les en listes pour vos campagnes
           </p>
         </div>
-        <div className="flex space-x-2">
-          <Button onClick={() => navigate('/email-campaigns')} variant="outline">
+        <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
+          <Button onClick={() => navigate('/email-campaigns')} variant="outline" size="sm" className="text-sm">
             <Mail className="h-4 w-4 mr-2" />
-            Campagnes Email
+            <span className="hidden sm:inline">Campagnes Email</span>
+            <span className="sm:hidden">Email</span>
           </Button>
-          <Button onClick={() => setDialogOpen(true)}>
+          <Button onClick={() => setDialogOpen(true)} size="sm" className="text-sm">
             <Plus className="h-4 w-4 mr-2" />
-            Nouveau contact
+            <span className="hidden sm:inline">Nouveau contact</span>
+            <span className="sm:hidden">Nouveau</span>
           </Button>
         </div>
       </div>
@@ -259,52 +261,54 @@ export const Contacts: React.FC = () => {
 
         <TabsContent value="contacts" className="space-y-6">
           {/* Actions pour les contacts */}
-          <div className="flex justify-end space-x-2">
-            <Button onClick={() => setCsvImportOpen(true)} variant="outline" size="sm">
+          <div className="flex flex-col space-y-2 sm:flex-row sm:justify-end sm:space-y-0 sm:space-x-2">
+            <Button onClick={() => setCsvImportOpen(true)} variant="outline" size="sm" className="text-sm">
               <Upload className="h-4 w-4 mr-2" />
-              Importer CSV
+              <span className="hidden sm:inline">Importer CSV</span>
+              <span className="sm:hidden">Import</span>
             </Button>
-            <Button onClick={() => setCsvExportOpen(true)} variant="outline" size="sm">
+            <Button onClick={() => setCsvExportOpen(true)} variant="outline" size="sm" className="text-sm">
               <Download className="h-4 w-4 mr-2" />
-              Exporter CSV
+              <span className="hidden sm:inline">Exporter CSV</span>
+              <span className="sm:hidden">Export</span>
             </Button>
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="bg-card p-4 rounded-lg border">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+            <div className="bg-card p-3 md:p-4 rounded-lg border shadow-sm">
               <div className="flex items-center space-x-2">
-                <Users className="h-5 w-5 text-primary" />
+                <Users className="h-4 w-4 md:h-5 md:w-5 text-primary" />
                 <div>
-                  <p className="text-sm text-muted-foreground">Total</p>
-                  <p className="text-2xl font-bold">{stats.total}</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">Total</p>
+                  <p className="text-lg md:text-2xl font-bold text-foreground">{stats.total}</p>
                 </div>
               </div>
             </div>
-            <div className="bg-card p-4 rounded-lg border">
+            <div className="bg-card p-3 md:p-4 rounded-lg border shadow-sm">
               <div className="flex items-center space-x-2">
-                <UserCheck className="h-5 w-5 text-green-600" />
+                <UserCheck className="h-4 w-4 md:h-5 md:w-5 text-green-600" />
                 <div>
-                  <p className="text-sm text-muted-foreground">Clients</p>
-                  <p className="text-2xl font-bold text-green-600">{stats.clients}</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">Clients</p>
+                  <p className="text-lg md:text-2xl font-bold text-green-600">{stats.clients}</p>
                 </div>
               </div>
             </div>
-            <div className="bg-card p-4 rounded-lg border">
+            <div className="bg-card p-3 md:p-4 rounded-lg border shadow-sm">
               <div className="flex items-center space-x-2">
-                <Users className="h-5 w-5 text-blue-600" />
+                <Users className="h-4 w-4 md:h-5 md:w-5 text-blue-600" />
                 <div>
-                  <p className="text-sm text-muted-foreground">Prospects</p>
-                  <p className="text-2xl font-bold text-blue-600">{stats.prospects}</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">Prospects</p>
+                  <p className="text-lg md:text-2xl font-bold text-blue-600">{stats.prospects}</p>
                 </div>
               </div>
             </div>
-            <div className="bg-card p-4 rounded-lg border">
+            <div className="bg-card p-3 md:p-4 rounded-lg border shadow-sm">
               <div className="flex items-center space-x-2">
-                <UserX className="h-5 w-5 text-gray-600" />
+                <UserX className="h-4 w-4 md:h-5 md:w-5 text-gray-600" />
                 <div>
-                  <p className="text-sm text-muted-foreground">Inactifs</p>
-                  <p className="text-2xl font-bold text-gray-600">{stats.inactifs}</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">Inactifs</p>
+                  <p className="text-lg md:text-2xl font-bold text-gray-600">{stats.inactifs}</p>
                 </div>
               </div>
             </div>
@@ -344,10 +348,11 @@ export const Contacts: React.FC = () => {
 
           {/* Bulk Action Buttons */}
           {selectedContactIds.length > 0 && (
-            <div className="flex gap-2">
-              <Button onClick={handleBulkListAssignment} variant="outline">
+            <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:gap-2">
+              <Button onClick={handleBulkListAssignment} variant="outline" size="sm" className="text-sm">
                 <List className="h-4 w-4 mr-2" />
-                Ajouter à une liste
+                <span className="hidden sm:inline">Ajouter à une liste</span>
+                <span className="sm:hidden">Ajouter</span>
               </Button>
             </div>
           )}
@@ -373,7 +378,7 @@ export const Contacts: React.FC = () => {
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
               {filteredContacts.map((contact) => (
                 <ContactCard
                   key={contact.id}
