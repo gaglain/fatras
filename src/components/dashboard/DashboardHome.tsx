@@ -9,18 +9,18 @@ import { Link } from 'react-router-dom';
 
 export const DashboardHome: React.FC = () => {
   return (
-    <div className="space-y-4 md:space-y-6 min-h-screen p-4 md:p-6" style={{
+    <div className="space-y-4 md:space-y-6 min-h-screen p-2 md:p-6" style={{
       background: 'var(--custom-background, #ffffff)',
       color: 'var(--custom-text, #18181b)'
     }}>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div className="min-w-0">
-          <h1 className="text-2xl md:text-3xl font-bold truncate" style={{
+          <h1 className="text-2xl lg:text-3xl font-bold truncate" style={{
             color: 'var(--custom-text, #18181b)'
           }}>
             Tableau de Bord
           </h1>
-          <p className="mt-2 text-sm md:text-base" style={{
+          <p className="mt-1 text-sm lg:text-base" style={{
             color: 'var(--custom-text, #666666)'
           }}>
             Bienvenue sur votre plateforme de booking d'artistes
@@ -28,7 +28,7 @@ export const DashboardHome: React.FC = () => {
         </div>
         <div className="flex space-x-3 flex-shrink-0">
           <Link to="/events" className="w-full sm:w-auto">
-            <Button className="back-office-button w-full sm:w-auto justify-center">
+            <Button className="back-office-button button-responsive">
               <Plus className="h-4 w-4 mr-2" />
               <span className="hidden sm:inline">Nouvel Événement</span>
               <span className="sm:hidden">Événement</span>
