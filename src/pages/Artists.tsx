@@ -125,19 +125,21 @@ export const Artists: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Gestion des Artistes</h1>
-          <p className="text-gray-600 mt-2">Gérer les artistes, tournées, plannings et logistique ({artists.length} artistes)</p>
+          <h1 className="text-2xl lg:text-3xl font-bold">Gestion des Artistes</h1>
+          <p className="text-muted-foreground mt-1 text-sm lg:text-base">Gérer les artistes, tournées, plannings et logistique ({artists.length} artistes)</p>
         </div>
-        <div className="flex space-x-2">
-          <Button variant="outline" onClick={() => navigate('/show-bible')}>
+        <div className="flex flex-col sm:flex-row gap-2 sm:space-x-2">
+          <Button variant="outline" onClick={() => navigate('/show-bible')} className="button-responsive">
             <BookOpen className="h-4 w-4 mr-2" />
-            Bible de Spectacle
+            <span className="hidden sm:inline">Bible de Spectacle</span>
+            <span className="sm:hidden">Bible</span>
           </Button>
-          <Button onClick={() => setShowAddForm(true)} className="bg-purple-600 hover:bg-purple-700">
+          <Button onClick={() => setShowAddForm(true)} className="button-responsive">
             <Plus className="h-4 w-4 mr-2" />
-            Ajouter Artiste
+            <span className="hidden sm:inline">Ajouter Artiste</span>
+            <span className="sm:hidden">Ajouter</span>
           </Button>
         </div>
       </div>
