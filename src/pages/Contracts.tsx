@@ -204,20 +204,21 @@ export const Contracts: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-8">
+    <div className="container mx-auto px-2 md:px-4 py-4 md:py-8">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6 md:mb-8">
         <div>
-          <h1 className="text-3xl font-bold flex items-center">
-            <FileText className="h-8 w-8 mr-3 text-blue-600" />
+          <h1 className="text-2xl lg:text-3xl font-bold flex items-center">
+            <FileText className="h-6 w-6 lg:h-8 lg:w-8 mr-2 lg:mr-3 text-blue-600" />
             Devis & Contrats
           </h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-muted-foreground mt-1 text-sm lg:text-base">
             Gérez vos devis et contrats clients
           </p>
         </div>
-        <Button onClick={() => setShowForm(true)} className="bg-blue-600 hover:bg-blue-700">
+        <Button onClick={() => setShowForm(true)} className="button-responsive">
           <Plus className="h-4 w-4 mr-2" />
-          Nouveau Devis
+          <span className="hidden sm:inline">Nouveau Devis</span>
+          <span className="sm:hidden">Nouveau</span>
         </Button>
       </div>
 
