@@ -102,16 +102,16 @@ export const Tasks: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Gestion des Tâches</h1>
-          <p className="text-muted-foreground mt-2">Organisez et suivez toutes vos tâches</p>
+          <h1 className="text-2xl lg:text-3xl font-bold">Gestion des Tâches</h1>
+          <p className="text-muted-foreground mt-1 text-sm lg:text-base">Organisez et suivez toutes vos tâches</p>
         </div>
         <TaskCreator onTaskCreated={handleTaskCreated} />
       </div>
 
-      <div className="flex items-center space-x-4 flex-wrap gap-2">
-        <div className="relative flex-1 max-w-md">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        <div className="relative w-full sm:flex-1 sm:max-w-md">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
             placeholder="Rechercher des tâches..."
@@ -120,32 +120,34 @@ export const Tasks: React.FC = () => {
             className="pl-10"
           />
         </div>
-        <Select value={selectedUser} onValueChange={setSelectedUser}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Filtrer par utilisateur" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tous les utilisateurs</SelectItem>
-            {users.filter(user => user.isActive).map((user) => (
-              <SelectItem key={user.id} value={user.id}>
-                {user.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Filtrer par catégorie" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Toutes les catégories</SelectItem>
-            <SelectItem value="follow_up">Suivi Client</SelectItem>
-            <SelectItem value="contract">Contrat</SelectItem>
-            <SelectItem value="event_prep">Préparation Événement</SelectItem>
-            <SelectItem value="marketing">Marketing</SelectItem>
-            <SelectItem value="admin">Administration</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <Select value={selectedUser} onValueChange={setSelectedUser}>
+            <SelectTrigger className="w-full sm:w-48">
+              <SelectValue placeholder="Filtrer par utilisateur" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous les utilisateurs</SelectItem>
+              {users.filter(user => user.isActive).map((user) => (
+                <SelectItem key={user.id} value={user.id}>
+                  {user.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <SelectTrigger className="w-full sm:w-48">
+              <SelectValue placeholder="Filtrer par catégorie" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Toutes les catégories</SelectItem>
+              <SelectItem value="follow_up">Suivi Client</SelectItem>
+              <SelectItem value="contract">Contrat</SelectItem>
+              <SelectItem value="event_prep">Préparation Événement</SelectItem>
+              <SelectItem value="marketing">Marketing</SelectItem>
+              <SelectItem value="admin">Administration</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <Tabs defaultValue="all" className="space-y-6">
