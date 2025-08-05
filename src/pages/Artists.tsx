@@ -130,13 +130,13 @@ export const Artists: React.FC = () => {
           <h1 className="text-2xl lg:text-3xl font-bold">Gestion des Artistes</h1>
           <p className="text-muted-foreground mt-1 text-sm lg:text-base">Gérer les artistes, tournées, plannings et logistique ({artists.length} artistes)</p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-2 sm:space-x-2">
-          <Button variant="outline" onClick={() => navigate('/show-bible')} className="button-responsive">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <Button variant="outline" onClick={() => navigate('/show-bible')} className="w-full sm:w-auto">
             <BookOpen className="h-4 w-4 mr-2" />
             <span className="hidden sm:inline">Bible de Spectacle</span>
             <span className="sm:hidden">Bible</span>
           </Button>
-          <Button onClick={() => setShowAddForm(true)} className="button-responsive">
+          <Button onClick={() => setShowAddForm(true)} className="w-full sm:w-auto">
             <Plus className="h-4 w-4 mr-2" />
             <span className="hidden sm:inline">Ajouter Artiste</span>
             <span className="sm:hidden">Ajouter</span>
@@ -144,10 +144,10 @@ export const Artists: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
         {/* Artists List */}
         <div className="lg:col-span-1">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Artistes</h2>
+          <h2 className="text-lg lg:text-xl font-semibold mb-4">Artistes</h2>
           <div className="space-y-3">
             {artists.map((artist) => (
               <Card 
