@@ -141,22 +141,24 @@ export const Events: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Événements</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-2xl lg:text-3xl font-bold">Événements</h1>
+          <p className="text-muted-foreground mt-1 text-sm lg:text-base">
             Gérez vos concerts, festivals et événements
           </p>
         </div>
-        <div className="flex space-x-2">
+        <div className="flex flex-col sm:flex-row gap-2 sm:space-x-2">
           <CSVEventExporter events={filteredEvents} />
-          <Button onClick={() => setCsvImportOpen(true)} variant="outline">
+          <Button onClick={() => setCsvImportOpen(true)} variant="outline" className="button-responsive">
             <Upload className="h-4 w-4 mr-2" />
-            Importer CSV
+            <span className="hidden sm:inline">Importer</span>
+            <span className="sm:hidden">CSV</span>
           </Button>
-          <Button onClick={() => setDialogOpen(true)}>
+          <Button onClick={() => setDialogOpen(true)} className="button-responsive">
             <Plus className="h-4 w-4 mr-2" />
-            Nouvel événement
+            <span className="hidden sm:inline">Nouvel événement</span>
+            <span className="sm:hidden">Nouveau</span>
           </Button>
         </div>
       </div>
