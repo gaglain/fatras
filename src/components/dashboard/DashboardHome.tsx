@@ -9,7 +9,7 @@ import { Link } from 'react-router-dom';
 
 export const DashboardHome: React.FC = () => {
   return (
-    <div className="space-y-4 md:space-y-6 min-h-screen p-2 md:p-6" style={{
+    <div className="space-y-4 md:space-y-6 min-h-screen p-4 md:p-6" style={{
       background: 'var(--custom-background, #ffffff)',
       color: 'var(--custom-text, #18181b)'
     }}>
@@ -26,9 +26,9 @@ export const DashboardHome: React.FC = () => {
             Bienvenue sur votre plateforme de booking d'artistes
           </p>
         </div>
-        <div className="flex space-x-3 flex-shrink-0">
+        <div className="flex w-full sm:w-auto">
           <Link to="/events" className="w-full sm:w-auto">
-            <Button className="back-office-button button-responsive">
+            <Button className="back-office-button w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               <span className="hidden sm:inline">Nouvel Événement</span>
               <span className="sm:hidden">Événement</span>
