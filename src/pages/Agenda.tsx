@@ -266,8 +266,8 @@ export const Agenda: React.FC = () => {
   );
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-8">
+    <div className="space-y-6 p-4 lg:p-0">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold flex items-center">
             <Calendar className="h-8 w-8 mr-3 text-blue-600" />
@@ -277,21 +277,24 @@ export const Agenda: React.FC = () => {
             Gérez vos événements, concerts et réunions
           </p>
         </div>
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <AgendaCSVExporter events={filteredEvents} />
-          <Button onClick={() => setCsvImportOpen(true)} variant="outline">
+          <Button onClick={() => setCsvImportOpen(true)} variant="outline" className="w-full sm:w-auto">
             <Upload className="h-4 w-4 mr-2" />
-            Importer CSV
+            <span className="hidden sm:inline">Importer CSV</span>
+            <span className="sm:hidden">CSV</span>
           </Button>
-          <Button variant="outline" asChild>
+          <Button variant="outline" asChild className="w-full sm:w-auto">
             <Link to="/preferences?tab=calendar">
               <Settings className="h-4 w-4 mr-2" />
-              Configuration Google
+              <span className="hidden sm:inline">Configuration Google</span>
+              <span className="sm:hidden">Config</span>
             </Link>
           </Button>
-          <Button onClick={handleCreateNew} className="bg-blue-600 hover:bg-blue-700">
+          <Button onClick={handleCreateNew} className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
             <Plus className="h-4 w-4 mr-2" />
-            Nouvel Événement
+            <span className="hidden sm:inline">Nouvel Événement</span>
+            <span className="sm:hidden">Nouveau</span>
           </Button>
         </div>
       </div>

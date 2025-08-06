@@ -139,9 +139,9 @@ export const Events: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-4 lg:p-0">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 p-4 lg:p-0">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold">Événements</h1>
           <p className="text-muted-foreground mt-1 text-sm lg:text-base">

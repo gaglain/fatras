@@ -204,8 +204,8 @@ export const Contracts: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto px-2 md:px-4 py-4 md:py-8">
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6 md:mb-8">
+    <div className="space-y-6 p-4 lg:p-0">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold flex items-center">
             <FileText className="h-6 w-6 lg:h-8 lg:w-8 mr-2 lg:mr-3 text-blue-600" />
