@@ -223,22 +223,22 @@ export const Contacts: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-4 lg:p-0">
       {/* Header */}
-      <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
+      <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Contacts & Listes</h1>
-          <p className="text-sm md:text-base text-muted-foreground mt-1">
+          <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Contacts & Listes</h1>
+          <p className="text-sm lg:text-base text-muted-foreground mt-1">
             Gérez vos contacts et organisez-les en listes pour vos campagnes
           </p>
         </div>
-        <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
-          <Button onClick={() => navigate('/email-campaigns')} variant="outline" size="sm" className="text-sm">
+        <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2 w-full sm:w-auto">
+          <Button onClick={() => navigate('/email-campaigns')} variant="outline" size="sm" className="w-full sm:w-auto">
             <Mail className="h-4 w-4 mr-2" />
             <span className="hidden sm:inline">Campagnes Email</span>
             <span className="sm:hidden">Email</span>
           </Button>
-          <Button onClick={() => setDialogOpen(true)} size="sm" className="text-sm">
+          <Button onClick={() => setDialogOpen(true)} size="sm" className="w-full sm:w-auto">
             <Plus className="h-4 w-4 mr-2" />
             <span className="hidden sm:inline">Nouveau contact</span>
             <span className="sm:hidden">Nouveau</span>
