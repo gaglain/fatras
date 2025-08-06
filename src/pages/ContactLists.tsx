@@ -103,8 +103,8 @@ export const ContactLists: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 p-4 lg:p-0">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold">Listes de Contacts</h1>
           <p className="text-muted-foreground mt-2">
@@ -113,9 +113,10 @@ export const ContactLists: React.FC = () => {
         </div>
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="w-full lg:w-auto">
               <Plus className="h-4 w-4 mr-2" />
-              Nouvelle Liste
+              <span className="hidden sm:inline">Nouvelle Liste</span>
+              <span className="sm:hidden">Nouvelle</span>
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl">

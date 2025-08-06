@@ -110,17 +110,18 @@ export const Forms: React.FC = () => {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 p-4 lg:p-0">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Gestionnaire de Formulaires</h1>
           <p className="text-gray-600 mt-2">Créez et gérez vos formulaires personnalisés</p>
         </div>
         <Dialog open={showBuilder} onOpenChange={setShowBuilder}>
           <DialogTrigger asChild>
-            <Button onClick={() => setSelectedForm(null)}>
+            <Button onClick={() => setSelectedForm(null)} className="w-full lg:w-auto">
               <Plus className="h-4 w-4 mr-2" />
-              Nouveau Formulaire
+              <span className="hidden sm:inline">Nouveau Formulaire</span>
+              <span className="sm:hidden">Nouveau</span>
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
