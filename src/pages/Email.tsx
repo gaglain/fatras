@@ -392,15 +392,15 @@ export const Email: React.FC = () => {
   return (
     <div className="h-full bg-gradient-to-br from-background via-background to-muted/20">
       {/* Modern Header with glass effect */}
-      <div className="bg-background/80 backdrop-blur-sm border-b border-border/50 p-6 sticky top-0 z-10">
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
+      <div className="bg-background/80 backdrop-blur-sm border-b border-border/50 p-4 lg:p-6 sticky top-0 z-10">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 max-w-7xl mx-auto">
           <div className="space-y-1">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-xl bg-primary/10 text-primary">
                 <Mail className="h-6 w-6" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                <h1 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
                   Centre Email Pro
                 </h1>
                 <p className="text-muted-foreground text-sm">
@@ -410,29 +410,32 @@ export const Email: React.FC = () => {
             </div>
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
             <Button variant="outline" size="sm" onClick={() => setShowEmailSender(true)} 
-                    className="border-primary/20 hover:border-primary/40 hover:bg-primary/5">
+                    className="border-primary/20 hover:border-primary/40 hover:bg-primary/5 w-full sm:w-auto">
               <Send className="h-4 w-4 mr-2" />
-              Email Rapide
+              <span className="hidden sm:inline">Email Rapide</span>
+              <span className="sm:hidden">Rapide</span>
             </Button>
             
             <Button variant="outline" size="sm" onClick={() => setShowAnalytics(true)} 
-                    className="border-primary/20 hover:border-primary/40 hover:bg-primary/5">
+                    className="border-primary/20 hover:border-primary/40 hover:bg-primary/5 w-full sm:w-auto">
               <TrendingUp className="h-4 w-4 mr-2" />
-              Analytics
+              <span className="hidden sm:inline">Analytics</span>
+              <span className="sm:hidden">Stats</span>
             </Button>
             
             <Button variant="outline" size="sm" onClick={() => setShowScheduled(!showScheduled)} 
-                    className="border-primary/20 hover:border-primary/40 hover:bg-primary/5">
+                    className="border-primary/20 hover:border-primary/40 hover:bg-primary/5 w-full sm:w-auto">
               <Clock className="h-4 w-4 mr-2" />
-              Programmés ({scheduledEmails.length})
+              <span className="hidden sm:inline">Programmés ({scheduledEmails.length})</span>
+              <span className="sm:hidden">Prog ({scheduledEmails.length})</span>
             </Button>
             
             <Dialog open={showCompose} onOpenChange={setShowCompose}>
               <DialogTrigger asChild>
                 <Button className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 
-                                 shadow-lg hover:shadow-xl transition-all duration-200">
+                                 shadow-lg hover:shadow-xl transition-all duration-200 w-full sm:w-auto">
                   <Plus className="h-4 w-4 mr-2" />
                   Composer
                 </Button>
