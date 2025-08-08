@@ -38,14 +38,14 @@ export const Messagerie: React.FC = () => {
   const currentMessages = messages[selectedChannel] || [];
 
   return (
-    <div className="flex h-[calc(100vh-4rem)]">
+    <div className="flex h-[calc(100vh-4rem)] flex-col lg:flex-row">
       {/* Sidebar */}
-      <div className="w-80 border-r" style={{
+      <div className="w-full lg:w-80 border-r lg:border-b-0 border-b" style={{
         backgroundColor: 'var(--app-card-bg, #ffffff)',
         borderColor: 'var(--notification-border, #e5e7eb)'
       }}>
         <div className="p-4 border-b" style={{ borderColor: 'var(--notification-border, #e5e7eb)' }}>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <h2 className="font-semibold text-lg" style={{ color: 'var(--app-card-text, #18181b)' }}>
               Messagerie Interne
             </h2>
@@ -53,13 +53,15 @@ export const Messagerie: React.FC = () => {
               size="sm" 
               variant="outline" 
               onClick={handleCreateChannel}
+              className="w-full sm:w-auto"
               style={{
                 borderColor: 'var(--app-button-bg, #1632f4)',
                 color: 'var(--app-button-bg, #1632f4)'
               }}
             >
               <Plus className="h-3 w-3 mr-1" />
-              Canal
+              <span className="hidden sm:inline">Canal</span>
+              <span className="sm:hidden">Nouveau</span>
             </Button>
           </div>
         </div>
@@ -96,7 +98,7 @@ export const Messagerie: React.FC = () => {
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col" style={{ backgroundColor: 'var(--app-background, #ffffff)' }}>
+      <div className="flex-1 flex flex-col min-h-0" style={{ backgroundColor: 'var(--app-background, #ffffff)' }}>
         {/* Header */}
         <div className="p-4 border-b" style={{
           backgroundColor: 'var(--app-card-bg, #ffffff)',
@@ -149,11 +151,11 @@ export const Messagerie: React.FC = () => {
         </ScrollArea>
 
         {/* Message Input */}
-        <div className="p-4 border-t" style={{
+        <div className="p-2 sm:p-4 border-t" style={{
           backgroundColor: 'var(--app-card-bg, #ffffff)',
           borderColor: 'var(--notification-border, #e5e7eb)'
         }}>
-          <div className="flex space-x-2">
+          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
             <Input
               placeholder={`Message ${currentChannel ? '#' + currentChannel.name : ''}...`}
               value={message}
@@ -169,12 +171,14 @@ export const Messagerie: React.FC = () => {
             <Button 
               onClick={sendMessage} 
               disabled={!message.trim()}
+              className="w-full sm:w-auto"
               style={{
                 backgroundColor: 'var(--app-button-bg, #1632f4)',
                 color: 'var(--app-button-text, #ffffff)'
               }}
             >
-              <Send className="h-4 w-4" />
+              <Send className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Envoyer</span>
             </Button>
           </div>
         </div>

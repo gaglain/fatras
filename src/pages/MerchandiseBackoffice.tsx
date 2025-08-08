@@ -385,19 +385,20 @@ export const MerchandiseBackoffice: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-8">
+    <div className="space-y-6 p-4 lg:p-0">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold">Gestion de la Boutique</h1>
           <p className="text-muted-foreground mt-2">
             Gérez vos produits avec attributs et variations
           </p>
         </div>
-        <div className="flex items-center space-x-3">
-          <Button variant="outline" asChild>
+        <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
+          <Button variant="outline" asChild className="w-full sm:w-auto">
             <Link to="/shop" target="_blank">
               <Package className="h-4 w-4 mr-2" />
-              Voir la boutique
+              <span className="hidden sm:inline">Voir la boutique</span>
+              <span className="sm:hidden">Boutique</span>
             </Link>
           </Button>
         </div>
@@ -405,11 +406,12 @@ export const MerchandiseBackoffice: React.FC = () => {
 
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <CardTitle>Catalogue Produits</CardTitle>
-            <Button onClick={handleCreateNew} className="bg-blue-600 hover:bg-blue-700">
+            <Button onClick={handleCreateNew} className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
-              Nouveau Produit
+              <span className="hidden sm:inline">Nouveau Produit</span>
+              <span className="sm:hidden">Nouveau</span>
             </Button>
           </div>
         </CardHeader>
