@@ -53,17 +53,18 @@ export const RoadShow: React.FC = () => {
   });
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 p-4 lg:p-0">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Feuille de Route</h1>
           <p className="text-muted-foreground mt-2">Gérez votre tournée et planifiez vos dates</p>
         </div>
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="w-full lg:w-auto">
               <Plus className="h-4 w-4 mr-2" />
-              Nouvelle Étape
+              <span className="hidden sm:inline">Nouvelle Étape</span>
+              <span className="sm:hidden">Nouvelle</span>
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">

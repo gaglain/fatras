@@ -145,22 +145,23 @@ export const Opportunities: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 p-4 lg:p-0">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Opportunités</h1>
           <p className="text-muted-foreground mt-2">
             Gérez vos opportunités de concerts et événements
           </p>
         </div>
-        <Button onClick={() => setShowAddForm(true)}>
+        <Button onClick={() => setShowAddForm(true)} className="w-full lg:w-auto">
           <Plus className="h-4 w-4 mr-2" />
-          Nouvelle Opportunité
+          <span className="hidden sm:inline">Nouvelle Opportunité</span>
+          <span className="sm:hidden">Nouvelle</span>
         </Button>
       </div>
 
-      <div className="flex items-center space-x-4">
-        <div className="relative flex-1 max-w-md">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+        <div className="relative flex-1 max-w-full sm:max-w-md">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
             placeholder="Rechercher des opportunités..."
@@ -182,18 +183,21 @@ export const Opportunities: React.FC = () => {
                     {getStatusLabel(opportunity.status)}
                   </Badge>
                 </div>
-                <div className="flex space-x-1">
+                <div className="flex flex-col sm:flex-row gap-1">
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => handleEditOpportunity(opportunity)}
+                    className="w-full sm:w-auto"
                   >
-                    <Edit className="h-4 w-4" />
+                    <Edit className="h-4 w-4 sm:mr-1" />
+                    <span className="hidden sm:inline">Modifier</span>
                   </Button>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button size="sm" variant="outline">
-                        <Trash2 className="h-4 w-4 text-red-500" />
+                      <Button size="sm" variant="outline" className="w-full sm:w-auto">
+                        <Trash2 className="h-4 w-4 text-red-500 sm:mr-1" />
+                        <span className="hidden sm:inline text-red-500">Supprimer</span>
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>

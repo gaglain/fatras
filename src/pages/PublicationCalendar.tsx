@@ -150,8 +150,8 @@ export const PublicationCalendar: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 p-4 lg:p-0">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Calendrier de Publication</h1>
           <p className="text-muted-foreground mt-2">Planifiez et gérez vos publications sur les réseaux sociaux ({publications.length} publications)</p>
@@ -162,11 +162,12 @@ export const PublicationCalendar: React.FC = () => {
             setEditingPublication(null);
             setShowForm(true);
           }} 
-          className="bg-purple-600 hover:bg-purple-700"
+          className="bg-purple-600 hover:bg-purple-700 w-full lg:w-auto"
           disabled={isLoading}
         >
           <Plus className="h-4 w-4 mr-2" />
-          Nouvelle publication
+          <span className="hidden sm:inline">Nouvelle publication</span>
+          <span className="sm:hidden">Nouvelle</span>
         </Button>
       </div>
 
@@ -237,19 +238,20 @@ export const PublicationCalendar: React.FC = () => {
                   )}
                 </div>
                 
-                <div className="flex items-center justify-between pt-2 border-t">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-2 border-t">
                   <div className="flex items-center space-x-2">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => setShowComments(showComments === publication.id ? null : publication.id)}
                     >
-                      <MessageSquare className="h-4 w-4" />
-                      {publication.comments.length}
+                      <MessageSquare className="h-4 w-4 mr-1" />
+                      <span className="hidden sm:inline">{publication.comments.length}</span>
+                      <span className="sm:hidden">{publication.comments.length}</span>
                     </Button>
                   </div>
                   
-                  <div className="flex items-center space-x-1">
+                  <div className="flex items-center justify-end flex-wrap gap-1">
                     {publication.status === 'pending_approval' && (
                       <>
                         <Button
