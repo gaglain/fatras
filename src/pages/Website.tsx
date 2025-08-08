@@ -23,46 +23,50 @@ export const Website: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6 p-4 lg:p-0">
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold">Gestion du Site Web</h1>
           <p className="mt-2 text-gray-600">
             Configurez et personnalisez votre site web public
           </p>
         </div>
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
           <Button 
             onClick={handlePreviewSite}
             variant="outline"
-            className="flex items-center space-x-2"
+            className="flex items-center justify-center space-x-2"
           >
             <ExternalLink className="h-4 w-4" />
-            <span>Aperçu du site</span>
+            <span className="hidden sm:inline">Aperçu du site</span>
+            <span className="sm:hidden">Aperçu</span>
           </Button>
           <Button 
             onClick={handleOpenEditor}
-            className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white"
+            className="flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white"
           >
             <Edit className="h-4 w-4" />
-            <span>Éditeur de pages</span>
+            <span className="hidden sm:inline">Éditeur de pages</span>
+            <span className="sm:hidden">Éditeur</span>
           </Button>
         </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="config">
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 gap-1">
+          <TabsTrigger value="config" className="flex items-center justify-center">
             <Settings className="h-4 w-4 mr-2" />
-            Configuration
+            <span className="hidden sm:inline">Configuration</span>
+            <span className="sm:hidden">Config</span>
           </TabsTrigger>
-          <TabsTrigger value="advanced">
+          <TabsTrigger value="advanced" className="flex items-center justify-center">
             <Globe className="h-4 w-4 mr-2" />
-            Gestion avancée
+            <span className="hidden sm:inline">Gestion avancée</span>
+            <span className="sm:hidden">Avancé</span>
           </TabsTrigger>
-          <TabsTrigger value="preview">
+          <TabsTrigger value="preview" className="flex items-center justify-center">
             <Eye className="h-4 w-4 mr-2" />
-            Aperçu
+            <span>Aperçu</span>
           </TabsTrigger>
         </TabsList>
 

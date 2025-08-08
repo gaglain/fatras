@@ -132,12 +132,12 @@ export const ShowBible: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6" style={{
+    <div className="space-y-6 p-4 lg:p-0" style={{
       backgroundColor: 'var(--app-background, #ffffff)',
       color: 'var(--app-text, #18181b)',
       minHeight: '100vh'
     }}>
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold" style={{ color: 'var(--app-text, #18181b)' }}>
             Bible du Spectacle
@@ -148,12 +148,13 @@ export const ShowBible: React.FC = () => {
         </div>
         <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
           <DialogTrigger asChild>
-            <Button style={{
+            <Button className="w-full lg:w-auto" style={{
               backgroundColor: 'var(--app-button-bg, #1632f4)',
               color: 'var(--app-button-text, #ffffff)'
             }}>
               <Plus className="h-4 w-4 mr-2" />
-              Ajouter Document
+              <span className="hidden sm:inline">Ajouter Document</span>
+              <span className="sm:hidden">Ajouter</span>
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl">

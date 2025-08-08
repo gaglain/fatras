@@ -148,20 +148,22 @@ export const EventTypes: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 p-4 lg:p-0">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Types d'Événements</h1>
           <p className="text-gray-600 mt-2">Gérer les types d'événements pour votre organisation</p>
         </div>
-        <div className="flex space-x-2">
-          <Button variant="outline" onClick={() => navigate('/events')}>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button variant="outline" onClick={() => navigate('/events')} className="w-full sm:w-auto">
             <Calendar className="h-4 w-4 mr-2" />
-            Retour aux Événements
+            <span className="hidden sm:inline">Retour aux Événements</span>
+            <span className="sm:hidden">Retour</span>
           </Button>
-          <Button onClick={() => setIsFormOpen(true)} className="bg-purple-600 hover:bg-purple-700">
+          <Button onClick={() => setIsFormOpen(true)} className="bg-purple-600 hover:bg-purple-700 w-full sm:w-auto">
             <Plus className="h-4 w-4 mr-2" />
-            Ajouter Type
+            <span className="hidden sm:inline">Ajouter Type</span>
+            <span className="sm:hidden">Ajouter</span>
           </Button>
         </div>
       </div>
@@ -182,18 +184,20 @@ export const EventTypes: React.FC = () => {
 
               <p className="text-gray-600 text-sm mb-4">{type.description}</p>
 
-              <div className="flex space-x-2 mt-4 pt-4 border-t">
-                <Button variant="outline" size="sm" onClick={() => handleEdit(type)} className="flex-1">
+              <div className="flex flex-col sm:flex-row gap-2 mt-4 pt-4 border-t">
+                <Button variant="outline" size="sm" onClick={() => handleEdit(type)} className="w-full sm:flex-1">
                   <Edit className="h-3 w-3 mr-1" />
-                  Modifier
+                  <span className="hidden sm:inline">Modifier</span>
+                  <span className="sm:hidden">Edit</span>
                 </Button>
                 <Button 
                   variant="outline" 
                   size="sm" 
                   onClick={() => handleDelete(type.id)}
-                  className="text-red-600 hover:text-red-800 hover:bg-red-50"
+                  className="text-red-600 hover:text-red-800 hover:bg-red-50 w-full sm:w-auto"
                 >
-                  <Trash2 className="h-3 w-3" />
+                  <Trash2 className="h-3 w-3 sm:mr-1" />
+                  <span className="hidden sm:inline">Supprimer</span>
                 </Button>
               </div>
             </CardContent>
