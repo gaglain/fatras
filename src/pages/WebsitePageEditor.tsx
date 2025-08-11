@@ -483,7 +483,7 @@ export const WebsitePageEditor: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="p-6" style={{
+      <div className="p-4 lg:p-6" style={{
         backgroundColor: 'var(--app-background, #ffffff)',
         color: 'var(--app-text, #18181b)',
         minHeight: '100vh'

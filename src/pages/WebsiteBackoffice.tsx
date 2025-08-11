@@ -243,43 +243,45 @@ export const WebsiteBackoffice: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-8">
+    <div className="container mx-auto px-4 py-6 lg:py-8">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6 lg:mb-8">
         <div>
-          <h1 className="text-3xl font-bold">Gestion du Site Web</h1>
-          <p className="text-muted-foreground mt-2">
+          <h1 className="text-2xl lg:text-3xl font-bold">Gestion du Site Web</h1>
+          <p className="text-muted-foreground mt-2 text-sm lg:text-base">
             Créez et personnalisez vos pages avec un éditeur de blocs
           </p>
         </div>
         <div className="flex items-center space-x-3">
-          <Button variant="outline" onClick={handlePreviewSite}>
+          <Button variant="outline" onClick={handlePreviewSite} className="text-xs lg:text-sm">
             <Globe className="h-4 w-4 mr-2" />
-            Prévisualiser le site ({pages.length} pages)
+            <span className="hidden sm:inline">Prévisualiser le site ({pages.length})</span>
+            <span className="sm:hidden">Aperçu ({pages.length})</span>
           </Button>
         </div>
       </div>
 
-      <Tabs defaultValue="pages" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="pages" className="flex items-center space-x-2">
+      <Tabs defaultValue="pages" className="space-y-4 lg:space-y-6">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1">
+          <TabsTrigger value="pages" className="flex items-center justify-center space-x-1 lg:space-x-2">
             <FileText className="h-4 w-4" />
-            <span>Pages</span>
+            <span className="hidden sm:inline">Pages</span>
           </TabsTrigger>
-          <TabsTrigger value="menu" className="flex items-center space-x-2">
+          <TabsTrigger value="menu" className="flex items-center justify-center space-x-1 lg:space-x-2">
             <Menu className="h-4 w-4" />
-            <span>Menu</span>
+            <span className="hidden sm:inline">Menu</span>
           </TabsTrigger>
-          <TabsTrigger value="design" className="flex items-center space-x-2">
+          <TabsTrigger value="design" className="flex items-center justify-center space-x-1 lg:space-x-2">
             <Palette className="h-4 w-4" />
-            <span>Design</span>
+            <span className="hidden sm:inline">Design</span>
           </TabsTrigger>
-          <TabsTrigger value="settings" className="flex items-center space-x-2">
+          <TabsTrigger value="settings" className="flex items-center justify-center space-x-1 lg:space-x-2">
             <Settings className="h-4 w-4" />
-            <span>Paramètres</span>
+            <span className="hidden lg:inline">Paramètres</span>
+            <span className="lg:hidden">Config</span>
           </TabsTrigger>
-          <TabsTrigger value="legal" className="flex items-center space-x-2">
+          <TabsTrigger value="legal" className="flex items-center justify-center space-x-1 lg:space-x-2">
             <FileText className="h-4 w-4" />
-            <span>Légal</span>
+            <span className="hidden sm:inline">Légal</span>
           </TabsTrigger>
         </TabsList>
 
@@ -288,9 +290,10 @@ export const WebsiteBackoffice: React.FC = () => {
             <CardContent className="space-y-4 p-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold">Gestionnaire de Pages ({pages.length})</h2>
-                <Button onClick={() => setShowPageCreator(true)} className="bg-blue-600 hover:bg-blue-700">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nouvelle Page
+                <Button onClick={() => setShowPageCreator(true)} className="bg-blue-600 hover:bg-blue-700 text-sm lg:text-base">
+                  <Plus className="h-4 w-4 mr-1 lg:mr-2" />
+                  <span className="hidden sm:inline">Nouvelle Page</span>
+                  <span className="sm:hidden">Nouveau</span>
                 </Button>
               </div>
 

@@ -10,45 +10,45 @@ export const SimpleFrontHome: React.FC = () => {
   console.log('🏠 Home rendering with:', config.siteName);
 
   return (
-    <div className="space-y-16">
+    <div className="space-y-8 lg:space-y-16">
       {/* Hero Section */}
       <section 
-        className="relative py-20 px-4 text-center text-white rounded-lg"
+        className="relative py-12 lg:py-20 px-4 text-center text-white rounded-lg"
         style={{
           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
         }}
       >
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">
+          <h1 className="text-2xl md:text-4xl lg:text-6xl font-bold mb-4 lg:mb-6">
             Bienvenue sur
           </h1>
-          <h2 className="text-5xl md:text-7xl font-bold text-yellow-400 mb-6">
+          <h2 className="text-3xl md:text-5xl lg:text-7xl font-bold text-yellow-400 mb-4 lg:mb-6">
             {config.siteName}
           </h2>
-          <p className="text-xl md:text-2xl mb-8 opacity-90">
+          <p className="text-lg md:text-xl lg:text-2xl mb-6 lg:mb-8 opacity-90 px-4">
             {config.siteDescription}
           </p>
-          <button className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-4 px-8 rounded-lg text-lg transition-colors">
+          <button className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 lg:py-4 px-6 lg:px-8 rounded-lg text-base lg:text-lg transition-colors">
             Découvrir
           </button>
         </div>
       </section>
 
       {/* Services Section */}
-      <section className="py-16">
-        <div className="text-center mb-12">
+      <section className="py-8 lg:py-16 px-4">
+        <div className="text-center mb-8 lg:mb-12">
           <p className="text-blue-600 font-semibold text-sm uppercase tracking-wide mb-2">
             SERVICES
           </p>
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
             Tout ce dont vous avez besoin
           </h2>
-          <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+          <p className="text-gray-600 text-base lg:text-lg max-w-2xl mx-auto px-4">
             Découvrez nos services pour une expérience musicale complète
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto">
           {/* Artistes */}
           <div className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow">
             <div className="w-16 h-16 bg-blue-100 rounded-xl flex items-center justify-center mb-6">

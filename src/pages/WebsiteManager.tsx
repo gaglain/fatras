@@ -29,55 +29,60 @@ export const WebsiteManager: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-8">
+    <div className="container mx-auto px-4 py-6 lg:py-8">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6 lg:mb-8">
         <div>
-          <h1 className="text-3xl font-bold">Gestion du Site Web</h1>
-          <p className="text-muted-foreground mt-2">
+          <h1 className="text-2xl lg:text-3xl font-bold">Gestion du Site Web</h1>
+          <p className="text-muted-foreground mt-2 text-sm lg:text-base">
             Gérez votre site web comme un WordPress professionnel
           </p>
         </div>
-        <div className="flex items-center space-x-3">
-          <Button variant="outline" onClick={handlePreviewSite}>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+          <Button variant="outline" onClick={handlePreviewSite} className="text-sm">
             <Eye className="h-4 w-4 mr-2" />
-            Prévisualiser
+            <span className="hidden sm:inline">Prévisualiser</span>
+            <span className="sm:hidden">Aperçu</span>
           </Button>
-          <Button onClick={handlePreviewSite}>
+          <Button onClick={handlePreviewSite} className="text-sm">
             <Globe className="h-4 w-4 mr-2" />
-            Voir le site
+            <span className="hidden sm:inline">Voir le site</span>
+            <span className="sm:hidden">Voir</span>
           </Button>
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-7">
-          <TabsTrigger value="layout" className="flex items-center space-x-2">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 lg:space-y-6">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-1">
+          <TabsTrigger value="layout" className="flex items-center justify-center space-x-1 lg:space-x-2 text-xs lg:text-sm">
             <LayoutIcon className="h-4 w-4" />
-            <span>Header/Footer</span>
+            <span className="hidden lg:inline">Header/Footer</span>
+            <span className="lg:hidden">Layout</span>
           </TabsTrigger>
-          <TabsTrigger value="pages" className="flex items-center space-x-2">
+          <TabsTrigger value="pages" className="flex items-center justify-center space-x-1 lg:space-x-2 text-xs lg:text-sm">
             <FileText className="h-4 w-4" />
             <span>Pages</span>
           </TabsTrigger>
-          <TabsTrigger value="menu" className="flex items-center space-x-2">
+          <TabsTrigger value="menu" className="flex items-center justify-center space-x-1 lg:space-x-2 text-xs lg:text-sm">
             <Menu className="h-4 w-4" />
             <span>Menu</span>
           </TabsTrigger>
-          <TabsTrigger value="seo" className="flex items-center space-x-2">
+          <TabsTrigger value="seo" className="flex items-center justify-center space-x-1 lg:space-x-2 text-xs lg:text-sm">
             <Search className="h-4 w-4" />
             <span>SEO</span>
           </TabsTrigger>
-          <TabsTrigger value="legal" className="flex items-center space-x-2">
+          <TabsTrigger value="legal" className="flex items-center justify-center space-x-1 lg:space-x-2 text-xs lg:text-sm">
             <Shield className="h-4 w-4" />
             <span>Légal</span>
           </TabsTrigger>
-          <TabsTrigger value="analytics" className="flex items-center space-x-2">
+          <TabsTrigger value="analytics" className="flex items-center justify-center space-x-1 lg:space-x-2 text-xs lg:text-sm">
             <BarChart3 className="h-4 w-4" />
-            <span>Analytics</span>
+            <span className="hidden sm:inline">Analytics</span>
+            <span className="sm:hidden">Stats</span>
           </TabsTrigger>
-          <TabsTrigger value="settings" className="flex items-center space-x-2">
+          <TabsTrigger value="settings" className="flex items-center justify-center space-x-1 lg:space-x-2 text-xs lg:text-sm">
             <Settings className="h-4 w-4" />
-            <span>Paramètres</span>
+            <span className="hidden lg:inline">Paramètres</span>
+            <span className="lg:hidden">Config</span>
           </TabsTrigger>
         </TabsList>
 
