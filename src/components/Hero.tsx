@@ -13,20 +13,21 @@ export const Hero: React.FC<HeroProps> = ({ setCurrentPage }) => {
   return (
     <section className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 overflow-hidden">
       <div className="absolute inset-0 bg-black/20"></div>
-      <div className="relative z-10 text-center text-white px-4 max-w-4xl mx-auto">
-        <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
+      <div className="relative z-10 text-center text-white px-4 lg:px-8 max-w-4xl mx-auto">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 lg:mb-6 leading-tight">
           Créons des Moments Magiques
         </h1>
-        <p className="text-xl md:text-2xl mb-8 text-gray-200 max-w-2xl mx-auto">
+        <p className="text-lg sm:text-xl md:text-xl lg:text-2xl mb-6 lg:mb-8 text-gray-200 max-w-2xl mx-auto px-4">
           Découvrez nos artistes talentueux et créons ensemble des expériences musicales exceptionnelles pour vos événements
         </p>
         <Button 
           onClick={() => setCurrentPage('artists')}
           size="lg"
-          className="bg-pink-500 hover:bg-pink-600 text-white px-8 py-3 text-lg"
+          className="bg-pink-500 hover:bg-pink-600 text-white px-6 lg:px-8 py-3 text-base lg:text-lg w-full sm:w-auto"
         >
-          Découvrir nos Artistes
-          <ArrowRight className="ml-2 h-5 w-5" />
+          <span className="hidden sm:inline">Découvrir nos Artistes</span>
+          <span className="sm:hidden">Nos Artistes</span>
+          <ArrowRight className="ml-2 h-4 w-4 lg:h-5 lg:w-5" />
         </Button>
       </div>
       

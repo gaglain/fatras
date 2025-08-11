@@ -26,28 +26,44 @@ export const Preferences: React.FC = () => {
   const defaultTab = searchParams.get('tab') || 'company';
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 lg:space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Préférences</h1>
-        <p className="text-muted-foreground mt-2">
+        <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Préférences</h1>
+        <p className="text-muted-foreground mt-2 text-sm lg:text-base">
           Personnalisez votre expérience
         </p>
       </div>
       <Tabs defaultValue={defaultTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-7">
-          <TabsTrigger value="company">Entreprise</TabsTrigger>
-          <TabsTrigger value="appearance">Apparence</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          <TabsTrigger value="calendar">
-            <Calendar className="h-4 w-4 mr-2" />
-            Agenda
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-1">
+          <TabsTrigger value="company" className="text-xs lg:text-sm">
+            <Globe className="h-4 w-4 lg:mr-2" />
+            <span className="hidden lg:inline">Entreprise</span>
           </TabsTrigger>
-          <TabsTrigger value="gmail">
-            <Mail className="h-4 w-4 mr-2" />
-            Gmail
+          <TabsTrigger value="appearance" className="text-xs lg:text-sm">
+            <Palette className="h-4 w-4 lg:mr-2" />
+            <span className="hidden lg:inline">Apparence</span>
           </TabsTrigger>
-          <TabsTrigger value="mobile">Mobile</TabsTrigger>
-          <TabsTrigger value="colors">Couleurs</TabsTrigger>
+          <TabsTrigger value="notifications" className="text-xs lg:text-sm">
+            <Bell className="h-4 w-4 lg:mr-2" />
+            <span className="hidden sm:inline lg:inline">Notifications</span>
+            <span className="sm:hidden">Notifs</span>
+          </TabsTrigger>
+          <TabsTrigger value="calendar" className="text-xs lg:text-sm">
+            <Calendar className="h-4 w-4 lg:mr-2" />
+            <span className="hidden lg:inline">Agenda</span>
+          </TabsTrigger>
+          <TabsTrigger value="gmail" className="text-xs lg:text-sm">
+            <Mail className="h-4 w-4 lg:mr-2" />
+            <span className="hidden lg:inline">Gmail</span>
+          </TabsTrigger>
+          <TabsTrigger value="mobile" className="text-xs lg:text-sm">
+            <Smartphone className="h-4 w-4 lg:mr-2" />
+            <span className="hidden lg:inline">Mobile</span>
+          </TabsTrigger>
+          <TabsTrigger value="colors" className="text-xs lg:text-sm">
+            <Palette className="h-4 w-4 lg:mr-2" />
+            <span className="hidden lg:inline">Couleurs</span>
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="company" className="space-y-4">
           <CompanyTab />
