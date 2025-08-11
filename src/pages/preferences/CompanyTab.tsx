@@ -82,7 +82,7 @@ export const CompanyTab: React.FC = () => {
         </div>
         <div>
           <Label htmlFor="company-logo">Logo de l'entreprise</Label>
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="flex-1">
               <Input
                 id="company-logo"
@@ -92,7 +92,7 @@ export const CompanyTab: React.FC = () => {
               />
             </div>
             {companySettings.logo && (
-              <div className="flex flex-col items-center space-y-2">
+              <div className="flex flex-col items-center space-y-2 sm:items-start">
                 <img
                   src={companySettings.logo}
                   alt="Logo"
@@ -109,7 +109,7 @@ export const CompanyTab: React.FC = () => {
         </div>
         <div>
           <Label htmlFor="company-favicon">Icône de l'application (Favicon)</Label>
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="flex-1">
               <Input
                 id="company-favicon"
@@ -119,7 +119,7 @@ export const CompanyTab: React.FC = () => {
               />
             </div>
             {companySettings.favicon && (
-              <div className="flex flex-col items-center space-y-2">
+              <div className="flex flex-col items-center space-y-2 sm:items-start">
                 <img
                   src={companySettings.favicon}
                   alt="Favicon"

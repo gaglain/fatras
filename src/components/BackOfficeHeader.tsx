@@ -59,12 +59,13 @@ export const BackOfficeHeader: React.FC = () => {
                 <img
                   src={logo || "/logo.svg"}
                   alt={name}
-                  className="h-9 w-9 object-contain"
+                  className="h-8 w-8 lg:h-9 lg:w-9 object-contain"
                   style={{ filter: "drop-shadow(0 2px 7px #1632f4)" }}
                   onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                 />
-                <span className="text-lg font-bold tracking-tight transition-colors duration-300 text-foreground">
-                  {name || "MusiConnect"}
+                <span className="text-base lg:text-lg font-bold tracking-tight transition-colors duration-300 text-foreground">
+                  <span className="hidden sm:inline">{name || "MusiConnect"}</span>
+                  <span className="sm:hidden">{(name || "MusiConnect").split(' ')[0]}</span>
                 </span>
               </Link>
             </div>

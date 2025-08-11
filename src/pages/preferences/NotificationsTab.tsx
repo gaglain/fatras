@@ -67,7 +67,7 @@ export const NotificationsTab: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center space-x-2">
               <Mail className="h-4 w-4 text-muted-foreground" />
               <Label>Notifications par email</Label>
@@ -77,7 +77,7 @@ export const NotificationsTab: React.FC = () => {
               onCheckedChange={(checked) => updateSetting('email', checked)}
             />
           </div>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center space-x-2">
               <Bell className="h-4 w-4 text-muted-foreground" />
               <Label>Notifications push</Label>
@@ -102,7 +102,7 @@ export const NotificationsTab: React.FC = () => {
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center space-x-2">
               <CheckSquare className="h-4 w-4 text-muted-foreground" />
               <Label>Tâches</Label>
@@ -113,7 +113,7 @@ export const NotificationsTab: React.FC = () => {
             />
           </div>
           
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center space-x-2">
               <MessageSquare className="h-4 w-4 text-muted-foreground" />
               <Label>Messages</Label>
@@ -124,7 +124,7 @@ export const NotificationsTab: React.FC = () => {
             />
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center space-x-2">
               <Calendar className="h-4 w-4 text-muted-foreground" />
               <Label>Événements</Label>
@@ -135,7 +135,7 @@ export const NotificationsTab: React.FC = () => {
             />
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center space-x-2">
               <User className="h-4 w-4 text-muted-foreground" />
               <Label>Contacts</Label>
@@ -146,7 +146,7 @@ export const NotificationsTab: React.FC = () => {
             />
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center space-x-2">
               <Users className="h-4 w-4 text-muted-foreground" />
               <Label>Artistes</Label>
@@ -159,7 +159,7 @@ export const NotificationsTab: React.FC = () => {
 
           <Separator />
 
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center space-x-2">
               <CheckSquare className="h-4 w-4 text-muted-foreground" />
               <Label>Contrats</Label>
@@ -170,7 +170,7 @@ export const NotificationsTab: React.FC = () => {
             />
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center space-x-2">
               <Calendar className="h-4 w-4 text-muted-foreground" />
               <Label>Calendrier</Label>
@@ -181,7 +181,7 @@ export const NotificationsTab: React.FC = () => {
             />
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center space-x-2">
               <CheckSquare className="h-4 w-4 text-muted-foreground" />
               <Label>Tableau de bord</Label>

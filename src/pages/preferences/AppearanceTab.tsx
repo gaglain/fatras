@@ -36,11 +36,11 @@ export const AppearanceTab: React.FC = () => {
           Apparence de l'application
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
+      <CardContent className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex-1">
             <Label>Mode compact</Label>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground mt-1">
               Réduire l'espacement entre les éléments pour afficher plus d'informations à l'écran. 
               Utile pour les écrans plus petits ou pour maximiser l'espace de travail.
             </p>
@@ -50,10 +50,10 @@ export const AppearanceTab: React.FC = () => {
             onCheckedChange={checked => setAppearance(prev => ({ ...prev, compactMode: checked }))}
           />
         </div>
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex-1">
             <Label>Sidebar réduite par défaut</Label>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground mt-1">
               La barre latérale sera repliée au démarrage
             </p>
           </div>
