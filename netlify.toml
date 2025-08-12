@@ -8,6 +8,21 @@
   to = "/index.html"
   status = 200
 
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "max-age=31536000"
+
+[[headers]]
+  for = "*.js"
+  [headers.values]
+    Content-Type = "application/javascript"
+
+[[headers]]
+  for = "*.mjs"
+  [headers.values]
+    Content-Type = "application/javascript"
+
 [build.environment]
   NODE_VERSION = "18"
   CI = "false"
