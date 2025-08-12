@@ -1,9 +1,7 @@
 const CACHE_NAME = 'artistcrm-v1';
 const urlsToCache = [
   '/',
-  '/src/main.tsx',
-  '/src/index.css',
-  '/lovable-uploads/favicon.png'
+  '/favicon.ico'
 ];
 
 // Installation du service worker
