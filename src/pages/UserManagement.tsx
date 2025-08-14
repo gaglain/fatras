@@ -20,6 +20,7 @@ import { toast } from 'sonner';
 import { useUser, UserRole } from '@/contexts/UserContext';
 import { useEmailSender } from '@/hooks/useEmailSender';
 import { useUserManagement } from '@/hooks/useUserManagement';
+import { ExtendedUserForm } from '@/components/users/ExtendedUserForm';
 
 export const UserManagement: React.FC = () => {
   const { currentUser } = useUser();
@@ -28,18 +29,6 @@ export const UserManagement: React.FC = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [userForm, setUserForm] = useState({
-    email: '',
-    username: '',
-    name: '',
-    lastName: '',
-    phone: '',
-    role: 'utilisateur' as UserRole,
-    address: '',
-    city: '',
-    function_title: '',
-    show_name: ''
-  });
 
   const roleLabels = {
     super_admin: 'Super Admin',
@@ -64,14 +53,14 @@ export const UserManagement: React.FC = () => {
     return Math.random().toString(36).slice(-8);
   };
 
-  const handleSaveUser = async () => {
-    if (!userForm.email || !userForm.name || !userForm.lastName) {
+  const handleSaveUser = async (formData: any) => {
+    if (!formData.email || !formData.firstName || !formData.lastName) {
       toast.error('Veuillez remplir tous les champs obligatoires');
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(userForm.email)) {
+    if (!emailRegex.test(formData.email)) {
       toast.error('Veuillez entrer une adresse email valide');
       return;
     }
@@ -80,40 +69,59 @@ export const UserManagement: React.FC = () => {
       if (selectedUser) {
         // Modification
         await updateUserProfile(selectedUser.user_id, {
-          first_name: userForm.name,
-          last_name: userForm.lastName,
-          username: userForm.username,
-          phone: userForm.phone,
-          role: userForm.role,
-          address: userForm.address,
-          city: userForm.city,
-          function_title: userForm.function_title,
-          show_name: userForm.show_name
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          username: formData.username,
+          phone: formData.phone,
+          role: formData.role,
+          address: formData.address,
+          city: formData.city,
+          function_title: formData.functionTitle,
+          show_name: formData.showName,
+          birth_date: formData.birthDate,
+          birth_place: formData.birthPlace,
+          nationality: formData.nationality,
+          social_security_number: formData.socialSecurityNumber,
+          bank_details: formData.bankDetails,
+          contracts_fees: formData.contractsFees,
+          availability: formData.availability,
+          skills: formData.skills,
+          identity_documents: formData.identityDocuments
         });
+        toast.success('Utilisateur modifié avec succès');
       } else {
         // Création avec informations étendues
         const tempPassword = generateTempPassword();
         
         const success = await createUser({
-          email: userForm.email,
+          email: formData.email,
           password: tempPassword,
-          first_name: userForm.name,
-          last_name: userForm.lastName,
-          username: userForm.username || userForm.email.split('@')[0],
-          phone: userForm.phone,
-          role: userForm.role,
-          address: userForm.address,
-          city: userForm.city,
-          function_title: userForm.function_title,
-          show_name: userForm.show_name
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          username: formData.username || formData.email.split('@')[0],
+          phone: formData.phone,
+          role: formData.role,
+          address: formData.address,
+          city: formData.city,
+          function_title: formData.functionTitle,
+          show_name: formData.showName,
+          birth_date: formData.birthDate,
+          birth_place: formData.birthPlace,
+          nationality: formData.nationality,
+          social_security_number: formData.socialSecurityNumber,
+          bank_details: formData.bankDetails,
+          contracts_fees: formData.contractsFees,
+          availability: formData.availability,
+          skills: formData.skills,
+          identity_documents: formData.identityDocuments
         });
 
         if (success) {
           // Envoyer l'email de bienvenue
           try {
             await sendUserWelcomeEmail(
-              userForm.email,
-              `${userForm.name} ${userForm.lastName}`,
+              formData.email,
+              `${formData.firstName} ${formData.lastName}`,
               tempPassword
             );
             toast.success('Utilisateur créé et email de bienvenue envoyé !');
@@ -125,6 +133,7 @@ export const UserManagement: React.FC = () => {
       }
 
       resetForm();
+      fetchUsers(); // Recharger la liste
     } catch (error) {
       console.error('Erreur:', error);
       toast.error('Erreur lors de la sauvegarde');
@@ -132,36 +141,12 @@ export const UserManagement: React.FC = () => {
   };
 
   const resetForm = () => {
-    setUserForm({
-      email: '',
-      username: '',
-      name: '',
-      lastName: '',
-      phone: '',
-      role: 'utilisateur',
-      address: '',
-      city: '',
-      function_title: '',
-      show_name: ''
-    });
     setIsFormOpen(false);
     setSelectedUser(null);
   };
 
   const handleEdit = (user: any) => {
     setSelectedUser(user);
-    setUserForm({
-      email: user.email || '',
-      username: user.username || '',
-      name: user.first_name || '',
-      lastName: user.last_name || '',
-      phone: user.phone || '',
-      role: user.role || 'utilisateur',
-      address: user.address || '',
-      city: user.city || '',
-      function_title: user.function_title || '',
-      show_name: user.show_name || ''
-    });
     setIsFormOpen(true);
   };
 
@@ -285,136 +270,51 @@ export const UserManagement: React.FC = () => {
         ))}
       </div>
 
-      {/* Dialog de création/modification */}
+      {/* Dialog de création/modification avec formulaire étendu */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto mx-4">
+        <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto mx-2">
           <DialogHeader>
             <DialogTitle className="text-lg sm:text-xl">
               {selectedUser ? 'Modifier l\'utilisateur' : 'Créer un nouvel utilisateur'}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="name">Prénom *</Label>
-              <Input
-                id="name"
-                value={userForm.name}
-                onChange={(e) => setUserForm(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="Prénom"
-                required
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="lastName">Nom *</Label>
-              <Input
-                id="lastName"
-                value={userForm.lastName}
-                onChange={(e) => setUserForm(prev => ({ ...prev, lastName: e.target.value }))}
-                placeholder="Nom de famille"
-                required
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="email">Email *</Label>
-              <Input
-                id="email"
-                type="email"
-                value={userForm.email}
-                onChange={(e) => setUserForm(prev => ({ ...prev, email: e.target.value }))}
-                placeholder="email@exemple.com"
-                required
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="username">Nom d'utilisateur</Label>
-              <Input
-                id="username"
-                value={userForm.username}
-                onChange={(e) => setUserForm(prev => ({ ...prev, username: e.target.value }))}
-                placeholder="nom_utilisateur"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="phone">Téléphone</Label>
-              <Input
-                id="phone"
-                value={userForm.phone}
-                onChange={(e) => setUserForm(prev => ({ ...prev, phone: e.target.value }))}
-                placeholder="+33 1 23 45 67 89"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="role">Rôle *</Label>
-              <Select value={userForm.role} onValueChange={(value: UserRole) => setUserForm(prev => ({ ...prev, role: value }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un rôle" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="super_admin">Super Admin</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="manager">Manager / Booker</SelectItem>
-                  <SelectItem value="artiste">Artiste</SelectItem>
-                  <SelectItem value="utilisateur">Utilisateur</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="function_title">Fonction</Label>
-              <Input
-                id="function_title"
-                value={userForm.function_title}
-                onChange={(e) => setUserForm(prev => ({ ...prev, function_title: e.target.value }))}
-                placeholder="Titre de fonction"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="show_name">Nom de scène</Label>
-              <Input
-                id="show_name"
-                value={userForm.show_name}
-                onChange={(e) => setUserForm(prev => ({ ...prev, show_name: e.target.value }))}
-                placeholder="Nom d'artiste"
-              />
-            </div>
-
-            <div className="md:col-span-2">
-              <Label htmlFor="address">Adresse</Label>
-              <Input
-                id="address"
-                value={userForm.address}
-                onChange={(e) => setUserForm(prev => ({ ...prev, address: e.target.value }))}
-                placeholder="Adresse complète"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="city">Ville</Label>
-              <Input
-                id="city"
-                value={userForm.city}
-                onChange={(e) => setUserForm(prev => ({ ...prev, city: e.target.value }))}
-                placeholder="Ville"
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 pt-4">
-            <Button variant="outline" onClick={resetForm} className="w-full sm:w-auto">
-              Annuler
-            </Button>
-            <Button onClick={handleSaveUser} disabled={sending} className="w-full sm:w-auto">
-              <Save className="h-4 w-4 mr-2" />
-              {sending ? 'Envoi...' : (selectedUser ? 'Modifier' : 'Créer')}
-            </Button>
-          </div>
+          <ExtendedUserForm
+            initialData={selectedUser ? {
+              email: selectedUser.email || '',
+              username: selectedUser.username || '',
+              firstName: selectedUser.first_name || '',
+              lastName: selectedUser.last_name || '',
+              phone: selectedUser.phone || '',
+              role: selectedUser.role || 'utilisateur',
+              address: selectedUser.address || '',
+              city: selectedUser.city || '',
+              functionTitle: selectedUser.function_title || '',
+              showName: selectedUser.show_name || '',
+              birthDate: selectedUser.birth_date || '',
+              birthPlace: selectedUser.birth_place || '',
+              nationality: selectedUser.nationality || 'FR',
+              socialSecurityNumber: selectedUser.social_security_number || '',
+              bankDetails: selectedUser.bank_details || {
+                iban: '',
+                bic: '',
+                bankName: '',
+                accountHolder: ''
+              },
+              contractsFees: selectedUser.contracts_fees || [],
+              availability: selectedUser.availability || {
+                timeZone: 'Europe/Paris',
+                workingHours: { start: '09:00', end: '18:00' },
+                workingDays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
+                unavailableDates: []
+              },
+              skills: selectedUser.skills || [],
+              identityDocuments: selectedUser.identity_documents || []
+            } : undefined}
+            onSave={handleSaveUser}
+            onCancel={resetForm}
+            isEdit={!!selectedUser}
+          />
         </DialogContent>
       </Dialog>
     </div>
