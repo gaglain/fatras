@@ -26,7 +26,7 @@ import { Opportunities } from "./pages/Opportunities";
 import { EventTypes } from "./pages/EventTypes";
 import { PublicationCalendar } from "./pages/PublicationCalendar";
 import { Forms } from "./pages/Forms";
-import { UserManagement } from "./pages/UserManagement";
+import { UserManagement } from "./pages/UserManagementSimple";
 import { Agenda } from "./pages/Agenda";
 import { Merchandise } from "./pages/Merchandise";
 import { MerchandiseBackoffice } from "./pages/MerchandiseBackoffice";
