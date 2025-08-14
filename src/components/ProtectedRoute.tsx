@@ -11,6 +11,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   console.log('🔐 ProtectedRoute - Checking authentication...');
   
   const { user, loading } = useAuth();
+  
+  console.log('🔐 ProtectedRoute - User:', user?.email, 'Loading:', loading);
 
   if (loading) {
     console.log('⏳ ProtectedRoute - Loading authentication state...');

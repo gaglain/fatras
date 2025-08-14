@@ -23,6 +23,7 @@ import { useUserManagement } from '@/hooks/useUserManagement';
 import { ExtendedUserForm } from '@/components/users/ExtendedUserForm';
 
 export const UserManagement: React.FC = () => {
+  console.log('📊 UserManagement component rendering...');
   const { currentUser } = useUser();
   const { sendUserWelcomeEmail, sending } = useEmailSender();
   const { users, loading, fetchUsers, createUser, updateUserProfile, deactivateUser } = useUserManagement();
