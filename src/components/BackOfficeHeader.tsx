@@ -18,7 +18,17 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 export const BackOfficeHeader: React.FC = () => {
   const { theme } = useTheme();
   const { name, logo } = useCompanySettings();
-  const { currentUser } = useUser();
+  
+  // Protection contre l'erreur de contexte
+  let currentUser = null;
+  try {
+    const userContext = useUser();
+    currentUser = userContext?.currentUser;
+  } catch (error) {
+    console.warn('⚠️ UserContext not available yet, using fallback');
+    currentUser = null;
+  }
+  
   const [showUserProfile, setShowUserProfile] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
