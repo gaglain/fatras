@@ -64,39 +64,49 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const { user: authUser, loading } = useAuth();
 
-  // Charger tous les utilisateurs depuis Supabase
+  // Charger tous les utilisateurs depuis Supabase - OPTIMISÉ
   useEffect(() => {
+    let isMounted = true;
+    
     const fetchUsers = async () => {
-      const { data: profiles } = await supabase
-        .from('user_profiles')
-        .select('*');
-      
-      if (profiles) {
-        const usersData: User[] = profiles.map(profile => ({
-          id: profile.user_id,
-          name: profile.first_name || '',
-          lastName: profile.last_name || '',
-          email: profile.email || '',
-          role: profile.role as UserRole,
-          isActive: true,
-          username: profile.username || '',
-          phone: profile.phone || '',
-          address: profile.address || '',
-          postal_code: profile.postal_code || '',
-          city: profile.city || '',
-          birth_date: profile.birth_date || '',
-          birth_place: profile.birth_place || '',
-          social_security_number: profile.social_security_number || '',
-          guso_id: profile.guso_id || '',
-          function_title: profile.function_title || '',
-          nationality: profile.nationality || '',
-          show_name: profile.show_name || ''
-        }));
-        setUsers(usersData);
+      try {
+        const { data: profiles } = await supabase
+          .from('user_profiles')
+          .select('*');
+        
+        if (profiles && isMounted) {
+          const usersData: User[] = profiles.map(profile => ({
+            id: profile.user_id,
+            name: profile.first_name || '',
+            lastName: profile.last_name || '',
+            email: profile.email || '',
+            role: profile.role as UserRole,
+            isActive: true,
+            username: profile.username || '',
+            phone: profile.phone || '',
+            address: profile.address || '',
+            postal_code: profile.postal_code || '',
+            city: profile.city || '',
+            birth_date: profile.birth_date || '',
+            birth_place: profile.birth_place || '',
+            social_security_number: profile.social_security_number || '',
+            guso_id: profile.guso_id || '',
+            function_title: profile.function_title || '',
+            nationality: profile.nationality || '',
+            show_name: profile.show_name || ''
+          }));
+          setUsers(usersData);
+        }
+      } catch (error) {
+        console.warn('⚠️ Error fetching users:', error);
       }
     };
 
     fetchUsers();
+    
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Synchroniser l'utilisateur authentifié avec le contexte utilisateur - OPTIMISÉ

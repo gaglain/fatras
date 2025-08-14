@@ -19,11 +19,11 @@ export const useAuth = () => {
       setUser(session?.user ?? null);
       setLoading(false);
       
-      // Redirection automatique désactivée temporairement pour éviter les boucles
-      // if (session?.user && (location.pathname === '/' || location.pathname === '/admin')) {
-      //   console.log('🔄 Auto-redirect to dashboard from:', location.pathname);
-      //   navigate('/dashboard');
-      // }
+      // Redirection automatique SEULEMENT depuis la page d'accueil ou admin
+      if (session?.user && (location.pathname === '/' || location.pathname === '/admin')) {
+        console.log('🔄 Auto-redirect to dashboard from:', location.pathname);
+        navigate('/dashboard');
+      }
     });
 
     // Listen for auth changes
@@ -34,14 +34,14 @@ export const useAuth = () => {
         setUser(session?.user ?? null);
         setLoading(false);
         
-        // Redirection après connexion désactivée temporairement
-        // if (event === 'SIGNED_IN' && session?.user) {
-        //   const currentPath = window.location.pathname;
-        //   if (currentPath === '/' || currentPath === '/admin') {
-        //     console.log('✅ User signed in, redirecting to dashboard from:', currentPath);
-        //     navigate('/dashboard');
-        //   }
-        // }
+        // Redirection après connexion SEULEMENT depuis certaines pages
+        if (event === 'SIGNED_IN' && session?.user) {
+          const currentPath = window.location.pathname;
+          if (currentPath === '/' || currentPath === '/admin') {
+            console.log('✅ User signed in, redirecting to dashboard from:', currentPath);
+            navigate('/dashboard');
+          }
+        }
         
         // Redirection après déconnexion
         if (event === 'SIGNED_OUT') {
