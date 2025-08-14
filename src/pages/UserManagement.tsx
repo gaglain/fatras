@@ -24,7 +24,17 @@ import { ExtendedUserForm } from '@/components/users/ExtendedUserForm';
 
 export const UserManagement: React.FC = () => {
   console.log('📊 UserManagement component rendering...');
-  const { currentUser } = useUser();
+  
+  // Protection contre l'erreur de contexte
+  let currentUser = null;
+  try {
+    const userContext = useUser();
+    currentUser = userContext?.currentUser;
+  } catch (error) {
+    console.warn('⚠️ UserContext not available yet in UserManagement, using fallback');
+    currentUser = null;
+  }
+  
   const { sendUserWelcomeEmail, sending } = useEmailSender();
   const { users, loading, fetchUsers, createUser, updateUserProfile, deactivateUser } = useUserManagement();
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -168,9 +178,11 @@ export const UserManagement: React.FC = () => {
     user.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Charger les utilisateurs au montage du composant
+  // Charger les utilisateurs au montage du composant - avec protection
   React.useEffect(() => {
-    fetchUsers();
+    if (fetchUsers && typeof fetchUsers === 'function') {
+      fetchUsers();
+    }
   }, []);
 
   return (

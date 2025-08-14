@@ -99,76 +99,98 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     fetchUsers();
   }, []);
 
-  // Synchroniser l'utilisateur authentifié avec le contexte utilisateur
+  // Synchroniser l'utilisateur authentifié avec le contexte utilisateur - OPTIMISÉ
   useEffect(() => {
-    console.log('Auth user changed:', authUser);
-    if (authUser && !loading) {
-      const fetchCurrentUserProfile = async () => {
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('*')
-          .eq('user_id', authUser.id)
-          .single();
+    if (loading) {
+      console.log('🔄 Still loading auth...');
+      return; // Attendre que l'auth soit chargée
+    }
 
-        if (profile) {
-          const userData: User = {
-            id: profile.user_id,
-            name: profile.first_name || '',
-            lastName: profile.last_name || '',
-            email: profile.email || '',
-            role: profile.role as UserRole,
-            isActive: true,
-            username: profile.username || '',
-            phone: profile.phone || '',
-            address: profile.address || '',
-            postal_code: profile.postal_code || '',
-            city: profile.city || '',
-            birth_date: profile.birth_date || '',
-            birth_place: profile.birth_place || '',
-            social_security_number: profile.social_security_number || '',
-            guso_id: profile.guso_id || '',
-            function_title: profile.function_title || '',
-            nationality: profile.nationality || '',
-            show_name: profile.show_name || ''
-          };
-          setCurrentUser(userData);
-          console.log('Current user set to:', userData);
-        } else {
-          // Créer un profil par défaut si il n'existe pas
-          const { data: newProfile } = await supabase
+    console.log('🔐 Auth user changed:', authUser?.email || 'No user');
+    
+    if (authUser) {
+      // Éviter les appels multiples - vérifier si on a déjà cet utilisateur
+      if (currentUser?.id === authUser.id) {
+        console.log('✅ Same user already loaded, skipping fetch');
+        return;
+      }
+
+      console.log('🔄 Fetching profile for user:', authUser.id);
+      const fetchCurrentUserProfile = async () => {
+        try {
+          const { data: profile } = await supabase
             .from('user_profiles')
-            .insert({
-              user_id: authUser.id,
-              username: authUser.email?.split('@')[0] || 'user',
-              email: authUser.email,
-              first_name: authUser.user_metadata?.first_name || '',
-              last_name: authUser.user_metadata?.last_name || '',
-              role: 'admin'
-            })
-            .select()
+            .select('*')
+            .eq('user_id', authUser.id)
             .single();
 
-          if (newProfile) {
+          if (profile) {
             const userData: User = {
-              id: newProfile.user_id,
-              name: newProfile.first_name || '',
-              lastName: newProfile.last_name || '',
-              email: newProfile.email || '',
-              role: newProfile.role as UserRole,
+              id: profile.user_id,
+              name: profile.first_name || '',
+              lastName: profile.last_name || '',
+              email: profile.email || '',
+              role: profile.role as UserRole,
               isActive: true,
-              username: newProfile.username || ''
+              username: profile.username || '',
+              phone: profile.phone || '',
+              address: profile.address || '',
+              postal_code: profile.postal_code || '',
+              city: profile.city || '',
+              birth_date: profile.birth_date || '',
+              birth_place: profile.birth_place || '',
+              social_security_number: profile.social_security_number || '',
+              guso_id: profile.guso_id || '',
+              function_title: profile.function_title || '',
+              nationality: profile.nationality || '',
+              show_name: profile.show_name || ''
             };
             setCurrentUser(userData);
+            console.log('✅ Current user set to:', userData.email);
+          } else {
+            console.log('📝 Creating default profile for new user');
+            // Créer un profil par défaut si il n'existe pas
+            const { data: newProfile } = await supabase
+              .from('user_profiles')
+              .insert({
+                user_id: authUser.id,
+                username: authUser.email?.split('@')[0] || 'user',
+                email: authUser.email,
+                first_name: authUser.user_metadata?.first_name || '',
+                last_name: authUser.user_metadata?.last_name || '',
+                role: 'admin'
+              })
+              .select()
+              .single();
+
+            if (newProfile) {
+              const userData: User = {
+                id: newProfile.user_id,
+                name: newProfile.first_name || '',
+                lastName: newProfile.last_name || '',
+                email: newProfile.email || '',
+                role: newProfile.role as UserRole,
+                isActive: true,
+                username: newProfile.username || ''
+              };
+              setCurrentUser(userData);
+              console.log('✅ New user profile created:', userData.email);
+            }
           }
+        } catch (error) {
+          console.error('❌ Error fetching user profile:', error);
         }
       };
 
       fetchCurrentUserProfile();
-    } else if (!authUser && !loading) {
-      setCurrentUser(null);
-      console.log('User logged out, current user set to null');
+    } else {
+      // User déconnecté
+      if (currentUser !== null) {
+        setCurrentUser(null);
+        console.log('👋 User logged out, current user set to null');
+      }
     }
-  }, [authUser, loading]);
+  }, [authUser?.id, loading]); // Dépendances optimisées
 
   const roleLabels = {
     super_admin: 'Super Admin',
