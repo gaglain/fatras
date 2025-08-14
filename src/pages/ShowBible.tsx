@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,9 +10,13 @@ import {
   Plus, 
   FileText, 
   Upload,
-  Folder
+  Folder,
+  Download,
+  Trash2
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useFileUpload } from '@/hooks/useFileUpload';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Document {
   id: string;
@@ -45,6 +49,8 @@ const defaultCategories: Category[] = [
 ];
 
 export const ShowBible: React.FC = () => {
+  const { user } = useAuth();
+  const { uploadFile, deleteFile, isUploading, uploadProgress } = useFileUpload();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [categories] = useState<Category[]>(defaultCategories);
   const [showUploadDialog, setShowUploadDialog] = useState(false);
@@ -65,6 +71,23 @@ export const ShowBible: React.FC = () => {
     tags: '',
     version: '1.0'
   });
+
+  // Charger les documents depuis localStorage au démarrage
+  useEffect(() => {
+    const savedDocuments = localStorage.getItem('showBible_documents');
+    if (savedDocuments) {
+      try {
+        setDocuments(JSON.parse(savedDocuments));
+      } catch (error) {
+        console.error('Erreur lors du chargement des documents:', error);
+      }
+    }
+  }, []);
+
+  // Sauvegarder les documents dans localStorage à chaque changement
+  useEffect(() => {
+    localStorage.setItem('showBible_documents', JSON.stringify(documents));
+  }, [documents]);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -87,40 +110,69 @@ export const ShowBible: React.FC = () => {
     return 'other';
   };
 
-  const handleUpload = () => {
+  const handleUpload = async () => {
     if (!uploadForm.file || !uploadForm.name.trim()) {
       toast.error('Veuillez sélectionner un fichier et saisir un nom');
       return;
     }
 
-    const tags = uploadForm.tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+    if (!user) {
+      toast.error('Vous devez être connecté pour uploader des fichiers');
+      return;
+    }
 
-    const newDocument: Document = {
-      id: Date.now().toString(),
-      name: uploadForm.name,
-      type: uploadForm.type,
-      url: URL.createObjectURL(uploadForm.file),
-      size: formatFileSize(uploadForm.file.size),
-      category: uploadForm.category,
-      description: uploadForm.description,
-      uploadedAt: new Date().toISOString().split('T')[0],
-      uploadedBy: 'current-user',
-      tags,
-      version: uploadForm.version
-    };
+    try {
+      // Upload du fichier vers Supabase
+      const uploadResult = await uploadFile(uploadForm.file, 'show-bible', uploadForm.category);
+      
+      const tags = uploadForm.tags.split(',').map(tag => tag.trim()).filter(tag => tag);
 
-    setDocuments(prev => [...prev, newDocument]);
-    setShowUploadDialog(false);
-    setUploadForm({
-      name: '',
-      type: 'text',
-      category: 'other',
-      description: '',
-      file: null,
-      tags: '',
-      version: '1.0'
-    });
-    toast.success('Document ajouté à la bible du spectacle');
+      const newDocument: Document = {
+        id: Date.now().toString(),
+        name: uploadForm.name,
+        type: uploadForm.type,
+        url: uploadResult.url,
+        size: formatFileSize(uploadForm.file.size),
+        category: uploadForm.category,
+        description: uploadForm.description,
+        uploadedAt: new Date().toISOString().split('T')[0],
+        uploadedBy: user.id,
+        tags,
+        version: uploadForm.version
+      };
+
+      setDocuments(prev => [...prev, newDocument]);
+      setShowUploadDialog(false);
+      setUploadForm({
+        name: '',
+        type: 'text',
+        category: 'other',
+        description: '',
+        file: null,
+        tags: '',
+        version: '1.0'
+      });
+      toast.success('Document ajouté à la bible du spectacle');
+    } catch (error) {
+      console.error('Erreur upload:', error);
+      toast.error('Erreur lors de l\'upload du fichier');
+    }
+  };
+
+  const handleDeleteDocument = async (doc: Document) => {
+    try {
+      // Extraire le chemin du fichier depuis l'URL
+      const url = new URL(doc.url);
+      const pathParts = url.pathname.split('/');
+      const filePath = pathParts.slice(-2).join('/'); // category/filename
+
+      await deleteFile('show-bible', filePath);
+      setDocuments(prev => prev.filter(d => d.id !== doc.id));
+      toast.success('Document supprimé');
+    } catch (error) {
+      console.error('Erreur suppression:', error);
+      toast.error('Erreur lors de la suppression');
+    }
   };
 
   const formatFileSize = (bytes: number): string => {
@@ -250,8 +302,12 @@ export const ShowBible: React.FC = () => {
                 <Button variant="outline" onClick={() => setShowUploadDialog(false)} className="flex-1">
                   Annuler
                 </Button>
-                <Button onClick={handleUpload} className="flex-1">
-                  Ajouter
+                <Button 
+                  onClick={handleUpload} 
+                  className="flex-1"
+                  disabled={isUploading || !uploadForm.file}
+                >
+                  {isUploading ? `Upload... ${uploadProgress}%` : 'Ajouter'}
                 </Button>
               </div>
             </div>
@@ -259,21 +315,85 @@ export const ShowBible: React.FC = () => {
         </Dialog>
       </div>
 
-      <Card style={{
-        backgroundColor: 'var(--app-card-bg, #ffffff)',
-        color: 'var(--app-card-text, #18181b)',
-        border: '1px solid var(--notification-border, #e5e7eb)'
-      }}>
-        <CardContent className="text-center py-12">
-          <FileText className="h-16 w-16 mx-auto mb-4" style={{ color: 'var(--app-button-bg, #1632f4)' }} />
-          <h3 className="text-lg font-medium mb-2" style={{ color: 'var(--app-card-text, #18181b)' }}>
-            Aucun document
-          </h3>
-          <p className="mb-4" style={{ color: 'var(--app-text, #666666)' }}>
-            Commencez par ajouter votre premier document à la bible
-          </p>
-        </CardContent>
-      </Card>
+{documents.length === 0 ? (
+        <Card style={{
+          backgroundColor: 'var(--app-card-bg, #ffffff)',
+          color: 'var(--app-card-text, #18181b)',
+          border: '1px solid var(--notification-border, #e5e7eb)'
+        }}>
+          <CardContent className="text-center py-12">
+            <FileText className="h-16 w-16 mx-auto mb-4" style={{ color: 'var(--app-button-bg, #1632f4)' }} />
+            <h3 className="text-lg font-medium mb-2" style={{ color: 'var(--app-card-text, #18181b)' }}>
+              Aucun document
+            </h3>
+            <p className="mb-4" style={{ color: 'var(--app-text, #666666)' }}>
+              Commencez par ajouter votre premier document à la bible
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {documents.map((doc) => (
+            <Card key={doc.id} style={{
+              backgroundColor: 'var(--app-card-bg, #ffffff)',
+              color: 'var(--app-card-text, #18181b)',
+              border: '1px solid var(--notification-border, #e5e7eb)'
+            }}>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span className="truncate">{doc.name}</span>
+                  <div className="flex space-x-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => window.open(doc.url, '_blank')}
+                    >
+                      <Download className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteDocument(doc)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Type:</span>
+                    <span className="font-medium">{doc.type}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Taille:</span>
+                    <span>{doc.size}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Version:</span>
+                    <span>{doc.version}</span>
+                  </div>
+                  {doc.description && (
+                    <p className="text-sm text-muted-foreground mt-2">
+                      {doc.description}
+                    </p>
+                  )}
+                  {doc.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {doc.tags.map((tag, index) => (
+                        <span key={index} className="text-xs bg-secondary px-2 py-1 rounded">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

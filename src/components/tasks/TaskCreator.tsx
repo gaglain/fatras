@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { CheckSquare, User, Target, Calendar } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
+import { useContacts } from '@/hooks/useContacts';
+import { useEvents } from '@/hooks/useEvents';
 import { toast } from 'sonner';
 
 interface TaskCreatorProps {
@@ -24,11 +26,15 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const { users, currentUser } = useUser();
+  const { contacts } = useContacts();
+  const { events } = useEvents();
   
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     assignedTo: currentUser?.id || '',
+    contactId: '',
+    eventId: '',
     dueDate: '',
     priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent',
     status: 'todo' as 'todo' | 'in_progress' | 'done',
@@ -72,6 +78,8 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
         title: '',
         description: '',
         assignedTo: currentUser?.id || '',
+        contactId: '',
+        eventId: '',
         dueDate: '',
         priority: 'medium',
         status: 'todo',
@@ -166,6 +174,46 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="contactId">Contact lié</Label>
+            <Select 
+              value={formData.contactId} 
+              onValueChange={(value) => setFormData({ ...formData, contactId: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner un contact" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Aucun contact</SelectItem>
+                {contacts.slice(0, 50).map((contact) => (
+                  <SelectItem key={contact.id} value={contact.id}>
+                    {contact.first_name} {contact.last_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="eventId">Événement lié</Label>
+            <Select 
+              value={formData.eventId} 
+              onValueChange={(value) => setFormData({ ...formData, eventId: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner un événement" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Aucun événement</SelectItem>
+                {events.slice(0, 50).map((event) => (
+                  <SelectItem key={event.id} value={event.id}>
+                    {event.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
