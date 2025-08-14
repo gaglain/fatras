@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,25 +12,14 @@ import {
   Upload,
   Folder,
   Download,
-  Trash2
+  Trash2,
+  Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useAuth } from '@/hooks/useAuth';
+import { useShowBible, CreateDocumentData } from '@/hooks/useShowBible';
 
-interface Document {
-  id: string;
-  name: string;
-  type: 'audio' | 'video' | 'image' | 'text' | 'pdf' | 'other';
-  url: string;
-  size: string;
-  category: string;
-  description: string;
-  uploadedAt: string;
-  uploadedBy: string;
-  tags: string[];
-  version: string;
-}
 
 interface Category {
   id: string;
@@ -50,8 +39,8 @@ const defaultCategories: Category[] = [
 
 export const ShowBible: React.FC = () => {
   const { user } = useAuth();
-  const { uploadFile, deleteFile, isUploading, uploadProgress } = useFileUpload();
-  const [documents, setDocuments] = useState<Document[]>([]);
+  const { uploadFile, isUploading, uploadProgress } = useFileUpload();
+  const { documents, loading, createDocument, deleteDocument } = useShowBible();
   const [categories] = useState<Category[]>(defaultCategories);
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [uploadForm, setUploadForm] = useState<{
@@ -72,22 +61,6 @@ export const ShowBible: React.FC = () => {
     version: '1.0'
   });
 
-  // Charger les documents depuis localStorage au démarrage
-  useEffect(() => {
-    const savedDocuments = localStorage.getItem('showBible_documents');
-    if (savedDocuments) {
-      try {
-        setDocuments(JSON.parse(savedDocuments));
-      } catch (error) {
-        console.error('Erreur lors du chargement des documents:', error);
-      }
-    }
-  }, []);
-
-  // Sauvegarder les documents dans localStorage à chaque changement
-  useEffect(() => {
-    localStorage.setItem('showBible_documents', JSON.stringify(documents));
-  }, [documents]);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -127,52 +100,42 @@ export const ShowBible: React.FC = () => {
       
       const tags = uploadForm.tags.split(',').map(tag => tag.trim()).filter(tag => tag);
 
-      const newDocument: Document = {
-        id: Date.now().toString(),
+      const documentData: CreateDocumentData = {
         name: uploadForm.name,
         type: uploadForm.type,
         url: uploadResult.url,
-        size: formatFileSize(uploadForm.file.size),
+        file_path: uploadResult.path,
+        bucket_name: 'show-bible',
+        file_size_bytes: uploadForm.file.size,
+        file_size_display: formatFileSize(uploadForm.file.size),
         category: uploadForm.category,
-        description: uploadForm.description,
-        uploadedAt: new Date().toISOString().split('T')[0],
-        uploadedBy: user.id,
+        description: uploadForm.description || undefined,
         tags,
         version: uploadForm.version
       };
 
-      setDocuments(prev => [...prev, newDocument]);
-      setShowUploadDialog(false);
-      setUploadForm({
-        name: '',
-        type: 'text',
-        category: 'other',
-        description: '',
-        file: null,
-        tags: '',
-        version: '1.0'
-      });
-      toast.success('Document ajouté à la bible du spectacle');
+      const result = await createDocument(documentData);
+      
+      if (result) {
+        setShowUploadDialog(false);
+        setUploadForm({
+          name: '',
+          type: 'text',
+          category: 'other',
+          description: '',
+          file: null,
+          tags: '',
+          version: '1.0'
+        });
+      }
     } catch (error) {
       console.error('Erreur upload:', error);
       toast.error('Erreur lors de l\'upload du fichier');
     }
   };
 
-  const handleDeleteDocument = async (doc: Document) => {
-    try {
-      // Extraire le chemin du fichier depuis l'URL
-      const url = new URL(doc.url);
-      const pathParts = url.pathname.split('/');
-      const filePath = pathParts.slice(-2).join('/'); // category/filename
-
-      await deleteFile('show-bible', filePath);
-      setDocuments(prev => prev.filter(d => d.id !== doc.id));
-      toast.success('Document supprimé');
-    } catch (error) {
-      console.error('Erreur suppression:', error);
-      toast.error('Erreur lors de la suppression');
-    }
+  const handleDeleteDocument = async (doc: any) => {
+    await deleteDocument(doc.id, doc.file_path, doc.bucket_name);
   };
 
   const formatFileSize = (bytes: number): string => {
@@ -315,7 +278,23 @@ export const ShowBible: React.FC = () => {
         </Dialog>
       </div>
 
-{documents.length === 0 ? (
+{loading ? (
+        <Card style={{
+          backgroundColor: 'var(--app-card-bg, #ffffff)',
+          color: 'var(--app-card-text, #18181b)',
+          border: '1px solid var(--notification-border, #e5e7eb)'
+        }}>
+          <CardContent className="text-center py-12">
+            <Loader2 className="h-16 w-16 mx-auto mb-4 animate-spin" style={{ color: 'var(--app-button-bg, #1632f4)' }} />
+            <h3 className="text-lg font-medium mb-2" style={{ color: 'var(--app-card-text, #18181b)' }}>
+              Chargement...
+            </h3>
+            <p style={{ color: 'var(--app-text, #666666)' }}>
+              Chargement des documents de la bible
+            </p>
+          </CardContent>
+        </Card>
+      ) : documents.length === 0 ? (
         <Card style={{
           backgroundColor: 'var(--app-card-bg, #ffffff)',
           color: 'var(--app-card-text, #18181b)',
@@ -368,7 +347,7 @@ export const ShowBible: React.FC = () => {
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Taille:</span>
-                    <span>{doc.size}</span>
+                    <span>{doc.file_size_display}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Version:</span>

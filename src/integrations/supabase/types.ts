@@ -1262,6 +1262,60 @@ export type Database = {
         }
         Relationships: []
       }
+      show_bible_documents: {
+        Row: {
+          bucket_name: string
+          category: string
+          created_at: string
+          description: string | null
+          file_path: string
+          file_size_bytes: number
+          file_size_display: string
+          id: string
+          name: string
+          tags: string[] | null
+          type: string
+          updated_at: string
+          url: string
+          user_id: string
+          version: string
+        }
+        Insert: {
+          bucket_name?: string
+          category: string
+          created_at?: string
+          description?: string | null
+          file_path: string
+          file_size_bytes?: number
+          file_size_display: string
+          id?: string
+          name: string
+          tags?: string[] | null
+          type: string
+          updated_at?: string
+          url: string
+          user_id: string
+          version?: string
+        }
+        Update: {
+          bucket_name?: string
+          category?: string
+          created_at?: string
+          description?: string | null
+          file_path?: string
+          file_size_bytes?: number
+          file_size_display?: string
+          id?: string
+          name?: string
+          tags?: string[] | null
+          type?: string
+          updated_at?: string
+          url?: string
+          user_id?: string
+          version?: string
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           artist_id: string | null
