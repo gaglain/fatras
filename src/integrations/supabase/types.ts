@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -1349,16 +1349,20 @@ export type Database = {
         Row: {
           address: string | null
           associated_artists: string[] | null
+          availability: Json | null
           avatar_url: string | null
+          bank_details: Json | null
           birth_date: string | null
           birth_place: string | null
           city: string | null
+          contracts_fees: Json | null
           created_at: string
           email: string | null
           first_name: string | null
           function_title: string | null
           guso_id: string | null
           id: string
+          identity_documents: Json | null
           is_active: boolean | null
           last_name: string | null
           nationality: string | null
@@ -1366,6 +1370,7 @@ export type Database = {
           postal_code: string | null
           role: string
           show_name: string | null
+          skills: string[] | null
           social_security_number: string | null
           updated_at: string
           user_id: string
@@ -1374,16 +1379,20 @@ export type Database = {
         Insert: {
           address?: string | null
           associated_artists?: string[] | null
+          availability?: Json | null
           avatar_url?: string | null
+          bank_details?: Json | null
           birth_date?: string | null
           birth_place?: string | null
           city?: string | null
+          contracts_fees?: Json | null
           created_at?: string
           email?: string | null
           first_name?: string | null
           function_title?: string | null
           guso_id?: string | null
           id?: string
+          identity_documents?: Json | null
           is_active?: boolean | null
           last_name?: string | null
           nationality?: string | null
@@ -1391,6 +1400,7 @@ export type Database = {
           postal_code?: string | null
           role?: string
           show_name?: string | null
+          skills?: string[] | null
           social_security_number?: string | null
           updated_at?: string
           user_id: string
@@ -1399,16 +1409,20 @@ export type Database = {
         Update: {
           address?: string | null
           associated_artists?: string[] | null
+          availability?: Json | null
           avatar_url?: string | null
+          bank_details?: Json | null
           birth_date?: string | null
           birth_place?: string | null
           city?: string | null
+          contracts_fees?: Json | null
           created_at?: string
           email?: string | null
           first_name?: string | null
           function_title?: string | null
           guso_id?: string | null
           id?: string
+          identity_documents?: Json | null
           is_active?: boolean | null
           last_name?: string | null
           nationality?: string | null
@@ -1416,6 +1430,7 @@ export type Database = {
           postal_code?: string | null
           role?: string
           show_name?: string | null
+          skills?: string[] | null
           social_security_number?: string | null
           updated_at?: string
           user_id?: string
@@ -1566,28 +1581,28 @@ export type Database = {
     }
     Functions: {
       create_user_with_profile: {
-        Args: { user_email: string; user_password: string; profile_data: Json }
+        Args: { profile_data: Json; user_email: string; user_password: string }
         Returns: Json
       }
       get_user_profiles: {
         Args: Record<PropertyKey, never>
         Returns: {
-          id: string
-          user_id: string
-          username: string
-          first_name: string
-          last_name: string
+          address: string
+          avatar_url: string
+          city: string
+          created_at: string
           email: string
+          first_name: string
+          function_title: string
+          id: string
+          is_active: boolean
+          last_name: string
           phone: string
           role: string
-          avatar_url: string
-          is_active: boolean
-          address: string
-          city: string
-          function_title: string
           show_name: string
-          created_at: string
           updated_at: string
+          user_id: string
+          username: string
         }[]
       }
       update_campaign_stats: {
@@ -1595,7 +1610,7 @@ export type Database = {
         Returns: undefined
       }
       update_user_profile_data: {
-        Args: { profile_user_id: string; profile_data: Json }
+        Args: { profile_data: Json; profile_user_id: string }
         Returns: Json
       }
     }

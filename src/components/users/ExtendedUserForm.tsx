@@ -5,7 +5,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Save, User, CreditCard, MapPin, Briefcase } from 'lucide-react';
+import { Save, User, CreditCard, MapPin, Briefcase, Banknote, FileText, Calendar, Award, IdCard } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 
 interface ExtendedUserFormData {
   // Informations personnelles de base
@@ -32,6 +33,37 @@ interface ExtendedUserFormData {
   functionTitle: string;
   showName: string;
   gusoId: string;
+  
+  // Nouvelles informations
+  bankDetails: {
+    iban: string;
+    bic: string;
+    bankName: string;
+    accountHolder: string;
+  };
+  contractsFees: Array<{
+    id: string;
+    contractType: string;
+    amount: number;
+    currency: string;
+    description: string;
+    date: string;
+  }>;
+  availability: {
+    timeZone: string;
+    workingHours: { start: string; end: string };
+    workingDays: string[];
+    unavailableDates: string[];
+  };
+  skills: string[];
+  identityDocuments: Array<{
+    id: string;
+    type: string;
+    number: string;
+    issueDate: string;
+    expiryDate: string;
+    issuer: string;
+  }>;
 }
 
 interface ExtendedUserFormProps {
@@ -65,6 +97,21 @@ export const ExtendedUserForm: React.FC<ExtendedUserFormProps> = ({
     functionTitle: '',
     showName: '',
     gusoId: '',
+    bankDetails: {
+      iban: '',
+      bic: '',
+      bankName: '',
+      accountHolder: ''
+    },
+    contractsFees: [],
+    availability: {
+      timeZone: 'Europe/Paris',
+      workingHours: { start: '09:00', end: '18:00' },
+      workingDays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
+      unavailableDates: []
+    },
+    skills: [],
+    identityDocuments: [],
     ...initialData
   });
 
@@ -304,6 +351,191 @@ export const ExtendedUserForm: React.FC<ExtendedUserFormProps> = ({
                 onChange={(e) => updateFormData('gusoId', e.target.value)}
                 placeholder="Identifiant pour la gestion des droits"
               />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Coordonnées bancaires */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Banknote className="h-5 w-5" />
+            <span>Coordonnées bancaires</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="iban">IBAN</Label>
+              <Input
+                id="iban"
+                value={formData.bankDetails.iban}
+                onChange={(e) => setFormData(prev => ({ 
+                  ...prev, 
+                  bankDetails: { ...prev.bankDetails, iban: e.target.value } 
+                }))}
+                placeholder="FR76 1234 5678 9012 3456 7890 123"
+              />
+            </div>
+            <div>
+              <Label htmlFor="bic">BIC/SWIFT</Label>
+              <Input
+                id="bic"
+                value={formData.bankDetails.bic}
+                onChange={(e) => setFormData(prev => ({ 
+                  ...prev, 
+                  bankDetails: { ...prev.bankDetails, bic: e.target.value } 
+                }))}
+                placeholder="BNPAFRPP"
+              />
+            </div>
+            <div>
+              <Label htmlFor="bankName">Nom de la banque</Label>
+              <Input
+                id="bankName"
+                value={formData.bankDetails.bankName}
+                onChange={(e) => setFormData(prev => ({ 
+                  ...prev, 
+                  bankDetails: { ...prev.bankDetails, bankName: e.target.value } 
+                }))}
+                placeholder="BNP Paribas"
+              />
+            </div>
+            <div>
+              <Label htmlFor="accountHolder">Titulaire du compte</Label>
+              <Input
+                id="accountHolder"
+                value={formData.bankDetails.accountHolder}
+                onChange={(e) => setFormData(prev => ({ 
+                  ...prev, 
+                  bankDetails: { ...prev.bankDetails, accountHolder: e.target.value } 
+                }))}
+                placeholder="Nom du titulaire"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Disponibilités */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Calendar className="h-5 w-5" />
+            <span>Disponibilités</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="startTime">Heure de début</Label>
+              <Input
+                id="startTime"
+                type="time"
+                value={formData.availability.workingHours.start}
+                onChange={(e) => setFormData(prev => ({ 
+                  ...prev, 
+                  availability: { 
+                    ...prev.availability, 
+                    workingHours: { ...prev.availability.workingHours, start: e.target.value } 
+                  } 
+                }))}
+              />
+            </div>
+            <div>
+              <Label htmlFor="endTime">Heure de fin</Label>
+              <Input
+                id="endTime"
+                type="time"
+                value={formData.availability.workingHours.end}
+                onChange={(e) => setFormData(prev => ({ 
+                  ...prev, 
+                  availability: { 
+                    ...prev.availability, 
+                    workingHours: { ...prev.availability.workingHours, end: e.target.value } 
+                  } 
+                }))}
+              />
+            </div>
+            <div>
+              <Label htmlFor="timeZone">Fuseau horaire</Label>
+              <Select 
+                value={formData.availability.timeZone} 
+                onValueChange={(value) => setFormData(prev => ({ 
+                  ...prev, 
+                  availability: { ...prev.availability, timeZone: value } 
+                }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Europe/Paris">Europe/Paris</SelectItem>
+                  <SelectItem value="Europe/London">Europe/London</SelectItem>
+                  <SelectItem value="America/New_York">America/New_York</SelectItem>
+                  <SelectItem value="America/Los_Angeles">America/Los_Angeles</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Compétences */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Award className="h-5 w-5" />
+            <span>Compétences</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="skills">Compétences (séparées par des virgules)</Label>
+            <Textarea
+              id="skills"
+              value={formData.skills.join(', ')}
+              onChange={(e) => setFormData(prev => ({ 
+                ...prev, 
+                skills: e.target.value.split(',').map(s => s.trim()).filter(s => s.length > 0)
+              }))}
+              placeholder="Guitare, Chant, Production musicale, Animation, ..."
+              rows={3}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Documents d'identité */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <IdCard className="h-5 w-5" />
+            <span>Documents d'identité</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="text-sm text-muted-foreground mb-2">
+            Informations sur les documents d'identité (à compléter manuellement)
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label>Type de document principal</Label>
+              <Select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="passport">Passeport</SelectItem>
+                  <SelectItem value="id_card">Carte d'identité</SelectItem>
+                  <SelectItem value="driving_license">Permis de conduire</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Numéro du document</Label>
+              <Input placeholder="Numéro du document" />
             </div>
           </div>
         </CardContent>

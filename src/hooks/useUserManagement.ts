@@ -17,6 +17,16 @@ export interface ExtendedUserProfile {
   city?: string;
   function_title?: string;
   show_name?: string;
+  birth_date?: string;
+  birth_place?: string;
+  social_security_number?: string;
+  guso_id?: string;
+  nationality?: string;
+  bank_details?: any;
+  contracts_fees?: any[];
+  availability?: any;
+  skills?: string[];
+  identity_documents?: any[];
   created_at: string;
   updated_at: string;
 }
@@ -57,6 +67,16 @@ export const useUserManagement = () => {
     city?: string;
     function_title?: string;
     show_name?: string;
+    birth_date?: string;
+    birth_place?: string;
+    social_security_number?: string;
+    guso_id?: string;
+    nationality?: string;
+    bank_details?: any;
+    contracts_fees?: any[];
+    availability?: any;
+    skills?: string[];
+    identity_documents?: any[];
   }) => {
     try {
       setLoading(true);
@@ -95,6 +115,16 @@ export const useUserManagement = () => {
             city: userData.city,
             function_title: userData.function_title,
             show_name: userData.show_name,
+            birth_date: userData.birth_date,
+            birth_place: userData.birth_place,
+            social_security_number: userData.social_security_number,
+            guso_id: userData.guso_id,
+            nationality: userData.nationality,
+            bank_details: userData.bank_details,
+            contracts_fees: userData.contracts_fees || [],
+            availability: userData.availability,
+            skills: userData.skills || [],
+            identity_documents: userData.identity_documents || [],
             is_active: true
           });
 
@@ -135,6 +165,16 @@ export const useUserManagement = () => {
           function_title: userData.function_title,
           show_name: userData.show_name,
           avatar_url: userData.avatar_url,
+          birth_date: userData.birth_date,
+          birth_place: userData.birth_place,
+          social_security_number: userData.social_security_number,
+          guso_id: userData.guso_id,
+          nationality: userData.nationality,
+          bank_details: userData.bank_details,
+          contracts_fees: userData.contracts_fees,
+          availability: userData.availability,
+          skills: userData.skills,
+          identity_documents: userData.identity_documents,
           updated_at: new Date().toISOString()
         })
         .eq('user_id', userId);
