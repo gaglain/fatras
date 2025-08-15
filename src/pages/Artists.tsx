@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Music, Calendar, MapPin, Clock, Bed, BookOpen, Trash2, Upload, Image } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useCentralizedData, Artist } from '@/contexts/CentralizedDataContext';
+import { useCentralizedData, CentralizedArtist as Artist } from '@/hooks/useCentralizedData';
 import { toast } from 'sonner';
 
 interface TourSchedule {
@@ -80,7 +80,7 @@ export const Artists: React.FC = () => {
     setFormData({
       name: artist.name,
       genre: artist.genre,
-      currentTour: artist.currentTour || '',
+      currentTour: artist.current_tour || '',
       bio: artist.bio || '',
       image: artist.image || ''
     });
@@ -97,9 +97,9 @@ export const Artists: React.FC = () => {
       name: formData.name,
       genre: formData.genre,
       status: 'active' as const,
-      upcomingShows: editingArtist?.upcomingShows || 0,
-      totalShows: editingArtist?.totalShows || 0,
-      currentTour: formData.currentTour || undefined,
+      upcoming_shows: editingArtist?.upcoming_shows || 0,
+      total_shows: editingArtist?.total_shows || 0,
+      current_tour: formData.currentTour || undefined,
       bio: formData.bio || undefined,
       image: formData.image || undefined
     };
@@ -196,9 +196,9 @@ export const Artists: React.FC = () => {
                   </div>
                   
                   <div className="text-sm text-gray-600">
-                    <p>{artist.upcomingShows} spectacles à venir</p>
-                    {artist.currentTour && (
-                      <p className="text-purple-600 font-medium">{artist.currentTour}</p>
+                    <p>{artist.upcoming_shows} spectacles à venir</p>
+                    {artist.current_tour && (
+                      <p className="text-purple-600 font-medium">{artist.current_tour}</p>
                     )}
                   </div>
                   

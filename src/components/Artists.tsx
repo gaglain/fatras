@@ -58,8 +58,8 @@ export const Artists: React.FC<ArtistsProps> = ({ setCurrentPage, setSelectedArt
                 <p className="text-gray-600 text-sm mb-4 line-clamp-2">{artist.bio || 'Description de l\'artiste...'}</p>
                 
                 <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                  <span>{artist.upcomingShows} spectacles à venir</span>
-                  <span>{artist.totalShows} spectacles total</span>
+                  <span>{artist.upcoming_shows} spectacles à venir</span>
+                  <span>{artist.total_shows} spectacles total</span>
                 </div>
                 
                 <div className="flex space-x-2">

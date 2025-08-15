@@ -199,6 +199,135 @@ export type Database = {
         }
         Relationships: []
       }
+      centralized_artists: {
+        Row: {
+          bio: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          current_tour: string | null
+          facebook: string | null
+          genre: string
+          id: string
+          image: string | null
+          instagram: string | null
+          name: string
+          rating: number | null
+          status: string
+          total_shows: number | null
+          upcoming_shows: number | null
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          bio?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          current_tour?: string | null
+          facebook?: string | null
+          genre: string
+          id?: string
+          image?: string | null
+          instagram?: string | null
+          name: string
+          rating?: number | null
+          status?: string
+          total_shows?: number | null
+          upcoming_shows?: number | null
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          bio?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          current_tour?: string | null
+          facebook?: string | null
+          genre?: string
+          id?: string
+          image?: string | null
+          instagram?: string | null
+          name?: string
+          rating?: number | null
+          status?: string
+          total_shows?: number | null
+          upcoming_shows?: number | null
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
+      centralized_events: {
+        Row: {
+          address: string | null
+          artist_id: string | null
+          attendees_count: number | null
+          budget_max: number | null
+          budget_min: number | null
+          city: string | null
+          country: string | null
+          created_at: string
+          description: string | null
+          end_date: string | null
+          event_type: string | null
+          id: string
+          image: string | null
+          start_date: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+          venue: string | null
+        }
+        Insert: {
+          address?: string | null
+          artist_id?: string | null
+          attendees_count?: number | null
+          budget_max?: number | null
+          budget_min?: number | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          event_type?: string | null
+          id?: string
+          image?: string | null
+          start_date?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+          venue?: string | null
+        }
+        Update: {
+          address?: string | null
+          artist_id?: string | null
+          attendees_count?: number | null
+          budget_max?: number | null
+          budget_min?: number | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          event_type?: string | null
+          id?: string
+          image?: string | null
+          start_date?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+          venue?: string | null
+        }
+        Relationships: []
+      }
       contact_list_members: {
         Row: {
           contact_id: string
@@ -1125,6 +1254,95 @@ export type Database = {
         }
         Relationships: []
       }
+      publication_comments: {
+        Row: {
+          comment: string
+          created_at: string
+          id: string
+          publication_id: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          comment: string
+          created_at?: string
+          id?: string
+          publication_id: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          comment?: string
+          created_at?: string
+          id?: string
+          publication_id?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "publication_comments_publication_id_fkey"
+            columns: ["publication_id"]
+            isOneToOne: false
+            referencedRelation: "publications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      publications: {
+        Row: {
+          assigned_to: string | null
+          assigned_username: string | null
+          content: string
+          created_at: string
+          created_by: string
+          external_link: string | null
+          id: string
+          media_type: string | null
+          media_url: string | null
+          platform: string
+          scheduled_date: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          assigned_username?: string | null
+          content: string
+          created_at?: string
+          created_by: string
+          external_link?: string | null
+          id?: string
+          media_type?: string | null
+          media_url?: string | null
+          platform: string
+          scheduled_date?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assigned_to?: string | null
+          assigned_username?: string | null
+          content?: string
+          created_at?: string
+          created_by?: string
+          external_link?: string | null
+          id?: string
+          media_type?: string | null
+          media_url?: string | null
+          platform?: string
+          scheduled_date?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       quote_items: {
         Row: {
           created_at: string | null
@@ -1516,6 +1734,54 @@ export type Database = {
           updated_at?: string
           user_id?: string
           username?: string | null
+        }
+        Relationships: []
+      }
+      website_designs: {
+        Row: {
+          accent_color: string
+          created_at: string
+          footer_bg: string
+          header_bg: string
+          id: string
+          link_color: string
+          logo: string | null
+          primary_color: string
+          secondary_color: string
+          site_name: string
+          text_color: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accent_color: string
+          created_at?: string
+          footer_bg: string
+          header_bg: string
+          id?: string
+          link_color: string
+          logo?: string | null
+          primary_color: string
+          secondary_color: string
+          site_name: string
+          text_color: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accent_color?: string
+          created_at?: string
+          footer_bg?: string
+          header_bg?: string
+          id?: string
+          link_color?: string
+          logo?: string | null
+          primary_color?: string
+          secondary_color?: string
+          site_name?: string
+          text_color?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

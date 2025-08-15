@@ -113,6 +113,7 @@ export const PublicationCalendar: React.FC = () => {
 
     const comment: PublicationComment = {
       id: `comment-${Date.now()}`,
+      publication_id: publicationId,
       user_id: currentUser.id,
       username: currentUser.name || 'Utilisateur',
       comment: newComment.trim(),

@@ -45,7 +45,7 @@ import { SimpleFrontHome } from "./pages/SimpleFrontHome";
 import { UserProvider } from "./contexts/UserContext";
 import { WebsiteConfigProvider } from "./contexts/WebsiteConfigContext";
 import { RealtimeProvider } from "./contexts/RealtimeContext";
-import { CentralizedDataProvider } from "./contexts/CentralizedDataContext";
+import { CentralizedDataProvider } from "./contexts/CentralizedDataProvider";
 import { MessagingProvider } from "./contexts/MessagingContext";
 
 const queryClient = new QueryClient({

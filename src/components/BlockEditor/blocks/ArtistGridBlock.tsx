@@ -107,11 +107,11 @@ export const ArtistGridBlock: React.FC<ArtistGridBlockProps> = ({ content, isEdi
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center space-x-6 text-sm text-gray-500">
                       <div className="text-center">
-                        <div className="font-bold text-pink-600 text-lg">{artist.upcomingShows}</div>
+                        <div className="font-bold text-pink-600 text-lg">{artist.upcoming_shows}</div>
                         <div className="text-xs">Prochains shows</div>
                       </div>
                       <div className="text-center">
-                        <div className="font-bold text-pink-600 text-lg">{artist.totalShows}</div>
+                        <div className="font-bold text-pink-600 text-lg">{artist.total_shows}</div>
                         <div className="text-xs">Total shows</div>
                       </div>
                     </div>

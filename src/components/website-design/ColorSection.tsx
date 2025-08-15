@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -6,18 +5,20 @@ import { Label } from '@/components/ui/label';
 import { Palette } from 'lucide-react';
 
 interface SiteDesign {
-  primaryColor: string;
-  secondaryColor: string;
-  accentColor: string;
-  textColor: string;
-  linkColor: string;
-  headerBg: string;
-  footerBg: string;
+  site_name?: string;
+  logo?: string;
+  primary_color: string;
+  secondary_color: string;
+  accent_color: string;
+  text_color: string;
+  link_color: string;
+  header_bg: string;
+  footer_bg: string;
 }
 
 interface ColorSectionProps {
   design: SiteDesign;
-  onInputChange: (field: keyof SiteDesign, value: string) => void;
+  onInputChange: (field: string, value: string) => void;
 }
 
 export const ColorSection: React.FC<ColorSectionProps> = ({ design, onInputChange }) => {
@@ -37,13 +38,13 @@ export const ColorSection: React.FC<ColorSectionProps> = ({ design, onInputChang
               <Input
                 id="primaryColor"
                 type="color"
-                value={design.primaryColor}
+                value={design.primary_color}
                 onChange={(e) => onInputChange('primaryColor', e.target.value)}
                 className="w-16 h-10 p-1 border rounded"
               />
               <Input
                 type="text"
-                value={design.primaryColor}
+                value={design.primary_color}
                 onChange={(e) => onInputChange('primaryColor', e.target.value)}
                 className="flex-1"
               />
@@ -56,13 +57,13 @@ export const ColorSection: React.FC<ColorSectionProps> = ({ design, onInputChang
               <Input
                 id="secondaryColor"
                 type="color"
-                value={design.secondaryColor}
+                value={design.secondary_color}
                 onChange={(e) => onInputChange('secondaryColor', e.target.value)}
                 className="w-16 h-10 p-1 border rounded"
               />
               <Input
                 type="text"
-                value={design.secondaryColor}
+                value={design.secondary_color}
                 onChange={(e) => onInputChange('secondaryColor', e.target.value)}
                 className="flex-1"
               />
@@ -75,13 +76,13 @@ export const ColorSection: React.FC<ColorSectionProps> = ({ design, onInputChang
               <Input
                 id="textColor"
                 type="color"
-                value={design.textColor}
+                value={design.text_color}
                 onChange={(e) => onInputChange('textColor', e.target.value)}
                 className="w-16 h-10 p-1 border rounded"
               />
               <Input
                 type="text"
-                value={design.textColor}
+                value={design.text_color}
                 onChange={(e) => onInputChange('textColor', e.target.value)}
                 className="flex-1"
               />
@@ -94,13 +95,13 @@ export const ColorSection: React.FC<ColorSectionProps> = ({ design, onInputChang
               <Input
                 id="linkColor"
                 type="color"
-                value={design.linkColor}
+                value={design.link_color}
                 onChange={(e) => onInputChange('linkColor', e.target.value)}
                 className="w-16 h-10 p-1 border rounded"
               />
               <Input
                 type="text"
-                value={design.linkColor}
+                value={design.link_color}
                 onChange={(e) => onInputChange('linkColor', e.target.value)}
                 className="flex-1"
               />
