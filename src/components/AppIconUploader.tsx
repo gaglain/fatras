@@ -1,10 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useFileUpload } from '@/hooks/useFileUpload';
+import { useAppSettings } from '@/hooks/useAppSettings';
 import { toast } from 'sonner';
 import { Upload, Image } from 'lucide-react';
 
@@ -12,15 +13,17 @@ export const AppIconUploader: React.FC = () => {
   const [iconUrl, setIconUrl] = useState<string>('');
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const { uploadFile, isUploading } = useFileUpload();
+  const { getSetting, setSetting, loading } = useAppSettings();
 
-  React.useEffect(() => {
-    // Charger l'icône sauvegardée
-    const savedIcon = localStorage.getItem('appIcon');
-    if (savedIcon) {
-      setIconUrl(savedIcon);
-      setPreviewUrl(savedIcon);
+  useEffect(() => {
+    if (!loading) {
+      const savedIcon = getSetting('appIcon');
+      if (savedIcon) {
+        setIconUrl(savedIcon);
+        setPreviewUrl(savedIcon);
+      }
     }
-  }, []);
+  }, [loading, getSetting]);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -39,8 +42,8 @@ export const AppIconUploader: React.FC = () => {
       setIconUrl(url);
       setPreviewUrl(url);
       
-      // Sauvegarder dans localStorage
-      localStorage.setItem('appIcon', url);
+      // Sauvegarder dans Supabase
+      await setSetting('appIcon', url);
       
       // Mettre à jour le favicon
       updateFavicon(url);
@@ -68,12 +71,14 @@ export const AppIconUploader: React.FC = () => {
     console.log('🎯 Favicon updated:', url);
   };
 
-  const handleUrlChange = (url: string) => {
+  const handleUrlChange = async (url: string) => {
     setIconUrl(url);
     setPreviewUrl(url);
-    localStorage.setItem('appIcon', url);
-    updateFavicon(url);
-    toast.success('Icône mise à jour !');
+    const success = await setSetting('appIcon', url);
+    if (success) {
+      updateFavicon(url);
+      toast.success('Icône mise à jour !');
+    }
   };
 
   return (
