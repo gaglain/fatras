@@ -7,7 +7,7 @@ const Index = () => {
   console.log('🏠 Index - Rendering Index page...');
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md">
         <Card className="shadow-xl border-border bg-card">
           <CardHeader className="text-center pb-6">
