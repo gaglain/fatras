@@ -1927,6 +1927,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_guest_order: {
+        Args: {
+          currency_param?: string
+          customer_address_param?: Json
+          customer_email_param: string
+          customer_name_param?: string
+          items_param?: Json
+          payment_method_param?: string
+          shop_owner_id: string
+          total_amount_param: number
+        }
+        Returns: string
+      }
       create_user_with_profile: {
         Args: { profile_data: Json; user_email: string; user_password: string }
         Returns: Json
