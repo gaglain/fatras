@@ -138,8 +138,8 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-md max-h-[90vh] overflow-y-auto bg-white border-gray-200 shadow-2xl">
+    <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-4 pt-8 overflow-y-auto">
+      <Card className="w-full max-w-md max-h-[calc(100vh-4rem)] overflow-y-auto bg-white border-gray-200 shadow-2xl my-4">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 bg-gradient-to-r from-blue-600 to-purple-600">
           <CardTitle className="flex items-center text-lg text-white">
             <User className="h-5 w-5 mr-2 text-white" />
