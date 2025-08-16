@@ -1254,6 +1254,30 @@ export type Database = {
         }
         Relationships: []
       }
+      public_shop_stats: {
+        Row: {
+          average_order_value: number | null
+          completed_orders: number | null
+          total_orders: number | null
+          total_revenue: number | null
+          user_id: string | null
+        }
+        Insert: {
+          average_order_value?: number | null
+          completed_orders?: number | null
+          total_orders?: number | null
+          total_revenue?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          average_order_value?: number | null
+          completed_orders?: number | null
+          total_orders?: number | null
+          total_revenue?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       publication_comments: {
         Row: {
           comment: string
@@ -1924,16 +1948,7 @@ export type Database = {
       }
     }
     Views: {
-      public_shop_stats: {
-        Row: {
-          average_order_value: number | null
-          completed_orders: number | null
-          total_orders: number | null
-          total_revenue: number | null
-          user_id: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       create_guest_order: {
@@ -1995,6 +2010,10 @@ export type Database = {
           user_id: string
           username: string
         }[]
+      }
+      refresh_shop_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       update_campaign_stats: {
         Args: { campaign_id: string; event_type: string }
