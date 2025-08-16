@@ -1924,7 +1924,16 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_shop_stats: {
+        Row: {
+          average_order_value: number | null
+          completed_orders: number | null
+          total_orders: number | null
+          total_revenue: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       create_guest_order: {
@@ -1943,6 +1952,28 @@ export type Database = {
       create_user_with_profile: {
         Args: { profile_data: Json; user_email: string; user_password: string }
         Returns: Json
+      }
+      get_guest_order_by_email: {
+        Args: { customer_email_param: string; order_id_param: string }
+        Returns: {
+          created_at: string
+          currency: string
+          customer_email: string
+          customer_name: string
+          id: string
+          items: Json
+          status: string
+          total_amount: number
+        }[]
+      }
+      get_my_shop_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          average_order_value: number
+          completed_orders: number
+          total_orders: number
+          total_revenue: number
+        }[]
       }
       get_user_profiles: {
         Args: Record<PropertyKey, never>

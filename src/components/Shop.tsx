@@ -4,12 +4,16 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ShoppingBag, Star } from 'lucide-react';
+import { ShoppingBag, Star, ShoppingCart } from 'lucide-react';
 import { useBackofficeProducts } from '@/hooks/useBackofficeData';
+import { SecureShoppingCart, CartItem } from '@/components/SecureShoppingCart';
+import { toast } from 'sonner';
 
 export const Shop: React.FC = () => {
   const { products, loading } = useBackofficeProducts();
   const [selectedVariations, setSelectedVariations] = useState<{[productId: string]: string}>({});
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   const handleVariationSelect = (productId: string, variationId: string) => {
     setSelectedVariations(prev => ({
@@ -32,6 +36,54 @@ export const Shop: React.FC = () => {
   const getStock = (product: any) => {
     const selectedVar = getSelectedVariation(product);
     return selectedVar ? selectedVar.stockQuantity : product.stockQuantity || 0;
+  };
+
+  const addToCart = (product: any) => {
+    const selectedVar = getSelectedVariation(product);
+    const price = selectedVar ? selectedVar.price : product.price;
+    const variationName = selectedVar ? selectedVar.name : undefined;
+    
+    const existingItemIndex = cartItems.findIndex(item => 
+      item.id === product.id + (selectedVar ? `-${selectedVar.id}` : '')
+    );
+
+    if (existingItemIndex >= 0) {
+      // Augmenter la quantité si l'article existe déjà
+      const newCartItems = [...cartItems];
+      newCartItems[existingItemIndex].quantity += 1;
+      setCartItems(newCartItems);
+    } else {
+      // Ajouter un nouvel article
+      const newItem: CartItem = {
+        id: product.id + (selectedVar ? `-${selectedVar.id}` : ''),
+        name: product.name,
+        price: price,
+        quantity: 1,
+        variation: variationName,
+        image: product.images?.[0]
+      };
+      setCartItems([...cartItems, newItem]);
+    }
+    
+    toast.success(`${product.name} ajouté au panier`);
+  };
+
+  const updateCartQuantity = (itemId: string, quantity: number) => {
+    setCartItems(cartItems.map(item => 
+      item.id === itemId ? { ...item, quantity } : item
+    ));
+  };
+
+  const removeFromCart = (itemId: string) => {
+    setCartItems(cartItems.filter(item => item.id !== itemId));
+  };
+
+  const clearCart = () => {
+    setCartItems([]);
+  };
+
+  const getTotalCartItems = () => {
+    return cartItems.reduce((sum, item) => sum + item.quantity, 0);
   };
 
   if (loading) {
@@ -68,11 +120,29 @@ export const Shop: React.FC = () => {
     }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-center mb-12">
-          <h1 className="text-3xl md:text-4xl font-bold mb-4" style={{
-            color: 'var(--custom-text, #18181b)'
-          }}>
-            Boutique Officielle
-          </h1>
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <h1 className="text-3xl md:text-4xl font-bold" style={{
+              color: 'var(--custom-text, #18181b)'
+            }}>
+              Boutique Officielle
+            </h1>
+            {getTotalCartItems() > 0 && (
+              <Button
+                onClick={() => setIsCartOpen(true)}
+                className="relative"
+                style={{
+                  backgroundColor: 'var(--custom-buttonBg, #1632f4)',
+                  color: 'var(--custom-buttonText, #ffffff)'
+                }}
+              >
+                <ShoppingCart className="h-5 w-5 mr-2" />
+                Panier
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center">
+                  {getTotalCartItems()}
+                </span>
+              </Button>
+            )}
+          </div>
           <p className="text-lg max-w-2xl mx-auto" style={{
             color: 'var(--custom-text, #666666)'
           }}>
@@ -183,11 +253,14 @@ export const Shop: React.FC = () => {
                           Stock: {stock}
                         </div>
                       </div>
-                      <Button size="sm" disabled={stock === 0} className="border-0" style={{
-                        backgroundColor: stock > 0 ? 'var(--custom-buttonBg, #1632f4)' : 'var(--custom-text, #999999)',
-                        color: 'var(--custom-buttonText, #ffffff)',
-                        borderRadius: '4px'
-                      }}>
+                      <Button size="sm" disabled={stock === 0} className="border-0" 
+                        style={{
+                          backgroundColor: stock > 0 ? 'var(--custom-buttonBg, #1632f4)' : 'var(--custom-text, #999999)',
+                          color: 'var(--custom-buttonText, #ffffff)',
+                          borderRadius: '4px'
+                        }}
+                        onClick={() => addToCart(product)}
+                      >
                         <ShoppingBag className="h-4 w-4 mr-1" />
                         {stock > 0 ? 'Ajouter' : 'Rupture'}
                       </Button>
@@ -209,6 +282,16 @@ export const Shop: React.FC = () => {
             Voir Plus de Produits
           </Button>
         </div>
+
+        {/* Panier sécurisé */}
+        <SecureShoppingCart
+          isOpen={isCartOpen}
+          onClose={() => setIsCartOpen(false)}
+          items={cartItems}
+          onUpdateQuantity={updateCartQuantity}
+          onRemoveItem={removeFromCart}
+          onClearCart={clearCart}
+        />
       </div>
     </div>
   );
