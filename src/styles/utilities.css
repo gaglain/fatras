@@ -12,7 +12,7 @@
   
   /* Utilitaires pour les couleurs personnalisées */
   .arc-gradient {
-    background: linear-gradient(135deg, rgb(var(--color-primary)) 0%, rgb(var(--color-accent-red)) 100%);
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--destructive)) 100%);
   }
   
   .arc-glass {
@@ -22,43 +22,43 @@
   }
 
   .arc-text-primary {
-    color: white;
+    color: hsl(var(--primary-foreground));
   }
 
   .arc-text-secondary {
-    color: rgba(255, 255, 255, 0.8);
+    color: hsl(var(--muted-foreground));
   }
 
   .text-brand-primary {
-    color: rgb(var(--color-primary));
+    color: hsl(var(--primary));
   }
 
   .text-brand-dark {
-    color: rgb(var(--color-primary-dark));
+    color: hsl(var(--primary));
   }
 
   .text-accent-red {
-    color: rgb(var(--color-accent-red));
+    color: hsl(var(--destructive));
   }
 
   .text-accent-pink {
-    color: rgb(var(--color-accent-pink));
+    color: hsl(var(--accent));
   }
 
   .bg-brand-primary {
-    background-color: rgb(var(--color-primary));
+    background-color: hsl(var(--primary));
   }
 
   .bg-brand-dark {
-    background-color: rgb(var(--color-primary-dark));
+    background-color: hsl(var(--primary));
   }
 
   .bg-accent-red {
-    background-color: rgb(var(--color-accent-red));
+    background-color: hsl(var(--destructive));
   }
 
   .bg-accent-pink {
-    background-color: rgb(var(--color-accent-pink));
+    background-color: hsl(var(--accent));
   }
 
   /* Optimisations éco-conception */
