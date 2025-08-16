@@ -48,14 +48,10 @@ export const LoginForm = () => {
   return (
     <div className="w-full">
       <div className="mb-4">
-        <h2 className="text-xl font-semibold" style={{
-          color: 'var(--custom-text, #18181b)'
-        }}>
+        <h2 className="text-xl font-semibold text-foreground">
           {isSignUp ? 'Créer un compte' : 'Connexion'}
         </h2>
-        <p className="text-sm mt-1" style={{
-          color: 'var(--custom-text, #666666)'
-        }}>
+        <p className="text-sm mt-1 text-muted-foreground">
           {isSignUp 
             ? 'Créez votre compte Fatras Booking' 
             : 'Connectez-vous à votre compte Fatras Booking'
@@ -66,9 +62,7 @@ export const LoginForm = () => {
         {isSignUp && (
           <>
             <div className="space-y-2">
-              <Label htmlFor="firstName" style={{
-                color: 'var(--custom-text, #18181b)'
-              }}>
+              <Label htmlFor="firstName" className="text-foreground">
                 Prénom
               </Label>
               <Input
@@ -77,17 +71,11 @@ export const LoginForm = () => {
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 required
-                style={{
-                  background: 'var(--custom-background, #ffffff)',
-                  color: 'var(--custom-text, #18181b)',
-                  borderColor: 'var(--custom-buttonBg, #1632f4)'
-                }}
+                className="bg-background text-foreground border-input"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="lastName" style={{
-                color: 'var(--custom-text, #18181b)'
-              }}>
+              <Label htmlFor="lastName" className="text-foreground">
                 Nom
               </Label>
               <Input
@@ -96,19 +84,13 @@ export const LoginForm = () => {
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 required
-                style={{
-                  background: 'var(--custom-background, #ffffff)',
-                  color: 'var(--custom-text, #18181b)',
-                  borderColor: 'var(--custom-buttonBg, #1632f4)'
-                }}
+                className="bg-background text-foreground border-input"
               />
             </div>
           </>
         )}
         <div className="space-y-2">
-          <Label htmlFor="email" style={{
-            color: 'var(--custom-text, #18181b)'
-          }}>
+          <Label htmlFor="email" className="text-foreground">
             Email
           </Label>
           <Input
@@ -117,17 +99,11 @@ export const LoginForm = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            style={{
-              background: 'var(--custom-background, #ffffff)',
-              color: 'var(--custom-text, #18181b)',
-              borderColor: 'var(--custom-buttonBg, #1632f4)'
-            }}
+            className="bg-background text-foreground border-input"
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="password" style={{
-            color: 'var(--custom-text, #18181b)'
-          }}>
+          <Label htmlFor="password" className="text-foreground">
             Mot de passe
           </Label>
           <Input
@@ -136,14 +112,10 @@ export const LoginForm = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            style={{
-              background: 'var(--custom-background, #ffffff)',
-              color: 'var(--custom-text, #18181b)',
-              borderColor: 'var(--custom-buttonBg, #1632f4)'
-            }}
+            className="bg-background text-foreground border-input"
           />
         </div>
-        <Button type="submit" className="w-full back-office-button" disabled={isLoading}>
+        <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? 'Chargement...' : (isSignUp ? 'Créer le compte' : 'Se connecter')}
         </Button>
       </form>
@@ -151,8 +123,7 @@ export const LoginForm = () => {
         <Button
           variant="link"
           onClick={() => setIsSignUp(!isSignUp)}
-          className="text-sm"
-          style={{ color: 'var(--custom-buttonBg, #1632f4)' }}
+          className="text-sm text-primary"
         >
           {isSignUp 
             ? 'Déjà un compte ? Se connecter' 
