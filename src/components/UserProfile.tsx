@@ -23,8 +23,8 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const displayUser = currentUser || {
-    name: authUser?.user_metadata?.first_name || 'Laurent',
-    lastName: authUser?.user_metadata?.last_name || 'Guillet',
+    name: authUser?.user_metadata?.first_name || '',
+    lastName: authUser?.user_metadata?.last_name || '',
     email: authUser?.email || '',
     avatar: authUser?.user_metadata?.avatar_url || ''
   };
@@ -98,9 +98,10 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
           toast.error('Erreur lors de la sauvegarde');
         } else {
           // Forcer le rafraîchissement des données utilisateur
-          if (updateUser) {
+          if (updateUser && currentUser) {
             try {
-              await updateUser(formData.name, {
+              await updateUser(currentUser.id, {
+                name: formData.name,
                 lastName: formData.lastName,
                 phone: formData.phone,
                 avatar: formData.avatar
@@ -112,9 +113,6 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
           
           setIsEditing(false);
           toast.success('Profil mis à jour avec succès');
-          
-          // Rafraîchir la page pour voir les changements
-          window.location.reload();
         }
       } else {
         toast.error('Impossible de sauvegarder : utilisateur non connecté');
@@ -138,29 +136,29 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-4 pt-8 overflow-y-auto">
-      <Card className="w-full max-w-md max-h-[calc(100vh-4rem)] overflow-y-auto bg-white border-gray-200 shadow-2xl my-4">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 bg-gradient-to-r from-blue-600 to-purple-600">
-          <CardTitle className="flex items-center text-lg text-white">
-            <User className="h-5 w-5 mr-2 text-white" />
+    <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-[9999] p-4 pt-8 overflow-y-auto">
+      <Card className="w-full max-w-md max-h-[calc(100vh-4rem)] overflow-y-auto bg-background border shadow-2xl my-4 z-[9999]">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 bg-gradient-to-r from-primary to-secondary">
+          <CardTitle className="flex items-center text-lg text-primary-foreground">
+            <User className="h-5 w-5 mr-2 text-primary-foreground" />
             Profil utilisateur
           </CardTitle>
-          <Button variant="ghost" size="sm" onClick={onClose} className="text-white hover:bg-white/20">
+          <Button variant="ghost" size="sm" onClick={onClose} className="text-primary-foreground hover:bg-white/20">
             <X className="h-4 w-4" />
           </Button>
         </CardHeader>
-        <CardContent className="space-y-6 bg-white p-6">
+        <CardContent className="space-y-6 bg-background p-6">
           {/* Avatar Section */}
           <div className="flex flex-col items-center space-y-4">
             <div className="relative group">
-              <Avatar className="h-24 w-24 border-4 border-gray-200 shadow-lg">
+              <Avatar className="h-24 w-24 border-4 border-border shadow-lg">
                 <AvatarImage 
                   src={formData.avatar || displayUser.avatar} 
                   alt={formData.name || displayUser.name}
                   className="object-cover"
                 />
-                <AvatarFallback className="text-xl bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold">
-                  {((formData.name || displayUser.name)?.charAt(0) || 'L') + ((formData.lastName || displayUser.lastName)?.charAt(0) || 'G')}
+                <AvatarFallback className="text-xl bg-gradient-to-br from-primary to-secondary text-primary-foreground font-bold">
+                  {((formData.name || displayUser.name)?.charAt(0) || 'U') + ((formData.lastName || displayUser.lastName)?.charAt(0) || 'S')}
                 </AvatarFallback>
               </Avatar>
               
@@ -195,7 +193,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
                 size="sm"
                 disabled={uploading}
                 onClick={() => fileInputRef.current?.click()}
-                className="border-blue-200 text-blue-600 hover:bg-blue-50"
+                className="border-primary/20 text-primary hover:bg-primary/10"
               >
                 <ImageIcon className="h-4 w-4 mr-2" />
                 {uploading ? 'Téléchargement...' : 'Changer la photo'}
@@ -206,31 +204,31 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
           {/* Form Fields */}
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-gray-700 font-medium">Prénom *</Label>
+              <Label htmlFor="name" className="text-foreground font-medium">Prénom *</Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 disabled={!isEditing}
                 placeholder="Votre prénom"
-                className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                className="border-input focus:border-primary focus:ring-primary"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="lastName" className="text-gray-700 font-medium">Nom</Label>
+              <Label htmlFor="lastName" className="text-foreground font-medium">Nom</Label>
               <Input
                 id="lastName"
                 value={formData.lastName}
                 onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                 disabled={!isEditing}
                 placeholder="Votre nom"
-                className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                className="border-input focus:border-primary focus:ring-primary"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-gray-700 font-medium">Email</Label>
+              <Label htmlFor="email" className="text-foreground font-medium">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -238,12 +236,12 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 disabled={!isEditing}
                 placeholder="votre@email.com"
-                className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                className="border-input focus:border-primary focus:ring-primary"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="phone" className="text-gray-700 font-medium">Téléphone</Label>
+              <Label htmlFor="phone" className="text-foreground font-medium">Téléphone</Label>
               <Input
                 id="phone"
                 type="tel"
@@ -251,19 +249,19 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 disabled={!isEditing}
                 placeholder="+33 6 12 34 56 78"
-                className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                className="border-input focus:border-primary focus:ring-primary"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="bio" className="text-gray-700 font-medium">Bio</Label>
+              <Label htmlFor="bio" className="text-foreground font-medium">Bio</Label>
               <Input
                 id="bio"
                 value={formData.bio}
                 onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                 disabled={!isEditing}
                 placeholder="Une courte description..."
-                className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                className="border-input focus:border-primary focus:ring-primary"
               />
             </div>
           </div>
@@ -271,15 +269,15 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
           {/* Action Buttons */}
           <div className="flex justify-between space-x-2 pt-4">
             {!isEditing ? (
-              <Button onClick={() => setIsEditing(true)} className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+              <Button onClick={() => setIsEditing(true)} className="w-full">
                 Modifier le profil
               </Button>
             ) : (
               <>
-                <Button variant="outline" onClick={handleCancel} className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-50">
+                <Button variant="outline" onClick={handleCancel} className="flex-1">
                   Annuler
                 </Button>
-                <Button onClick={handleSave} className="flex-1 bg-green-600 hover:bg-green-700 text-white" disabled={uploading}>
+                <Button onClick={handleSave} className="flex-1" disabled={uploading}>
                   <Save className="h-4 w-4 mr-2" />
                   Sauvegarder
                 </Button>

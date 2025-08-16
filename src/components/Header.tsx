@@ -132,7 +132,7 @@ export const Header: React.FC = () => {
                   <ChevronDown className="h-3 w-3 lg:h-4 lg:w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
+              <DropdownMenuContent className="w-56 z-[9998] bg-background border" align="end" forceMount>
                 <div className="px-3 py-2 border-b">
                   <p className="text-sm font-medium">
                     {currentUser?.name || 'Utilisateur'}
