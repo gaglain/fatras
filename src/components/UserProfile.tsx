@@ -8,6 +8,7 @@ import { X, User, Save, Camera, Upload, ImageIcon } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useUser } from '@/contexts/UserContext';
 import { useAuth } from '@/hooks/useAuth';
+import { useFileUpload } from '@/hooks/useFileUpload';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -18,8 +19,8 @@ interface UserProfileProps {
 export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
   const { currentUser, updateUser } = useUser();
   const { user: authUser } = useAuth();
+  const { uploadAvatar, isUploading } = useFileUpload();
   const [isEditing, setIsEditing] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const displayUser = currentUser || {
@@ -56,21 +57,19 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
     }
 
     try {
-      setUploading(true);
       console.log('Starting avatar upload...');
       
-      const tempUrl = URL.createObjectURL(file);
-      setFormData(prev => ({ ...prev, avatar: tempUrl }));
+      // Upload réel vers Supabase
+      const uploadResult = await uploadAvatar(file);
       
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Mettre à jour l'avatar dans le formulaire
+      setFormData(prev => ({ ...prev, avatar: uploadResult.url }));
       
       toast.success('Photo de profil mise à jour avec succès');
     } catch (error) {
       console.error('Erreur lors du téléchargement:', error);
       toast.error('Erreur lors du téléchargement de la photo');
       setFormData(prev => ({ ...prev, avatar: displayUser.avatar || '' }));
-    } finally {
-      setUploading(false);
     }
   };
 
@@ -176,10 +175,10 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
                   variant="ghost"
                   size="sm"
                   className="text-white hover:bg-white/20 p-2"
-                  disabled={uploading}
+                  disabled={isUploading}
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  {uploading ? (
+                  {isUploading ? (
                     <Upload className="h-6 w-6 animate-spin" />
                   ) : (
                     <Camera className="h-6 w-6" />
@@ -200,12 +199,12 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
               <Button
                 variant="outline"
                 size="sm"
-                disabled={uploading}
+                disabled={isUploading}
                 onClick={() => fileInputRef.current?.click()}
                 className="border-primary/20 text-primary hover:bg-primary/10"
               >
                 <ImageIcon className="h-4 w-4 mr-2" />
-                {uploading ? 'Téléchargement...' : 'Changer la photo'}
+                {isUploading ? 'Téléchargement...' : 'Changer la photo'}
               </Button>
             </div>
           </div>
@@ -286,7 +285,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
                 <Button variant="outline" onClick={handleCancel} className="flex-1">
                   Annuler
                 </Button>
-                <Button onClick={handleSave} className="flex-1" disabled={uploading}>
+                <Button onClick={handleSave} className="flex-1" disabled={isUploading}>
                   <Save className="h-4 w-4 mr-2" />
                   Sauvegarder
                 </Button>
