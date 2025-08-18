@@ -1,15 +1,14 @@
-
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { X, User, Save, Camera, Upload, ImageIcon } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { X, User, Edit2, Save } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useFileUpload } from '@/hooks/useFileUpload';
-import { supabase } from '@/integrations/supabase/client';
+import { useUserManagement } from '@/hooks/useUserManagement';
 import { toast } from 'sonner';
 
 interface UserProfileProps {
@@ -17,34 +16,46 @@ interface UserProfileProps {
 }
 
 export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
-  const { currentUser, updateUser } = useUser();
+  const { currentUser } = useUser();
   const { user: authUser } = useAuth();
-  const { uploadAvatar, isUploading } = useFileUpload();
+  const { uploadFile } = useFileUpload();
+  const { updateUserProfile, loading } = useUserManagement();
   const [isEditing, setIsEditing] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
+  // Utiliser currentUser comme source principale, avec authUser comme fallback
   const displayUser = currentUser || {
+    id: authUser?.id || '',
     name: authUser?.user_metadata?.first_name || '',
     lastName: authUser?.user_metadata?.last_name || '',
     email: authUser?.email || '',
+    role: 'utilisateur' as const,
+    isActive: true,
     avatar: authUser?.user_metadata?.avatar_url || ''
   };
 
   const [formData, setFormData] = useState({
-    name: displayUser.name || '',
+    firstName: displayUser.name || '',
     lastName: displayUser.lastName || '',
     email: displayUser.email || '',
     phone: currentUser?.phone || '',
-    bio: currentUser?.bio || '',
     avatar: displayUser.avatar || ''
   });
 
+  useEffect(() => {
+    if (currentUser) {
+      setFormData({
+        firstName: currentUser.name || '',
+        lastName: currentUser.lastName || '',
+        email: currentUser.email || '',
+        phone: currentUser.phone || '',
+        avatar: currentUser.avatar || ''
+      });
+    }
+  }, [currentUser]);
+
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) {
-      toast.error('Aucun fichier sélectionné');
-      return;
-    }
+    if (!file) return;
 
     if (!file.type.startsWith('image/')) {
       toast.error('Veuillez sélectionner une image');
@@ -57,15 +68,9 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
     }
 
     try {
-      console.log('Starting avatar upload...');
-      
-      // Upload réel vers Supabase
-      const uploadResult = await uploadAvatar(file);
-      
-      // Mettre à jour l'avatar dans le formulaire
+      const uploadResult = await uploadFile(file, 'avatars');
       setFormData(prev => ({ ...prev, avatar: uploadResult.url }));
-      
-      toast.success('Photo de profil mise à jour avec succès');
+      toast.success('Photo de profil mise à jour');
     } catch (error) {
       console.error('Erreur lors du téléchargement:', error);
       toast.error('Erreur lors du téléchargement de la photo');
@@ -75,41 +80,20 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
 
   const handleSave = async () => {
     try {
-      if (!formData.name.trim()) {
+      if (!formData.firstName.trim()) {
         toast.error('Le prénom est requis');
         return;
       }
 
       if (authUser?.id) {
-        // Utiliser la fonction RPC sécurisée pour la mise à jour
-        const { data, error } = await supabase.rpc('update_user_profile_data', {
-          profile_user_id: authUser.id,
-          profile_data: {
-            first_name: formData.name,
-            last_name: formData.lastName,
-            phone: formData.phone,
-            avatar_url: formData.avatar
-          }
+        const success = await updateUserProfile(authUser.id, {
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          phone: formData.phone,
+          avatar_url: formData.avatar
         });
 
-        if (error) {
-          console.error('Erreur:', error);
-          toast.error('Erreur lors de la sauvegarde');
-        } else {
-          // Forcer le rafraîchissement des données utilisateur
-          if (updateUser && currentUser) {
-            try {
-              await updateUser(currentUser.id, {
-                name: formData.name,
-                lastName: formData.lastName,
-                phone: formData.phone,
-                avatar: formData.avatar
-              });
-            } catch (updateError) {
-              console.error('Erreur lors de la mise à jour du contexte utilisateur:', updateError);
-            }
-          }
-          
+        if (success) {
           setIsEditing(false);
           toast.success('Profil mis à jour avec succès');
         }
@@ -124,11 +108,10 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
 
   const handleCancel = () => {
     setFormData({
-      name: displayUser.name || '',
+      firstName: displayUser.name || '',
       lastName: displayUser.lastName || '',
       email: displayUser.email || '',
       phone: currentUser?.phone || '',
-      bio: currentUser?.bio || '',
       avatar: displayUser.avatar || ''
     });
     setIsEditing(false);
@@ -136,148 +119,114 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
 
   return (
     <div 
-      className="fixed inset-0 flex items-start justify-center p-4 pt-8 overflow-y-auto"
-      style={{ 
-        backgroundColor: 'rgba(0, 0, 0, 0.5)', 
-        zIndex: 999999 
-      }}
+      className="fixed inset-0 flex items-start justify-center p-4 pt-8 overflow-y-auto bg-black/50 z-[999999]"
     >
-      <Card 
-        className="w-full max-w-md max-h-[calc(100vh-4rem)] overflow-y-auto bg-background border shadow-2xl my-4"
-        style={{ zIndex: 999999 }}
-      >
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 bg-gradient-to-r from-primary to-secondary">
-          <CardTitle className="flex items-center text-lg text-primary-foreground">
-            <User className="h-5 w-5 mr-2 text-primary-foreground" />
+      <Card className="w-full max-w-md max-h-[calc(100vh-4rem)] overflow-y-auto bg-background border shadow-2xl my-4">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+          <CardTitle className="flex items-center text-lg">
+            <User className="h-5 w-5 mr-2" />
             Profil utilisateur
           </CardTitle>
-          <Button variant="ghost" size="sm" onClick={onClose} className="text-primary-foreground hover:bg-white/20">
+          <Button variant="ghost" size="sm" onClick={onClose}>
             <X className="h-4 w-4" />
           </Button>
         </CardHeader>
-        <CardContent className="space-y-6 bg-background p-6">
+        <CardContent className="space-y-6 p-6">
           {/* Avatar Section */}
           <div className="flex flex-col items-center space-y-4">
-            <div className="relative group">
+            <div className="relative">
               <Avatar className="h-24 w-24 border-4 border-border shadow-lg">
                 <AvatarImage 
-                  src={formData.avatar || displayUser.avatar} 
-                  alt={formData.name || displayUser.name}
+                  src={formData.avatar} 
+                  alt={formData.firstName}
                   className="object-cover"
                 />
-                <AvatarFallback className="text-xl bg-gradient-to-br from-primary to-secondary text-primary-foreground font-bold">
-                  {((formData.name || displayUser.name)?.charAt(0) || 'U') + ((formData.lastName || displayUser.lastName)?.charAt(0) || 'S')}
+                <AvatarFallback className="text-xl font-bold">
+                  {(formData.firstName?.charAt(0) || 'U') + (formData.lastName?.charAt(0) || 'S')}
                 </AvatarFallback>
               </Avatar>
-              
-              <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-white hover:bg-white/20 p-2"
-                  disabled={isUploading}
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  {isUploading ? (
-                    <Upload className="h-6 w-6 animate-spin" />
-                  ) : (
-                    <Camera className="h-6 w-6" />
-                  )}
-                </Button>
-              </div>
-              
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleAvatarUpload}
-                className="hidden"
-              />
             </div>
             
-            <div className="text-center">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={isUploading}
-                onClick={() => fileInputRef.current?.click()}
-                className="border-primary/20 text-primary hover:bg-primary/10"
-              >
-                <ImageIcon className="h-4 w-4 mr-2" />
-                {isUploading ? 'Téléchargement...' : 'Changer la photo'}
-              </Button>
-            </div>
+            {isEditing && (
+              <div className="text-center">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarUpload}
+                  className="hidden"
+                  id="avatar-upload"
+                />
+                <Label 
+                  htmlFor="avatar-upload"
+                  className="cursor-pointer text-sm text-primary hover:underline"
+                >
+                  Changer la photo
+                </Label>
+              </div>
+            )}
           </div>
 
           {/* Form Fields */}
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-foreground font-medium">Prénom *</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                disabled={!isEditing}
-                placeholder="Votre prénom"
-                className="border-input focus:border-primary focus:ring-primary"
-              />
+              <Label htmlFor="firstName">Prénom *</Label>
+              {isEditing ? (
+                <Input
+                  id="firstName"
+                  value={formData.firstName}
+                  onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
+                  className="mt-1"
+                />
+              ) : (
+                <p className="mt-1 text-sm text-muted-foreground">{displayUser.name || 'Non renseigné'}</p>
+              )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="lastName" className="text-foreground font-medium">Nom</Label>
-              <Input
-                id="lastName"
-                value={formData.lastName}
-                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                disabled={!isEditing}
-                placeholder="Votre nom"
-                className="border-input focus:border-primary focus:ring-primary"
-              />
+              <Label htmlFor="lastName">Nom</Label>
+              {isEditing ? (
+                <Input
+                  id="lastName"
+                  value={formData.lastName}
+                  onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
+                  className="mt-1"
+                />
+              ) : (
+                <p className="mt-1 text-sm text-muted-foreground">{displayUser.lastName || 'Non renseigné'}</p>
+              )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-foreground font-medium">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                disabled={!isEditing}
-                placeholder="votre@email.com"
-                className="border-input focus:border-primary focus:ring-primary"
-              />
+              <Label htmlFor="email">Email</Label>
+              <p className="mt-1 text-sm text-muted-foreground">{displayUser.email || 'Non renseigné'}</p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="phone" className="text-foreground font-medium">Téléphone</Label>
-              <Input
-                id="phone"
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                disabled={!isEditing}
-                placeholder="+33 6 12 34 56 78"
-                className="border-input focus:border-primary focus:ring-primary"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="bio" className="text-foreground font-medium">Bio</Label>
-              <Input
-                id="bio"
-                value={formData.bio}
-                onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                disabled={!isEditing}
-                placeholder="Une courte description..."
-                className="border-input focus:border-primary focus:ring-primary"
-              />
+              <Label htmlFor="phone">Téléphone</Label>
+              {isEditing ? (
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                  className="mt-1"
+                />
+              ) : (
+                <p className="mt-1 text-sm text-muted-foreground">{currentUser?.phone || 'Non renseigné'}</p>
+              )}
             </div>
           </div>
 
           {/* Action Buttons */}
           <div className="flex justify-between space-x-2 pt-4">
             {!isEditing ? (
-              <Button onClick={() => setIsEditing(true)} className="w-full">
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => setIsEditing(true)}
+                disabled={loading}
+              >
+                <Edit2 className="h-4 w-4 mr-2" />
                 Modifier le profil
               </Button>
             ) : (
@@ -285,7 +234,12 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
                 <Button variant="outline" onClick={handleCancel} className="flex-1">
                   Annuler
                 </Button>
-                <Button onClick={handleSave} className="flex-1" disabled={isUploading}>
+                <Button 
+                  variant="default" 
+                  className="flex-1"
+                  onClick={handleSave}
+                  disabled={loading}
+                >
                   <Save className="h-4 w-4 mr-2" />
                   Sauvegarder
                 </Button>
