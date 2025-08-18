@@ -101,6 +101,7 @@ const App = () => {
         <TooltipProvider>
           <BrowserRouter>
             <Routes>
+              <Route index element={<SimpleIndex />} />
               <Route path="/" element={<SimpleIndex />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
