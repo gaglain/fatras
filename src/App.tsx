@@ -21,6 +21,16 @@ import { ShowBible } from "./pages/ShowBible";
 import { Contracts } from "./pages/Contracts";
 import { UserManagement } from "./pages/UserManagement";
 import { Preferences } from "./pages/Preferences";
+// Pages manquantes
+import { ContactLists } from "./pages/ContactLists";
+import { EventTypes } from "./pages/EventTypes";
+import { Opportunities } from "./pages/Opportunities";
+import { RoadShow } from "./pages/RoadShow";
+import { Messagerie } from "./pages/Messagerie";
+import { Forms } from "./pages/Forms";
+import { PublicationCalendar } from "./pages/PublicationCalendar";
+import { Website } from "./pages/Website";
+import { Application } from "./pages/Application";
 import { useAuth } from "@/hooks/useAuth";
 import { UserProvider } from "@/contexts/UserContext";
 import { Layout } from "@/components/Layout";
@@ -232,6 +242,106 @@ const App = () => {
                     <ProtectedRoute>
                       <Layout>
                         <Preferences />
+                      </Layout>
+                    </ProtectedRoute>
+                  } 
+                />
+                
+                {/* Pages manquantes */}
+                <Route 
+                  path="/contact-lists" 
+                  element={
+                    <ProtectedRoute>
+                      <Layout>
+                        <ContactLists />
+                      </Layout>
+                    </ProtectedRoute>
+                  } 
+                />
+                
+                <Route 
+                  path="/event-types" 
+                  element={
+                    <ProtectedRoute>
+                      <Layout>
+                        <EventTypes />
+                      </Layout>
+                    </ProtectedRoute>
+                  } 
+                />
+                
+                <Route 
+                  path="/opportunities" 
+                  element={
+                    <ProtectedRoute>
+                      <Layout>
+                        <Opportunities />
+                      </Layout>
+                    </ProtectedRoute>
+                  } 
+                />
+                
+                <Route 
+                  path="/roadshow" 
+                  element={
+                    <ProtectedRoute>
+                      <Layout>
+                        <RoadShow />
+                      </Layout>
+                    </ProtectedRoute>
+                  } 
+                />
+                
+                <Route 
+                  path="/messagerie" 
+                  element={
+                    <ProtectedRoute>
+                      <Layout>
+                        <Messagerie />
+                      </Layout>
+                    </ProtectedRoute>
+                  } 
+                />
+                
+                <Route 
+                  path="/forms" 
+                  element={
+                    <ProtectedRoute>
+                      <Layout>
+                        <Forms />
+                      </Layout>
+                    </ProtectedRoute>
+                  } 
+                />
+                
+                <Route 
+                  path="/publication-calendar" 
+                  element={
+                    <ProtectedRoute>
+                      <Layout>
+                        <PublicationCalendar />
+                      </Layout>
+                    </ProtectedRoute>
+                  } 
+                />
+                
+                <Route 
+                  path="/website" 
+                  element={
+                    <ProtectedRoute>
+                      <Layout>
+                        <Website />
+                      </Layout>
+                    </ProtectedRoute>
+                  } 
+                />
+                
+                <Route 
+                  path="/application" 
+                  element={
+                    <ProtectedRoute>
+                      <Layout>
+                        <Application />
                       </Layout>
                     </ProtectedRoute>
                   } 
