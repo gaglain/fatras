@@ -9,6 +9,9 @@ import { Toaster } from "@/components/ui/sonner";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import { NotFound } from "./pages/NotFound";
+import { Events } from "./pages/Events";
+import { Contacts } from "./pages/Contacts";
+import { Artists } from "./pages/Artists";
 import { useAuth } from "@/hooks/useAuth";
 
 // Composant de protection des routes
@@ -70,6 +73,34 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <Dashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              {/* Pages principales protégées */}
+              <Route 
+                path="/events" 
+                element={
+                  <ProtectedRoute>
+                    <Events />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              <Route 
+                path="/contacts" 
+                element={
+                  <ProtectedRoute>
+                    <Contacts />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              <Route 
+                path="/artists" 
+                element={
+                  <ProtectedRoute>
+                    <Artists />
                   </ProtectedRoute>
                 } 
               />
