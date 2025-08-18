@@ -1,115 +1,43 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ThemeProvider } from "next-themes";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { Toaster } from "@/components/ui/sonner";
+import React from 'react';
 
-// Simple test component
-const SimpleIndex = () => {
+const App = () => {
+  console.log('🚀 Super minimal App starting...');
+  
   return (
     <div style={{ 
       padding: '40px', 
-      textAlign: 'center',
+      backgroundColor: '#ffffff',
+      minHeight: '100vh',
       fontFamily: 'Arial, sans-serif'
     }}>
-      <h1 style={{ color: '#333', marginBottom: '20px' }}>
-        🎵 Fatras Cooking - Test Mode
+      <h1 style={{ 
+        color: '#333', 
+        marginBottom: '20px',
+        fontSize: '32px'
+      }}>
+        ✅ Application Chargée
       </h1>
-      <p style={{ color: '#666', marginBottom: '30px' }}>
-        Application en cours de diagnostic...
+      <p style={{ 
+        color: '#666', 
+        fontSize: '18px',
+        marginBottom: '30px'
+      }}>
+        Si vous voyez ce texte, React fonctionne correctement.
       </p>
       <div style={{ 
-        background: '#f0f9ff', 
-        border: '2px solid #0284c7', 
+        background: '#e7f5e7', 
+        border: '2px solid #22c55e', 
         borderRadius: '8px', 
         padding: '20px',
-        maxWidth: '600px',
-        margin: '0 auto'
+        maxWidth: '500px'
       }}>
-        <h2 style={{ color: '#0284c7', margin: '0 0 15px 0' }}>
-          Mode Test Activé
-        </h2>
-        <p style={{ margin: 0, lineHeight: '1.5' }}>
-          Cette version simplifiée permet de vérifier que l'application se charge correctement.
-          Si vous voyez ce message, la base de l'application fonctionne.
-        </p>
-      </div>
-      <div style={{ marginTop: '30px' }}>
-        <button 
-          style={{
-            background: '#0284c7',
-            color: 'white',
-            border: 'none',
-            padding: '12px 24px',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontSize: '16px',
-            marginRight: '10px'
-          }}
-          onClick={() => window.location.href = '#test'}
-        >
-          Test Navigation
-        </button>
-        <button 
-          style={{
-            background: '#dc2626',
-            color: 'white',
-            border: 'none',
-            padding: '12px 24px',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontSize: '16px'
-          }}
-          onClick={() => console.log('Test Console Log')}
-        >
-          Test Console
-        </button>
+        <strong style={{ color: '#16a34a' }}>
+          Diagnostic: Application React OK
+        </strong>
+        <br />
+        <small>Timestamp: {new Date().toLocaleTimeString()}</small>
       </div>
     </div>
-  );
-};
-
-const NotFound = () => (
-  <div style={{ padding: '40px', textAlign: 'center' }}>
-    <h1>404 - Page non trouvée</h1>
-    <p>La page demandée n'existe pas.</p>
-  </div>
-);
-
-// Create a stable query client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 60 * 1000,
-      retry: 1,
-    },
-  },
-});
-
-const App = () => {
-  console.log('🚀 App starting in test mode...');
-  
-  return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider 
-        attribute="class"
-        defaultTheme="light"
-        enableSystem={false}
-        disableTransitionOnChange
-        storageKey="lovable-theme"
-      >
-        <TooltipProvider>
-          <BrowserRouter>
-            <Routes>
-              <Route index element={<SimpleIndex />} />
-              <Route path="/" element={<SimpleIndex />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-            <Toaster />
-          </BrowserRouter>
-        </TooltipProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
   );
 };
 
