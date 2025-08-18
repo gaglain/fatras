@@ -73,12 +73,12 @@ const App = () => {
         <TooltipProvider>
           <BrowserRouter>
             <UserProvider>
-            <CentralizedDataProvider>
-              <RealtimeProvider>
-                <MessagingProvider>
-                  <WebsiteConfigProvider>
-                    <Toaster />
-                    <Routes>
+              <CentralizedDataProvider>
+                <RealtimeProvider>
+                  <MessagingProvider>
+                    <WebsiteConfigProvider>
+                      <Toaster />
+                      <Routes>
                       {/* Route d'accueil */}
                       <Route path="/" element={<Index />} />
                       
