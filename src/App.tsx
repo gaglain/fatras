@@ -1,45 +1,71 @@
+import React from 'react';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 
-// Import des pages principales
-import Index from "./pages/Index";
-import Dashboard from "./pages/Dashboard";
-import { NotFound } from "./pages/NotFound";
-
-// Import des composants d'authentification et layout
-import { useAuth } from "@/hooks/useAuth";
-import { UserProvider } from "@/contexts/UserContext";
-import { Layout } from "@/components/Layout";
-import { RealtimeProvider } from "@/contexts/RealtimeContext";
-import { CentralizedDataProvider } from "@/contexts/CentralizedDataProvider";
-import { MessagingProvider } from "@/contexts/MessagingContext";
-
-// Composant de protection des routes
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth();
+// Version de test simple pour diagnostiquer
+const TestIndex = () => {
+  console.log('✅ TestIndex component rendering...');
   
-  if (loading) {
-    return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh',
-        fontSize: '18px'
+  return (
+    <div style={{ 
+      padding: '40px', 
+      backgroundColor: '#ffffff',
+      minHeight: '100vh',
+      fontFamily: 'Arial, sans-serif'
+    }}>
+      <h1 style={{ 
+        color: '#333', 
+        marginBottom: '20px',
+        fontSize: '32px'
       }}>
-        Chargement...
+        🎵 Fatras Cooking - Mode Diagnostic
+      </h1>
+      <p style={{ 
+        color: '#666', 
+        fontSize: '18px',
+        marginBottom: '30px'
+      }}>
+        Application en cours de diagnostic. Si vous voyez ce message, la base fonctionne.
+      </p>
+      
+      <div style={{ 
+        background: '#f0f9ff', 
+        border: '2px solid #0284c7', 
+        borderRadius: '8px', 
+        padding: '20px',
+        marginBottom: '20px'
+      }}>
+        <h3>État du diagnostic :</h3>
+        <ul style={{ margin: '10px 0', paddingLeft: '20px' }}>
+          <li>✅ React fonctionne</li>
+          <li>✅ Routing fonctionne</li>
+          <li>✅ Styles inline fonctionnent</li>
+        </ul>
       </div>
-    );
-  }
-  
-  if (!user) {
-    return <Navigate to="/" replace />;
-  }
-  
-  return <>{children}</>;
+
+      <button 
+        style={{
+          background: '#0284c7',
+          color: 'white',
+          border: 'none',
+          padding: '12px 24px',
+          borderRadius: '6px',
+          cursor: 'pointer',
+          fontSize: '16px',
+          marginRight: '10px'
+        }}
+        onClick={() => {
+          console.log('🔄 Test button clicked');
+          alert('Test réussi ! L\'application répond.');
+        }}
+      >
+        Tester l'interactivité
+      </button>
+    </div>
+  );
 };
 
 // Create a stable query client
@@ -53,7 +79,7 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
-  console.log('🚀 Fatras Cooking App starting...');
+  console.log('🚀 App diagnostic mode starting...');
   
   return (
     <QueryClientProvider client={queryClient}>
@@ -66,34 +92,11 @@ const App = () => {
       >
         <TooltipProvider>
           <BrowserRouter>
-            <UserProvider>
-              <RealtimeProvider>
-                <CentralizedDataProvider>
-                  <MessagingProvider>
-                    <Routes>
-                      {/* Page d'accueil */}
-                      <Route path="/" element={<Index />} />
-                      
-                      {/* Dashboard avec layout protégé */}
-                      <Route 
-                        path="/dashboard" 
-                        element={
-                          <ProtectedRoute>
-                            <Layout>
-                              <Dashboard />
-                            </Layout>
-                          </ProtectedRoute>
-                        } 
-                      />
-                      
-                      {/* Page 404 */}
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                    <Toaster />
-                  </MessagingProvider>
-                </CentralizedDataProvider>
-              </RealtimeProvider>
-            </UserProvider>
+            <Routes>
+              <Route path="/" element={<TestIndex />} />
+              <Route path="*" element={<TestIndex />} />
+            </Routes>
+            <Toaster />
           </BrowserRouter>
         </TooltipProvider>
       </ThemeProvider>
