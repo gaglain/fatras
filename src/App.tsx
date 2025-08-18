@@ -15,6 +15,7 @@ import { UserProvider } from "@/contexts/UserContext";
 import { Layout } from "@/components/Layout";
 import { RealtimeProvider } from "@/contexts/RealtimeContext";
 import { CentralizedDataProvider } from "@/contexts/CentralizedDataProvider";
+import { MessagingProvider } from "@/contexts/MessagingContext";
 
 // Composant de protection des routes
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -68,26 +69,28 @@ const App = () => {
             <UserProvider>
               <RealtimeProvider>
                 <CentralizedDataProvider>
-                  <Routes>
-                    {/* Page d'accueil */}
-                    <Route path="/" element={<Index />} />
-                    
-                    {/* Dashboard avec layout protégé */}
-                    <Route 
-                      path="/dashboard" 
-                      element={
-                        <ProtectedRoute>
-                          <Layout>
-                            <Dashboard />
-                          </Layout>
-                        </ProtectedRoute>
-                      } 
-                    />
-                    
-                    {/* Page 404 */}
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                  <Toaster />
+                  <MessagingProvider>
+                    <Routes>
+                      {/* Page d'accueil */}
+                      <Route path="/" element={<Index />} />
+                      
+                      {/* Dashboard avec layout protégé */}
+                      <Route 
+                        path="/dashboard" 
+                        element={
+                          <ProtectedRoute>
+                            <Layout>
+                              <Dashboard />
+                            </Layout>
+                          </ProtectedRoute>
+                        } 
+                      />
+                      
+                      {/* Page 404 */}
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                    <Toaster />
+                  </MessagingProvider>
                 </CentralizedDataProvider>
               </RealtimeProvider>
             </UserProvider>
