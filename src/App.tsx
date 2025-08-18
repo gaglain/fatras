@@ -9,9 +9,12 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import { NotFound } from "./pages/NotFound";
 
-// Import des composants d'authentification
+// Import des composants d'authentification et layout
 import { useAuth } from "@/hooks/useAuth";
 import { UserProvider } from "@/contexts/UserContext";
+import { Layout } from "@/components/Layout";
+import { RealtimeProvider } from "@/contexts/RealtimeContext";
+import { CentralizedDataProvider } from "@/contexts/CentralizedDataProvider";
 
 // Composant de protection des routes
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -63,24 +66,30 @@ const App = () => {
         <TooltipProvider>
           <BrowserRouter>
             <UserProvider>
-              <Routes>
-                {/* Page d'accueil */}
-                <Route path="/" element={<Index />} />
-                
-                {/* Dashboard protégé */}
-                <Route 
-                  path="/dashboard" 
-                  element={
-                    <ProtectedRoute>
-                      <Dashboard />
-                    </ProtectedRoute>
-                  } 
-                />
-                
-                {/* Page 404 */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-              <Toaster />
+              <RealtimeProvider>
+                <CentralizedDataProvider>
+                  <Routes>
+                    {/* Page d'accueil */}
+                    <Route path="/" element={<Index />} />
+                    
+                    {/* Dashboard avec layout protégé */}
+                    <Route 
+                      path="/dashboard" 
+                      element={
+                        <ProtectedRoute>
+                          <Layout>
+                            <Dashboard />
+                          </Layout>
+                        </ProtectedRoute>
+                      } 
+                    />
+                    
+                    {/* Page 404 */}
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                  <Toaster />
+                </CentralizedDataProvider>
+              </RealtimeProvider>
             </UserProvider>
           </BrowserRouter>
         </TooltipProvider>
