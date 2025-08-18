@@ -4,8 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
 const Index = () => {
-  const navigate = useNavigate();
-  console.log('🏠 Index - Rendering Index page...');
+  console.log('🏠 Index - Starting to render Index page...');
+  
+  try {
+    const navigate = useNavigate();
+    console.log('🏠 Index - Navigation hook initialized');
 
   return (
     <div 
@@ -57,6 +60,15 @@ const Index = () => {
       </div>
     </div>
   );
+  } catch (error) {
+    console.error('💥 Index rendering error:', error);
+    return (
+      <div style={{ padding: '20px', color: 'red', backgroundColor: 'white' }}>
+        <h1>Erreur Index</h1>
+        <p>Erreur: {error instanceof Error ? error.message : 'Inconnue'}</p>
+      </div>
+    );
+  }
 };
 
 export default Index;

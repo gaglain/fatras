@@ -60,9 +60,11 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  console.log('👤 UserProvider - Initializing...');
   const [users, setUsers] = useState<User[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const { user: authUser, loading } = useAuth();
+  console.log('👤 UserProvider - useAuth result:', { user: authUser?.email, loading });
 
   // Charger tous les utilisateurs depuis Supabase - OPTIMISÉ
   useEffect(() => {

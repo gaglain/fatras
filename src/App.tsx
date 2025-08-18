@@ -61,8 +61,9 @@ const queryClient = new QueryClient({
 const App = () => {
   console.log('🚀 App starting...');
   
-  return (
-    <QueryClientProvider client={queryClient}>
+  try {
+    return (
+      <QueryClientProvider client={queryClient}>
       <ThemeProvider 
         attribute="class"
         defaultTheme="light"
@@ -137,17 +138,26 @@ const App = () => {
                       
                       {/* Page 404 */}
                       <Route path="*" element={<NotFound />} />
-                    </Routes>
-                  </WebsiteConfigProvider>
-                </MessagingProvider>
-              </RealtimeProvider>
-            </CentralizedDataProvider>
+                      </Routes>
+                    </WebsiteConfigProvider>
+                  </MessagingProvider>
+                </RealtimeProvider>
+              </CentralizedDataProvider>
             </UserProvider>
           </BrowserRouter>
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );
+  } catch (error) {
+    console.error('💥 App rendering error:', error);
+    return (
+      <div style={{ padding: '20px', color: 'red' }}>
+        <h1>Erreur de rendu</h1>
+        <p>Une erreur s'est produite: {error instanceof Error ? error.message : 'Erreur inconnue'}</p>
+      </div>
+    );
+  }
 };
 
 export default App;
