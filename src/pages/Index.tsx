@@ -7,14 +7,14 @@ const Index = () => {
   console.log('🏠 Index - Rendering Index page...');
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md">
-        <Card className="shadow-xl border-border bg-card">
+    <div className="min-h-screen flex items-center justify-center" style={{backgroundColor: 'hsl(210 40% 98%)'}}>
+      <div className="w-full max-w-md p-4">
+        <Card className="shadow-xl border-border" style={{backgroundColor: 'hsl(0 0% 100%)'}}>
           <CardHeader className="text-center pb-6">
-            <CardTitle className="text-3xl font-bold text-card-foreground mb-2">
+            <CardTitle className="text-3xl font-bold mb-2" style={{color: 'hsl(240 10% 3.9%)'}}>
               Fatras Booking
             </CardTitle>
-            <CardDescription className="text-muted-foreground text-lg">
+            <CardDescription className="text-lg" style={{color: 'hsl(240 3.8% 46.1%)'}}>
               Système de gestion pour bookers professionnels
             </CardDescription>
           </CardHeader>
