@@ -5,8 +5,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Save, User, CreditCard, MapPin, Briefcase, Banknote, FileText, Calendar, Award, IdCard } from 'lucide-react';
+import { Save, User, CreditCard, MapPin, Briefcase, Banknote, FileText, Calendar, Award, IdCard, Camera } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
+import { AvatarUploader } from '@/components/AvatarUploader';
 
 interface ExtendedUserFormData {
   // Informations personnelles de base
@@ -16,6 +17,7 @@ interface ExtendedUserFormData {
   lastName: string;
   phone: string;
   role: string;
+  avatarUrl: string;
   
   // Informations personnelles étendues
   birthDate: string;
@@ -86,6 +88,7 @@ export const ExtendedUserForm: React.FC<ExtendedUserFormProps> = ({
     lastName: '',
     phone: '',
     role: 'utilisateur',
+    avatarUrl: '',
     birthDate: '',
     birthPlace: '',
     nationality: 'FR',
@@ -212,6 +215,24 @@ export const ExtendedUserForm: React.FC<ExtendedUserFormProps> = ({
               </Select>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Photo de profil */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Camera className="h-5 w-5" />
+            <span>Photo de profil</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex justify-center py-6">
+          <AvatarUploader
+            currentAvatarUrl={formData.avatarUrl}
+            userInitials={`${formData.firstName?.charAt(0) || 'U'}${formData.lastName?.charAt(0) || ''}`}
+            onAvatarChange={(url) => updateFormData('avatarUrl', url)}
+            size="xl"
+          />
         </CardContent>
       </Card>
 
