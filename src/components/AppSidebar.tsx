@@ -1,18 +1,9 @@
+
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { 
-  Users, 
-  Music, 
-  Calendar, 
-  CheckSquare, 
-  Mail, 
-  ShoppingBag, 
-  BookOpen, 
-  FileText,
-  Settings,
-  UserCheck,
-  Home
-} from "lucide-react";
+import { useTheme } from 'next-themes';
+import { ChevronRight } from "lucide-react";
+
 import {
   Sidebar,
   SidebarContent,
@@ -22,65 +13,95 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
+  SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useNavigation } from "@/hooks/useNavigation";
 
 export function AppSidebar() {
   const location = useLocation();
+  const { theme } = useTheme();
+  const { navigation, openSections, toggleSection } = useNavigation();
   
+  console.log('🎨 AppSidebar - Current theme:', theme);
+
   const isActive = (path: string) => {
     return location.pathname === path || location.pathname.startsWith(path + '/');
   };
 
-  const menuItems = [
-    { path: "/dashboard", label: "Tableau de bord", icon: Home },
-    { path: "/contacts", label: "Contacts", icon: Users },
-    { path: "/artists", label: "Artistes", icon: Music },
-    { path: "/events", label: "Événements", icon: Calendar },
-    { path: "/agenda", label: "Agenda", icon: Calendar },
-    { path: "/tasks", label: "Tâches", icon: CheckSquare },
-    { path: "/contracts", label: "Contrats", icon: FileText },
-    { path: "/email", label: "Email", icon: Mail },
-    { path: "/email-campaigns", label: "Campagnes Email", icon: Mail },
-    { path: "/merchandise", label: "Boutique", icon: ShoppingBag },
-    { path: "/show-bible", label: "Show Bible", icon: BookOpen },
-    { path: "/contact-lists", label: "Listes de contacts", icon: Users },
-    { path: "/event-types", label: "Types d'événements", icon: Calendar },
-    { path: "/opportunities", label: "Opportunités", icon: Calendar },
-    { path: "/roadshow", label: "Feuille de route", icon: Calendar },
-    { path: "/messagerie", label: "Messagerie", icon: Mail },
-    { path: "/forms", label: "Formulaires", icon: FileText },
-    { path: "/publication-calendar", label: "Calendrier de publication", icon: Calendar },
-    { path: "/website", label: "Site Web", icon: Settings },
-    { path: "/application", label: "Application", icon: Settings },
-    { path: "/user-management", label: "Gestion des utilisateurs", icon: UserCheck },
-    { path: "/preferences", label: "Préférences", icon: Settings },
-  ];
+  const isChildActive = (children: any[]) => {
+    return children.some(child => isActive(child.href));
+  };
 
   return (
-    <Sidebar>
+    <Sidebar className="border-r bg-white">
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {menuItems.map((item) => {
-                const Icon = item.icon;
-                const active = isActive(item.path);
-                
-                return (
-                  <SidebarMenuItem key={item.path}>
-                    <SidebarMenuButton asChild isActive={active}>
-                      <Link to={item.path}>
-                        <Icon className="w-4 h-4" />
-                        <span>{item.label}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        <div className="p-4">
+          <SidebarTrigger />
+        </div>
+        
+        {navigation.map((item) => {
+          if (!item.visible) return null;
+          
+          // Si l'élément a des enfants, créer un groupe collapsible
+          if (item.children && item.children.length > 0) {
+            const hasActiveChild = isChildActive(item.children);
+            const isOpen = openSections.includes(item.name);
+            
+            return (
+              <SidebarGroup key={item.name}>
+                <Collapsible open={isOpen}>
+                  <CollapsibleTrigger
+                    onClick={() => toggleSection(item.name)}
+                    className="w-full"
+                  >
+                    <SidebarGroupLabel className="text-sm font-semibold text-gray-600 uppercase tracking-wider flex items-center justify-between hover:bg-gray-50 px-2 py-1 rounded">
+                      <span>{item.name}</span>
+                      <ChevronRight className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-90' : ''}`} />
+                    </SidebarGroupLabel>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <SidebarGroupContent>
+                      <SidebarMenu>
+                        {item.children.filter(child => child.visible !== false).map((child) => (
+                          <SidebarMenuItem key={child.href}>
+                            <SidebarMenuButton asChild isActive={isActive(child.href)}>
+                              <Link to={child.href} className="flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors">
+                                <child.icon className="h-5 w-5" />
+                                <span className="font-medium">{child.name}</span>
+                              </Link>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        ))}
+                      </SidebarMenu>
+                    </SidebarGroupContent>
+                  </CollapsibleContent>
+                </Collapsible>
+              </SidebarGroup>
+            );
+          } else {
+            // Élément de menu simple sans enfants
+            return (
+              <SidebarGroup key={item.name}>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild isActive={isActive(item.href)}>
+                        <Link to={item.href} className="flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors">
+                          <item.icon className="h-5 w-5" />
+                          <span className="font-medium">{item.name}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            );
+          }
+        })}
       </SidebarContent>
     </Sidebar>
   );
