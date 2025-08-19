@@ -62,6 +62,7 @@ const App = () => {
   console.log('🚀 App starting...');
   
   try {
+    console.log('🚀 App about to render providers...');
     return (
       <QueryClientProvider client={queryClient}>
       <ThemeProvider 

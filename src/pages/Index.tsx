@@ -9,6 +9,7 @@ const Index = () => {
   try {
     const navigate = useNavigate();
     console.log('🏠 Index - Navigation hook initialized');
+    console.log('🏠 Index - About to render JSX...');
 
   return (
     <div 
