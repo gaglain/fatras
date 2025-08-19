@@ -58,7 +58,7 @@ export const AvatarUploader: React.FC<AvatarUploaderProps> = ({
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+      const filePath = fileName; // Pas besoin de préfixe car on est déjà dans le bucket avatars
 
       // Upload file to Supabase Storage
       const { error: uploadError, data } = await supabase.storage
