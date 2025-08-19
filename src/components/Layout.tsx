@@ -4,8 +4,6 @@ import { useLocation } from 'react-router-dom';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { BackOfficeHeader } from '@/components/BackOfficeHeader';
-import { PublicChatWidget } from '@/components/PublicChatWidget';
-import { useCustomColors } from '@/hooks/useCustomColors';
 
 const adminRoutes = [
   '/admin', '/dashboard', '/artists', '/events', '/agenda', '/contacts',
@@ -21,31 +19,19 @@ interface LayoutProps {
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   
-  // Hook pour les couleurs personnalisées (dashboard uniquement)
   const isAdminRoute = adminRoutes.some(route =>
     location.pathname === route || location.pathname.startsWith(route + '/')
   );
   
-  // ISOLATION COMPLETE: Couleurs personnalisées UNIQUEMENT pour le dashboard
-  if (isAdminRoute) {
-    useCustomColors();
-  }
-  
-  console.log('🏗️ Layout - Path:', location.pathname, 'isAdmin:', isAdminRoute);
+  console.log('🏗️ Layout - SIMPLIFIED - Path:', location.pathname, 'isAdmin:', isAdminRoute);
   
   if (!isAdminRoute) {
-    return (
-      <>
-        {children}
-        <PublicChatWidget />
-      </>
-    );
+    return <>{children}</>;
   }
 
   return (
     <SidebarProvider>
       <div className="flex h-screen w-full">
-        {/* Sidebar desktop seulement */}
         <div className="hidden lg:block">
           <AppSidebar />
         </div>
