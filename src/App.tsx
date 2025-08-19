@@ -5,7 +5,31 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
+import { Artists } from "./pages/Artists";
+import { ArtistDetail } from "./pages/ArtistDetail";
+import { Events } from "./pages/Events";
+import { Contacts } from "./pages/Contacts";
+import { Preferences } from "./pages/Preferences";
+import { Tasks } from "./pages/Tasks";
 import { NotFound } from "./pages/NotFound";
+import { RoadShow } from "./pages/RoadShow";
+import { Messagerie } from "./pages/Messagerie";
+import { ShowBible } from "./pages/ShowBible";
+import { Contracts } from "./pages/Contracts";
+import { Email } from "./pages/Email";
+import { EmailCampaigns } from "./pages/EmailCampaigns";
+import { ContactLists } from "./pages/ContactLists";
+import { Opportunities } from "./pages/Opportunities";
+import { EventTypes } from "./pages/EventTypes";
+import { PublicationCalendar } from "./pages/PublicationCalendar";
+import { Forms } from "./pages/Forms";
+import { UserManagement } from "./pages/UserManagement";
+import { Agenda } from "./pages/Agenda";
+import { Merchandise } from "./pages/Merchandise";
+import { MerchandiseBackoffice } from "./pages/MerchandiseBackoffice";
+import { Website } from "./pages/Website";
+import { WebsiteManager } from "./pages/WebsiteManager";
+import { Application } from "./pages/Application";
 import { Layout } from "./components/Layout";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { UserProvider } from "./contexts/UserContext";
@@ -21,7 +45,7 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
-  console.log('🚀 App starting - SIMPLIFIED VERSION...');
+  console.log('🚀 App starting - WITH ALL ROUTES...');
   
   return (
     <QueryClientProvider client={queryClient}>
@@ -38,7 +62,34 @@ const App = () => {
               <Toaster />
               <Routes>
                 <Route path="/" element={<Index />} />
+                
+                {/* Routes du back-office - PROTÉGÉES */}
                 <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
+                <Route path="/artists" element={<ProtectedRoute><Layout><Artists /></Layout></ProtectedRoute>} />
+                <Route path="/artists/:id" element={<ProtectedRoute><Layout><ArtistDetail /></Layout></ProtectedRoute>} />
+                <Route path="/events" element={<ProtectedRoute><Layout><Events /></Layout></ProtectedRoute>} />
+                <Route path="/contacts" element={<ProtectedRoute><Layout><Contacts /></Layout></ProtectedRoute>} />
+                <Route path="/tasks" element={<ProtectedRoute><Layout><Tasks /></Layout></ProtectedRoute>} />
+                <Route path="/roadshow" element={<ProtectedRoute><Layout><RoadShow /></Layout></ProtectedRoute>} />
+                <Route path="/messagerie" element={<ProtectedRoute><Layout><Messagerie /></Layout></ProtectedRoute>} />
+                <Route path="/show-bible" element={<ProtectedRoute><Layout><ShowBible /></Layout></ProtectedRoute>} />
+                <Route path="/contracts" element={<ProtectedRoute><Layout><Contracts /></Layout></ProtectedRoute>} />
+                <Route path="/email" element={<ProtectedRoute><Layout><Email /></Layout></ProtectedRoute>} />
+                <Route path="/email-campaigns" element={<ProtectedRoute><Layout><EmailCampaigns /></Layout></ProtectedRoute>} />
+                <Route path="/contact-lists" element={<ProtectedRoute><Layout><ContactLists /></Layout></ProtectedRoute>} />
+                <Route path="/opportunities" element={<ProtectedRoute><Layout><Opportunities /></Layout></ProtectedRoute>} />
+                <Route path="/event-types" element={<ProtectedRoute><Layout><EventTypes /></Layout></ProtectedRoute>} />
+                <Route path="/publication-calendar" element={<ProtectedRoute><Layout><PublicationCalendar /></Layout></ProtectedRoute>} />
+                <Route path="/forms" element={<ProtectedRoute><Layout><Forms /></Layout></ProtectedRoute>} />
+                <Route path="/user-management" element={<ProtectedRoute><Layout><UserManagement /></Layout></ProtectedRoute>} />
+                <Route path="/agenda" element={<ProtectedRoute><Layout><Agenda /></Layout></ProtectedRoute>} />
+                <Route path="/merchandise" element={<ProtectedRoute><Layout><Merchandise /></Layout></ProtectedRoute>} />
+                <Route path="/merchandise-backoffice" element={<ProtectedRoute><Layout><MerchandiseBackoffice /></Layout></ProtectedRoute>} />
+                <Route path="/website" element={<ProtectedRoute><Layout><Website /></Layout></ProtectedRoute>} />
+                <Route path="/website-manager" element={<ProtectedRoute><Layout><WebsiteManager /></Layout></ProtectedRoute>} />
+                <Route path="/application" element={<ProtectedRoute><Layout><Application /></Layout></ProtectedRoute>} />
+                <Route path="/preferences" element={<ProtectedRoute><Layout><Preferences /></Layout></ProtectedRoute>} />
+                
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </UserProvider>
