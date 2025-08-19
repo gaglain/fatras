@@ -13,6 +13,16 @@ import {
   UserCheck,
   Home
 } from "lucide-react";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from "@/components/ui/sidebar";
 
 export function AppSidebar() {
   const location = useLocation();
@@ -47,32 +57,31 @@ export function AppSidebar() {
   ];
 
   return (
-    <div className="w-64 bg-white border-r border-border h-full overflow-y-auto">
-      <div className="p-4">
-        <h2 className="text-lg font-semibold text-foreground">Navigation</h2>
-      </div>
-      
-      <nav className="px-2 space-y-1">
-        {menuItems.map((item) => {
-          const Icon = item.icon;
-          const active = isActive(item.path);
-          
-          return (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                active
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-              }`}
-            >
-              <Icon className="w-4 h-4 mr-3" />
-              {item.label}
-            </Link>
-          );
-        })}
-      </nav>
-    </div>
+    <Sidebar>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {menuItems.map((item) => {
+                const Icon = item.icon;
+                const active = isActive(item.path);
+                
+                return (
+                  <SidebarMenuItem key={item.path}>
+                    <SidebarMenuButton asChild isActive={active}>
+                      <Link to={item.path}>
+                        <Icon className="w-4 h-4" />
+                        <span>{item.label}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+    </Sidebar>
   );
 }

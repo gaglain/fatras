@@ -1,10 +1,6 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MessageSquare, X, Send, User, Bot, Hash, Users } from 'lucide-react';
-import { useMessaging } from '@/contexts/MessagingContext';
+import { MessageSquare, X, Send } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -15,143 +11,105 @@ interface Message {
 
 export const ChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedChannel, setSelectedChannel] = useState('general');
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: '1',
+      text: 'Bonjour ! Comment puis-je vous aider ?',
+      sender: 'bot',
+      timestamp: new Date()
+    }
+  ]);
   const [inputValue, setInputValue] = useState('');
-
-  const { channels, messages, addMessage } = useMessaging();
 
   const handleSendMessage = () => {
     if (!inputValue.trim()) return;
 
-    addMessage(selectedChannel, {
-      senderId: 'me',
-      sender: 'Moi',
-      message: inputValue,
-      time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-      isMe: true
-    });
+    const newMessage: Message = {
+      id: Date.now().toString(),
+      text: inputValue,
+      sender: 'user',
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, newMessage]);
+
+    // Simple bot response
+    setTimeout(() => {
+      const botResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        text: 'Message reçu ! Un membre de l\'équipe vous répondra bientôt.',
+        sender: 'bot',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, botResponse]);
+    }, 1000);
 
     setInputValue('');
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSendMessage();
-    }
-  };
-
-  const currentMessages = messages[selectedChannel] || [];
+  if (!isOpen) {
+    return (
+      <Button
+        onClick={() => setIsOpen(true)}
+        size="icon"
+        className="fixed bottom-4 right-4 h-14 w-14 rounded-full shadow-lg z-50"
+      >
+        <MessageSquare className="h-6 w-6" />
+      </Button>
+    );
+  }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
-      {isOpen && (
-        <div 
-          className="mb-4 shadow-2xl rounded-xl overflow-hidden border bg-card text-card-foreground"
-          style={{ width: '400px', height: '500px' }}
+    <div className="fixed bottom-4 right-4 w-80 h-96 bg-white rounded-lg shadow-xl border z-50 flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 border-b">
+        <h3 className="font-semibold">Support</h3>
+        <Button
+          onClick={() => setIsOpen(false)}
+          size="icon"
+          variant="ghost"
+          className="h-6 w-6"
         >
-          <div className="p-4 border-b bg-primary text-primary-foreground">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center space-x-2">
-                <MessageSquare className="h-5 w-5" />
-                <span className="font-medium">Chat Interne</span>
-              </div>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => setIsOpen(false)} 
-                className="text-primary-foreground hover:bg-primary-foreground/20"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            
-            <div className="flex space-x-2">
-              <Select value={selectedChannel} onValueChange={setSelectedChannel}>
-                <SelectTrigger className="flex-1 h-8 text-xs bg-background text-foreground">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-card text-card-foreground">
-                  {channels.filter(c => c.type === 'channel').map((channel) => (
-                    <SelectItem key={channel.id} value={channel.id}>
-                      <div className="flex items-center">
-                        <Hash className="h-3 w-3 mr-1" />
-                        {channel.name}
-                        {channel.unread > 0 && (
-                          <span className="ml-2 px-1 py-0.5 text-xs rounded-full bg-primary text-primary-foreground">
-                            {channel.unread}
-                          </span>
-                        )}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+        {messages.map((message) => (
+          <div
+            key={message.id}
+            className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+          >
+            <div
+              className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
+                message.sender === 'user'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted text-foreground'
+              }`}
+            >
+              {message.text}
             </div>
           </div>
+        ))}
+      </div>
 
-          <ScrollArea className="h-80 p-4 bg-background">
-            <div className="space-y-3">
-              {currentMessages.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <MessageSquare className="h-8 w-8 mx-auto mb-3" />
-                  <p className="text-sm">Commencez une conversation dans #{selectedChannel}</p>
-                </div>
-              ) : (
-                currentMessages.map((message) => (
-                  <div key={message.id} className={`flex ${message.isMe ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`flex items-start space-x-2 max-w-[80%] ${message.isMe ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs text-white ${
-                        message.isMe ? 'bg-primary' : 'bg-muted-foreground'
-                      }`}>
-                        <User className="h-3 w-3" />
-                      </div>
-                      <div className={`px-3 py-2 rounded-lg text-sm ${
-                        message.isMe 
-                          ? 'bg-primary text-primary-foreground' 
-                          : 'bg-muted text-muted-foreground border'
-                      }`}>
-                        <div className="flex items-center space-x-1 mb-1">
-                          <span className="font-medium text-xs">{message.sender}</span>
-                          <span className="text-xs opacity-70">{message.time}</span>
-                        </div>
-                        <div>{message.message}</div>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </ScrollArea>
-
-          <div className="p-4 border-t bg-card">
-            <div className="flex space-x-2">
-              <input
-                type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Tapez votre message..."
-                className="flex-1 px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
-              />
-              <Button 
-                onClick={handleSendMessage} 
-                disabled={!inputValue.trim()} 
-                size="sm"
-                className="bg-primary text-primary-foreground hover:bg-primary/90"
-              >
-                <Send className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+      {/* Input */}
+      <div className="p-4 border-t">
+        <div className="flex space-x-2">
+          <input
+            type="text"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+            placeholder="Tapez votre message..."
+            className="flex-1 px-3 py-2 border rounded-md text-sm"
+          />
+          <Button onClick={handleSendMessage} size="icon" className="h-10 w-10">
+            <Send className="h-4 w-4" />
+          </Button>
         </div>
-      )}
-      
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-14 h-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group bg-primary text-primary-foreground hover:bg-primary/90"
-      >
-        <MessageSquare className="h-6 w-6 group-hover:scale-110 transition-transform duration-200" />
-      </button>
+      </div>
     </div>
   );
 };
