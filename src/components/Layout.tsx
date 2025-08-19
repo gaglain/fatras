@@ -5,7 +5,6 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { BackOfficeHeader } from '@/components/BackOfficeHeader';
 import { PublicChatWidget } from '@/components/PublicChatWidget';
-import { ChatWidget } from '@/components/ChatWidget';
 import { useCustomColors } from '@/hooks/useCustomColors';
 
 const adminRoutes = [
@@ -59,7 +58,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           </main>
         </div>
       </div>
-      <ChatWidget />
     </SidebarProvider>
   );
 };

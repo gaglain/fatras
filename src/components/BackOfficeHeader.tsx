@@ -11,7 +11,6 @@ import { useUser } from '@/contexts/UserContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { UserProfile } from './UserProfile';
 import { NotificationCenter } from './NotificationCenter';
-import { RealtimeIndicator } from '@/components/ui/realtime-indicator';
 import { AppSidebar } from '@/components/AppSidebar';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
@@ -104,7 +103,6 @@ export const BackOfficeHeader: React.FC = () => {
                   </svg>
                 </Button>
               </div>
-              <RealtimeIndicator />
               
               <div className="relative">
                 <Button 
