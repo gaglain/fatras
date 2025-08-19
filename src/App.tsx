@@ -31,35 +31,10 @@ import { Forms } from "./pages/Forms";
 import { PublicationCalendar } from "./pages/PublicationCalendar";
 import { Website } from "./pages/Website";
 import { Application } from "./pages/Application";
-import { useAuth } from "@/hooks/useAuth";
-import { UserProvider } from "@/contexts/UserContext";
 import { Layout } from "@/components/Layout";
-import { RealtimeProvider } from "@/contexts/RealtimeContext";
-import { CentralizedDataProvider } from "@/contexts/CentralizedDataProvider";
-import { MessagingProvider } from "@/contexts/MessagingContext";
 
-// Composant de protection des routes
+// Composant de protection des routes simple sans contextes
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth();
-  
-  if (loading) {
-    return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh',
-        fontSize: '18px'
-      }}>
-        Chargement...
-      </div>
-    );
-  }
-  
-  if (!user) {
-    return <Navigate to="/" replace />;
-  }
-  
   return <>{children}</>;
 };
 
@@ -87,11 +62,7 @@ const App = () => {
       >
         <TooltipProvider>
           <BrowserRouter>
-            <UserProvider>
-              <RealtimeProvider>
-                <CentralizedDataProvider>
-                  <MessagingProvider>
-                    <Routes>
+            <Routes>
                 {/* Page d'accueil */}
                 <Route path="/" element={<Index />} />
                 
@@ -349,12 +320,8 @@ const App = () => {
                 
                 {/* Page 404 */}
                 <Route path="*" element={<NotFound />} />
-                    </Routes>
-                    <Toaster />
-                  </MessagingProvider>
-                </CentralizedDataProvider>
-              </RealtimeProvider>
-            </UserProvider>
+            </Routes>
+            <Toaster />
           </BrowserRouter>
         </TooltipProvider>
       </ThemeProvider>

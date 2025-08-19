@@ -22,15 +22,10 @@ interface LayoutProps {
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   
-  // Hook pour les couleurs personnalisées (dashboard uniquement)
+  // Vérifier si c'est une route admin
   const isAdminRoute = adminRoutes.some(route =>
     location.pathname === route || location.pathname.startsWith(route + '/')
   );
-  
-  // ISOLATION COMPLETE: Couleurs personnalisées UNIQUEMENT pour le dashboard
-  if (isAdminRoute) {
-    useCustomColors();
-  }
   
   console.log('🏗️ Layout - Path:', location.pathname, 'isAdmin:', isAdminRoute);
   
@@ -38,28 +33,24 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     return (
       <>
         {children}
-        <PublicChatWidget />
       </>
     );
   }
 
   return (
-    <SidebarProvider>
-      <div className="flex h-screen w-full">
-        {/* Sidebar desktop seulement */}
-        <div className="hidden lg:block">
-          <AppSidebar />
-        </div>
-
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <BackOfficeHeader />
-          
-          <main className="flex-1 overflow-auto p-4 lg:p-6">
-            {children}
-          </main>
-        </div>
+    <div className="flex h-screen w-full">
+      {/* Sidebar desktop seulement */}
+      <div className="hidden lg:block">
+        <AppSidebar />
       </div>
-      <ChatWidget />
-    </SidebarProvider>
+
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <BackOfficeHeader />
+        
+        <main className="flex-1 overflow-auto p-4 lg:p-6">
+          {children}
+        </main>
+      </div>
+    </div>
   );
 };
