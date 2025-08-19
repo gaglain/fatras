@@ -33,6 +33,7 @@ import { Application } from "./pages/Application";
 import { Layout } from "./components/Layout";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { UserProvider } from "./contexts/UserContext";
+import { WebsiteConfigProvider } from "./contexts/WebsiteConfigContext";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -59,8 +60,9 @@ const App = () => {
         <TooltipProvider>
           <BrowserRouter>
             <UserProvider>
-              <Toaster />
-              <Routes>
+              <WebsiteConfigProvider>
+                <Toaster />
+                <Routes>
                 <Route path="/" element={<Index />} />
                 
                 {/* Routes du back-office - PROTÉGÉES */}
@@ -91,7 +93,8 @@ const App = () => {
                 <Route path="/preferences" element={<ProtectedRoute><Layout><Preferences /></Layout></ProtectedRoute>} />
                 
                 <Route path="*" element={<NotFound />} />
-              </Routes>
+                </Routes>
+              </WebsiteConfigProvider>
             </UserProvider>
           </BrowserRouter>
         </TooltipProvider>
