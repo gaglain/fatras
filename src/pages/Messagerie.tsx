@@ -1,63 +1,24 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send, Hash, MessageSquare, Users, Plus } from 'lucide-react';
-
-interface Channel {
-  id: string;
-  name: string;
-  type: 'channel';
-}
-
-interface Message {
-  id: string;
-  senderId: string;
-  sender: string;
-  message: string;
-  time: string;
-  isMe: boolean;
-}
+import { useSimpleMessaging } from '@/hooks/useSimpleMessaging';
 
 export const Messagerie: React.FC = () => {
   const [selectedChannel, setSelectedChannel] = useState('general');
   const [message, setMessage] = useState('');
   
-  // État local simple pour remplacer useMessaging
-  const [channels] = useState<Channel[]>([
-    { id: 'general', name: 'general', type: 'channel' },
-    { id: 'dev', name: 'dev', type: 'channel' },
-    { id: 'marketing', name: 'marketing', type: 'channel' }
-  ]);
-  
-  const [messages, setMessages] = useState<Record<string, Message[]>>({
-    general: [
-      {
-        id: '1',
-        senderId: 'bot',
-        sender: 'System',
-        message: 'Bienvenue dans le canal général !',
-        time: '14:30',
-        isMe: false
-      }
-    ],
-    dev: [],
-    marketing: []
-  });
+  const { channels, messages, addMessage, createChannel, markChannelAsRead } = useSimpleMessaging();
 
-  const addMessage = (channelId: string, newMessage: Omit<Message, 'id'>) => {
-    const messageWithId = {
-      ...newMessage,
-      id: Date.now().toString()
-    };
-    
-    setMessages(prev => ({
-      ...prev,
-      [channelId]: [...(prev[channelId] || []), messageWithId]
-    }));
-  };
+  // Marquer le canal comme lu lorsqu'on le sélectionne
+  useEffect(() => {
+    if (selectedChannel) {
+      markChannelAsRead(selectedChannel);
+    }
+  }, [selectedChannel, markChannelAsRead]);
 
   const sendMessage = () => {
     if (!message.trim()) return;
@@ -67,7 +28,8 @@ export const Messagerie: React.FC = () => {
       sender: 'Moi',
       message: message.trim(),
       time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-      isMe: true
+      isMe: true,
+      channel: selectedChannel
     });
     setMessage('');
   };
@@ -75,8 +37,8 @@ export const Messagerie: React.FC = () => {
   const handleCreateChannel = () => {
     const channelName = prompt('Nom du nouveau canal :');
     if (channelName) {
-      // Pour l'instant, on simule juste l'ajout
-      alert(`Canal "${channelName}" créé ! (Fonctionnalité en développement)`);
+      const newChannelId = createChannel(channelName);
+      setSelectedChannel(newChannelId);
     }
   };
 
@@ -125,6 +87,11 @@ export const Messagerie: React.FC = () => {
                     <Hash className="h-4 w-4 mr-2" />
                     <span className="text-sm">{channel.name}</span>
                   </div>
+                  {channel.unread > 0 && (
+                    <span className="px-2 py-0.5 text-xs rounded-full bg-destructive text-destructive-foreground">
+                      {channel.unread}
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
