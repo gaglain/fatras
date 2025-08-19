@@ -151,11 +151,11 @@ export const BackOfficeHeader: React.FC = () => {
           </div>
           
         </div>
-        
-        {showUserProfile && (
-          <UserProfile onClose={() => setShowUserProfile(false)} />
-        )}
       </header>
+      
+      {showUserProfile && (
+        <UserProfile onClose={() => setShowUserProfile(false)} />
+      )}
     </>
   );
 };
