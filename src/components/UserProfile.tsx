@@ -74,10 +74,11 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
   };
 
   if (!isEditing) {
-    return (
-      <div 
-        className="fixed inset-0 flex items-start justify-center p-4 pt-8 overflow-y-auto bg-black/50 z-[999999]"
-      >
+  return (
+    <div 
+      className="fixed inset-0 flex items-start justify-center p-4 pt-8 overflow-y-auto bg-black/50 z-[99999] backdrop-blur-sm"
+      style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
+    >
         <Card className="w-full max-w-md max-h-[calc(100vh-4rem)] overflow-y-auto bg-background border shadow-2xl my-4">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
             <CardTitle className="flex items-center text-lg">
@@ -133,7 +134,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
             </div>
 
             {/* Action Button */}
-            <div className="pt-4">
+            <div className="pt-4 space-y-2">
               <Button 
                 variant="outline" 
                 className="w-full"
@@ -143,6 +144,18 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
                 <Edit2 className="h-4 w-4 mr-2" />
                 Modifier le profil
               </Button>
+              {currentUser?.role === 'super_admin' || currentUser?.role === 'admin' ? (
+                <Button 
+                  variant="ghost" 
+                  className="w-full text-muted-foreground"
+                  onClick={() => {
+                    onClose();
+                    window.location.href = '/user-management';
+                  }}
+                >
+                  Aller à la gestion des utilisateurs
+                </Button>
+              ) : null}
             </div>
           </CardContent>
         </Card>
@@ -152,7 +165,8 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
 
   return (
     <div 
-      className="fixed inset-0 flex items-start justify-center p-4 pt-2 overflow-y-auto bg-black/50 z-[999999]"
+      className="fixed inset-0 flex items-start justify-center p-4 pt-2 overflow-y-auto bg-black/50 z-[99999] backdrop-blur-sm"
+      style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
     >
       <Card className="w-full max-w-6xl max-h-[calc(100vh-2rem)] overflow-y-auto bg-background border shadow-2xl my-2">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
