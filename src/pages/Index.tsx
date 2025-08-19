@@ -4,33 +4,18 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
 const Index = () => {
-  console.log('🏠 Index - Starting to render Index page...');
+  console.log('🏠 Index - SIMPLIFIED - Starting...');
   
-  try {
-    const navigate = useNavigate();
-    console.log('🏠 Index - Navigation hook initialized');
-    console.log('🏠 Index - About to render JSX...');
+  const navigate = useNavigate();
 
   return (
-    <div 
-      className="min-h-screen flex flex-col items-center justify-center p-8" 
-      style={{
-        backgroundColor: 'hsl(210 40% 98%)',
-        color: 'hsl(240 10% 3.9%)'
-      }}
-    >
+    <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-slate-50">
       <div className="text-center space-y-6 max-w-md">
-        <h1 
-          className="text-4xl font-bold"
-          style={{ color: 'hsl(240 10% 3.9%)' }}
-        >
+        <h1 className="text-4xl font-bold text-slate-900">
           Fatras Booking
         </h1>
         
-        <p 
-          className="text-xl"
-          style={{ color: 'hsl(240 3.8% 46.1%)' }}
-        >
+        <p className="text-xl text-slate-600">
           Système de gestion pour bookers professionnels
         </p>
         
@@ -38,38 +23,13 @@ const Index = () => {
           <Button 
             onClick={() => navigate('/dashboard')}
             className="w-full"
-            style={{
-              backgroundColor: 'hsl(240 5.9% 10%)',
-              color: 'hsl(0 0% 98%)'
-            }}
           >
             Accéder au Dashboard
-          </Button>
-          
-          <Button 
-            onClick={() => navigate('/front')}
-            variant="outline"
-            className="w-full"
-            style={{
-              borderColor: 'hsl(240 5.9% 10%)',
-              color: 'hsl(240 5.9% 10%)'
-            }}
-          >
-            Voir le site public
           </Button>
         </div>
       </div>
     </div>
   );
-  } catch (error) {
-    console.error('💥 Index rendering error:', error);
-    return (
-      <div style={{ padding: '20px', color: 'red', backgroundColor: 'white' }}>
-        <h1>Erreur Index</h1>
-        <p>Erreur: {error instanceof Error ? error.message : 'Inconnue'}</p>
-      </div>
-    );
-  }
 };
 
 export default Index;
