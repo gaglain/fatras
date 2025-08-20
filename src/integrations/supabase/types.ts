@@ -1994,18 +1994,30 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: {
           address: string
+          associated_artists: string[]
+          availability: Json
           avatar_url: string
+          bank_details: Json
+          birth_date: string
+          birth_place: string
           city: string
+          contracts_fees: Json
           created_at: string
           email: string
           first_name: string
           function_title: string
+          guso_id: string
           id: string
+          identity_documents: Json
           is_active: boolean
           last_name: string
+          nationality: string
           phone: string
+          postal_code: string
           role: string
           show_name: string
+          skills: string[]
+          social_security_number: string
           updated_at: string
           user_id: string
           username: string
