@@ -48,6 +48,7 @@ const queryClient = new QueryClient({
 const App = () => {
   console.log('🚀 App starting - WITH ALL ROUTES...');
   
+  console.log('🚀 App - About to render QueryClientProvider...');
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider 
