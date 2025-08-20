@@ -19,8 +19,8 @@ export const useAuth = () => {
       setUser(session?.user ?? null);
       setLoading(false);
       
-      // Redirection automatique SEULEMENT depuis la page d'accueil ou admin
-      if (session?.user && (location.pathname === '/' || location.pathname === '/admin')) {
+      // Redirection automatique SEULEMENT depuis la page d'accueil
+      if (session?.user && location.pathname === '/') {
         console.log('🔄 Auto-redirect to dashboard from:', location.pathname);
         navigate('/dashboard');
       }
@@ -34,10 +34,10 @@ export const useAuth = () => {
         setUser(session?.user ?? null);
         setLoading(false);
         
-        // Redirection après connexion SEULEMENT depuis certaines pages
+        // Redirection après connexion SEULEMENT depuis la page d'accueil
         if (event === 'SIGNED_IN' && session?.user) {
           const currentPath = window.location.pathname;
-          if (currentPath === '/' || currentPath === '/admin') {
+          if (currentPath === '/') {
             console.log('✅ User signed in, redirecting to dashboard from:', currentPath);
             navigate('/dashboard');
           }

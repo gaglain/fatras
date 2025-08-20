@@ -46,7 +46,7 @@ export const useUserManagement = () => {
         return;
       }
 
-      setUsers(data || []);
+      setUsers((data || []) as ExtendedUserProfile[]);
     } catch (error) {
       console.error('Erreur:', error);
       toast.error('Erreur lors du chargement des utilisateurs');
