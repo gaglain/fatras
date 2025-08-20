@@ -21,10 +21,10 @@ const Index = () => {
         
         <div className="space-y-4">
           <Button 
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate('/auth')}
             className="w-full"
           >
-            Accéder au Dashboard
+            Se connecter
           </Button>
         </div>
       </div>
