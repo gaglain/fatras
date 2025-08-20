@@ -5,17 +5,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 export const useAuth = () => {
-  console.log('🔐 useAuth - Hook called...');
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  
-  console.log('🔐 useAuth - About to call useNavigate...');
   const navigate = useNavigate();
-  console.log('🔐 useAuth - About to call useLocation...');
   const location = useLocation();
-  
-  console.log('🔐 useAuth - Hooks initialized, setting up effects...');
 
   useEffect(() => {
     // Get initial session

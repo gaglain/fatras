@@ -64,17 +64,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [users, setUsers] = useState<User[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   
-  console.log('👤 UserProvider - About to call useAuth...');
-  let authUser, loading;
-  try {
-    const authResult = useAuth();
-    authUser = authResult.user;
-    loading = authResult.loading;
-    console.log('👤 UserProvider - useAuth result:', { user: authUser?.email, loading });
-  } catch (error) {
-    console.error('❌ UserProvider - Error in useAuth:', error);
-    throw error;
-  }
+  const { user: authUser, loading } = useAuth();
+  console.log('👤 UserProvider - useAuth result:', { user: authUser?.email, loading });
 
   // Charger tous les utilisateurs depuis Supabase - OPTIMISÉ
   useEffect(() => {
