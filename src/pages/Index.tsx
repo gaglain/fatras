@@ -1,12 +1,14 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
 const Index = () => {
-  console.log('🏠 Index - SIMPLIFIED - Starting...');
-  
-  const navigate = useNavigate();
+  console.log('🏠 Index - Loading...');
+
+  const handleLogin = () => {
+    console.log('🔄 Redirecting to auth...');
+    window.location.href = '/auth';
+  };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-slate-50">
@@ -21,7 +23,7 @@ const Index = () => {
         
         <div className="space-y-4">
           <Button 
-            onClick={() => navigate('/auth')}
+            onClick={handleLogin}
             className="w-full"
           >
             Se connecter
