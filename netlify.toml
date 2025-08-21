@@ -4,6 +4,16 @@
   command = "npm run build"
 
 [[redirects]]
+  from = "/*.js"
+  to = "/:splat.js"
+  status = 200
+  
+[[redirects]]
+  from = "/*.css"
+  to = "/:splat.css"
+  status = 200
+
+[[redirects]]
   from = "/assets/*"
   to = "/assets/:splat"
   status = 200
