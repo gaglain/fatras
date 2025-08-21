@@ -2,57 +2,38 @@
 import { useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate, useLocation } from 'react-router-dom';
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
-  const location = useLocation();
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('📱 Initial session:', session?.user?.email);
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-      
-      // Redirection automatique SEULEMENT depuis la page d'accueil
-      if (session?.user && location.pathname === '/') {
-        console.log('🔄 Auto-redirect to dashboard from:', location.pathname);
-        navigate('/dashboard');
-      }
-    });
-
-    // Listen for auth changes
+    console.log('🔐 useAuth - Setting up auth state listener...');
+    
+    // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('🔐 Auth state changed:', event, session?.user?.email);
+      (event, session) => {
+        console.log('🔐 Auth state changed:', event, session?.user?.email || 'No user');
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
-        
-        // Redirection après connexion SEULEMENT depuis la page d'accueil
-        if (event === 'SIGNED_IN' && session?.user) {
-          const currentPath = window.location.pathname;
-          if (currentPath === '/') {
-            console.log('✅ User signed in, redirecting to dashboard from:', currentPath);
-            navigate('/dashboard');
-          }
-        }
-        
-        // Redirection après déconnexion
-        if (event === 'SIGNED_OUT') {
-          console.log('👋 User signed out, redirecting to login');
-          navigate('/');
-        }
       }
     );
 
-    return () => subscription.unsubscribe();
-  }, [navigate, location.pathname]);
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('🔐 Initial session:', session?.user?.email || 'No session');
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    return () => {
+      console.log('🔐 Cleaning up auth listener');
+      subscription.unsubscribe();
+    };
+  }, []);
 
   const signIn = async (email: string, password: string) => {
     console.log('🔑 Attempting sign in for:', email);
