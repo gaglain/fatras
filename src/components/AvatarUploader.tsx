@@ -18,6 +18,8 @@ export const AvatarUploader: React.FC<AvatarUploaderProps> = ({
   onAvatarChange,
   size = 'lg'
 }) => {
+  console.log('📷 AvatarUploader mounted with:', { currentAvatarUrl, userInitials, size });
+  
   const [uploading, setUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
