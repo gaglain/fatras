@@ -92,6 +92,7 @@ export const AvatarUploader: React.FC<AvatarUploaderProps> = ({
         
       console.log('🔗 Public URL generated:', publicUrl);
 
+      console.log('🔗 Calling onAvatarChange with URL:', publicUrl);
       onAvatarChange(publicUrl);
       setPreviewUrl(null);
       toast.success('Photo de profil mise à jour avec succès');

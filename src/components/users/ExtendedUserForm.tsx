@@ -142,7 +142,11 @@ export const ExtendedUserForm: React.FC<ExtendedUserFormProps> = ({
 
   const updateFormData = (field: keyof ExtendedUserFormData, value: string) => {
     console.log('🔄 FormData update:', field, '=', value);
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const newData = { ...prev, [field]: value };
+      console.log('📝 New formData after update:', newData);
+      return newData;
+    });
   };
 
   return (
