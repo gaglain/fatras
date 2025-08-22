@@ -83,9 +83,19 @@ export const AvatarUploader: React.FC<AvatarUploaderProps> = ({
       onAvatarChange(publicUrl);
       setPreviewUrl(null);
       toast.success('Photo de profil mise à jour avec succès');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors de l\'upload:', error);
-      toast.error('Erreur lors de l\'upload de la photo');
+      let errorMessage = 'Erreur lors de l\'upload de la photo';
+      
+      if (error.message?.includes('not authenticated')) {
+        errorMessage = 'Vous devez être connecté pour uploader une photo';
+      } else if (error.message?.includes('violates')) {
+        errorMessage = 'Permissions insuffisantes pour uploader dans ce dossier';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      toast.error(errorMessage);
       setPreviewUrl(null);
     } finally {
       setUploading(false);
