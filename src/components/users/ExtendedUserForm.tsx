@@ -122,6 +122,7 @@ export const ExtendedUserForm: React.FC<ExtendedUserFormProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('💾 Submitting form with data:', formData);
     
     // Validation basique
     if (!formData.email || !formData.firstName || !formData.lastName) {
@@ -131,14 +132,16 @@ export const ExtendedUserForm: React.FC<ExtendedUserFormProps> = ({
     setLoading(true);
     try {
       await onSave(formData);
+      console.log('✅ Form saved successfully');
     } catch (error) {
-      console.error('Erreur lors de la sauvegarde:', error);
+      console.error('❌ Form save error:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const updateFormData = (field: keyof ExtendedUserFormData, value: string) => {
+    console.log('🔄 FormData update:', field, '=', value);
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
