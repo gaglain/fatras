@@ -2157,6 +2157,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_channel_access: {
+        Args: { channel_id_param: string; user_id_param: string }
+        Returns: boolean
+      }
       create_direct_message_channel: {
         Args: { other_user_id: string }
         Returns: string
