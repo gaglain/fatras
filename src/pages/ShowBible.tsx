@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,7 +15,9 @@ import {
   Trash2,
   Loader2,
   Users,
-  User
+  User,
+  Filter,
+  X
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useFileUpload } from '@/hooks/useFileUpload';
@@ -49,6 +51,9 @@ export const ShowBible: React.FC = () => {
   const { documents, loading, createDocument, deleteDocument } = useShowBible();
   const [categories] = useState<Category[]>(defaultCategories);
   const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const [filterCategory, setFilterCategory] = useState<string>('');
+  const [filterArtist, setFilterArtist] = useState<string>('');
+  const [availableArtists, setAvailableArtists] = useState<{id: string, name: string}[]>([]);
   const [uploadForm, setUploadForm] = useState<{
     name: string;
     type: 'audio' | 'video' | 'image' | 'text' | 'pdf' | 'other';
@@ -67,6 +72,38 @@ export const ShowBible: React.FC = () => {
     tags: '',
     version: '1.0',
     artists: []
+  });
+
+  // Récupérer tous les artistes uniques des documents
+  useEffect(() => {
+    const artistsFromDocuments = new Set<string>();
+    documents.forEach(doc => {
+      if (doc.artists) {
+        doc.artists.forEach(artistId => artistsFromDocuments.add(artistId));
+      }
+    });
+
+    // Mapper les IDs vers les noms
+    const artistNameMap: Record<string, string> = {
+      'artist-1': 'The Midnight Express',
+      'artist-2': 'Sarah Mitchell', 
+      'artist-3': 'Thunder Road',
+      'artist-4': 'Acoustic Dreams'
+    };
+
+    const artistsList = Array.from(artistsFromDocuments).map(id => ({
+      id,
+      name: artistNameMap[id] || id.replace('artist-', 'Artiste ')
+    }));
+
+    setAvailableArtists(artistsList);
+  }, [documents]);
+
+  // Filtrer les documents
+  const filteredDocuments = documents.filter(doc => {
+    const matchesCategory = !filterCategory || doc.category === filterCategory;
+    const matchesArtist = !filterArtist || (doc.artists && doc.artists.includes(filterArtist));
+    return matchesCategory && matchesArtist;
   });
 
 
@@ -302,6 +339,59 @@ export const ShowBible: React.FC = () => {
         </Dialog>
       </div>
 
+      {/* Filtres */}
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="flex-1">
+          <label className="block text-sm font-medium mb-2">Filtrer par catégorie</label>
+          <Select value={filterCategory} onValueChange={setFilterCategory}>
+            <SelectTrigger>
+              <SelectValue placeholder="Toutes les catégories" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Toutes les catégories</SelectItem>
+              {categories.map((category) => (
+                <SelectItem key={category.id} value={category.id}>
+                  {category.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="flex-1">
+          <label className="block text-sm font-medium mb-2">Filtrer par artiste</label>
+          <Select value={filterArtist} onValueChange={setFilterArtist}>
+            <SelectTrigger>
+              <SelectValue placeholder="Tous les artistes" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Tous les artistes</SelectItem>
+              {availableArtists.map((artist) => (
+                <SelectItem key={artist.id} value={artist.id}>
+                  {artist.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {(filterCategory || filterArtist) && (
+          <div className="flex items-end">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setFilterCategory('');
+                setFilterArtist('');
+              }}
+              className="h-10"
+            >
+              <X className="h-4 w-4 mr-2" />
+              Effacer filtres
+            </Button>
+          </div>
+        )}
+      </div>
+
 {loading ? (
         <Card style={{
           backgroundColor: 'var(--app-card-bg, #ffffff)',
@@ -315,6 +405,25 @@ export const ShowBible: React.FC = () => {
             </h3>
             <p style={{ color: 'var(--app-text, #666666)' }}>
               Chargement des documents de la bible
+            </p>
+          </CardContent>
+        </Card>
+      ) : filteredDocuments.length === 0 ? (
+        <Card style={{
+          backgroundColor: 'var(--app-card-bg, #ffffff)',
+          color: 'var(--app-card-text, #18181b)',
+          border: '1px solid var(--notification-border, #e5e7eb)'
+        }}>
+          <CardContent className="text-center py-12">
+            <Filter className="h-16 w-16 mx-auto mb-4" style={{ color: 'var(--app-button-bg, #1632f4)' }} />
+            <h3 className="text-lg font-medium mb-2" style={{ color: 'var(--app-card-text, #18181b)' }}>
+              Aucun document trouvé
+            </h3>
+            <p className="mb-4" style={{ color: 'var(--app-text, #666666)' }}>
+              {(filterCategory || filterArtist) 
+                ? 'Aucun document ne correspond aux filtres sélectionnés'
+                : 'Commencez par ajouter votre premier document à la bible'
+              }
             </p>
           </CardContent>
         </Card>
@@ -336,7 +445,7 @@ export const ShowBible: React.FC = () => {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {documents.map((doc) => (
+          {filteredDocuments.map((doc) => (
             <Card key={doc.id} style={{
               backgroundColor: 'var(--app-card-bg, #ffffff)',
               color: 'var(--app-card-text, #18181b)',

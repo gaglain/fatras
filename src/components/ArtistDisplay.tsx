@@ -56,11 +56,18 @@ export const ArtistDisplay: React.FC<ArtistDisplayProps> = ({ artistIds, classNa
         }
       }
 
-      // Pour les anciens IDs, les afficher tels quels
+      // Pour les anciens IDs, utiliser les noms d'exemple correspondants
+      const artistNameMap: Record<string, string> = {
+        'artist-1': 'The Midnight Express',
+        'artist-2': 'Sarah Mitchell', 
+        'artist-3': 'Thunder Road',
+        'artist-4': 'Acoustic Dreams'
+      };
+
       oldIds.forEach(oldId => {
         allArtists.push({
           id: oldId,
-          name: oldId.replace('artist-', 'Artiste ') // Convertir "artist-1" en "Artiste 1"
+          name: artistNameMap[oldId] || oldId.replace('artist-', 'Artiste ')
         });
       });
 
