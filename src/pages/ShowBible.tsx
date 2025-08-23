@@ -51,8 +51,8 @@ export const ShowBible: React.FC = () => {
   const { documents, loading, createDocument, deleteDocument } = useShowBible();
   const [categories] = useState<Category[]>(defaultCategories);
   const [showUploadDialog, setShowUploadDialog] = useState(false);
-  const [filterCategory, setFilterCategory] = useState<string>('');
-  const [filterArtist, setFilterArtist] = useState<string>('');
+  const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [filterArtist, setFilterArtist] = useState<string>('all');
   const [availableArtists, setAvailableArtists] = useState<{id: string, name: string}[]>([]);
   const [uploadForm, setUploadForm] = useState<{
     name: string;
@@ -101,8 +101,8 @@ export const ShowBible: React.FC = () => {
 
   // Filtrer les documents
   const filteredDocuments = documents.filter(doc => {
-    const matchesCategory = !filterCategory || doc.category === filterCategory;
-    const matchesArtist = !filterArtist || (doc.artists && doc.artists.includes(filterArtist));
+    const matchesCategory = filterCategory === 'all' || doc.category === filterCategory;
+    const matchesArtist = filterArtist === 'all' || (doc.artists && doc.artists.includes(filterArtist));
     return matchesCategory && matchesArtist;
   });
 
@@ -348,7 +348,7 @@ export const ShowBible: React.FC = () => {
               <SelectValue placeholder="Toutes les catégories" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Toutes les catégories</SelectItem>
+              <SelectItem value="all">Toutes les catégories</SelectItem>
               {categories.map((category) => (
                 <SelectItem key={category.id} value={category.id}>
                   {category.name}
@@ -365,7 +365,7 @@ export const ShowBible: React.FC = () => {
               <SelectValue placeholder="Tous les artistes" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Tous les artistes</SelectItem>
+              <SelectItem value="all">Tous les artistes</SelectItem>
               {availableArtists.map((artist) => (
                 <SelectItem key={artist.id} value={artist.id}>
                   {artist.name}
@@ -375,13 +375,13 @@ export const ShowBible: React.FC = () => {
           </Select>
         </div>
 
-        {(filterCategory || filterArtist) && (
+        {(filterCategory !== 'all' || filterArtist !== 'all') && (
           <div className="flex items-end">
             <Button 
               variant="outline" 
               onClick={() => {
-                setFilterCategory('');
-                setFilterArtist('');
+                setFilterCategory('all');
+                setFilterArtist('all');
               }}
               className="h-10"
             >
@@ -420,7 +420,7 @@ export const ShowBible: React.FC = () => {
               Aucun document trouvé
             </h3>
             <p className="mb-4" style={{ color: 'var(--app-text, #666666)' }}>
-              {(filterCategory || filterArtist) 
+              {(filterCategory !== 'all' || filterArtist !== 'all') 
                 ? 'Aucun document ne correspond aux filtres sélectionnés'
                 : 'Commencez par ajouter votre premier document à la bible'
               }
