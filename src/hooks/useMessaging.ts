@@ -338,6 +338,7 @@ export const useMessaging = () => {
 
   useEffect(() => {
     if (user) {
+      console.log('🔄 Fetching messaging data for user:', user.id);
       fetchChannels();
       fetchAvailableUsers();
     }
@@ -348,8 +349,13 @@ export const useMessaging = () => {
   useEffect(() => {
     if (!user) return;
 
+    console.log('📡 Setting up real-time subscription for user:', user.id);
+    
+    // Create a unique channel name to avoid conflicts
+    const channelName = `messaging_changes_${user.id}_${Date.now()}`;
+    console.log('📡 Creating channel:', channelName);
     const channelSubscription = supabase
-      .channel('messaging_changes')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -370,6 +376,9 @@ export const useMessaging = () => {
       .subscribe();
 
     return () => {
+      // Properly unsubscribe and remove channel
+      console.log('🧹 Cleaning up messaging subscription:', channelName);
+      channelSubscription.unsubscribe();
       supabase.removeChannel(channelSubscription);
     };
   }, [user]);
