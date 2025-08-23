@@ -14,7 +14,8 @@ import {
   Download,
   Trash2,
   Loader2,
-  Users
+  Users,
+  User
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useFileUpload } from '@/hooks/useFileUpload';
@@ -22,6 +23,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useShowBible, CreateDocumentData } from '@/hooks/useShowBible';
 import { FilePreview } from '@/components/FilePreview';
 import { ArtistSelector } from '@/components/ArtistSelector';
+import { DocumentPreview } from '@/components/DocumentPreview';
 
 
 interface Category {
@@ -332,21 +334,22 @@ export const ShowBible: React.FC = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {documents.map((doc) => (
             <Card key={doc.id} style={{
               backgroundColor: 'var(--app-card-bg, #ffffff)',
               color: 'var(--app-card-text, #18181b)',
               border: '1px solid var(--notification-border, #e5e7eb)'
             }}>
-              <CardHeader>
+              <CardHeader className="pb-3">
                 <CardTitle className="flex items-center justify-between">
-                  <span className="truncate">{doc.name}</span>
+                  <span className="truncate text-sm">{doc.name}</span>
                   <div className="flex space-x-1">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => window.open(doc.url, '_blank')}
+                      title="Télécharger"
                     >
                       <Download className="h-4 w-4" />
                     </Button>
@@ -354,48 +357,84 @@ export const ShowBible: React.FC = () => {
                       variant="ghost"
                       size="sm"
                       onClick={() => handleDeleteDocument(doc)}
+                      title="Supprimer"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-3">
+                {/* Aperçu du document */}
+                <DocumentPreview document={doc} />
+                
+                {/* Informations du document */}
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span>Type:</span>
+                    <span className="text-muted-foreground">Type:</span>
                     <span className="font-medium">{doc.type}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span>Taille:</span>
+                    <span className="text-muted-foreground">Taille:</span>
                     <span>{doc.file_size_display}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span>Version:</span>
+                    <span className="text-muted-foreground">Version:</span>
                     <span>{doc.version}</span>
                   </div>
-                  {doc.description && (
-                    <p className="text-sm text-muted-foreground mt-2">
-                      {doc.description}
-                    </p>
-                  )}
-                  {doc.artists && doc.artists.length > 0 && (
-                    <div className="flex items-center gap-1 mt-2">
-                      <Users className="h-3 w-3" />
-                      <span className="text-xs font-medium">Artistes:</span>
-                      <span className="text-xs">{doc.artists.join(', ')}</span>
+                  
+                  {/* Catégorie */}
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Catégorie:</span>
+                    <span className="font-medium">
+                      {categories.find(cat => cat.id === doc.category)?.name || doc.category}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Artistes associés */}
+                {doc.artists && doc.artists.length > 0 && (
+                  <div className="border-t pt-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <User className="h-4 w-4 text-blue-600" />
+                      <span className="text-sm font-medium text-blue-700">
+                        Artistes associés
+                      </span>
                     </div>
-                  )}
-                  {doc.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {doc.tags.map((tag, index) => (
-                        <span key={index} className="text-xs bg-secondary px-2 py-1 rounded">
-                          {tag}
+                    <div className="flex flex-wrap gap-1">
+                      {doc.artists.map((artist, index) => (
+                        <span 
+                          key={index} 
+                          className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full"
+                        >
+                          {artist}
                         </span>
                       ))}
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
+
+                {/* Description */}
+                {doc.description && (
+                  <div className="border-t pt-3">
+                    <p className="text-sm text-muted-foreground">
+                      {doc.description}
+                    </p>
+                  </div>
+                )}
+
+                {/* Tags */}
+                {doc.tags.length > 0 && (
+                  <div className="border-t pt-3">
+                    <div className="flex flex-wrap gap-1">
+                      {doc.tags.map((tag, index) => (
+                        <span key={index} className="text-xs bg-secondary px-2 py-1 rounded">
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}
