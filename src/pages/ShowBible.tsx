@@ -24,6 +24,7 @@ import { useShowBible, CreateDocumentData } from '@/hooks/useShowBible';
 import { FilePreview } from '@/components/FilePreview';
 import { ArtistSelector } from '@/components/ArtistSelector';
 import { DocumentPreview } from '@/components/DocumentPreview';
+import { ArtistDisplay } from '@/components/ArtistDisplay';
 
 
 interface Category {
@@ -401,16 +402,7 @@ export const ShowBible: React.FC = () => {
                         Artistes associés
                       </span>
                     </div>
-                    <div className="flex flex-wrap gap-1">
-                      {doc.artists.map((artist, index) => (
-                        <span 
-                          key={index} 
-                          className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full"
-                        >
-                          {artist}
-                        </span>
-                      ))}
-                    </div>
+                    <ArtistDisplay artistIds={doc.artists} />
                   </div>
                 )}
 

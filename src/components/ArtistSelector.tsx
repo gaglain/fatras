@@ -1,11 +1,13 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, Music, Search } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Artist {
   id: string;
@@ -19,44 +21,83 @@ interface ArtistSelectorProps {
   onArtistsChange: (artists: string[]) => void;
 }
 
-// Sample artists data - in a real app, this would come from a database
-const sampleArtists: Artist[] = [
-  { id: 'artist-1', name: 'The Midnight Express', genre: 'Rock', status: 'active' },
-  { id: 'artist-2', name: 'Sarah Mitchell', genre: 'Pop', status: 'active' },
-  { id: 'artist-3', name: 'Thunder Road', genre: 'Metal', status: 'active' },
-  { id: 'artist-4', name: 'Acoustic Dreams', genre: 'Folk', status: 'active' },
-];
-
 export const ArtistSelector: React.FC<ArtistSelectorProps> = ({
   selectedArtists,
   onArtistsChange
 }) => {
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [artists, setArtists] = useState<Artist[]>(sampleArtists);
+  const [artists, setArtists] = useState<Artist[]>([]);
   const [newArtistName, setNewArtistName] = useState('');
   const [newArtistGenre, setNewArtistGenre] = useState('');
+
+  // Fetch artists from database
+  useEffect(() => {
+    const fetchArtists = async () => {
+      if (!user) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('centralized_artists')
+          .select('id, name, genre, status')
+          .eq('user_id', user.id)
+          .eq('status', 'active');
+
+        if (error) {
+          console.error('Erreur lors du chargement des artistes:', error);
+          return;
+        }
+
+        setArtists(data || []);
+      } catch (error) {
+        console.error('Erreur lors du chargement des artistes:', error);
+      }
+    };
+
+    fetchArtists();
+  }, [user]);
 
   const filteredArtists = artists.filter(artist =>
     artist.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     artist.genre.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleAddArtist = () => {
-    if (!newArtistName.trim()) return;
+  const handleAddArtist = async () => {
+    if (!newArtistName.trim() || !user) return;
 
-    const newArtist: Artist = {
-      id: `artist-${Date.now()}`,
-      name: newArtistName.trim(),
-      genre: newArtistGenre || 'Non spécifié',
-      status: 'active'
-    };
+    try {
+      const { data, error } = await supabase
+        .from('centralized_artists')
+        .insert([{
+          user_id: user.id,
+          name: newArtistName.trim(),
+          genre: newArtistGenre || 'Non spécifié',
+          status: 'active',
+          bio: '',
+          contact_email: '',
+          contact_phone: ''
+        }])
+        .select('id, name, genre, status')
+        .single();
 
-    setArtists(prev => [...prev, newArtist]);
-    onArtistsChange([...selectedArtists, newArtist.id]);
-    setNewArtistName('');
-    setNewArtistGenre('');
-    toast.success(`Artiste "${newArtist.name}" ajouté avec succès`);
+      if (error) {
+        console.error('Erreur lors de l\'ajout de l\'artiste:', error);
+        toast.error('Erreur lors de l\'ajout de l\'artiste');
+        return;
+      }
+
+      if (data) {
+        setArtists(prev => [...prev, data]);
+        onArtistsChange([...selectedArtists, data.id]);
+        setNewArtistName('');
+        setNewArtistGenre('');
+        toast.success(`Artiste "${data.name}" ajouté avec succès`);
+      }
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout de l\'artiste:', error);
+      toast.error('Erreur lors de l\'ajout de l\'artiste');
+    }
   };
 
   const toggleArtist = (artistId: string) => {
