@@ -30,6 +30,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
   };
 
   const handleSaveProfile = async (formData: any) => {
+    console.log('🚀 handleSaveProfile called with:', formData);
     try {
       if (authUser?.id) {
         const success = await updateUserProfile(authUser.id, {
