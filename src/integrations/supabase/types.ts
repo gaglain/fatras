@@ -967,6 +967,128 @@ export type Database = {
         }
         Relationships: []
       }
+      messaging_channel_members: {
+        Row: {
+          channel_id: string
+          id: string
+          joined_at: string
+          last_read_at: string | null
+          role: string
+          user_id: string
+        }
+        Insert: {
+          channel_id: string
+          id?: string
+          joined_at?: string
+          last_read_at?: string | null
+          role?: string
+          user_id: string
+        }
+        Update: {
+          channel_id?: string
+          id?: string
+          joined_at?: string
+          last_read_at?: string | null
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messaging_channel_members_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "messaging_channels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messaging_channels: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          roadshow_id: string | null
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          roadshow_id?: string | null
+          type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          roadshow_id?: string | null
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      messaging_messages: {
+        Row: {
+          channel_id: string
+          content: string
+          created_at: string
+          edited_at: string | null
+          id: string
+          message_type: string
+          metadata: Json | null
+          reply_to_id: string | null
+          user_id: string
+        }
+        Insert: {
+          channel_id: string
+          content: string
+          created_at?: string
+          edited_at?: string | null
+          id?: string
+          message_type?: string
+          metadata?: Json | null
+          reply_to_id?: string | null
+          user_id: string
+        }
+        Update: {
+          channel_id?: string
+          content?: string
+          created_at?: string
+          edited_at?: string | null
+          id?: string
+          message_type?: string
+          metadata?: Json | null
+          reply_to_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messaging_messages_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "messaging_channels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messaging_messages_reply_to_id_fkey"
+            columns: ["reply_to_id"]
+            isOneToOne: false
+            referencedRelation: "messaging_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string | null
@@ -1954,6 +2076,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_direct_message_channel: {
+        Args: { other_user_id: string }
+        Returns: string
+      }
       create_guest_order: {
         Args: {
           currency_param?: string
@@ -1964,6 +2090,16 @@ export type Database = {
           payment_method_param?: string
           shop_owner_id: string
           total_amount_param: number
+        }
+        Returns: string
+      }
+      create_messaging_channel: {
+        Args: {
+          channel_description?: string
+          channel_name: string
+          channel_type?: string
+          member_user_ids?: string[]
+          roadshow_ref_id?: string
         }
         Returns: string
       }

@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { TourStop, FormData } from '@/types/roadshow.types';
+import { useMessaging } from '@/hooks/useMessaging';
 
 const initialFormData: FormData = {
   city: '',
@@ -31,6 +32,7 @@ export const useRoadshowForm = (
   setTourStops: React.Dispatch<React.SetStateAction<TourStop[]>>,
   currentUserId: string | undefined
 ) => {
+  const { createChannel } = useMessaging();
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [selectedStop, setSelectedStop] = useState<TourStop | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -42,7 +44,7 @@ export const useRoadshowForm = (
     setSelectedTab('general');
   };
 
-  const handleCreateStop = () => {
+  const handleCreateStop = async () => {
     const newStop: TourStop = {
       id: Date.now().toString(),
       ...formData,
@@ -52,6 +54,25 @@ export const useRoadshowForm = (
     };
     
     setTourStops([...tourStops, newStop]);
+
+    // Create a messaging channel for this roadshow stop
+    if (createChannel) {
+      const channelName = `${formData.city} - ${formData.venue}`;
+      const description = `Canal pour l'étape de tournée à ${formData.city}`;
+      
+      // Get user IDs from the team members
+      // Note: crew is a string array, so we'll just use the current user for now
+      const memberIds: string[] = [];
+      
+      await createChannel(
+        channelName,
+        description,
+        'private', // Private channel for team members only
+        memberIds,
+        newStop.id // Link to roadshow
+      );
+    }
+    
     setShowCreateDialog(false);
     resetForm();
     toast.success("Étape de tournée créée avec succès");

@@ -4,97 +4,176 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Send, Hash, MessageSquare, Users, Plus } from 'lucide-react';
-import { useSimpleMessaging } from '@/hooks/useSimpleMessaging';
+import { Send, Hash, MessageSquare, Users, Plus, Lock, Trash2 } from 'lucide-react';
+import { useMessaging } from '@/hooks/useMessaging';
+import { ChannelManager } from '@/components/messaging/ChannelManager';
 
 export const Messagerie: React.FC = () => {
-  const [selectedChannel, setSelectedChannel] = useState('general');
+  const [selectedChannel, setSelectedChannel] = useState<string>('');
   const [message, setMessage] = useState('');
   
-  const { channels, messages, addMessage, createChannel, markChannelAsRead } = useSimpleMessaging();
+  const { 
+    channels, 
+    messages, 
+    loading,
+    fetchMessages, 
+    sendMessage, 
+    markChannelAsRead,
+    deleteChannel 
+  } = useMessaging();
 
-  // Marquer le canal comme lu lorsqu'on le sélectionne
+  // Auto-select first channel if none selected
+  useEffect(() => {
+    if (channels.length > 0 && !selectedChannel) {
+      setSelectedChannel(channels[0].id);
+    }
+  }, [channels, selectedChannel]);
+
+  // Fetch messages and mark as read when selecting a channel
   useEffect(() => {
     if (selectedChannel) {
+      fetchMessages(selectedChannel);
       markChannelAsRead(selectedChannel);
     }
-  }, [selectedChannel, markChannelAsRead]);
+  }, [selectedChannel, fetchMessages, markChannelAsRead]);
 
-  const sendMessage = () => {
-    if (!message.trim()) return;
+  const handleSendMessage = async () => {
+    if (!message.trim() || !selectedChannel) return;
 
-    addMessage(selectedChannel, {
-      senderId: 'me',
-      sender: 'Moi',
-      message: message.trim(),
-      time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-      isMe: true,
-      channel: selectedChannel
-    });
-    setMessage('');
+    const success = await sendMessage(selectedChannel, message.trim());
+    if (success) {
+      setMessage('');
+    }
   };
 
-  const handleCreateChannel = () => {
-    const channelName = prompt('Nom du nouveau canal :');
-    if (channelName) {
-      const newChannelId = createChannel(channelName);
-      setSelectedChannel(newChannelId);
+  const handleChannelCreated = (channelId: string) => {
+    setSelectedChannel(channelId);
+  };
+
+  const handleDeleteChannel = async (channelId: string) => {
+    if (confirm('Êtes-vous sûr de vouloir supprimer ce canal ?')) {
+      const success = await deleteChannel(channelId);
+      if (success && selectedChannel === channelId) {
+        setSelectedChannel(channels.length > 1 ? channels[0].id : '');
+      }
     }
   };
 
   const currentChannel = channels.find(c => c.id === selectedChannel);
   const currentMessages = messages[selectedChannel] || [];
 
+  const getChannelDisplayName = (channel: any) => {
+    if (channel.type === 'direct') {
+      // For DM channels, show the other user's name
+      return channel.name.replace(/^DM-.*?-.*?$/, 'Message Direct');
+    }
+    return channel.name;
+  };
+
+  const getChannelIcon = (channel: any) => {
+    switch (channel.type) {
+      case 'private':
+        return <Lock className="h-4 w-4" />;
+      case 'direct':
+        return <MessageSquare className="h-4 w-4" />;
+      default:
+        return <Hash className="h-4 w-4" />;
+    }
+  };
+
   return (
     <div className="flex h-[calc(100vh-4rem)] flex-col lg:flex-row">
       {/* Sidebar */}
-      <div className="w-full lg:w-80 border-r lg:border-b-0 border-b bg-card">
+        <div className="w-full lg:w-80 border-r lg:border-b-0 border-b bg-card">
         <div className="p-4 border-b border-border">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div className="flex flex-col gap-2">
             <h2 className="font-semibold text-lg text-card-foreground">
               Messagerie Interne
             </h2>
-            <Button 
-              size="sm" 
-              variant="outline" 
-              onClick={handleCreateChannel}
-              className="w-full sm:w-auto"
-            >
-              <Plus className="h-3 w-3 mr-1" />
-              <span className="hidden sm:inline">Canal</span>
-              <span className="sm:hidden">Nouveau</span>
-            </Button>
+            <ChannelManager onChannelCreated={handleChannelCreated} />
           </div>
         </div>
 
         <ScrollArea className="flex-1">
           <div className="p-2">
-            <div className="mb-4">
-              <h3 className="text-xs font-medium px-2 py-1 uppercase text-primary">
-                Canaux
-              </h3>
-              {channels.filter(c => c.type === 'channel').map((channel) => (
-                <button
-                  key={channel.id}
-                  onClick={() => setSelectedChannel(channel.id)}
-                  className={`w-full flex items-center justify-between p-2 rounded-md text-left transition-colors ${
-                    selectedChannel === channel.id 
-                      ? 'bg-primary text-primary-foreground' 
-                      : 'hover:bg-accent text-card-foreground'
-                  }`}
-                >
-                  <div className="flex items-center">
-                    <Hash className="h-4 w-4 mr-2" />
-                    <span className="text-sm">{channel.name}</span>
+            {loading ? (
+              <div className="text-center py-4 text-muted-foreground">
+                Chargement...
+              </div>
+            ) : (
+              <>
+                {/* Public and Private Channels */}
+                {channels.filter(c => c.type !== 'direct').length > 0 && (
+                  <div className="mb-4">
+                    <h3 className="text-xs font-medium px-2 py-1 uppercase text-primary">
+                      Canaux
+                    </h3>
+                    {channels.filter(c => c.type !== 'direct').map((channel) => (
+                      <div key={channel.id} className="group flex items-center">
+                        <button
+                          onClick={() => setSelectedChannel(channel.id)}
+                          className={`flex-1 flex items-center justify-between p-2 rounded-md text-left transition-colors ${
+                            selectedChannel === channel.id 
+                              ? 'bg-primary text-primary-foreground' 
+                              : 'hover:bg-accent text-card-foreground'
+                          }`}
+                        >
+                          <div className="flex items-center">
+                            {getChannelIcon(channel)}
+                            <span className="text-sm ml-2">{getChannelDisplayName(channel)}</span>
+                          </div>
+                          {channel.unread_count && channel.unread_count > 0 && (
+                            <span className="px-2 py-0.5 text-xs rounded-full bg-destructive text-destructive-foreground">
+                              {channel.unread_count}
+                            </span>
+                          )}
+                        </button>
+                        {channel.user_id && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleDeleteChannel(channel.id)}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 ml-1"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                  {channel.unread > 0 && (
-                    <span className="px-2 py-0.5 text-xs rounded-full bg-destructive text-destructive-foreground">
-                      {channel.unread}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
+                )}
+
+                {/* Direct Messages */}
+                {channels.filter(c => c.type === 'direct').length > 0 && (
+                  <div className="mb-4">
+                    <h3 className="text-xs font-medium px-2 py-1 uppercase text-primary">
+                      Messages Directs
+                    </h3>
+                    {channels.filter(c => c.type === 'direct').map((channel) => (
+                      <button
+                        key={channel.id}
+                        onClick={() => setSelectedChannel(channel.id)}
+                        className={`w-full flex items-center justify-between p-2 rounded-md text-left transition-colors ${
+                          selectedChannel === channel.id 
+                            ? 'bg-primary text-primary-foreground' 
+                            : 'hover:bg-accent text-card-foreground'
+                        }`}
+                      >
+                        <div className="flex items-center">
+                          {getChannelIcon(channel)}
+                          <span className="text-sm ml-2">{getChannelDisplayName(channel)}</span>
+                        </div>
+                        {channel.unread_count && channel.unread_count > 0 && (
+                          <span className="px-2 py-0.5 text-xs rounded-full bg-destructive text-destructive-foreground">
+                            {channel.unread_count}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </ScrollArea>
       </div>
@@ -104,9 +183,9 @@ export const Messagerie: React.FC = () => {
         {/* Header */}
         <div className="p-4 border-b border-border bg-card">
           <div className="flex items-center">
-            <Hash className="h-5 w-5 mr-2 text-primary" />
-            <h1 className="text-xl font-semibold text-card-foreground">
-              {currentChannel?.name || 'Sélectionnez un canal'}
+            {currentChannel && getChannelIcon(currentChannel)}
+            <h1 className="text-xl font-semibold text-card-foreground ml-2">
+              {currentChannel ? getChannelDisplayName(currentChannel) : 'Sélectionnez un canal'}
             </h1>
           </div>
         </div>
@@ -117,29 +196,45 @@ export const Messagerie: React.FC = () => {
             {currentMessages.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <MessageSquare className="h-8 w-8 mx-auto mb-3" />
-                <p className="text-sm">Commencez une conversation dans #{currentChannel?.name}</p>
+                <p className="text-sm">
+                  {currentChannel 
+                    ? `Commencez une conversation dans ${currentChannel.type === 'direct' ? 'ce message direct' : '#' + getChannelDisplayName(currentChannel)}`
+                    : 'Sélectionnez un canal pour commencer'
+                  }
+                </p>
               </div>
             ) : (
-              currentMessages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`flex ${msg.isMe ? 'justify-end' : 'justify-start'}`}
-                >
+              currentMessages.map((msg) => {
+                // We'll need to get the current user from auth context
+                const isMe = false; // TODO: Compare with current user ID from auth
+                const displayName = 'Utilisateur';
+                
+                return (
                   <div
-                    className={`max-w-[75%] rounded-lg p-3 ${
-                      msg.isMe
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-card text-card-foreground border border-border'
-                    }`}
+                    key={msg.id}
+                    className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
                   >
-                    {!msg.isMe && (
-                      <div className="text-xs font-medium mb-1 opacity-70">{msg.sender}</div>
-                    )}
-                    <div className="text-sm">{msg.message}</div>
-                    <div className="text-xs mt-1 opacity-70">{msg.time}</div>
+                    <div
+                      className={`max-w-[75%] rounded-lg p-3 ${
+                        isMe
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-card text-card-foreground border border-border'
+                      }`}
+                    >
+                      {!isMe && (
+                        <div className="text-xs font-medium mb-1 opacity-70">{displayName}</div>
+                      )}
+                      <div className="text-sm">{msg.content}</div>
+                      <div className="text-xs mt-1 opacity-70">
+                        {new Date(msg.created_at).toLocaleTimeString('fr-FR', { 
+                          hour: '2-digit', 
+                          minute: '2-digit' 
+                        })}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </ScrollArea>
@@ -148,15 +243,16 @@ export const Messagerie: React.FC = () => {
         <div className="p-2 sm:p-4 border-t border-border bg-card">
           <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
             <Input
-              placeholder={`Message ${currentChannel ? '#' + currentChannel.name : ''}...`}
+              placeholder={`Message ${currentChannel ? getChannelDisplayName(currentChannel) : ''}...`}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
               className="flex-1"
+              disabled={!currentChannel}
             />
             <Button 
-              onClick={sendMessage} 
-              disabled={!message.trim()}
+              onClick={handleSendMessage} 
+              disabled={!message.trim() || !currentChannel}
               className="w-full sm:w-auto"
             >
               <Send className="h-4 w-4 sm:mr-2" />
