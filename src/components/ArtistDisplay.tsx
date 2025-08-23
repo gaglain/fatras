@@ -25,25 +25,47 @@ export const ArtistDisplay: React.FC<ArtistDisplayProps> = ({ artistIds, classNa
         return;
       }
 
-      try {
-        const { data, error } = await supabase
-          .from('centralized_artists')
-          .select('id, name')
-          .eq('user_id', user.id)
-          .in('id', artistIds);
+      // Séparer les UUIDs valides des anciens IDs
+      const validUuids = artistIds.filter(id => {
+        // Vérifier si c'est un UUID valide (36 caractères avec des tirets)
+        return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      });
 
-        if (error) {
+      const oldIds = artistIds.filter(id => {
+        return !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      });
+
+      const allArtists: Artist[] = [];
+
+      // Récupérer les artistes avec des UUIDs valides
+      if (validUuids.length > 0) {
+        try {
+          const { data, error } = await supabase
+            .from('centralized_artists')
+            .select('id, name')
+            .eq('user_id', user.id)
+            .in('id', validUuids);
+
+          if (error) {
+            console.error('Erreur lors du chargement des artistes:', error);
+          } else {
+            allArtists.push(...(data || []));
+          }
+        } catch (error) {
           console.error('Erreur lors du chargement des artistes:', error);
-          setArtists([]);
-        } else {
-          setArtists(data || []);
         }
-      } catch (error) {
-        console.error('Erreur lors du chargement des artistes:', error);
-        setArtists([]);
-      } finally {
-        setLoading(false);
       }
+
+      // Pour les anciens IDs, les afficher tels quels
+      oldIds.forEach(oldId => {
+        allArtists.push({
+          id: oldId,
+          name: oldId.replace('artist-', 'Artiste ') // Convertir "artist-1" en "Artiste 1"
+        });
+      });
+
+      setArtists(allArtists);
+      setLoading(false);
     };
 
     fetchArtists();
