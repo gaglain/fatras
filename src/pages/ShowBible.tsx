@@ -13,12 +13,15 @@ import {
   Folder,
   Download,
   Trash2,
-  Loader2
+  Loader2,
+  Users
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useAuth } from '@/hooks/useAuth';
 import { useShowBible, CreateDocumentData } from '@/hooks/useShowBible';
+import { FilePreview } from '@/components/FilePreview';
+import { ArtistSelector } from '@/components/ArtistSelector';
 
 
 interface Category {
@@ -51,6 +54,7 @@ export const ShowBible: React.FC = () => {
     file: File | null;
     tags: string;
     version: string;
+    artists: string[];
   }>({
     name: '',
     type: 'text',
@@ -58,7 +62,8 @@ export const ShowBible: React.FC = () => {
     description: '',
     file: null,
     tags: '',
-    version: '1.0'
+    version: '1.0',
+    artists: []
   });
 
 
@@ -111,7 +116,8 @@ export const ShowBible: React.FC = () => {
         category: uploadForm.category,
         description: uploadForm.description || undefined,
         tags,
-        version: uploadForm.version
+        version: uploadForm.version,
+        artists: uploadForm.artists
       };
 
       const result = await createDocument(documentData);
@@ -125,7 +131,8 @@ export const ShowBible: React.FC = () => {
           description: '',
           file: null,
           tags: '',
-          version: '1.0'
+          version: '1.0',
+          artists: []
         });
       }
     } catch (error) {
@@ -177,34 +184,40 @@ export const ShowBible: React.FC = () => {
               <DialogTitle>Ajouter un document</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Fichier</label>
-                <div className="border-2 border-dashed rounded-lg p-6 text-center" style={{
-                  borderColor: 'var(--notification-border, #e5e7eb)'
-                }}>
-                  <Upload className="h-8 w-8 mx-auto mb-2" style={{ color: 'var(--app-text, #666666)' }} />
-                  <p className="text-sm mb-2" style={{ color: 'var(--app-text, #666666)' }}>
-                    Glissez-déposez votre fichier ici ou cliquez pour sélectionner
-                  </p>
-                  <input
-                    type="file"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                    id="file-upload"
-                    accept="*/*"
-                  />
-                  <Button 
-                    variant="outline" 
-                    onClick={() => document.getElementById('file-upload')?.click()}
-                  >
-                    Sélectionner un fichier
-                  </Button>
-                  {uploadForm.file && (
-                    <p className="text-sm text-green-600 mt-2">
-                      Fichier sélectionné: {uploadForm.file.name}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Fichier</label>
+                  <div className="border-2 border-dashed rounded-lg p-6 text-center" style={{
+                    borderColor: 'var(--notification-border, #e5e7eb)'
+                  }}>
+                    <Upload className="h-8 w-8 mx-auto mb-2" style={{ color: 'var(--app-text, #666666)' }} />
+                    <p className="text-sm mb-2" style={{ color: 'var(--app-text, #666666)' }}>
+                      Glissez-déposez votre fichier ici ou cliquez pour sélectionner
                     </p>
-                  )}
+                    <input
+                      type="file"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      id="file-upload"
+                      accept="*/*"
+                    />
+                    <Button 
+                      variant="outline" 
+                      onClick={() => document.getElementById('file-upload')?.click()}
+                    >
+                      Sélectionner un fichier
+                    </Button>
+                    {uploadForm.file && (
+                      <p className="text-sm text-green-600 mt-2">
+                        Fichier sélectionné: {uploadForm.file.name}
+                      </p>
+                    )}
+                  </div>
                 </div>
+                
+                {uploadForm.file && (
+                  <FilePreview file={uploadForm.file} />
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -248,6 +261,14 @@ export const ShowBible: React.FC = () => {
                   value={uploadForm.tags}
                   onChange={(e) => setUploadForm({ ...uploadForm, tags: e.target.value })}
                   placeholder="ex: urgent, technique, final"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Artistes associés</label>
+                <ArtistSelector
+                  selectedArtists={uploadForm.artists}
+                  onArtistsChange={(artists) => setUploadForm({ ...uploadForm, artists })}
                 />
               </div>
 
@@ -357,6 +378,13 @@ export const ShowBible: React.FC = () => {
                     <p className="text-sm text-muted-foreground mt-2">
                       {doc.description}
                     </p>
+                  )}
+                  {doc.artists && doc.artists.length > 0 && (
+                    <div className="flex items-center gap-1 mt-2">
+                      <Users className="h-3 w-3" />
+                      <span className="text-xs font-medium">Artistes:</span>
+                      <span className="text-xs">{doc.artists.join(', ')}</span>
+                    </div>
                   )}
                   {doc.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-2">

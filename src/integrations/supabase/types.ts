@@ -1533,6 +1533,7 @@ export type Database = {
       }
       show_bible_documents: {
         Row: {
+          artists: string[] | null
           bucket_name: string
           category: string
           created_at: string
@@ -1550,6 +1551,7 @@ export type Database = {
           version: string
         }
         Insert: {
+          artists?: string[] | null
           bucket_name?: string
           category: string
           created_at?: string
@@ -1567,6 +1569,7 @@ export type Database = {
           version?: string
         }
         Update: {
+          artists?: string[] | null
           bucket_name?: string
           category?: string
           created_at?: string

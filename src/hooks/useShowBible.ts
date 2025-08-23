@@ -16,6 +16,7 @@ export interface ShowBibleDocument {
   description: string | null;
   tags: string[];
   version: string;
+  artists: string[];
   created_at: string;
   updated_at: string;
 }
@@ -32,6 +33,7 @@ export interface CreateDocumentData {
   description?: string;
   tags: string[];
   version: string;
+  artists: string[];
 }
 
 export const useShowBible = () => {
