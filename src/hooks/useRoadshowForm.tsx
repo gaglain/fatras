@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { TourStop, FormData } from '@/types/roadshow.types';
 import { useMessaging } from '@/hooks/useMessaging';
+import { useRoadshowStops } from '@/hooks/useRoadshowStops';
 
 const initialFormData: FormData = {
   city: '',
@@ -28,11 +29,10 @@ const initialFormData: FormData = {
 };
 
 export const useRoadshowForm = (
-  tourStops: TourStop[],
-  setTourStops: React.Dispatch<React.SetStateAction<TourStop[]>>,
   currentUserId: string | undefined
 ) => {
   const { createChannel } = useMessaging();
+  const { createStop, updateStop, deleteStop, convertFromTourStop } = useRoadshowStops();
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [selectedStop, setSelectedStop] = useState<TourStop | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -45,37 +45,44 @@ export const useRoadshowForm = (
   };
 
   const handleCreateStop = async () => {
-    const newStop: TourStop = {
-      id: Date.now().toString(),
-      ...formData,
-      capacity: parseInt(formData.capacity),
-      ticketsAvailable: parseInt(formData.ticketsAvailable),
-      createdBy: currentUserId || 'unknown'
-    };
-    
-    setTourStops([...tourStops, newStop]);
-
-    // Create a messaging channel for this roadshow stop
-    if (createChannel) {
-      const channelName = `${formData.city} - ${formData.venue}`;
-      const description = `Canal pour l'étape de tournée à ${formData.city}`;
-      
-      // Get user IDs from the team members
-      // Note: crew is a string array, so we'll just use the current user for now
-      const memberIds: string[] = [];
-      
-      await createChannel(
-        channelName,
-        description,
-        'private', // Private channel for team members only
-        memberIds,
-        newStop.id // Link to roadshow
-      );
+    if (!formData.city || !formData.venue) {
+      toast.error("Veuillez remplir au moins la ville et le lieu");
+      return;
     }
+
+    // Convert form data to database format
+    const stopData = convertFromTourStop({
+      ...formData,
+      capacity: parseInt(formData.capacity) || 0,
+      ticketsAvailable: parseInt(formData.ticketsAvailable) || 0
+    });
+
+    const newStop = await createStop(stopData);
     
-    setShowCreateDialog(false);
-    resetForm();
-    toast.success("Étape de tournée créée avec succès");
+    if (newStop) {
+      // Create a messaging channel for this roadshow stop
+      if (createChannel) {
+        const channelName = `${formData.city} - ${formData.venue}`;
+        const description = `Canal pour l'étape de tournée à ${formData.city}`;
+        
+        // Get user IDs from the team members
+        const memberIds: string[] = [];
+        
+        await createChannel(
+          channelName,
+          description,
+          'private', // Private channel for team members only
+          memberIds,
+          newStop.id // Link to roadshow
+        );
+      }
+      
+      setShowCreateDialog(false);
+      resetForm();
+      toast.success("Étape de tournée créée avec succès");
+    } else {
+      toast.error("Erreur lors de la création de l'étape");
+    }
   };
 
   const handleEditStop = (stop: TourStop) => {
@@ -105,31 +112,36 @@ export const useRoadshowForm = (
     setShowEditDialog(true);
   };
 
-  const handleUpdateStop = () => {
+  const handleUpdateStop = async () => {
     if (!selectedStop) return;
     
-    const updatedStops = tourStops.map(stop => 
-      stop.id === selectedStop.id 
-        ? { 
-            ...stop, 
-            ...formData,
-            capacity: parseInt(formData.capacity),
-            ticketsAvailable: parseInt(formData.ticketsAvailable)
-          }
-        : stop
-    );
+    // Convert form data to database format
+    const stopData = convertFromTourStop({
+      ...formData,
+      capacity: parseInt(formData.capacity) || 0,
+      ticketsAvailable: parseInt(formData.ticketsAvailable) || 0
+    });
+
+    const success = await updateStop(selectedStop.id, stopData);
     
-    setTourStops(updatedStops);
-    setShowEditDialog(false);
-    setSelectedStop(null);
-    resetForm();
-    toast.success("Étape de tournée mise à jour avec succès");
+    if (success) {
+      setShowEditDialog(false);
+      setSelectedStop(null);
+      resetForm();
+      toast.success("Étape de tournée mise à jour avec succès");
+    } else {
+      toast.error("Erreur lors de la mise à jour de l'étape");
+    }
   };
 
-  const handleDeleteStop = (stopId: string) => {
+  const handleDeleteStop = async (stopId: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette étape ?')) {
-      setTourStops(tourStops.filter(stop => stop.id !== stopId));
-      toast.success("Étape de tournée supprimée");
+      const success = await deleteStop(stopId);
+      if (success) {
+        toast.success("Étape de tournée supprimée");
+      } else {
+        toast.error("Erreur lors de la suppression");
+      }
     }
   };
 

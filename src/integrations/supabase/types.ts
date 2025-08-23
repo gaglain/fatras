@@ -1602,6 +1602,87 @@ export type Database = {
           },
         ]
       }
+      roadshow_stops: {
+        Row: {
+          accommodation: string | null
+          accommodation_address: string | null
+          address: string | null
+          artist_lineup: Json | null
+          artists: string[] | null
+          capacity: number | null
+          check_in_time: string | null
+          city: string
+          created_at: string
+          crew: string[] | null
+          departure_time: string | null
+          equipment: string[] | null
+          event_date: string | null
+          event_time: string | null
+          id: string
+          local_contact: string | null
+          local_contact_phone: string | null
+          notes: string | null
+          status: string
+          tickets_available: number | null
+          transport: string | null
+          updated_at: string
+          user_id: string
+          venue: string
+        }
+        Insert: {
+          accommodation?: string | null
+          accommodation_address?: string | null
+          address?: string | null
+          artist_lineup?: Json | null
+          artists?: string[] | null
+          capacity?: number | null
+          check_in_time?: string | null
+          city: string
+          created_at?: string
+          crew?: string[] | null
+          departure_time?: string | null
+          equipment?: string[] | null
+          event_date?: string | null
+          event_time?: string | null
+          id?: string
+          local_contact?: string | null
+          local_contact_phone?: string | null
+          notes?: string | null
+          status?: string
+          tickets_available?: number | null
+          transport?: string | null
+          updated_at?: string
+          user_id: string
+          venue: string
+        }
+        Update: {
+          accommodation?: string | null
+          accommodation_address?: string | null
+          address?: string | null
+          artist_lineup?: Json | null
+          artists?: string[] | null
+          capacity?: number | null
+          check_in_time?: string | null
+          city?: string
+          created_at?: string
+          crew?: string[] | null
+          departure_time?: string | null
+          equipment?: string[] | null
+          event_date?: string | null
+          event_time?: string | null
+          id?: string
+          local_contact?: string | null
+          local_contact_phone?: string | null
+          notes?: string | null
+          status?: string
+          tickets_available?: number | null
+          transport?: string | null
+          updated_at?: string
+          user_id?: string
+          venue?: string
+        }
+        Relationships: []
+      }
       shop_orders: {
         Row: {
           created_at: string | null

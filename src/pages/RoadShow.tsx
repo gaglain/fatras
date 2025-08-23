@@ -9,12 +9,13 @@ import { SearchBar } from '@/components/roadshow/SearchBar';
 import { RoadShowForm } from '@/components/roadshow/RoadShowForm';
 import { TourStopCard } from '@/components/roadshow/TourStopCard';
 import { useRoadshowForm } from '@/hooks/useRoadshowForm';
+import { useRoadshowStops } from '@/hooks/useRoadshowStops';
 import { TourStop } from '@/types/roadshow.types';
 
 export const RoadShow: React.FC = () => {
   const { users, getUserById, currentUser } = useUser();
   const { artists: artistsData } = useArtists();
-  const [tourStops, setTourStops] = useState<TourStop[]>([]);
+  const { tourStops, loading } = useRoadshowStops();
   
   // Transformer les données des artistes pour correspondre au type roadshow
   const artists = artistsData.map(artist => ({
@@ -40,7 +41,7 @@ export const RoadShow: React.FC = () => {
     handleEditStop,
     handleUpdateStop,
     handleDeleteStop
-  } = useRoadshowForm(tourStops, setTourStops, currentUser?.id);
+  } = useRoadshowForm(currentUser?.id);
 
   const filteredStops = tourStops.filter(stop => {
     const matchesSearch = stop.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -106,19 +107,32 @@ export const RoadShow: React.FC = () => {
       />
 
       {/* Liste des étapes */}
-      <div className="grid gap-6">
-        {filteredStops.map((stop) => (
-          <TourStopCard
-            key={stop.id}
-            stop={stop}
-            artists={artists}
-            creator={getUserById(stop.createdBy)}
-            onEdit={handleEditStop}
-            onDelete={handleDeleteStop}
-            getUserById={getUserById}
-          />
-        ))}
-      </div>
+      {loading ? (
+        <div className="text-center py-8 text-muted-foreground">
+          Chargement des étapes...
+        </div>
+      ) : (
+        <div className="grid gap-6">
+          {filteredStops.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <p>Aucune étape de tournée trouvée.</p>
+              <p className="text-sm">Créez votre première étape pour commencer !</p>
+            </div>
+          ) : (
+            filteredStops.map((stop) => (
+              <TourStopCard
+                key={stop.id}
+                stop={stop}
+                artists={artists}
+                creator={getUserById(stop.createdBy)}
+                onEdit={handleEditStop}
+                onDelete={handleDeleteStop}
+                getUserById={getUserById}
+              />
+            ))
+          )}
+        </div>
+      )}
 
       {/* Dialog de modification */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
