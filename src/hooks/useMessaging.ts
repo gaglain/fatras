@@ -273,6 +273,27 @@ export const useMessaging = () => {
     }
   };
 
+  // Delete channels by roadshow ID
+  const deleteChannelsByRoadshow = async (roadshowId: string) => {
+    if (!user) return false;
+
+    try {
+      const { error } = await supabase
+        .from('messaging_channels')
+        .update({ is_active: false })
+        .eq('roadshow_id', roadshowId)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      await fetchChannels();
+      return true;
+    } catch (error) {
+      console.error('Error deleting roadshow channels:', error);
+      return false;
+    }
+  };
+
   // Add members to channel
   const addChannelMembers = async (channelId: string, userIds: string[]) => {
     if (!user) return false;
@@ -394,6 +415,7 @@ export const useMessaging = () => {
     createDirectMessage,
     sendMessage,
     deleteChannel,
+    deleteChannelsByRoadshow,
     addChannelMembers,
     removeChannelMember,
     markChannelAsRead

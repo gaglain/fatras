@@ -31,7 +31,7 @@ const initialFormData: FormData = {
 export const useRoadshowForm = (
   currentUserId: string | undefined
 ) => {
-  const { createChannel } = useMessaging();
+  const { createChannel, deleteChannelsByRoadshow } = useMessaging();
   const { createStop, updateStop, deleteStop, convertFromTourStop } = useRoadshowStops();
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [selectedStop, setSelectedStop] = useState<TourStop | null>(null);
@@ -138,6 +138,10 @@ export const useRoadshowForm = (
     if (confirm('Êtes-vous sûr de vouloir supprimer cette étape ?')) {
       const success = await deleteStop(stopId);
       if (success) {
+        // Also delete associated messaging channel if it exists
+        if (deleteChannelsByRoadshow) {
+          await deleteChannelsByRoadshow(stopId);
+        }
         toast.success("Étape de tournée supprimée");
       } else {
         toast.error("Erreur lors de la suppression");
