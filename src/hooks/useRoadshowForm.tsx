@@ -32,7 +32,7 @@ export const useRoadshowForm = (
   currentUserId: string | undefined
 ) => {
   const { createChannel, deleteChannelsByRoadshow } = useMessaging();
-  const { createStop, updateStop, deleteStop, convertFromTourStop } = useRoadshowStops();
+  const { createStop, updateStop, deleteStop, convertFromTourStop, fetchStops } = useRoadshowStops();
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [selectedStop, setSelectedStop] = useState<TourStop | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -87,6 +87,12 @@ export const useRoadshowForm = (
         
         setShowCreateDialog(false);
         resetForm();
+        
+        // Small delay to ensure UI updates, then force refresh
+        setTimeout(() => {
+          fetchStops();
+        }, 100);
+        
         toast.success("Étape de tournée créée avec succès");
       } else {
         toast.error("Erreur lors de la création de l'étape");
