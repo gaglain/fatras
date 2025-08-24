@@ -50,37 +50,49 @@ export const useRoadshowForm = (
       return;
     }
 
-    // Convert form data to database format
-    const stopData = convertFromTourStop({
-      ...formData,
-      capacity: parseInt(formData.capacity) || 0,
-      ticketsAvailable: parseInt(formData.ticketsAvailable) || 0
-    });
+    try {
+      // Convert form data to database format
+      const stopData = convertFromTourStop({
+        ...formData,
+        capacity: parseInt(formData.capacity) || 0,
+        ticketsAvailable: parseInt(formData.ticketsAvailable) || 0
+      });
 
-    const newStop = await createStop(stopData);
-    
-    if (newStop) {
-      // Create a messaging channel for this roadshow stop
-      if (createChannel) {
-        const channelName = `${formData.city} - ${formData.venue}`;
-        const description = `Canal pour l'étape de tournée à ${formData.city}`;
-        
-        // Get user IDs from the team members
-        const memberIds: string[] = [];
-        
-        await createChannel(
-          channelName,
-          description,
-          'private', // Private channel for team members only
-          memberIds,
-          newStop.id // Link to roadshow
-        );
-      }
+      const newStop = await createStop(stopData);
       
-      setShowCreateDialog(false);
-      resetForm();
-      toast.success("Étape de tournée créée avec succès");
-    } else {
+      if (newStop) {
+        // Try to create a messaging channel for this roadshow stop
+        if (createChannel) {
+          try {
+            // Make channel name unique by adding timestamp
+            const timestamp = Date.now();
+            const channelName = `${formData.city} - ${formData.venue} - ${timestamp}`;
+            const description = `Canal pour l'étape de tournée à ${formData.city}`;
+            
+            // Get user IDs from the team members
+            const memberIds: string[] = [];
+            
+            await createChannel(
+              channelName,
+              description,
+              'private', // Private channel for team members only
+              memberIds,
+              newStop.id // Link to roadshow
+            );
+          } catch (channelError) {
+            console.error('Error creating channel:', channelError);
+            // Don't fail the whole operation if channel creation fails
+          }
+        }
+        
+        setShowCreateDialog(false);
+        resetForm();
+        toast.success("Étape de tournée créée avec succès");
+      } else {
+        toast.error("Erreur lors de la création de l'étape");
+      }
+    } catch (error) {
+      console.error('Error in handleCreateStop:', error);
       toast.error("Erreur lors de la création de l'étape");
     }
   };
