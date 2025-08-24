@@ -2247,6 +2247,14 @@ export type Database = {
           username: string
         }[]
       }
+      is_channel_member: {
+        Args: { channel_id_param: string }
+        Returns: boolean
+      }
+      is_channel_owner: {
+        Args: { channel_id_param: string }
+        Returns: boolean
+      }
       refresh_shop_stats: {
         Args: Record<PropertyKey, never>
         Returns: undefined
