@@ -158,8 +158,6 @@ export const useRoadshowStops = () => {
       };
 
       setStops(prev => [...prev, transformedStop]);
-      // Force refresh from database to ensure consistency
-      await fetchStops();
       return transformedStop;
     } catch (error) {
       console.error('Error creating roadshow stop:', error);
