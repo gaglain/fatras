@@ -160,6 +160,12 @@ export const useRoadshowForm = (
         if (deleteChannelsByRoadshow) {
           await deleteChannelsByRoadshow(stopId);
         }
+        
+        // Force refresh to update UI immediately
+        setTimeout(() => {
+          fetchStops();
+        }, 100);
+        
         toast.success("Étape de tournée supprimée");
       } else {
         toast.error("Erreur lors de la suppression");
