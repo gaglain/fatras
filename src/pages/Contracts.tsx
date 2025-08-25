@@ -6,12 +6,14 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Plus, FileText, Edit, Trash2, Save } from 'lucide-react';
+import { Plus, FileText, Edit, Trash2, Save, Calculator } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQuotes } from '@/hooks/useQuotes';
 import { useContacts } from '@/hooks/useContacts';
 import { useEvents } from '@/hooks/useEvents';
 import { useUser } from '@/contexts/UserContext';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ContractCalculator, type CalculationValues } from '@/components/contracts/ContractCalculator';
 
 interface QuoteFormData {
   title: string;
@@ -39,6 +41,7 @@ export const Contracts: React.FC = () => {
   const { events } = useEvents();
   
   const [showForm, setShowForm] = useState(false);
+  const [showCalculator, setShowCalculator] = useState(false);
   const [editingQuote, setEditingQuote] = useState<any>(null);
   const [formData, setFormData] = useState<QuoteFormData>({
     title: '',
@@ -81,6 +84,19 @@ export const Contracts: React.FC = () => {
 
   const calculateTax = (subtotal: number) => {
     return subtotal * 0.20; // 20% TVA
+  };
+
+  const handleCalculatorChange = (values: CalculationValues) => {
+    // Mise à jour automatique du formulaire avec les valeurs du calculateur
+    setFormData(prev => ({
+      ...prev,
+      items: [{ 
+        name: 'Service complet', 
+        description: 'Cachet, transport, hébergement et frais annexes', 
+        quantity: 1, 
+        unit_price: values.totalHT 
+      }]
+    }));
   };
 
   const handleSaveQuote = async () => {
@@ -215,11 +231,22 @@ export const Contracts: React.FC = () => {
             Gérez vos devis et contrats clients
           </p>
         </div>
-        <Button onClick={() => setShowForm(true)} className="button-responsive">
-          <Plus className="h-4 w-4 mr-2" />
-          <span className="hidden sm:inline">Nouveau Devis</span>
-          <span className="sm:hidden">Nouveau</span>
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            onClick={() => setShowCalculator(true)} 
+            variant="outline"
+            className="button-responsive"
+          >
+            <Calculator className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Calculateur</span>
+            <span className="sm:hidden">Calc</span>
+          </Button>
+          <Button onClick={() => setShowForm(true)} className="button-responsive">
+            <Plus className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Nouveau Devis</span>
+            <span className="sm:hidden">Nouveau</span>
+          </Button>
+        </div>
       </div>
 
       {/* Formulaire de devis */}
@@ -501,6 +528,16 @@ export const Contracts: React.FC = () => {
           </Button>
         </div>
       )}
+
+      {/* Dialog Calculateur */}
+      <Dialog open={showCalculator} onOpenChange={setShowCalculator}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Calculateur de Devis</DialogTitle>
+          </DialogHeader>
+          <ContractCalculator onCalculationChange={handleCalculatorChange} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
