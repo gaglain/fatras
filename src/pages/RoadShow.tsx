@@ -15,7 +15,7 @@ import { TourStop } from '@/types/roadshow.types';
 export const RoadShow: React.FC = () => {
   const { users, getUserById, currentUser } = useUser();
   const { artists: artistsData } = useArtists();
-  const { tourStops, loading } = useRoadshowStops();
+  const { tourStops, loading, createStop, updateStop, deleteStop, convertFromTourStop } = useRoadshowStops();
   
   // Transformer les données des artistes pour correspondre au type roadshow
   const artists = artistsData.map(artist => ({
@@ -41,7 +41,7 @@ export const RoadShow: React.FC = () => {
     handleEditStop,
     handleUpdateStop,
     handleDeleteStop
-  } = useRoadshowForm(currentUser?.id);
+  } = useRoadshowForm(currentUser?.id, { createStop, updateStop, deleteStop, convertFromTourStop });
 
   const filteredStops = tourStops.filter(stop => {
     const matchesSearch = stop.city.toLowerCase().includes(searchTerm.toLowerCase()) ||

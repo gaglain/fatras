@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { TourStop, FormData } from '@/types/roadshow.types';
 import { useMessaging } from '@/hooks/useMessaging';
-import { useRoadshowStops } from '@/hooks/useRoadshowStops';
 
 const initialFormData: FormData = {
   city: '',
@@ -29,10 +28,16 @@ const initialFormData: FormData = {
 };
 
 export const useRoadshowForm = (
-  currentUserId: string | undefined
+  currentUserId: string | undefined,
+  roadshowActions: {
+    createStop: any;
+    updateStop: any;
+    deleteStop: any;
+    convertFromTourStop: any;
+  }
 ) => {
   const { createChannel, deleteChannelsByRoadshow } = useMessaging();
-  const { createStop, updateStop, deleteStop, convertFromTourStop, fetchStops } = useRoadshowStops();
+  const { createStop, updateStop, deleteStop, convertFromTourStop } = roadshowActions;
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [selectedStop, setSelectedStop] = useState<TourStop | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -87,12 +92,6 @@ export const useRoadshowForm = (
         
         setShowCreateDialog(false);
         resetForm();
-        
-        // Small delay to ensure UI updates, then force refresh
-        setTimeout(() => {
-          fetchStops();
-        }, 100);
-        
         toast.success("Étape de tournée créée avec succès");
       } else {
         toast.error("Erreur lors de la création de l'étape");
