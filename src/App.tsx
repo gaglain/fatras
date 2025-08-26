@@ -65,6 +65,7 @@ const App = () => {
                 <Toaster />
                 <Routes>
                 <Route path="/" element={<Index />} />
+                <Route path="/front" element={<Index />} />
                 <Route path="/auth" element={<Auth />} />
                 
                 {/* Routes du back-office - PROTÉGÉES */}

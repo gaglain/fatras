@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { useUser } from '@/contexts/UserContext';
 import { PublicationForm } from '@/components/PublicationForm';
 import { useCentralizedData, Publication, PublicationComment } from '@/contexts/CentralizedDataContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const platforms = [
   { value: 'facebook', label: 'Facebook' },
@@ -62,15 +63,29 @@ export const PublicationCalendar: React.FC = () => {
         media_type: formData.media_type || 'image' as const,
         external_link: formData.external_link || '',
         status: editingPublication?.status || 'draft' as const,
-        comments: editingPublication?.comments || [],
-        created_by: currentUser.id,
-        created_at: editingPublication?.created_at || new Date().toISOString()
+        user_id: currentUser.id
       };
 
       if (editingPublication) {
+        // Mise à jour dans Supabase
+        const { error } = await supabase
+          .from('publications')
+          .update(publicationData)
+          .eq('id', editingPublication.id)
+          .eq('user_id', currentUser.id);
+
+        if (error) throw error;
+        
         updatePublication(editingPublication.id, publicationData);
         toast.success('Publication modifiée avec succès');
       } else {
+        // Création dans Supabase
+        const { error } = await supabase
+          .from('publications')
+          .insert(publicationData);
+
+        if (error) throw error;
+        
         addPublication(publicationData);
         toast.success('Publication créée avec succès');
       }

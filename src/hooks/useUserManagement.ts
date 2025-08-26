@@ -160,6 +160,7 @@ export const useUserManagement = () => {
           last_name: userData.last_name,
           username: userData.username,
           phone: userData.phone,
+          role: userData.role, // Assurer que le rôle est bien mis à jour
           address: userData.address,
           city: userData.city,
           function_title: userData.function_title,
@@ -201,23 +202,24 @@ export const useUserManagement = () => {
     try {
       setLoading(true);
       
+      // Supprimer complètement l'utilisateur du profil
       const { error } = await supabase
         .from('user_profiles')
-        .update({ is_active: false })
+        .delete()
         .eq('user_id', userId);
 
       if (error) {
-        console.error('Erreur désactivation:', error);
-        toast.error('Erreur lors de la désactivation');
+        console.error('Erreur suppression:', error);
+        toast.error('Erreur lors de la suppression');
         return false;
       }
 
-      toast.success('Utilisateur désactivé');
+      toast.success('Utilisateur supprimé');
       await fetchUsers();
       return true;
     } catch (error) {
       console.error('Erreur:', error);
-      toast.error('Erreur lors de la désactivation');
+      toast.error('Erreur lors de la suppression');
       return false;
     } finally {
       setLoading(false);
