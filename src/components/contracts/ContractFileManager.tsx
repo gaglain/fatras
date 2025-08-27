@@ -29,7 +29,7 @@ export const ContractFileManager: React.FC<ContractFileManagerProps> = ({ artist
   const { user } = useAuth();
   const [files, setFiles] = useState<ContractFile[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedArtist, setSelectedArtist] = useState<string>('');
+  const [selectedArtist, setSelectedArtist] = useState<string>('none');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('contract');
   const [uploading, setUploading] = useState(false);
@@ -82,7 +82,7 @@ export const ContractFileManager: React.FC<ContractFileManagerProps> = ({ artist
         .from('artist_files')
         .insert({
           user_id: user.id,
-          artist_id: selectedArtist || null,
+          artist_id: selectedArtist === 'none' ? null : selectedArtist,
           file_name: file.name,
           file_path: publicUrl,
           file_type: file.type,
@@ -98,7 +98,7 @@ export const ContractFileManager: React.FC<ContractFileManagerProps> = ({ artist
       await fetchFiles();
       
       // Reset form
-      setSelectedArtist('');
+      setSelectedArtist('none');
       setDescription('');
       setCategory('contract');
       setIsOpen(false);
@@ -178,7 +178,7 @@ export const ContractFileManager: React.FC<ContractFileManagerProps> = ({ artist
                     <SelectValue placeholder="Sélectionner un artiste" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Aucun artiste</SelectItem>
+                    <SelectItem value="none">Aucun artiste</SelectItem>
                     {artists.map(artist => (
                       <SelectItem key={artist.id} value={artist.id}>
                         {artist.first_name} {artist.last_name}

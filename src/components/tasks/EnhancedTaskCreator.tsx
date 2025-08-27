@@ -32,10 +32,10 @@ export const EnhancedTaskCreator: React.FC<EnhancedTaskCreatorProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [assignedTo, setAssignedTo] = useState('');
-  const [artistId, setArtistId] = useState('');
-  const [contactId, setContactId] = useState('');
-  const [eventId, setEventId] = useState('');
+  const [assignedTo, setAssignedTo] = useState('none');
+  const [artistId, setArtistId] = useState('none');
+  const [contactId, setContactId] = useState('none');
+  const [eventId, setEventId] = useState('none');
   const [priority, setPriority] = useState<'low' | 'medium' | 'high' | 'urgent'>('medium');
   const [dueDate, setDueDate] = useState('');
   const [creating, setCreating] = useState(false);
@@ -50,10 +50,10 @@ export const EnhancedTaskCreator: React.FC<EnhancedTaskCreatorProps> = ({
     try {
       const taskData = {
         user_id: user.id,
-        assigned_to: assignedTo || undefined,
-        contact_id: contactId || undefined,
-        event_id: eventId || undefined,
-        artist_id: artistId || undefined,
+        assigned_to: assignedTo === 'none' ? undefined : assignedTo,
+        contact_id: contactId === 'none' ? undefined : contactId,
+        event_id: eventId === 'none' ? undefined : eventId,
+        artist_id: artistId === 'none' ? undefined : artistId,
         title: title.trim(),
         description: description.trim() || undefined,
         priority,
@@ -88,10 +88,10 @@ export const EnhancedTaskCreator: React.FC<EnhancedTaskCreatorProps> = ({
       // Reset form
       setTitle('');
       setDescription('');
-      setAssignedTo('');
-      setArtistId('');
-      setContactId('');
-      setEventId('');
+      setAssignedTo('none');
+      setArtistId('none');
+      setContactId('none');
+      setEventId('none');
       setPriority('medium');
       setDueDate('');
       setIsOpen(false);
@@ -200,7 +200,7 @@ export const EnhancedTaskCreator: React.FC<EnhancedTaskCreatorProps> = ({
                     <SelectValue placeholder="Sélectionner un utilisateur" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Aucune assignation</SelectItem>
+                    <SelectItem value="none">Aucune assignation</SelectItem>
                     {users.map(user => (
                       <SelectItem key={user.id} value={user.id}>
                         <div className="flex items-center space-x-2">
@@ -221,7 +221,7 @@ export const EnhancedTaskCreator: React.FC<EnhancedTaskCreatorProps> = ({
                     <SelectValue placeholder="Sélectionner un artiste" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Aucun artiste</SelectItem>
+                    <SelectItem value="none">Aucun artiste</SelectItem>
                     {artists.map(artist => (
                       <SelectItem key={artist.id} value={artist.id}>
                         <div className="flex items-center space-x-2">
@@ -242,7 +242,7 @@ export const EnhancedTaskCreator: React.FC<EnhancedTaskCreatorProps> = ({
                       <SelectValue placeholder="Sélectionner un contact" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Aucun contact</SelectItem>
+                      <SelectItem value="none">Aucun contact</SelectItem>
                       {contacts.slice(0, 50).map(contact => (
                         <SelectItem key={contact.id} value={contact.id}>
                           {contact.first_name} {contact.last_name}
@@ -261,7 +261,7 @@ export const EnhancedTaskCreator: React.FC<EnhancedTaskCreatorProps> = ({
                       <SelectValue placeholder="Sélectionner un événement" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Aucun événement</SelectItem>
+                      <SelectItem value="none">Aucun événement</SelectItem>
                       {events.slice(0, 50).map(event => (
                         <SelectItem key={event.id} value={event.id}>
                           {event.title}

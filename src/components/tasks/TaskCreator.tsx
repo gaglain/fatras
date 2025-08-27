@@ -33,8 +33,8 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
     title: '',
     description: '',
     assignedTo: currentUser?.id || '',
-    contactId: '',
-    eventId: '',
+    contactId: 'none',
+    eventId: 'none',
     dueDate: '',
     priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent',
     status: 'todo' as 'todo' | 'in_progress' | 'done',
@@ -78,8 +78,8 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
         title: '',
         description: '',
         assignedTo: currentUser?.id || '',
-        contactId: '',
-        eventId: '',
+        contactId: 'none',
+        eventId: 'none',
         dueDate: '',
         priority: 'medium',
         status: 'todo',
@@ -186,7 +186,7 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
                 <SelectValue placeholder="Sélectionner un contact" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Aucun contact</SelectItem>
+                <SelectItem value="none">Aucun contact</SelectItem>
                 {contacts.slice(0, 50).map((contact) => (
                   <SelectItem key={contact.id} value={contact.id}>
                     {contact.first_name} {contact.last_name}
@@ -206,7 +206,7 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
                 <SelectValue placeholder="Sélectionner un événement" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Aucun événement</SelectItem>
+                <SelectItem value="none">Aucun événement</SelectItem>
                 {events.slice(0, 50).map((event) => (
                   <SelectItem key={event.id} value={event.id}>
                     {event.title}

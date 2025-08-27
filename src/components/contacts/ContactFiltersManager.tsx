@@ -28,9 +28,9 @@ export const ContactFiltersManager: React.FC<ContactFiltersManagerProps> = ({
   const [listName, setListName] = useState('');
   const [filters, setFilters] = useState<FilterCriteria>({
     postalCodeStartsWith: '',
-    contactType: '',
-    city: '',
-    source: ''
+    contactType: 'all',
+    city: 'all',
+    source: 'all'
   });
 
   const applyFilters = () => {
@@ -40,17 +40,17 @@ export const ContactFiltersManager: React.FC<ContactFiltersManagerProps> = ({
         return false;
       }
       
-      if (filters.contactType && contact.status !== filters.contactType) {
+      if (filters.contactType && filters.contactType !== 'all' && contact.status !== filters.contactType) {
         return false;
       }
       
-      if (filters.city && 
-          (!contact.city || !contact.city.toLowerCase().includes(filters.city.toLowerCase()))) {
+      if (filters.city && filters.city !== 'all' && 
+          (!contact.city || contact.city !== filters.city)) {
         return false;
       }
       
-      if (filters.source && 
-          (!contact.source || !contact.source.toLowerCase().includes(filters.source.toLowerCase()))) {
+      if (filters.source && filters.source !== 'all' && 
+          (!contact.source || contact.source !== filters.source)) {
         return false;
       }
       
@@ -81,9 +81,9 @@ export const ContactFiltersManager: React.FC<ContactFiltersManagerProps> = ({
       setListName('');
       setFilters({
         postalCodeStartsWith: '',
-        contactType: '',
-        city: '',
-        source: ''
+        contactType: 'all',
+        city: 'all',
+        source: 'all'
       });
       setIsOpen(false);
     } catch (error) {
@@ -95,9 +95,9 @@ export const ContactFiltersManager: React.FC<ContactFiltersManagerProps> = ({
   const resetFilters = () => {
     setFilters({
       postalCodeStartsWith: '',
-      contactType: '',
-      city: '',
-      source: ''
+      contactType: 'all',
+      city: 'all',
+      source: 'all'
     });
   };
 
@@ -162,7 +162,7 @@ export const ContactFiltersManager: React.FC<ContactFiltersManagerProps> = ({
                       <SelectValue placeholder="Tous les types" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Tous les types</SelectItem>
+                      <SelectItem value="all">Tous les types</SelectItem>
                       {uniqueStatuses.map(status => (
                         <SelectItem key={status} value={status}>
                           {status === 'prospect' ? 'Prospect' : 
@@ -184,7 +184,7 @@ export const ContactFiltersManager: React.FC<ContactFiltersManagerProps> = ({
                       <SelectValue placeholder="Toutes les villes" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Toutes les villes</SelectItem>
+                      <SelectItem value="all">Toutes les villes</SelectItem>
                       {uniqueCities.slice(0, 20).map(city => (
                         <SelectItem key={city} value={city}>
                           {city}
@@ -204,7 +204,7 @@ export const ContactFiltersManager: React.FC<ContactFiltersManagerProps> = ({
                       <SelectValue placeholder="Toutes les sources" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Toutes les sources</SelectItem>
+                      <SelectItem value="all">Toutes les sources</SelectItem>
                       {uniqueSources.slice(0, 20).map(source => (
                         <SelectItem key={source} value={source}>
                           {source}

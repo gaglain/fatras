@@ -21,7 +21,7 @@ export const SimpleContactFilters: React.FC<SimpleContactFiltersProps> = ({ filt
   };
 
   const clearFilters = () => {
-    onFiltersChange({ status: '', role: '', company: '' });
+    onFiltersChange({ status: 'all', role: 'all', company: '' });
   };
 
   const hasActiveFilters = filters.status || filters.role || filters.company;
@@ -58,7 +58,7 @@ export const SimpleContactFilters: React.FC<SimpleContactFiltersProps> = ({ filt
                 <SelectValue placeholder="Tous les statuts" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tous les statuts</SelectItem>
+                <SelectItem value="all">Tous les statuts</SelectItem>
                 <SelectItem value="prospect">Prospect</SelectItem>
                 <SelectItem value="client">Client</SelectItem>
                 <SelectItem value="partenaire">Partenaire</SelectItem>
@@ -74,7 +74,7 @@ export const SimpleContactFilters: React.FC<SimpleContactFiltersProps> = ({ filt
                 <SelectValue placeholder="Tous les types" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tous les types</SelectItem>
+                <SelectItem value="all">Tous les types</SelectItem>
                 <SelectItem value="artiste">Artiste</SelectItem>
                 <SelectItem value="manager">Manager</SelectItem>
                 <SelectItem value="venue">Salle/Venue</SelectItem>

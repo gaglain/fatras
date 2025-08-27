@@ -30,8 +30,8 @@ export const ArtistDocumentFilter: React.FC = () => {
   const [documents, setDocuments] = useState<ArtistDocument[]>([]);
   const [artists, setArtists] = useState<Artist[]>([]);
   const [filteredDocuments, setFilteredDocuments] = useState<ArtistDocument[]>([]);
-  const [selectedArtist, setSelectedArtist] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedArtist, setSelectedArtist] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -111,11 +111,11 @@ export const ArtistDocumentFilter: React.FC = () => {
   const filterDocuments = () => {
     let filtered = documents;
 
-    if (selectedArtist) {
+    if (selectedArtist && selectedArtist !== 'all') {
       filtered = filtered.filter(doc => doc.artist_id === selectedArtist);
     }
 
-    if (selectedCategory) {
+    if (selectedCategory && selectedCategory !== 'all') {
       filtered = filtered.filter(doc => doc.category === selectedCategory);
     }
 
@@ -178,8 +178,8 @@ export const ArtistDocumentFilter: React.FC = () => {
   };
 
   const clearFilters = () => {
-    setSelectedArtist('');
-    setSelectedCategory('');
+    setSelectedArtist('all');
+    setSelectedCategory('all');
     setSearchTerm('');
   };
 
@@ -215,7 +215,7 @@ export const ArtistDocumentFilter: React.FC = () => {
                   <SelectValue placeholder="Tous les artistes" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tous les artistes</SelectItem>
+                  <SelectItem value="all">Tous les artistes</SelectItem>
                   {artists.map(artist => (
                     <SelectItem key={artist.id} value={artist.id}>
                       {artist.name}
@@ -232,7 +232,7 @@ export const ArtistDocumentFilter: React.FC = () => {
                   <SelectValue placeholder="Toutes les catégories" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Toutes les catégories</SelectItem>
+                  <SelectItem value="all">Toutes les catégories</SelectItem>
                   <SelectItem value="photo">Photos</SelectItem>
                   <SelectItem value="video">Vidéos</SelectItem>
                   <SelectItem value="audio">Audio</SelectItem>
