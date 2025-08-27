@@ -63,6 +63,7 @@ export const PublicationCalendar: React.FC = () => {
         media_type: formData.media_type || 'image' as const,
         external_link: formData.external_link || '',
         status: editingPublication?.status || 'draft' as const,
+        created_by: currentUser.id,
         user_id: currentUser.id
       };
 
