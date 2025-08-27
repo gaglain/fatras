@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import { FrontHome } from "./pages/FrontHome";
 import Dashboard from "./pages/Dashboard";
 import { Artists } from "./pages/Artists";
 import { ArtistDetail } from "./pages/ArtistDetail";
@@ -65,7 +66,7 @@ const App = () => {
                 <Toaster />
                 <Routes>
                 <Route path="/" element={<Index />} />
-                <Route path="/front" element={<Index />} />
+                <Route path="/front" element={<FrontHome />} />
                 <Route path="/auth" element={<Auth />} />
                 
                 {/* Routes du back-office - PROTÉGÉES */}

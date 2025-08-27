@@ -5,11 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CheckSquare, Search, Plus } from 'lucide-react';
+import { CheckSquare, Search, Plus, Trash } from 'lucide-react';
 import { toast } from 'sonner';
 import { TaskCreator } from '@/components/tasks/TaskCreator';
 import { TaskList } from '@/components/tasks/TaskList';
 import { useUser } from '@/contexts/UserContext';
+import { useTasks } from '@/hooks/useTasks';
 
 interface Task {
   id: string;
@@ -20,85 +21,55 @@ interface Task {
   createdBy: string;
   dueDate: string;
   priority: 'low' | 'medium' | 'high' | 'urgent';
-  status: 'todo' | 'in_progress' | 'completed';
+  status: 'todo' | 'in_progress' | 'completed' | 'cancelled';
   category: 'follow_up' | 'contract' | 'event_prep' | 'marketing' | 'admin';
   createdAt: string;
 }
 
 export const Tasks: React.FC = () => {
-  const [tasks, setTasks] = useState<Task[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<string>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const { users } = useUser();
+  const { tasks, loading, updateTask, deleteTask } = useTasks();
 
-  useEffect(() => {
-    loadTasks();
-  }, []);
-
-  const loadTasks = () => {
-    const savedTasks = localStorage.getItem('bookingTasks');
-    if (savedTasks) {
-      try {
-        const parsed = JSON.parse(savedTasks);
-        // Enrichir les tâches avec les noms des utilisateurs
-        const enrichedTasks = parsed.map((task: Task) => {
-          const assignedUser = users.find(u => u.id === task.assignedTo);
-          return {
-            ...task,
-            assignedToName: assignedUser ? assignedUser.name : 'Utilisateur inconnu'
-          };
-        });
-        setTasks(enrichedTasks);
-      } catch (error) {
-        console.error('Error loading tasks:', error);
-      }
-    }
-  };
-
-  const saveTasks = (updatedTasks: Task[]) => {
-    localStorage.setItem('bookingTasks', JSON.stringify(updatedTasks));
-    setTasks(updatedTasks);
-  };
-
-  const handleTaskCreated = (newTask: Task) => {
-    const assignedUser = users.find(u => u.id === newTask.assignedTo);
-    const enrichedTask = {
-      ...newTask,
-      assignedToName: assignedUser ? assignedUser.name : 'Utilisateur inconnu'
-    };
-    
-    const updatedTasks = [...tasks, enrichedTask];
-    saveTasks(updatedTasks);
+  const handleTaskCreated = () => {
     toast.success('Tâche créée avec succès');
   };
 
-  const updateTaskStatus = (taskId: string, newStatus: Task['status']) => {
-    const updatedTasks = tasks.map(task => {
-      if (task.id === taskId) {
-        return {
-          ...task,
-          status: newStatus,
-          completedAt: newStatus === 'completed' ? new Date().toISOString() : undefined
-        };
-      }
-      return task;
-    });
-    saveTasks(updatedTasks);
-    toast.success('Statut de la tâche mis à jour');
+  const updateTaskStatus = async (taskId: string, newStatus: 'todo' | 'in_progress' | 'completed' | 'cancelled') => {
+    try {
+      await updateTask(taskId, { status: newStatus });
+      toast.success('Statut de la tâche mis à jour');
+    } catch (error) {
+      toast.error('Erreur lors de la mise à jour de la tâche');
+    }
+  };
+
+  const handleDeleteTask = async (taskId: string) => {
+    try {
+      await deleteTask(taskId);
+      toast.success('Tâche supprimée avec succès');
+    } catch (error) {
+      toast.error('Erreur lors de la suppression de la tâche');
+    }
   };
 
   const filteredTasks = tasks.filter(task => {
     const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      task.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesUser = selectedUser === 'all' || task.assignedTo === selectedUser;
-    const matchesCategory = selectedCategory === 'all' || task.category === selectedCategory;
+      (task.description || '').toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesUser = selectedUser === 'all' || task.assigned_to === selectedUser;
+    const matchesCategory = selectedCategory === 'all' || true; // Remove category filter for now
     return matchesSearch && matchesUser && matchesCategory;
   });
 
   const todoTasks = filteredTasks.filter(task => task.status === 'todo');
   const inProgressTasks = filteredTasks.filter(task => task.status === 'in_progress');
   const completedTasks = filteredTasks.filter(task => task.status === 'completed');
+
+  if (loading) {
+    return <div className="flex justify-center items-center h-64">Chargement...</div>;
+  }
 
   return (
     <div className="space-y-6 p-4 lg:p-0">
@@ -159,19 +130,71 @@ export const Tasks: React.FC = () => {
         </TabsList>
 
         <TabsContent value="all">
-          <TaskList tasks={filteredTasks} onUpdateTaskStatus={updateTaskStatus} />
+          <TaskList 
+            tasks={filteredTasks.map(task => ({
+              ...task,
+              assignedTo: task.assigned_to || '',
+              assignedToName: users.find(u => u.id === task.assigned_to)?.name || 'Non assigné',
+              dueDate: task.due_date || '',
+              createdAt: task.created_at,
+              createdBy: task.user_id,
+              category: 'admin' as const,
+              description: task.description || ''
+            }))}
+            onUpdateTaskStatus={updateTaskStatus}
+            onDeleteTask={handleDeleteTask}
+          />
         </TabsContent>
 
         <TabsContent value="todo">
-          <TaskList tasks={todoTasks} onUpdateTaskStatus={updateTaskStatus} />
+          <TaskList 
+            tasks={todoTasks.map(task => ({
+              ...task,
+              assignedTo: task.assigned_to || '',
+              assignedToName: users.find(u => u.id === task.assigned_to)?.name || 'Non assigné',
+              dueDate: task.due_date || '',
+              createdAt: task.created_at,
+              createdBy: task.user_id,
+              category: 'admin' as const,
+              description: task.description || ''
+            }))}
+            onUpdateTaskStatus={updateTaskStatus}
+            onDeleteTask={handleDeleteTask}
+          />
         </TabsContent>
 
         <TabsContent value="in_progress">
-          <TaskList tasks={inProgressTasks} onUpdateTaskStatus={updateTaskStatus} />
+          <TaskList 
+            tasks={inProgressTasks.map(task => ({
+              ...task,
+              assignedTo: task.assigned_to || '',
+              assignedToName: users.find(u => u.id === task.assigned_to)?.name || 'Non assigné',
+              dueDate: task.due_date || '',
+              createdAt: task.created_at,
+              createdBy: task.user_id,
+              category: 'admin' as const,
+              description: task.description || ''
+            }))}
+            onUpdateTaskStatus={updateTaskStatus}
+            onDeleteTask={handleDeleteTask}
+          />
         </TabsContent>
 
         <TabsContent value="completed">
-          <TaskList tasks={completedTasks} onUpdateTaskStatus={updateTaskStatus} />
+          <TaskList 
+            tasks={completedTasks.map(task => ({
+              ...task,
+              assignedTo: task.assigned_to || '',
+              assignedToName: users.find(u => u.id === task.assigned_to)?.name || 'Non assigné',
+              dueDate: task.due_date || '',
+              createdAt: task.created_at,
+              createdBy: task.user_id,
+              category: 'admin' as const,
+              description: task.description || ''
+            }))}
+            onUpdateTaskStatus={updateTaskStatus}
+            onDeleteTask={handleDeleteTask}
+          />
         </TabsContent>
       </Tabs>
     </div>

@@ -214,8 +214,9 @@ export const useUserManagement = () => {
         return false;
       }
 
+      // Mettre à jour immédiatement la liste locale
+      setUsers(prev => prev.filter(user => user.user_id !== userId));
       toast.success('Utilisateur supprimé');
-      await fetchUsers();
       return true;
     } catch (error) {
       console.error('Erreur:', error);

@@ -2,8 +2,9 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, User, Clock, AlertCircle } from 'lucide-react';
+import { Calendar, User, Clock, AlertCircle, Trash2 } from 'lucide-react';
 
 interface Task {
   id: string;
@@ -13,7 +14,7 @@ interface Task {
   assignedToName?: string;
   dueDate: string;
   priority: 'low' | 'medium' | 'high' | 'urgent';
-  status: 'todo' | 'in_progress' | 'completed';
+  status: 'todo' | 'in_progress' | 'completed' | 'cancelled';
   category: 'follow_up' | 'contract' | 'event_prep' | 'marketing' | 'admin';
   createdAt: string;
 }
@@ -21,9 +22,10 @@ interface Task {
 interface TaskListProps {
   tasks: Task[];
   onUpdateTaskStatus: (taskId: string, status: Task['status']) => void;
+  onDeleteTask?: (taskId: string) => void;
 }
 
-export const TaskList: React.FC<TaskListProps> = ({ tasks, onUpdateTaskStatus }) => {
+export const TaskList: React.FC<TaskListProps> = ({ tasks, onUpdateTaskStatus, onDeleteTask }) => {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'urgent': return 'bg-red-100 text-red-800 border-red-200';
@@ -108,6 +110,16 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks, onUpdateTaskStatus })
                       <SelectItem value="completed">Terminée</SelectItem>
                     </SelectContent>
                   </Select>
+                  {onDeleteTask && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onDeleteTask(task.id)}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
