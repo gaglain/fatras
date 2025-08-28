@@ -19,6 +19,12 @@ export const Header: React.FC = () => {
   const { currentUser } = useUser();
   const { signOut } = useAuth();
   const { unreadCount } = useNotifications();
+  
+  // Debug du badge
+  useEffect(() => {
+    console.log('🎯 Header - unreadCount:', unreadCount);
+    console.log('🔴 Badge devrait être visible:', unreadCount > 0);
+  }, [unreadCount]);
   const [showUserProfile, setShowUserProfile] = useState(false);
   const [showNotificationCenter, setShowNotificationCenter] = useState(false);
   const [companySettings, setCompanySettings] = useState({
@@ -106,12 +112,12 @@ export const Header: React.FC = () => {
                   size="icon"
                   className="relative h-10 w-10"
                 >
-                  <Bell className="h-5 w-5" />
-                  {unreadCount > 0 && (
-                    <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs p-0 bg-red-500 text-white">
-                      {unreadCount > 99 ? '99+' : unreadCount}
-                    </Badge>
-                  )}
+                   <Bell className="h-5 w-5" />
+                   {unreadCount > 0 && (
+                     <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs p-0 bg-red-500 text-white min-w-[20px]">
+                       {unreadCount > 99 ? '99+' : unreadCount}
+                     </Badge>
+                   )}
                 </Button>
                 
                 {showNotificationCenter && (

@@ -30,7 +30,12 @@ export const useNotifications = () => {
         .order('created_at', { ascending: false });
 
       if (data && !error) {
+        console.log('📬 Notifications récupérées:', data);
+        console.log('📊 Nombre total:', data.length);
+        console.log('🔴 Non lues:', data.filter(n => !n.read).length);
         setNotifications(data);
+      } else if (error) {
+        console.error('❌ Erreur lors de la récupération des notifications:', error);
       }
       setLoading(false);
     };
@@ -132,6 +137,7 @@ export const useNotifications = () => {
   };
 
   const unreadCount = notifications.filter(n => !n.read).length;
+  console.log('🔔 Badge notifications - Total:', notifications.length, 'Non lues:', unreadCount);
 
   return {
     notifications,
