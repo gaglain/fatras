@@ -328,6 +328,42 @@ export type Database = {
         }
         Relationships: []
       }
+      contact_events: {
+        Row: {
+          contact_id: string
+          created_at: string
+          event_id: string
+          id: string
+        }
+        Insert: {
+          contact_id: string
+          created_at?: string
+          event_id: string
+          id?: string
+        }
+        Update: {
+          contact_id?: string
+          created_at?: string
+          event_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_events_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contact_events_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "centralized_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contact_list_members: {
         Row: {
           contact_id: string
@@ -1983,6 +2019,8 @@ export type Database = {
           contracts_fees: Json | null
           created_at: string
           email: string | null
+          email_signature: string | null
+          email_tracking_enabled: boolean | null
           first_name: string | null
           function_title: string | null
           guso_id: string | null
@@ -2013,6 +2051,8 @@ export type Database = {
           contracts_fees?: Json | null
           created_at?: string
           email?: string | null
+          email_signature?: string | null
+          email_tracking_enabled?: boolean | null
           first_name?: string | null
           function_title?: string | null
           guso_id?: string | null
@@ -2043,6 +2083,8 @@ export type Database = {
           contracts_fees?: Json | null
           created_at?: string
           email?: string | null
+          email_signature?: string | null
+          email_tracking_enabled?: boolean | null
           first_name?: string | null
           function_title?: string | null
           guso_id?: string | null
@@ -2287,6 +2329,18 @@ export type Database = {
       create_user_with_profile: {
         Args: { profile_data: Json; user_email: string; user_password: string }
         Returns: Json
+      }
+      get_event_contacts: {
+        Args: { event_id_param: string }
+        Returns: {
+          company: string
+          contact_id: string
+          email: string
+          first_name: string
+          last_name: string
+          phone: string
+          role: string
+        }[]
       }
       get_guest_order_by_email: {
         Args: { customer_email_param: string; order_id_param: string }

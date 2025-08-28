@@ -11,6 +11,7 @@ import { TaskCreator } from '@/components/tasks/TaskCreator';
 import { TaskList } from '@/components/tasks/TaskList';
 import { useUser } from '@/contexts/UserContext';
 import { useTasks } from '@/hooks/useTasks';
+import { EmailComposer } from '@/components/email/EmailComposer';
 
 interface Task {
   id: string;
@@ -30,6 +31,17 @@ export const Tasks: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<string>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [emailComposer, setEmailComposer] = useState<{
+    isOpen: boolean;
+    to: string;
+    subject: string;
+    preText: string;
+  }>({
+    isOpen: false,
+    to: '',
+    subject: '',
+    preText: ''
+  });
   const { users } = useUser();
   const { tasks, loading, updateTask, deleteTask } = useTasks();
 
@@ -152,6 +164,7 @@ export const Tasks: React.FC = () => {
             }))}
             onUpdateTaskStatus={updateTaskStatus}
             onDeleteTask={handleDeleteTask}
+            onSendEmail={handleSendTaskEmail}
           />
         </TabsContent>
 
@@ -169,6 +182,7 @@ export const Tasks: React.FC = () => {
             }))}
             onUpdateTaskStatus={updateTaskStatus}
             onDeleteTask={handleDeleteTask}
+            onSendEmail={handleSendTaskEmail}
           />
         </TabsContent>
 
@@ -186,6 +200,7 @@ export const Tasks: React.FC = () => {
             }))}
             onUpdateTaskStatus={updateTaskStatus}
             onDeleteTask={handleDeleteTask}
+            onSendEmail={handleSendTaskEmail}
           />
         </TabsContent>
 
@@ -203,9 +218,18 @@ export const Tasks: React.FC = () => {
             }))}
             onUpdateTaskStatus={updateTaskStatus}
             onDeleteTask={handleDeleteTask}
+            onSendEmail={handleSendTaskEmail}
           />
         </TabsContent>
       </Tabs>
+
+      <EmailComposer
+        isOpen={emailComposer.isOpen}
+        onClose={() => setEmailComposer({ isOpen: false, to: '', subject: '', preText: '' })}
+        toEmail={emailComposer.to}
+        subject={emailComposer.subject}
+        preText={emailComposer.preText}
+      />
     </div>
   );
 };

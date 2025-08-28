@@ -53,7 +53,7 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
       `;
 
       await sendEmail({
-        to,
+        to: [to],
         subject: emailSubject,
         html: htmlContent,
         from: currentUser?.email || 'noreply@example.com'
