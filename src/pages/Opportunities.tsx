@@ -14,7 +14,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useContacts } from '@/hooks/useContacts';
 import { useEvents } from '@/hooks/useEvents';
 import { useTasks } from '@/hooks/useTasks';
-import { useArtists } from '@/hooks/useArtists';
+import { useCentralizedData } from '@/hooks/useCentralizedData';
 
 interface Opportunity {
   id: string;
@@ -40,7 +40,7 @@ export const Opportunities: React.FC = () => {
   const { contacts } = useContacts();
   const { events } = useEvents();
   const { tasks } = useTasks();
-  const { artists } = useArtists();
+  const { artists } = useCentralizedData();
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
@@ -677,11 +677,11 @@ export const Opportunities: React.FC = () => {
                        </SelectTrigger>
                        <SelectContent>
                          <SelectItem value="none">Aucun artiste</SelectItem>
-                         {artists.map((artist) => (
-                           <SelectItem key={artist.id} value={artist.user_id}>
-                             {artist.first_name} {artist.last_name} {artist.show_name ? `(${artist.show_name})` : ''}
-                           </SelectItem>
-                         ))}
+                          {artists.map((artist) => (
+                            <SelectItem key={artist.id} value={artist.id}>
+                              {artist.name} ({artist.genre})
+                            </SelectItem>
+                          ))}
                        </SelectContent>
                      </Select>
                    </div>

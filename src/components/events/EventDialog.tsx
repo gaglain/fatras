@@ -212,6 +212,7 @@ export const EventDialog: React.FC<EventDialogProps> = ({
 
       onSave();
       onOpenChange(false);
+      window.location.reload(); // Force refresh to show updated data
     } catch (error: any) {
       console.error('Erreur:', error);
       toast.error('Erreur lors de la sauvegarde de l\'événement');
