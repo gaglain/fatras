@@ -7,13 +7,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Search, Calendar, MapPin, DollarSign, Edit, Trash2, User, CalendarDays, CheckSquare } from 'lucide-react';
+import { Plus, Search, Calendar, MapPin, DollarSign, Edit, Trash2, User, CalendarDays, CheckSquare, Grid, List } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useContacts } from '@/hooks/useContacts';
 import { useEvents } from '@/hooks/useEvents';
 import { useTasks } from '@/hooks/useTasks';
+import { useArtists } from '@/hooks/useArtists';
 
 interface Opportunity {
   id: string;
@@ -39,6 +40,7 @@ export const Opportunities: React.FC = () => {
   const { contacts } = useContacts();
   const { events } = useEvents();
   const { tasks } = useTasks();
+  const { artists } = useArtists();
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
@@ -301,6 +303,8 @@ export const Opportunities: React.FC = () => {
     }
   };
 
+  const [viewMode, setViewMode] = useState<'compact' | 'list'>('compact');
+
   return (
     <div className="space-y-6 p-4 lg:p-0">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -327,34 +331,135 @@ export const Opportunities: React.FC = () => {
             className="pl-10"
           />
         </div>
+        <div className="flex items-center space-x-1 border border-border rounded-md p-1">
+          <Button
+            variant={viewMode === 'compact' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => setViewMode('compact')}
+            className="h-8 px-3"
+          >
+            <Grid className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={viewMode === 'list' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => setViewMode('list')}
+            className="h-8 px-3"
+          >
+            <List className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className={viewMode === 'compact' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
         {filteredOpportunities.map((opportunity) => (
-          <Card key={opportunity.id} className="hover:shadow-md transition-shadow">
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <CardTitle className="text-lg mb-2">{opportunity.title}</CardTitle>
-                  <Badge className={getStatusColor(opportunity.status)}>
-                    {getStatusLabel(opportunity.status)}
-                  </Badge>
+          viewMode === 'compact' ? (
+            <Card key={opportunity.id} className="hover:shadow-md transition-shadow">
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <CardTitle className="text-lg mb-2">{opportunity.title}</CardTitle>
+                    <Badge className={getStatusColor(opportunity.status)}>
+                      {getStatusLabel(opportunity.status)}
+                    </Badge>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-1">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleEditOpportunity(opportunity)}
+                      className="w-full sm:w-auto"
+                    >
+                      <Edit className="h-4 w-4 sm:mr-1" />
+                      <span className="hidden sm:inline">Modifier</span>
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button size="sm" variant="outline" className="w-full sm:w-auto">
+                          <Trash2 className="h-4 w-4 text-red-500 sm:mr-1" />
+                          <span className="hidden sm:inline text-red-500">Supprimer</span>
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Supprimer l'opportunité</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Êtes-vous sûr de vouloir supprimer cette opportunité ? Cette action ne peut pas être annulée.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Annuler</AlertDialogCancel>
+                          <AlertDialogAction 
+                            onClick={() => handleDeleteOpportunity(opportunity.id)}
+                            className="bg-red-600 hover:bg-red-700"
+                          >
+                            Supprimer
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-1">
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-gray-600">{opportunity.description}</p>
+                
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center text-gray-600">
+                    <MapPin className="h-4 w-4 mr-2" />
+                    {opportunity.venue} - {opportunity.location}
+                  </div>
+                  <div className="flex items-center text-gray-600">
+                    <Calendar className="h-4 w-4 mr-2" />
+                    {new Date(opportunity.date).toLocaleDateString('fr-FR')}
+                  </div>
+                  <div className="flex items-center text-gray-600">
+                    <DollarSign className="h-4 w-4 mr-2" />
+                    {opportunity.budget}€
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card key={opportunity.id} className="hover:shadow-md transition-shadow p-4">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-center gap-3">
+                    <h3 className="text-lg font-semibold">{opportunity.title}</h3>
+                    <Badge className={getStatusColor(opportunity.status)}>
+                      {getStatusLabel(opportunity.status)}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{opportunity.description}</p>
+                  <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                    <div className="flex items-center">
+                      <MapPin className="h-4 w-4 mr-1" />
+                      {opportunity.venue} - {opportunity.location}
+                    </div>
+                    <div className="flex items-center">
+                      <Calendar className="h-4 w-4 mr-1" />
+                      {new Date(opportunity.date).toLocaleDateString('fr-FR')}
+                    </div>
+                    <div className="flex items-center">
+                      <DollarSign className="h-4 w-4 mr-1" />
+                      {opportunity.budget}€
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-2">
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => handleEditOpportunity(opportunity)}
-                    className="w-full sm:w-auto"
                   >
-                    <Edit className="h-4 w-4 sm:mr-1" />
-                    <span className="hidden sm:inline">Modifier</span>
+                    <Edit className="h-4 w-4 mr-1" />
+                    Modifier
                   </Button>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button size="sm" variant="outline" className="w-full sm:w-auto">
-                        <Trash2 className="h-4 w-4 text-red-500 sm:mr-1" />
-                        <span className="hidden sm:inline text-red-500">Supprimer</span>
+                      <Button size="sm" variant="outline">
+                        <Trash2 className="h-4 w-4 text-red-500 mr-1" />
+                        <span className="text-red-500">Supprimer</span>
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
@@ -377,26 +482,8 @@ export const Opportunities: React.FC = () => {
                   </AlertDialog>
                 </div>
               </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-sm text-gray-600">{opportunity.description}</p>
-              
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center text-gray-600">
-                  <MapPin className="h-4 w-4 mr-2" />
-                  {opportunity.venue} - {opportunity.location}
-                </div>
-                <div className="flex items-center text-gray-600">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  {new Date(opportunity.date).toLocaleDateString('fr-FR')}
-                </div>
-                <div className="flex items-center text-gray-600">
-                  <DollarSign className="h-4 w-4 mr-2" />
-                  {opportunity.budget}€
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+            </Card>
+          )
         ))}
       </div>
 
@@ -579,25 +666,45 @@ export const Opportunities: React.FC = () => {
                     </Select>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Tâche associée</label>
-                    <Select
-                      value={newOpportunity.task_id}
-                      onValueChange={(value) => setNewOpportunity({ ...newOpportunity, task_id: value === "none" ? "" : value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner une tâche" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Aucune tâche</SelectItem>
-                        {tasks.map((task) => (
-                          <SelectItem key={task.id} value={task.id}>
-                            {task.title}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                   <div>
+                     <label className="block text-sm font-medium mb-1">Artiste associé</label>
+                     <Select
+                       value={newOpportunity.artist_id}
+                       onValueChange={(value) => setNewOpportunity({ ...newOpportunity, artist_id: value === "none" ? "" : value })}
+                     >
+                       <SelectTrigger>
+                         <SelectValue placeholder="Sélectionner un artiste" />
+                       </SelectTrigger>
+                       <SelectContent>
+                         <SelectItem value="none">Aucun artiste</SelectItem>
+                         {artists.map((artist) => (
+                           <SelectItem key={artist.id} value={artist.user_id}>
+                             {artist.first_name} {artist.last_name} {artist.show_name ? `(${artist.show_name})` : ''}
+                           </SelectItem>
+                         ))}
+                       </SelectContent>
+                     </Select>
+                   </div>
+
+                   <div>
+                     <label className="block text-sm font-medium mb-1">Tâche associée</label>
+                     <Select
+                       value={newOpportunity.task_id}
+                       onValueChange={(value) => setNewOpportunity({ ...newOpportunity, task_id: value === "none" ? "" : value })}
+                     >
+                       <SelectTrigger>
+                         <SelectValue placeholder="Sélectionner une tâche" />
+                       </SelectTrigger>
+                       <SelectContent>
+                         <SelectItem value="none">Aucune tâche</SelectItem>
+                         {tasks.map((task) => (
+                           <SelectItem key={task.id} value={task.id}>
+                             {task.title}
+                           </SelectItem>
+                         ))}
+                       </SelectContent>
+                     </Select>
+                   </div>
                 </div>
               </div>
             </div>

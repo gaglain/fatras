@@ -235,12 +235,15 @@ export const useUserManagement = () => {
     }
   };
 
+  const deleteUser = deactivateUser; // Alias pour compatibilité
+
   return {
     users,
     loading,
     fetchUsers,
     createUser,
     updateUserProfile,
-    deactivateUser
+    deactivateUser,
+    deleteUser
   };
 };
