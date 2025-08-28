@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Search, Filter, Users, UserCheck, UserX, Upload, Download, Mail, List } from 'lucide-react';
+import { Plus, Search, Filter, Users, UserCheck, UserX, Upload, Download, Mail, List, Grid, LayoutList } from 'lucide-react';
 import { ContactCard } from '@/components/contacts/ContactCard';
 import { ContactDialog } from '@/components/contacts/ContactDialog';
 import { CSVImporter } from '@/components/CSVImporter';
@@ -40,6 +40,7 @@ export const Contacts: React.FC = () => {
   const [selectedContactIds, setSelectedContactIds] = useState<string[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
   const [bulkListAssignmentOpen, setBulkListAssignmentOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   useEffect(() => {
     if (user) {
@@ -261,17 +262,37 @@ export const Contacts: React.FC = () => {
 
         <TabsContent value="contacts" className="space-y-6">
           {/* Actions pour les contacts */}
-          <div className="flex flex-col space-y-2 sm:flex-row sm:justify-end sm:space-y-0 sm:space-x-2">
-            <Button onClick={() => setCsvImportOpen(true)} variant="outline" size="sm" className="text-sm">
-              <Upload className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">Importer CSV</span>
-              <span className="sm:hidden">Import</span>
-            </Button>
-            <Button onClick={() => setCsvExportOpen(true)} variant="outline" size="sm" className="text-sm">
-              <Download className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">Exporter CSV</span>
-              <span className="sm:hidden">Export</span>
-            </Button>
+          <div className="flex flex-col space-y-2 sm:flex-row sm:justify-between sm:space-y-0 sm:space-x-2">
+            <div className="flex space-x-2">
+              <Button
+                variant={viewMode === 'grid' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('grid')}
+              >
+                <Grid className="h-4 w-4 mr-2" />
+                Grille
+              </Button>
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('list')}
+              >
+                <LayoutList className="h-4 w-4 mr-2" />
+                Liste
+              </Button>
+            </div>
+            <div className="flex space-x-2">
+              <Button onClick={() => setCsvImportOpen(true)} variant="outline" size="sm" className="text-sm">
+                <Upload className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Importer CSV</span>
+                <span className="sm:hidden">Import</span>
+              </Button>
+              <Button onClick={() => setCsvExportOpen(true)} variant="outline" size="sm" className="text-sm">
+                <Download className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Exporter CSV</span>
+                <span className="sm:hidden">Export</span>
+              </Button>
+            </div>
           </div>
 
           {/* Stats Cards */}
@@ -378,7 +399,10 @@ export const Contacts: React.FC = () => {
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+            <div className={viewMode === 'grid' 
+              ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
+              : "space-y-2"
+            }>
               {filteredContacts.map((contact) => (
                 <ContactCard
                   key={contact.id}
@@ -387,6 +411,7 @@ export const Contacts: React.FC = () => {
                   onDelete={handleDelete}
                   isSelected={selectedContactIds.includes(contact.id!)}
                   onSelect={(selected) => handleContactSelect(contact.id!, selected)}
+                  viewMode={viewMode}
                 />
               ))}
             </div>

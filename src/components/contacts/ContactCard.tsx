@@ -13,6 +13,7 @@ interface ContactCardProps {
   onDelete: (id: string) => void;
   isSelected?: boolean;
   onSelect?: (selected: boolean) => void;
+  viewMode?: 'grid' | 'list';
 }
 
 export const ContactCard: React.FC<ContactCardProps> = ({ 
@@ -20,7 +21,8 @@ export const ContactCard: React.FC<ContactCardProps> = ({
   onEdit, 
   onDelete,
   isSelected = false,
-  onSelect
+  onSelect,
+  viewMode = 'grid'
 }) => {
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -42,6 +44,71 @@ export const ContactCard: React.FC<ContactCardProps> = ({
       default: return '👤';
     }
   };
+
+  if (viewMode === 'list') {
+    return (
+      <Card className={`hover:shadow-md transition-shadow ${isSelected ? 'ring-2 ring-blue-500' : ''}`}>
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4 flex-1">
+              {onSelect && (
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={(e) => onSelect(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                />
+              )}
+              <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                <span className="text-sm">{getRoleIcon(contact.role)}</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-base truncate">
+                  {contact.first_name} {contact.last_name}
+                </h3>
+                <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                  {contact.position && <span>{contact.position}</span>}
+                  {contact.company && <span>{contact.company}</span>}
+                  {contact.city && <span>{contact.city}</span>}
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                {contact.email && (
+                  <Mail className="h-4 w-4 text-muted-foreground" />
+                )}
+                {contact.phone && (
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                )}
+              </div>
+              <Badge className={getStatusColor(contact.status)}>
+                {contact.status}
+              </Badge>
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => onEdit(contact)}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Modifier
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => contact.id && onDelete(contact.id)}
+                  className="text-destructive"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Supprimer
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className={`hover:shadow-md transition-shadow ${isSelected ? 'ring-2 ring-blue-500' : ''}`}>

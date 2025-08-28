@@ -127,8 +127,8 @@ export const Artists: React.FC = () => {
     <div className="space-y-6 p-4 lg:p-0">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold">Gestion des Artistes</h1>
-          <p className="text-muted-foreground mt-1 text-sm lg:text-base">Gérer les artistes, tournées, plannings et logistique ({artists.length} artistes)</p>
+          <h1 className="text-2xl lg:text-3xl font-bold">Gestion des Spectacles</h1>
+          <p className="text-muted-foreground mt-1 text-sm lg:text-base">Gérer les spectacles, tournées, plannings et logistique ({artists.length} spectacles)</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <Button variant="outline" onClick={() => navigate('/show-bible')} className="w-full sm:w-auto">
@@ -138,7 +138,7 @@ export const Artists: React.FC = () => {
           </Button>
           <Button onClick={() => setShowAddForm(true)} className="w-full sm:w-auto">
             <Plus className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">Ajouter Artiste</span>
+            <span className="hidden sm:inline">Ajouter Spectacle</span>
             <span className="sm:hidden">Ajouter</span>
           </Button>
         </div>
@@ -147,7 +147,7 @@ export const Artists: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
         {/* Artists List */}
         <div className="lg:col-span-1">
-          <h2 className="text-lg lg:text-xl font-semibold mb-4">Artistes</h2>
+          <h2 className="text-lg lg:text-xl font-semibold mb-4">Spectacles</h2>
           <div className="space-y-3">
             {artists.map((artist) => (
               <Card 
@@ -316,24 +316,24 @@ export const Artists: React.FC = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <Card className="w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
             <CardHeader>
-              <CardTitle>{editingArtist ? 'Modifier l\'Artiste' : 'Ajouter Nouvel Artiste'}</CardTitle>
+              <CardTitle>{editingArtist ? 'Modifier le Spectacle' : 'Ajouter Nouveau Spectacle'}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <Input 
-                  placeholder="Nom de l'artiste *" 
+                  placeholder="Nom du spectacle *" 
                   value={formData.name}
                   onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                 />
                 <Input 
-                  placeholder="Genre *" 
+                  placeholder="Genre/Type *" 
                   value={formData.genre}
                   onChange={(e) => setFormData(prev => ({ ...prev, genre: e.target.value }))}
                 />
               </div>
               
               <Input 
-                placeholder="Tournée actuelle (optionnel)" 
+                placeholder="Tournée/Série actuelle (optionnel)" 
                 value={formData.currentTour}
                 onChange={(e) => setFormData(prev => ({ ...prev, currentTour: e.target.value }))}
               />
@@ -345,10 +345,10 @@ export const Artists: React.FC = () => {
               />
               
               <div>
-                <label className="block text-sm font-medium mb-2">Biographie</label>
+                <label className="block text-sm font-medium mb-2">Description du spectacle</label>
                 <textarea 
                   className="w-full p-3 border rounded-md min-h-24"
-                  placeholder="Biographie de l'artiste..."
+                  placeholder="Description du spectacle, synopsis, informations techniques..."
                   value={formData.bio}
                   onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
                 />
@@ -376,7 +376,7 @@ export const Artists: React.FC = () => {
                   onClick={handleSaveArtist}
                   className="flex-1 bg-purple-600 hover:bg-purple-700"
                 >
-                  {editingArtist ? 'Modifier' : 'Sauvegarder'} Artiste
+                  {editingArtist ? 'Modifier' : 'Sauvegarder'} Spectacle
                 </Button>
               </div>
             </CardContent>

@@ -171,17 +171,17 @@ export const ChannelManager: React.FC<ChannelManagerProps> = ({ onChannelCreated
         </DialogContent>
       </Dialog>
 
-      {/* Create Direct Message */}
+      {/* Envoyer un message direct */}
       <Dialog>
         <DialogTrigger asChild>
           <Button variant="outline" className="w-full justify-start h-8">
             <MessageSquare className="h-3 w-3 mr-2" />
-            Message direct
+            Envoyer un message
           </Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Envoyer un message direct</DialogTitle>
+            <DialogTitle>Envoyer un message</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <Label>Sélectionner un utilisateur</Label>
