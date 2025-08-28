@@ -118,7 +118,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
         notes: formData.notes || '',
         tags: formData.tags || [],
         role: formData.role || 'contact',
-        artist_id: (formData as any).artist_id && (formData as any).artist_id !== 'none' ? (formData as any).artist_id : null
+        accepts_marketing_emails: true
       };
 
       console.log('Saving contact with data:', contactData);
@@ -280,20 +280,13 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
               </Select>
             </div>
             <div>
-              <Label htmlFor="artist_id">Spectacle associé</Label>
-              <Select value={(formData as any).artist_id || 'none'} onValueChange={(value) => setFormData(prev => ({ ...prev, artist_id: value === 'none' ? null : value } as any))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un spectacle" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Aucun spectacle</SelectItem>
-                  {spectacles.map((spectacle) => (
-                    <SelectItem key={spectacle.id} value={spectacle.id}>
-                      {spectacle.name} - {spectacle.genre}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="source">Source</Label>
+              <Input
+                id="source"
+                value={formData.source || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, source: e.target.value }))}
+                placeholder="Référence, réseau social..."
+              />
             </div>
           </div>
 
@@ -333,15 +326,6 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="source">Source</Label>
-            <Input
-              id="source"
-              value={formData.source || ''}
-              onChange={(e) => setFormData(prev => ({ ...prev, source: e.target.value }))}
-              placeholder="Référence, réseau social..."
-            />
-          </div>
 
           <div>
             <Label htmlFor="tags">Tags</Label>
