@@ -9,6 +9,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useUser } from '@/contexts/UserContext';
 import { useAuth } from '@/hooks/useAuth';
+import { useNotifications } from '@/hooks/useNotifications';
+import { NotificationCenter } from '@/components/NotificationCenter';
 import { Link } from 'react-router-dom';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { toast } from 'sonner';
@@ -16,9 +18,9 @@ import { toast } from 'sonner';
 export const Header: React.FC = () => {
   const { currentUser } = useUser();
   const { signOut } = useAuth();
+  const { unreadCount } = useNotifications();
   const [showUserProfile, setShowUserProfile] = useState(false);
-  const [showNotificationTest, setShowNotificationTest] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [showNotificationCenter, setShowNotificationCenter] = useState(false);
   const [companySettings, setCompanySettings] = useState({
     name: 'Fatras Booking',
     logo: '',
@@ -52,12 +54,7 @@ export const Header: React.FC = () => {
   }, []);
 
   const handleNotificationClick = () => {
-    console.log('🔔 CLIC NOTIFICATION - Avant:', showNotificationTest);
-    setShowNotificationTest(prev => {
-      const newVal = !prev;
-      console.log('🔔 NOUVEAU ÉTAT:', newVal);
-      return newVal;
-    });
+    setShowNotificationCenter(prev => !prev);
   };
 
   const handleSignOut = async () => {
@@ -70,8 +67,6 @@ export const Header: React.FC = () => {
       toast.error('Erreur lors de la déconnexion');
     }
   };
-
-  console.log('🔔 RENDER Header - showNotificationTest:', showNotificationTest);
 
   return (
     <>
@@ -104,17 +99,27 @@ export const Header: React.FC = () => {
             <div className="flex items-center space-x-1 lg:space-x-2">
               <ThemeToggle />
               
-              <Button
-                onClick={handleNotificationClick}
-                className="relative h-10 w-10 p-0 bg-red-500 hover:bg-red-600 text-white border-2 border-white"
-              >
-                <Bell className="h-5 w-5" />
-                {unreadCount > 0 && (
-                  <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center text-xs p-0 bg-yellow-500 text-black">
-                    {unreadCount}
-                  </Badge>
+              <div className="relative">
+                <Button
+                  onClick={handleNotificationClick}
+                  variant="ghost"
+                  size="icon"
+                  className="relative h-10 w-10"
+                >
+                  <Bell className="h-5 w-5" />
+                  {unreadCount > 0 && (
+                    <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs p-0 bg-red-500 text-white">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </Badge>
+                  )}
+                </Button>
+                
+                {showNotificationCenter && (
+                  <div className="absolute top-12 right-0 z-50">
+                    <NotificationCenter onClose={() => setShowNotificationCenter(false)} />
+                  </div>
                 )}
-              </Button>
+              </div>
             </div>
 
             <DropdownMenu>
@@ -166,63 +171,6 @@ export const Header: React.FC = () => {
         </div>
       </div>
 
-      {/* POPUP TEST MEGA SIMPLE */}
-      {showNotificationTest && (
-        <div 
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100vw',
-            height: '100vh',
-            backgroundColor: 'rgba(255, 0, 0, 0.8)',
-            zIndex: 999999,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-          onClick={() => {
-            console.log('🔔 FERMETURE par clic fond');
-            setShowNotificationTest(false);
-          }}
-        >
-          <div 
-            style={{
-              backgroundColor: 'yellow',
-              padding: '50px',
-              border: '5px solid black',
-              borderRadius: '10px',
-              fontSize: '24px',
-              fontWeight: 'bold',
-              color: 'black'
-            }}
-            onClick={e => e.stopPropagation()}
-          >
-            <div>✅ POPUP FONCTIONNE !</div>
-            <div style={{ marginTop: '20px', fontSize: '16px' }}>
-              État: {showNotificationTest ? 'VISIBLE' : 'CACHÉ'}
-            </div>
-            <button 
-              onClick={() => {
-                console.log('🔔 FERMETURE par bouton');
-                setShowNotificationTest(false);
-              }}
-              style={{
-                marginTop: '20px',
-                padding: '10px 20px',
-                backgroundColor: 'red',
-                color: 'white',
-                border: 'none',
-                borderRadius: '5px',
-                fontSize: '16px',
-                cursor: 'pointer'
-              }}
-            >
-              FERMER
-            </button>
-          </div>
-        </div>
-      )}
     </>
   );
 };

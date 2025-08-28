@@ -4,7 +4,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, User, Clock, AlertCircle, Trash2 } from 'lucide-react';
+import { Calendar, User, Clock, AlertCircle, Trash2, Mail } from 'lucide-react';
+import { useContacts } from '@/hooks/useContacts';
 
 interface Task {
   id: string;
@@ -23,9 +24,11 @@ interface TaskListProps {
   tasks: Task[];
   onUpdateTaskStatus: (taskId: string, status: Task['status']) => void;
   onDeleteTask?: (taskId: string) => void;
+  onSendEmail?: (contactEmail: string, taskTitle: string) => void;
 }
 
-export const TaskList: React.FC<TaskListProps> = ({ tasks, onUpdateTaskStatus, onDeleteTask }) => {
+export const TaskList: React.FC<TaskListProps> = ({ tasks, onUpdateTaskStatus, onDeleteTask, onSendEmail }) => {
+  const { contacts } = useContacts();
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'urgent': return 'bg-red-100 text-red-800 border-red-200';
@@ -48,6 +51,10 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks, onUpdateTaskStatus, o
 
   const isOverdue = (dueDate: string) => {
     return new Date(dueDate) < new Date() && dueDate;
+  };
+
+  const getTaskContact = (assignedTo: string) => {
+    return contacts.find(contact => contact.id === assignedTo);
   };
 
   if (tasks.length === 0) {
@@ -96,7 +103,7 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks, onUpdateTaskStatus, o
                   )}
                 </div>
 
-                <div className="flex space-x-2">
+                <div className="flex flex-wrap gap-2">
                   <Select 
                     value={task.status} 
                     onValueChange={(value: Task['status']) => onUpdateTaskStatus(task.id, value)}
@@ -110,6 +117,23 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks, onUpdateTaskStatus, o
                       <SelectItem value="completed">Terminée</SelectItem>
                     </SelectContent>
                   </Select>
+                  
+                  {(() => {
+                    const contact = getTaskContact(task.assignedTo);
+                    return contact?.email && onSendEmail ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onSendEmail(contact.email!, task.title)}
+                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                        title={`Envoyer un email à ${contact.email}`}
+                      >
+                        <Mail className="h-4 w-4 mr-1" />
+                        Email
+                      </Button>
+                    ) : null;
+                  })()}
+                  
                   {onDeleteTask && (
                     <Button
                       variant="outline"

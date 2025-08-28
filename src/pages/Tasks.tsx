@@ -55,6 +55,15 @@ export const Tasks: React.FC = () => {
     }
   };
 
+  const handleSendTaskEmail = (contactEmail: string, taskTitle: string) => {
+    setEmailComposer({
+      isOpen: true,
+      to: contactEmail,
+      subject: `Concernant la tâche: ${taskTitle}`,
+      preText: `Bonjour,\n\nJe vous contacte concernant la tâche "${taskTitle}".\n\n`
+    });
+  };
+
   const filteredTasks = tasks.filter(task => {
     const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (task.description || '').toLowerCase().includes(searchTerm.toLowerCase());
