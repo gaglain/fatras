@@ -544,13 +544,13 @@ export const Opportunities: React.FC = () => {
                     <label className="block text-sm font-medium mb-1">Contact associé</label>
                     <Select
                       value={newOpportunity.contact_id}
-                      onValueChange={(value) => setNewOpportunity({ ...newOpportunity, contact_id: value })}
+                      onValueChange={(value) => setNewOpportunity({ ...newOpportunity, contact_id: value === "none" ? "" : value })}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Sélectionner un contact" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Aucun contact</SelectItem>
+                        <SelectItem value="none">Aucun contact</SelectItem>
                         {contacts.map((contact) => (
                           <SelectItem key={contact.id} value={contact.id}>
                             {contact.first_name} {contact.last_name}
@@ -564,13 +564,13 @@ export const Opportunities: React.FC = () => {
                     <label className="block text-sm font-medium mb-1">Événement associé</label>
                     <Select
                       value={newOpportunity.event_id}
-                      onValueChange={(value) => setNewOpportunity({ ...newOpportunity, event_id: value })}
+                      onValueChange={(value) => setNewOpportunity({ ...newOpportunity, event_id: value === "none" ? "" : value })}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Sélectionner un événement" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Aucun événement</SelectItem>
+                        <SelectItem value="none">Aucun événement</SelectItem>
                         {events.map((event) => (
                           <SelectItem key={event.id} value={event.id}>
                             {event.title}
@@ -584,13 +584,13 @@ export const Opportunities: React.FC = () => {
                     <label className="block text-sm font-medium mb-1">Tâche associée</label>
                     <Select
                       value={newOpportunity.task_id}
-                      onValueChange={(value) => setNewOpportunity({ ...newOpportunity, task_id: value })}
+                      onValueChange={(value) => setNewOpportunity({ ...newOpportunity, task_id: value === "none" ? "" : value })}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Sélectionner une tâche" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Aucune tâche</SelectItem>
+                        <SelectItem value="none">Aucune tâche</SelectItem>
                         {tasks.map((task) => (
                           <SelectItem key={task.id} value={task.id}>
                             {task.title}
