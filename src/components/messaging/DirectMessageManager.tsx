@@ -1,0 +1,130 @@
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { MessageSquare, User } from 'lucide-react';
+import { useUserManagement } from '@/hooks/useUserManagement';
+import { useMessaging } from '@/hooks/useMessaging';
+import { toast } from 'sonner';
+
+interface DirectMessageManagerProps {
+  trigger?: React.ReactNode;
+}
+
+export const DirectMessageManager: React.FC<DirectMessageManagerProps> = ({ trigger }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const { users } = useUserManagement();
+  const { createDirectMessage } = useMessaging();
+
+  React.useEffect(() => {
+    if (isOpen) {
+      // Fetch les utilisateurs quand on ouvre le dialog
+      // Les utilisateurs sont déjà gérés par useUserManagement
+    }
+  }, [isOpen]);
+
+  const handleCreateDM = async () => {
+    if (!selectedUserId) {
+      toast.error('Veuillez sélectionner un utilisateur');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      console.log('🔄 Création DM avec utilisateur:', selectedUserId);
+      const channelId = await createDirectMessage(selectedUserId);
+      
+      if (channelId) {
+        toast.success('Conversation privée créée');
+        setIsOpen(false);
+        setSelectedUserId('');
+      } else {
+        toast.error('Erreur lors de la création de la conversation');
+      }
+    } catch (error) {
+      console.error('❌ Erreur création DM:', error);
+      toast.error('Erreur lors de la création de la conversation');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const activeUsers = users.filter(user => user.is_active);
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        {trigger || (
+          <Button variant="outline" size="sm">
+            <MessageSquare className="h-4 w-4 mr-2" />
+            Nouveau message privé
+          </Button>
+        )}
+      </DialogTrigger>
+      <DialogContent className="w-full max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <MessageSquare className="h-5 w-5" />
+            Nouveau message privé
+          </DialogTitle>
+        </DialogHeader>
+        
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-medium mb-2 block">
+              Sélectionner un utilisateur
+            </label>
+            <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Choisir un utilisateur..." />
+              </SelectTrigger>
+              <SelectContent>
+                {activeUsers.length === 0 ? (
+                  <SelectItem value="no-users" disabled>
+                    Aucun utilisateur disponible
+                  </SelectItem>
+                ) : (
+                  activeUsers.map((user) => (
+                    <SelectItem key={user.user_id} value={user.user_id}>
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4" />
+                        <div>
+                          <div className="font-medium">
+                            {user.first_name} {user.last_name}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            @{user.username} - {user.role}
+                          </div>
+                        </div>
+                      </div>
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsOpen(false);
+                setSelectedUserId('');
+              }}
+            >
+              Annuler
+            </Button>
+            <Button
+              onClick={handleCreateDM}
+              disabled={!selectedUserId || isLoading || activeUsers.length === 0}
+            >
+              {isLoading ? 'Création...' : 'Créer conversation'}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};

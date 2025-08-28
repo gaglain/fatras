@@ -152,22 +152,29 @@ export const useTasks = () => {
 
   const addTask = async (taskData: Omit<Task, 'id' | 'created_at' | 'updated_at'>) => {
     try {
+      // S'assurer que les liaisons avec les artistes sont préservées
+      const taskWithRequiredData = {
+        ...taskData,
+        user_id: user?.id || taskData.user_id,
+        artist_id: taskData.artist_id || null // Garder la liaison artiste
+      };
+
       const { data, error } = await supabase
         .from('tasks')
         .insert({
-          user_id: taskData.user_id,
-          assigned_to: taskData.assigned_to,
-          contact_id: taskData.contact_id,
-          event_id: taskData.event_id,
-          artist_id: taskData.artist_id,
-          title: taskData.title,
-          description: taskData.description,
-          priority: taskData.priority,
-          status: taskData.status,
-          task_type: taskData.task_type,
-          due_date: taskData.due_date,
-          completed_at: taskData.completed_at,
-          tags: taskData.tags
+          user_id: taskWithRequiredData.user_id,
+          assigned_to: taskWithRequiredData.assigned_to,
+          contact_id: taskWithRequiredData.contact_id,
+          event_id: taskWithRequiredData.event_id,
+          artist_id: taskWithRequiredData.artist_id,
+          title: taskWithRequiredData.title,
+          description: taskWithRequiredData.description,
+          priority: taskWithRequiredData.priority,
+          status: taskWithRequiredData.status,
+          task_type: taskWithRequiredData.task_type,
+          due_date: taskWithRequiredData.due_date,
+          completed_at: taskWithRequiredData.completed_at,
+          tags: taskWithRequiredData.tags
         })
         .select()
         .single();

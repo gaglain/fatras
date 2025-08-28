@@ -7,6 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send, Hash, MessageSquare, Users, Plus, Lock, Trash2 } from 'lucide-react';
 import { useMessaging } from '@/hooks/useMessaging';
 import { ChannelManager } from '@/components/messaging/ChannelManager';
+import { DirectMessageManager } from '@/components/messaging/DirectMessageManager';
 
 export const Messagerie: React.FC = () => {
   const [selectedChannel, setSelectedChannel] = useState<string>('');
@@ -90,7 +91,10 @@ export const Messagerie: React.FC = () => {
             <h2 className="font-semibold text-lg text-card-foreground">
               Messagerie Interne
             </h2>
-            <ChannelManager onChannelCreated={handleChannelCreated} />
+            <div className="flex gap-2">
+              <ChannelManager onChannelCreated={handleChannelCreated} />
+              <DirectMessageManager />
+            </div>
           </div>
         </div>
 

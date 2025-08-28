@@ -203,21 +203,20 @@ export const useUserManagement = () => {
       setLoading(true);
       console.log('🗑️ Suppression utilisateur:', userId);
       
-      // D'abord supprimer de auth.users
-      const { error: authError } = await supabase.auth.admin.deleteUser(userId);
-      if (authError) {
-        console.log('⚠️ Avertissement suppression auth (peut être normal):', authError);
-      }
-      
-      // Puis supprimer le profil
-      const { error } = await supabase
-        .from('user_profiles')
-        .delete()
-        .eq('user_id', userId);
+      // Utiliser la fonction de suppression sécurisée
+      const { data, error } = await supabase.rpc('delete_user_completely', {
+        target_user_id: userId
+      });
 
       if (error) {
-        console.error('❌ Erreur suppression profil:', error);
-        toast.error('Erreur lors de la suppression du profil');
+        console.error('❌ Erreur suppression:', error);
+        toast.error('Erreur lors de la suppression');
+        return false;
+      }
+
+      if (data && typeof data === 'object' && 'success' in data && !data.success) {
+        console.error('❌ Erreur suppression:', data.error);
+        toast.error(String(data.error || 'Erreur inconnue'));
         return false;
       }
 
@@ -225,6 +224,7 @@ export const useUserManagement = () => {
       setUsers(prev => prev.filter(user => user.user_id !== userId));
       console.log('✅ Utilisateur supprimé avec succès');
       toast.success('Utilisateur supprimé définitivement');
+      await fetchUsers(); // Recharger la liste
       return true;
     } catch (error) {
       console.error('❌ Erreur suppression:', error);

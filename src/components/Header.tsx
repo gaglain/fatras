@@ -114,9 +114,12 @@ export const Header: React.FC = () => {
                 >
                    <Bell className="h-5 w-5" />
                    {unreadCount > 0 && (
-                     <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs p-0 bg-red-500 text-white min-w-[20px]">
-                       {unreadCount > 99 ? '99+' : unreadCount}
-                     </Badge>
+                     <>
+                       <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs p-0 bg-red-500 text-white min-w-[20px]">
+                         {unreadCount > 99 ? '99+' : unreadCount}
+                       </Badge>
+                       <div className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full animate-pulse"></div>
+                     </>
                    )}
                 </Button>
                 

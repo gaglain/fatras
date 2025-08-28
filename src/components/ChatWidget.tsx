@@ -9,6 +9,7 @@ import { useMessaging } from '@/hooks/useMessaging';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotifications } from '@/hooks/useNotifications';
 import { ChannelManager } from '@/components/messaging/ChannelManager';
+import { DirectMessageManager } from '@/components/messaging/DirectMessageManager';
 
 export const ChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -148,7 +149,17 @@ export const ChatWidget: React.FC = () => {
                 </SelectContent>
               </Select>
               
-              <ChannelManager onChannelCreated={(channelId) => setSelectedChannel(channelId)} />
+              <div className="flex gap-2">
+                <ChannelManager onChannelCreated={(channelId) => setSelectedChannel(channelId)} />
+                <DirectMessageManager
+                  trigger={
+                    <Button size="sm" variant="secondary" className="flex-1">
+                      <MessageSquare className="h-3 w-3 mr-1" />
+                      DM
+                    </Button>
+                  }
+                />
+              </div>
             </div>
           </div>
 

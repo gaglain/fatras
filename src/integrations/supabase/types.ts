@@ -2336,6 +2336,10 @@ export type Database = {
         Args: { profile_data: Json; user_email: string; user_password: string }
         Returns: Json
       }
+      delete_user_completely: {
+        Args: { target_user_id: string }
+        Returns: Json
+      }
       get_event_contacts: {
         Args: { event_id_param: string }
         Returns: {
