@@ -12,6 +12,7 @@ import { TaskList } from '@/components/tasks/TaskList';
 import { useUser } from '@/contexts/UserContext';
 import { useTasks } from '@/hooks/useTasks';
 import { EmailComposer } from '@/components/email/EmailComposer';
+import { NotificationTest } from '@/components/NotificationTest';
 
 interface Task {
   id: string;
@@ -102,6 +103,7 @@ export const Tasks: React.FC = () => {
           <p className="text-muted-foreground mt-1 text-sm lg:text-base">Organisez et suivez toutes vos tâches</p>
         </div>
         <TaskCreator onTaskCreated={handleTaskCreated} />
+        <NotificationTest />
       </div>
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">

@@ -192,8 +192,11 @@ export const useTasks = () => {
       
       // Créer une notification si la tâche a une échéance
       if (newTask.due_date) {
-        createTaskNotification(newTask);
+        await createTaskNotification(newTask);
       }
+      
+      // Créer aussi une notification simple pour informer de la création
+      await createSimpleTaskNotification(newTask);
       
       return newTask;
     } catch (error) {
@@ -230,13 +233,25 @@ export const useTasks = () => {
   };
 
   const deleteTask = async (id: string) => {
-    const { error } = await supabase
-      .from('tasks')
-      .delete()
-      .eq('id', id);
+    try {
+      // Supprimer d'abord toutes les notifications liées à cette tâche
+      await supabase
+        .from('notifications')
+        .delete()
+        .or(`and(type.eq.task_reminder,data->>task_id.eq.${id}),and(type.eq.task_created,data->>task_id.eq.${id}),and(type.eq.task_overdue,data->>task_id.eq.${id})`);
 
-    if (!error) {
-      setTasks(prev => prev.filter(task => task.id !== id));
+      // Puis supprimer la tâche
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', id);
+
+      if (!error) {
+        setTasks(prev => prev.filter(task => task.id !== id));
+      }
+    } catch (error) {
+      console.error('Erreur lors de la suppression de la tâche:', error);
+      throw error;
     }
   };
 
@@ -252,6 +267,25 @@ export const useTasks = () => {
           title: 'Rappel de tâche',
           message: `La tâche "${task.title}" arrive à échéance le ${new Date(task.due_date).toLocaleString('fr-FR')}`,
           data: { task_id: task.id, due_date: task.due_date }
+        });
+    } catch (error) {
+      console.error('Erreur lors de la création de la notification:', error);
+    }
+  };
+
+  // Créer une notification simple pour toute nouvelle tâche
+  const createSimpleTaskNotification = async (task: Task) => {
+    if (!user) return;
+    
+    try {
+      await supabase
+        .from('notifications')
+        .insert({
+          user_id: task.assigned_to || task.user_id,
+          type: 'task_created',
+          title: 'Nouvelle tâche assignée',
+          message: `Une nouvelle tâche "${task.title}" vous a été assignée`,
+          data: { task_id: task.id, task_title: task.title }
         });
     } catch (error) {
       console.error('Erreur lors de la création de la notification:', error);
@@ -277,12 +311,32 @@ export const useTasks = () => {
     }
   };
 
+  // Créer une notification test pour voir le point rouge
+  const createTestNotification = async () => {
+    if (!user) return;
+    
+    try {
+      await supabase
+        .from('notifications')
+        .insert({
+          user_id: user.id,
+          type: 'test',
+          title: 'Test notification',
+          message: 'Ceci est une notification de test pour vérifier le système',
+          data: { test: true }
+        });
+    } catch (error) {
+      console.error('Erreur lors de la création de la notification de test:', error);
+    }
+  };
+
   return {
     tasks,
     loading,
     addTask,
     updateTask,
     deleteTask,
-    getNotifications
+    getNotifications,
+    createTestNotification
   };
 };
