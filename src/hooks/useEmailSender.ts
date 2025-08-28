@@ -15,7 +15,8 @@ export const useEmailSender = () => {
   const sendEmail = async (emailData: EmailData) => {
     setSending(true);
     try {
-      const { data, error } = await supabase.functions.invoke('send-email', {
+      // Utiliser la fonction OVH au lieu de Resend
+      const { data, error } = await supabase.functions.invoke('send-email-ovh', {
         body: emailData
       });
 
