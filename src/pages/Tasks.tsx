@@ -45,7 +45,9 @@ export const Tasks: React.FC = () => {
   const { users } = useUser();
   const { tasks, loading, updateTask, deleteTask } = useTasks();
 
-  const handleTaskCreated = () => {
+  const handleTaskCreated = async () => {
+    // Recharger les tâches après création
+    window.location.reload();
     toast.success('Tâche créée avec succès');
   };
 

@@ -11,39 +11,39 @@ const RealtimeContext = createContext<RealtimeContextType | undefined>(undefined
 export const RealtimeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false);
 
-  // Configuration des mises à jour temps réel pour les principales tables
-  useRealtimeUpdates([
-    {
-      table: 'contacts',
-      onInsert: (payload) => {
-        console.log('Nouveau contact ajouté:', payload.new);
-        window.dispatchEvent(new CustomEvent('contactsChanged', { detail: payload.new }));
-      },
-      onUpdate: (payload) => {
-        console.log('Contact modifié:', payload.new);
-        window.dispatchEvent(new CustomEvent('contactsChanged', { detail: payload.new }));
-      },
-      onDelete: (payload) => {
-        console.log('Contact supprimé:', payload.old);
-        window.dispatchEvent(new CustomEvent('contactsChanged', { detail: payload.old }));
-      }
-    },
-    {
-      table: 'events',
-      onInsert: (payload) => {
-        console.log('Nouvel événement ajouté:', payload.new);
-        window.dispatchEvent(new CustomEvent('eventsChanged', { detail: payload.new }));
-      },
-      onUpdate: (payload) => {
-        console.log('Événement modifié:', payload.new);
-        window.dispatchEvent(new CustomEvent('eventsChanged', { detail: payload.new }));
-      },
-      onDelete: (payload) => {
-        console.log('Événement supprimé:', payload.old);
-        window.dispatchEvent(new CustomEvent('eventsChanged', { detail: payload.old }));
-      }
-    }
-  ]);
+  // Configuration des mises à jour temps réel désactivée temporairement
+  // useRealtimeUpdates([
+  //   {
+  //     table: 'contacts',
+  //     onInsert: (payload) => {
+  //       console.log('Nouveau contact ajouté:', payload.new);
+  //       window.dispatchEvent(new CustomEvent('contactsChanged', { detail: payload.new }));
+  //     },
+  //     onUpdate: (payload) => {
+  //       console.log('Contact modifié:', payload.new);
+  //       window.dispatchEvent(new CustomEvent('contactsChanged', { detail: payload.new }));
+  //     },
+  //     onDelete: (payload) => {
+  //       console.log('Contact supprimé:', payload.old);
+  //       window.dispatchEvent(new CustomEvent('contactsChanged', { detail: payload.old }));
+  //     }
+  //   },
+  //   {
+  //     table: 'events',
+  //     onInsert: (payload) => {
+  //       console.log('Nouvel événement ajouté:', payload.new);
+  //       window.dispatchEvent(new CustomEvent('eventsChanged', { detail: payload.new }));
+  //     },
+  //     onUpdate: (payload) => {
+  //       console.log('Événement modifié:', payload.new);
+  //       window.dispatchEvent(new CustomEvent('eventsChanged', { detail: payload.new }));
+  //     },
+  //     onDelete: (payload) => {
+  //       console.log('Événement supprimé:', payload.old);
+  //       window.dispatchEvent(new CustomEvent('eventsChanged', { detail: payload.old }));
+  //     }
+  //   }
+  // ]);
 
   useEffect(() => {
     // Simuler une connexion temps réel
