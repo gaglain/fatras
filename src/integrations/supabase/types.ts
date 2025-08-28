@@ -1155,6 +1155,69 @@ export type Database = {
         }
         Relationships: []
       }
+      opportunities: {
+        Row: {
+          artist_id: string | null
+          budget: number | null
+          contact: string | null
+          contact_id: string | null
+          created_at: string
+          date: string | null
+          deadline: string | null
+          description: string | null
+          event_id: string | null
+          id: string
+          location: string | null
+          requirements: string | null
+          status: string | null
+          task_id: string | null
+          title: string
+          updated_at: string
+          user_id: string
+          venue: string | null
+        }
+        Insert: {
+          artist_id?: string | null
+          budget?: number | null
+          contact?: string | null
+          contact_id?: string | null
+          created_at?: string
+          date?: string | null
+          deadline?: string | null
+          description?: string | null
+          event_id?: string | null
+          id?: string
+          location?: string | null
+          requirements?: string | null
+          status?: string | null
+          task_id?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+          venue?: string | null
+        }
+        Update: {
+          artist_id?: string | null
+          budget?: number | null
+          contact?: string | null
+          contact_id?: string | null
+          created_at?: string
+          date?: string | null
+          deadline?: string | null
+          description?: string | null
+          event_id?: string | null
+          id?: string
+          location?: string | null
+          requirements?: string | null
+          status?: string | null
+          task_id?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          venue?: string | null
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           created_at: string | null
