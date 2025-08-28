@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Calendar, User, Clock, AlertCircle, Trash2, Mail, Edit } from 'lucide-react';
 import { useContacts } from '@/hooks/useContacts';
 import { TaskEditor } from './TaskEditor';
+import { TaskExecuteButton } from './TaskExecuteButton';
 import { Task } from '@/hooks/useTasks';
 
 interface TaskDisplayData {
@@ -123,34 +124,32 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks, rawTasks, onUpdateTas
                     </SelectContent>
                   </Select>
                   
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      const rawTask = rawTasks?.find(t => t.id === task.id);
-                      if (rawTask) setEditingTask(rawTask);
-                    }}
-                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                  >
-                    <Edit className="h-4 w-4 mr-1" />
-                    Modifier
-                  </Button>
-                  
-                  {(() => {
-                    const contact = getTaskContact(task.assignedTo);
-                    return contact?.email && onSendEmail ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onSendEmail(contact.email!, task.title)}
-                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                        title={`Envoyer un email à ${contact.email}`}
-                      >
-                        <Mail className="h-4 w-4 mr-1" />
-                        Email
-                      </Button>
-                    ) : null;
-                  })()}
+                   {(() => {
+                     const rawTask = rawTasks?.find(t => t.id === task.id);
+                     const contact = getTaskContact(task.assignedTo);
+                     
+                     return rawTask ? (
+                       <TaskExecuteButton
+                         taskType={rawTask.task_type || 'Autre'}
+                         contactEmail={contact?.email}
+                         contactPhone={contact?.phone}
+                         taskTitle={task.title}
+                       />
+                     ) : null;
+                   })()}
+                   
+                   <Button
+                     variant="outline"
+                     size="sm"
+                     onClick={() => {
+                       const rawTask = rawTasks?.find(t => t.id === task.id);
+                       if (rawTask) setEditingTask(rawTask);
+                     }}
+                     className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                   >
+                     <Edit className="h-4 w-4 mr-1" />
+                     Modifier
+                   </Button>
                   
                   {onDeleteTask && (
                     <Button

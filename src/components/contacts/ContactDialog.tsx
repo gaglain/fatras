@@ -102,25 +102,51 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
     setLoading(true);
     try {
       const contactData = {
-        ...formData,
         user_id: user.id,
-        artist_id: (formData as any).artist_id || null
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        email: formData.email || '',
+        phone: formData.phone || '',
+        position: formData.position || '',
+        company: formData.company || '',
+        address: formData.address || '',
+        city: formData.city || '',
+        postal_code: formData.postal_code || '',
+        country: formData.country || 'France',
+        status: formData.status || 'prospect',
+        source: formData.source || '',
+        notes: formData.notes || '',
+        tags: formData.tags || [],
+        role: formData.role || 'contact',
+        artist_id: (formData as any).artist_id && (formData as any).artist_id !== 'none' ? (formData as any).artist_id : null
       };
 
+      console.log('Saving contact with data:', contactData);
+
       if (contact?.id) {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('contacts')
           .update(contactData)
-          .eq('id', contact.id);
+          .eq('id', contact.id)
+          .select();
         
-        if (error) throw error;
+        if (error) {
+          console.error('Contact update error:', error);
+          throw error;
+        }
+        console.log('Contact updated successfully:', data);
         toast.success('Contact mis à jour avec succès');
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('contacts')
-          .insert([contactData]);
+          .insert([contactData])
+          .select();
         
-        if (error) throw error;
+        if (error) {
+          console.error('Contact insert error:', error);
+          throw error;
+        }
+        console.log('Contact created successfully:', data);
         toast.success('Contact créé avec succès');
       }
 

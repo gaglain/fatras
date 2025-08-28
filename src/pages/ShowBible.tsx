@@ -24,9 +24,8 @@ import { useFileUpload } from '@/hooks/useFileUpload';
 import { useAuth } from '@/hooks/useAuth';
 import { useShowBible, CreateDocumentData } from '@/hooks/useShowBible';
 import { FilePreview } from '@/components/FilePreview';
-import { ArtistSelector } from '@/components/ArtistSelector';
 import { DocumentPreview } from '@/components/DocumentPreview';
-import { ArtistDisplay } from '@/components/ArtistDisplay';
+import { useCentralizedData } from '@/hooks/useCentralizedData';
 
 
 interface Category {
@@ -48,6 +47,7 @@ const defaultCategories: Category[] = [
 export const ShowBible: React.FC = () => {
   const { user } = useAuth();
   const { uploadFile, isUploading, uploadProgress } = useFileUpload();
+  const { artists: spectacles } = useCentralizedData();
   const { documents, loading, createDocument, deleteDocument } = useShowBible();
   const [categories] = useState<Category[]>(defaultCategories);
   const [showUploadDialog, setShowUploadDialog] = useState(false);
@@ -305,11 +305,26 @@ export const ShowBible: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Artistes associés</label>
-                <ArtistSelector
-                  selectedArtists={uploadForm.artists}
-                  onArtistsChange={(artists) => setUploadForm({ ...uploadForm, artists })}
-                />
+                <label className="block text-sm font-medium mb-1">Spectacles associés</label>
+                <Select 
+                  value={uploadForm.artists[0] || 'none'} 
+                  onValueChange={(value) => setUploadForm({ 
+                    ...uploadForm, 
+                    artists: value === 'none' ? [] : [value] 
+                  })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un spectacle" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Aucun spectacle</SelectItem>
+                    {spectacles.map((spectacle) => (
+                      <SelectItem key={spectacle.id} value={spectacle.id}>
+                        {spectacle.name} - {spectacle.genre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div>
@@ -502,16 +517,25 @@ export const ShowBible: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Artistes associés */}
+                {/* Spectacles associés */}
                 {doc.artists && doc.artists.length > 0 && (
                   <div className="border-t pt-3">
                     <div className="flex items-center gap-2 mb-2">
                       <User className="h-4 w-4 text-blue-600" />
                       <span className="text-sm font-medium text-blue-700">
-                        Artistes associés
+                        Spectacles associés
                       </span>
                     </div>
-                    <ArtistDisplay artistIds={doc.artists} />
+                    <div className="flex flex-wrap gap-2">
+                      {doc.artists.map((artistId) => {
+                        const spectacle = spectacles.find(s => s.id === artistId);
+                        return spectacle ? (
+                          <span key={artistId} className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                            {spectacle.name}
+                          </span>
+                        ) : null;
+                      })}
+                    </div>
                   </div>
                 )}
 

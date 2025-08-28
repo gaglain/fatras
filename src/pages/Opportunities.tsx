@@ -667,16 +667,32 @@ export const Opportunities: React.FC = () => {
                   </div>
 
                    <div>
-                     <label className="block text-sm font-medium mb-1">Artiste associé</label>
+                     <label className="block text-sm font-medium mb-1">Spectacle associé</label>
                      <Select
-                       value={newOpportunity.artist_id}
-                       onValueChange={(value) => setNewOpportunity({ ...newOpportunity, artist_id: value === "none" ? "" : value })}
+                       value={newOpportunity.artist_id || "none"}
+                       onValueChange={(value) => {
+                         setNewOpportunity(prev => ({ 
+                           ...prev, 
+                           artist_id: value === "none" ? "" : value 
+                         }));
+                         
+                         // Auto-fill email if spectacle has contact email
+                         if (value !== "none") {
+                           const selectedSpectacle = artists.find(a => a.id === value);
+                           if (selectedSpectacle?.contact_email) {
+                             setNewOpportunity(prev => ({ 
+                               ...prev, 
+                               contact: selectedSpectacle.contact_email 
+                             }));
+                           }
+                         }
+                       }}
                      >
                        <SelectTrigger>
-                         <SelectValue placeholder="Sélectionner un artiste" />
+                         <SelectValue placeholder="Sélectionner un spectacle" />
                        </SelectTrigger>
                        <SelectContent>
-                         <SelectItem value="none">Aucun artiste</SelectItem>
+                         <SelectItem value="none">Aucun spectacle</SelectItem>
                           {artists.map((artist) => (
                             <SelectItem key={artist.id} value={artist.id}>
                               {artist.name} ({artist.genre})

@@ -163,25 +163,25 @@ export const EventDialog: React.FC<EventDialogProps> = ({
       const eventData = {
         user_id: user.id,
         title: formData.title,
-        description: formData.description,
+        description: formData.description || '',
         event_type: formData.event_type || null,
-        venue: formData.venue,
-        address: formData.address,
-        city: formData.city,
-        postal_code: formData.postal_code,
-        country: formData.country,
+        venue: formData.venue || '',
+        address: formData.address || '',
+        city: formData.city || '',
+        postal_code: formData.postal_code || '',
+        country: formData.country || 'France',
         start_date: formData.start_date ? new Date(formData.start_date).toISOString() : null,
         end_date: formData.end_date ? new Date(formData.end_date).toISOString() : null,
-        status: formData.status,
+        status: formData.status || 'pending',
         budget_min: formData.budget_min || null,
         budget_max: formData.budget_max || null,
         attendees_count: formData.attendees_count || null,
-        requirements: formData.requirements,
-        notes: formData.notes,
-        contact_id: formData.contact_id && formData.contact_id !== 'none' ? formData.contact_id : null
+        requirements: formData.requirements || '',
+        notes: formData.notes || '',
+        contact_id: formData.contact_id && formData.contact_id !== 'none' && formData.contact_id !== '' ? formData.contact_id : null
       };
 
-      console.log('Event data being saved:', eventData);
+      console.log('Saving event with data:', eventData);
 
       if (event?.id) {
         const { data, error } = await supabase
@@ -194,7 +194,7 @@ export const EventDialog: React.FC<EventDialogProps> = ({
           console.error('Update error:', error);
           throw error;
         }
-        console.log('Updated event data:', data);
+        console.log('Event updated successfully:', data);
         toast.success('Événement mis à jour avec succès');
       } else {
         const { data, error } = await supabase
@@ -206,13 +206,12 @@ export const EventDialog: React.FC<EventDialogProps> = ({
           console.error('Insert error:', error);
           throw error;
         }
-        console.log('Inserted event data:', data);
+        console.log('Event created successfully:', data);
         toast.success('Événement créé avec succès');
       }
 
       onSave();
       onOpenChange(false);
-      window.location.reload(); // Force refresh to show updated data
     } catch (error: any) {
       console.error('Erreur:', error);
       toast.error('Erreur lors de la sauvegarde de l\'événement');
