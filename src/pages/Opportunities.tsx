@@ -423,13 +423,13 @@ export const Opportunities: React.FC = () => {
                   });
           }
         }}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
                 {editingOpportunity ? 'Modifier l\'opportunité' : 'Créer une nouvelle opportunité'}
               </DialogTitle>
             </DialogHeader>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4 max-h-[60vh] overflow-y-auto">
               <div>
                 <label className="block text-sm font-medium mb-1">Titre *</label>
                 <Input
@@ -494,7 +494,7 @@ export const Opportunities: React.FC = () => {
                 </Select>
               </div>
 
-              <div className="col-span-2">
+              <div className="col-span-1 md:col-span-2">
                 <label className="block text-sm font-medium mb-1">Description</label>
                 <Textarea
                   value={newOpportunity.description}
@@ -504,7 +504,7 @@ export const Opportunities: React.FC = () => {
                 />
               </div>
 
-              <div className="col-span-2">
+              <div className="col-span-1 md:col-span-2">
                 <label className="block text-sm font-medium mb-1">Exigences</label>
                 <Textarea
                   value={newOpportunity.requirements}
@@ -523,23 +523,22 @@ export const Opportunities: React.FC = () => {
                 />
               </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-1">Contact</label>
-                  <Input
-                    value={newOpportunity.contact}
-                    onChange={(e) => setNewOpportunity({ ...newOpportunity, contact: e.target.value })}
-                    placeholder="Email ou téléphone"
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Contact</label>
+                <Input
+                  value={newOpportunity.contact}
+                  onChange={(e) => setNewOpportunity({ ...newOpportunity, contact: e.target.value })}
+                  placeholder="Email ou téléphone"
+                />
               </div>
 
               {/* Relations */}
-              <div className="col-span-2 border-t pt-4">
+              <div className="col-span-1 md:col-span-2 border-t pt-4">
                 <h3 className="text-sm font-semibold mb-3 flex items-center">
                   <CalendarDays className="h-4 w-4 mr-2" />
                   Liens avec d'autres éléments
                 </h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-1">Contact associé</label>
                     <Select
@@ -601,21 +600,22 @@ export const Opportunities: React.FC = () => {
                   </div>
                 </div>
               </div>
+            </div>
 
-            <div className="flex space-x-2 pt-4">
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 pt-4 border-t">
               <Button 
                 variant="outline" 
                 onClick={() => {
                   setShowAddForm(false);
                   setEditingOpportunity(null);
                 }} 
-                className="flex-1"
+                className="flex-1 w-full sm:w-auto"
               >
                 Annuler
               </Button>
               <Button 
                 onClick={editingOpportunity ? handleUpdateOpportunity : handleAddOpportunity} 
-                className="flex-1"
+                className="flex-1 w-full sm:w-auto"
               >
                 {editingOpportunity ? 'Modifier' : 'Créer'}
               </Button>
