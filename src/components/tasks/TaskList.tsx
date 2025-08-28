@@ -1,13 +1,15 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, User, Clock, AlertCircle, Trash2, Mail } from 'lucide-react';
+import { Calendar, User, Clock, AlertCircle, Trash2, Mail, Edit } from 'lucide-react';
 import { useContacts } from '@/hooks/useContacts';
+import { TaskEditor } from './TaskEditor';
+import { Task } from '@/hooks/useTasks';
 
-interface Task {
+interface TaskDisplayData {
   id: string;
   title: string;
   description: string;
@@ -21,14 +23,16 @@ interface Task {
 }
 
 interface TaskListProps {
-  tasks: Task[];
-  onUpdateTaskStatus: (taskId: string, status: Task['status']) => void;
+  tasks: TaskDisplayData[];
+  rawTasks?: Task[];
+  onUpdateTaskStatus: (taskId: string, status: TaskDisplayData['status']) => void;
   onDeleteTask?: (taskId: string) => void;
   onSendEmail?: (contactEmail: string, taskTitle: string) => void;
 }
 
-export const TaskList: React.FC<TaskListProps> = ({ tasks, onUpdateTaskStatus, onDeleteTask, onSendEmail }) => {
+export const TaskList: React.FC<TaskListProps> = ({ tasks, rawTasks, onUpdateTaskStatus, onDeleteTask, onSendEmail }) => {
   const { contacts } = useContacts();
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'urgent': return 'bg-red-100 text-red-800 border-red-200';
@@ -106,7 +110,7 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks, onUpdateTaskStatus, o
                 <div className="flex flex-wrap gap-2">
                   <Select 
                     value={task.status} 
-                    onValueChange={(value: Task['status']) => onUpdateTaskStatus(task.id, value)}
+                    onValueChange={(value: TaskDisplayData['status']) => onUpdateTaskStatus(task.id, value)}
                   >
                     <SelectTrigger className="w-40">
                       <SelectValue />
@@ -115,8 +119,22 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks, onUpdateTaskStatus, o
                       <SelectItem value="todo">À faire</SelectItem>
                       <SelectItem value="in_progress">En cours</SelectItem>
                       <SelectItem value="completed">Terminée</SelectItem>
+                      <SelectItem value="cancelled">Annulée</SelectItem>
                     </SelectContent>
                   </Select>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const rawTask = rawTasks?.find(t => t.id === task.id);
+                      if (rawTask) setEditingTask(rawTask);
+                    }}
+                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                  >
+                    <Edit className="h-4 w-4 mr-1" />
+                    Modifier
+                  </Button>
                   
                   {(() => {
                     const contact = getTaskContact(task.assignedTo);
@@ -150,6 +168,15 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks, onUpdateTaskStatus, o
           </CardContent>
         </Card>
       ))}
+      
+      {editingTask && (
+        <TaskEditor
+          task={editingTask}
+          isOpen={!!editingTask}
+          onClose={() => setEditingTask(null)}
+          onTaskUpdated={() => setEditingTask(null)}
+        />
+      )}
     </div>
   );
 };

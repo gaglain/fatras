@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
 
 export interface Task {
   id: string;
@@ -60,6 +61,63 @@ export const useTasks = () => {
 
     fetchTasks();
   }, [user]);
+
+  // Configuration des mises à jour en temps réel
+  useRealtimeUpdates([
+    {
+      table: 'tasks',
+      onInsert: (payload) => {
+        const newTask = payload.new;
+        if (newTask.user_id === user?.id || newTask.assigned_to === user?.id) {
+          const taskData: Task = {
+            id: newTask.id,
+            user_id: newTask.user_id,
+            assigned_to: newTask.assigned_to || undefined,
+            contact_id: newTask.contact_id || undefined,
+            event_id: newTask.event_id || undefined,
+            artist_id: newTask.artist_id || undefined,
+            title: newTask.title,
+            description: newTask.description || '',
+            priority: newTask.priority as 'low' | 'medium' | 'high' | 'urgent',
+            status: newTask.status as 'todo' | 'in_progress' | 'completed' | 'cancelled',
+            due_date: newTask.due_date || undefined,
+            completed_at: newTask.completed_at || undefined,
+            tags: newTask.tags || [],
+            created_at: newTask.created_at,
+            updated_at: newTask.updated_at
+          };
+          setTasks(prev => [...prev, taskData]);
+        }
+      },
+      onUpdate: (payload) => {
+        const updatedTask = payload.new;
+        if (updatedTask.user_id === user?.id || updatedTask.assigned_to === user?.id) {
+          const taskData: Task = {
+            id: updatedTask.id,
+            user_id: updatedTask.user_id,
+            assigned_to: updatedTask.assigned_to || undefined,
+            contact_id: updatedTask.contact_id || undefined,
+            event_id: updatedTask.event_id || undefined,
+            artist_id: updatedTask.artist_id || undefined,
+            title: updatedTask.title,
+            description: updatedTask.description || '',
+            priority: updatedTask.priority as 'low' | 'medium' | 'high' | 'urgent',
+            status: updatedTask.status as 'todo' | 'in_progress' | 'completed' | 'cancelled',
+            due_date: updatedTask.due_date || undefined,
+            completed_at: updatedTask.completed_at || undefined,
+            tags: updatedTask.tags || [],
+            created_at: updatedTask.created_at,
+            updated_at: updatedTask.updated_at
+          };
+          setTasks(prev => prev.map(task => task.id === updatedTask.id ? taskData : task));
+        }
+      },
+      onDelete: (payload) => {
+        const deletedTask = payload.old;
+        setTasks(prev => prev.filter(task => task.id !== deletedTask.id));
+      }
+    }
+  ]);
 
   const addTask = async (taskData: Omit<Task, 'id' | 'created_at' | 'updated_at'>) => {
     try {

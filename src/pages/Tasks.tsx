@@ -162,6 +162,7 @@ export const Tasks: React.FC = () => {
               category: 'admin' as const,
               description: task.description || ''
             }))}
+            rawTasks={filteredTasks}
             onUpdateTaskStatus={updateTaskStatus}
             onDeleteTask={handleDeleteTask}
             onSendEmail={handleSendTaskEmail}
@@ -180,6 +181,7 @@ export const Tasks: React.FC = () => {
               category: 'admin' as const,
               description: task.description || ''
             }))}
+            rawTasks={todoTasks}
             onUpdateTaskStatus={updateTaskStatus}
             onDeleteTask={handleDeleteTask}
             onSendEmail={handleSendTaskEmail}
@@ -198,6 +200,7 @@ export const Tasks: React.FC = () => {
               category: 'admin' as const,
               description: task.description || ''
             }))}
+            rawTasks={inProgressTasks}
             onUpdateTaskStatus={updateTaskStatus}
             onDeleteTask={handleDeleteTask}
             onSendEmail={handleSendTaskEmail}
@@ -216,6 +219,7 @@ export const Tasks: React.FC = () => {
               category: 'admin' as const,
               description: task.description || ''
             }))}
+            rawTasks={completedTasks}
             onUpdateTaskStatus={updateTaskStatus}
             onDeleteTask={handleDeleteTask}
             onSendEmail={handleSendTaskEmail}
