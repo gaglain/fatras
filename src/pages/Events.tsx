@@ -17,6 +17,8 @@ import { Event } from '@/types/event.types';
 export const Events: React.FC = () => {
   const { user } = useAuth();
   const { eventTypes } = useEventTypes();
+  
+  // State declarations
   const [events, setEvents] = useState<Event[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,23 +30,17 @@ export const Events: React.FC = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [csvImportOpen, setCsvImportOpen] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      fetchEvents();
-    }
-  }, [user]);
-
-  useEffect(() => {
-    filterEvents();
-  }, [events, searchTerm, statusFilter, typeFilter]);
-
+  // Fetch events from Supabase
   const fetchEvents = async () => {
+    if (!user) return;
+    
+    setLoading(true);
     try {
       const { data, error } = await supabase
         .from('events')
         .select('*')
-        .eq('user_id', user?.id)
-        .order('start_date', { ascending: true });
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       setEvents(data || []);
@@ -56,15 +52,15 @@ export const Events: React.FC = () => {
     }
   };
 
+  // Filter events based on search and filters
   const filterEvents = () => {
     let filtered = events;
 
     if (searchTerm) {
-      filtered = filtered.filter(event => 
-        event.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      filtered = filtered.filter(event =>
+        event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         event.venue?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        event.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        event.event_type?.toLowerCase().includes(searchTerm.toLowerCase())
+        event.city?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -79,23 +75,26 @@ export const Events: React.FC = () => {
     setFilteredEvents(filtered);
   };
 
+  // Event handlers
   const handleEdit = (event: Event) => {
     setEditingEvent(event);
     setDialogOpen(true);
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cet événement ?')) return;
+    if (!user) return;
 
     try {
       const { error } = await supabase
         .from('events')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', user.id);
 
       if (error) throw error;
+
+      setEvents(prev => prev.filter(event => event.id !== id));
       toast.success('Événement supprimé avec succès');
-      fetchEvents();
     } catch (error: any) {
       console.error('Erreur lors de la suppression:', error);
       toast.error('Erreur lors de la suppression de l\'événement');
@@ -107,132 +106,147 @@ export const Events: React.FC = () => {
     setEditingEvent(null);
   };
 
-  const handleImportComplete = (importedEvents: any[]) => {
-    console.log('Import completed:', importedEvents.length, 'events');
+  const handleSaveEvent = () => {
+    fetchEvents();
+    handleDialogClose();
+  };
+
+  const handleImportComplete = () => {
     fetchEvents();
     setCsvImportOpen(false);
   };
 
   const getEventStats = () => {
-    const total = events.length;
-    const pending = events.filter(e => e.status === 'pending').length;
-    const confirmed = events.filter(e => e.status === 'confirmed').length;
-    const completed = events.filter(e => e.status === 'completed').length;
-    const cancelled = events.filter(e => e.status === 'cancelled').length;
-    
-    return { total, pending, confirmed, completed, cancelled };
+    const pending = filteredEvents.filter(e => e.status === 'pending').length;
+    const confirmed = filteredEvents.filter(e => e.status === 'confirmed').length;
+    const completed = filteredEvents.filter(e => e.status === 'completed').length;
+    const cancelled = filteredEvents.filter(e => e.status === 'cancelled').length;
+
+    return { total: filteredEvents.length, pending, confirmed, completed, cancelled };
   };
 
-  const stats = getEventStats();
+  // Effects
+  useEffect(() => {
+    if (user) {
+      fetchEvents();
+    }
+  }, [user]);
+
+  useEffect(() => {
+    filterEvents();
+  }, [events, searchTerm, statusFilter, typeFilter]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <div className="flex justify-center p-8">Chargement des événements...</div>;
   }
+
+  const stats = getEventStats();
 
   return (
     <div className="space-y-6 p-4 lg:p-0">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold">Événements</h1>
-          <p className="text-muted-foreground mt-1 text-sm lg:text-base">
-            Gérez vos concerts, festivals et événements
+          <h1 className="text-3xl font-bold text-foreground">Événements</h1>
+          <p className="text-muted-foreground mt-2">
+            Organisez et gérez tous vos événements
           </p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+        <div className="flex gap-2">
           <CSVEventExporter events={filteredEvents} />
-          <Button onClick={() => setCsvImportOpen(true)} variant="outline" className="w-full sm:w-auto">
+          <Button 
+            variant="outline" 
+            onClick={() => setCsvImportOpen(true)}
+          >
             <Upload className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">Importer</span>
-            <span className="sm:hidden">CSV</span>
+            <span className="hidden sm:inline">Importer CSV</span>
+            <span className="sm:hidden">Import</span>
           </Button>
-          <Button onClick={() => setDialogOpen(true)} className="w-full sm:w-auto">
+          <Button onClick={() => setDialogOpen(true)} className="w-full lg:w-auto">
             <Plus className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">Nouvel événement</span>
+            <span className="hidden sm:inline">Nouvel Événement</span>
             <span className="sm:hidden">Nouveau</span>
           </Button>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <div className="bg-card p-4 rounded-lg border">
-          <div className="flex items-center space-x-2">
-            <Calendar className="h-5 w-5 text-primary" />
+          <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Total</p>
               <p className="text-2xl font-bold">{stats.total}</p>
             </div>
+            <Calendar className="h-8 w-8 text-muted-foreground" />
           </div>
         </div>
         <div className="bg-card p-4 rounded-lg border">
-          <div className="flex items-center space-x-2">
-            <Clock className="h-5 w-5 text-yellow-600" />
+          <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">En attente</p>
               <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
             </div>
+            <Clock className="h-8 w-8 text-yellow-600" />
           </div>
         </div>
         <div className="bg-card p-4 rounded-lg border">
-          <div className="flex items-center space-x-2">
-            <CheckCircle className="h-5 w-5 text-green-600" />
+          <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Confirmés</p>
               <p className="text-2xl font-bold text-green-600">{stats.confirmed}</p>
             </div>
+            <CheckCircle className="h-8 w-8 text-green-600" />
           </div>
         </div>
         <div className="bg-card p-4 rounded-lg border">
-          <div className="flex items-center space-x-2">
-            <CheckCircle className="h-5 w-5 text-blue-600" />
+          <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Terminés</p>
               <p className="text-2xl font-bold text-blue-600">{stats.completed}</p>
             </div>
+            <CheckCircle className="h-8 w-8 text-blue-600" />
           </div>
         </div>
         <div className="bg-card p-4 rounded-lg border">
-          <div className="flex items-center space-x-2">
-            <XCircle className="h-5 w-5 text-red-600" />
+          <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Annulés</p>
               <p className="text-2xl font-bold text-red-600">{stats.cancelled}</p>
             </div>
+            <XCircle className="h-8 w-8 text-red-600" />
           </div>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+        <div className="relative flex-1 max-w-full sm:max-w-md">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
-            placeholder="Rechercher un événement..."
+            placeholder="Rechercher des événements..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
           />
         </div>
+        
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-full sm:w-48">
-            <SelectValue placeholder="Filtrer par statut" />
+            <SelectValue placeholder="Statut" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tous les statuts</SelectItem>
             <SelectItem value="pending">En attente</SelectItem>
-            <SelectItem value="confirmed">Confirmés</SelectItem>
-            <SelectItem value="completed">Terminés</SelectItem>
-            <SelectItem value="cancelled">Annulés</SelectItem>
+            <SelectItem value="confirmed">Confirmé</SelectItem>
+            <SelectItem value="cancelled">Annulé</SelectItem>
+            <SelectItem value="completed">Terminé</SelectItem>
           </SelectContent>
         </Select>
+
         <Select value={typeFilter} onValueChange={setTypeFilter}>
           <SelectTrigger className="w-full sm:w-48">
-            <SelectValue placeholder="Filtrer par type" />
+            <SelectValue placeholder="Type" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tous les types</SelectItem>
@@ -249,6 +263,7 @@ export const Events: React.FC = () => {
             ))}
           </SelectContent>
         </Select>
+        
         <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
       </div>
 
@@ -286,14 +301,12 @@ export const Events: React.FC = () => {
         </div>
       )}
 
+      {/* Dialogs */}
       <EventDialog
         open={dialogOpen}
         onOpenChange={handleDialogClose}
         event={editingEvent}
-        onSave={() => {
-          fetchEvents();
-          handleDialogClose();
-        }}
+        onSave={handleSaveEvent}
       />
 
       <CSVEventImporter
