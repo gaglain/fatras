@@ -12,6 +12,12 @@ import { toast } from 'sonner';
 import { Event } from '@/types/event.types';
 import { Contact } from '@/types/contact.types';
 
+interface EventType {
+  id: string;
+  name: string;
+  color: string;
+}
+
 interface EventDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -27,6 +33,8 @@ export const EventDialog: React.FC<EventDialogProps> = ({
 }) => {
   const { user } = useAuth();
   const [contacts, setContacts] = useState<Contact[]>([]);
+  const [eventTypes, setEventTypes] = useState<EventType[]>([]);
+  const [artists, setArtists] = useState<any[]>([]);
   const [formData, setFormData] = useState<Event>({
     title: '',
     description: '',
@@ -51,6 +59,8 @@ export const EventDialog: React.FC<EventDialogProps> = ({
   useEffect(() => {
     if (open && user) {
       fetchContacts();
+      fetchEventTypes();
+      fetchArtists();
     }
   }, [open, user]);
 
@@ -96,6 +106,36 @@ export const EventDialog: React.FC<EventDialogProps> = ({
       setContacts(data || []);
     } catch (error: any) {
       console.error('Erreur lors du chargement des contacts:', error);
+    }
+  };
+
+  const fetchEventTypes = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('event_types')
+        .select('id, name, color')
+        .eq('user_id', user?.id)
+        .order('name');
+
+      if (error) throw error;
+      setEventTypes(data || []);
+    } catch (error: any) {
+      console.error('Erreur lors du chargement des types d\'événements:', error);
+    }
+  };
+
+  const fetchArtists = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('user_id, first_name, last_name, show_name')
+        .in('role', ['artiste', 'admin', 'super_admin', 'manager'])
+        .order('first_name');
+
+      if (error) throw error;
+      setArtists(data || []);
+    } catch (error: any) {
+      console.error('Erreur lors du chargement des artistes:', error);
     }
   };
 
@@ -173,12 +213,24 @@ export const EventDialog: React.FC<EventDialogProps> = ({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="event_type">Type d'événement</Label>
-              <Input
-                id="event_type"
-                value={formData.event_type || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, event_type: e.target.value }))}
-                placeholder="Concert, Festival, etc."
-              />
+              <Select value={formData.event_type || ''} onValueChange={(value) => setFormData(prev => ({ ...prev, event_type: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {eventTypes.map((type) => (
+                    <SelectItem key={type.id} value={type.name}>
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: type.color }}
+                        />
+                        {type.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label htmlFor="status">Statut</Label>
@@ -217,21 +269,39 @@ export const EventDialog: React.FC<EventDialogProps> = ({
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="contact_id">Contact associé</Label>
-            <Select value={formData.contact_id || 'none'} onValueChange={(value) => setFormData(prev => ({ ...prev, contact_id: value === 'none' ? '' : value }))}>
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un contact" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Aucun contact</SelectItem>
-                {contacts.map((contact) => (
-                  <SelectItem key={contact.id} value={contact.id!}>
-                    {contact.first_name} {contact.last_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="contact_id">Contact associé</Label>
+              <Select value={formData.contact_id || 'none'} onValueChange={(value) => setFormData(prev => ({ ...prev, contact_id: value === 'none' ? '' : value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un contact" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Aucun contact</SelectItem>
+                  {contacts.map((contact) => (
+                    <SelectItem key={contact.id} value={contact.id!}>
+                      {contact.first_name} {contact.last_name} - {contact.role}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="artist_id">Artiste associé</Label>
+              <Select value={(formData as any).artist_id || 'none'} onValueChange={(value) => setFormData(prev => ({ ...prev, artist_id: value === 'none' ? null : value } as any))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un artiste" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Aucun artiste</SelectItem>
+                  {artists.map((artist) => (
+                    <SelectItem key={artist.user_id} value={artist.user_id}>
+                      {artist.show_name || `${artist.first_name} ${artist.last_name}`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div>

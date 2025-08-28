@@ -188,13 +188,38 @@ export const useMessaging = () => {
     if (!user) return null;
 
     try {
+      console.log('Creating DM with user:', otherUserId);
+      
+      // Vérifier si un canal DM existe déjà
+      const existingChannels = channels.filter(ch => ch.type === 'direct');
+      
+      for (const channel of existingChannels) {
+        // Récupérer les membres du canal
+        const { data: members, error: membersError } = await supabase
+          .from('messaging_channel_members')
+          .select('user_id')
+          .eq('channel_id', channel.id);
+
+        if (!membersError && members && members.length === 2) {
+          const memberIds = members.map(m => m.user_id);
+          if (memberIds.includes(user?.id) && memberIds.includes(otherUserId)) {
+            console.log('Existing DM channel found:', channel.id);
+            return channel.id;
+          }
+        }
+      }
+
       const { data, error } = await supabase.rpc('create_direct_message_channel', {
         other_user_id: otherUserId
       });
 
       if (error) throw error;
 
+      console.log('DM channel created:', data);
+      
+      // Refresh channels
       await fetchChannels();
+      
       return data;
     } catch (error) {
       console.error('Error creating DM:', error);

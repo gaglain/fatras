@@ -9,11 +9,13 @@ import { CSVEventImporter } from '@/components/events/CSVEventImporter';
 import { CSVEventExporter } from '@/components/events/CSVEventExporter';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useEventTypes } from '@/hooks/useEventTypes';
 import { toast } from 'sonner';
 import { Event } from '@/types/event.types';
 
 export const Events: React.FC = () => {
   const { user } = useAuth();
+  const { eventTypes } = useEventTypes();
   const [events, setEvents] = useState<Event[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -119,16 +121,7 @@ export const Events: React.FC = () => {
     return { total, pending, confirmed, completed, cancelled };
   };
 
-  const getUniqueEventTypes = () => {
-    const types = events
-      .map(e => e.event_type)
-      .filter(Boolean)
-      .filter((type, index, array) => array.indexOf(type) === index);
-    return types;
-  };
-
   const stats = getEventStats();
-  const eventTypes = getUniqueEventTypes();
 
   if (loading) {
     return (
@@ -242,8 +235,14 @@ export const Events: React.FC = () => {
           <SelectContent>
             <SelectItem value="all">Tous les types</SelectItem>
             {eventTypes.map((type) => (
-              <SelectItem key={type} value={type!}>
-                {type}
+              <SelectItem key={type.id} value={type.name}>
+                <div className="flex items-center gap-2">
+                  <div 
+                    className="w-3 h-3 rounded-full" 
+                    style={{ backgroundColor: type.color }}
+                  />
+                  {type.name}
+                </div>
               </SelectItem>
             ))}
           </SelectContent>
