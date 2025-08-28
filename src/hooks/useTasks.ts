@@ -266,6 +266,7 @@ export const useTasks = () => {
           type: 'task_reminder',
           title: 'Rappel de tâche',
           message: `La tâche "${task.title}" arrive à échéance le ${new Date(task.due_date).toLocaleString('fr-FR')}`,
+          read: false, // Explicitement non lue
           data: { task_id: task.id, due_date: task.due_date }
         });
     } catch (error) {
@@ -285,6 +286,7 @@ export const useTasks = () => {
           type: 'task_created',
           title: 'Nouvelle tâche assignée',
           message: `Une nouvelle tâche "${task.title}" vous a été assignée`,
+          read: false, // Explicitement non lue
           data: { task_id: task.id, task_title: task.title }
         });
     } catch (error) {
@@ -323,6 +325,7 @@ export const useTasks = () => {
           type: 'test',
           title: 'Test notification',
           message: 'Ceci est une notification de test pour vérifier le système',
+          read: false, // Explicitement non lue
           data: { test: true }
         });
     } catch (error) {

@@ -39,7 +39,7 @@ export const useNotifications = () => {
 
     // Écouter les nouvelles notifications en temps réel
     const channel = supabase
-      .channel('notifications-changes')
+      .channel(`notifications-changes-${user.id}`)
       .on(
         'postgres_changes',
         {
@@ -49,7 +49,25 @@ export const useNotifications = () => {
           filter: `user_id=eq.${user.id}`
         },
         (payload) => {
+          console.log('Nouvelle notification reçue:', payload.new);
           setNotifications(prev => [payload.new as Notification, ...prev]);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Notification mise à jour:', payload.new);
+          setNotifications(prev => 
+            prev.map(notif => 
+              notif.id === payload.new.id ? payload.new as Notification : notif
+            )
+          );
         }
       )
       .subscribe();
