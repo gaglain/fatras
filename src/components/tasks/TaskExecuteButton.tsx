@@ -2,29 +2,46 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Mail, Phone, Calendar, PlayCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { useContacts } from '@/hooks/useContacts';
 
-interface TaskExecuteButtonProps {
-  taskType: string;
-  contactEmail?: string;
-  contactPhone?: string;
-  taskTitle?: string;
+interface Task {
+  id: string;
+  title: string;
+  task_type: string;
+  contact_id?: string;
 }
 
-export const TaskExecuteButton: React.FC<TaskExecuteButtonProps> = ({
-  taskType,
-  contactEmail,
-  contactPhone,
-  taskTitle
-}) => {
+interface TaskExecuteButtonProps {
+  task: Task;
+}
+
+export const TaskExecuteButton: React.FC<TaskExecuteButtonProps> = ({ task }) => {
+  const { contacts } = useContacts();
+
+  const getContactEmail = () => {
+    if (!task.contact_id) return '';
+    const contact = contacts.find(c => c.id === task.contact_id);
+    console.log('Found contact for task:', contact, 'task contact_id:', task.contact_id);
+    return contact?.email || '';
+  };
+
+  const getContactPhone = () => {
+    if (!task.contact_id) return '';
+    const contact = contacts.find(c => c.id === task.contact_id);
+    return contact?.phone || '';
+  };
   const handleExecute = () => {
-    switch (taskType) {
+    const contactEmail = getContactEmail();
+    const contactPhone = getContactPhone();
+
+    switch (task.task_type) {
       case 'Email':
         if (contactEmail) {
-          const subject = encodeURIComponent(`Re: ${taskTitle || 'Tâche'}`);
-          const body = encodeURIComponent(`Bonjour,\n\nSuite à notre tâche "${taskTitle}", je vous contacte...\n\nCordialement`);
+          const subject = encodeURIComponent(`Re: ${task.title || 'Tâche'}`);
+          const body = encodeURIComponent(`Bonjour,\n\nSuite à notre tâche "${task.title}", je vous contacte...\n\nCordialement`);
           window.open(`mailto:${contactEmail}?subject=${subject}&body=${body}`);
         } else {
-          toast.error('Aucun email de contact disponible');
+          toast.error('Aucun email de contact disponible pour cette tâche');
         }
         break;
       
@@ -32,7 +49,7 @@ export const TaskExecuteButton: React.FC<TaskExecuteButtonProps> = ({
         if (contactPhone) {
           window.open(`tel:${contactPhone}`);
         } else {
-          toast.error('Aucun numéro de téléphone disponible');
+          toast.error('Aucun numéro de téléphone disponible pour cette tâche');
         }
         break;
       
@@ -41,7 +58,7 @@ export const TaskExecuteButton: React.FC<TaskExecuteButtonProps> = ({
         const startDate = new Date();
         const endDate = new Date(startDate.getTime() + 60 * 60 * 1000); // 1 hour later
         
-        const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(taskTitle || 'Rendez-vous')}&dates=${startDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z/${endDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z`;
+        const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(task.title || 'Rendez-vous')}&dates=${startDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z/${endDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z`;
         
         window.open(googleCalendarUrl, '_blank');
         break;
@@ -53,7 +70,7 @@ export const TaskExecuteButton: React.FC<TaskExecuteButtonProps> = ({
   };
 
   const getIcon = () => {
-    switch (taskType) {
+    switch (task.task_type) {
       case 'Email':
         return <Mail className="h-4 w-4" />;
       case 'Telephone':
@@ -66,7 +83,7 @@ export const TaskExecuteButton: React.FC<TaskExecuteButtonProps> = ({
   };
 
   const getLabel = () => {
-    switch (taskType) {
+    switch (task.task_type) {
       case 'Email':
         return 'Envoyer Email';
       case 'Telephone':

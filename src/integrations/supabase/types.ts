@@ -1665,6 +1665,42 @@ export type Database = {
           },
         ]
       }
+      quote_templates: {
+        Row: {
+          category: string
+          created_at: string
+          default_items: Json | null
+          default_terms: string | null
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          default_items?: Json | null
+          default_terms?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          default_items?: Json | null
+          default_terms?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       quotes: {
         Row: {
           contact_id: string | null

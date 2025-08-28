@@ -1,228 +1,250 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { MessageCircle, X, Send, User } from 'lucide-react';
+import { MessageCircle, X, Send, Users, Plus } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useMessaging } from '@/hooks/useMessaging';
+import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
-
-interface ChatMessage {
-  id: string;
-  user_name: string;
-  message: string;
-  timestamp: string;
-  is_admin: boolean;
-}
 
 export const PublicChatWidget: React.FC = () => {
+  const { user } = useAuth();
+  const { 
+    channels, 
+    messages, 
+    sendMessage, 
+    createChannel, 
+    createDirectMessage,
+    availableUsers 
+  } = useMessaging();
+  
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [activeChannel, setActiveChannel] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState('');
-  const [userName, setUserName] = useState('');
-  const [hasSetName, setHasSetName] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  const [showChannelCreator, setShowChannelCreator] = useState(false);
+  const [newChannelName, setNewChannelName] = useState('');
+  const [selectedUser, setSelectedUser] = useState<string>('');
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  // Charger les messages du chat depuis localStorage
-  useEffect(() => {
-    if (isOpen) {
-      const savedMessages = localStorage.getItem('publicChatMessages');
-      if (savedMessages) {
-        try {
-          setMessages(JSON.parse(savedMessages));
-        } catch (error) {
-          console.error('Erreur lors du chargement des messages:', error);
-        }
-      }
+    if (channels.length > 0 && !activeChannel) {
+      setActiveChannel(channels[0].id);
     }
-  }, [isOpen]);
+  }, [channels, activeChannel]);
 
-  const saveMessages = (newMessages: ChatMessage[]) => {
-    localStorage.setItem('publicChatMessages', JSON.stringify(newMessages));
-    setMessages(newMessages);
-  };
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || !activeChannel) return;
 
-  const sendMessage = async () => {
-    if (!newMessage.trim() || !userName.trim()) return;
-
-    const message: ChatMessage = {
-      id: `msg-${Date.now()}`,
-      user_name: userName,
-      message: newMessage.trim(),
-      timestamp: new Date().toISOString(),
-      is_admin: false
-    };
-
-    const updatedMessages = [...messages, message];
-    saveMessages(updatedMessages);
-    setNewMessage('');
-
-    // Envoyer une notification réelle via Supabase
     try {
-      // Obtenir les admins depuis les user_profiles
-      const { data: adminProfiles, error: adminError } = await supabase
-        .from('user_profiles')
-        .select('user_id')
-        .eq('role', 'super_admin');
-
-      if (adminError) {
-        console.error('Erreur lors de la récupération des admins:', adminError);
-      } else if (adminProfiles && adminProfiles.length > 0) {
-        // Envoyer une notification à chaque admin
-        const notifications = adminProfiles.map(admin => ({
-          user_id: admin.user_id,
-          type: 'chat_message',
-          title: 'Nouveau message chat public',
-          message: `${userName}: ${newMessage.slice(0, 50)}${newMessage.length > 50 ? '...' : ''}`,
-          data: { 
-            chat_message_id: message.id,
-            user_name: userName,
-            full_message: newMessage
-          }
-        }));
-
-        const { error: notifError } = await supabase
-          .from('notifications')
-          .insert(notifications);
-
-        if (notifError) {
-          console.error('Erreur notification Supabase:', notifError);
-        } else {
-          console.log('Notification envoyée aux admins via Supabase');
-        }
-      }
-
-      // Fallback vers localStorage pour compatibilité
-      const localNotifications = JSON.parse(localStorage.getItem('adminNotifications') || '[]');
-      localNotifications.push({
-        id: `notif-${Date.now()}`,
-        type: 'chat',
-        title: 'Nouveau message chat public',
-        message: `${userName}: ${newMessage.slice(0, 50)}${newMessage.length > 50 ? '...' : ''}`,
-        timestamp: new Date().toISOString(),
-        read: false
-      });
-      localStorage.setItem('adminNotifications', JSON.stringify(localNotifications));
-      
-      toast.success('Message envoyé !');
+      await sendMessage(activeChannel, newMessage);
+      setNewMessage('');
     } catch (error) {
-      console.error('Erreur lors de l\'envoi:', error);
+      console.error('Erreur envoi message:', error);
       toast.error('Erreur lors de l\'envoi du message');
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!hasSetName && userName.trim()) {
-      setHasSetName(true);
-      toast.success(`Bienvenue ${userName} !`);
-    } else if (hasSetName) {
-      sendMessage();
+  const handleCreateChannel = async () => {
+    if (!newChannelName.trim()) {
+      toast.error('Le nom du canal est requis');
+      return;
+    }
+
+    try {
+      const channelId = await createChannel(newChannelName, '', 'public', []);
+      if (channelId) {
+        setActiveChannel(channelId);
+        setNewChannelName('');
+        setShowChannelCreator(false);
+        toast.success('Canal créé avec succès');
+      }
+    } catch (error) {
+      console.error('Erreur création canal:', error);
+      toast.error('Erreur lors de la création du canal');
     }
   };
 
-  if (!isOpen) {
-    return (
-      <div className="fixed bottom-4 right-4 z-50">
-        <Button
-          onClick={() => setIsOpen(true)}
-          className="rounded-full w-14 h-14 bg-blue-600 hover:bg-blue-700 shadow-lg"
-        >
-          <MessageCircle className="h-6 w-6 text-white" />
-        </Button>
-      </div>
-    );
-  }
+  const handleCreateDM = async () => {
+    if (!selectedUser) {
+      toast.error('Veuillez sélectionner un utilisateur');
+      return;
+    }
+
+    try {
+      const channelId = await createDirectMessage(selectedUser);
+      if (channelId) {
+        setActiveChannel(channelId);
+        setSelectedUser('');
+        toast.success('Message privé créé');
+      }
+    } catch (error) {
+      console.error('Erreur création DM:', error);
+      toast.error('Erreur lors de la création du message privé');
+    }
+  };
+
+  const activeChannelData = channels.find(c => c.id === activeChannel);
+  const channelMessages = activeChannel ? messages[activeChannel] || [] : [];
+
+  if (!user) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 z-50">
-      <Card className="w-80 h-96 flex flex-col shadow-xl">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-blue-600 text-white rounded-t-lg">
-          <CardTitle className="text-lg">Chat Public</CardTitle>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsOpen(false)}
-            className="text-white hover:bg-blue-700"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </CardHeader>
-        <CardContent className="flex-1 flex flex-col p-4">
-          {!hasSetName ? (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">
-                  Votre nom pour discuter :
-                </label>
-                <Input
-                  value={userName}
-                  onChange={(e) => setUserName(e.target.value)}
-                  placeholder="Entrez votre nom..."
-                  className="w-full"
-                />
+    <>
+      {/* Widget Button */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <Button
+          onClick={() => setIsOpen(!isOpen)}
+          className="rounded-full w-14 h-14 shadow-lg"
+          size="icon"
+        >
+          {isOpen ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
+        </Button>
+      </div>
+
+      {/* Chat Window */}
+      {isOpen && (
+        <Card className="fixed bottom-24 right-6 w-96 h-[500px] shadow-xl z-40 flex flex-col">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg">Messages</CardTitle>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowChannelCreator(!showChannelCreator)}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
               </div>
-              <Button type="submit" className="w-full" disabled={!userName.trim()}>
-                Commencer à discuter
-              </Button>
-            </form>
-          ) : (
-            <>
-              <div className="flex-1 overflow-y-auto space-y-2 mb-4">
-                {messages.length === 0 ? (
-                  <div className="text-center text-gray-500 text-sm mt-8">
-                    Aucun message pour le moment.
-                    <br />
-                    Commencez la conversation !
+            </div>
+            
+            {/* Channel Creation */}
+            {showChannelCreator && (
+              <div className="space-y-2 p-3 bg-muted rounded-lg">
+                <div className="space-y-2">
+                  <Input
+                    placeholder="Nom du canal"
+                    value={newChannelName}
+                    onChange={(e) => setNewChannelName(e.target.value)}
+                  />
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={handleCreateChannel}>
+                      Créer Canal
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowChannelCreator(false)}
+                    >
+                      Annuler
+                    </Button>
                   </div>
-                ) : (
-                  messages.map((msg) => (
+                </div>
+                
+                <div className="border-t pt-2">
+                  <select
+                    value={selectedUser}
+                    onChange={(e) => setSelectedUser(e.target.value)}
+                    className="w-full p-2 border rounded"
+                  >
+                    <option value="">Sélectionner un utilisateur pour DM</option>
+                    {availableUsers.map((user) => (
+                      <option key={user.id} value={user.id}>
+                        {user.username || user.email}
+                      </option>
+                    ))}
+                  </select>
+                  {selectedUser && (
+                    <Button
+                      size="sm"
+                      onClick={handleCreateDM}
+                      className="mt-2 w-full"
+                    >
+                      Créer Message Privé
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
+          </CardHeader>
+
+          <CardContent className="flex-1 flex flex-col p-0">
+            {/* Channel List */}
+            <div className="border-b p-3">
+              <ScrollArea className="max-h-20">
+                <div className="flex flex-wrap gap-1">
+                  {channels.map((channel) => (
+                    <Badge
+                      key={channel.id}
+                      variant={activeChannel === channel.id ? "default" : "outline"}
+                      className="cursor-pointer"
+                      onClick={() => setActiveChannel(channel.id)}
+                    >
+                      {channel.type === 'direct' ? (
+                        <Users className="h-3 w-3 mr-1" />
+                      ) : null}
+                      {channel.name.length > 15 
+                        ? `${channel.name.substring(0, 15)}...` 
+                        : channel.name}
+                    </Badge>
+                  ))}
+                </div>
+              </ScrollArea>
+            </div>
+
+            {/* Messages */}
+            <ScrollArea className="flex-1 p-3">
+              {activeChannelData ? (
+                <div className="space-y-3">
+                  {channelMessages.map((message) => (
                     <div
-                      key={msg.id}
-                      className={`flex ${msg.is_admin ? 'justify-start' : 'justify-end'}`}
+                      key={message.id}
+                      className={`flex ${
+                        message.user_id === user.id ? 'justify-end' : 'justify-start'
+                      }`}
                     >
                       <div
-                        className={`max-w-[70%] rounded-lg p-2 text-sm ${
-                          msg.is_admin
-                            ? 'bg-gray-100 text-gray-800'
-                            : 'bg-blue-600 text-white'
+                        className={`max-w-[80%] p-2 rounded-lg ${
+                          message.user_id === user.id
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-muted'
                         }`}
                       >
-                        <div className="flex items-center space-x-1 mb-1">
-                          <User className="h-3 w-3" />
-                          <span className="font-medium text-xs">
-                            {msg.is_admin ? 'Support' : msg.user_name}
-                          </span>
-                        </div>
-                        <div>{msg.message}</div>
+                        <p className="text-sm">{message.content}</p>
+                        <p className="text-xs opacity-70 mt-1">
+                          {new Date(message.created_at).toLocaleTimeString()}
+                        </p>
                       </div>
                     </div>
-                  ))
-                )}
-                <div ref={messagesEndRef} />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center text-muted-foreground">
+                  Sélectionnez un canal pour voir les messages
+                </div>
+              )}
+            </ScrollArea>
+
+            {/* Message Input */}
+            {activeChannelData && (
+              <div className="border-t p-3">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Tapez votre message..."
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                  />
+                  <Button onClick={handleSendMessage} size="icon">
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-              <form onSubmit={handleSubmit} className="flex space-x-2">
-                <Input
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Tapez votre message..."
-                  className="flex-1"
-                />
-                <Button type="submit" size="sm" disabled={!newMessage.trim()}>
-                  <Send className="h-4 w-4" />
-                </Button>
-              </form>
-            </>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+    </>
   );
 };

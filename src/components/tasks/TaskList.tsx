@@ -126,14 +126,15 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks, rawTasks, onUpdateTas
                   
                    {(() => {
                      const rawTask = rawTasks?.find(t => t.id === task.id);
-                     const contact = getTaskContact(task.assignedTo);
                      
                      return rawTask ? (
                        <TaskExecuteButton
-                         taskType={rawTask.task_type || 'Autre'}
-                         contactEmail={contact?.email}
-                         contactPhone={contact?.phone}
-                         taskTitle={task.title}
+                         task={{
+                           id: rawTask.id,
+                           title: rawTask.title,
+                           task_type: rawTask.task_type || 'Autre',
+                           contact_id: rawTask.contact_id
+                         }}
                        />
                      ) : null;
                    })()}
