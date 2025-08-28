@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { Contact } from '@/types/contact.types';
+import { ContactRelatedEntities } from './ContactRelatedEntities';
 
 interface Spectacle {
   id: string;
@@ -372,6 +373,12 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
             </Button>
           </div>
         </form>
+        
+        {formData.id && (
+          <div className="mt-6">
+            <ContactRelatedEntities contact={formData as Contact} />
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
