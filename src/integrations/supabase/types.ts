@@ -41,6 +41,45 @@ export type Database = {
         }
         Relationships: []
       }
+      artist_events: {
+        Row: {
+          artist_id: string
+          created_at: string
+          event_id: string
+          id: string
+          role: string | null
+        }
+        Insert: {
+          artist_id: string
+          created_at?: string
+          event_id: string
+          id?: string
+          role?: string | null
+        }
+        Update: {
+          artist_id?: string
+          created_at?: string
+          event_id?: string
+          id?: string
+          role?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "artist_events_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "centralized_artists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "artist_events_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       artist_files: {
         Row: {
           artist_id: string | null
@@ -91,6 +130,45 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      artist_opportunities: {
+        Row: {
+          artist_id: string
+          created_at: string
+          id: string
+          opportunity_id: string
+          role: string | null
+        }
+        Insert: {
+          artist_id: string
+          created_at?: string
+          id?: string
+          opportunity_id: string
+          role?: string | null
+        }
+        Update: {
+          artist_id?: string
+          created_at?: string
+          id?: string
+          opportunity_id?: string
+          role?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "artist_opportunities_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "centralized_artists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "artist_opportunities_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -426,6 +504,84 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      contact_opportunities: {
+        Row: {
+          contact_id: string
+          created_at: string
+          id: string
+          opportunity_id: string
+          role: string | null
+        }
+        Insert: {
+          contact_id: string
+          created_at?: string
+          id?: string
+          opportunity_id: string
+          role?: string | null
+        }
+        Update: {
+          contact_id?: string
+          created_at?: string
+          id?: string
+          opportunity_id?: string
+          role?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_opportunities_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contact_opportunities_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contact_quotes: {
+        Row: {
+          contact_id: string
+          created_at: string
+          id: string
+          quote_id: string
+          role: string | null
+        }
+        Insert: {
+          contact_id: string
+          created_at?: string
+          id?: string
+          quote_id: string
+          role?: string | null
+        }
+        Update: {
+          contact_id?: string
+          created_at?: string
+          id?: string
+          quote_id?: string
+          role?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_quotes_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contact_quotes_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       contacts: {
         Row: {
@@ -1254,6 +1410,42 @@ export type Database = {
         }
         Relationships: []
       }
+      opportunity_events: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          opportunity_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          opportunity_id: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          opportunity_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opportunity_events_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunity_events_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           created_at: string | null
@@ -1621,6 +1813,42 @@ export type Database = {
         }
         Relationships: []
       }
+      quote_events: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          quote_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          quote_id: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          quote_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_events_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_events_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quote_items: {
         Row: {
           created_at: string | null
@@ -1658,6 +1886,42 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "quote_items_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quote_opportunities: {
+        Row: {
+          created_at: string
+          id: string
+          opportunity_id: string
+          quote_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          opportunity_id: string
+          quote_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          opportunity_id?: string
+          quote_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_opportunities_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_opportunities_quote_id_fkey"
             columns: ["quote_id"]
             isOneToOne: false
             referencedRelation: "quotes"
@@ -1769,6 +2033,81 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roadshow_contacts: {
+        Row: {
+          contact_id: string
+          created_at: string
+          id: string
+          roadshow_stop_id: string
+          role: string | null
+        }
+        Insert: {
+          contact_id: string
+          created_at?: string
+          id?: string
+          roadshow_stop_id: string
+          role?: string | null
+        }
+        Update: {
+          contact_id?: string
+          created_at?: string
+          id?: string
+          roadshow_stop_id?: string
+          role?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roadshow_contacts_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roadshow_contacts_roadshow_stop_id_fkey"
+            columns: ["roadshow_stop_id"]
+            isOneToOne: false
+            referencedRelation: "roadshow_stops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roadshow_opportunities: {
+        Row: {
+          created_at: string
+          id: string
+          opportunity_id: string
+          roadshow_stop_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          opportunity_id: string
+          roadshow_stop_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          opportunity_id?: string
+          roadshow_stop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roadshow_opportunities_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roadshow_opportunities_roadshow_stop_id_fkey"
+            columns: ["roadshow_stop_id"]
+            isOneToOne: false
+            referencedRelation: "roadshow_stops"
             referencedColumns: ["id"]
           },
         ]
@@ -1961,6 +2300,38 @@ export type Database = {
           version?: string
         }
         Relationships: []
+      }
+      task_entities: {
+        Row: {
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          task_id: string
+        }
+        Insert: {
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          task_id: string
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_entities_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tasks: {
         Row: {
