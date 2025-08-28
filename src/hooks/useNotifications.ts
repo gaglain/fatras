@@ -124,11 +124,20 @@ export const useNotifications = () => {
     try {
       const { data, error } = await supabase
         .from('notifications')
-        .insert(notificationData)
+        .insert({
+          user_id: notificationData.user_id,
+          type: notificationData.type,
+          title: notificationData.title,
+          message: notificationData.message,
+          read: notificationData.read,
+          data: notificationData.data
+        })
         .select()
         .single();
 
       if (error) throw error;
+      
+      console.log('✅ Notification créée:', data);
       return data;
     } catch (error) {
       console.error('Erreur lors de la création de la notification:', error);
