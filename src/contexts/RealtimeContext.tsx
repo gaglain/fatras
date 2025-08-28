@@ -29,21 +29,6 @@ export const RealtimeProvider: React.FC<{ children: ReactNode }> = ({ children }
       }
     },
     {
-      table: 'tasks',
-      onInsert: (payload) => {
-        console.log('Nouvelle tâche ajoutée:', payload.new);
-        window.dispatchEvent(new CustomEvent('tasksChanged', { detail: payload.new }));
-      },
-      onUpdate: (payload) => {
-        console.log('Tâche modifiée:', payload.new);
-        window.dispatchEvent(new CustomEvent('tasksChanged', { detail: payload.new }));
-      },
-      onDelete: (payload) => {
-        console.log('Tâche supprimée:', payload.old);
-        window.dispatchEvent(new CustomEvent('tasksChanged', { detail: payload.old }));
-      }
-    },
-    {
       table: 'events',
       onInsert: (payload) => {
         console.log('Nouvel événement ajouté:', payload.new);

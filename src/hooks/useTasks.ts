@@ -65,13 +65,18 @@ export const useTasks = () => {
   useEffect(() => {
     if (!user) return;
 
+    // Créer un nom de canal unique pour éviter les conflits
+    const channelName = `tasks-realtime-${user.id}-${Date.now()}`;
+    console.log('Creating tasks channel:', channelName);
+    
     const channel = supabase
-      .channel('tasks-realtime')
+      .channel(channelName)
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
         table: 'tasks'
       }, (payload) => {
+        console.log('Task INSERT:', payload);
         const newTask = payload.new;
         if (newTask.user_id === user.id || newTask.assigned_to === user.id) {
           const taskData: Task = {
@@ -99,6 +104,7 @@ export const useTasks = () => {
         schema: 'public',
         table: 'tasks'
       }, (payload) => {
+        console.log('Task UPDATE:', payload);
         const updatedTask = payload.new;
         if (updatedTask.user_id === user.id || updatedTask.assigned_to === user.id) {
           const taskData: Task = {
@@ -126,15 +132,21 @@ export const useTasks = () => {
         schema: 'public',
         table: 'tasks'
       }, (payload) => {
+        console.log('Task DELETE:', payload);
         const deletedTask = payload.old;
         setTasks(prev => prev.filter(task => task.id !== deletedTask.id));
-      })
-      .subscribe();
+      });
+
+    // S'abonner au canal
+    const subscription = channel.subscribe((status) => {
+      console.log('Tasks channel subscription status:', status);
+    });
 
     return () => {
+      console.log('Cleaning up tasks channel:', channelName);
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user?.id]); // Dépendance uniquement sur user.id pour éviter les re-créations inutiles
 
   const addTask = async (taskData: Omit<Task, 'id' | 'created_at' | 'updated_at'>) => {
     try {
