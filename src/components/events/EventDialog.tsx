@@ -184,19 +184,29 @@ export const EventDialog: React.FC<EventDialogProps> = ({
       console.log('Event data being saved:', eventData);
 
       if (event?.id) {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('events')
           .update(eventData)
-          .eq('id', event.id);
+          .eq('id', event.id)
+          .select();
         
-        if (error) throw error;
+        if (error) {
+          console.error('Update error:', error);
+          throw error;
+        }
+        console.log('Updated event data:', data);
         toast.success('Événement mis à jour avec succès');
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('events')
-          .insert([eventData]);
+          .insert([eventData])
+          .select();
         
-        if (error) throw error;
+        if (error) {
+          console.error('Insert error:', error);
+          throw error;
+        }
+        console.log('Inserted event data:', data);
         toast.success('Événement créé avec succès');
       }
 
