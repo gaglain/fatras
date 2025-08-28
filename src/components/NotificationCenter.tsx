@@ -4,19 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Bell, X, Mail, CheckSquare, Calendar, User, MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from 'next-themes';
-
-interface Notification {
-  id: string;
-  type: 'email' | 'task' | 'event' | 'message' | 'contact';
-  title: string;
-  message: string;
-  timestamp: string;
-  isRead: boolean;
-  priority: 'low' | 'medium' | 'high';
-  linkTo?: string;
-}
-
-const sampleNotifications: Notification[] = [];
+import { useNotifications } from '@/hooks/useNotifications';
 
 interface NotificationCenterProps {
   onClose: () => void;
@@ -25,34 +13,27 @@ interface NotificationCenterProps {
 export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose }) => {
   console.log('🔔 NotificationCenter component rendered');
   
-  const [notifications, setNotifications] = useState<Notification[]>(sampleNotifications);
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const { theme } = useTheme();
   const navigate = useNavigate();
 
-  const unreadCount = notifications.filter(n => !n.isRead).length;
-
-  const markAsRead = (id: string) => {
-    setNotifications(prev => 
-      prev.map(notification => 
-        notification.id === id 
-          ? { ...notification, isRead: true }
-          : notification
-      )
-    );
-  };
-
-  const markAllAsRead = () => {
-    setNotifications(prev => 
-      prev.map(notification => ({ ...notification, isRead: true }))
-    );
-  };
-
-  const handleNotificationClick = (notification: Notification) => {
+  const handleNotificationClick = (notification: any) => {
     markAsRead(notification.id);
-    if (notification.linkTo) {
-      navigate(notification.linkTo);
-      onClose();
+    // Navigation basée sur le type de notification
+    switch (notification.type) {
+      case 'task_reminder':
+        navigate('/tasks');
+        break;
+      case 'publication_reminder':
+        navigate('/publication-calendar');
+        break;
+      case 'email':
+        navigate('/email');
+        break;
+      default:
+        break;
     }
+    onClose();
   };
 
   const getIcon = (type: string) => {
@@ -66,11 +47,11 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
     }
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'bg-red-100 text-red-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'low': return 'bg-green-100 text-green-800';
+  const getPriorityColor = (type: string) => {
+    switch (type) {
+      case 'task_reminder': return 'bg-red-100 text-red-800';
+      case 'publication_reminder': return 'bg-blue-100 text-blue-800';
+      case 'email': return 'bg-green-100 text-green-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -154,10 +135,10 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
                 className="p-3 border rounded-lg transition-all duration-200 cursor-pointer hover:shadow-md bg-white dark:bg-gray-800"
                 style={{
                   backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
-                  borderColor: !notification.isRead 
+                  borderColor: !notification.read 
                     ? '#3b82f6' 
                     : (theme === 'dark' ? '#374151' : '#e5e7eb'),
-                  borderWidth: !notification.isRead ? '2px' : '1px'
+                  borderWidth: !notification.read ? '2px' : '1px'
                 }}
                 onClick={() => handleNotificationClick(notification)}
               >
@@ -171,10 +152,10 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
                         {notification.title}
                       </p>
                       <div className="flex items-center space-x-2">
-                        <div className={`px-2 py-1 rounded text-xs font-semibold ${getPriorityColor(notification.priority)}`}>
-                          {notification.priority}
+                        <div className={`px-2 py-1 rounded text-xs font-semibold ${getPriorityColor(notification.type)}`}>
+                          {notification.type}
                         </div>
-                        {!notification.isRead && (
+                        {!notification.read && (
                           <div className="w-2 h-2 rounded-full bg-red-500"></div>
                         )}
                       </div>
@@ -183,7 +164,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
                       {notification.message}
                     </p>
                     <p className="text-xs mt-1 opacity-70 text-gray-500 dark:text-gray-400">
-                      {formatTime(notification.timestamp)}
+                      {formatTime(notification.created_at)}
                     </p>
                   </div>
                 </div>

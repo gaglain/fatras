@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,8 +7,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Search, Calendar, MapPin, DollarSign, Edit, Trash2 } from 'lucide-react';
+import { Plus, Search, Calendar, MapPin, DollarSign, Edit, Trash2, User, CalendarDays, CheckSquare } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useContacts } from '@/hooks/useContacts';
+import { useEvents } from '@/hooks/useEvents';
+import { useTasks } from '@/hooks/useTasks';
 
 interface Opportunity {
   id: string;
@@ -22,14 +27,23 @@ interface Opportunity {
   deadline: string;
   requirements: string;
   contact: string;
+  artist_id?: string;
+  contact_id?: string;
+  event_id?: string;
+  task_id?: string;
   createdAt: string;
 }
 
 export const Opportunities: React.FC = () => {
+  const { user } = useAuth();
+  const { contacts } = useContacts();
+  const { events } = useEvents();
+  const { tasks } = useTasks();
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingOpportunity, setEditingOpportunity] = useState<Opportunity | null>(null);
+  const [loading, setLoading] = useState(true);
   const [newOpportunity, setNewOpportunity] = useState({
     title: '',
     description: '',
@@ -40,8 +54,54 @@ export const Opportunities: React.FC = () => {
     status: 'open' as 'open' | 'applied' | 'won' | 'lost',
     deadline: '',
     requirements: '',
-    contact: ''
+    contact: '',
+    artist_id: '',
+    contact_id: '',
+    event_id: '',
+    task_id: ''
   });
+
+  // Charger les opportunités depuis Supabase
+  useEffect(() => {
+    if (!user) return;
+    
+    const fetchOpportunities = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('opportunities')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Erreur lors du chargement des opportunités:', error);
+        toast.error('Erreur lors du chargement des opportunités');
+      } else {
+        const formattedOpportunities = data.map(opp => ({
+          id: opp.id,
+          title: opp.title,
+          description: opp.description || '',
+          venue: opp.venue || '',
+          location: opp.location || '',
+          date: opp.date || '',
+          budget: opp.budget || 0,
+          status: opp.status as 'open' | 'applied' | 'won' | 'lost',
+          deadline: opp.deadline || '',
+          requirements: opp.requirements || '',
+          contact: opp.contact || '',
+          artist_id: opp.artist_id || '',
+          contact_id: opp.contact_id || '',
+          event_id: opp.event_id || '',
+          task_id: opp.task_id || '',
+          createdAt: opp.created_at
+        }));
+        setOpportunities(formattedOpportunities);
+      }
+      setLoading(false);
+    };
+
+    fetchOpportunities();
+  }, [user]);
 
   const filteredOpportunities = opportunities.filter(opp =>
     opp.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -49,33 +109,79 @@ export const Opportunities: React.FC = () => {
     opp.location.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleAddOpportunity = () => {
-    if (!newOpportunity.title || !newOpportunity.venue) {
+  const handleAddOpportunity = async () => {
+    if (!newOpportunity.title || !newOpportunity.venue || !user) {
       toast.error('Veuillez remplir tous les champs obligatoires');
       return;
     }
 
-    const opportunity: Opportunity = {
-      id: `opp-${Date.now()}`,
-      ...newOpportunity,
-      createdAt: new Date().toISOString()
-    };
+    try {
+      const { data, error } = await supabase
+        .from('opportunities')
+        .insert({
+          user_id: user.id,
+          title: newOpportunity.title,
+          description: newOpportunity.description,
+          venue: newOpportunity.venue,
+          location: newOpportunity.location,
+          date: newOpportunity.date || null,
+          budget: newOpportunity.budget,
+          status: newOpportunity.status,
+          deadline: newOpportunity.deadline || null,
+          requirements: newOpportunity.requirements,
+          contact: newOpportunity.contact,
+          artist_id: newOpportunity.artist_id || null,
+          contact_id: newOpportunity.contact_id || null,
+          event_id: newOpportunity.event_id || null,
+          task_id: newOpportunity.task_id || null
+        })
+        .select()
+        .single();
 
-    setOpportunities(prev => [...prev, opportunity]);
-    setNewOpportunity({
-      title: '',
-      description: '',
-      venue: '',
-      location: '',
-      date: '',
-      budget: 0,
-      status: 'open' as 'open' | 'applied' | 'won' | 'lost',
-      deadline: '',
-      requirements: '',
-      contact: ''
-    });
-    setShowAddForm(false);
-    toast.success('Opportunité créée');
+      if (error) throw error;
+
+      const opportunity: Opportunity = {
+        id: data.id,
+        title: data.title,
+        description: data.description || '',
+        venue: data.venue || '',
+        location: data.location || '',
+        date: data.date || '',
+        budget: data.budget || 0,
+        status: data.status as 'open' | 'applied' | 'won' | 'lost',
+        deadline: data.deadline || '',
+        requirements: data.requirements || '',
+        contact: data.contact || '',
+        artist_id: data.artist_id || '',
+        contact_id: data.contact_id || '',
+        event_id: data.event_id || '',
+        task_id: data.task_id || '',
+        createdAt: data.created_at
+      };
+
+      setOpportunities(prev => [opportunity, ...prev]);
+      setNewOpportunity({
+        title: '',
+        description: '',
+        venue: '',
+        location: '',
+        date: '',
+        budget: 0,
+        status: 'open' as 'open' | 'applied' | 'won' | 'lost',
+        deadline: '',
+        requirements: '',
+        contact: '',
+        artist_id: '',
+        contact_id: '',
+        event_id: '',
+        task_id: ''
+      });
+      setShowAddForm(false);
+      toast.success('Opportunité créée avec succès');
+    } catch (error) {
+      console.error('Erreur lors de la création:', error);
+      toast.error('Erreur lors de la création de l\'opportunité');
+    }
   };
 
   const handleEditOpportunity = (opportunity: Opportunity) => {
@@ -90,38 +196,89 @@ export const Opportunities: React.FC = () => {
       status: opportunity.status,
       deadline: opportunity.deadline,
       requirements: opportunity.requirements,
-      contact: opportunity.contact
+      contact: opportunity.contact,
+      artist_id: opportunity.artist_id || '',
+      contact_id: opportunity.contact_id || '',
+      event_id: opportunity.event_id || '',
+      task_id: opportunity.task_id || ''
     });
   };
 
-  const handleUpdateOpportunity = () => {
-    if (!editingOpportunity) return;
+  const handleUpdateOpportunity = async () => {
+    if (!editingOpportunity || !user) return;
 
-    setOpportunities(prev => prev.map(opp => 
-      opp.id === editingOpportunity.id 
-        ? { ...opp, ...newOpportunity }
-        : opp
-    ));
-    
-    setEditingOpportunity(null);
-    setNewOpportunity({
-      title: '',
-      description: '',
-      venue: '',
-      location: '',
-      date: '',
-      budget: 0,
-      status: 'open' as 'open' | 'applied' | 'won' | 'lost',
-      deadline: '',
-      requirements: '',
-      contact: ''
-    });
-    toast.success('Opportunité mise à jour');
+    try {
+      const { error } = await supabase
+        .from('opportunities')
+        .update({
+          title: newOpportunity.title,
+          description: newOpportunity.description,
+          venue: newOpportunity.venue,
+          location: newOpportunity.location,
+          date: newOpportunity.date || null,
+          budget: newOpportunity.budget,
+          status: newOpportunity.status,
+          deadline: newOpportunity.deadline || null,
+          requirements: newOpportunity.requirements,
+          contact: newOpportunity.contact,
+          artist_id: newOpportunity.artist_id || null,
+          contact_id: newOpportunity.contact_id || null,
+          event_id: newOpportunity.event_id || null,
+          task_id: newOpportunity.task_id || null
+        })
+        .eq('id', editingOpportunity.id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      setOpportunities(prev => prev.map(opp => 
+        opp.id === editingOpportunity.id 
+          ? { ...opp, ...newOpportunity }
+          : opp
+      ));
+      
+      setEditingOpportunity(null);
+      setNewOpportunity({
+        title: '',
+        description: '',
+        venue: '',
+        location: '',
+        date: '',
+        budget: 0,
+        status: 'open' as 'open' | 'applied' | 'won' | 'lost',
+        deadline: '',
+        requirements: '',
+        contact: '',
+        artist_id: '',
+        contact_id: '',
+        event_id: '',
+        task_id: ''
+      });
+      toast.success('Opportunité mise à jour avec succès');
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour:', error);
+      toast.error('Erreur lors de la mise à jour de l\'opportunité');
+    }
   };
 
-  const handleDeleteOpportunity = (id: string) => {
-    setOpportunities(prev => prev.filter(opp => opp.id !== id));
-    toast.success('Opportunité supprimée');
+  const handleDeleteOpportunity = async (id: string) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('opportunities')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      setOpportunities(prev => prev.filter(opp => opp.id !== id));
+      toast.success('Opportunité supprimée avec succès');
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      toast.error('Erreur lors de la suppression de l\'opportunité');
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -248,18 +405,22 @@ export const Opportunities: React.FC = () => {
           if (!open) {
             setShowAddForm(false);
             setEditingOpportunity(null);
-            setNewOpportunity({
-              title: '',
-              description: '',
-              venue: '',
-              location: '',
-              date: '',
-              budget: 0,
-              status: 'open' as 'open' | 'applied' | 'won' | 'lost',
-              deadline: '',
-              requirements: '',
-              contact: ''
-            });
+                  setNewOpportunity({
+                    title: '',
+                    description: '',
+                    venue: '',
+                    location: '',
+                    date: '',
+                    budget: 0,
+                    status: 'open' as 'open' | 'applied' | 'won' | 'lost',
+                    deadline: '',
+                    requirements: '',
+                    contact: '',
+                    artist_id: '',
+                    contact_id: '',
+                    event_id: '',
+                    task_id: ''
+                  });
           }
         }}>
           <DialogContent className="max-w-2xl">
@@ -362,15 +523,84 @@ export const Opportunities: React.FC = () => {
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-1">Contact</label>
-                <Input
-                  value={newOpportunity.contact}
-                  onChange={(e) => setNewOpportunity({ ...newOpportunity, contact: e.target.value })}
-                  placeholder="Email ou téléphone"
-                />
+                <div>
+                  <label className="block text-sm font-medium mb-1">Contact</label>
+                  <Input
+                    value={newOpportunity.contact}
+                    onChange={(e) => setNewOpportunity({ ...newOpportunity, contact: e.target.value })}
+                    placeholder="Email ou téléphone"
+                  />
+                </div>
               </div>
-            </div>
+
+              {/* Relations */}
+              <div className="col-span-2 border-t pt-4">
+                <h3 className="text-sm font-semibold mb-3 flex items-center">
+                  <CalendarDays className="h-4 w-4 mr-2" />
+                  Liens avec d'autres éléments
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Contact associé</label>
+                    <Select
+                      value={newOpportunity.contact_id}
+                      onValueChange={(value) => setNewOpportunity({ ...newOpportunity, contact_id: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner un contact" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Aucun contact</SelectItem>
+                        {contacts.map((contact) => (
+                          <SelectItem key={contact.id} value={contact.id}>
+                            {contact.first_name} {contact.last_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Événement associé</label>
+                    <Select
+                      value={newOpportunity.event_id}
+                      onValueChange={(value) => setNewOpportunity({ ...newOpportunity, event_id: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner un événement" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Aucun événement</SelectItem>
+                        {events.map((event) => (
+                          <SelectItem key={event.id} value={event.id}>
+                            {event.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Tâche associée</label>
+                    <Select
+                      value={newOpportunity.task_id}
+                      onValueChange={(value) => setNewOpportunity({ ...newOpportunity, task_id: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner une tâche" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Aucune tâche</SelectItem>
+                        {tasks.map((task) => (
+                          <SelectItem key={task.id} value={task.id}>
+                            {task.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
 
             <div className="flex space-x-2 pt-4">
               <Button 

@@ -26,7 +26,7 @@ import { EventTypes } from "./pages/EventTypes";
 import { PublicationCalendar } from "./pages/PublicationCalendar";
 import { Forms } from "./pages/Forms";
 import { UserManagement } from "./pages/UserManagement";
-import { ArtistShowcase } from "./pages/ArtistShowcase";
+import { FrontArtistShowcase } from "./pages/FrontArtistShowcase";
 import { Agenda } from "./pages/Agenda";
 import { Merchandise } from "./pages/Merchandise";
 import { MerchandiseBackoffice } from "./pages/MerchandiseBackoffice";
@@ -69,7 +69,7 @@ const App = () => {
                 <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/front" element={<FrontHome />} />
-                <Route path="/artist-showcase" element={<ArtistShowcase />} />
+                <Route path="/artist-showcase" element={<FrontArtistShowcase />} />
                 <Route path="/auth" element={<Auth />} />
                 
                 {/* Routes du back-office - PROTÉGÉES */}

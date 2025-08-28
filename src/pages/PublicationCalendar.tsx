@@ -19,21 +19,58 @@ const platforms = [
   { value: 'tiktok', label: 'TikTok' }
 ];
 
-const exampleProfiles = [
-  { user_id: 'user1', username: 'admin', first_name: 'Admin', last_name: 'User', role: 'admin' },
-  { user_id: 'user2', username: 'editor', first_name: 'Editor', last_name: 'User', role: 'editor' },
-  { user_id: 'user3', username: 'manager', first_name: 'Manager', last_name: 'User', role: 'manager' }
-];
+// On va chercher les vrais utilisateurs depuis useUserManagement
+import { useUserManagement } from '@/hooks/useUserManagement';
 
 export const PublicationCalendar: React.FC = () => {
   const { currentUser } = useUser();
+  const { users } = useUserManagement();
   const { publications, addPublication, updatePublication, deletePublication } = useCentralizedData();
   const [showForm, setShowForm] = useState(false);
   const [editingPublication, setEditingPublication] = useState<Publication | null>(null);
-  const [userProfiles] = useState(exampleProfiles);
   const [showComments, setShowComments] = useState<string | null>(null);
   const [newComment, setNewComment] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [realPublications, setRealPublications] = useState<Publication[]>([]);
+
+  // Charger les publications depuis Supabase
+  useEffect(() => {
+    if (!currentUser) return;
+    
+    const fetchPublications = async () => {
+      const { data, error } = await supabase
+        .from('publications')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Erreur lors du chargement des publications:', error);
+      } else {
+        const formattedPublications: Publication[] = data.map(pub => ({
+          id: pub.id,
+          title: pub.title,
+          content: pub.content,
+          scheduled_date: pub.scheduled_date,
+          platform: pub.platform,
+          assigned_to: pub.assigned_to || '',
+          assigned_username: pub.assigned_username || '',
+          media_url: pub.media_url || '',
+          media_type: (pub.media_type === 'gif' ? 'image' : pub.media_type) as 'image' | 'video',
+          external_link: pub.external_link || '',
+          status: pub.status as 'draft' | 'scheduled' | 'published' | 'pending_approval',
+          created_by: pub.created_by || currentUser.id,
+          user_id: pub.user_id,
+          created_at: pub.created_at,
+          updated_at: pub.updated_at,
+          comments: [] // Les commentaires seront chargés séparément
+        }));
+        setRealPublications(formattedPublications);
+      }
+    };
+
+    fetchPublications();
+  }, [currentUser]);
 
   console.log('📅 PublicationCalendar - Current publications:', publications.length);
 
@@ -49,7 +86,7 @@ export const PublicationCalendar: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const assignedProfile = userProfiles.find(p => p.user_id === formData.assigned_to);
+      const assignedProfile = users.find(p => p.user_id === formData.assigned_to);
       console.log('👤 Assigned profile found:', assignedProfile);
 
       const publicationData = {
@@ -77,7 +114,10 @@ export const PublicationCalendar: React.FC = () => {
 
         if (error) throw error;
         
-        updatePublication(editingPublication.id, publicationData);
+        // Mettre à jour la liste locale
+        setRealPublications(prev => prev.map(pub => 
+          pub.id === editingPublication.id ? { ...pub, ...publicationData } : pub
+        ));
         toast.success('Publication modifiée avec succès');
       } else {
         // Création dans Supabase
@@ -87,7 +127,15 @@ export const PublicationCalendar: React.FC = () => {
 
         if (error) throw error;
         
-        addPublication(publicationData);
+        // Ajouter à la liste locale
+        const newPublication: Publication = {
+          id: new Date().getTime().toString(),
+          ...publicationData,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          comments: []
+        };
+        setRealPublications(prev => [newPublication, ...prev]);
         toast.success('Publication créée avec succès');
       }
 
@@ -108,18 +156,46 @@ export const PublicationCalendar: React.FC = () => {
     setShowForm(true);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     console.log('🗑️ Deleting publication:', id);
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cette publication ?')) {
-      deletePublication(id);
-      toast.success('Publication supprimée');
+      try {
+        const { error } = await supabase
+          .from('publications')
+          .delete()
+          .eq('id', id)
+          .eq('user_id', currentUser?.id);
+
+        if (error) throw error;
+
+        setRealPublications(prev => prev.filter(pub => pub.id !== id));
+        toast.success('Publication supprimée');
+      } catch (error) {
+        console.error('Erreur lors de la suppression:', error);
+        toast.error('Erreur lors de la suppression');
+      }
     }
   };
 
-  const changeStatus = (id: string, newStatus: Publication['status']) => {
+  const changeStatus = async (id: string, newStatus: Publication['status']) => {
     console.log('🔄 Changing status for publication:', id, 'to:', newStatus);
-    updatePublication(id, { status: newStatus });
-    toast.success('Statut mis à jour');
+    try {
+      const { error } = await supabase
+        .from('publications')
+        .update({ status: newStatus })
+        .eq('id', id)
+        .eq('user_id', currentUser?.id);
+
+      if (error) throw error;
+
+      setRealPublications(prev => prev.map(pub => 
+        pub.id === id ? { ...pub, status: newStatus } : pub
+      ));
+      toast.success('Statut mis à jour');
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du statut:', error);
+      toast.error('Erreur lors de la mise à jour');
+    }
   };
 
   const addComment = (publicationId: string) => {
@@ -136,11 +212,13 @@ export const PublicationCalendar: React.FC = () => {
       created_at: new Date().toISOString()
     };
 
-    const publication = publications.find(p => p.id === publicationId);
+    const publication = realPublications.find(p => p.id === publicationId);
     if (publication) {
-      updatePublication(publicationId, {
-        comments: [...publication.comments, comment]
-      });
+      setRealPublications(prev => prev.map(pub => 
+        pub.id === publicationId 
+          ? { ...pub, comments: [...pub.comments, comment] }
+          : pub
+      ));
       setNewComment('');
       toast.success('Commentaire ajouté');
     }
@@ -171,7 +249,7 @@ export const PublicationCalendar: React.FC = () => {
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Calendrier de Publication</h1>
-          <p className="text-muted-foreground mt-2">Planifiez et gérez vos publications sur les réseaux sociaux ({publications.length} publications)</p>
+          <p className="text-muted-foreground mt-2">Planifiez et gérez vos publications sur les réseaux sociaux ({realPublications.length} publications)</p>
         </div>
         <Button 
           onClick={() => {
@@ -190,7 +268,7 @@ export const PublicationCalendar: React.FC = () => {
 
       {/* Publications Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {publications.length === 0 ? (
+        {realPublications.length === 0 ? (
           <div className="col-span-full text-center py-12">
             <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">Aucune publication</h3>
@@ -208,7 +286,7 @@ export const PublicationCalendar: React.FC = () => {
             </Button>
           </div>
         ) : (
-          publications.map((publication) => (
+          realPublications.map((publication) => (
             <Card key={publication.id} className="relative">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
@@ -355,7 +433,13 @@ export const PublicationCalendar: React.FC = () => {
         }}
         onSubmit={handleFormSubmit}
         initialData={editingPublication || {}}
-        userProfiles={userProfiles}
+        userProfiles={users.map(u => ({ 
+          user_id: u.user_id, 
+          username: u.username || u.email, 
+          first_name: u.first_name || '',
+          last_name: u.last_name || '',
+          role: u.role || 'user'
+        }))}
         isEditing={!!editingPublication}
       />
     </div>

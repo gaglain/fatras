@@ -171,11 +171,31 @@ export const useTasks = () => {
     }
   };
 
+  // Fonction pour récupérer les notifications
+  const getNotifications = async () => {
+    if (!user) return [];
+    
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Erreur lors de la récupération des notifications:', error);
+      return [];
+    }
+  };
+
   return {
     tasks,
     loading,
     addTask,
     updateTask,
-    deleteTask
+    deleteTask,
+    getNotifications
   };
 };
