@@ -7,6 +7,7 @@ import { ViewToggle } from '@/components/ui/view-toggle';
 import { Plus, Music, Calendar, MapPin, Clock, Bed, BookOpen, Trash2, Upload, Image, Search, Edit2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCentralizedData, CentralizedArtist as Artist } from '@/hooks/useCentralizedData';
+import { useOpportunities } from '@/hooks/useOpportunities';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -46,6 +47,7 @@ const sampleTourSchedule: TourSchedule[] = [
 export const Artists: React.FC = () => {
   const navigate = useNavigate();
   const { artists, addArtist, updateArtist, deleteArtist } = useCentralizedData();
+  const { opportunities } = useOpportunities();
   const [tourSchedule, setTourSchedule] = useState<TourSchedule[]>(sampleTourSchedule);
   const [selectedArtist, setSelectedArtist] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -68,9 +70,17 @@ export const Artists: React.FC = () => {
     artist.genre.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Synchroniser avec les opportunités liées au spectacle
+  const getArtistOpportunities = (artistId: string) => {
+    return opportunities.filter(opp => opp.artist_id === artistId);
+  };
+
   const selectedArtistSchedule = tourSchedule.filter(
     schedule => schedule.artistId === selectedArtist
   );
+
+  // Synchronisation des opportunités avec le planning
+  const selectedArtistOpportunities = selectedArtist ? getArtistOpportunities(selectedArtist) : [];
 
   const handleDeleteArtist = (artistId: string) => {
     const artist = artists.find(a => a.id === artistId);
@@ -299,6 +309,55 @@ export const Artists: React.FC = () => {
             
             {selectedArtist ? (
               <div className="space-y-4">
+                {/* Opportunités synchronisées */}
+                {selectedArtistOpportunities.length > 0 && (
+                  <div className="mb-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Opportunités liées</h3>
+                    <div className="grid gap-3">
+                      {selectedArtistOpportunities.map((opportunity) => (
+                        <Card key={opportunity.id} className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h4 className="font-medium text-gray-900">{opportunity.title}</h4>
+                              <p className="text-sm text-gray-600">{opportunity.venue}</p>
+                              <div className="flex items-center text-sm text-gray-500 mt-1">
+                                <Calendar className="h-3 w-3 mr-1" />
+                                {opportunity.date ? new Date(opportunity.date).toLocaleDateString('fr-FR') : 'Date à définir'}
+                                {opportunity.budget && (
+                                  <>
+                                    <span className="mx-2">•</span>
+                                    <span>{opportunity.budget.toLocaleString('fr-FR')} €</span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                opportunity.status === 'open' ? 'bg-green-100 text-green-800' :
+                                opportunity.status === 'applied' ? 'bg-blue-100 text-blue-800' :
+                                opportunity.status === 'won' ? 'bg-green-200 text-green-900' :
+                                'bg-gray-100 text-gray-800'
+                              }`}>
+                                {opportunity.status === 'open' ? 'Ouvert' : 
+                                 opportunity.status === 'applied' ? 'Candidature envoyée' : 
+                                 opportunity.status === 'won' ? 'Remporté' : 'Perdu'}
+                              </span>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => navigate('/opportunities')}
+                              >
+                                Voir détails
+                              </Button>
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Planning de tournée existant */}
                 {selectedArtistSchedule.map((schedule) => (
                   <Card key={schedule.id}>
                     <CardContent className="p-6">
@@ -354,14 +413,20 @@ export const Artists: React.FC = () => {
                   </Card>
                 ))}
                 
-                {selectedArtistSchedule.length === 0 && (
+                {selectedArtistSchedule.length === 0 && selectedArtistOpportunities.length === 0 && (
                   <Card>
                     <CardContent className="p-6 text-center">
-                      <p className="text-gray-500">Aucune date de tournée programmée pour cet artiste.</p>
-                      <Button className="mt-4" variant="outline">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Ajouter Date de Tournée
-                      </Button>
+                      <p className="text-gray-500">Aucune date de tournée ou opportunité programmée pour ce spectacle.</p>
+                      <div className="flex justify-center space-x-4 mt-4">
+                        <Button variant="outline" onClick={() => navigate('/opportunities')}>
+                          <Plus className="h-4 w-4 mr-2" />
+                          Voir Opportunités
+                        </Button>
+                        <Button variant="outline">
+                          <Plus className="h-4 w-4 mr-2" />
+                          Ajouter Date de Tournée
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 )}

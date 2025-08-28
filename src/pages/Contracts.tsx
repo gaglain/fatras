@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { ViewToggle } from '@/components/ui/view-toggle';
-import { Plus, FileText, Edit, Trash2, Save, Calculator, Search } from 'lucide-react';
+import { Plus, FileText, Edit, Trash2, Save, Calculator, Search, File } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQuotes } from '@/hooks/useQuotes';
 import { useContacts } from '@/hooks/useContacts';
@@ -15,6 +15,8 @@ import { useEvents } from '@/hooks/useEvents';
 import { useUser } from '@/contexts/UserContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ContractCalculator, type CalculationValues } from '@/components/contracts/ContractCalculator';
+import { QuoteItemManager } from '@/components/quotes/QuoteItemManager';
+import { QuoteTemplateManager } from '@/components/quotes/QuoteTemplateManager';
 
 interface QuoteFormData {
   title: string;
@@ -43,6 +45,7 @@ export const Contracts: React.FC = () => {
   
   const [showForm, setShowForm] = useState(false);
   const [showCalculator, setShowCalculator] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
   const [editingQuote, setEditingQuote] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -102,6 +105,8 @@ export const Contracts: React.FC = () => {
     }));
   };
 
+  const { addQuoteItem } = useQuotes();
+
   const handleSaveQuote = async () => {
     if (!currentUser) return;
 
@@ -135,7 +140,7 @@ export const Contracts: React.FC = () => {
         });
         toast.success('Devis modifié avec succès');
       } else {
-        await addQuote({
+        const createdQuote = await addQuote({
           user_id: currentUser.id,
           quote_number: generateQuoteNumber(),
           title: formData.title,
@@ -149,12 +154,45 @@ export const Contracts: React.FC = () => {
           terms: formData.terms,
           notes: formData.notes
         });
+        
+        if (createdQuote && formData.items.length > 0) {
+          // Ajouter les items du devis
+          for (const item of formData.items) {
+            if (item.name.trim()) {
+              await addQuoteItem(createdQuote.id, {
+                name: item.name,
+                description: item.description,
+                quantity: item.quantity,
+                unit_price: item.unit_price,
+                total_price: item.quantity * item.unit_price
+              });
+            }
+          }
+        }
+        
         toast.success('Devis créé avec succès');
       }
       resetForm();
     } catch (error) {
       toast.error('Erreur lors de la sauvegarde');
     }
+  };
+
+  const handleApplyTemplate = (template: any) => {
+    setFormData({
+      title: template.name,
+      description: template.description || '',
+      contact_id: '',
+      event_id: '',
+      status: 'draft',
+      valid_until: '',
+      terms: template.default_terms || 'Paiement à 30 jours. Acompte de 30% à la signature.',
+      notes: '',
+      items: template.default_items.length > 0 ? template.default_items : [{ name: '', description: '', quantity: 1, unit_price: 0 }]
+    });
+    setShowTemplates(false);
+    setShowForm(true);
+    toast.success('Modèle appliqué avec succès');
   };
 
   const resetForm = () => {
@@ -240,6 +278,15 @@ export const Contracts: React.FC = () => {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button 
+            onClick={() => setShowTemplates(true)} 
+            variant="outline"
+            className="button-responsive"
+          >
+            <File className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Modèles</span>
+            <span className="sm:hidden">Modèles</span>
+          </Button>
           <Button 
             onClick={() => setShowCalculator(true)} 
             variant="outline"
@@ -557,6 +604,16 @@ export const Contracts: React.FC = () => {
             <DialogTitle>Calculateur de Devis</DialogTitle>
           </DialogHeader>
           <ContractCalculator onCalculationChange={handleCalculatorChange} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Modèles */}
+      <Dialog open={showTemplates} onOpenChange={setShowTemplates}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Modèles de Devis</DialogTitle>
+          </DialogHeader>
+          <QuoteTemplateManager onApplyTemplate={handleApplyTemplate} />
         </DialogContent>
       </Dialog>
     </div>
