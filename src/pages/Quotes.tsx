@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,13 +9,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Plus, Search, Eye, Edit, Trash2, Download } from 'lucide-react';
+import { FileText, Plus, Search, Eye, Edit, Trash2, Download, Calculator } from 'lucide-react';
 import { useQuotes, Quote } from '@/hooks/useQuotes';
 import { useContacts } from '@/hooks/useContacts';
 import { useEvents } from '@/hooks/useEvents';
 import { useAuth } from '@/hooks/useAuth';
 import { QuoteCalculator, QuoteCalculation } from '@/components/quotes/QuoteCalculator';
 import { QuoteItemManager } from '@/components/quotes/QuoteItemManager';
+import { SimpleQuoteCalculator, QuoteFormData } from '@/components/quotes/SimpleQuoteCalculator';
 import { toast } from 'sonner';
 
 export const Quotes: React.FC = () => {
@@ -24,6 +25,8 @@ export const Quotes: React.FC = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
   const [calculation, setCalculation] = useState<QuoteCalculation | null>(null);
+  const [showSimpleCalculator, setShowSimpleCalculator] = useState(false);
+  const [quoteTemplates, setQuoteTemplates] = useState<QuoteFormData[]>([]);
   
   const { quotes, loading, addQuote, updateQuote, deleteQuote, generateQuoteNumber } = useQuotes();
   const { contacts } = useContacts();
@@ -103,6 +106,25 @@ export const Quotes: React.FC = () => {
     }
   };
 
+  const handleSaveTemplate = (templateData: QuoteFormData) => {
+    const templates = JSON.parse(localStorage.getItem('quoteTemplates') || '[]');
+    const newTemplate = {
+      ...templateData,
+      id: Date.now().toString(),
+      name: templateData.artistName || 'Modèle sans nom',
+      createdAt: new Date().toISOString()
+    };
+    templates.push(newTemplate);
+    localStorage.setItem('quoteTemplates', JSON.stringify(templates));
+    setQuoteTemplates(templates);
+    toast.success('Modèle de devis sauvegardé');
+  };
+
+  useEffect(() => {
+    const templates = JSON.parse(localStorage.getItem('quoteTemplates') || '[]');
+    setQuoteTemplates(templates);
+  }, []);
+
   const getStatusBadge = (status: Quote['status']) => {
     const variants = {
       draft: 'secondary',
@@ -149,171 +171,182 @@ export const Quotes: React.FC = () => {
           <p className="text-muted-foreground mt-1">Créez et gérez vos devis avec calculs automatiques</p>
         </div>
         
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Nouveau Devis
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Créer un nouveau devis</DialogTitle>
-            </DialogHeader>
-            
-            <Tabs defaultValue="info" className="space-y-4">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="info">Informations</TabsTrigger>
-                <TabsTrigger value="calculator">Calculateur</TabsTrigger>
-                <TabsTrigger value="items">Lignes</TabsTrigger>
-              </TabsList>
+        <div className="flex gap-2">
+          <Button 
+            onClick={() => setShowSimpleCalculator(true)} 
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <Calculator className="h-4 w-4" />
+            Calculateur Simple
+          </Button>
+          
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Nouveau Devis
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Créer un nouveau devis</DialogTitle>
+              </DialogHeader>
               
-              <TabsContent value="info" className="space-y-4">
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="title">Titre *</Label>
-                      <Input
-                        id="title"
-                        value={formData.title}
-                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                        required
-                        placeholder="Nom du devis"
-                      />
+              <Tabs defaultValue="info" className="space-y-4">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="info">Informations</TabsTrigger>
+                  <TabsTrigger value="calculator">Calculateur</TabsTrigger>
+                  <TabsTrigger value="items">Lignes</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="info" className="space-y-4">
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="title">Titre *</Label>
+                        <Input
+                          id="title"
+                          value={formData.title}
+                          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                          required
+                          placeholder="Nom du devis"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="status">Statut</Label>
+                        <Select 
+                          value={formData.status} 
+                          onValueChange={(value) => setFormData({ ...formData, status: value as Quote['status'] })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="draft">Brouillon</SelectItem>
+                            <SelectItem value="sent">Envoyé</SelectItem>
+                            <SelectItem value="accepted">Accepté</SelectItem>
+                            <SelectItem value="rejected">Refusé</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="contact">Contact</Label>
+                        <Select 
+                          value={formData.contact_id} 
+                          onValueChange={(value) => setFormData({ ...formData, contact_id: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionner un contact" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">Aucun contact</SelectItem>
+                            {contacts.slice(0, 50).map((contact) => (
+                              <SelectItem key={contact.id} value={contact.id}>
+                                {contact.first_name} {contact.last_name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="event">Événement</Label>
+                        <Select 
+                          value={formData.event_id} 
+                          onValueChange={(value) => setFormData({ ...formData, event_id: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionner un événement" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">Aucun événement</SelectItem>
+                            {events.slice(0, 50).map((event) => (
+                              <SelectItem key={event.id} value={event.id}>
+                                {event.title}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="valid_until">Valide jusqu'au</Label>
+                        <Input
+                          id="valid_until"
+                          type="date"
+                          value={formData.valid_until}
+                          onChange={(e) => setFormData({ ...formData, valid_until: e.target.value })}
+                        />
+                      </div>
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="status">Statut</Label>
-                      <Select 
-                        value={formData.status} 
-                        onValueChange={(value) => setFormData({ ...formData, status: value as Quote['status'] })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="draft">Brouillon</SelectItem>
-                          <SelectItem value="sent">Envoyé</SelectItem>
-                          <SelectItem value="accepted">Accepté</SelectItem>
-                          <SelectItem value="rejected">Refusé</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="contact">Contact</Label>
-                      <Select 
-                        value={formData.contact_id} 
-                        onValueChange={(value) => setFormData({ ...formData, contact_id: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Sélectionner un contact" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">Aucun contact</SelectItem>
-                          {contacts.slice(0, 50).map((contact) => (
-                            <SelectItem key={contact.id} value={contact.id}>
-                              {contact.first_name} {contact.last_name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="event">Événement</Label>
-                      <Select 
-                        value={formData.event_id} 
-                        onValueChange={(value) => setFormData({ ...formData, event_id: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Sélectionner un événement" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">Aucun événement</SelectItem>
-                          {events.slice(0, 50).map((event) => (
-                            <SelectItem key={event.id} value={event.id}>
-                              {event.title}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="valid_until">Valide jusqu'au</Label>
-                      <Input
-                        id="valid_until"
-                        type="date"
-                        value={formData.valid_until}
-                        onChange={(e) => setFormData({ ...formData, valid_until: e.target.value })}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea
-                      id="description"
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      rows={3}
-                      placeholder="Description du devis"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="terms">Conditions</Label>
+                      <Label htmlFor="description">Description</Label>
                       <Textarea
-                        id="terms"
-                        value={formData.terms}
-                        onChange={(e) => setFormData({ ...formData, terms: e.target.value })}
+                        id="description"
+                        value={formData.description}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                         rows={3}
-                        placeholder="Conditions du devis"
+                        placeholder="Description du devis"
                       />
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="notes">Notes</Label>
-                      <Textarea
-                        id="notes"
-                        value={formData.notes}
-                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                        rows={3}
-                        placeholder="Notes internes"
-                      />
-                    </div>
-                  </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="terms">Conditions</Label>
+                        <Textarea
+                          id="terms"
+                          value={formData.terms}
+                          onChange={(e) => setFormData({ ...formData, terms: e.target.value })}
+                          rows={3}
+                          placeholder="Conditions du devis"
+                        />
+                      </div>
 
-                  <div className="flex justify-end gap-2">
-                    <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
-                      Annuler
-                    </Button>
-                    <Button type="submit">
-                      Créer le devis
-                    </Button>
-                  </div>
-                </form>
-              </TabsContent>
-              
-              <TabsContent value="calculator">
-                <QuoteCalculator 
-                  onCalculationChange={setCalculation}
-                  initialValues={calculation || undefined}
-                />
-              </TabsContent>
-              
-              <TabsContent value="items">
-                {selectedQuote && (
-                  <QuoteItemManager 
-                    quoteId={selectedQuote.id}
+                      <div className="space-y-2">
+                        <Label htmlFor="notes">Notes</Label>
+                        <Textarea
+                          id="notes"
+                          value={formData.notes}
+                          onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                          rows={3}
+                          placeholder="Notes internes"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end gap-2">
+                      <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                        Annuler
+                      </Button>
+                      <Button type="submit">
+                        Créer le devis
+                      </Button>
+                    </div>
+                  </form>
+                </TabsContent>
+                
+                <TabsContent value="calculator">
+                  <QuoteCalculator 
+                    onCalculationChange={setCalculation}
+                    initialValues={calculation || undefined}
                   />
-                )}
-              </TabsContent>
-            </Tabs>
-          </DialogContent>
-        </Dialog>
+                </TabsContent>
+                
+                <TabsContent value="items">
+                  {selectedQuote && (
+                    <QuoteItemManager 
+                      quoteId={selectedQuote.id}
+                    />
+                  )}
+                </TabsContent>
+              </Tabs>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
@@ -421,6 +454,29 @@ export const Quotes: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Modal Calculateur Simple */}
+      {showSimpleCalculator && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-background rounded-lg shadow-lg max-w-6xl w-full mx-4 max-h-[90vh] overflow-auto">
+            <div className="p-6 border-b">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold">Calculateur de Devis</h2>
+                <Button 
+                  variant="ghost" 
+                  onClick={() => setShowSimpleCalculator(false)}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  ✕
+                </Button>
+              </div>
+            </div>
+            <div className="p-6">
+              <SimpleQuoteCalculator onSave={handleSaveTemplate} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

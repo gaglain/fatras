@@ -102,6 +102,12 @@ export const useTasks = () => {
         updated_at: data.updated_at
       };
       setTasks(prev => [...prev, newTask]);
+      
+      // Créer une notification si la tâche a une échéance
+      if (newTask.due_date) {
+        createTaskNotification(newTask);
+      }
+      
       return newTask;
     } catch (error) {
       console.error('Erreur lors de la création de la tâche:', error);
@@ -144,6 +150,24 @@ export const useTasks = () => {
 
     if (!error) {
       setTasks(prev => prev.filter(task => task.id !== id));
+    }
+  };
+
+  const createTaskNotification = async (task: Task) => {
+    if (!task.due_date || !user) return;
+    
+    try {
+      await supabase
+        .from('notifications')
+        .insert({
+          user_id: task.assigned_to || task.user_id,
+          type: 'task_reminder',
+          title: 'Rappel de tâche',
+          message: `La tâche "${task.title}" arrive à échéance le ${new Date(task.due_date).toLocaleString('fr-FR')}`,
+          data: { task_id: task.id, due_date: task.due_date }
+        });
+    } catch (error) {
+      console.error('Erreur lors de la création de la notification:', error);
     }
   };
 

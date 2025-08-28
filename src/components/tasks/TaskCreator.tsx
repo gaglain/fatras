@@ -225,10 +225,10 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="dueDate">Date d'échéance</Label>
+            <Label htmlFor="dueDate">Date et heure d'échéance</Label>
             <Input
               id="dueDate"
-              type="date"
+              type="datetime-local"
               value={formData.dueDate}
               onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
             />
