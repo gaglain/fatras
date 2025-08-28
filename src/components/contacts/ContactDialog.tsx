@@ -103,7 +103,8 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
     try {
       const contactData = {
         ...formData,
-        user_id: user.id
+        user_id: user.id,
+        artist_id: (formData as any).artist_id || null
       };
 
       if (contact?.id) {

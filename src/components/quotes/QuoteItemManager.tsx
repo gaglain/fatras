@@ -48,7 +48,12 @@ export const QuoteItemManager: React.FC<QuoteItemManagerProps> = ({
 
   const handleAddItem = async () => {
     if (!newItem.name.trim()) {
-      toast.error('Le nom de l\'item est requis');
+      toast.error('Le nom de l\'élément est requis');
+      return;
+    }
+
+    if (!quoteId) {
+      toast.error('Devis non spécifié');
       return;
     }
 
@@ -56,14 +61,16 @@ export const QuoteItemManager: React.FC<QuoteItemManagerProps> = ({
     try {
       const totalPrice = newItem.quantity * newItem.unit_price;
       const itemData = {
-        ...newItem,
+        name: newItem.name,
+        description: newItem.description,
+        quantity: newItem.quantity,
+        unit_price: newItem.unit_price,
         total_price: totalPrice
       };
 
       const addedItem = await addQuoteItem(quoteId, itemData);
       if (addedItem) {
-        const updatedItems = [...items, addedItem];
-        setItems(updatedItems);
+        await loadItems(); // Recharger les items pour s'assurer de la cohérence
         setNewItem({
           name: '',
           description: '',
@@ -71,15 +78,11 @@ export const QuoteItemManager: React.FC<QuoteItemManagerProps> = ({
           unit_price: 0
         });
         
-        if (onItemsChange) {
-          onItemsChange(updatedItems);
-        }
-        
-        toast.success('Item ajouté avec succès');
+        toast.success('Élément ajouté avec succès');
       }
     } catch (error) {
-      console.error('Erreur lors de l\'ajout de l\'item:', error);
-      toast.error('Erreur lors de l\'ajout de l\'item');
+      console.error('Erreur lors de l\'ajout de l\'élément:', error);
+      toast.error('Erreur lors de l\'ajout de l\'élément');
     } finally {
       setLoading(false);
     }

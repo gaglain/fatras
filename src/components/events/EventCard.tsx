@@ -11,9 +11,10 @@ interface EventCardProps {
   event: Event;
   onEdit: (event: Event) => void;
   onDelete: (id: string) => void;
+  viewMode?: 'grid' | 'list';
 }
 
-export const EventCard: React.FC<EventCardProps> = ({ event, onEdit, onDelete }) => {
+export const EventCard: React.FC<EventCardProps> = ({ event, onEdit, onDelete, viewMode = 'grid' }) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'confirmed': return 'bg-green-100 text-green-800';

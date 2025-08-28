@@ -6,7 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Plus, FileText, Edit, Trash2, Save, Calculator } from 'lucide-react';
+import { ViewToggle } from '@/components/ui/view-toggle';
+import { Plus, FileText, Edit, Trash2, Save, Calculator, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQuotes } from '@/hooks/useQuotes';
 import { useContacts } from '@/hooks/useContacts';
@@ -43,6 +44,8 @@ export const Contracts: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [showCalculator, setShowCalculator] = useState(false);
   const [editingQuote, setEditingQuote] = useState<any>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [formData, setFormData] = useState<QuoteFormData>({
     title: '',
     description: '',
@@ -219,6 +222,11 @@ export const Contracts: React.FC = () => {
     return <div>Chargement...</div>;
   }
 
+  const filteredQuotes = quotes.filter(quote =>
+    quote.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    quote.quote_number.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="space-y-6 p-4 lg:p-0">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -247,6 +255,19 @@ export const Contracts: React.FC = () => {
             <span className="sm:hidden">Nouveau</span>
           </Button>
         </div>
+      </div>
+
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+        <div className="relative flex-1 max-w-full sm:max-w-md">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            placeholder="Rechercher des devis..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
       </div>
 
       {/* Formulaire de devis */}
@@ -464,8 +485,8 @@ export const Contracts: React.FC = () => {
       )}
 
       {/* Liste des devis */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {quotes.map(quote => (
+      <div className={viewMode === 'grid' ? "grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6" : "space-y-4"}>
+        {filteredQuotes.map(quote => (
           <Card key={quote.id} className="hover:shadow-lg transition-shadow">
             <CardContent className="p-6">
               <div className="flex items-start justify-between mb-4">

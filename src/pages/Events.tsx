@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ViewToggle } from '@/components/ui/view-toggle';
 import { Plus, Search, Calendar, Clock, CheckCircle, XCircle, Upload } from 'lucide-react';
 import { EventCard } from '@/components/events/EventCard';
 import { EventDialog } from '@/components/events/EventDialog';
@@ -24,6 +25,7 @@ export const Events: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [csvImportOpen, setCsvImportOpen] = useState(false);
 
   useEffect(() => {
@@ -247,6 +249,7 @@ export const Events: React.FC = () => {
             ))}
           </SelectContent>
         </Select>
+        <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
       </div>
 
       {/* Events Grid */}
@@ -270,13 +273,14 @@ export const Events: React.FC = () => {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
           {filteredEvents.map((event) => (
             <EventCard
               key={event.id}
               event={event}
               onEdit={handleEdit}
               onDelete={handleDelete}
+              viewMode={viewMode}
             />
           ))}
         </div>

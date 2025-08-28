@@ -151,7 +151,8 @@ export const EventDialog: React.FC<EventDialogProps> = ({
         user_id: user.id,
         start_date: formData.start_date ? new Date(formData.start_date).toISOString() : null,
         end_date: formData.end_date ? new Date(formData.end_date).toISOString() : null,
-        contact_id: formData.contact_id || null
+        contact_id: formData.contact_id || null,
+        artist_id: (formData as any).artist_id || null
       };
 
       if (event?.id) {

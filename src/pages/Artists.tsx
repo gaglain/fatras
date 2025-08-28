@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Music, Calendar, MapPin, Clock, Bed, BookOpen, Trash2, Upload, Image } from 'lucide-react';
+import { ViewToggle } from '@/components/ui/view-toggle';
+import { Plus, Music, Calendar, MapPin, Clock, Bed, BookOpen, Trash2, Upload, Image, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCentralizedData, CentralizedArtist as Artist } from '@/hooks/useCentralizedData';
 import { toast } from 'sonner';
@@ -48,6 +49,8 @@ export const Artists: React.FC = () => {
   const [selectedArtist, setSelectedArtist] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingArtist, setEditingArtist] = useState<Artist | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [formData, setFormData] = useState({
     name: '',
     genre: '',
@@ -57,6 +60,11 @@ export const Artists: React.FC = () => {
   });
 
   console.log('🎭 Artists page - Current artists:', artists.length);
+
+  const filteredArtists = artists.filter(artist =>
+    artist.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    artist.genre.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const selectedArtistSchedule = tourSchedule.filter(
     schedule => schedule.artistId === selectedArtist
