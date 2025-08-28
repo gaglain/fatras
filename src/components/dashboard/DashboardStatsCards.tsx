@@ -15,8 +15,7 @@ export const DashboardStatsCards: React.FC = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('contacts')
-        .select('*')
-        .eq('status', 'active');
+        .select('*');
       
       if (error) {
         console.error('Erreur lors du chargement des contacts:', error);
@@ -47,9 +46,8 @@ export const DashboardStatsCards: React.FC = () => {
     queryKey: ['campaigns'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('campaigns')
-        .select('*')
-        .eq('status', 'sent');
+        .from('email_campaigns')
+        .select('*');
       
       if (error) {
         console.error('Erreur lors du chargement des campagnes:', error);
@@ -65,8 +63,7 @@ export const DashboardStatsCards: React.FC = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('quotes')
-        .select('*')
-        .in('status', ['pending', 'in_progress']);
+        .select('*');
       
       if (error) {
         console.error('Erreur lors du chargement des devis:', error);
@@ -85,12 +82,12 @@ export const DashboardStatsCards: React.FC = () => {
     return eventDate.getMonth() === now.getMonth() && eventDate.getFullYear() === now.getFullYear();
   }).length;
   
-  const pendingTasks = quotes.length; // Les devis en cours comme tâches
+  const pendingQuotes = quotes.filter(q => q.status === 'pending' || q.status === 'draft').length;
   const activeArtists = contacts.filter(c => c.role === 'artist').length;
-  const sentCampaigns = campaigns.length;
+  const sentCampaigns = campaigns.filter(c => c.status === 'sent').length;
   
-  // Calcul du revenu total des devis
-  const revenue = quotes.reduce((total, quote) => total + (Number(quote.total_amount) || 0), 0);
+  // Calcul du revenu total des devis acceptés
+  const revenue = quotes.filter(q => q.status === 'accepted').reduce((total, quote) => total + (Number(quote.total_amount) || 0), 0);
 
   const stats = [
     { 
@@ -111,11 +108,11 @@ export const DashboardStatsCards: React.FC = () => {
     },
     { 
       name: 'Devis en cours', 
-      value: pendingTasks.toString(), 
+      value: pendingQuotes.toString(), 
       icon: CheckSquare, 
-      change: pendingTasks > 0 ? '-8%' : '0%', 
-      changeType: pendingTasks > 10 ? 'negative' as const : 'positive' as const,
-      route: '/contracts'
+      change: pendingQuotes > 0 ? '-8%' : '0%', 
+      changeType: pendingQuotes > 10 ? 'negative' as const : 'positive' as const,
+      route: '/quotes'
     },
     { 
       name: 'Artistes actifs', 
@@ -131,7 +128,7 @@ export const DashboardStatsCards: React.FC = () => {
       icon: Euro, 
       change: revenue > 0 ? '+15%' : '0%', 
       changeType: 'positive' as const,
-      route: '/contracts'
+      route: '/quotes'
     },
     { 
       name: 'Campagnes email', 

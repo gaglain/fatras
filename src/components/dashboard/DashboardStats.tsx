@@ -12,8 +12,7 @@ export const DashboardStats: React.FC = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('contacts')
-        .select('*')
-        .eq('status', 'active');
+        .select('*');
       
       if (error) throw error;
       return data || [];
@@ -37,8 +36,7 @@ export const DashboardStats: React.FC = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('quotes')
-        .select('*')
-        .eq('status', 'pending');
+        .select('*');
       
       if (error) throw error;
       return data || [];
@@ -53,7 +51,8 @@ export const DashboardStats: React.FC = () => {
     return eventDate.getMonth() === now.getMonth() && eventDate.getFullYear() === now.getFullYear();
   }).length;
 
-  const monthlyRevenue = quotes.reduce((total, quote) => total + (Number(quote.total_amount) || 0), 0);
+  const totalRevenue = quotes.filter(q => q.status === 'accepted').reduce((total, quote) => total + (Number(quote.total_amount) || 0), 0);
+  const pendingQuotes = quotes.filter(q => q.status === 'pending' || q.status === 'draft').length;
 
   const stats = [
     {
@@ -72,16 +71,16 @@ export const DashboardStats: React.FC = () => {
     },
     {
       title: 'Devis',
-      value: quotes.length.toString(),
+      value: pendingQuotes.toString(),
       icon: FileText,
       description: 'En attente',
       color: 'text-orange-600'
     },
     {
       title: 'Revenus',
-      value: `€${monthlyRevenue.toLocaleString('fr-FR')}`,
+      value: `€${totalRevenue.toLocaleString('fr-FR')}`,
       icon: TrendingUp,
-      description: 'Total devis',
+      description: 'Devis acceptés',
       color: 'text-purple-600'
     }
   ];
