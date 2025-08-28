@@ -12,8 +12,7 @@ export const NotificationTest: React.FC = () => {
     try {
       await createTestNotification();
       toast.success('Notification de test créée ! Regardez la cloche en haut à droite.');
-      // Forcer un rechargement pour voir immédiatement le badge
-      setTimeout(() => window.location.reload(), 1000);
+      // Pas de rechargement, les notifications en temps réel devraient fonctionner
     } catch (error) {
       toast.error('Erreur lors de la création de la notification');
     }
