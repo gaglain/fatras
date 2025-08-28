@@ -164,7 +164,7 @@ export const EventDialog: React.FC<EventDialogProps> = ({
         user_id: user.id,
         title: formData.title,
         description: formData.description,
-        event_type: formData.event_type,
+        event_type: formData.event_type || null,
         venue: formData.venue,
         address: formData.address,
         city: formData.city,
@@ -178,8 +178,10 @@ export const EventDialog: React.FC<EventDialogProps> = ({
         attendees_count: formData.attendees_count || null,
         requirements: formData.requirements,
         notes: formData.notes,
-        contact_id: formData.contact_id || null
+        contact_id: formData.contact_id && formData.contact_id !== 'none' ? formData.contact_id : null
       };
+
+      console.log('Event data being saved:', eventData);
 
       if (event?.id) {
         const { error } = await supabase
