@@ -127,15 +127,16 @@ export const EventDialog: React.FC<EventDialogProps> = ({
   const fetchArtists = async () => {
     try {
       const { data, error } = await supabase
-        .from('user_profiles')
-        .select('user_id, first_name, last_name, show_name')
-        .in('role', ['artiste', 'admin', 'super_admin', 'manager'])
-        .order('first_name');
+        .from('centralized_artists')
+        .select('id, name, genre, status')
+        .eq('user_id', user?.id)
+        .eq('status', 'active')
+        .order('name');
 
       if (error) throw error;
       setArtists(data || []);
     } catch (error: any) {
-      console.error('Erreur lors du chargement des artistes:', error);
+      console.error('Erreur lors du chargement des spectacles:', error);
     }
   };
 
@@ -287,16 +288,16 @@ export const EventDialog: React.FC<EventDialogProps> = ({
               </Select>
             </div>
             <div>
-              <Label htmlFor="artist_id">Artiste associé</Label>
+              <Label htmlFor="artist_id">Spectacle associé</Label>
               <Select value={(formData as any).artist_id || 'none'} onValueChange={(value) => setFormData(prev => ({ ...prev, artist_id: value === 'none' ? null : value } as any))}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un artiste" />
+                  <SelectValue placeholder="Sélectionner un spectacle" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Aucun artiste</SelectItem>
+                  <SelectItem value="none">Aucun spectacle</SelectItem>
                   {artists.map((artist) => (
-                    <SelectItem key={artist.user_id} value={artist.user_id}>
-                      {artist.show_name || `${artist.first_name} ${artist.last_name}`}
+                    <SelectItem key={artist.id} value={artist.id}>
+                      {artist.name} - {artist.genre}
                     </SelectItem>
                   ))}
                 </SelectContent>

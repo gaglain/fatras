@@ -47,7 +47,7 @@ export const navigationData: MenuItem[] = [
     ]
   },
   { 
-    name: 'Artistes', 
+    name: 'Spectacles', 
     href: '/artists', 
     icon: Palette, 
     visible: true 

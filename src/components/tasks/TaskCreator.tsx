@@ -11,6 +11,7 @@ import { useUser } from '@/contexts/UserContext';
 import { useContacts } from '@/hooks/useContacts';
 import { useEvents } from '@/hooks/useEvents';
 import { useTasks } from '@/hooks/useTasks';
+import { useCentralizedData } from '@/hooks/useCentralizedData';
 import { toast } from 'sonner';
 
 interface TaskCreatorProps {
@@ -29,6 +30,7 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
   const { users, currentUser } = useUser();
   const { contacts } = useContacts();
   const { events } = useEvents();
+  const { artists: spectacles } = useCentralizedData();
   const { addTask } = useTasks();
   
   const [formData, setFormData] = useState({
@@ -37,6 +39,7 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
     assignedTo: currentUser?.id || '',
     contactId: 'none',
     eventId: 'none',
+    artistId: 'none',
     dueDate: '',
     priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent',
     status: 'todo' as 'todo' | 'in_progress' | 'done',
@@ -90,6 +93,7 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
         assignedTo: currentUser?.id || '',
         contactId: 'none',
         eventId: 'none',
+        artistId: 'none',
         dueDate: '',
         priority: 'medium',
         status: 'todo',
@@ -239,6 +243,26 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
                 {events.slice(0, 50).map((event) => (
                   <SelectItem key={event.id} value={event.id}>
                     {event.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="artistId">Spectacle lié</Label>
+            <Select 
+              value={formData.artistId} 
+              onValueChange={(value) => setFormData({ ...formData, artistId: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner un spectacle" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Aucun spectacle</SelectItem>
+                {spectacles.slice(0, 50).map((spectacle) => (
+                  <SelectItem key={spectacle.id} value={spectacle.id}>
+                    {spectacle.name} - {spectacle.genre}
                   </SelectItem>
                 ))}
               </SelectContent>

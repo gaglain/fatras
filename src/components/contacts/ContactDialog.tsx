@@ -12,6 +12,12 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { Contact } from '@/types/contact.types';
 
+interface Spectacle {
+  id: string;
+  name: string;
+  genre: string;
+}
+
 interface ContactDialogProps {
   isOpen: boolean;
   onClose: () => void;
@@ -26,6 +32,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
   onSave
 }) => {
   const { user } = useAuth();
+  const [spectacles, setSpectacles] = useState<Spectacle[]>([]);
   const [formData, setFormData] = useState<Contact>({
     first_name: '',
     last_name: '',
@@ -45,6 +52,23 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
   });
   const [newTag, setNewTag] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const fetchSpectacles = async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase
+        .from('centralized_artists')
+        .select('id, name, genre')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .order('name');
+
+      if (error) throw error;
+      setSpectacles(data || []);
+    } catch (error: any) {
+      console.error('Erreur lors du chargement des spectacles:', error);
+    }
+  };
 
   useEffect(() => {
     if (contact) {
@@ -68,6 +92,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
         role: 'contact'
       });
     }
+    fetchSpectacles();
   }, [contact, isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -196,7 +221,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div>
               <Label htmlFor="status">Statut</Label>
               <Select value={formData.status} onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}>
@@ -224,6 +249,22 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
                   <SelectItem value="organisateur">Organisateur</SelectItem>
                   <SelectItem value="media">Média</SelectItem>
                   <SelectItem value="contact">Contact général</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="artist_id">Spectacle associé</Label>
+              <Select value={(formData as any).artist_id || 'none'} onValueChange={(value) => setFormData(prev => ({ ...prev, artist_id: value === 'none' ? null : value } as any))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un spectacle" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Aucun spectacle</SelectItem>
+                  {spectacles.map((spectacle) => (
+                    <SelectItem key={spectacle.id} value={spectacle.id}>
+                      {spectacle.name} - {spectacle.genre}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
