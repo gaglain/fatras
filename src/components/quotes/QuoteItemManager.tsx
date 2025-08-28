@@ -112,12 +112,38 @@ export const QuoteItemManager: React.FC<QuoteItemManagerProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 p-4 bg-muted/50 rounded-lg">
           <div className="space-y-2">
             <Label htmlFor="itemName">Nom *</Label>
-            <Input
-              id="itemName"
-              value={newItem.name}
-              onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
-              placeholder="Nom de l'item"
-            />
+            <Select 
+              value={newItem.name || 'custom'} 
+              onValueChange={(value) => {
+                if (value === 'custom') {
+                  setNewItem({ ...newItem, name: '' });
+                } else {
+                  setNewItem({ ...newItem, name: value });
+                }
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Choisir un type ou saisir" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="custom">Personnalisé</SelectItem>
+                <SelectItem value="Prestation artistique">Prestation artistique</SelectItem>
+                <SelectItem value="Location matériel">Location matériel</SelectItem>
+                <SelectItem value="Transport">Transport</SelectItem>
+                <SelectItem value="Hébergement">Hébergement</SelectItem>
+                <SelectItem value="Restauration">Restauration</SelectItem>
+                <SelectItem value="Technique">Technique</SelectItem>
+                <SelectItem value="Frais de dossier">Frais de dossier</SelectItem>
+              </SelectContent>
+            </Select>
+            {(newItem.name === '' || !['Prestation artistique', 'Location matériel', 'Transport', 'Hébergement', 'Restauration', 'Technique', 'Frais de dossier'].includes(newItem.name)) && (
+              <Input
+                value={newItem.name}
+                onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
+                placeholder="Nom personnalisé de l'item"
+                className="mt-2"
+              />
+            )}
           </div>
 
           <div className="space-y-2">

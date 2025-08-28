@@ -328,6 +328,37 @@ export const ShowBible: React.FC = () => {
               </div>
 
               <div>
+                <label className="block text-sm font-medium mb-1">Image de couverture</label>
+                <div className="border-2 border-dashed rounded-lg p-4 text-center">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setUploadForm({ ...uploadForm, file });
+                      }
+                    }}
+                    className="hidden"
+                    id="cover-image-upload"
+                  />
+                  <Button 
+                    type="button"
+                    variant="outline" 
+                    onClick={() => document.getElementById('cover-image-upload')?.click()}
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    Choisir une image
+                  </Button>
+                  {uploadForm.file && (
+                    <p className="text-sm text-green-600 mt-2">
+                      Image sélectionnée: {uploadForm.file.name}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div>
                 <label className="block text-sm font-medium mb-1">Description</label>
                 <Textarea
                   value={uploadForm.description}
@@ -374,16 +405,16 @@ export const ShowBible: React.FC = () => {
         </div>
         
         <div className="flex-1">
-          <label className="block text-sm font-medium mb-2">Filtrer par artiste</label>
+          <label className="block text-sm font-medium mb-2">Filtrer par spectacle</label>
           <Select value={filterArtist} onValueChange={setFilterArtist}>
             <SelectTrigger>
-              <SelectValue placeholder="Tous les artistes" />
+              <SelectValue placeholder="Tous les spectacles" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Tous les artistes</SelectItem>
-              {availableArtists.map((artist) => (
-                <SelectItem key={artist.id} value={artist.id}>
-                  {artist.name}
+              <SelectItem value="all">Tous les spectacles</SelectItem>
+              {spectacles.map((spectacle) => (
+                <SelectItem key={spectacle.id} value={spectacle.id}>
+                  {spectacle.name} - {spectacle.genre}
                 </SelectItem>
               ))}
             </SelectContent>
