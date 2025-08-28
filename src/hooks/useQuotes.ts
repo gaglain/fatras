@@ -165,29 +165,43 @@ export const useQuotes = () => {
 
   // Fonctions pour gérer les items des devis
   const addQuoteItem = async (quoteId: string, itemData: Omit<QuoteItem, 'id' | 'quote_id' | 'created_at'>) => {
-    const { data, error } = await supabase
-      .from('quote_items')
-      .insert({
-        quote_id: quoteId,
-        name: itemData.name,
-        description: itemData.description,
-        quantity: itemData.quantity,
-        unit_price: itemData.unit_price,
-        total_price: itemData.total_price
-      })
-      .select()
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('quote_items')
+        .insert({
+          quote_id: quoteId,
+          name: itemData.name,
+          description: itemData.description,
+          quantity: itemData.quantity,
+          unit_price: itemData.unit_price,
+          total_price: itemData.total_price
+        })
+        .select()
+        .single();
 
-    return data && !error ? data : null;
+      if (error) throw error;
+      
+      console.log('✅ Quote item added successfully:', data);
+      return data;
+    } catch (error) {
+      console.error('❌ Error adding quote item:', error);
+      throw error;
+    }
   };
 
   const getQuoteItems = async (quoteId: string): Promise<QuoteItem[]> => {
-    const { data, error } = await supabase
-      .from('quote_items')
-      .select('*')
-      .eq('quote_id', quoteId);
+    try {
+      const { data, error } = await supabase
+        .from('quote_items')
+        .select('*')
+        .eq('quote_id', quoteId);
 
-    return data && !error ? data : [];
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('❌ Error fetching quote items:', error);
+      return [];
+    }
   };
 
   const generateQuoteNumber = () => {

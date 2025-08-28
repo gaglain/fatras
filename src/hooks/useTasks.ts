@@ -13,6 +13,7 @@ export interface Task {
   description?: string;
   priority: 'low' | 'medium' | 'high' | 'urgent';
   status: 'todo' | 'in_progress' | 'completed' | 'cancelled';
+  task_type: 'Email' | 'Telephone' | 'RDV' | 'Autre';
   due_date?: string;
   completed_at?: string;
   tags?: string[];
@@ -47,6 +48,7 @@ export const useTasks = () => {
           description: task.description || '',
           priority: task.priority as 'low' | 'medium' | 'high' | 'urgent',
           status: task.status as 'todo' | 'in_progress' | 'completed' | 'cancelled',
+          task_type: task.task_type as 'Email' | 'Telephone' | 'RDV' | 'Autre',
           due_date: task.due_date || undefined,
           completed_at: task.completed_at || undefined,
           tags: task.tags || [],
@@ -162,6 +164,7 @@ export const useTasks = () => {
           description: taskData.description,
           priority: taskData.priority,
           status: taskData.status,
+          task_type: taskData.task_type,
           due_date: taskData.due_date,
           completed_at: taskData.completed_at,
           tags: taskData.tags
@@ -182,6 +185,7 @@ export const useTasks = () => {
         description: data.description || '',
         priority: data.priority as 'low' | 'medium' | 'high' | 'urgent',
         status: data.status as 'todo' | 'in_progress' | 'completed' | 'cancelled',
+        task_type: data.task_type as 'Email' | 'Telephone' | 'RDV' | 'Autre',
         due_date: data.due_date || undefined,
         completed_at: data.completed_at || undefined,
         tags: data.tags || [],
@@ -217,6 +221,7 @@ export const useTasks = () => {
         description: updates.description,
         priority: updates.priority,
         status: updates.status,
+        task_type: updates.task_type,
         due_date: updates.due_date,
         completed_at: updates.completed_at,
         tags: updates.tags

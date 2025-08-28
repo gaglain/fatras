@@ -1631,6 +1631,7 @@ export type Database = {
           quote_id: string
           total_price: number
           unit_price: number
+          updated_at: string | null
         }
         Insert: {
           created_at?: string | null
@@ -1641,6 +1642,7 @@ export type Database = {
           quote_id: string
           total_price: number
           unit_price: number
+          updated_at?: string | null
         }
         Update: {
           created_at?: string | null
@@ -1651,6 +1653,7 @@ export type Database = {
           quote_id?: string
           total_price?: number
           unit_price?: number
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -1937,6 +1940,7 @@ export type Database = {
           priority: string
           status: string
           tags: string[] | null
+          task_type: string | null
           title: string
           updated_at: string
           user_id: string
@@ -1954,6 +1958,7 @@ export type Database = {
           priority?: string
           status?: string
           tags?: string[] | null
+          task_type?: string | null
           title: string
           updated_at?: string
           user_id: string
@@ -1971,6 +1976,7 @@ export type Database = {
           priority?: string
           status?: string
           tags?: string[] | null
+          task_type?: string | null
           title?: string
           updated_at?: string
           user_id?: string

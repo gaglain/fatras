@@ -40,6 +40,7 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
     dueDate: '',
     priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent',
     status: 'todo' as 'todo' | 'in_progress' | 'done',
+    taskType: 'Autre' as 'Email' | 'Telephone' | 'RDV' | 'Autre',
     relatedToId: relatedToId || '',
     relatedToType: (relatedToType || 'contact') as 'contact' | 'event' | 'contract' | 'opportunity'
   });
@@ -69,6 +70,7 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
         description: formData.description,
         priority: formData.priority,
         status: formData.status === 'done' ? 'completed' : formData.status as 'todo' | 'in_progress' | 'completed',
+        task_type: formData.taskType,
         due_date: formData.dueDate || undefined,
         tags: []
       };
@@ -91,6 +93,7 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
         dueDate: '',
         priority: 'medium',
         status: 'todo',
+        taskType: 'Autre',
         relatedToId: '',
         relatedToType: 'contact'
       });
@@ -166,22 +169,40 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="priority">Priorité</Label>
+              <Label htmlFor="taskType">Type de tâche</Label>
               <Select 
-                value={formData.priority} 
-                onValueChange={(value) => setFormData({ ...formData, priority: value as any })}
+                value={formData.taskType} 
+                onValueChange={(value) => setFormData({ ...formData, taskType: value as any })}
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="low">Basse</SelectItem>
-                  <SelectItem value="medium">Moyenne</SelectItem>
-                  <SelectItem value="high">Haute</SelectItem>
-                  <SelectItem value="urgent">Urgente</SelectItem>
+                  <SelectItem value="Email">📧 Email</SelectItem>
+                  <SelectItem value="Telephone">📞 Téléphone</SelectItem>
+                  <SelectItem value="RDV">📅 Rendez-vous</SelectItem>
+                  <SelectItem value="Autre">📋 Autre</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="priority">Priorité</Label>
+            <Select 
+              value={formData.priority} 
+              onValueChange={(value) => setFormData({ ...formData, priority: value as any })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="low">Basse</SelectItem>
+                <SelectItem value="medium">Moyenne</SelectItem>
+                <SelectItem value="high">Haute</SelectItem>
+                <SelectItem value="urgent">Urgente</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">

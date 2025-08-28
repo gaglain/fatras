@@ -58,6 +58,7 @@ export const EnhancedTaskCreator: React.FC<EnhancedTaskCreatorProps> = ({
         description: description.trim() || undefined,
         priority,
         status: 'todo' as const,
+        task_type: 'Autre' as 'Email' | 'Telephone' | 'RDV' | 'Autre',
         due_date: dueDate || undefined,
         tags: []
       };
