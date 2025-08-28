@@ -147,10 +147,23 @@ export const EventDialog: React.FC<EventDialogProps> = ({
     setLoading(true);
     try {
       const eventData = {
-        ...formData,
         user_id: user.id,
+        title: formData.title,
+        description: formData.description,
+        event_type: formData.event_type,
+        venue: formData.venue,
+        address: formData.address,
+        city: formData.city,
+        postal_code: formData.postal_code,
+        country: formData.country,
         start_date: formData.start_date ? new Date(formData.start_date).toISOString() : null,
         end_date: formData.end_date ? new Date(formData.end_date).toISOString() : null,
+        status: formData.status,
+        budget_min: formData.budget_min || null,
+        budget_max: formData.budget_max || null,
+        attendees_count: formData.attendees_count || null,
+        requirements: formData.requirements,
+        notes: formData.notes,
         contact_id: formData.contact_id || null
       };
 
@@ -282,22 +295,6 @@ export const EventDialog: React.FC<EventDialogProps> = ({
                   {contacts.map((contact) => (
                     <SelectItem key={contact.id} value={contact.id!}>
                       {contact.first_name} {contact.last_name} - {contact.role}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="artist_id">Spectacle associé</Label>
-              <Select value={(formData as any).artist_id || 'none'} onValueChange={(value) => setFormData(prev => ({ ...prev, artist_id: value === 'none' ? null : value } as any))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un spectacle" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Aucun spectacle</SelectItem>
-                  {artists.map((artist) => (
-                    <SelectItem key={artist.id} value={artist.id}>
-                      {artist.name} - {artist.genre}
                     </SelectItem>
                   ))}
                 </SelectContent>
