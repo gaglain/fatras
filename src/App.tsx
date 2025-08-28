@@ -32,6 +32,7 @@ import { MerchandiseBackoffice } from "./pages/MerchandiseBackoffice";
 import { Website } from "./pages/Website";
 import { WebsiteManager } from "./pages/WebsiteManager";
 import { Application } from "./pages/Application";
+import { Quotes } from "./pages/Quotes";
 import { Layout } from "./components/Layout";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { UserProvider } from "./contexts/UserContext";
@@ -94,6 +95,7 @@ const App = () => {
                 <Route path="/website" element={<ProtectedRoute><Layout><Website /></Layout></ProtectedRoute>} />
                 <Route path="/website-manager" element={<ProtectedRoute><Layout><WebsiteManager /></Layout></ProtectedRoute>} />
                 <Route path="/application" element={<ProtectedRoute><Layout><Application /></Layout></ProtectedRoute>} />
+                <Route path="/quotes" element={<ProtectedRoute><Layout><Quotes /></Layout></ProtectedRoute>} />
                 <Route path="/preferences" element={<ProtectedRoute><Layout><Preferences /></Layout></ProtectedRoute>} />
                 
                 <Route path="*" element={<NotFound />} />

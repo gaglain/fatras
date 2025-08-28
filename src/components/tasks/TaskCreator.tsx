@@ -10,6 +10,7 @@ import { CheckSquare, User, Target, Calendar } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import { useContacts } from '@/hooks/useContacts';
 import { useEvents } from '@/hooks/useEvents';
+import { useTasks } from '@/hooks/useTasks';
 import { toast } from 'sonner';
 
 interface TaskCreatorProps {
@@ -28,6 +29,7 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
   const { users, currentUser } = useUser();
   const { contacts } = useContacts();
   const { events } = useEvents();
+  const { addTask } = useTasks();
   
   const [formData, setFormData] = useState({
     title: '',
@@ -58,14 +60,20 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
     setLoading(true);
     
     try {
-      const newTask = {
-        id: `task-${Date.now()}`,
-        ...formData,
-        createdAt: new Date().toISOString(),
-        createdBy: currentUser?.id || ''
+      const taskData = {
+        user_id: currentUser?.id || '',
+        assigned_to: formData.assignedTo !== 'none' ? formData.assignedTo : undefined,
+        contact_id: formData.contactId !== 'none' ? formData.contactId : undefined,
+        event_id: formData.eventId !== 'none' ? formData.eventId : undefined,
+        title: formData.title,
+        description: formData.description,
+        priority: formData.priority,
+        status: formData.status === 'done' ? 'completed' : formData.status as 'todo' | 'in_progress' | 'completed',
+        due_date: formData.dueDate || undefined,
+        tags: []
       };
 
-      console.log('Creating new task:', newTask);
+      const newTask = await addTask(taskData);
       
       if (onTaskCreated) {
         onTaskCreated(newTask);
