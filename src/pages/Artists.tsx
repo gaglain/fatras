@@ -4,10 +4,11 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ViewToggle } from '@/components/ui/view-toggle';
-import { Plus, Music, Calendar, MapPin, Clock, Bed, BookOpen, Trash2, Upload, Image, Search } from 'lucide-react';
+import { Plus, Music, Calendar, MapPin, Clock, Bed, BookOpen, Trash2, Upload, Image, Search, Edit2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCentralizedData, CentralizedArtist as Artist } from '@/hooks/useCentralizedData';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface TourSchedule {
   id: string;
@@ -58,6 +59,7 @@ export const Artists: React.FC = () => {
     bio: '',
     image: ''
   });
+  const [uploading, setUploading] = useState(false);
 
   console.log('🎭 Artists page - Current artists:', artists.length);
 
@@ -93,6 +95,63 @@ export const Artists: React.FC = () => {
       image: artist.image || ''
     });
     setShowAddForm(true);
+  };
+
+  const handleUploadImage = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Vérifier le type de fichier
+    if (!file.type.startsWith('image/')) {
+      toast.error('Veuillez sélectionner un fichier image');
+      return;
+    }
+
+    // Vérifier la taille (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('L\'image doit faire moins de 5MB');
+      return;
+    }
+
+    setUploading(true);
+
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error || !user) {
+        toast.error('Vous devez être connecté');
+        return;
+      }
+
+      // Générer un nom de fichier unique
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      // Upload vers Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('artist-photos')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        toast.error('Erreur lors de l\'upload de l\'image');
+        return;
+      }
+
+      // Obtenir l'URL publique
+      const { data } = supabase.storage
+        .from('artist-photos')
+        .getPublicUrl(filePath);
+
+      // Mettre à jour le formData avec l'URL de l'image
+      setFormData(prev => ({ ...prev, image: data.publicUrl }));
+      toast.success('Image uploadée avec succès');
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error('Erreur lors de l\'upload');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSaveArtist = () => {
@@ -187,7 +246,7 @@ export const Artists: React.FC = () => {
                         }}
                         className="p-1 h-6 w-6 text-blue-600 hover:text-blue-800 hover:bg-blue-50"
                       >
-                        <Music className="h-3 w-3" />
+                        <Edit2 className="h-3 w-3" />
                       </Button>
                       <Button
                         variant="outline"
@@ -346,11 +405,50 @@ export const Artists: React.FC = () => {
                 onChange={(e) => setFormData(prev => ({ ...prev, currentTour: e.target.value }))}
               />
               
-              <Input 
-                placeholder="URL de l'image (optionnel)" 
-                value={formData.image}
-                onChange={(e) => setFormData(prev => ({ ...prev, image: e.target.value }))}
-              />
+              <div>
+                <label className="block text-sm font-medium mb-2">Image du spectacle</label>
+                <div className="space-y-3">
+                  {formData.image && (
+                    <div className="relative w-full h-32 bg-gray-100 rounded-lg overflow-hidden">
+                      <img 
+                        src={formData.image} 
+                        alt="Aperçu" 
+                        className="w-full h-full object-cover"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        className="absolute top-2 right-2 h-8 w-8 p-0"
+                        onClick={() => setFormData(prev => ({ ...prev, image: '' }))}
+                      >
+                        ×
+                      </Button>
+                    </div>
+                  )}
+                  
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={uploading}
+                      className="relative overflow-hidden"
+                      onClick={() => document.getElementById('image-upload')?.click()}
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      {uploading ? 'Upload en cours...' : 'Choisir une image'}
+                    </Button>
+                    <input
+                      id="image-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleUploadImage}
+                      className="hidden"
+                    />
+                    <span className="text-sm text-gray-500">JPG, PNG (max 5MB)</span>
+                  </div>
+                </div>
+              </div>
               
               <div>
                 <label className="block text-sm font-medium mb-2">Description du spectacle</label>
