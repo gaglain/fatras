@@ -35,7 +35,7 @@ export const EventDialog: React.FC<EventDialogProps> = ({
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [eventTypes, setEventTypes] = useState<EventType[]>([]);
   const [artists, setArtists] = useState<any[]>([]);
-  const [formData, setFormData] = useState<Event>({
+  const [formData, setFormData] = useState({
     title: '',
     description: '',
     event_type: '',
@@ -47,9 +47,9 @@ export const EventDialog: React.FC<EventDialogProps> = ({
     start_date: '',
     end_date: '',
     status: 'pending',
-    budget_min: undefined,
-    budget_max: undefined,
-    attendees_count: undefined,
+    budget_min: undefined as number | undefined,
+    budget_max: undefined as number | undefined,
+    attendees_count: undefined as number | undefined,
     requirements: '',
     notes: '',
     contact_id: ''
@@ -67,9 +67,23 @@ export const EventDialog: React.FC<EventDialogProps> = ({
   useEffect(() => {
     if (event) {
       setFormData({
-        ...event,
+        title: event.title || '',
+        description: event.description || '',
+        event_type: event.event_type || '',
+        venue: event.venue || '',
+        address: event.address || '',
+        city: event.city || '',
+        postal_code: event.postal_code || '',
+        country: event.country || 'France',
         start_date: event.start_date ? new Date(event.start_date).toISOString().slice(0, 16) : '',
-        end_date: event.end_date ? new Date(event.end_date).toISOString().slice(0, 16) : ''
+        end_date: event.end_date ? new Date(event.end_date).toISOString().slice(0, 16) : '',
+        status: event.status || 'pending',
+        budget_min: event.budget_min,
+        budget_max: event.budget_max,
+        attendees_count: event.attendees_count,
+        requirements: event.requirements || '',
+        notes: event.notes || '',
+        contact_id: event.contact_id || ''
       });
     } else {
       setFormData({
