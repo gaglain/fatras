@@ -38,7 +38,10 @@ export const useUserManagement = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase.rpc('get_user_profiles');
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
       
       if (error) {
         console.error('Erreur lors du chargement des utilisateurs:', error);

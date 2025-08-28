@@ -171,47 +171,38 @@ export const ChannelManager: React.FC<ChannelManagerProps> = ({ onChannelCreated
         </DialogContent>
       </Dialog>
 
-      {/* Envoyer un message direct */}
-      <Dialog>
-        <DialogTrigger asChild>
-          <Button variant="outline" className="w-full justify-start h-8">
-            <MessageSquare className="h-3 w-3 mr-2" />
-            Envoyer un message
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Envoyer un message</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Label>Sélectionner un utilisateur</Label>
-            <ScrollArea className="h-48 border rounded-md p-2">
-              {availableUsers.map((user) => (
-                <Button
-                  key={user.user_id}
-                  variant="ghost"
-                  className="w-full justify-start p-2 h-auto"
-                  onClick={() => handleCreateDM(user.user_id)}
-                >
-                  <div className="flex items-center space-x-2">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-xs font-medium">
-                        {(user.first_name?.[0] || user.username?.[0] || user.email[0]).toUpperCase()}
-                      </span>
-                    </div>
-                    <span className="text-sm">
-                      {user.first_name && user.last_name 
-                        ? `${user.first_name} ${user.last_name}`
-                        : user.username || user.email
-                      }
+      {/* Messages directs uniquement */}
+      <div className="space-y-2">
+        <Label className="text-sm font-medium text-muted-foreground">Messages Directs</Label>
+        <ScrollArea className="h-48">
+          {availableUsers.length > 0 ? (
+            availableUsers.map((user) => (
+              <Button
+                key={user.user_id}
+                variant="ghost"
+                className="w-full justify-start p-2 h-auto mb-1"
+                onClick={() => handleCreateDM(user.user_id)}
+              >
+                <div className="flex items-center space-x-2">
+                  <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
+                    <span className="text-xs font-medium">
+                      {(user.first_name?.[0] || user.username?.[0] || user.email[0]).toUpperCase()}
                     </span>
                   </div>
-                </Button>
-              ))}
-            </ScrollArea>
-          </div>
-        </DialogContent>
-      </Dialog>
+                  <span className="text-sm">
+                    {user.first_name && user.last_name 
+                      ? `${user.first_name} ${user.last_name}`
+                      : user.username || user.email
+                    }
+                  </span>
+                </div>
+              </Button>
+            ))
+          ) : (
+            <p className="text-sm text-muted-foreground p-2">Aucun utilisateur disponible</p>
+          )}
+        </ScrollArea>
+      </div>
 
       {/* Delete Channel Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

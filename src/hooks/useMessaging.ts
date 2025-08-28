@@ -190,37 +190,24 @@ export const useMessaging = () => {
     try {
       console.log('Creating DM with user:', otherUserId);
       
-      // Vérifier si un canal DM existe déjà
-      const existingChannels = channels.filter(ch => ch.type === 'direct');
-      
-      for (const channel of existingChannels) {
-        // Récupérer les membres du canal
-        const { data: members, error: membersError } = await supabase
-          .from('messaging_channel_members')
-          .select('user_id')
-          .eq('channel_id', channel.id);
-
-        if (!membersError && members && members.length === 2) {
-          const memberIds = members.map(m => m.user_id);
-          if (memberIds.includes(user?.id) && memberIds.includes(otherUserId)) {
-            console.log('Existing DM channel found:', channel.id);
-            return channel.id;
-          }
-        }
-      }
-
-      const { data, error } = await supabase.rpc('create_direct_message_channel', {
+      // Vérifier si un canal DM existe déjà en utilisant la fonction SQL
+      const { data: existingChannelId, error: checkError } = await supabase.rpc('create_direct_message_channel', {
         other_user_id: otherUserId
       });
 
-      if (error) throw error;
+      if (checkError) {
+        console.error('Error creating/finding DM:', checkError);
+        throw checkError;
+      }
 
-      console.log('DM channel created:', data);
+      console.log('DM channel ID:', existingChannelId);
       
-      // Refresh channels
-      await fetchChannels();
+      // Refresh channels pour s'assurer que le nouveau canal est affiché
+      setTimeout(() => {
+        fetchChannels();
+      }, 100);
       
-      return data;
+      return existingChannelId;
     } catch (error) {
       console.error('Error creating DM:', error);
       return null;
