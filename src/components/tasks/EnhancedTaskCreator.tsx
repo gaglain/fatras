@@ -123,7 +123,7 @@ export const EnhancedTaskCreator: React.FC<EnhancedTaskCreatorProps> = ({
         </Button>
       </DialogTrigger>
       
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="w-full max-w-2xl max-h-[90vh] overflow-y-auto mx-4">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <Calendar className="h-5 w-5" />

@@ -210,14 +210,17 @@ export const useTasks = () => {
   };
 
   const updateTask = async (id: string, updates: Partial<Task>) => {
-    const { data, error } = await supabase
-      .from('tasks')
-      .update({
-        assigned_to: updates.assigned_to,
-        contact_id: updates.contact_id,
-        event_id: updates.event_id,
-        artist_id: updates.artist_id,
-        title: updates.title,
+    try {
+      console.log('🔄 Updating task:', id, updates);
+      
+      const { data, error } = await supabase
+        .from('tasks')
+        .update({
+          assigned_to: updates.assigned_to,
+          contact_id: updates.contact_id,
+          event_id: updates.event_id,
+          artist_id: updates.artist_id,
+          title: updates.title,
         description: updates.description,
         priority: updates.priority,
         status: updates.status,
@@ -230,10 +233,20 @@ export const useTasks = () => {
       .select()
       .single();
 
-    if (data && !error) {
-      setTasks(prev => prev.map(task => 
-        task.id === id ? { ...task, ...updates } : task
-      ));
+      if (error) {
+        console.error('❌ Error updating task:', error);
+        throw error;
+      }
+
+      if (data) {
+        console.log('✅ Task updated successfully:', data);
+        setTasks(prev => prev.map(task => 
+          task.id === id ? { ...task, ...updates, updated_at: data.updated_at } : task
+        ));
+      }
+    } catch (error) {
+      console.error('Error updating task:', error);
+      throw error;
     }
   };
 

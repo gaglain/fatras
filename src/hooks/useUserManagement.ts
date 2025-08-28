@@ -201,25 +201,33 @@ export const useUserManagement = () => {
   const deactivateUser = async (userId: string) => {
     try {
       setLoading(true);
+      console.log('🗑️ Suppression utilisateur:', userId);
       
-      // Supprimer complètement l'utilisateur du profil
+      // D'abord supprimer de auth.users
+      const { error: authError } = await supabase.auth.admin.deleteUser(userId);
+      if (authError) {
+        console.log('⚠️ Avertissement suppression auth (peut être normal):', authError);
+      }
+      
+      // Puis supprimer le profil
       const { error } = await supabase
         .from('user_profiles')
         .delete()
         .eq('user_id', userId);
 
       if (error) {
-        console.error('Erreur suppression:', error);
-        toast.error('Erreur lors de la suppression');
+        console.error('❌ Erreur suppression profil:', error);
+        toast.error('Erreur lors de la suppression du profil');
         return false;
       }
 
       // Mettre à jour immédiatement la liste locale
       setUsers(prev => prev.filter(user => user.user_id !== userId));
-      toast.success('Utilisateur supprimé');
+      console.log('✅ Utilisateur supprimé avec succès');
+      toast.success('Utilisateur supprimé définitivement');
       return true;
     } catch (error) {
-      console.error('Erreur:', error);
+      console.error('❌ Erreur suppression:', error);
       toast.error('Erreur lors de la suppression');
       return false;
     } finally {

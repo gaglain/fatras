@@ -118,7 +118,7 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
           Créer Tâche
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md">
+      <DialogContent className="w-full max-w-2xl max-h-[90vh] overflow-y-auto mx-4">
         <DialogHeader>
           <DialogTitle>Créer une nouvelle tâche</DialogTitle>
           <DialogDescription>
