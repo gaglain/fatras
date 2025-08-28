@@ -6,3 +6,4 @@ export { CustomColorsForm } from './CustomColorsForm';
 export { MobileTab } from './MobileTab';
 export { NotificationsTab } from './NotificationsTab';
 export { SidebarTab } from './SidebarTab';
+export { EmailTab } from './EmailTab';

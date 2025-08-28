@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Upload, Save, Palette, Bell, Globe, Smartphone, Download, Calendar, Mail } from 'lucide-react';
+import { Upload, Save, Palette, Bell, Globe, Smartphone, Download, Calendar, Mail, Settings } from 'lucide-react';
 import { toast } from 'sonner';
 import { CustomColorsForm } from "./preferences/CustomColorsForm";
 import { GoogleCalendarTab } from "./preferences/GoogleCalendarTab";
@@ -18,6 +18,7 @@ import {
   NotificationsTab,
   MobileTab,
   ColorsTab,
+  EmailTab,
 } from "./preferences";
 import { useSearchParams } from 'react-router-dom';
 
@@ -34,7 +35,7 @@ export const Preferences: React.FC = () => {
         </p>
       </div>
       <Tabs defaultValue={defaultTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-1">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-1">
           <TabsTrigger value="company" className="text-xs lg:text-sm">
             <Globe className="h-4 w-4 lg:mr-2" />
             <span className="hidden lg:inline">Entreprise</span>
@@ -47,6 +48,10 @@ export const Preferences: React.FC = () => {
             <Bell className="h-4 w-4 lg:mr-2" />
             <span className="hidden sm:inline lg:inline">Notifications</span>
             <span className="sm:hidden">Notifs</span>
+          </TabsTrigger>
+          <TabsTrigger value="email" className="text-xs lg:text-sm">
+            <Settings className="h-4 w-4 lg:mr-2" />
+            <span className="hidden lg:inline">Email</span>
           </TabsTrigger>
           <TabsTrigger value="calendar" className="text-xs lg:text-sm">
             <Calendar className="h-4 w-4 lg:mr-2" />
@@ -73,6 +78,9 @@ export const Preferences: React.FC = () => {
         </TabsContent>
         <TabsContent value="notifications" className="space-y-4">
           <NotificationsTab />
+        </TabsContent>
+        <TabsContent value="email" className="space-y-4">
+          <EmailTab />
         </TabsContent>
         <TabsContent value="calendar" className="space-y-4">
           <GoogleCalendarTab />
