@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
 
 export interface Task {
   id: string;
@@ -62,13 +61,19 @@ export const useTasks = () => {
     fetchTasks();
   }, [user]);
 
-  // Configuration des mises à jour en temps réel
-  useRealtimeUpdates([
-    {
-      table: 'tasks',
-      onInsert: (payload) => {
+  // Configuration des mises à jour en temps réel uniquement si user existe
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('tasks-realtime')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'tasks'
+      }, (payload) => {
         const newTask = payload.new;
-        if (newTask.user_id === user?.id || newTask.assigned_to === user?.id) {
+        if (newTask.user_id === user.id || newTask.assigned_to === user.id) {
           const taskData: Task = {
             id: newTask.id,
             user_id: newTask.user_id,
@@ -88,10 +93,14 @@ export const useTasks = () => {
           };
           setTasks(prev => [...prev, taskData]);
         }
-      },
-      onUpdate: (payload) => {
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'tasks'
+      }, (payload) => {
         const updatedTask = payload.new;
-        if (updatedTask.user_id === user?.id || updatedTask.assigned_to === user?.id) {
+        if (updatedTask.user_id === user.id || updatedTask.assigned_to === user.id) {
           const taskData: Task = {
             id: updatedTask.id,
             user_id: updatedTask.user_id,
@@ -111,13 +120,21 @@ export const useTasks = () => {
           };
           setTasks(prev => prev.map(task => task.id === updatedTask.id ? taskData : task));
         }
-      },
-      onDelete: (payload) => {
+      })
+      .on('postgres_changes', {
+        event: 'DELETE',
+        schema: 'public',
+        table: 'tasks'
+      }, (payload) => {
         const deletedTask = payload.old;
         setTasks(prev => prev.filter(task => task.id !== deletedTask.id));
-      }
-    }
-  ]);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
 
   const addTask = async (taskData: Omit<Task, 'id' | 'created_at' | 'updated_at'>) => {
     try {

@@ -1,5 +1,5 @@
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface RealtimeConfig {
@@ -10,10 +10,20 @@ interface RealtimeConfig {
 }
 
 export const useRealtimeUpdates = (configs: RealtimeConfig[]) => {
-  const setupRealtimeListeners = useCallback(() => {
-    const channels = configs.map(config => {
+  const channelsRef = useRef<Map<string, any>>(new Map());
+
+  useEffect(() => {
+    // Nettoyer les anciens canaux
+    channelsRef.current.forEach(channel => {
+      supabase.removeChannel(channel);
+    });
+    channelsRef.current.clear();
+
+    // Créer de nouveaux canaux
+    configs.forEach(config => {
+      const channelName = `realtime-${config.table}-${Date.now()}`;
       const channel = supabase
-        .channel(`realtime-${config.table}`)
+        .channel(channelName)
         .on('postgres_changes', {
           event: 'INSERT',
           schema: 'public',
@@ -40,18 +50,15 @@ export const useRealtimeUpdates = (configs: RealtimeConfig[]) => {
         })
         .subscribe();
 
-      return channel;
+      channelsRef.current.set(channelName, channel);
     });
 
+    // Fonction de nettoyage
     return () => {
-      channels.forEach(channel => {
+      channelsRef.current.forEach(channel => {
         supabase.removeChannel(channel);
       });
+      channelsRef.current.clear();
     };
   }, [configs]);
-
-  useEffect(() => {
-    const cleanup = setupRealtimeListeners();
-    return cleanup;
-  }, [setupRealtimeListeners]);
 };
