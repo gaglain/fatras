@@ -21,6 +21,7 @@ import { Contracts } from "./pages/Contracts";
 import { Email } from "./pages/Email";
 import { EmailCampaigns } from "./pages/EmailCampaigns";
 import { ContactLists } from "./pages/ContactLists";
+import { ContactDetail } from "./pages/ContactDetail";
 import { Opportunities } from "./pages/Opportunities";
 import { EventTypes } from "./pages/EventTypes";
 import { PublicationCalendar } from "./pages/PublicationCalendar";
@@ -78,6 +79,7 @@ const App = () => {
                 <Route path="/artists/:id" element={<ProtectedRoute><Layout><ArtistDetail /></Layout></ProtectedRoute>} />
                 <Route path="/events" element={<ProtectedRoute><Layout><Events /></Layout></ProtectedRoute>} />
                 <Route path="/contacts" element={<ProtectedRoute><Layout><Contacts /></Layout></ProtectedRoute>} />
+                <Route path="/contacts/:id" element={<ProtectedRoute><Layout><ContactDetail /></Layout></ProtectedRoute>} />
                 <Route path="/tasks" element={<ProtectedRoute><Layout><Tasks /></Layout></ProtectedRoute>} />
                 <Route path="/roadshow" element={<ProtectedRoute><Layout><RoadShow /></Layout></ProtectedRoute>} />
                 <Route path="/messagerie" element={<ProtectedRoute><Layout><Messagerie /></Layout></ProtectedRoute>} />

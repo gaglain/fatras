@@ -1,10 +1,11 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Mail, Phone, MapPin, MoreVertical, Edit, Trash2, User } from 'lucide-react';
+import { Mail, Phone, MapPin, MoreVertical, Edit, Trash2, User, Eye } from 'lucide-react';
 import { Contact } from '@/types/contact.types';
 
 interface ContactCardProps {
@@ -24,6 +25,7 @@ export const ContactCard: React.FC<ContactCardProps> = ({
   onSelect,
   viewMode = 'grid'
 }) => {
+  const navigate = useNavigate();
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'client': return 'bg-green-100 text-green-800';
@@ -47,18 +49,19 @@ export const ContactCard: React.FC<ContactCardProps> = ({
 
   if (viewMode === 'list') {
     return (
-      <Card className={`hover:shadow-md transition-shadow ${isSelected ? 'ring-2 ring-blue-500' : ''}`}>
+    <Card className={`hover:shadow-md transition-shadow cursor-pointer ${isSelected ? 'ring-2 ring-blue-500' : ''}`} onClick={() => navigate(`/contacts/${contact.id}`)}>
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4 flex-1">
-              {onSelect && (
-                <input
-                  type="checkbox"
-                  checked={isSelected}
-                  onChange={(e) => onSelect(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                />
-              )}
+               {onSelect && (
+                 <input
+                   type="checkbox"
+                   checked={isSelected}
+                   onChange={(e) => onSelect(e.target.checked)}
+                   onClick={(e) => e.stopPropagation()}
+                   className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                 />
+               )}
               <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
                 <span className="text-sm">{getRoleIcon(contact.role)}</span>
               </div>
@@ -84,13 +87,17 @@ export const ContactCard: React.FC<ContactCardProps> = ({
                 {contact.status}
               </Badge>
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
+             <DropdownMenu>
+               <DropdownMenuTrigger asChild>
+                 <Button variant="ghost" size="sm" onClick={(e) => e.stopPropagation()}>
+                   <MoreVertical className="h-4 w-4" />
+                 </Button>
+               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => navigate(`/contacts/${contact.id}`)}>
+                  <Eye className="h-4 w-4 mr-2" />
+                  Voir le détail
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onEdit(contact)}>
                   <Edit className="h-4 w-4 mr-2" />
                   Modifier
@@ -111,18 +118,19 @@ export const ContactCard: React.FC<ContactCardProps> = ({
   }
 
   return (
-    <Card className={`hover:shadow-md transition-shadow ${isSelected ? 'ring-2 ring-blue-500' : ''}`}>
+    <Card className={`hover:shadow-md transition-shadow cursor-pointer ${isSelected ? 'ring-2 ring-blue-500' : ''}`} onClick={() => navigate(`/contacts/${contact.id}`)}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center space-x-3">
-            {onSelect && (
-              <input
-                type="checkbox"
-                checked={isSelected}
-                onChange={(e) => onSelect(e.target.checked)}
-                className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-              />
-            )}
+             {onSelect && (
+               <input
+                 type="checkbox"
+                 checked={isSelected}
+                 onChange={(e) => onSelect(e.target.checked)}
+                 onClick={(e) => e.stopPropagation()}
+                 className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+               />
+             )}
             <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
               <span className="text-lg">{getRoleIcon(contact.role)}</span>
             </div>
@@ -139,13 +147,17 @@ export const ContactCard: React.FC<ContactCardProps> = ({
             <Badge className={getStatusColor(contact.status)}>
               {contact.status}
             </Badge>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
+             <DropdownMenu>
+               <DropdownMenuTrigger asChild>
+                 <Button variant="ghost" size="sm" onClick={(e) => e.stopPropagation()}>
+                   <MoreVertical className="h-4 w-4" />
+                 </Button>
+               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => navigate(`/contacts/${contact.id}`)}>
+                  <Eye className="h-4 w-4 mr-2" />
+                  Voir le détail
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onEdit(contact)}>
                   <Edit className="h-4 w-4 mr-2" />
                   Modifier
