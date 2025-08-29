@@ -32,6 +32,7 @@ export const Tasks: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<string>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedDate, setSelectedDate] = useState<string>('all');
   const [emailComposer, setEmailComposer] = useState<{
     isOpen: boolean;
     to: string;
@@ -84,7 +85,35 @@ export const Tasks: React.FC = () => {
       (task.description || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesUser = selectedUser === 'all' || task.assigned_to === selectedUser;
     const matchesCategory = selectedCategory === 'all' || true; // Remove category filter for now
-    return matchesSearch && matchesUser && matchesCategory;
+    
+    // Filtrage par date d'échéance
+    const matchesDate = selectedDate === 'all' || (() => {
+      if (!task.due_date) return selectedDate === 'no_date';
+      
+      const dueDate = new Date(task.due_date);
+      const today = new Date();
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const nextWeek = new Date(today);
+      nextWeek.setDate(nextWeek.getDate() + 7);
+      
+      switch (selectedDate) {
+        case 'overdue':
+          return dueDate < today;
+        case 'today':
+          return dueDate.toDateString() === today.toDateString();
+        case 'tomorrow':
+          return dueDate.toDateString() === tomorrow.toDateString();
+        case 'this_week':
+          return dueDate >= today && dueDate <= nextWeek;
+        case 'no_date':
+          return false;
+        default:
+          return true;
+      }
+    })();
+    
+    return matchesSearch && matchesUser && matchesCategory && matchesDate;
   });
 
   const todoTasks = filteredTasks.filter(task => task.status === 'todo');
@@ -140,6 +169,19 @@ export const Tasks: React.FC = () => {
               <SelectItem value="event_prep">Préparation Événement</SelectItem>
               <SelectItem value="marketing">Marketing</SelectItem>
               <SelectItem value="admin">Administration</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={selectedDate} onValueChange={setSelectedDate}>
+            <SelectTrigger className="w-full sm:w-48">
+              <SelectValue placeholder="Filtrer par échéance" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Toutes les échéances</SelectItem>
+              <SelectItem value="overdue">En retard</SelectItem>
+              <SelectItem value="today">Aujourd'hui</SelectItem>
+              <SelectItem value="tomorrow">Demain</SelectItem>
+              <SelectItem value="this_week">Cette semaine</SelectItem>
+              <SelectItem value="no_date">Sans date</SelectItem>
             </SelectContent>
           </Select>
         </div>
