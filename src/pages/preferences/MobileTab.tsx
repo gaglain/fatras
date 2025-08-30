@@ -1,9 +1,10 @@
 
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Smartphone, Download } from "lucide-react";
+import { Smartphone, Download, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export const MobileTab: React.FC = () => (
   <Card>
@@ -13,24 +14,51 @@ export const MobileTab: React.FC = () => (
         Applications mobiles
       </CardTitle>
     </CardHeader>
-    <CardContent className="space-y-4">
+    <CardContent className="space-y-6">
+      <Alert>
+        <QrCode className="h-4 w-4" />
+        <AlertDescription>
+          <strong>Application PWA disponible!</strong><br />
+          Vous pouvez installer cette application sur votre appareil mobile en tant qu'app Progressive Web App (PWA).
+        </AlertDescription>
+      </Alert>
+      
+      <div className="space-y-4">
+        <div>
+          <h3 className="font-semibold mb-2">Installation sur iOS (Safari):</h3>
+          <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
+            <li>Ouvrez cette page dans Safari</li>
+            <li>Appuyez sur l'icône de partage (carré avec flèche vers le haut)</li>
+            <li>Sélectionnez "Sur l'écran d'accueil"</li>
+            <li>Confirmez l'installation</li>
+          </ol>
+        </div>
+        
+        <div>
+          <h3 className="font-semibold mb-2">Installation sur Android (Chrome):</h3>
+          <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
+            <li>Ouvrez cette page dans Chrome</li>
+            <li>Appuyez sur le menu (trois points verticaux)</li>
+            <li>Sélectionnez "Ajouter à l'écran d'accueil"</li>
+            <li>Confirmez l'installation</li>
+          </ol>
+        </div>
+      </div>
+      
       <div className="text-center space-y-4">
         <p className="text-muted-foreground">
-          Les applications mobiles iOS et Android sont en cours de développement.
+          Applications natives iOS et Android en développement
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button variant="outline" disabled className="flex items-center">
             <Download className="h-4 w-4 mr-2" />
-            App iOS (Bientôt)
+            App Store (Bientôt)
           </Button>
           <Button variant="outline" disabled className="flex items-center">
             <Download className="h-4 w-4 mr-2" />
-            App Android (Bientôt)
+            Google Play (Bientôt)
           </Button>
         </div>
-        <Badge variant="secondary" className="text-xs">
-          En attendant, vous pouvez ajouter cette page à votre écran d'accueil
-        </Badge>
       </div>
     </CardContent>
   </Card>

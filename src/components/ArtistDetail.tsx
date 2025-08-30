@@ -1,9 +1,16 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Play, Download, Calendar, Star } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ArrowLeft, Play, Download, Calendar, Star, Upload, Plus, X } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 
 type PageType = 'home' | 'artists' | 'artist-detail' | 'contact' | 'tour' | 'shop';
 
@@ -13,6 +20,95 @@ interface ArtistDetailProps {
 }
 
 export const ArtistDetail: React.FC<ArtistDetailProps> = ({ artist, setCurrentPage }) => {
+  const { user } = useAuth();
+  const [isEditing, setIsEditing] = useState(false);
+  const [artistData, setArtistData] = useState(artist);
+  const [users, setUsers] = useState<any[]>([]);
+  const [newPhoto, setNewPhoto] = useState('');
+
+  useEffect(() => {
+    fetchUsers();
+    if (artist?.id) {
+      fetchArtistData();
+    }
+  }, [artist?.id]);
+
+  const fetchUsers = async () => {
+    const { data } = await supabase
+      .from('user_profiles')
+      .select('id, first_name, last_name, role')
+      .in('role', ['booker', 'admin', 'super_admin']);
+    
+    if (data) setUsers(data);
+  };
+
+  const fetchArtistData = async () => {
+    const { data } = await supabase
+      .from('centralized_artists')
+      .select('*')
+      .eq('id', artist.id)
+      .single();
+    
+    if (data) {
+      setArtistData({
+        ...artist,
+        presentation_text: data.presentation_text || '',
+        photos: data.photos || [],
+        presentation_pdf_url: data.presentation_pdf_url || '',
+        video_url: data.video_url || '',
+        audio_url: data.audio_url || '',
+        tech_sheet_pdf_url: data.tech_sheet_pdf_url || '',
+        technical_contact_id: data.technical_contact_id || '',
+        booking_contact_id: data.booking_contact_id || ''
+      });
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      const { error } = await supabase
+        .from('centralized_artists')
+        .update({
+          presentation_text: artistData.presentation_text,
+          photos: artistData.photos,
+          presentation_pdf_url: artistData.presentation_pdf_url,
+          video_url: artistData.video_url,
+          audio_url: artistData.audio_url,
+          tech_sheet_pdf_url: artistData.tech_sheet_pdf_url,
+          technical_contact_id: artistData.technical_contact_id,
+          booking_contact_id: artistData.booking_contact_id
+        })
+        .eq('id', artist.id);
+
+      if (error) throw error;
+      
+      toast.success('Informations mises à jour');
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Error updating artist:', error);
+      toast.error('Erreur lors de la mise à jour');
+    }
+  };
+
+  const addPhoto = () => {
+    if (newPhoto.trim()) {
+      setArtistData({
+        ...artistData,
+        photos: [...(artistData.photos || []), newPhoto.trim()]
+      });
+      setNewPhoto('');
+    }
+  };
+
+  const removePhoto = (index: number) => {
+    const updatedPhotos = [...(artistData.photos || [])];
+    updatedPhotos.splice(index, 1);
+    setArtistData({
+      ...artistData,
+      photos: updatedPhotos
+    });
+  };
+
   if (!artist) {
     return (
       <div className="pt-20 min-h-screen flex items-center justify-center">
@@ -69,16 +165,253 @@ export const ArtistDetail: React.FC<ArtistDetailProps> = ({ artist, setCurrentPa
                     <Calendar className="h-4 w-4 mr-2" />
                     Réserver un Spectacle
                   </Button>
-                  <Button variant="outline" className="w-full">
+                  <Button variant="outline" className="w-full mb-3">
                     <Play className="h-4 w-4 mr-2" />
                     Écouter un Extrait
                   </Button>
+                  
+                  {user?.role && ['admin', 'super_admin'].includes(user.role) && (
+                    <Button 
+                      onClick={() => setIsEditing(!isEditing)} 
+                      variant={isEditing ? "destructive" : "secondary"}
+                      className="w-full"
+                    >
+                      {isEditing ? 'Annuler' : 'Modifier les détails'}
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
           </div>
 
           <div className="lg:col-span-2 space-y-6">
+            {/* Section Présentation */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Texte de Présentation</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isEditing ? (
+                  <Textarea
+                    value={artistData.presentation_text || ''}
+                    onChange={(e) => setArtistData({...artistData, presentation_text: e.target.value})}
+                    placeholder="Texte de présentation de l'artiste..."
+                    rows={6}
+                  />
+                ) : (
+                  <p className="text-gray-700 whitespace-pre-wrap">
+                    {artistData.presentation_text || 'Aucun texte de présentation disponible'}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Section Photographies */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Photographies</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isEditing && (
+                  <div className="mb-4 flex gap-2">
+                    <Input
+                      value={newPhoto}
+                      onChange={(e) => setNewPhoto(e.target.value)}
+                      placeholder="URL de la photo"
+                    />
+                    <Button onClick={addPhoto} size="sm">
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {artistData.photos?.map((photo: string, index: number) => (
+                    <div key={index} className="relative group">
+                      <img 
+                        src={photo} 
+                        alt={`Photo ${index + 1}`}
+                        className="w-full h-32 object-cover rounded-lg"
+                      />
+                      {isEditing && (
+                        <Button
+                          onClick={() => removePhoto(index)}
+                          size="sm"
+                          variant="destructive"
+                          className="absolute top-1 right-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+                  )) || (
+                    <p className="text-gray-500 col-span-full">Aucune photo disponible</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Section Fichiers et Médias */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Fichiers et Médias</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Dossier de présentation (PDF)</Label>
+                    {isEditing ? (
+                      <Input
+                        value={artistData.presentation_pdf_url || ''}
+                        onChange={(e) => setArtistData({...artistData, presentation_pdf_url: e.target.value})}
+                        placeholder="URL du dossier PDF"
+                      />
+                    ) : (
+                      artistData.presentation_pdf_url ? (
+                        <Button variant="outline" className="w-full">
+                          <Download className="h-4 w-4 mr-2" />
+                          Télécharger le dossier
+                        </Button>
+                      ) : (
+                        <p className="text-gray-500">Aucun dossier disponible</p>
+                      )
+                    )}
+                  </div>
+                  
+                  <div>
+                    <Label>Fiche technique (PDF)</Label>
+                    {isEditing ? (
+                      <Input
+                        value={artistData.tech_sheet_pdf_url || ''}
+                        onChange={(e) => setArtistData({...artistData, tech_sheet_pdf_url: e.target.value})}
+                        placeholder="URL de la fiche technique"
+                      />
+                    ) : (
+                      artistData.tech_sheet_pdf_url ? (
+                        <Button variant="outline" className="w-full">
+                          <Download className="h-4 w-4 mr-2" />
+                          Télécharger la fiche technique
+                        </Button>
+                      ) : (
+                        <p className="text-gray-500">Aucune fiche technique disponible</p>
+                      )
+                    )}
+                  </div>
+
+                  <div>
+                    <Label>Vidéo</Label>
+                    {isEditing ? (
+                      <Input
+                        value={artistData.video_url || ''}
+                        onChange={(e) => setArtistData({...artistData, video_url: e.target.value})}
+                        placeholder="URL de la vidéo"
+                      />
+                    ) : (
+                      artistData.video_url ? (
+                        <Button variant="outline" className="w-full">
+                          <Play className="h-4 w-4 mr-2" />
+                          Voir la vidéo
+                        </Button>
+                      ) : (
+                        <p className="text-gray-500">Aucune vidéo disponible</p>
+                      )
+                    )}
+                  </div>
+
+                  <div>
+                    <Label>Audio</Label>
+                    {isEditing ? (
+                      <Input
+                        value={artistData.audio_url || ''}
+                        onChange={(e) => setArtistData({...artistData, audio_url: e.target.value})}
+                        placeholder="URL de l'audio"
+                      />
+                    ) : (
+                      artistData.audio_url ? (
+                        <Button variant="outline" className="w-full">
+                          <Play className="h-4 w-4 mr-2" />
+                          Écouter l'audio
+                        </Button>
+                      ) : (
+                        <p className="text-gray-500">Aucun audio disponible</p>
+                      )
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Section Contacts */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Contacts</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Contact Technique</Label>
+                    {isEditing ? (
+                      <Select 
+                        value={artistData.technical_contact_id || ''} 
+                        onValueChange={(value) => setArtistData({...artistData, technical_contact_id: value})}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choisir un contact technique" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {users.map((user) => (
+                            <SelectItem key={user.id} value={user.id}>
+                              {user.first_name} {user.last_name} ({user.role})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <p className="text-gray-700">
+                        {users.find(u => u.id === artistData.technical_contact_id)?.first_name || 'Non défini'}
+                        {users.find(u => u.id === artistData.technical_contact_id)?.last_name && 
+                          ` ${users.find(u => u.id === artistData.technical_contact_id)?.last_name}`}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label>Contact Booking</Label>
+                    {isEditing ? (
+                      <Select 
+                        value={artistData.booking_contact_id || ''} 
+                        onValueChange={(value) => setArtistData({...artistData, booking_contact_id: value})}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choisir un contact booking" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {users.filter(u => ['booker', 'admin', 'super_admin'].includes(u.role)).map((user) => (
+                            <SelectItem key={user.id} value={user.id}>
+                              {user.first_name} {user.last_name} ({user.role})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <p className="text-gray-700">
+                        {users.find(u => u.id === artistData.booking_contact_id)?.first_name || 'Non défini'}
+                        {users.find(u => u.id === artistData.booking_contact_id)?.last_name && 
+                          ` ${users.find(u => u.id === artistData.booking_contact_id)?.last_name}`}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {isEditing && (
+              <div className="flex justify-end">
+                <Button onClick={handleSave} className="px-8">
+                  Sauvegarder les modifications
+                </Button>
+              </div>
+            )}
+
             <Card>
               <CardContent className="p-6">
                 <h2 className="text-xl font-semibold mb-4">Vidéos</h2>

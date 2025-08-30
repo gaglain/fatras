@@ -279,7 +279,9 @@ export type Database = {
       }
       centralized_artists: {
         Row: {
+          audio_url: string | null
           bio: string | null
+          booking_contact_id: string | null
           contact_email: string | null
           contact_phone: string | null
           created_at: string
@@ -290,16 +292,24 @@ export type Database = {
           image: string | null
           instagram: string | null
           name: string
+          photos: string[] | null
+          presentation_pdf_url: string | null
+          presentation_text: string | null
           rating: number | null
           status: string
+          tech_sheet_pdf_url: string | null
+          technical_contact_id: string | null
           total_shows: number | null
           upcoming_shows: number | null
           updated_at: string
           user_id: string
+          video_url: string | null
           website: string | null
         }
         Insert: {
+          audio_url?: string | null
           bio?: string | null
+          booking_contact_id?: string | null
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string
@@ -310,16 +320,24 @@ export type Database = {
           image?: string | null
           instagram?: string | null
           name: string
+          photos?: string[] | null
+          presentation_pdf_url?: string | null
+          presentation_text?: string | null
           rating?: number | null
           status?: string
+          tech_sheet_pdf_url?: string | null
+          technical_contact_id?: string | null
           total_shows?: number | null
           upcoming_shows?: number | null
           updated_at?: string
           user_id: string
+          video_url?: string | null
           website?: string | null
         }
         Update: {
+          audio_url?: string | null
           bio?: string | null
+          booking_contact_id?: string | null
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string
@@ -330,15 +348,36 @@ export type Database = {
           image?: string | null
           instagram?: string | null
           name?: string
+          photos?: string[] | null
+          presentation_pdf_url?: string | null
+          presentation_text?: string | null
           rating?: number | null
           status?: string
+          tech_sheet_pdf_url?: string | null
+          technical_contact_id?: string | null
           total_shows?: number | null
           upcoming_shows?: number | null
           updated_at?: string
           user_id?: string
+          video_url?: string | null
           website?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "centralized_artists_booking_contact_id_fkey"
+            columns: ["booking_contact_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "centralized_artists_technical_contact_id_fkey"
+            columns: ["technical_contact_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       centralized_events: {
         Row: {

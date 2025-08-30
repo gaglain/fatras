@@ -194,13 +194,51 @@ export const useQuotes = () => {
       const { data, error } = await supabase
         .from('quote_items')
         .select('*')
-        .eq('quote_id', quoteId);
+        .eq('quote_id', quoteId)
+        .order('created_at', { ascending: true });
 
       if (error) throw error;
       return data || [];
     } catch (error) {
       console.error('❌ Error fetching quote items:', error);
       return [];
+    }
+  };
+
+  const updateQuoteItem = async (itemId: string, itemData: Partial<QuoteItem>) => {
+    try {
+      const { data, error } = await supabase
+        .from('quote_items')
+        .update({
+          name: itemData.name,
+          description: itemData.description,
+          quantity: itemData.quantity,
+          unit_price: itemData.unit_price,
+          total_price: itemData.total_price
+        })
+        .eq('id', itemId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('❌ Error updating quote item:', error);
+      throw error;
+    }
+  };
+
+  const deleteQuoteItem = async (itemId: string) => {
+    try {
+      const { error } = await supabase
+        .from('quote_items')
+        .delete()
+        .eq('id', itemId);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('❌ Error deleting quote item:', error);
+      throw error;
     }
   };
 
@@ -219,6 +257,8 @@ export const useQuotes = () => {
     updateQuote,
     deleteQuote,
     addQuoteItem,
+    updateQuoteItem,
+    deleteQuoteItem,
     getQuoteItems,
     generateQuoteNumber
   };

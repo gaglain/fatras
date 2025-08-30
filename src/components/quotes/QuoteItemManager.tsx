@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Trash2, Save } from 'lucide-react';
+import { Plus, Trash2, Save, X } from 'lucide-react';
 import { useQuotes, QuoteItem } from '@/hooks/useQuotes';
 import { toast } from 'sonner';
 
@@ -27,7 +27,8 @@ export const QuoteItemManager: React.FC<QuoteItemManagerProps> = ({
     unit_price: 0
   });
   const [loading, setLoading] = useState(false);
-  const { addQuoteItem, getQuoteItems } = useQuotes();
+  const [editingItem, setEditingItem] = useState<string | null>(null);
+  const { addQuoteItem, updateQuoteItem, deleteQuoteItem, getQuoteItems } = useQuotes();
 
   useEffect(() => {
     loadItems();
@@ -86,6 +87,29 @@ export const QuoteItemManager: React.FC<QuoteItemManagerProps> = ({
       toast.error('Erreur lors de l\'ajout de l\'élément');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUpdateItem = async (itemId: string, updatedData: any) => {
+    try {
+      await updateQuoteItem(itemId, updatedData);
+      await loadItems();
+      setEditingItem(null);
+      toast.success('Élément mis à jour');
+    } catch (error) {
+      console.error('Error updating item:', error);
+      toast.error('Erreur lors de la mise à jour');
+    }
+  };
+
+  const handleDeleteItem = async (itemId: string) => {
+    try {
+      await deleteQuoteItem(itemId);
+      await loadItems();
+      toast.success('Élément supprimé');
+    } catch (error) {
+      console.error('Error deleting item:', error);
+      toast.error('Erreur lors de la suppression');
     }
   };
 
@@ -207,30 +231,126 @@ export const QuoteItemManager: React.FC<QuoteItemManagerProps> = ({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {items.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell className="font-medium">{item.name}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {item.description || '-'}
-                    </TableCell>
-                    <TableCell className="text-center">{item.quantity}</TableCell>
-                    <TableCell className="text-right">
-                      {formatCurrency(item.unit_price)}
-                    </TableCell>
-                    <TableCell className="text-right font-medium">
-                      {formatCurrency(item.total_price)}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {items.map((item) => {
+                  const isEditing = editingItem === item.id;
+                  const [editData, setEditData] = useState(item);
+                  
+                  return (
+                    <TableRow key={item.id}>
+                      <TableCell className="font-medium">
+                        {isEditing ? (
+                          <Input
+                            value={editData.name}
+                            onChange={(e) => setEditData({...editData, name: e.target.value})}
+                            className="w-full"
+                          />
+                        ) : (
+                          item.name
+                        )}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {isEditing ? (
+                          <Input
+                            value={editData.description || ''}
+                            onChange={(e) => setEditData({...editData, description: e.target.value})}
+                            className="w-full"
+                          />
+                        ) : (
+                          item.description || '-'
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {isEditing ? (
+                          <Input
+                            type="number"
+                            value={editData.quantity}
+                            onChange={(e) => {
+                              const quantity = parseInt(e.target.value) || 1;
+                              setEditData({
+                                ...editData, 
+                                quantity,
+                                total_price: quantity * editData.unit_price
+                              });
+                            }}
+                            className="w-20"
+                          />
+                        ) : (
+                          item.quantity
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {isEditing ? (
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={editData.unit_price}
+                            onChange={(e) => {
+                              const unit_price = parseFloat(e.target.value) || 0;
+                              setEditData({
+                                ...editData, 
+                                unit_price,
+                                total_price: editData.quantity * unit_price
+                              });
+                            }}
+                            className="w-24"
+                          />
+                        ) : (
+                          formatCurrency(item.unit_price)
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right font-medium">
+                        {isEditing ? (
+                          formatCurrency(editData.total_price)
+                        ) : (
+                          formatCurrency(item.total_price)
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          {isEditing ? (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleUpdateItem(item.id, editData)}
+                                className="text-green-600 hover:text-green-700"
+                              >
+                                <Save className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setEditingItem(null)}
+                                className="text-gray-600 hover:text-gray-700"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </>
+                          ) : (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setEditingItem(item.id)}
+                                className="text-blue-600 hover:text-blue-700"
+                              >
+                                ✏️
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeleteItem(item.id)}
+                                className="text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
                 <TableRow className="bg-muted/50">
                   <TableCell colSpan={4} className="font-bold text-right">
                     Total:
