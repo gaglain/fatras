@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { CustomColorsForm } from "./preferences/CustomColorsForm";
 import { GoogleCalendarTab } from "./preferences/GoogleCalendarTab";
 import { GmailTab } from "./preferences/GmailTab";
+import { EmailTestComponent } from '@/components/EmailTestComponent';
 import {
   CompanyTab,
   AppearanceTab,
@@ -79,8 +80,9 @@ export const Preferences: React.FC = () => {
         <TabsContent value="notifications" className="space-y-4">
           <NotificationsTab />
         </TabsContent>
-        <TabsContent value="email" className="space-y-4">
+        <TabsContent value="email" className="space-y-6">
           <EmailTab />
+          <EmailTestComponent />
         </TabsContent>
         <TabsContent value="calendar" className="space-y-4">
           <GoogleCalendarTab />

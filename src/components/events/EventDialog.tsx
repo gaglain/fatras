@@ -6,11 +6,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { Event } from '@/types/event.types';
 import { Contact } from '@/types/contact.types';
+import { useEventDraft } from '@/hooks/useEventDraft';
+import { Info } from 'lucide-react';
 
 interface EventType {
   id: string;
@@ -32,9 +35,11 @@ export const EventDialog: React.FC<EventDialogProps> = ({
   onSave
 }) => {
   const { user } = useAuth();
+  const { draft, saveDraft, clearDraft, hasDraft } = useEventDraft();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [eventTypes, setEventTypes] = useState<EventType[]>([]);
   const [artists, setArtists] = useState<any[]>([]);
+  const [showDraftAlert, setShowDraftAlert] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -67,7 +72,8 @@ export const EventDialog: React.FC<EventDialogProps> = ({
   useEffect(() => {
     if (open) {
       if (event) {
-        setFormData({
+        // Mode modification - charger les données de l'événement
+        const eventData = {
           title: event.title || '',
           description: event.description || '',
           event_type: event.event_type || '',
@@ -85,30 +91,50 @@ export const EventDialog: React.FC<EventDialogProps> = ({
           requirements: event.requirements || '',
           notes: event.notes || '',
           contact_id: event.contact_id || ''
-        });
+        };
+        setFormData(eventData);
+        setShowDraftAlert(false);
       } else {
-        setFormData({
-          title: '',
-          description: '',
-          event_type: '',
-          venue: '',
-          address: '',
-          city: '',
-          postal_code: '',
-          country: 'France',
-          start_date: '',
-          end_date: '',
-          status: 'pending',
-          budget_min: undefined,
-          budget_max: undefined,
-          attendees_count: undefined,
-          requirements: '',
-          notes: '',
-          contact_id: ''
-        });
+        // Mode création - vérifier s'il y a un brouillon
+        if (hasDraft() && draft) {
+          setShowDraftAlert(true);
+          setFormData(draft);
+        } else {
+          setFormData({
+            title: '',
+            description: '',
+            event_type: '',
+            venue: '',
+            address: '',
+            city: '',
+            postal_code: '',
+            country: 'France',
+            start_date: '',
+            end_date: '',
+            status: 'pending',
+            budget_min: undefined,
+            budget_max: undefined,
+            attendees_count: undefined,
+            requirements: '',
+            notes: '',
+            contact_id: ''
+          });
+          setShowDraftAlert(false);
+        }
       }
     }
-  }, [event, open]);
+  }, [event, open, draft, hasDraft]);
+
+  // Sauvegarder automatiquement en brouillon
+  useEffect(() => {
+    if (open && !event) { // Seulement en mode création
+      const timeoutId = setTimeout(() => {
+        saveDraft(formData);
+      }, 1000); // Délai de 1 seconde
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [formData, open, event, saveDraft]);
 
   const fetchContacts = async () => {
     try {
@@ -212,6 +238,11 @@ export const EventDialog: React.FC<EventDialogProps> = ({
         toast.success('Événement créé avec succès');
       }
 
+      // Effacer le brouillon après sauvegarde réussie
+      if (!event) {
+        clearDraft();
+      }
+      
       onSave();
       onOpenChange(false);
     } catch (error: any) {
@@ -230,6 +261,44 @@ export const EventDialog: React.FC<EventDialogProps> = ({
             {event ? 'Modifier l\'événement' : 'Nouvel événement'}
           </DialogTitle>
         </DialogHeader>
+
+        {showDraftAlert && (
+          <Alert className="mb-4">
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              Un brouillon a été restauré. Vous pouvez continuer votre saisie ou{' '}
+              <Button 
+                variant="link" 
+                className="p-0 h-auto font-normal underline"
+                onClick={() => {
+                  clearDraft();
+                  setFormData({
+                    title: '',
+                    description: '',
+                    event_type: '',
+                    venue: '',
+                    address: '',
+                    city: '',
+                    postal_code: '',
+                    country: 'France',
+                    start_date: '',
+                    end_date: '',
+                    status: 'pending',
+                    budget_min: undefined,
+                    budget_max: undefined,
+                    attendees_count: undefined,
+                    requirements: '',
+                    notes: '',
+                    contact_id: ''
+                  });
+                  setShowDraftAlert(false);
+                }}
+              >
+                recommencer à zéro
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
