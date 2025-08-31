@@ -6,18 +6,21 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Trash2, Save, X } from 'lucide-react';
+import { Plus, Trash2, Save, X, Download } from 'lucide-react';
 import { useQuotes, QuoteItem } from '@/hooks/useQuotes';
+import { generateQuotePDF } from '@/utils/quotePdfGenerator';
 import { toast } from 'sonner';
 
 interface QuoteItemManagerProps {
   quoteId: string;
+  quote?: any;
   onItemsChange?: (items: QuoteItem[]) => void;
 }
 
-export const QuoteItemManager: React.FC<QuoteItemManagerProps> = ({
-  quoteId,
-  onItemsChange
+export const QuoteItemManager: React.FC<QuoteItemManagerProps> = ({ 
+  quoteId, 
+  quote,
+  onItemsChange 
 }) => {
   const [items, setItems] = useState<QuoteItem[]>([]);
   const [newItem, setNewItem] = useState({
@@ -124,13 +127,35 @@ export const QuoteItemManager: React.FC<QuoteItemManagerProps> = ({
     }).format(amount);
   };
 
+  const handleExportPDF = () => {
+    if (!quote) {
+      toast.error('Informations du devis manquantes');
+      return;
+    }
+
+    try {
+      const doc = generateQuotePDF(quote, items);
+      doc.save(`devis-${quote.quote_number || quote.id}.pdf`);
+      toast.success('PDF exporté avec succès');
+    } catch (error) {
+      console.error('Erreur export PDF:', error);
+      toast.error('Erreur lors de l\'export PDF');
+    }
+  };
+
   return (
     <Card className="w-full">
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center gap-2">
           <Plus className="h-5 w-5" />
           Lignes du Devis
         </CardTitle>
+        {items.length > 0 && (
+          <Button onClick={handleExportPDF} variant="outline" size="sm">
+            <Download className="h-4 w-4 mr-2" />
+            Exporter PDF
+          </Button>
+        )}
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Formulaire d'ajout */}

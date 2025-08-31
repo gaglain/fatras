@@ -340,6 +340,7 @@ export const Quotes: React.FC = () => {
                   {selectedQuote && (
                     <QuoteItemManager 
                       quoteId={selectedQuote.id}
+                      quote={selectedQuote}
                     />
                   )}
                 </TabsContent>

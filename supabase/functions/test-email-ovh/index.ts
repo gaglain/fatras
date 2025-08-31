@@ -59,10 +59,10 @@ Content-Type: text/html; charset=UTF-8
 
 `;
 
-    // Connexion SMTP
+    // Connexion SMTP - Utiliser SSL pour OVH
     const conn = await Deno.connectTls({
       hostname: smtpHost,
-      port: smtpPort,
+      port: 465, // Port SSL pour OVH
     });
 
     const encoder = new TextEncoder();
