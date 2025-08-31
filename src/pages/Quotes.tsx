@@ -341,6 +341,20 @@ export const Quotes: React.FC = () => {
                     <QuoteItemManager 
                       quoteId={selectedQuote.id}
                       quote={selectedQuote}
+                      onItemsChange={(items) => {
+                        console.log('Items mis à jour:', items);
+                        // Recalculer et mettre à jour le total du devis
+                        const total = items.reduce((sum, item) => sum + item.total_price, 0);
+                        const taxRate = 0.20; // 20% de TVA
+                        const taxAmount = total * taxRate;
+                        const totalWithTax = total + taxAmount;
+                        
+                        updateQuote(selectedQuote.id, {
+                          ...selectedQuote,
+                          total_amount: totalWithTax,
+                          tax_amount: taxAmount
+                        });
+                      }}
                     />
                   )}
                 </TabsContent>

@@ -18,14 +18,16 @@ const handler = async (req: Request): Promise<Response> => {
     const { to }: TestEmailRequest = await req.json();
 
     // Configuration OVH SMTP
-    const smtpHost = Deno.env.get("OVH_SMTP_HOST");
+    const smtpHost = Deno.env.get("OVH_SMTP_HOST") || "ssl0.ovh.net";
     const smtpPort = parseInt(Deno.env.get("OVH_SMTP_PORT") || "587");
     const smtpUser = Deno.env.get("OVH_SMTP_USERNAME");
     const smtpPass = Deno.env.get("OVH_SMTP_PASSWORD");
 
     if (!smtpHost || !smtpUser || !smtpPass) {
-      throw new Error("Configuration SMTP OVH manquante");
+      throw new Error("Configuration SMTP OVH manquante. Host: " + smtpHost + ", User: " + smtpUser);
     }
+
+    console.log("Configuration SMTP:", { host: smtpHost, port: smtpPort, user: smtpUser });
 
     // Test de base64 pour l'authentification
     const authUser = btoa(smtpUser);
@@ -59,7 +61,7 @@ Content-Type: text/html; charset=UTF-8
 
 `;
 
-    // Connexion SMTP - Utiliser SSL pour OVH
+    // Connexion SMTP - Utiliser le port configuré
     const conn = await Deno.connectTls({
       hostname: smtpHost,
       port: 465, // Port SSL pour OVH
