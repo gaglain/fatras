@@ -73,7 +73,7 @@ export const Quotes: React.FC = () => {
         notes: formData.notes
       };
 
-      await addQuote(quoteData);
+      const newQuote = await addQuote(quoteData);
       toast.success('Devis créé avec succès');
       
       // Reset form
@@ -89,6 +89,11 @@ export const Quotes: React.FC = () => {
       });
       setCalculation(null);
       setDialogOpen(false);
+      
+      // Auto-select the new quote for editing items
+      if (newQuote) {
+        setSelectedQuote(newQuote);
+      }
     } catch (error) {
       console.error('Erreur lors de la création du devis:', error);
       toast.error('Erreur lors de la création du devis');

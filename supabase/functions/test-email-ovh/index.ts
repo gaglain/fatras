@@ -18,7 +18,7 @@ const handler = async (req: Request): Promise<Response> => {
     const { to }: TestEmailRequest = await req.json();
 
     // Configuration OVH SMTP
-    const smtpHost = Deno.env.get("OVH_SMTP_HOST") || "ssl0.ovh.net";
+    const smtpHost = Deno.env.get("OVH_SMTP_HOST") || "pro1.mail.ovh.net";
     const smtpPort = parseInt(Deno.env.get("OVH_SMTP_PORT") || "587");
     const smtpUser = Deno.env.get("OVH_SMTP_USERNAME");
     const smtpPass = Deno.env.get("OVH_SMTP_PASSWORD");

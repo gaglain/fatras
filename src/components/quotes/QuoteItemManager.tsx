@@ -31,7 +31,7 @@ export const QuoteItemManager: React.FC<QuoteItemManagerProps> = ({
   });
   const [loading, setLoading] = useState(false);
   const [editingItem, setEditingItem] = useState<string | null>(null);
-  const { addQuoteItem, updateQuoteItem, deleteQuoteItem, getQuoteItems } = useQuotes();
+  const { addQuoteItem, updateQuoteItem, deleteQuoteItem, getQuoteItems, updateQuote } = useQuotes();
 
   useEffect(() => {
     loadItems();
@@ -76,6 +76,10 @@ export const QuoteItemManager: React.FC<QuoteItemManagerProps> = ({
       const addedItem = await addQuoteItem(quoteId, itemData);
       if (addedItem) {
         await loadItems(); // Recharger les items pour s'assurer de la cohérence
+        
+        // Recalculer le total du devis
+        await updateQuoteTotal();
+        
         setNewItem({
           name: '',
           description: '',
@@ -93,10 +97,24 @@ export const QuoteItemManager: React.FC<QuoteItemManagerProps> = ({
     }
   };
 
+  const updateQuoteTotal = async () => {
+    if (!quoteId || !quote) return;
+    
+    // Calculer le nouveau total basé sur les items
+    const totalAmount = items.reduce((sum, item) => sum + (item.total_price || 0), 0);
+    
+    try {
+      await updateQuote(quoteId, { total_amount: totalAmount });
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du total:', error);
+    }
+  };
+
   const handleUpdateItem = async (itemId: string, updatedData: any) => {
     try {
       await updateQuoteItem(itemId, updatedData);
       await loadItems();
+      await updateQuoteTotal();
       setEditingItem(null);
       toast.success('Élément mis à jour');
     } catch (error) {

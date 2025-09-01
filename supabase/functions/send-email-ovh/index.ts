@@ -23,7 +23,7 @@ const handler = async (req: Request): Promise<Response> => {
     const { to, subject, html, from, replyTo }: EmailRequest = await req.json();
 
     // Récupérer les paramètres SMTP OVH depuis les secrets
-    const smtpHost = Deno.env.get("OVH_SMTP_HOST") || "ssl0.ovh.net"; // ex: ssl0.ovh.net
+    const smtpHost = Deno.env.get("OVH_SMTP_HOST") || "pro1.mail.ovh.net"; // ex: pro1.mail.ovh.net
     const smtpPort = parseInt(Deno.env.get("OVH_SMTP_PORT") || "465"); // 465 pour SSL
     const smtpUser = Deno.env.get("OVH_SMTP_USERNAME"); // votre email complet
     const smtpPass = Deno.env.get("OVH_SMTP_PASSWORD"); // mot de passe email

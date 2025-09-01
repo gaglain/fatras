@@ -126,29 +126,57 @@ export const useQuotes = () => {
   };
 
   const updateQuote = async (id: string, updates: Partial<Quote>) => {
-    const { data, error } = await supabase
-      .from('quotes')
-      .update({
-        contact_id: updates.contact_id,
-        event_id: updates.event_id,
-        title: updates.title,
-        description: updates.description,
-        status: updates.status,
-        total_amount: updates.total_amount,
-        tax_amount: updates.tax_amount,
-        discount_amount: updates.discount_amount,
-        valid_until: updates.valid_until,
-        terms: updates.terms,
-        notes: updates.notes
-      })
-      .eq('id', id)
-      .select()
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('quotes')
+        .update({
+          contact_id: updates.contact_id,
+          event_id: updates.event_id,
+          title: updates.title,
+          description: updates.description,
+          status: updates.status,
+          total_amount: updates.total_amount,
+          tax_amount: updates.tax_amount,
+          discount_amount: updates.discount_amount,
+          valid_until: updates.valid_until,
+          terms: updates.terms,
+          notes: updates.notes
+        })
+        .eq('id', id)
+        .select()
+        .single();
 
-    if (data && !error) {
-      setQuotes(prev => prev.map(quote => 
-        quote.id === id ? { ...quote, ...updates } : quote
-      ));
+      if (error) throw error;
+
+      if (data) {
+        const updatedQuote: Quote = {
+          id: data.id,
+          user_id: data.user_id,
+          contact_id: data.contact_id || undefined,
+          event_id: data.event_id || undefined,
+          quote_number: data.quote_number,
+          title: data.title,
+          description: data.description || '',
+          status: data.status as 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired',
+          total_amount: data.total_amount,
+          tax_amount: data.tax_amount || 0,
+          discount_amount: data.discount_amount || 0,
+          valid_until: data.valid_until || '',
+          terms: data.terms || '',
+          notes: data.notes || '',
+          created_at: data.created_at,
+          updated_at: data.updated_at
+        };
+        
+        setQuotes(prev => prev.map(quote => 
+          quote.id === id ? updatedQuote : quote
+        ));
+        
+        return updatedQuote;
+      }
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du devis:', error);
+      throw error;
     }
   };
 
