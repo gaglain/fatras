@@ -83,66 +83,124 @@ export const useUserManagement = () => {
   }) => {
     try {
       setLoading(true);
+      console.log('🔄 Création utilisateur avec les données:', {
+        email: userData.email,
+        first_name: userData.first_name,
+        last_name: userData.last_name,
+        role: userData.role
+      });
       
-      // Créer l'utilisateur avec auth
+      // Créer l'utilisateur avec auth et invitation par email
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: userData.email,
         password: userData.password,
         options: {
+          emailRedirectTo: `${window.location.origin}/dashboard`,
           data: {
             first_name: userData.first_name,
             last_name: userData.last_name,
+            username: userData.username || userData.email.split('@')[0],
+            role: userData.role || 'utilisateur'
           }
         }
       });
 
       if (authError) {
-        console.error('Erreur création auth:', authError);
-        toast.error('Erreur lors de la création du compte');
+        console.error('❌ Erreur création auth:', authError);
+        if (authError.message.includes('already registered')) {
+          toast.error('Un utilisateur avec cet email existe déjà');
+        } else {
+          toast.error(`Erreur lors de la création: ${authError.message}`);
+        }
         return false;
       }
 
-      if (authData.user) {
-        // Créer le profil utilisateur
-        const { error: profileError } = await supabase
-          .from('user_profiles')
-          .insert({
-            user_id: authData.user.id,
-            username: userData.username || userData.email.split('@')[0],
-            first_name: userData.first_name,
-            last_name: userData.last_name,
-            email: userData.email,
-            phone: userData.phone,
-            role: userData.role || 'utilisateur',
-            address: userData.address,
-            city: userData.city,
-            function_title: userData.function_title,
-            show_name: userData.show_name,
-            birth_date: userData.birth_date,
-            birth_place: userData.birth_place,
-            social_security_number: userData.social_security_number,
-            guso_id: userData.guso_id,
-            nationality: userData.nationality,
-            bank_details: userData.bank_details,
-            contracts_fees: userData.contracts_fees || [],
-            availability: userData.availability,
-            skills: userData.skills || [],
-            identity_documents: userData.identity_documents || [],
-            is_active: true
-          });
+      console.log('✅ Auth user créé:', authData.user?.id);
 
-        if (profileError) {
-          console.error('Erreur création profil:', profileError);
-          toast.error('Erreur lors de la création du profil');
-          return false;
+      if (authData.user) {
+        // Attendre un peu pour que le trigger fonctionne
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Vérifier si le profil a été créé par le trigger
+        const { data: existingProfile } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('user_id', authData.user.id)
+          .single();
+
+        if (!existingProfile) {
+          console.log('🔄 Profil non trouvé, création manuelle...');
+          // Créer le profil manuellement si le trigger n'a pas fonctionné
+          const { error: profileError } = await supabase
+            .from('user_profiles')
+            .insert({
+              user_id: authData.user.id,
+              username: userData.username || userData.email.split('@')[0],
+              first_name: userData.first_name,
+              last_name: userData.last_name,
+              email: userData.email,
+              phone: userData.phone,
+              role: userData.role || 'utilisateur',
+              address: userData.address,
+              city: userData.city,
+              function_title: userData.function_title,
+              show_name: userData.show_name,
+              birth_date: userData.birth_date,
+              birth_place: userData.birth_place,
+              social_security_number: userData.social_security_number,
+              guso_id: userData.guso_id,
+              nationality: userData.nationality,
+              bank_details: userData.bank_details,
+              contracts_fees: userData.contracts_fees || [],
+              availability: userData.availability,
+              skills: userData.skills || [],
+              identity_documents: userData.identity_documents || [],
+              is_active: true
+            });
+
+          if (profileError) {
+            console.error('❌ Erreur création profil manuelle:', profileError);
+            toast.error(`Erreur lors de la création du profil: ${profileError.message}`);
+            return false;
+          }
+        } else {
+          console.log('✅ Profil trouvé, mise à jour avec données étendues...');
+          // Mettre à jour avec les données étendues
+          const { error: updateError } = await supabase
+            .from('user_profiles')
+            .update({
+              phone: userData.phone,
+              role: userData.role || 'utilisateur',
+              address: userData.address,
+              city: userData.city,
+              function_title: userData.function_title,
+              show_name: userData.show_name,
+              birth_date: userData.birth_date,
+              birth_place: userData.birth_place,
+              social_security_number: userData.social_security_number,
+              guso_id: userData.guso_id,
+              nationality: userData.nationality,
+              bank_details: userData.bank_details,
+              contracts_fees: userData.contracts_fees || [],
+              availability: userData.availability,
+              skills: userData.skills || [],
+              identity_documents: userData.identity_documents || []
+            })
+            .eq('user_id', authData.user.id);
+
+          if (updateError) {
+            console.error('❌ Erreur mise à jour profil:', updateError);
+            toast.error(`Erreur lors de la mise à jour: ${updateError.message}`);
+            return false;
+          }
         }
 
-        toast.success('Utilisateur créé avec succès');
+        toast.success('Utilisateur créé avec succès! Un email d\'invitation a été envoyé.');
         await fetchUsers();
         return true;
       }
     } catch (error) {
-      console.error('Erreur:', error);
+      console.error('❌ Erreur générale:', error);
       toast.error('Erreur lors de la création de l\'utilisateur');
       return false;
     } finally {
