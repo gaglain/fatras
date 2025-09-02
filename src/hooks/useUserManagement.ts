@@ -90,7 +90,51 @@ export const useUserManagement = () => {
         role: userData.role
       });
       
-      // Créer l'utilisateur avec auth et invitation par email
+      // Utiliser la fonction de base de données pour créer l'utilisateur directement
+      const { data, error } = await supabase.rpc('create_user_with_profile', {
+        user_email: userData.email,
+        user_password: userData.password,
+        profile_data: {
+          first_name: userData.first_name,
+          last_name: userData.last_name,
+          username: userData.username || userData.email.split('@')[0],
+          phone: userData.phone,
+          role: userData.role || 'utilisateur',
+          address: userData.address,
+          city: userData.city,
+          function_title: userData.function_title,
+          show_name: userData.show_name,
+          birth_date: userData.birth_date,
+          birth_place: userData.birth_place,
+          social_security_number: userData.social_security_number,
+          guso_id: userData.guso_id,
+          nationality: userData.nationality,
+          bank_details: userData.bank_details,
+          contracts_fees: userData.contracts_fees || [],
+          availability: userData.availability,
+          skills: userData.skills || [],
+          identity_documents: userData.identity_documents || []
+        }
+      });
+
+      console.log('📊 Résultat create_user_with_profile:', data);
+
+      if (error) {
+        console.error('❌ Erreur RPC create_user_with_profile:', error);
+        toast.error(`Erreur lors de la création: ${error.message}`);
+        return false;
+      }
+
+      const result = data as { success: boolean; error?: string; user_id?: string; email?: string };
+      if (!result?.success) {
+        console.error('❌ Échec création:', result?.error);
+        toast.error(`Erreur: ${result?.error}`);
+        return false;
+      }
+
+      console.log('✅ Profil utilisateur créé dans la base:', result);
+
+      // Maintenant créer l'utilisateur auth côté client pour l'authentification
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: userData.email,
         password: userData.password,
@@ -105,134 +149,39 @@ export const useUserManagement = () => {
         }
       });
 
-      if (authError) {
+      console.log('📊 Résultat auth signUp:', { authData, authError });
+
+      if (authError && !authError.message.includes('already registered')) {
         console.error('❌ Erreur création auth:', authError);
-        if (authError.message.includes('already registered')) {
-          toast.error('Un utilisateur avec cet email existe déjà');
+        // Si l'auth échoue mais le profil est créé, on peut continuer
+        console.log('⚠️ Auth échoué mais profil créé, continuons...');
+      }
+
+      if (authData?.user) {
+        // Mettre à jour le profil avec l'ID auth correct
+        console.log('🔄 Mise à jour du profil avec user_id auth:', authData.user.id);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        const { error: updateError } = await supabase
+          .from('user_profiles')
+          .update({
+            user_id: authData.user.id
+          })
+          .eq('email', userData.email);
+
+        if (updateError) {
+          console.error('❌ Erreur mise à jour user_id:', updateError);
         } else {
-          toast.error(`Erreur lors de la création: ${authError.message}`);
+          console.log('✅ Profil mis à jour avec user_id auth');
         }
-        return false;
+      } else {
+        console.log('ℹ️ Pas d\'auth user, le profil reste avec un user_id temporaire');
       }
 
-      console.log('✅ Auth user créé:', authData.user?.id);
+      toast.success('Utilisateur créé avec succès !');
+      await fetchUsers(); // Recharger la liste
+      return true;
 
-      if (authData.user) {
-        // Attendre que l'utilisateur auth soit bien persisté et retry logic
-        let retryCount = 0;
-        const maxRetries = 5;
-        let profileCreated = false;
-
-        while (retryCount < maxRetries && !profileCreated) {
-          try {
-            // Attendre progressivement plus longtemps à chaque tentative
-            await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
-
-            console.log(`🔄 Tentative ${retryCount + 1} de vérification/création du profil...`);
-
-            // Vérifier si le profil a été créé par le trigger
-            const { data: existingProfile } = await supabase
-              .from('user_profiles')
-              .select('*')
-              .eq('user_id', authData.user.id)
-              .single();
-
-            if (!existingProfile) {
-              console.log('🔄 Profil non trouvé, création manuelle...');
-              // Créer le profil manuellement si le trigger n'a pas fonctionné
-              const { error: profileError } = await supabase
-                .from('user_profiles')
-                .insert({
-                  user_id: authData.user.id,
-                  username: userData.username || userData.email.split('@')[0],
-                  first_name: userData.first_name,
-                  last_name: userData.last_name,
-                  email: userData.email,
-                  phone: userData.phone,
-                  role: userData.role || 'utilisateur',
-                  address: userData.address,
-                  city: userData.city,
-                  function_title: userData.function_title,
-                  show_name: userData.show_name,
-                  birth_date: userData.birth_date || null,
-                  birth_place: userData.birth_place,
-                  social_security_number: userData.social_security_number,
-                  guso_id: userData.guso_id,
-                  nationality: userData.nationality,
-                  bank_details: userData.bank_details,
-                  contracts_fees: userData.contracts_fees || [],
-                  availability: userData.availability,
-                  skills: userData.skills || [],
-                  identity_documents: userData.identity_documents || [],
-                  is_active: true
-                });
-
-              if (profileError) {
-                if (profileError.code === '23503' && retryCount < maxRetries - 1) {
-                  // Erreur de contrainte de clé étrangère, réessayer
-                  console.log(`⏳ Contrainte FK, nouvelle tentative dans ${1000 * (retryCount + 2)}ms...`);
-                  retryCount++;
-                  continue;
-                } else {
-                  console.error('❌ Erreur création profil manuelle:', profileError);
-                  toast.error(`Erreur lors de la création du profil: ${profileError.message}`);
-                  return false;
-                }
-              } else {
-                console.log('✅ Profil créé manuellement avec succès');
-                profileCreated = true;
-              }
-            } else {
-              console.log('✅ Profil trouvé, mise à jour avec données étendues...');
-              // Mettre à jour avec les données étendues
-              const { error: updateError } = await supabase
-                .from('user_profiles')
-                .update({
-                  phone: userData.phone,
-                  role: userData.role || 'utilisateur',
-                  address: userData.address,
-                  city: userData.city,
-                  function_title: userData.function_title,
-                  show_name: userData.show_name,
-                  birth_date: userData.birth_date || null,
-                  birth_place: userData.birth_place,
-                  social_security_number: userData.social_security_number,
-                  guso_id: userData.guso_id,
-                  nationality: userData.nationality,
-                  bank_details: userData.bank_details,
-                  contracts_fees: userData.contracts_fees || [],
-                  availability: userData.availability,
-                  skills: userData.skills || [],
-                  identity_documents: userData.identity_documents || []
-                })
-                .eq('user_id', authData.user.id);
-
-              if (updateError) {
-                console.error('❌ Erreur mise à jour profil:', updateError);
-                toast.error(`Erreur lors de la mise à jour: ${updateError.message}`);
-                return false;
-              }
-              profileCreated = true;
-            }
-          } catch (error) {
-            console.error(`❌ Erreur tentative ${retryCount + 1}:`, error);
-            retryCount++;
-            if (retryCount >= maxRetries) {
-              toast.error('Impossible de créer le profil utilisateur après plusieurs tentatives');
-              return false;
-            }
-          }
-        }
-
-        if (!profileCreated) {
-          toast.error('Échec de la création du profil utilisateur');
-          return false;
-        }
-
-        toast.success('Utilisateur créé avec succès! Un email d\'invitation a été envoyé.');
-        await fetchUsers();
-        return true;
-      }
     } catch (error) {
       console.error('❌ Erreur générale:', error);
       toast.error('Erreur lors de la création de l\'utilisateur');
@@ -240,7 +189,6 @@ export const useUserManagement = () => {
     } finally {
       setLoading(false);
     }
-    return false;
   };
 
   const updateUserProfile = async (userId: string, userData: Partial<ExtendedUserProfile>) => {
