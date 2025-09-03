@@ -21,6 +21,10 @@ export const EmailTab: React.FC = () => {
     smtp_port: '587',
     smtp_username: '',
     smtp_password: '',
+    imap_host: '',
+    imap_port: '993',
+    imap_username: '',
+    imap_password: '',
     from_email: '',
     from_name: ''
   });
@@ -39,7 +43,7 @@ export const EmailTab: React.FC = () => {
         .from('app_settings')
         .select('setting_key, setting_value')
         .eq('user_id', user.id)
-        .in('setting_key', ['email_provider', 'smtp_host', 'smtp_port', 'smtp_username', 'from_email', 'from_name']);
+        .in('setting_key', ['email_provider', 'smtp_host', 'smtp_port', 'smtp_username', 'imap_host', 'imap_port', 'imap_username', 'from_email', 'from_name']);
       
       if (error) throw error;
       
@@ -49,6 +53,9 @@ export const EmailTab: React.FC = () => {
         if (setting.setting_key === 'smtp_host') config.smtp_host = setting.setting_value;
         if (setting.setting_key === 'smtp_port') config.smtp_port = setting.setting_value;
         if (setting.setting_key === 'smtp_username') config.smtp_username = setting.setting_value;
+        if (setting.setting_key === 'imap_host') config.imap_host = setting.setting_value;
+        if (setting.setting_key === 'imap_port') config.imap_port = setting.setting_value;
+        if (setting.setting_key === 'imap_username') config.imap_username = setting.setting_value;
         if (setting.setting_key === 'from_email') config.from_email = setting.setting_value;
         if (setting.setting_key === 'from_name') config.from_name = setting.setting_value;
       });
@@ -68,6 +75,9 @@ export const EmailTab: React.FC = () => {
         { setting_key: 'smtp_host', setting_value: emailConfig.smtp_host },
         { setting_key: 'smtp_port', setting_value: emailConfig.smtp_port },
         { setting_key: 'smtp_username', setting_value: emailConfig.smtp_username },
+        { setting_key: 'imap_host', setting_value: emailConfig.imap_host },
+        { setting_key: 'imap_port', setting_value: emailConfig.imap_port },
+        { setting_key: 'imap_username', setting_value: emailConfig.imap_username },
         { setting_key: 'from_email', setting_value: emailConfig.from_email },
         { setting_key: 'from_name', setting_value: emailConfig.from_name }
       ];
@@ -83,7 +93,7 @@ export const EmailTab: React.FC = () => {
           });
       }
 
-      // Sauvegarder le mot de passe SMTP de manière sécurisée si fourni
+      // Sauvegarder les mots de passe de manière sécurisée si fournis
       if (emailConfig.smtp_password) {
         await supabase
           .from('app_settings')
@@ -91,6 +101,18 @@ export const EmailTab: React.FC = () => {
             user_id: user.id,
             setting_key: 'smtp_password',
             setting_value: emailConfig.smtp_password
+          }, {
+            onConflict: 'user_id,setting_key'
+          });
+      }
+
+      if (emailConfig.imap_password) {
+        await supabase
+          .from('app_settings')
+          .upsert({
+            user_id: user.id,
+            setting_key: 'imap_password',
+            setting_value: emailConfig.imap_password
           }, {
             onConflict: 'user_id,setting_key'
           });
@@ -135,13 +157,28 @@ export const EmailTab: React.FC = () => {
   const getProviderConfig = (provider: string) => {
     switch (provider) {
       case 'ovh':
-        return { host: 'ssl0.ovh.net', port: '587' };
+        return { 
+          smtp_host: 'ssl0.ovh.net', 
+          smtp_port: '587',
+          imap_host: 'ssl0.ovh.net',
+          imap_port: '993'
+        };
       case 'gmail':
-        return { host: 'smtp.gmail.com', port: '587' };
+        return { 
+          smtp_host: 'smtp.gmail.com', 
+          smtp_port: '587',
+          imap_host: 'imap.gmail.com',
+          imap_port: '993'
+        };
       case 'outlook':
-        return { host: 'smtp-mail.outlook.com', port: '587' };
+        return { 
+          smtp_host: 'smtp-mail.outlook.com', 
+          smtp_port: '587',
+          imap_host: 'outlook.office365.com',
+          imap_port: '993'
+        };
       default:
-        return { host: '', port: '587' };
+        return { smtp_host: '', smtp_port: '587', imap_host: '', imap_port: '993' };
     }
   };
 
@@ -150,8 +187,10 @@ export const EmailTab: React.FC = () => {
     setEmailConfig(prev => ({
       ...prev,
       provider,
-      smtp_host: config.host,
-      smtp_port: config.port
+      smtp_host: config.smtp_host,
+      smtp_port: config.smtp_port,
+      imap_host: config.imap_host,
+      imap_port: config.imap_port
     }));
   };
 
@@ -182,7 +221,7 @@ export const EmailTab: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="smtp_host">Serveur SMTP</Label>
+              <Label htmlFor="smtp_host">Serveur SMTP (Sortant)</Label>
               <Input
                 id="smtp_host"
                 value={emailConfig.smtp_host}
@@ -202,7 +241,27 @@ export const EmailTab: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="smtp_username">Nom d'utilisateur</Label>
+              <Label htmlFor="imap_host">Serveur IMAP (Entrant)</Label>
+              <Input
+                id="imap_host"
+                value={emailConfig.imap_host}
+                onChange={(e) => setEmailConfig(prev => ({ ...prev, imap_host: e.target.value }))}
+                placeholder="imap.example.com"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="imap_port">Port IMAP</Label>
+              <Input
+                id="imap_port"
+                value={emailConfig.imap_port}
+                onChange={(e) => setEmailConfig(prev => ({ ...prev, imap_port: e.target.value }))}
+                placeholder="993"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="smtp_username">Nom d'utilisateur SMTP</Label>
               <Input
                 id="smtp_username"
                 value={emailConfig.smtp_username}
@@ -212,12 +271,33 @@ export const EmailTab: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="smtp_password">Mot de passe</Label>
+              <Label htmlFor="smtp_password">Mot de passe SMTP</Label>
               <Input
                 id="smtp_password"
                 type="password"
                 value={emailConfig.smtp_password}
                 onChange={(e) => setEmailConfig(prev => ({ ...prev, smtp_password: e.target.value }))}
+                placeholder="••••••••"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="imap_username">Nom d'utilisateur IMAP</Label>
+              <Input
+                id="imap_username"
+                value={emailConfig.imap_username}
+                onChange={(e) => setEmailConfig(prev => ({ ...prev, imap_username: e.target.value }))}
+                placeholder="votre@email.com"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="imap_password">Mot de passe IMAP</Label>
+              <Input
+                id="imap_password"
+                type="password"
+                value={emailConfig.imap_password}
+                onChange={(e) => setEmailConfig(prev => ({ ...prev, imap_password: e.target.value }))}
                 placeholder="••••••••"
               />
             </div>
