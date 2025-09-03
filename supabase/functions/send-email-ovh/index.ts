@@ -1,54 +1,55 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
 interface EmailRequest {
-  to: string | string[];
+  to: string[];
   subject: string;
   html: string;
   from?: string;
-  replyTo?: string;
+  fromName?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
+  if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { to, subject, html, from, replyTo }: EmailRequest = await req.json();
+    const { to, subject, html, from, fromName }: EmailRequest = await req.json();
+    
+    console.log('📧 Sending email with OVH SMTP:', { to, subject, from });
 
-    // Récupérer les paramètres SMTP OVH depuis les secrets
-    const smtpHost = Deno.env.get("OVH_SMTP_HOST") || "pro1.mail.ovh.net"; // ex: pro1.mail.ovh.net
-    const smtpPort = parseInt(Deno.env.get("OVH_SMTP_PORT") || "465"); // 465 pour SSL
-    const smtpUser = Deno.env.get("OVH_SMTP_USERNAME"); // votre email complet
-    const smtpPass = Deno.env.get("OVH_SMTP_PASSWORD"); // mot de passe email
+    // Récupérer les paramètres SMTP OVH
+    const smtpHost = Deno.env.get('OVH_SMTP_HOST') || 'ssl0.ovh.net';
+    const smtpPort = parseInt(Deno.env.get('OVH_SMTP_PORT') || '587');
+    const smtpUsername = Deno.env.get('OVH_SMTP_USERNAME');
+    const smtpPassword = Deno.env.get('OVH_SMTP_PASSWORD');
 
-    if (!smtpHost || !smtpUser || !smtpPass) {
-      throw new Error("Configuration SMTP OVH manquante");
+    if (!smtpUsername || !smtpPassword) {
+      throw new Error('Configuration SMTP OVH manquante');
     }
 
-    // Construire l'email au format MIME
-    const toAddresses = Array.isArray(to) ? to.join(", ") : to;
-    const fromAddress = from || smtpUser;
+    // Construire l'email
+    const fromEmail = from || smtpUsername;
+    const fromField = fromName ? `${fromName} <${fromEmail}>` : fromEmail;
     
-    const mimeEmail = [
-      `From: ${fromAddress}`,
-      `To: ${toAddresses}`,
+    const emailContent = [
+      `From: ${fromField}`,
+      `To: ${to.join(', ')}`,
       `Subject: ${subject}`,
-      `MIME-Version: 1.0`,
-      `Content-Type: text/html; charset=UTF-8`,
-      `Content-Transfer-Encoding: 8bit`,
-      replyTo ? `Reply-To: ${replyTo}` : "",
-      ``,
+      'MIME-Version: 1.0',
+      'Content-Type: text/html; charset=UTF-8',
+      '',
       html
-    ].filter(line => line !== "").join("\r\n");
+    ].join('\r\n');
 
-    // Connexion SMTP avec TLS
+    // Établir la connexion TLS
+    console.log('🔗 Connecting to OVH SMTP server...');
     const conn = await Deno.connectTls({
       hostname: smtpHost,
       port: smtpPort,
@@ -57,100 +58,100 @@ const handler = async (req: Request): Promise<Response> => {
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
 
-    // Fonction pour lire la réponse SMTP
+    // Helper pour lire la réponse
     const readResponse = async (): Promise<string> => {
       const buffer = new Uint8Array(1024);
       const n = await conn.read(buffer);
       return decoder.decode(buffer.subarray(0, n || 0));
     };
 
-    // Fonction pour envoyer une commande SMTP
+    // Helper pour envoyer une commande
     const sendCommand = async (command: string): Promise<string> => {
-      await conn.write(encoder.encode(command + "\r\n"));
-      return await readResponse();
+      console.log('→', command.replace(/AUTH PLAIN .+/, 'AUTH PLAIN [hidden]'));
+      await conn.write(encoder.encode(command + '\r\n'));
+      const response = await readResponse();
+      console.log('←', response.trim());
+      return response;
     };
 
-    // Protocole SMTP
-    console.log("Connexion SMTP établie");
-    
-    // Lire le message de bienvenue
-    const welcome = await readResponse();
-    console.log("Welcome:", welcome);
+    try {
+      // Lire le message d'accueil
+      let response = await readResponse();
+      console.log('👋 Server greeting:', response.trim());
 
-    // EHLO
-    const ehlo = await sendCommand(`EHLO ${smtpHost}`);
-    console.log("EHLO:", ehlo);
+      // EHLO
+      response = await sendCommand(`EHLO ${smtpHost}`);
+      if (!response.startsWith('250')) {
+        throw new Error(`EHLO failed: ${response}`);
+      }
 
-    // AUTH LOGIN
-    const authLogin = await sendCommand("AUTH LOGIN");
-    console.log("AUTH LOGIN:", authLogin);
+      // AUTH PLAIN
+      const authString = btoa(`\0${smtpUsername}\0${smtpPassword}`);
+      response = await sendCommand(`AUTH PLAIN ${authString}`);
+      if (!response.startsWith('235')) {
+        throw new Error(`AUTH failed: ${response}`);
+      }
 
-    // Username en base64
-    const username64 = btoa(smtpUser);
-    const userAuth = await sendCommand(username64);
-    console.log("User auth:", userAuth);
+      // MAIL FROM
+      response = await sendCommand(`MAIL FROM:<${fromEmail}>`);
+      if (!response.startsWith('250')) {
+        throw new Error(`MAIL FROM failed: ${response}`);
+      }
 
-    // Password en base64
-    const password64 = btoa(smtpPass);
-    const passAuth = await sendCommand(password64);
-    console.log("Pass auth:", passAuth);
+      // RCPT TO pour chaque destinataire
+      for (const recipient of to) {
+        response = await sendCommand(`RCPT TO:<${recipient}>`);
+        if (!response.startsWith('250')) {
+          throw new Error(`RCPT TO failed for ${recipient}: ${response}`);
+        }
+      }
 
-    // MAIL FROM
-    const mailFrom = await sendCommand(`MAIL FROM:<${fromAddress}>`);
-    console.log("MAIL FROM:", mailFrom);
+      // DATA
+      response = await sendCommand('DATA');
+      if (!response.startsWith('354')) {
+        throw new Error(`DATA failed: ${response}`);
+      }
 
-    // RCPT TO
-    const recipients = Array.isArray(to) ? to : [to];
-    for (const recipient of recipients) {
-      const rcptTo = await sendCommand(`RCPT TO:<${recipient}>`);
-      console.log(`RCPT TO ${recipient}:`, rcptTo);
-    }
+      // Envoyer le contenu de l'email
+      await conn.write(encoder.encode(emailContent + '\r\n.\r\n'));
+      response = await readResponse();
+      console.log('📨 Email sent:', response.trim());
+      
+      if (!response.startsWith('250')) {
+        throw new Error(`Email sending failed: ${response}`);
+      }
 
-    // DATA
-    const dataCmd = await sendCommand("DATA");
-    console.log("DATA:", dataCmd);
+      // QUIT
+      await sendCommand('QUIT');
 
-    // Envoyer le contenu de l'email
-    await conn.write(encoder.encode(mimeEmail + "\r\n.\r\n"));
-    const dataResponse = await readResponse();
-    console.log("Data response:", dataResponse);
-
-    // QUIT
-    const quit = await sendCommand("QUIT");
-    console.log("QUIT:", quit);
-
-    conn.close();
-
-    console.log("Email envoyé avec succès via OVH SMTP");
-
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: "Email envoyé avec succès via OVH",
-        to: toAddresses,
-        subject 
-      }), 
-      {
+      console.log('✅ Email sent successfully');
+      
+      return new Response(JSON.stringify({ 
+        success: true,
+        message: 'Email sent successfully via OVH SMTP'
+      }), {
         status: 200,
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           ...corsHeaders,
         },
-      }
-    );
+      });
+
+    } finally {
+      conn.close();
+    }
 
   } catch (error: any) {
-    console.error("Erreur envoi email OVH:", error);
-    
+    console.error('❌ Error sending email:', error);
     return new Response(
       JSON.stringify({ 
         error: error.message,
-        details: "Vérifiez la configuration SMTP OVH"
+        success: false 
       }),
       {
         status: 500,
         headers: { 
-          "Content-Type": "application/json", 
+          'Content-Type': 'application/json', 
           ...corsHeaders 
         },
       }

@@ -2779,7 +2779,9 @@ export type Database = {
         Returns: string
       }
       create_user_with_profile: {
-        Args: { profile_data: Json; user_email: string; user_password: string }
+        Args:
+          | { profile_data: Json; user_email: string; user_password: string }
+          | { profile_data: Json; user_email: string; user_password: string }
         Returns: Json
       }
       delete_user_completely: {
