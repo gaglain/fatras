@@ -15,13 +15,20 @@ export const useEmailSender = () => {
   const sendEmail = async (emailData: EmailData) => {
     setSending(true);
     try {
-      // Utiliser la fonction OVH au lieu de Resend
+      // Récupérer l'utilisateur connecté
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Utilisateur non connecté');
+      }
+
+      // Utiliser la fonction OVH avec l'ID utilisateur
       const { data, error } = await supabase.functions.invoke('send-email-ovh', {
         body: {
           to: emailData.to,
           subject: emailData.subject,
           html: emailData.html,
-          from: emailData.from
+          from: emailData.from,
+          userId: user.id
         }
       });
 

@@ -7,6 +7,7 @@ const corsHeaders = {
 
 interface TestEmailRequest {
   to: string;
+  userId: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -15,16 +16,33 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { to }: TestEmailRequest = await req.json();
+    const { to, userId }: TestEmailRequest = await req.json();
 
-    // Configuration OVH SMTP
-    const smtpHost = Deno.env.get("OVH_SMTP_HOST") || "pro1.mail.ovh.net";
-    const smtpPort = parseInt(Deno.env.get("OVH_SMTP_PORT") || "587");
-    const smtpUser = Deno.env.get("OVH_SMTP_USERNAME");
-    const smtpPass = Deno.env.get("OVH_SMTP_PASSWORD");
+    // Créer le client Supabase
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Récupérer la configuration SMTP depuis les préférences utilisateur
+    const { data: smtpSettings } = await supabase
+      .from('app_settings')
+      .select('setting_key, setting_value')
+      .eq('user_id', userId)
+      .in('setting_key', ['smtp_host', 'smtp_port', 'smtp_user', 'smtp_password']);
+
+    const settingsMap = smtpSettings?.reduce((acc: any, setting: any) => {
+      acc[setting.setting_key] = setting.setting_value;
+      return acc;
+    }, {}) || {};
+
+    const smtpHost = settingsMap.smtp_host || "pro1.mail.ovh.net";
+    const smtpPort = parseInt(settingsMap.smtp_port || "587");
+    const smtpUser = settingsMap.smtp_user;
+    const smtpPass = settingsMap.smtp_password;
 
     if (!smtpHost || !smtpUser || !smtpPass) {
-      throw new Error("Configuration SMTP OVH manquante. Host: " + smtpHost + ", User: " + smtpUser);
+      throw new Error("Configuration SMTP manquante dans les préférences utilisateur");
     }
 
     console.log("Configuration SMTP:", { host: smtpHost, port: smtpPort, user: smtpUser });

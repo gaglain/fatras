@@ -21,8 +21,17 @@ export const EmailTestComponent = () => {
     setResult(null);
 
     try {
+      // Récupérer l'utilisateur connecté
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Utilisateur non connecté');
+      }
+
       const { data, error } = await supabase.functions.invoke('test-email-ovh', {
-        body: { to: email }
+        body: { 
+          to: email,
+          userId: user.id
+        }
       });
 
       if (error) {
