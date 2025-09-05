@@ -33,6 +33,8 @@ export const Tasks: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<string>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedDate, setSelectedDate] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<'dueDate' | 'priority' | 'status' | 'createdAt'>('dueDate');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [emailComposer, setEmailComposer] = useState<{
     isOpen: boolean;
     to: string;
@@ -184,6 +186,26 @@ export const Tasks: React.FC = () => {
               <SelectItem value="no_date">Sans date</SelectItem>
             </SelectContent>
           </Select>
+          <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+            <SelectTrigger className="w-full sm:w-48">
+              <SelectValue placeholder="Trier par" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="dueDate">Date d'échéance</SelectItem>
+              <SelectItem value="priority">Priorité</SelectItem>
+              <SelectItem value="status">Statut</SelectItem>
+              <SelectItem value="createdAt">Date de création</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={sortOrder} onValueChange={(value: any) => setSortOrder(value)}>
+            <SelectTrigger className="w-full sm:w-32">
+              <SelectValue placeholder="Ordre" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="asc">Croissant</SelectItem>
+              <SelectItem value="desc">Décroissant</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -211,6 +233,8 @@ export const Tasks: React.FC = () => {
             onUpdateTaskStatus={updateTaskStatus}
             onDeleteTask={handleDeleteTask}
             onSendEmail={handleSendTaskEmail}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
           />
         </TabsContent>
 
@@ -230,6 +254,8 @@ export const Tasks: React.FC = () => {
             onUpdateTaskStatus={updateTaskStatus}
             onDeleteTask={handleDeleteTask}
             onSendEmail={handleSendTaskEmail}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
           />
         </TabsContent>
 
@@ -249,6 +275,8 @@ export const Tasks: React.FC = () => {
             onUpdateTaskStatus={updateTaskStatus}
             onDeleteTask={handleDeleteTask}
             onSendEmail={handleSendTaskEmail}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
           />
         </TabsContent>
 
@@ -268,6 +296,8 @@ export const Tasks: React.FC = () => {
             onUpdateTaskStatus={updateTaskStatus}
             onDeleteTask={handleDeleteTask}
             onSendEmail={handleSendTaskEmail}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
           />
         </TabsContent>
       </Tabs>

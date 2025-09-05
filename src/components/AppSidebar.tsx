@@ -37,7 +37,7 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar className="border-r bg-white">
+    <Sidebar className="border-r bg-sidebar text-sidebar-foreground">
       <SidebarContent>
         <div className="p-4">
           <SidebarTrigger />
@@ -58,7 +58,7 @@ export function AppSidebar() {
                     onClick={() => toggleSection(item.name)}
                     className="w-full"
                   >
-                    <SidebarGroupLabel className="text-sm font-semibold text-gray-600 uppercase tracking-wider flex items-center justify-between hover:bg-gray-50 px-2 py-1 rounded">
+                    <SidebarGroupLabel className="text-sm font-semibold text-sidebar-foreground/70 uppercase tracking-wider flex items-center justify-between hover:bg-sidebar-accent px-2 py-1 rounded">
                       <span>{item.name}</span>
                       <ChevronRight className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-90' : ''}`} />
                     </SidebarGroupLabel>
@@ -68,12 +68,12 @@ export function AppSidebar() {
                       <SidebarMenu>
                         {item.children.filter(child => child.visible !== false).map((child) => (
                           <SidebarMenuItem key={child.href}>
-                            <SidebarMenuButton asChild isActive={isActive(child.href)}>
-                              <Link to={child.href} className="flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors">
-                                <child.icon className="h-5 w-5" />
-                                <span className="font-medium">{child.name}</span>
-                              </Link>
-                            </SidebarMenuButton>
+                             <SidebarMenuButton asChild isActive={isActive(child.href)}>
+                               <Link to={child.href} className="flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+                                 <child.icon className="h-5 w-5" />
+                                 <span className="font-medium">{child.name}</span>
+                               </Link>
+                             </SidebarMenuButton>
                           </SidebarMenuItem>
                         ))}
                       </SidebarMenu>
@@ -89,12 +89,12 @@ export function AppSidebar() {
                 <SidebarGroupContent>
                   <SidebarMenu>
                     <SidebarMenuItem>
-                      <SidebarMenuButton asChild isActive={isActive(item.href)}>
-                        <Link to={item.href} className="flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors">
-                          <item.icon className="h-5 w-5" />
-                          <span className="font-medium">{item.name}</span>
-                        </Link>
-                      </SidebarMenuButton>
+                       <SidebarMenuButton asChild isActive={isActive(item.href)}>
+                         <Link to={item.href} className="flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+                           <item.icon className="h-5 w-5" />
+                           <span className="font-medium">{item.name}</span>
+                         </Link>
+                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   </SidebarMenu>
                 </SidebarGroupContent>

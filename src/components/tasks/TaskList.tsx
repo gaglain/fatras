@@ -29,9 +29,19 @@ interface TaskListProps {
   onUpdateTaskStatus: (taskId: string, status: TaskDisplayData['status']) => void;
   onDeleteTask?: (taskId: string) => void;
   onSendEmail?: (contactEmail: string, taskTitle: string) => void;
+  sortBy?: 'dueDate' | 'priority' | 'status' | 'createdAt';
+  sortOrder?: 'asc' | 'desc';
 }
 
-export const TaskList: React.FC<TaskListProps> = ({ tasks, rawTasks, onUpdateTaskStatus, onDeleteTask, onSendEmail }) => {
+export const TaskList: React.FC<TaskListProps> = ({ 
+  tasks, 
+  rawTasks, 
+  onUpdateTaskStatus, 
+  onDeleteTask, 
+  onSendEmail,
+  sortBy = 'dueDate',
+  sortOrder = 'asc'
+}) => {
   const { contacts } = useContacts();
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const getPriorityColor = (priority: string) => {
@@ -62,7 +72,35 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks, rawTasks, onUpdateTas
     return contacts.find(contact => contact.id === assignedTo);
   };
 
-  if (tasks.length === 0) {
+  // Trier les tâches
+  const sortedTasks = [...tasks].sort((a, b) => {
+    let comparison = 0;
+    
+    switch (sortBy) {
+      case 'dueDate':
+        const dateA = a.dueDate ? new Date(a.dueDate).getTime() : 0;
+        const dateB = b.dueDate ? new Date(b.dueDate).getTime() : 0;
+        comparison = dateA - dateB;
+        break;
+      case 'priority':
+        const priorityOrder = { urgent: 4, high: 3, medium: 2, low: 1 };
+        comparison = (priorityOrder[b.priority as keyof typeof priorityOrder] || 0) - 
+                    (priorityOrder[a.priority as keyof typeof priorityOrder] || 0);
+        break;
+      case 'status':
+        comparison = a.status.localeCompare(b.status);
+        break;
+      case 'createdAt':
+        comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        break;
+      default:
+        comparison = 0;
+    }
+    
+    return sortOrder === 'desc' ? -comparison : comparison;
+  });
+
+  if (sortedTasks.length === 0) {
     return (
       <Card className="text-center py-12">
         <CardContent>
@@ -74,7 +112,7 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks, rawTasks, onUpdateTas
 
   return (
     <div className="space-y-4">
-      {tasks.map((task) => (
+      {sortedTasks.map((task) => (
         <Card key={task.id} className={`hover:shadow-md transition-shadow ${isOverdue(task.dueDate) && task.status !== 'completed' ? 'border-red-200 bg-red-50/30' : ''}`}>
           <CardContent className="p-6">
             <div className="flex items-start justify-between mb-4">

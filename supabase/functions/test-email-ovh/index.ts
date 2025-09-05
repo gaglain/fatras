@@ -38,8 +38,16 @@ const handler = async (req: Request): Promise<Response> => {
 
     const smtpHost = settingsMap.smtp_host || "pro1.mail.ovh.net";
     const smtpPort = parseInt(settingsMap.smtp_port || "587");
-    const smtpUser = settingsMap.smtp_user;
+    const smtpUser = settingsMap.smtp_username || settingsMap.smtp_user;
     const smtpPass = settingsMap.smtp_password;
+
+    console.log("📧 Configuration SMTP récupérée:", { 
+      host: smtpHost, 
+      port: smtpPort, 
+      user: smtpUser, 
+      hasPassword: !!smtpPass,
+      settings: Object.keys(settingsMap)
+    });
 
     if (!smtpHost || !smtpUser || !smtpPass) {
       throw new Error("Configuration SMTP manquante dans les préférences utilisateur");
@@ -82,7 +90,7 @@ Content-Type: text/html; charset=UTF-8
     // Connexion SMTP - Utiliser le port configuré
     const conn = await Deno.connectTls({
       hostname: smtpHost,
-      port: 465, // Port SSL pour OVH
+      port: smtpPort === 587 ? 465 : smtpPort, // Utiliser SSL/TLS selon le port
     });
 
     const encoder = new TextEncoder();
