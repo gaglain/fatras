@@ -22,7 +22,7 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const { to, subject, html, from, fromName, userId }: EmailRequest & { userId: string } = await req.json();
     
-    console.log('📧 Sending email with OVH SMTP:', { to, subject, from });
+    console.log('📧 Sending email with OVH SMTP:', { to, subject, from, userId });
 
     // Créer le client Supabase
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;

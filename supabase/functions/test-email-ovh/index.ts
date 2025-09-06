@@ -29,7 +29,7 @@ const handler = async (req: Request): Promise<Response> => {
       .from('app_settings')
       .select('setting_key, setting_value')
       .eq('user_id', userId)
-      .in('setting_key', ['smtp_host', 'smtp_port', 'smtp_user', 'smtp_password']);
+      .in('setting_key', ['smtp_host', 'smtp_port', 'smtp_username', 'smtp_password']);
 
     const settingsMap = smtpSettings?.reduce((acc: any, setting: any) => {
       acc[setting.setting_key] = setting.setting_value;
@@ -38,7 +38,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const smtpHost = settingsMap.smtp_host || "pro1.mail.ovh.net";
     const smtpPort = parseInt(settingsMap.smtp_port || "587");
-    const smtpUser = settingsMap.smtp_username || settingsMap.smtp_user;
+    const smtpUser = settingsMap.smtp_username;
     const smtpPass = settingsMap.smtp_password;
 
     console.log("📧 Configuration SMTP récupérée:", { 
