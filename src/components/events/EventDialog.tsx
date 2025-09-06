@@ -141,7 +141,6 @@ export const EventDialog: React.FC<EventDialogProps> = ({
       const { data, error } = await supabase
         .from('contacts')
         .select('id, first_name, last_name, status, role')
-        .eq('user_id', user?.id)
         .order('first_name');
 
       if (error) throw error;
@@ -156,7 +155,6 @@ export const EventDialog: React.FC<EventDialogProps> = ({
       const { data, error } = await supabase
         .from('event_types')
         .select('id, name, color')
-        .eq('user_id', user?.id)
         .order('name');
 
       if (error) throw error;
@@ -171,7 +169,6 @@ export const EventDialog: React.FC<EventDialogProps> = ({
       const { data, error } = await supabase
         .from('centralized_artists')
         .select('id, name, genre, status')
-        .eq('user_id', user?.id)
         .eq('status', 'active')
         .order('name');
 
