@@ -39,7 +39,7 @@ export const useEvents = () => {
       const { data, error } = await supabase
         .from('events')
         .select('*')
-        .eq('user_id', user.id);
+        .order('created_at', { ascending: false });
 
       if (data && !error) {
         const eventsData: Event[] = data.map(event => ({

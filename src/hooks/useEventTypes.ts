@@ -25,7 +25,6 @@ export const useEventTypes = () => {
       const { data, error } = await supabase
         .from('event_types')
         .select('*')
-        .eq('user_id', user.id)
         .order('name');
 
       if (data && !error) {
