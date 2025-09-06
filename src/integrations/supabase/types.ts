@@ -715,6 +715,51 @@ export type Database = {
           },
         ]
       }
+      email_accounts: {
+        Row: {
+          access_token: string | null
+          created_at: string | null
+          email: string
+          id: string
+          imap_config: Json | null
+          is_active: boolean | null
+          last_sync_at: string | null
+          provider: string
+          refresh_token: string | null
+          token_expires_at: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          access_token?: string | null
+          created_at?: string | null
+          email: string
+          id?: string
+          imap_config?: Json | null
+          is_active?: boolean | null
+          last_sync_at?: string | null
+          provider: string
+          refresh_token?: string | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          access_token?: string | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          imap_config?: Json | null
+          is_active?: boolean | null
+          last_sync_at?: string | null
+          provider?: string
+          refresh_token?: string | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       email_analytics: {
         Row: {
           campaign_id: string
@@ -1118,6 +1163,66 @@ export type Database = {
           settings?: Json
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      inbound_emails: {
+        Row: {
+          attachments: Json | null
+          content: string | null
+          created_at: string | null
+          from_email: string
+          from_name: string | null
+          html_content: string | null
+          id: string
+          labels: string[] | null
+          message_id: string
+          provider: string
+          read_at: string | null
+          received_at: string | null
+          subject: string | null
+          thread_id: string | null
+          to_email: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          attachments?: Json | null
+          content?: string | null
+          created_at?: string | null
+          from_email: string
+          from_name?: string | null
+          html_content?: string | null
+          id?: string
+          labels?: string[] | null
+          message_id: string
+          provider: string
+          read_at?: string | null
+          received_at?: string | null
+          subject?: string | null
+          thread_id?: string | null
+          to_email: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          attachments?: Json | null
+          content?: string | null
+          created_at?: string | null
+          from_email?: string
+          from_name?: string | null
+          html_content?: string | null
+          id?: string
+          labels?: string[] | null
+          message_id?: string
+          provider?: string
+          read_at?: string | null
+          received_at?: string | null
+          subject?: string | null
+          thread_id?: string | null
+          to_email?: string
+          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
