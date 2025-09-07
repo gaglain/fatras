@@ -73,13 +73,13 @@ export const EmailSenderComponent: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-start space-x-3 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-            <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+          <div className="flex items-start space-x-3 p-4 bg-green-50 rounded-lg border border-green-200">
+            <AlertCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
             <div>
-              <h4 className="font-medium text-yellow-800">Configuration requise</h4>
-              <p className="text-sm text-yellow-700 mt-1">
-                Pour envoyer des emails, vous devez configurer votre clé API RESEND dans les paramètres du projet.
-                Allez dans les paramètres Supabase pour ajouter la variable d'environnement RESEND_API_KEY.
+              <h4 className="font-medium text-green-800">Configuration Email Active</h4>
+              <p className="text-sm text-green-700 mt-1">
+                La clé API RESEND est configurée. Vous pouvez maintenant envoyer des emails.
+                Testez l'envoi avec le bouton ci-dessous.
               </p>
             </div>
           </div>
