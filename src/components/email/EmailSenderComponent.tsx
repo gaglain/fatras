@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Mail, Send, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useEmailSender } from '@/hooks/useEmailSender';
+import { supabase } from '@/integrations/supabase/client';
 
 export const EmailSenderComponent: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -26,12 +27,29 @@ export const EmailSenderComponent: React.FC = () => {
     try {
       console.log('Tentative d\'envoi d\'email...', { to, subject, content });
       
-      await sendEmail({
-        to: [to],
-        subject,
-        html: `<div style="font-family: Arial, sans-serif;">${content.replace(/\n/g, '<br>')}</div>`
+      // Utiliser directement la fonction Supabase send-email avec Resend
+      const { data, error } = await supabase.functions.invoke('send-email', {
+        body: {
+          to: [to],
+          subject,
+          html: `<div style="font-family: Arial, sans-serif; padding: 20px;">
+            <h2 style="color: #333;">${subject}</h2>
+            <div style="line-height: 1.6; color: #555;">
+              ${content.replace(/\n/g, '<br>')}
+            </div>
+            <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;">
+            <p style="font-size: 12px; color: #888;">
+              Envoyé depuis votre application de gestion
+            </p>
+          </div>`
+        }
       });
+
+      if (error) {
+        throw error;
+      }
       
+      console.log('Email envoyé avec succès:', data);
       toast.success('Email envoyé avec succès !');
       
       // Reset form
