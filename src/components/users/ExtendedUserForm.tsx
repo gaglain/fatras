@@ -35,6 +35,8 @@ interface ExtendedUserFormData {
   functionTitle: string;
   showName: string;
   gusoId: string;
+  entertainmentLeaveNumber: string;
+  taxReduction: boolean;
   
   // Nouvelles informations
   bankDetails: {
@@ -100,6 +102,8 @@ export const ExtendedUserForm: React.FC<ExtendedUserFormProps> = ({
     functionTitle: '',
     showName: '',
     gusoId: '',
+    entertainmentLeaveNumber: '',
+    taxReduction: false,
     bankDetails: {
       iban: '',
       bic: '',
@@ -371,7 +375,7 @@ export const ExtendedUserForm: React.FC<ExtendedUserFormProps> = ({
                 placeholder="Pour les artistes"
               />
             </div>
-            <div className="md:col-span-2">
+            <div>
               <Label htmlFor="gusoId">Identifiant GUSO</Label>
               <Input
                 id="gusoId"
@@ -379,6 +383,31 @@ export const ExtendedUserForm: React.FC<ExtendedUserFormProps> = ({
                 onChange={(e) => updateFormData('gusoId', e.target.value)}
                 placeholder="Identifiant pour la gestion des droits"
               />
+            </div>
+            <div>
+              <Label htmlFor="entertainmentLeaveNumber">Numéro congé spectacle</Label>
+              <Input
+                id="entertainmentLeaveNumber"
+                value={formData.entertainmentLeaveNumber || ''}
+                onChange={(e) => updateFormData('entertainmentLeaveNumber', e.target.value)}
+                placeholder="Numéro de congé spectacle"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={formData.taxReduction || false}
+                  onChange={(e) => setFormData(prev => ({ ...prev, taxReduction: e.target.checked }))}
+                  className="rounded border-gray-300"
+                />
+                <span>Abattement fiscal</span>
+              </Label>
+              <p className="text-sm text-muted-foreground mt-1">
+                Cochez si vous bénéficiez d'un abattement fiscal
+              </p>
             </div>
           </div>
         </CardContent>

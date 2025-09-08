@@ -22,6 +22,8 @@ export interface ExtendedUserProfile {
   social_security_number?: string;
   guso_id?: string;
   nationality?: string;
+  entertainment_leave_number?: string;
+  tax_reduction?: boolean;
   bank_details?: any;
   contracts_fees?: any[];
   availability?: any;
@@ -75,6 +77,8 @@ export const useUserManagement = () => {
     social_security_number?: string;
     guso_id?: string;
     nationality?: string;
+    entertainment_leave_number?: string;
+    tax_reduction?: boolean;
     bank_details?: any;
     contracts_fees?: any[];
     availability?: any;
@@ -109,6 +113,8 @@ export const useUserManagement = () => {
           social_security_number: userData.social_security_number,
           guso_id: userData.guso_id,
           nationality: userData.nationality,
+          entertainment_leave_number: userData.entertainment_leave_number,
+          tax_reduction: userData.tax_reduction,
           bank_details: userData.bank_details,
           contracts_fees: userData.contracts_fees || [],
           availability: userData.availability,
@@ -214,6 +220,8 @@ export const useUserManagement = () => {
           social_security_number: userData.social_security_number,
           guso_id: userData.guso_id,
           nationality: userData.nationality,
+          entertainment_leave_number: userData.entertainment_leave_number,
+          tax_reduction: userData.tax_reduction,
           bank_details: userData.bank_details,
           contracts_fees: userData.contracts_fees,
           availability: userData.availability,

@@ -32,8 +32,12 @@ export const Events: React.FC = () => {
 
   // Fetch events from Supabase
   const fetchEvents = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('❌ No user for fetchEvents');
+      return;
+    }
     
+    console.log('📅 Fetching events for user:', user.id);
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -41,7 +45,11 @@ export const Events: React.FC = () => {
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Events fetch error:', error);
+        throw error;
+      }
+      console.log('✅ Events loaded:', data?.length || 0, 'events');
       setEvents(data || []);
     } catch (error: any) {
       console.error('Erreur lors du chargement des événements:', error);

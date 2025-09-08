@@ -2578,6 +2578,7 @@ export type Database = {
           email: string | null
           email_signature: string | null
           email_tracking_enabled: boolean | null
+          entertainment_leave_number: string | null
           first_name: string | null
           function_title: string | null
           guso_id: string | null
@@ -2592,6 +2593,7 @@ export type Database = {
           show_name: string | null
           skills: string[] | null
           social_security_number: string | null
+          tax_reduction: boolean | null
           updated_at: string
           user_id: string
           username: string | null
@@ -2610,6 +2612,7 @@ export type Database = {
           email?: string | null
           email_signature?: string | null
           email_tracking_enabled?: boolean | null
+          entertainment_leave_number?: string | null
           first_name?: string | null
           function_title?: string | null
           guso_id?: string | null
@@ -2624,6 +2627,7 @@ export type Database = {
           show_name?: string | null
           skills?: string[] | null
           social_security_number?: string | null
+          tax_reduction?: boolean | null
           updated_at?: string
           user_id: string
           username?: string | null
@@ -2642,6 +2646,7 @@ export type Database = {
           email?: string | null
           email_signature?: string | null
           email_tracking_enabled?: boolean | null
+          entertainment_leave_number?: string | null
           first_name?: string | null
           function_title?: string | null
           guso_id?: string | null
@@ -2656,6 +2661,7 @@ export type Database = {
           show_name?: string | null
           skills?: string[] | null
           social_security_number?: string | null
+          tax_reduction?: boolean | null
           updated_at?: string
           user_id?: string
           username?: string | null

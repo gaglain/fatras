@@ -181,7 +181,14 @@ export const EventDialog: React.FC<EventDialogProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user) {
+      console.error('❌ No user found, cannot create event');
+      toast.error('Vous devez être connecté pour créer un événement');
+      return;
+    }
+
+    console.log('🎯 Starting event creation with user:', user.id);
+    console.log('📝 Form data:', formData);
 
     setLoading(true);
     try {

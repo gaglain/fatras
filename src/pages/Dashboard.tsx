@@ -1,13 +1,18 @@
 
 import React from 'react';
 import { DashboardHome } from '@/components/dashboard/DashboardHome';
+import { DebugTest } from '@/components/DebugTest';
 
 const Dashboard = () => {
   console.log('📊 Dashboard - Rendering Dashboard page...');
   
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background space-y-6 p-6">
       <DashboardHome />
+      <div className="border-t pt-6">
+        <h2 className="text-lg font-semibold mb-4">🔧 Zone de test (temporaire)</h2>
+        <DebugTest />
+      </div>
     </div>
   );
 };
