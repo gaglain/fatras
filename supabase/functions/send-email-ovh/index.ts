@@ -20,7 +20,20 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { to, subject, html, from, fromName, userId }: EmailRequest & { userId: string } = await req.json();
+    // Vérifier le content-type
+    const contentType = req.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      throw new Error('Content-Type must be application/json');
+    }
+
+    const body = await req.json();
+    console.log('📧 Request body received:', body);
+    
+    const { to, subject, html, from, fromName, userId } = body as EmailRequest & { userId: string };
+    
+    if (!userId) {
+      throw new Error('userId is required');
+    }
     
     console.log('📧 Sending email with OVH SMTP:', { to, subject, from, userId });
 

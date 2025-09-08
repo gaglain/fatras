@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { EventDialog } from '@/components/events/EventDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -9,7 +11,9 @@ import { toast } from 'sonner';
 export const DebugTest: React.FC = () => {
   const { user } = useAuth();
   const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
   const [testData, setTestData] = useState('');
+  const [eventDialogOpen, setEventDialogOpen] = useState(false);
 
   const testEventCreation = async () => {
     if (!user) {
@@ -119,6 +123,17 @@ export const DebugTest: React.FC = () => {
     }
   };
 
+  const testEventDialog = () => {
+    console.log('🎯 Opening EventDialog for testing');
+    setEventDialogOpen(true);
+  };
+
+  const handleEventSave = () => {
+    console.log('✅ Event saved successfully');
+    setEventDialogOpen(false);
+    toast.success('Événement sauvegardé !');
+  };
+
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
@@ -129,7 +144,22 @@ export const DebugTest: React.FC = () => {
           <Input
             placeholder="Titre de l'événement test"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => {
+              console.log('📝 Title input change:', e.target.value);
+              setTitle(e.target.value);
+            }}
+          />
+        </div>
+        
+        <div>
+          <Textarea
+            placeholder="Description test..."
+            value={description}
+            onChange={(e) => {
+              console.log('📝 Description change:', e.target.value);
+              setDescription(e.target.value);
+            }}
+            rows={3}
           />
         </div>
         
@@ -150,10 +180,22 @@ export const DebugTest: React.FC = () => {
             Tester mise à jour profil
           </Button>
           
+          <Button onClick={testEventDialog} className="w-full" variant="destructive">
+            🎯 Tester EventDialog (Bug titre)
+          </Button>
+          
           <Button onClick={fetchCurrentProfile} className="w-full" variant="secondary">
             Récupérer profil actuel
           </Button>
         </div>
+
+        {/* Event Dialog pour test */}
+        <EventDialog
+          open={eventDialogOpen}
+          onOpenChange={setEventDialogOpen}
+          event={null}
+          onSave={handleEventSave}
+        />
 
         <div className="text-sm text-muted-foreground">
           Utilisateur connecté: {user?.email || 'Non connecté'}
