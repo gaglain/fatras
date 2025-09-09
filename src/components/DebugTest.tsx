@@ -22,37 +22,56 @@ export const DebugTest: React.FC = () => {
       return;
     }
 
-    console.log('🧪 Testing event creation');
-    console.log('👤 User:', user.id);
-    
-    const eventData = {
-      user_id: user.id,
-      title: title || 'Test Event',
-      description: 'Test description',
-      status: 'pending'
-    };
+    if (!title.trim()) {
+      console.error('❌ No title provided');
+      toast.error('Veuillez entrer un titre');
+      return;
+    }
 
-    console.log('📝 Event data to insert:', eventData);
+    console.log('🎯 Testing event creation');
+    console.log('👤 User:', user.id, user.email);
+    console.log('📝 Title:', title);
+    console.log('🔍 Title length:', title.length);
+    console.log('🔍 Title chars:', title.split('').map(c => c.charCodeAt(0)));
 
     try {
+      console.log('📤 Inserting event into database...');
+      
+      const eventData = {
+        user_id: user.id,
+        title: title.trim(),
+        description: description || 'Test event description',
+        event_type: 'Concert',
+        venue: 'Test Venue',
+        city: 'Paris',
+        country: 'France',
+        status: 'pending',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      console.log('📊 Event data to insert:', eventData);
+
       const { data, error } = await supabase
         .from('events')
         .insert([eventData])
         .select();
 
-      console.log('📊 Insert result:', { data, error });
-
       if (error) {
-        console.error('❌ Insert error:', error);
-        toast.error(`Erreur: ${error.message}`);
+        console.error('❌ Database error:', error);
+        console.error('❌ Error details:', JSON.stringify(error, null, 2));
+        toast.error(`Erreur DB: ${error.message}`);
         return;
       }
 
       console.log('✅ Event created successfully:', data);
-      toast.success('Événement de test créé !');
+      toast.success('Événement créé avec succès !');
+      setTitle('');
+      setDescription('');
     } catch (error) {
       console.error('❌ Catch error:', error);
-      toast.error('Erreur lors du test');
+      console.error('❌ Error stack:', error.stack);
+      toast.error(`Erreur: ${error.message}`);
     }
   };
 

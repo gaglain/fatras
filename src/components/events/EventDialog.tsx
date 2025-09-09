@@ -310,8 +310,21 @@ export const EventDialog: React.FC<EventDialogProps> = ({
             <Input
               id="title"
               value={formData.title}
-              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+              onChange={(e) => {
+                console.log('🔥 Title input change:', e.target.value);
+                console.log('🔥 Event object:', e);
+                console.log('🔥 Target:', e.target);
+                console.log('🔥 Previous title:', formData.title);
+                setFormData(prev => {
+                  const newData = { ...prev, title: e.target.value };
+                  console.log('🔥 New form data:', newData);
+                  return newData;
+                });
+              }}
               required
+              onFocus={() => console.log('🔥 Title input focused')}
+              onBlur={() => console.log('🔥 Title input blurred')}
+              onKeyDown={(e) => console.log('🔥 Key pressed:', e.key)}
             />
           </div>
 
