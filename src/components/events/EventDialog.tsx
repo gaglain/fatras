@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -12,7 +11,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { Event } from '@/types/event.types';
 import { Contact } from '@/types/contact.types';
-import { useEventDraft } from '@/hooks/useEventDraft';
 import { Info } from 'lucide-react';
 
 interface EventType {
@@ -35,11 +33,9 @@ export const EventDialog: React.FC<EventDialogProps> = ({
   onSave
 }) => {
   const { user } = useAuth();
-  const { draft, saveDraft, clearDraft, hasDraft } = useEventDraft();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [eventTypes, setEventTypes] = useState<EventType[]>([]);
   const [artists, setArtists] = useState<any[]>([]);
-  const [showDraftAlert, setShowDraftAlert] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -52,9 +48,9 @@ export const EventDialog: React.FC<EventDialogProps> = ({
     start_date: '',
     end_date: '',
     status: 'pending',
-    budget_min: undefined as number | undefined,
-    budget_max: undefined as number | undefined,
-    attendees_count: undefined as number | undefined,
+    budget_min: '',
+    budget_max: '',
+    attendees_count: '',
     requirements: '',
     notes: '',
     contact_id: ''
@@ -73,7 +69,7 @@ export const EventDialog: React.FC<EventDialogProps> = ({
     if (open) {
       if (event) {
         // Mode modification - charger les données de l'événement
-        const eventData = {
+        setFormData({
           title: event.title || '',
           description: event.description || '',
           event_type: event.event_type || '',
@@ -85,56 +81,37 @@ export const EventDialog: React.FC<EventDialogProps> = ({
           start_date: event.start_date ? new Date(event.start_date).toISOString().slice(0, 16) : '',
           end_date: event.end_date ? new Date(event.end_date).toISOString().slice(0, 16) : '',
           status: event.status || 'pending',
-          budget_min: event.budget_min,
-          budget_max: event.budget_max,
-          attendees_count: event.attendees_count,
+          budget_min: event.budget_min ? event.budget_min.toString() : '',
+          budget_max: event.budget_max ? event.budget_max.toString() : '',
+          attendees_count: event.attendees_count ? event.attendees_count.toString() : '',
           requirements: event.requirements || '',
           notes: event.notes || '',
           contact_id: event.contact_id || ''
-        };
-        setFormData(eventData);
-        setShowDraftAlert(false);
+        });
       } else {
-        // Mode création - vérifier s'il y a un brouillon
-        if (hasDraft() && draft) {
-          setShowDraftAlert(true);
-          setFormData(draft);
-        } else {
-          setFormData({
-            title: '',
-            description: '',
-            event_type: '',
-            venue: '',
-            address: '',
-            city: '',
-            postal_code: '',
-            country: 'France',
-            start_date: '',
-            end_date: '',
-            status: 'pending',
-            budget_min: undefined,
-            budget_max: undefined,
-            attendees_count: undefined,
-            requirements: '',
-            notes: '',
-            contact_id: ''
-          });
-          setShowDraftAlert(false);
-        }
+        // Mode création - réinitialiser le formulaire
+        setFormData({
+          title: '',
+          description: '',
+          event_type: '',
+          venue: '',
+          address: '',
+          city: '',
+          postal_code: '',
+          country: 'France',
+          start_date: '',
+          end_date: '',
+          status: 'pending',
+          budget_min: '',
+          budget_max: '',
+          attendees_count: '',
+          requirements: '',
+          notes: '',
+          contact_id: ''
+        });
       }
     }
-  }, [event, open, draft, hasDraft]);
-
-  // Sauvegarder automatiquement en brouillon
-  useEffect(() => {
-    if (open && !event) { // Seulement en mode création
-      const timeoutId = setTimeout(() => {
-        saveDraft(formData);
-      }, 1000); // Délai de 1 seconde
-
-      return () => clearTimeout(timeoutId);
-    }
-  }, [formData, open, event, saveDraft]);
+  }, [event, open]);
 
   const fetchContacts = async () => {
     try {
@@ -205,9 +182,9 @@ export const EventDialog: React.FC<EventDialogProps> = ({
         start_date: formData.start_date ? new Date(formData.start_date).toISOString() : null,
         end_date: formData.end_date ? new Date(formData.end_date).toISOString() : null,
         status: formData.status || 'pending',
-        budget_min: formData.budget_min || null,
-        budget_max: formData.budget_max || null,
-        attendees_count: formData.attendees_count || null,
+        budget_min: formData.budget_min ? parseFloat(formData.budget_min) : null,
+        budget_max: formData.budget_max ? parseFloat(formData.budget_max) : null,
+        attendees_count: formData.attendees_count ? parseInt(formData.attendees_count) : null,
         requirements: formData.requirements || '',
         notes: formData.notes || '',
         contact_id: formData.contact_id && formData.contact_id !== 'none' && formData.contact_id !== '' ? formData.contact_id : null
@@ -242,11 +219,6 @@ export const EventDialog: React.FC<EventDialogProps> = ({
         toast.success('Événement créé avec succès');
       }
 
-      // Effacer le brouillon après sauvegarde réussie
-      if (!event) {
-        clearDraft();
-      }
-      
       onSave();
       onOpenChange(false);
     } catch (error: any) {
@@ -266,65 +238,14 @@ export const EventDialog: React.FC<EventDialogProps> = ({
           </DialogTitle>
         </DialogHeader>
 
-        {showDraftAlert && (
-          <Alert className="mb-4">
-            <Info className="h-4 w-4" />
-            <AlertDescription>
-              Un brouillon a été restauré. Vous pouvez continuer votre saisie ou{' '}
-              <Button 
-                variant="link" 
-                className="p-0 h-auto font-normal underline"
-                onClick={() => {
-                  clearDraft();
-                  setFormData({
-                    title: '',
-                    description: '',
-                    event_type: '',
-                    venue: '',
-                    address: '',
-                    city: '',
-                    postal_code: '',
-                    country: 'France',
-                    start_date: '',
-                    end_date: '',
-                    status: 'pending',
-                    budget_min: undefined,
-                    budget_max: undefined,
-                    attendees_count: undefined,
-                    requirements: '',
-                    notes: '',
-                    contact_id: ''
-                  });
-                  setShowDraftAlert(false);
-                }}
-              >
-                recommencer à zéro
-              </Button>
-            </AlertDescription>
-          </Alert>
-        )}
-
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label htmlFor="title">Titre *</Label>
             <Input
               id="title"
               value={formData.title}
-              onChange={(e) => {
-                console.log('🔥 Title input change:', e.target.value);
-                console.log('🔥 Event object:', e);
-                console.log('🔥 Target:', e.target);
-                console.log('🔥 Previous title:', formData.title);
-                setFormData(prev => {
-                  const newData = { ...prev, title: e.target.value };
-                  console.log('🔥 New form data:', newData);
-                  return newData;
-                });
-              }}
+              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
               required
-              onFocus={() => console.log('🔥 Title input focused')}
-              onBlur={() => console.log('🔥 Title input blurred')}
-              onKeyDown={(e) => console.log('🔥 Key pressed:', e.key)}
             />
           </div>
 
@@ -332,7 +253,7 @@ export const EventDialog: React.FC<EventDialogProps> = ({
             <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
-              value={formData.description || ''}
+              value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
               rows={3}
             />
@@ -341,7 +262,7 @@ export const EventDialog: React.FC<EventDialogProps> = ({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="event_type">Type d'événement</Label>
-              <Select value={formData.event_type || ''} onValueChange={(value) => setFormData(prev => ({ ...prev, event_type: value }))}>
+              <Select value={formData.event_type} onValueChange={(value) => setFormData(prev => ({ ...prev, event_type: value }))}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un type" />
                 </SelectTrigger>
@@ -382,7 +303,7 @@ export const EventDialog: React.FC<EventDialogProps> = ({
               <Input
                 id="start_date"
                 type="datetime-local"
-                value={formData.start_date || ''}
+                value={formData.start_date}
                 onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
               />
             </div>
@@ -391,7 +312,7 @@ export const EventDialog: React.FC<EventDialogProps> = ({
               <Input
                 id="end_date"
                 type="datetime-local"
-                value={formData.end_date || ''}
+                value={formData.end_date}
                 onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
               />
             </div>
@@ -420,7 +341,7 @@ export const EventDialog: React.FC<EventDialogProps> = ({
             <Label htmlFor="venue">Lieu</Label>
             <Input
               id="venue"
-              value={formData.venue || ''}
+              value={formData.venue}
               onChange={(e) => setFormData(prev => ({ ...prev, venue: e.target.value }))}
             />
           </div>
@@ -429,7 +350,7 @@ export const EventDialog: React.FC<EventDialogProps> = ({
             <Label htmlFor="address">Adresse</Label>
             <Input
               id="address"
-              value={formData.address || ''}
+              value={formData.address}
               onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
             />
           </div>
@@ -439,7 +360,7 @@ export const EventDialog: React.FC<EventDialogProps> = ({
               <Label htmlFor="city">Ville</Label>
               <Input
                 id="city"
-                value={formData.city || ''}
+                value={formData.city}
                 onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
               />
             </div>
@@ -447,7 +368,7 @@ export const EventDialog: React.FC<EventDialogProps> = ({
               <Label htmlFor="postal_code">Code postal</Label>
               <Input
                 id="postal_code"
-                value={formData.postal_code || ''}
+                value={formData.postal_code}
                 onChange={(e) => setFormData(prev => ({ ...prev, postal_code: e.target.value }))}
               />
             </div>
@@ -455,7 +376,7 @@ export const EventDialog: React.FC<EventDialogProps> = ({
               <Label htmlFor="country">Pays</Label>
               <Input
                 id="country"
-                value={formData.country || 'France'}
+                value={formData.country}
                 onChange={(e) => setFormData(prev => ({ ...prev, country: e.target.value }))}
               />
             </div>
@@ -467,8 +388,8 @@ export const EventDialog: React.FC<EventDialogProps> = ({
               <Input
                 id="budget_min"
                 type="number"
-                value={formData.budget_min || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, budget_min: e.target.value ? Number(e.target.value) : undefined }))}
+                value={formData.budget_min}
+                onChange={(e) => setFormData(prev => ({ ...prev, budget_min: e.target.value }))}
               />
             </div>
             <div>
@@ -476,8 +397,8 @@ export const EventDialog: React.FC<EventDialogProps> = ({
               <Input
                 id="budget_max"
                 type="number"
-                value={formData.budget_max || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, budget_max: e.target.value ? Number(e.target.value) : undefined }))}
+                value={formData.budget_max}
+                onChange={(e) => setFormData(prev => ({ ...prev, budget_max: e.target.value }))}
               />
             </div>
             <div>
@@ -485,8 +406,8 @@ export const EventDialog: React.FC<EventDialogProps> = ({
               <Input
                 id="attendees_count"
                 type="number"
-                value={formData.attendees_count || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, attendees_count: e.target.value ? Number(e.target.value) : undefined }))}
+                value={formData.attendees_count}
+                onChange={(e) => setFormData(prev => ({ ...prev, attendees_count: e.target.value }))}
               />
             </div>
           </div>
@@ -495,7 +416,7 @@ export const EventDialog: React.FC<EventDialogProps> = ({
             <Label htmlFor="requirements">Exigences techniques</Label>
             <Textarea
               id="requirements"
-              value={formData.requirements || ''}
+              value={formData.requirements}
               onChange={(e) => setFormData(prev => ({ ...prev, requirements: e.target.value }))}
               rows={3}
             />
@@ -505,18 +426,18 @@ export const EventDialog: React.FC<EventDialogProps> = ({
             <Label htmlFor="notes">Notes</Label>
             <Textarea
               id="notes"
-              value={formData.notes || ''}
+              value={formData.notes}
               onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
               rows={3}
             />
           </div>
 
-          <div className="flex justify-end space-x-2 pt-4">
+          <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Annuler
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? 'Sauvegarde...' : 'Sauvegarder'}
+              {loading ? 'Enregistrement...' : (event ? 'Modifier' : 'Créer')}
             </Button>
           </div>
         </form>
