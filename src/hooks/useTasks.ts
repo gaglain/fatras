@@ -34,7 +34,7 @@ export const useTasks = () => {
       const { data, error } = await supabase
         .from('tasks')
         .select('*')
-        .or(`user_id.eq.${user.id},assigned_to.eq.${user.id}`);
+        .order('created_at', { ascending: false });
 
       if (data && !error) {
         const tasksData: Task[] = data.map(task => ({

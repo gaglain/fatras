@@ -82,39 +82,31 @@ export const useCentralizedData = () => {
   const [loading, setLoading] = useState(true);
 
   const fetchData = async () => {
-    if (!user) {
-      setArtists([]);
-      setPublications([]);
-      setEvents([]);
-      setLoading(false);
-      return;
-    }
-
     try {
-      // Fetch artists
+      // Fetch artists - ALL artists, not just user's
       const { data: artistsData, error: artistsError } = await supabase
         .from('centralized_artists')
         .select('*')
-        .eq('user_id', user.id);
+        .order('created_at', { ascending: false });
 
       if (artistsError) throw artistsError;
 
-      // Fetch publications with comments
+      // Fetch publications with comments - ALL publications, not just user's
       const { data: publicationsData, error: publicationsError } = await supabase
         .from('publications')
         .select(`
           *,
           publication_comments (*)
         `)
-        .eq('user_id', user.id);
+        .order('created_at', { ascending: false });
 
       if (publicationsError) throw publicationsError;
 
-      // Fetch events
+      // Fetch events - ALL events, not just user's
       const { data: eventsData, error: eventsError } = await supabase
         .from('centralized_events')
         .select('*')
-        .eq('user_id', user.id);
+        .order('created_at', { ascending: false });
 
       if (eventsError) throw eventsError;
 
@@ -136,7 +128,7 @@ export const useCentralizedData = () => {
 
   useEffect(() => {
     fetchData();
-  }, [user]);
+  }, []);
 
   // Artist functions
   const addArtist = async (artistData: Omit<CentralizedArtist, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {

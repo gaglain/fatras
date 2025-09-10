@@ -40,7 +40,7 @@ export const useContacts = () => {
       const { data, error } = await supabase
         .from('contacts')
         .select('*')
-        .eq('user_id', user.id);
+        .order('created_at', { ascending: false });
 
       if (data && !error) {
         const contactsData: Contact[] = data.map(contact => ({

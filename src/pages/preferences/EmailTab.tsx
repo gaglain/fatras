@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Mail, Settings, Server, TestTube } from 'lucide-react';
 import { EmailSignatureManager } from '@/components/email/EmailSignatureManager';
+import { EmailSmtpConfig } from '@/components/EmailSmtpConfig';
 import { useEmailSender } from '@/hooks/useEmailSender';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -196,148 +197,7 @@ export const EmailTab: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Server className="h-5 w-5" />
-            Configuration serveur email
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="provider">Fournisseur email</Label>
-              <Select value={emailConfig.provider} onValueChange={handleProviderChange}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Choisir un fournisseur" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ovh">OVH</SelectItem>
-                  <SelectItem value="gmail">Gmail</SelectItem>
-                  <SelectItem value="outlook">Outlook</SelectItem>
-                  <SelectItem value="custom">Personnalisé</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="smtp_host">Serveur SMTP (Sortant)</Label>
-              <Input
-                id="smtp_host"
-                value={emailConfig.smtp_host}
-                onChange={(e) => setEmailConfig(prev => ({ ...prev, smtp_host: e.target.value }))}
-                placeholder="smtp.example.com"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="smtp_port">Port SMTP</Label>
-              <Input
-                id="smtp_port"
-                value={emailConfig.smtp_port}
-                onChange={(e) => setEmailConfig(prev => ({ ...prev, smtp_port: e.target.value }))}
-                placeholder="587"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="imap_host">Serveur IMAP (Entrant)</Label>
-              <Input
-                id="imap_host"
-                value={emailConfig.imap_host}
-                onChange={(e) => setEmailConfig(prev => ({ ...prev, imap_host: e.target.value }))}
-                placeholder="imap.example.com"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="imap_port">Port IMAP</Label>
-              <Input
-                id="imap_port"
-                value={emailConfig.imap_port}
-                onChange={(e) => setEmailConfig(prev => ({ ...prev, imap_port: e.target.value }))}
-                placeholder="993"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="smtp_username">Nom d'utilisateur SMTP</Label>
-              <Input
-                id="smtp_username"
-                value={emailConfig.smtp_username}
-                onChange={(e) => setEmailConfig(prev => ({ ...prev, smtp_username: e.target.value }))}
-                placeholder="votre@email.com"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="smtp_password">Mot de passe SMTP</Label>
-              <Input
-                id="smtp_password"
-                type="password"
-                value={emailConfig.smtp_password}
-                onChange={(e) => setEmailConfig(prev => ({ ...prev, smtp_password: e.target.value }))}
-                placeholder="••••••••"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="imap_username">Nom d'utilisateur IMAP</Label>
-              <Input
-                id="imap_username"
-                value={emailConfig.imap_username}
-                onChange={(e) => setEmailConfig(prev => ({ ...prev, imap_username: e.target.value }))}
-                placeholder="votre@email.com"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="imap_password">Mot de passe IMAP</Label>
-              <Input
-                id="imap_password"
-                type="password"
-                value={emailConfig.imap_password}
-                onChange={(e) => setEmailConfig(prev => ({ ...prev, imap_password: e.target.value }))}
-                placeholder="••••••••"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="from_email">Email d'envoi</Label>
-              <Input
-                id="from_email"
-                value={emailConfig.from_email}
-                onChange={(e) => setEmailConfig(prev => ({ ...prev, from_email: e.target.value }))}
-                placeholder="noreply@votredomaine.com"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="from_name">Nom d'expéditeur</Label>
-              <Input
-                id="from_name"
-                value={emailConfig.from_name}
-                onChange={(e) => setEmailConfig(prev => ({ ...prev, from_name: e.target.value }))}
-                placeholder="Votre Organisation"
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-2 pt-4">
-            <Button onClick={saveEmailConfig} disabled={isLoading}>
-              {isLoading ? 'Sauvegarde...' : 'Sauvegarder'}
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={testEmailConfig} 
-              disabled={isTesting || !emailConfig.from_email}
-            >
-              <TestTube className="h-4 w-4 mr-2" />
-              {isTesting ? 'Test en cours...' : 'Tester la configuration'}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <EmailSmtpConfig />
 
       <Card>
         <CardHeader>
