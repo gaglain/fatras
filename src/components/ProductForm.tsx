@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, X, Upload, Save, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { MediaUpload } from './MediaUpload';
+import { useProducts } from '@/hooks/useProducts';
 
 interface ProductFormProps {
   product?: any;
@@ -18,12 +19,13 @@ interface ProductFormProps {
 }
 
 export const ProductForm: React.FC<ProductFormProps> = ({ product, onSave, onClose }) => {
+  const { createProduct, updateProduct } = useProducts();
   const [formData, setFormData] = useState({
     name: product?.name || '',
     description: product?.description || '',
     price: product?.price || 0,
     category: product?.category || '',
-    stockQuantity: product?.stockQuantity || 0,
+    stock_quantity: product?.stock_quantity || 0,
     status: product?.status || 'active',
     images: product?.images || [],
     attributes: product?.attributes || [],
@@ -38,11 +40,11 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSave, onClo
   const [newVariation, setNewVariation] = useState({
     name: '',
     price: 0,
-    stockQuantity: 0,
+    stock_quantity: 0,
     attributes: {} as any
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.name.trim()) {
@@ -50,15 +52,18 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSave, onClo
       return;
     }
 
-    const productData = {
-      ...formData,
-      id: product?.id || `product-${Date.now()}`,
-      updatedAt: new Date().toISOString()
-    };
-
-    onSave(productData);
-    toast.success(product ? 'Produit modifié' : 'Produit créé');
-    onClose();
+    try {
+      if (product) {
+        await updateProduct(product.id, formData);
+      } else {
+        await createProduct(formData);
+      }
+      
+      onSave(formData);
+      onClose();
+    } catch (error) {
+      // L'erreur est déjà affichée dans le hook
+    }
   };
 
   const addAttribute = () => {
@@ -103,7 +108,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSave, onClo
       }]
     }));
 
-    setNewVariation({ name: '', price: 0, stockQuantity: 0, attributes: {} });
+    setNewVariation({ name: '', price: 0, stock_quantity: 0, attributes: {} });
     toast.success('Variation ajoutée');
   };
 
@@ -179,8 +184,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSave, onClo
               <Label>Stock</Label>
               <Input
                 type="number"
-                value={formData.stockQuantity}
-                onChange={(e) => setFormData(prev => ({ ...prev, stockQuantity: parseInt(e.target.value) || 0 }))}
+                value={formData.stock_quantity}
+                onChange={(e) => setFormData(prev => ({ ...prev, stock_quantity: parseInt(e.target.value) || 0 }))}
                 placeholder="0"
               />
             </div>
@@ -293,8 +298,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSave, onClo
                   <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                     <div>
                       <span className="font-medium">{variation.name}</span>
-                      <span className="ml-2 text-sm text-gray-500">
-                        {variation.price}€ - Stock: {variation.stockQuantity}
+                       <span className="ml-2 text-sm text-gray-500">
+                        {variation.price}€ - Stock: {variation.stock_quantity}
                       </span>
                     </div>
                     <Button
@@ -327,8 +332,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSave, onClo
               <Input
                 type="number"
                 placeholder="Stock"
-                value={newVariation.stockQuantity}
-                onChange={(e) => setNewVariation(prev => ({ ...prev, stockQuantity: parseInt(e.target.value) || 0 }))}
+                value={newVariation.stock_quantity}
+                onChange={(e) => setNewVariation(prev => ({ ...prev, stock_quantity: parseInt(e.target.value) || 0 }))}
               />
               <Button type="button" onClick={addVariation} variant="outline">
                 <Plus className="h-4 w-4" />

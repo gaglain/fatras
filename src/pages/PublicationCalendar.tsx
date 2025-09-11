@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, Plus, Edit, Trash2, Image, Link, MessageSquare, CheckCircle, XCircle, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { useUser } from '@/contexts/UserContext';
-import { PublicationForm } from '@/components/PublicationForm';
+import { PublicationFormMultiPlatform } from '@/components/PublicationFormMultiPlatform';
 import { useCentralizedData, Publication, PublicationComment } from '@/contexts/CentralizedDataContext';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -424,7 +424,7 @@ export const PublicationCalendar: React.FC = () => {
       </div>
 
       {/* Publication Form */}
-      <PublicationForm
+      <PublicationFormMultiPlatform
         isOpen={showForm}
         onClose={() => {
           console.log('❌ Closing publication form');

@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { Event } from '@/types/event.types';
 import { Contact } from '@/types/contact.types';
 import { Info } from 'lucide-react';
+import { EventDraftManager, useEventDraft } from './EventDraftManager';
 
 interface EventType {
   id: string;
@@ -56,6 +57,7 @@ export const EventDialog: React.FC<EventDialogProps> = ({
     contact_id: ''
   });
   const [loading, setLoading] = useState(false);
+  const { clearDraft } = useEventDraft(event?.id);
 
   useEffect(() => {
     if (open && user) {
@@ -219,6 +221,9 @@ export const EventDialog: React.FC<EventDialogProps> = ({
         toast.success('Événement créé avec succès');
       }
 
+      // Nettoyer le brouillon après succès
+      clearDraft();
+      
       onSave();
       onOpenChange(false);
     } catch (error: any) {
@@ -237,6 +242,12 @@ export const EventDialog: React.FC<EventDialogProps> = ({
             {event ? 'Modifier l\'événement' : 'Nouvel événement'}
           </DialogTitle>
         </DialogHeader>
+
+        <EventDraftManager
+          formData={formData}
+          onFormDataChange={setFormData}
+          eventId={event?.id}
+        />
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

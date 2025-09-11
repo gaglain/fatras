@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { MessageSquare, User } from 'lucide-react';
 import { useUserManagement } from '@/hooks/useUserManagement';
 import { useMessaging } from '@/hooks/useMessaging';
+import { UserAvatar } from './UserAvatar';
 import { toast } from 'sonner';
 
 interface DirectMessageManagerProps {
@@ -85,20 +86,15 @@ export const DirectMessageManager: React.FC<DirectMessageManagerProps> = ({ trig
                   <SelectItem value="no-users" disabled>
                     Aucun utilisateur disponible
                   </SelectItem>
-                ) : (
+                 ) : (
                   activeUsers.map((user) => (
                     <SelectItem key={user.user_id} value={user.user_id}>
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4" />
-                        <div>
-                          <div className="font-medium">
-                            {user.first_name} {user.last_name}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            @{user.username} - {user.role}
-                          </div>
-                        </div>
-                      </div>
+                      <UserAvatar 
+                        user={user} 
+                        size="sm" 
+                        showName={true} 
+                        showStatus={true}
+                      />
                     </SelectItem>
                   ))
                 )}

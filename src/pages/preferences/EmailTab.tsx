@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Mail, Settings, Server, TestTube } from 'lucide-react';
+import { Mail, Settings, Server, TestTube, ExternalLink } from 'lucide-react';
 import { EmailSignatureManager } from '@/components/email/EmailSignatureManager';
 import { EmailSmtpConfig } from '@/components/EmailSmtpConfig';
 import { useEmailSender } from '@/hooks/useEmailSender';
@@ -198,6 +198,28 @@ export const EmailTab: React.FC = () => {
   return (
     <div className="space-y-6">
       <EmailSmtpConfig />
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ExternalLink className="h-5 w-5" />
+            Configuration Resend
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
+            <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
+              Configuration requise pour l'envoi d'emails
+            </h4>
+            <div className="text-sm text-blue-700 dark:text-blue-300 space-y-2">
+              <p>1. <strong>Créez un compte Resend :</strong> <a href="https://resend.com" target="_blank" className="underline">https://resend.com</a></p>
+              <p>2. <strong>Validez votre domaine :</strong> <a href="https://resend.com/domains" target="_blank" className="underline">https://resend.com/domains</a></p>
+              <p>3. <strong>Créez une clé API :</strong> <a href="https://resend.com/api-keys" target="_blank" className="underline">https://resend.com/api-keys</a></p>
+              <p>4. <strong>Ajoutez votre clé dans les paramètres de l'application</strong></p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

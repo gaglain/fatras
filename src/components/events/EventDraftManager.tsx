@@ -4,13 +4,21 @@ import { toast } from 'sonner';
 interface EventFormData {
   title: string;
   description: string;
+  event_type: string;
+  venue: string;
+  address: string;
+  city: string;
+  postal_code: string;
+  country: string;
   start_date: string;
   end_date: string;
-  venue: string;
-  city: string;
+  status: string;
   budget_min: string;
   budget_max: string;
   attendees_count: string;
+  requirements: string;
+  notes: string;
+  contact_id: string;
 }
 
 interface EventDraftManagerProps {

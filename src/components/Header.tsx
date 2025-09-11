@@ -106,7 +106,7 @@ export const Header: React.FC = () => {
               <ThemeToggle />
               
               <div className="relative">
-                <Button
+                 <Button
                   onClick={handleNotificationClick}
                   variant="ghost"
                   size="icon"
@@ -114,7 +114,16 @@ export const Header: React.FC = () => {
                 >
                    <Bell className="h-5 w-5" />
                    {unreadCount > 0 && (
-                     <div className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center bg-destructive text-destructive-foreground text-xs rounded-full animate-bounce font-semibold min-w-[1.25rem] border-2 border-background">
+                     <div 
+                       className="absolute -top-1 -right-1 min-w-[1.25rem] h-5 flex items-center justify-center 
+                                  text-white text-xs font-bold rounded-full 
+                                  border-2 border-white dark:border-gray-900 
+                                  animate-pulse shadow-lg z-10"
+                       style={{
+                         background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                         boxShadow: '0 2px 8px rgba(239, 68, 68, 0.4)'
+                       }}
+                     >
                        {unreadCount > 99 ? '99+' : unreadCount}
                      </div>
                    )}
