@@ -207,11 +207,24 @@ const handler = async (req: Request): Promise<Response> => {
       }
 
       // RCPT TO pour chaque destinataire
+      const failedRecipients: string[] = [];
       for (const recipient of to) {
+        console.log(`📧 Adding recipient: ${recipient}`);
         response = await sendCommand(`RCPT TO:<${recipient}>`);
         if (!response.startsWith('250')) {
-          throw new Error(`RCPT TO failed for ${recipient}: ${response}`);
+          console.error(`❌ RCPT TO failed for ${recipient}: ${response}`);
+          failedRecipients.push(recipient);
+        } else {
+          console.log(`✅ Recipient accepted: ${recipient}`);
         }
+      }
+
+      if (failedRecipients.length === to.length) {
+        throw new Error(`All recipients rejected. First error: ${response}`);
+      }
+
+      if (failedRecipients.length > 0) {
+        console.warn(`⚠️ Some recipients were rejected: ${failedRecipients.join(', ')}`);
       }
 
       // DATA
