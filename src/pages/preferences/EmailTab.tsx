@@ -62,7 +62,7 @@ export const EmailTab: React.FC = () => {
         if (setting.setting_key === 'imap_port') config.imap_port = setting.setting_value;
         if (setting.setting_key === 'imap_username') config.imap_username = setting.setting_value;
         if (setting.setting_key === 'imap_password') config.imap_password = setting.setting_value;
-        if (setting.setting_key === 'imap_security') config.imap_security = (setting.setting_value || 'ssl');
+        if (setting.setting_key === 'imap_security') config.imap_security = (setting.setting_value || 'starttls');
         if (setting.setting_key === 'from_email') config.from_email = setting.setting_value;
         if (setting.setting_key === 'from_name') config.from_name = setting.setting_value;
       });
