@@ -202,7 +202,7 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">Aucun contact</SelectItem>
-                {contacts.slice(0, 50).map((contact) => (
+                {contacts.map((contact) => (
                   <SelectItem key={contact.id} value={contact.id}>
                     {contact.first_name} {contact.last_name}
                   </SelectItem>
@@ -222,7 +222,7 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">Aucun événement</SelectItem>
-                {events.slice(0, 50).map((event) => (
+                {events.map((event) => (
                   <SelectItem key={event.id} value={event.id}>
                     {event.title}
                   </SelectItem>
