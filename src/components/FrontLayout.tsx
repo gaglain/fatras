@@ -53,10 +53,12 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
     console.log('🎯 FrontLayout mounted - Starting sync');
     
     const loadSettings = () => {
-      // 1) Nouvelle clé back-office
+      // 1) Nouvelle clé back-office (SiteSettings)
       const savedSiteSettings = localStorage.getItem('site_settings');
-      // 2) Ancienne/standard clé
+      // 2) Clé standard historique
       const savedWebsiteSettings = localStorage.getItem('websiteSettings');
+      // 3) Configuration unifiée (WebsiteConfigManager)
+      const savedWebsiteConfig = localStorage.getItem('websiteConfig');
 
       try {
         let merged: any = { ...settings };
@@ -66,11 +68,24 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
         }
         if (savedSiteSettings) {
           const parsedSite = JSON.parse(savedSiteSettings);
-          // Fusion prioritaire depuis le back-office SiteSettings
           merged = {
             ...merged,
             ...parsedSite,
             socialLinks: { ...(merged.socialLinks || {}), ...(parsedSite.socialLinks || {}) }
+          };
+        }
+        if (savedWebsiteConfig) {
+          const parsedConfig = JSON.parse(savedWebsiteConfig);
+          merged = {
+            ...merged,
+            // champs principaux
+            siteName: parsedConfig.siteName || merged.siteName,
+            siteDescription: parsedConfig.siteDescription || merged.siteDescription,
+            contactEmail: parsedConfig.contactEmail || merged.contactEmail,
+            contactPhone: parsedConfig.contactPhone || merged.contactPhone,
+            address: parsedConfig.address || merged.address,
+            // réseaux sociaux
+            socialLinks: { ...(merged.socialLinks || {}), ...(parsedConfig.socialLinks || {}) }
           };
         }
         setSettings(merged);
@@ -113,13 +128,16 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
     window.addEventListener('siteSettingsUpdated', handleSettingsUpdate);
     window.addEventListener('websiteDesignUpdated', handleSettingsUpdate);
     window.addEventListener('websiteSettingsSaved', handleSettingsUpdate);
+    window.addEventListener('websiteConfigChanged', handleSettingsUpdate);
     window.addEventListener('storage', handleStorageChange);
 
     return () => {
       clearInterval(pollInterval);
       window.removeEventListener('websiteSettingsUpdated', handleSettingsUpdate);
+      window.removeEventListener('siteSettingsUpdated', handleSettingsUpdate);
       window.removeEventListener('websiteDesignUpdated', handleSettingsUpdate);
       window.removeEventListener('websiteSettingsSaved', handleSettingsUpdate);
+      window.removeEventListener('websiteConfigChanged', handleSettingsUpdate);
       window.removeEventListener('storage', handleStorageChange);
     };
   }, [forceSync, forceFrontDataSync]);
