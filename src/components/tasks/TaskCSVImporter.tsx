@@ -17,6 +17,9 @@ interface CSVTask {
   task_type: 'Email' | 'Telephone' | 'RDV' | 'Autre';
   due_date?: string;
   assigned_to?: string;
+  contact_id?: string;
+  event_id?: string;
+  artist_id?: string;
   tags?: string;
 }
 
@@ -31,9 +34,10 @@ export const TaskCSVImporter: React.FC = () => {
 
   const downloadTemplate = () => {
     const template = [
-      'title,description,priority,status,task_type,due_date,assigned_to,tags',
-      'Exemple de tâche,Description de la tâche,medium,todo,Autre,2024-12-31T10:00,,"tag1,tag2"',
-      'Appeler client,Contacter le client pour follow-up,high,todo,Telephone,2024-12-25T14:30,,"urgent,client"'
+      'title,description,priority,status,task_type,due_date,assigned_to,contact_id,event_id,artist_id,tags',
+      'Exemple de tâche,Description de la tâche,medium,todo,Autre,2024-12-31T10:00,,,,,"tag1,tag2"',
+      'Appeler client,Contacter le client pour follow-up,high,todo,Telephone,2024-12-25T14:30,,,,,"urgent,client"',
+      'RDV planning,Planifier un rendez-vous,high,todo,RDV,2025-01-15T14:00,,contact-uuid-123,event-uuid-456,,"rdv,planning"'
     ].join('\n');
 
     const blob = new Blob([template], { type: 'text/csv' });
@@ -97,6 +101,15 @@ export const TaskCSVImporter: React.FC = () => {
             case 'assigned_to':
               task.assigned_to = value;
               break;
+            case 'contact_id':
+              task.contact_id = value;
+              break;
+            case 'event_id':
+              task.event_id = value;
+              break;
+            case 'artist_id':
+              task.artist_id = value;
+              break;
             case 'tags':
               if (value) {
                 task.tags = value.split(',').map(t => t.trim()).filter(t => t);
@@ -159,6 +172,9 @@ export const TaskCSVImporter: React.FC = () => {
             task_type: csvTask.task_type || 'Autre',
             due_date: csvTask.due_date || undefined,
             assigned_to: csvTask.assigned_to || undefined,
+            contact_id: csvTask.contact_id || undefined,
+            event_id: csvTask.event_id || undefined,
+            artist_id: csvTask.artist_id || undefined,
             tags: Array.isArray(csvTask.tags) ? csvTask.tags : []
           };
 
@@ -286,6 +302,9 @@ export const TaskCSVImporter: React.FC = () => {
             <li><strong>task_type:</strong> Email, Telephone, RDV, Autre</li>
             <li><strong>due_date:</strong> Format ISO (YYYY-MM-DDTHH:mm)</li>
             <li><strong>assigned_to:</strong> ID de l'utilisateur assigné</li>
+            <li><strong>contact_id:</strong> ID du contact lié (optionnel)</li>
+            <li><strong>event_id:</strong> ID de l'événement lié (optionnel)</li>
+            <li><strong>artist_id:</strong> ID de l'artiste lié (optionnel)</li>
             <li><strong>tags:</strong> Tags séparés par des virgules</li>
           </ul>
         </div>
