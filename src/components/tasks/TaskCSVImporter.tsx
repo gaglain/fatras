@@ -9,6 +9,8 @@ import { useTasks, Task } from '@/hooks/useTasks';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useUser } from '@/contexts/UserContext';
+import { useContacts } from '@/hooks/useContacts';
 
 interface CSVTask {
   title: string;
@@ -32,6 +34,8 @@ export const TaskCSVImporter: React.FC = () => {
   const [success, setSuccess] = useState<number>(0);
   const { addTask } = useTasks();
   const { user } = useAuth();
+  const { users } = useUser();
+  const { contacts } = useContacts();
 
   const [headers, setHeaders] = useState<string[]>([]);
   const [columnMapping, setColumnMapping] = useState<Record<string, string>>({});
@@ -100,6 +104,44 @@ export const TaskCSVImporter: React.FC = () => {
       artist_id: pick('artist_id', 'artiste'),
       tags: pick('tags', 'libelles', 'labels'),
     };
+  };
+
+  // Helpers d'identification
+  const isUUID = (v?: string) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
+  const isEmail = (v?: string) => !!v && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
+  const toISODateString = (v?: string) => {
+    if (!v) return undefined;
+    const s = v.includes('T') ? v : v.replace(' ', 'T');
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? undefined : d.toISOString();
+  };
+  const norm = (s: string) => s.trim().toLowerCase();
+
+  const resolveUserId = (value?: string): string | undefined => {
+    if (!value) return undefined;
+    if (isUUID(value)) return value;
+    const v = norm(value);
+    const match = users.find(u =>
+      u.id === value ||
+      norm(u.email || '') === v ||
+      norm(u.username || '') === v ||
+      norm(`${u.name} ${u.lastName}`.trim()) === v ||
+      norm(u.name || '') === v ||
+      norm(u.lastName || '') === v
+    );
+    return match?.id;
+  };
+
+  const resolveContactId = (value?: string): string | undefined => {
+    if (!value) return undefined;
+    if (isUUID(value)) return value;
+    const v = norm(value);
+    const match = contacts.find(c =>
+      c.id === value ||
+      (c.email && norm(c.email) === v) ||
+      norm(`${c.first_name} ${c.last_name}`.trim()) === v
+    );
+    return match?.id;
   };
 
   const parseCSVWithMapping = (csvText: string, mapping: Record<string, string>): CSVTask[] => {
@@ -270,6 +312,12 @@ export const TaskCSVImporter: React.FC = () => {
         try {
           const csvTask = csvTasks[i];
           
+          const resolvedAssigned = resolveUserId(csvTask.assigned_to);
+          const resolvedContact = resolveContactId(csvTask.contact_id);
+          const resolvedDue = csvTask.due_date ? (toISODateString(csvTask.due_date) ?? csvTask.due_date) : undefined;
+          const resolvedEvent = isUUID(csvTask.event_id || '') ? csvTask.event_id : undefined;
+          const resolvedArtist = isUUID(csvTask.artist_id || '') ? csvTask.artist_id : undefined;
+          
           const taskData: Omit<Task, 'id' | 'created_at' | 'updated_at'> = {
             user_id: user.id,
             title: csvTask.title,
@@ -277,14 +325,13 @@ export const TaskCSVImporter: React.FC = () => {
             priority: csvTask.priority || 'medium',
             status: csvTask.status || 'todo',
             task_type: csvTask.task_type || 'Autre',
-            due_date: csvTask.due_date || undefined,
-            assigned_to: csvTask.assigned_to || undefined,
-            contact_id: csvTask.contact_id || undefined,
-            event_id: csvTask.event_id || undefined,
-            artist_id: csvTask.artist_id || undefined,
+            due_date: resolvedDue,
+            assigned_to: resolvedAssigned,
+            contact_id: resolvedContact,
+            event_id: resolvedEvent,
+            artist_id: resolvedArtist,
             tags: Array.isArray(csvTask.tags) ? csvTask.tags : []
           };
-
           await addTask(taskData);
           successCount++;
         } catch (error) {
