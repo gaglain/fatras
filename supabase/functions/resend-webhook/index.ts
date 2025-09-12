@@ -30,9 +30,63 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const signingSecret = Deno.env.get('RESEND_SIGNING_SECRET')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const payload: ResendWebhookPayload = await req.json();
+    // Verify webhook signature
+    const signature = req.headers.get('resend-signature');
+    if (!signature) {
+      console.log('❌ Signature manquante');
+      return new Response(JSON.stringify({ error: 'Missing signature' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      });
+    }
+
+    const body = await req.text();
+    
+    // Verify signature using crypto
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(signingSecret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['verify']
+    );
+
+    const parts = signature.split(',');
+    const timestamp = parts.find(p => p.startsWith('t='))?.split('=')[1];
+    const expectedSignature = parts.find(p => p.startsWith('v1='))?.split('=')[1];
+    
+    if (!timestamp || !expectedSignature) {
+      console.log('❌ Format de signature invalide');
+      return new Response(JSON.stringify({ error: 'Invalid signature format' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      });
+    }
+
+    const signedPayload = `${timestamp}.${body}`;
+    const actualSignature = await crypto.subtle.sign(
+      'HMAC',
+      key,
+      encoder.encode(signedPayload)
+    );
+
+    const actualSignatureHex = Array.from(new Uint8Array(actualSignature))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+
+    if (actualSignatureHex !== expectedSignature) {
+      console.log('❌ Signature invalide');
+      return new Response(JSON.stringify({ error: 'Invalid signature' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      });
+    }
+
+    const payload: ResendWebhookPayload = JSON.parse(body);
     
     console.log('📧 Resend webhook received:', payload.type);
 
