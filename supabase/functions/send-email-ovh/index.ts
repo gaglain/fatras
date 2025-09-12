@@ -80,12 +80,24 @@ const handler = async (req: Request): Promise<Response> => {
       html
     ].join('\r\n');
 
-    // Établir la connexion TLS
+    // Établir la connexion (TLS implicite pour 465, STARTTLS pour 587)
     console.log('🔗 Connecting to OVH SMTP server...');
-    const conn = await Deno.connectTls({
-      hostname: smtpHost,
-      port: smtpPort,
-    });
+    let conn: Deno.Conn;
+    if (smtpPort === 587) {
+      // Connexion en clair, puis upgrade STARTTLS
+      conn = await Deno.connect({
+        hostname: smtpHost,
+        port: smtpPort,
+      });
+      console.log('🔗 Connected (plain). Will upgrade to TLS using STARTTLS...');
+    } else {
+      // Connexion TLS implicite (ex: port 465)
+      conn = await Deno.connectTls({
+        hostname: smtpHost,
+        port: smtpPort,
+      });
+      console.log('🔗 Connected with implicit TLS');
+    }
 
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
@@ -148,6 +160,24 @@ const handler = async (req: Request): Promise<Response> => {
       response = await sendCommand(`EHLO ${smtpHost}`);
       if (!response.startsWith('250')) {
         throw new Error(`EHLO failed: ${response}`);
+      }
+
+      // STARTTLS si port 587
+      if (smtpPort === 587) {
+        response = await sendCommand('STARTTLS');
+        if (!response.startsWith('220')) {
+          throw new Error(`STARTTLS failed: ${response}`);
+        }
+        // Upgrade vers TLS
+        // @ts-ignore - Deno fournit startTls au runtime
+        conn = await Deno.startTls(conn, { hostname: smtpHost });
+        console.log('🔐 TLS upgrade successful');
+
+        // EHLO à nouveau après upgrade
+        response = await sendCommand(`EHLO ${smtpHost}`);
+        if (!response.startsWith('250')) {
+          throw new Error(`EHLO after STARTTLS failed: ${response}`);
+        }
       }
 
       // AUTH PLAIN
