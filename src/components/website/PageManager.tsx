@@ -136,16 +136,9 @@ export const PageManager: React.FC = () => {
     setPages(updatedPages);
     savePages(updatedPages);
   };
-    const savedPages = localStorage.getItem('website_pages');
-    if (savedPages) {
-      try {
-        setPages(JSON.parse(savedPages));
-      } catch (error) {
-        console.error('Erreur chargement pages:', error);
-      }
-    } else {
-      localStorage.setItem('website_pages', JSON.stringify(defaultPages));
-    }
+
+  useEffect(() => {
+    loadPages();
   }, []);
 
   useEffect(() => {
@@ -202,7 +195,7 @@ export const PageManager: React.FC = () => {
     };
 
     setPages(prev => [...prev, newPage]);
-    setNewPageData({ title: '', slug: '', type: 'page' });
+    setNewPageData({ title: '', slug: '', type: 'page', status: 'draft' });
     setShowCreateForm(false);
     toast.success('Page créée avec succès');
   };
