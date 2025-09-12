@@ -2,6 +2,7 @@
 import React from 'react';
 import { useWebsiteConfig } from '@/contexts/WebsiteConfigContext';
 import { useSimpleWebsiteSync } from '@/hooks/useSimpleWebsiteSync';
+import { Facebook, Instagram, Twitter, Youtube, Linkedin } from 'lucide-react';
 
 export const SimpleFrontFooter: React.FC = () => {
   const { config } = useWebsiteConfig();
@@ -29,19 +30,64 @@ export const SimpleFrontFooter: React.FC = () => {
             <h3 className="font-semibold mb-4 text-lg">Suivez-nous</h3>
             <div className="flex space-x-4">
               {config.socialLinks.facebook && (
-                <a href={config.socialLinks.facebook} style={{ color: config.linkColor }}>Facebook</a>
+                <a 
+                  href={config.socialLinks.facebook} 
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: config.linkColor }} 
+                  className="hover:opacity-80 hover:scale-110 transition-transform"
+                  title="Facebook"
+                >
+                  <Facebook size={24} />
+                </a>
               )}
               {config.socialLinks.instagram && (
-                <a href={config.socialLinks.instagram} style={{ color: config.linkColor }}>Instagram</a>
+                <a 
+                  href={config.socialLinks.instagram} 
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: config.linkColor }} 
+                  className="hover:opacity-80 hover:scale-110 transition-transform"
+                  title="Instagram"
+                >
+                  <Instagram size={24} />
+                </a>
               )}
               {config.socialLinks.twitter && (
-                <a href={config.socialLinks.twitter} style={{ color: config.linkColor }}>Twitter</a>
+                <a 
+                  href={config.socialLinks.twitter} 
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: config.linkColor }} 
+                  className="hover:opacity-80 hover:scale-110 transition-transform"
+                  title="Twitter"
+                >
+                  <Twitter size={24} />
+                </a>
               )}
               {config.socialLinks.linkedin && (
-                <a href={config.socialLinks.linkedin} style={{ color: config.linkColor }}>LinkedIn</a>
+                <a 
+                  href={config.socialLinks.linkedin} 
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: config.linkColor }} 
+                  className="hover:opacity-80 hover:scale-110 transition-transform"
+                  title="LinkedIn"
+                >
+                  <Linkedin size={24} />
+                </a>
               )}
               {config.socialLinks.youtube && (
-                <a href={config.socialLinks.youtube} style={{ color: config.linkColor }}>YouTube</a>
+                <a 
+                  href={config.socialLinks.youtube} 
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: config.linkColor }} 
+                  className="hover:opacity-80 hover:scale-110 transition-transform"
+                  title="YouTube"
+                >
+                  <Youtube size={24} />
+                </a>
               )}
             </div>
           </div>

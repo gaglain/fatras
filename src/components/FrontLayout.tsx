@@ -6,6 +6,7 @@ import { useFrontSync } from '@/hooks/useFrontSync';
 import { PublicChatWidget } from './PublicChatWidget';
 import { RGPDModule } from './RGPDModule';
 import { GoogleAnalytics } from './GoogleAnalytics';
+import { Facebook, Instagram, Twitter, Youtube, Linkedin } from 'lucide-react';
 
 interface FrontLayoutProps {
   children?: React.ReactNode;
@@ -149,10 +150,11 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
                     href={settings.socialLinks.facebook}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="front-link hover:opacity-80"
+                    className="front-link hover:opacity-80 hover:scale-110 transition-transform"
                     style={{ color: 'var(--site-link-color, #3b82f6)' }}
+                    title="Facebook"
                   >
-                    Facebook
+                    <Facebook size={24} />
                   </a>
                 )}
                 {settings.socialLinks.instagram && (
@@ -160,10 +162,11 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
                     href={settings.socialLinks.instagram}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="front-link hover:opacity-80"
+                    className="front-link hover:opacity-80 hover:scale-110 transition-transform"
                     style={{ color: 'var(--site-link-color, #3b82f6)' }}
+                    title="Instagram"
                   >
-                    Instagram
+                    <Instagram size={24} />
                   </a>
                 )}
                 {settings.socialLinks.twitter && (
@@ -171,10 +174,11 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
                     href={settings.socialLinks.twitter}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="front-link hover:opacity-80"
+                    className="front-link hover:opacity-80 hover:scale-110 transition-transform"
                     style={{ color: 'var(--site-link-color, #3b82f6)' }}
+                    title="Twitter"
                   >
-                    Twitter
+                    <Twitter size={24} />
                   </a>
                 )}
                 {settings.socialLinks.youtube && (
@@ -182,10 +186,11 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
                     href={settings.socialLinks.youtube}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="front-link hover:opacity-80"
+                    className="front-link hover:opacity-80 hover:scale-110 transition-transform"
                     style={{ color: 'var(--site-link-color, #3b82f6)' }}
+                    title="YouTube"
                   >
-                    YouTube
+                    <Youtube size={24} />
                   </a>
                 )}
                 {settings.socialLinks.linkedin && (
@@ -193,10 +198,11 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
                     href={settings.socialLinks.linkedin}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="front-link hover:opacity-80"
+                    className="front-link hover:opacity-80 hover:scale-110 transition-transform"
                     style={{ color: 'var(--site-link-color, #3b82f6)' }}
+                    title="LinkedIn"
                   >
-                    LinkedIn
+                    <Linkedin size={24} />
                   </a>
                 )}
               </div>
