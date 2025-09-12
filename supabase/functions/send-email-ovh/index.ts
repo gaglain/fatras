@@ -180,11 +180,24 @@ const handler = async (req: Request): Promise<Response> => {
         }
       }
 
-      // AUTH PLAIN
-      const authString = btoa(`\0${smtpUsername}\0${smtpPassword}`);
-      response = await sendCommand(`AUTH PLAIN ${authString}`);
+      // AUTH LOGIN (OVH supporte LOGIN, pas PLAIN)
+      response = await sendCommand('AUTH LOGIN');
+      if (!response.startsWith('334')) {
+        throw new Error(`AUTH LOGIN failed: ${response}`);
+      }
+
+      // Envoyer le nom d'utilisateur encodé en base64
+      const usernameB64 = btoa(smtpUsername);
+      response = await sendCommand(usernameB64);
+      if (!response.startsWith('334')) {
+        throw new Error(`Username authentication failed: ${response}`);
+      }
+
+      // Envoyer le mot de passe encodé en base64
+      const passwordB64 = btoa(smtpPassword);
+      response = await sendCommand(passwordB64);
       if (!response.startsWith('235')) {
-        throw new Error(`AUTH failed: ${response}`);
+        throw new Error(`Password authentication failed: ${response}`);
       }
 
       // MAIL FROM
