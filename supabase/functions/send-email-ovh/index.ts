@@ -92,9 +92,42 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Helper pour lire la réponse
     const readResponse = async (): Promise<string> => {
+      const chunks: Uint8Array[] = [];
       const buffer = new Uint8Array(1024);
-      const n = await conn.read(buffer);
-      return decoder.decode(buffer.subarray(0, n || 0));
+      
+      try {
+        let totalBytes = 0;
+        while (true) {
+          const n = await conn.read(buffer);
+          if (n === null) break;
+          
+          const chunk = buffer.subarray(0, n);
+          chunks.push(chunk);
+          totalBytes += n;
+          
+          // Vérifier si on a reçu la fin d'une réponse SMTP (ligne se terminant par \r\n)
+          const text = decoder.decode(chunk);
+          if (text.includes('\r\n') && totalBytes > 0) {
+            break;
+          }
+          
+          // Limite de sécurité pour éviter les boucles infinies
+          if (totalBytes > 8192) break;
+        }
+        
+        // Concaténer tous les chunks
+        const allBytes = new Uint8Array(totalBytes);
+        let offset = 0;
+        for (const chunk of chunks) {
+          allBytes.set(chunk, offset);
+          offset += chunk.length;
+        }
+        
+        return decoder.decode(allBytes);
+      } catch (error) {
+        console.error('Error reading response:', error);
+        throw new Error('Failed to read SMTP response');
+      }
     };
 
     // Helper pour envoyer une commande
