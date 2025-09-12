@@ -65,13 +65,13 @@ const handler = async (req: Request): Promise<Response> => {
     const useStartTls = imapSecurity === 'starttls' || imapPort === 143;
 
     if (useStartTls) {
-      // Plain TCP first, we'll upgrade with STARTTLS
+      // Plain TCP d'abord, on passera en TLS avec STARTTLS ensuite
       conn = await Deno.connect({
         hostname: imapHost,
         port: imapPort || 143,
       });
     } else {
-      // Implicit TLS
+      // TLS implicite
       conn = await Deno.connectTls({
         hostname: imapHost,
         port: imapPort || 993,
@@ -160,15 +160,31 @@ const handler = async (req: Request): Promise<Response> => {
         throw new Error(`IMAP server not ready: ${response}`);
       }
 
+      // Si STARTTLS est requis, on l'initialise maintenant puis on relance CAPABILITY
+      if (useStartTls) {
+        response = await sendCommand('STARTTLS');
+        if (!/\bOK\b/.test(response)) {
+          throw new Error(`STARTTLS failed: ${response}`);
+        }
+        // Passage en TLS sur la connexion existante
+        // @ts-ignore - Deno.startTls existe dans l'environnement des Edge Functions
+        // et renvoie une connexion compatible avec Deno.Conn
+        // Certains environnements n'exposent pas les types, mais l'API est disponible à l'exécution
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        conn = await Deno.startTls(conn, { hostname: imapHost, port: imapPort || 143, serverName: imapHost });
+        // Après STARTTLS, la RFC recommande de renvoyer CAPABILITY
+      }
+
       // CAPABILITY
       response = await sendCommand('CAPABILITY');
-      if (!response.includes('A001 OK')) {
+      if (!/\bOK\b/.test(response)) {
         throw new Error(`CAPABILITY failed: ${response}`);
       }
 
-      // LOGIN
-      response = await sendCommand(`LOGIN ${imapUsername} ${imapPassword}`);
-      if (!response.includes('OK')) {
+      // LOGIN (entre guillemets pour gérer les caractères spéciaux)
+      response = await sendCommand(`LOGIN "${imapUsername}" "${imapPassword}"`);
+      if (!/\bOK\b/.test(response)) {
         throw new Error(`LOGIN failed: ${response}`);
       }
 
