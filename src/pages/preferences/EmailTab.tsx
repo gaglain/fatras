@@ -213,6 +213,44 @@ export const EmailTab: React.FC = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
+            <Server className="h-5 w-5" />
+            Réception d'emails via IMAP
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="p-4 bg-amber-50 dark:bg-amber-950 rounded-lg border border-amber-200 dark:border-amber-800">
+            <h4 className="font-medium text-amber-900 dark:text-amber-100 mb-2">
+              Paramètres IMAP détectés
+            </h4>
+            <div className="text-sm text-amber-800 dark:text-amber-200">
+              <p>Hôte: <strong>{emailConfig.imap_host || '—'}</strong></p>
+              <p>Port: <strong>{emailConfig.imap_port || '—'}</strong> • Sécurité: <strong>{emailConfig.imap_security || '—'}</strong></p>
+              {!emailConfig.imap_host && (
+                <p className="mt-2">Complétez vos paramètres IMAP dans cette page puis sauvegardez.</p>
+              )}
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={testImapConnection}
+              disabled={isSyncing}
+            >
+              <TestTube className="w-4 h-4 mr-2" />
+              {isSyncing ? 'Test...' : 'Tester la connexion'}
+            </Button>
+            <Button onClick={syncEmails} disabled={isSyncing}>
+              <RefreshCw className="w-4 h-4 mr-2" />
+              {isSyncing ? 'Synchronisation...' : 'Synchroniser maintenant'}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
             <ExternalLink className="h-5 w-5" />
             Configuration Resend
           </CardTitle>
