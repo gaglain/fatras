@@ -4,10 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Mail, Settings, Server, TestTube, ExternalLink } from 'lucide-react';
+import { Mail, Settings, Server, TestTube, ExternalLink, RefreshCw, Inbox } from 'lucide-react';
 import { EmailSignatureManager } from '@/components/email/EmailSignatureManager';
 import { EmailSmtpConfig } from '@/components/EmailSmtpConfig';
 import { useEmailSender } from '@/hooks/useEmailSender';
+import { useEmailSync } from '@/hooks/useEmailSync';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -15,6 +16,7 @@ import { useAuth } from '@/hooks/useAuth';
 export const EmailTab: React.FC = () => {
   const { user } = useAuth();
   const { sendEmail } = useEmailSender();
+  const { syncEmails, testImapConnection, isLoading: isSyncing } = useEmailSync();
   const [showSignatureManager, setShowSignatureManager] = useState(false);
   const [emailConfig, setEmailConfig] = useState({
     provider: 'ovh',
@@ -217,6 +219,81 @@ export const EmailTab: React.FC = () => {
               <p>3. <strong>Créez une clé API :</strong> <a href="https://resend.com/api-keys" target="_blank" className="underline">https://resend.com/api-keys</a></p>
               <p>4. <strong>Ajoutez votre clé dans les paramètres de l'application</strong></p>
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Server className="h-5 w-5" />
+            Configuration IMAP (Réception)
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="imap_host">Serveur IMAP</Label>
+              <Input
+                id="imap_host"
+                value={emailConfig.imap_host}
+                onChange={(e) => setEmailConfig(prev => ({ ...prev, imap_host: e.target.value }))}
+                placeholder="imap.example.com"
+              />
+            </div>
+            <div>
+              <Label htmlFor="imap_port">Port IMAP</Label>
+              <Input
+                id="imap_port"
+                value={emailConfig.imap_port}
+                onChange={(e) => setEmailConfig(prev => ({ ...prev, imap_port: e.target.value }))}
+                placeholder="993"
+              />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="imap_username">Nom d'utilisateur IMAP</Label>
+              <Input
+                id="imap_username"
+                value={emailConfig.imap_username}
+                onChange={(e) => setEmailConfig(prev => ({ ...prev, imap_username: e.target.value }))}
+                placeholder="votre@email.com"
+              />
+            </div>
+            <div>
+              <Label htmlFor="imap_password">Mot de passe IMAP</Label>
+              <Input
+                id="imap_password"
+                type="password"
+                value={emailConfig.imap_password}
+                onChange={(e) => setEmailConfig(prev => ({ ...prev, imap_password: e.target.value }))}
+                placeholder="Mot de passe"
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              onClick={testImapConnection}
+              disabled={isSyncing || !emailConfig.imap_host}
+              variant="outline"
+              className="flex-1"
+            >
+              <TestTube className="h-4 w-4 mr-2" />
+              {isSyncing ? 'Test en cours...' : 'Tester la connexion IMAP'}
+            </Button>
+            
+            <Button
+              onClick={syncEmails}
+              disabled={isSyncing || !emailConfig.imap_host}
+              variant="outline"
+              className="flex-1"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+              {isSyncing ? 'Synchronisation...' : 'Synchroniser les emails'}
+            </Button>
           </div>
         </CardContent>
       </Card>
