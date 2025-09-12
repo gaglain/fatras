@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { Webhook } from "npm:svix@1.21.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -33,60 +34,36 @@ const handler = async (req: Request): Promise<Response> => {
     const signingSecret = Deno.env.get('RESEND_SIGNING_SECRET')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Verify webhook signature
-    const signature = req.headers.get('resend-signature');
-    if (!signature) {
-      console.log('❌ Signature manquante');
-      return new Response(JSON.stringify({ error: 'Missing signature' }), {
+    // Verify webhook signature (Svix)
+    const svixId = req.headers.get('svix-id');
+    const svixTimestamp = req.headers.get('svix-timestamp');
+    const svixSignature = req.headers.get('svix-signature');
+
+    if (!svixId || !svixTimestamp || !svixSignature) {
+      console.log('❌ En-têtes Svix manquants');
+      return new Response(JSON.stringify({ error: 'Missing Svix headers' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json', ...corsHeaders },
       });
     }
 
     const body = await req.text();
-    
-    // Verify signature using crypto
-    const encoder = new TextEncoder();
-    const key = await crypto.subtle.importKey(
-      'raw',
-      encoder.encode(signingSecret),
-      { name: 'HMAC', hash: 'SHA-256' },
-      false,
-      ['verify']
-    );
 
-    const parts = signature.split(',');
-    const timestamp = parts.find(p => p.startsWith('t='))?.split('=')[1];
-    const expectedSignature = parts.find(p => p.startsWith('v1='))?.split('=')[1];
-    
-    if (!timestamp || !expectedSignature) {
-      console.log('❌ Format de signature invalide');
-      return new Response(JSON.stringify({ error: 'Invalid signature format' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders },
-      });
-    }
-
-    const signedPayload = `${timestamp}.${body}`;
-    const actualSignature = await crypto.subtle.sign(
-      'HMAC',
-      key,
-      encoder.encode(signedPayload)
-    );
-
-    const actualSignatureHex = Array.from(new Uint8Array(actualSignature))
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('');
-
-    if (actualSignatureHex !== expectedSignature) {
-      console.log('❌ Signature invalide');
+    let payload: ResendWebhookPayload;
+    try {
+      const wh = new Webhook(signingSecret);
+      payload = wh.verify(body, {
+        'svix-id': svixId,
+        'svix-timestamp': svixTimestamp,
+        'svix-signature': svixSignature,
+      }) as ResendWebhookPayload;
+    } catch (err: any) {
+      console.log('❌ Signature invalide:', err?.message || err);
       return new Response(JSON.stringify({ error: 'Invalid signature' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json', ...corsHeaders },
       });
     }
-
-    const payload: ResendWebhookPayload = JSON.parse(body);
     
     console.log('📧 Resend webhook received:', payload.type);
 
