@@ -27,7 +27,7 @@ export const EmailTestComponent = () => {
         throw new Error('Utilisateur non connecté');
       }
 
-      const { data, error } = await supabase.functions.invoke('send-email-ovh', {
+      const { data, error } = await supabase.functions.invoke('send-email-resend', {
         body: { 
           to: [email],
           subject: 'Test d\'envoi SMTP',

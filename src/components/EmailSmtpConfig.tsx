@@ -91,7 +91,7 @@ export const EmailSmtpConfig = () => {
 
     setTestLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('send-email-ovh', {
+      const { data, error } = await supabase.functions.invoke('send-email-resend', {
         body: {
           to: [user.email],
           subject: 'Test de configuration SMTP',
@@ -121,20 +121,20 @@ export const EmailSmtpConfig = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Mail className="h-5 w-5" />
-          Configuration SMTP
+          Configuration Email (Resend)
         </CardTitle>
         <CardDescription>
-          Configurez votre serveur SMTP pour envoyer des emails. OVH recommandé.
+          Envoi d'emails via Resend - Service professionnel et fiable.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <Alert>
           <AlertDescription>
-            <strong>Configuration OVH recommandée :</strong><br />
-            • Serveur SMTP : ssl0.ovh.net<br />
-            • Port : 587<br />
-            • Utilisateur : votre adresse email complète<br />
-            • Mot de passe : votre mot de passe email
+            <strong>Envoi d'emails via Resend :</strong><br />
+            • Service professionnel fiable<br />
+            • Livraison garantie<br />
+            • Configuration automatique<br />
+            • Aucune config SMTP requise
           </AlertDescription>
         </Alert>
 

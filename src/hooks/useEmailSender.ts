@@ -21,8 +21,8 @@ export const useEmailSender = () => {
         throw new Error('Utilisateur non connecté');
       }
 
-      // Utiliser la fonction OVH avec l'ID utilisateur
-      const { data, error } = await supabase.functions.invoke('send-email-ovh', {
+      // Utiliser Resend pour l'envoi d'emails
+      const { data, error } = await supabase.functions.invoke('send-email-resend', {
         body: {
           to: emailData.to,
           subject: emailData.subject,

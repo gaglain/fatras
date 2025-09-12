@@ -166,9 +166,9 @@ export const EmailTab: React.FC = () => {
     switch (provider) {
       case 'ovh':
         return { 
-          smtp_host: 'ssl0.ovh.net', 
+          smtp_host: 'pro1.mail.ovh.net', 
           smtp_port: '587',
-          imap_host: 'ssl0.ovh.net',
+          imap_host: 'pro1.mail.ovh.net',
           imap_port: '993'
         };
       case 'gmail':
