@@ -61,18 +61,15 @@ export const FormBlock: React.FC<FormBlockProps> = ({ formId, customTitle }) => 
 
   const handleFormSubmit = async (submission: any) => {
     try {
-      // Sauvegarder la soumission dans la base de données
-      const { error } = await supabase
-        .from('form_submissions')
-        .insert({
-          form_id: formId,
-          data: submission.data,
-          submitted_at: submission.submittedAt
-        });
-
-      if (error) {
-        console.error('Erreur lors de la sauvegarde:', error);
-      }
+      // Sauvegarder localement pour l'instant
+      const submissions = JSON.parse(localStorage.getItem('form_submissions') || '[]');
+      submissions.push({
+        id: Math.random().toString(36).substr(2, 9),
+        form_id: formId,
+        data: submission.data,
+        submitted_at: submission.submittedAt
+      });
+      localStorage.setItem('form_submissions', JSON.stringify(submissions));
     } catch (error) {
       console.error('Erreur lors de la soumission:', error);
     }

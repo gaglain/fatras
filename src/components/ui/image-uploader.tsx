@@ -7,6 +7,7 @@ import { Upload, X, Image as ImageIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { ImageGallery } from '@/components/website/ImageGallery';
 
 interface ImageUploaderProps {
   onImageUploaded: (imageUrl: string) => void;
@@ -108,43 +109,53 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           </CardContent>
         </Card>
       ) : (
-        <Card className="border-2 border-dashed border-gray-300 hover:border-gray-400 transition-colors">
-          <CardContent className="p-6">
-            <div className="text-center">
-              <ImageIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <Label htmlFor="image-upload" className="cursor-pointer">
-                <div className="space-y-2">
-                  <p className="text-sm text-gray-600">
-                    Cliquez pour sélectionner une image
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    JPG, PNG, WebP ou GIF (max {maxSizeMB}MB)
-                  </p>
-                </div>
-              </Label>
-              <Input
-                id="image-upload"
-                type="file"
-                accept={acceptedTypes.join(',')}
-                onChange={handleFileSelect}
-                disabled={isUploading}
-                className="hidden"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                disabled={isUploading}
-                className="mt-4"
-                asChild
-              >
+        <div className="space-y-3">
+          <Card className="border-2 border-dashed border-gray-300 hover:border-gray-400 transition-colors">
+            <CardContent className="p-6">
+              <div className="text-center">
+                <ImageIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <Label htmlFor="image-upload" className="cursor-pointer">
-                  <Upload className="h-4 w-4 mr-2" />
-                  {isUploading ? 'Upload en cours...' : 'Sélectionner une image'}
+                  <div className="space-y-2">
+                    <p className="text-sm text-gray-600">
+                      Cliquez pour sélectionner une image
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      JPG, PNG, WebP ou GIF (max {maxSizeMB}MB)
+                    </p>
+                  </div>
                 </Label>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+                <Input
+                  id="image-upload"
+                  type="file"
+                  accept={acceptedTypes.join(',')}
+                  onChange={handleFileSelect}
+                  disabled={isUploading}
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={isUploading}
+                  className="mt-4"
+                  asChild
+                >
+                  <Label htmlFor="image-upload" className="cursor-pointer">
+                    <Upload className="h-4 w-4 mr-2" />
+                    {isUploading ? 'Upload en cours...' : 'Nouveau fichier'}
+                  </Label>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <ImageGallery 
+            onImageSelect={(url) => {
+              setPreviewUrl(url);
+              onImageUploaded(url);
+            }}
+            selectedImage={previewUrl}
+          />
+        </div>
       )}
     </div>
   );
