@@ -91,17 +91,51 @@ const defaultPages: WebPage[] = [
 ];
 
 export const PageManager: React.FC = () => {
-  const [pages, setPages] = useState<WebPage[]>(defaultPages);
+  const [pages, setPages] = useState<WebPage[]>([]);
   const [editingPage, setEditingPage] = useState<WebPage | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newPageData, setNewPageData] = useState({
     title: '',
     slug: '',
-    type: 'page' as WebPage['type']
+    type: 'page' as WebPage['type'],
+    status: 'draft' as WebPage['status']
   });
 
+  // Charger les pages au démarrage
   useEffect(() => {
+    loadPages();
+  }, []);
+
+  const loadPages = () => {
+    const savedPages = localStorage.getItem('websitePages');
+    if (savedPages) {
+      try {
+        const parsedPages = JSON.parse(savedPages);
+        setPages(parsedPages);
+      } catch (error) {
+        console.error('Error loading pages:', error);
+        setPages(defaultPages);
+        savePages(defaultPages);
+      }
+    } else {
+      setPages(defaultPages);
+      savePages(defaultPages);
+    }
+  };
+
+  const savePages = (pagesToSave: WebPage[]) => {
+    localStorage.setItem('websitePages', JSON.stringify(pagesToSave));
+    // Déclencher un événement pour synchroniser avec le front
+    window.dispatchEvent(new CustomEvent('websitePagesSaved', { detail: pagesToSave }));
+  };
+  const updatePage = (updatedPage: WebPage) => {
+    const updatedPages = pages.map(page => 
+      page.id === updatedPage.id ? updatedPage : page
+    );
+    setPages(updatedPages);
+    savePages(updatedPages);
+  };
     const savedPages = localStorage.getItem('website_pages');
     if (savedPages) {
       try {
