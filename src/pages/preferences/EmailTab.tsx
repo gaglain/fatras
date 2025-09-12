@@ -28,7 +28,7 @@ export const EmailTab: React.FC = () => {
     imap_port: '993',
     imap_username: '',
     imap_password: '',
-    imap_security: 'ssl',
+    imap_security: 'starttls',
     from_email: '',
     from_name: ''
   });
@@ -169,7 +169,7 @@ export const EmailTab: React.FC = () => {
           smtp_host: 'pro1.mail.ovh.net', 
           smtp_port: '587',
           imap_host: 'pro1.mail.ovh.net',
-          imap_port: '993'
+          imap_port: '143'
         };
       case 'gmail':
         return { 
