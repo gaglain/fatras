@@ -36,7 +36,7 @@ const handler = async (req: Request): Promise<Response> => {
       .from('app_settings')
       .select('setting_key, setting_value')
       .eq('user_id', userId)
-      .in('setting_key', ['imap_host', 'imap_port', 'imap_username', 'imap_password']);
+      .in('setting_key', ['imap_host', 'imap_port', 'imap_username', 'imap_password', 'imap_security']);
 
     const settingsMap = imapSettings?.reduce((acc: any, setting: any) => {
       acc[setting.setting_key] = setting.setting_value;
@@ -47,22 +47,37 @@ const handler = async (req: Request): Promise<Response> => {
     const imapPort = parseInt(settingsMap.imap_port || '993');
     const imapUsername = settingsMap.imap_username;
     const imapPassword = settingsMap.imap_password;
+    const imapSecurity = (settingsMap.imap_security || (imapPort === 143 ? 'starttls' : 'ssl')).toLowerCase();
 
-    console.log('📧 Configuration IMAP:', { host: imapHost, port: imapPort, user: imapUsername });
+    console.log('📧 Configuration IMAP:', { host: imapHost, port: imapPort, user: imapUsername, security: imapSecurity });
 
     if (!imapHost || !imapUsername || !imapPassword) {
       throw new Error('Configuration IMAP manquante dans les préférences utilisateur');
     }
 
-    // Établir la connexion IMAP (toujours TLS sur port 993)
+    // Établir la connexion IMAP (TLS implicite 993 ou STARTTLS 143)
     console.log('🔗 Connecting to IMAP server...');
-    const conn = await Deno.connectTls({
-      hostname: imapHost,
-      port: imapPort,
-    });
+    let conn: Deno.Conn;
 
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
+
+    const useStartTls = imapSecurity === 'starttls' || imapPort === 143;
+
+    if (useStartTls) {
+      // Plain TCP first, we'll upgrade with STARTTLS
+      conn = await Deno.connect({
+        hostname: imapHost,
+        port: imapPort || 143,
+      });
+    } else {
+      // Implicit TLS
+      conn = await Deno.connectTls({
+        hostname: imapHost,
+        port: imapPort || 993,
+        serverName: imapHost,
+      });
+    }
 
     // Helper pour lire la réponse IMAP
     const readResponse = async (): Promise<string> => {
