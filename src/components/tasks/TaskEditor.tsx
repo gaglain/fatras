@@ -11,6 +11,7 @@ import { useContacts } from '@/hooks/useContacts';
 import { useEvents } from '@/hooks/useEvents';
 import { useTasks, Task } from '@/hooks/useTasks';
 import { toast } from 'sonner';
+import { UniversalSearch } from '@/components/UniversalSearch';
 
 interface TaskEditorProps {
   task: Task;
@@ -43,6 +44,14 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
     tags: task.tags || []
   });
 
+  // États pour les éléments sélectionnés via recherche
+  const [selectedContact, setSelectedContact] = useState<any>(
+    task.contact_id ? contacts.find(c => c.id === task.contact_id) : null
+  );
+  const [selectedEvent, setSelectedEvent] = useState<any>(
+    task.event_id ? events.find(e => e.id === task.event_id) : null
+  );
+
   useEffect(() => {
     setFormData({
       title: task.title,
@@ -55,7 +64,10 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
       status: task.status,
       tags: task.tags || []
     });
-  }, [task]);
+    
+    setSelectedContact(task.contact_id ? contacts.find(c => c.id === task.contact_id) : null);
+    setSelectedEvent(task.event_id ? events.find(e => e.id === task.event_id) : null);
+  }, [task, contacts, events]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,8 +84,8 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
         title: formData.title,
         description: formData.description,
         assigned_to: formData.assigned_to !== 'none' ? formData.assigned_to : undefined,
-        contact_id: formData.contact_id !== 'none' ? formData.contact_id : undefined,
-        event_id: formData.event_id !== 'none' ? formData.event_id : undefined,
+        contact_id: selectedContact ? selectedContact.id : undefined,
+        event_id: selectedEvent ? selectedEvent.id : undefined,
         priority: formData.priority,
         status: formData.status,
         due_date: formData.due_date || undefined,
@@ -193,42 +205,48 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
 
           <div className="space-y-2">
             <Label htmlFor="contactId">Contact lié</Label>
-            <Select 
-              value={formData.contact_id} 
-              onValueChange={(value) => setFormData({ ...formData, contact_id: value })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un contact" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Aucun contact</SelectItem>
-                {contacts.map((contact) => (
-                  <SelectItem key={contact.id} value={contact.id}>
-                    {contact.first_name} {contact.last_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <UniversalSearch
+              filterTypes={['contact']}
+              onSelect={(item) => setSelectedContact(item.data)}
+              placeholder="Rechercher un contact..."
+              triggerText={selectedContact ? `${selectedContact.external_id || ''} ${selectedContact.first_name} ${selectedContact.last_name}`.trim() : "Rechercher un contact..."}
+            />
+            {selectedContact && (
+              <div className="text-sm text-muted-foreground mt-1">
+                Contact sélectionné: {selectedContact.external_id && `${selectedContact.external_id} - `}{selectedContact.first_name} {selectedContact.last_name}
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setSelectedContact(null)}
+                  className="ml-2 h-auto p-1"
+                >
+                  ✕
+                </Button>
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="eventId">Événement lié</Label>
-            <Select 
-              value={formData.event_id} 
-              onValueChange={(value) => setFormData({ ...formData, event_id: value })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un événement" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Aucun événement</SelectItem>
-                {events.map((event) => (
-                  <SelectItem key={event.id} value={event.id}>
-                    {event.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <UniversalSearch
+              filterTypes={['event']}
+              onSelect={(item) => setSelectedEvent(item.data)}
+              placeholder="Rechercher un événement..."
+              triggerText={selectedEvent ? `${selectedEvent.external_id || ''} ${selectedEvent.title}`.trim() : "Rechercher un événement..."}
+            />
+            {selectedEvent && (
+              <div className="text-sm text-muted-foreground mt-1">
+                Événement sélectionné: {selectedEvent.external_id && `${selectedEvent.external_id} - `}{selectedEvent.title}
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setSelectedEvent(null)}
+                  className="ml-2 h-auto p-1"
+                >
+                  ✕
+                </Button>
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">

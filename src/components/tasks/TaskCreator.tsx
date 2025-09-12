@@ -12,6 +12,7 @@ import { useContacts } from '@/hooks/useContacts';
 import { useEvents } from '@/hooks/useEvents';
 import { useTasks } from '@/hooks/useTasks';
 import { useCentralizedData } from '@/hooks/useCentralizedData';
+import { UniversalSearch } from '@/components/UniversalSearch';
 import { toast } from 'sonner';
 
 interface TaskCreatorProps {
@@ -48,6 +49,10 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
     relatedToType: (relatedToType || 'contact') as 'contact' | 'event' | 'contract' | 'opportunity'
   });
 
+  // États pour les éléments sélectionnés via recherche
+  const [selectedContact, setSelectedContact] = useState<any>(null);
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -67,8 +72,8 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
       const taskData = {
         user_id: currentUser?.id || '',
         assigned_to: formData.assignedTo !== 'none' ? formData.assignedTo : undefined,
-        contact_id: formData.contactId !== 'none' ? formData.contactId : undefined,
-        event_id: formData.eventId !== 'none' ? formData.eventId : undefined,
+        contact_id: selectedContact ? selectedContact.id : undefined,
+        event_id: selectedEvent ? selectedEvent.id : undefined,
         title: formData.title,
         description: formData.description,
         priority: formData.priority,
@@ -102,6 +107,8 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
         relatedToType: 'contact'
       });
       
+      setSelectedContact(null);
+      setSelectedEvent(null);
       setOpen(false);
     } catch (error) {
       console.error('Error creating task:', error);
@@ -211,42 +218,32 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
 
           <div className="space-y-2">
             <Label htmlFor="contactId">Contact lié</Label>
-            <Select 
-              value={formData.contactId} 
-              onValueChange={(value) => setFormData({ ...formData, contactId: value })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un contact" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Aucun contact</SelectItem>
-                {contacts.map((contact) => (
-                  <SelectItem key={contact.id} value={contact.id}>
-                    {contact.first_name} {contact.last_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <UniversalSearch
+              filterTypes={['contact']}
+              onSelect={(item) => setSelectedContact(item.data)}
+              placeholder="Rechercher un contact..."
+              triggerText={selectedContact ? `${selectedContact.external_id || ''} ${selectedContact.first_name} ${selectedContact.last_name}`.trim() : "Rechercher un contact..."}
+            />
+            {selectedContact && (
+              <div className="text-sm text-muted-foreground mt-1">
+                Contact sélectionné: {selectedContact.external_id && `${selectedContact.external_id} - `}{selectedContact.first_name} {selectedContact.last_name}
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="eventId">Événement lié</Label>
-            <Select 
-              value={formData.eventId} 
-              onValueChange={(value) => setFormData({ ...formData, eventId: value })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un événement" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Aucun événement</SelectItem>
-                {events.map((event) => (
-                  <SelectItem key={event.id} value={event.id}>
-                    {event.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <UniversalSearch
+              filterTypes={['event']}
+              onSelect={(item) => setSelectedEvent(item.data)}
+              placeholder="Rechercher un événement..."
+              triggerText={selectedEvent ? `${selectedEvent.external_id || ''} ${selectedEvent.title}`.trim() : "Rechercher un événement..."}
+            />
+            {selectedEvent && (
+              <div className="text-sm text-muted-foreground mt-1">
+                Événement sélectionné: {selectedEvent.external_id && `${selectedEvent.external_id} - `}{selectedEvent.title}
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
