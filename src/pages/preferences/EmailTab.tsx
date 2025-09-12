@@ -169,24 +169,27 @@ export const EmailTab: React.FC = () => {
           smtp_host: 'pro1.mail.ovh.net', 
           smtp_port: '587',
           imap_host: 'pro1.mail.ovh.net',
-          imap_port: '143'
-        };
+          imap_port: '993',
+          imap_security: 'ssl'
+        } as const;
       case 'gmail':
         return { 
           smtp_host: 'smtp.gmail.com', 
           smtp_port: '587',
           imap_host: 'imap.gmail.com',
-          imap_port: '993'
-        };
+          imap_port: '993',
+          imap_security: 'ssl'
+        } as const;
       case 'outlook':
         return { 
           smtp_host: 'smtp-mail.outlook.com', 
           smtp_port: '587',
           imap_host: 'outlook.office365.com',
-          imap_port: '993'
-        };
+          imap_port: '993',
+          imap_security: 'ssl'
+        } as const;
       default:
-        return { smtp_host: '', smtp_port: '587', imap_host: '', imap_port: '993' };
+        return { smtp_host: '', smtp_port: '587', imap_host: '', imap_port: '993', imap_security: 'ssl' } as const;
     }
   };
 
@@ -198,7 +201,8 @@ export const EmailTab: React.FC = () => {
       smtp_host: config.smtp_host,
       smtp_port: config.smtp_port,
       imap_host: config.imap_host,
-      imap_port: config.imap_port
+      imap_port: config.imap_port,
+      imap_security: config.imap_security
     }));
   };
 
