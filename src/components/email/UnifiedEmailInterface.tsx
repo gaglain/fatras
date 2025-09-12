@@ -16,7 +16,7 @@ import {
   Star, 
   Trash2, 
   Plus,
-  Refresh: RefreshCw,
+  RefreshCw,
   Settings,
   Eye,
   Clock
