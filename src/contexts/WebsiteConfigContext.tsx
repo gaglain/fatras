@@ -1,6 +1,15 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
+interface MenuItem {
+  id: string;
+  label: string;
+  path: string;
+  visible: boolean;
+  order: number;
+  isCustom?: boolean;
+}
+
 interface WebsiteConfig {
   // Branding
   siteName: string;
@@ -45,7 +54,18 @@ interface WebsiteConfig {
   // Maintenance
   enableMaintenanceMode: boolean;
   maintenanceMessage: string;
+  
+  // Menu
+  menuItems?: MenuItem[];
 }
+
+const defaultMenuItems: MenuItem[] = [
+  { id: '1', label: 'Accueil', path: '/front', visible: true, order: 1, isCustom: false },
+  { id: '2', label: 'Artistes', path: '/front/artists', visible: true, order: 2, isCustom: false },
+  { id: '3', label: 'Événements', path: '/front/events', visible: true, order: 3, isCustom: false },
+  { id: '4', label: 'Boutique', path: '/front/shop', visible: true, order: 4, isCustom: false },
+  { id: '5', label: 'Contact', path: '/front/contact', visible: true, order: 5, isCustom: false }
+];
 
 const defaultConfig: WebsiteConfig = {
   siteName: 'MusiConnect',
@@ -75,7 +95,8 @@ const defaultConfig: WebsiteConfig = {
   enableCookieConsent: true,
   cookieConsentText: 'Nous utilisons des cookies pour améliorer votre expérience.',
   enableMaintenanceMode: false,
-  maintenanceMessage: 'Site en maintenance. Nous reviendrons bientôt !'
+  maintenanceMessage: 'Site en maintenance. Nous reviendrons bientôt !',
+  menuItems: defaultMenuItems
 };
 
 interface WebsiteConfigContextType {
@@ -105,6 +126,20 @@ export const WebsiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({
         } catch (e) {
           console.warn('⚠️ Failed to parse saved config');
         }
+      }
+
+      // Charger et fusionner le menu depuis localStorage
+      const savedMenu = localStorage.getItem('websiteMenu');
+      if (savedMenu) {
+        try {
+          const parsedMenu = JSON.parse(savedMenu);
+          mergedConfig.menuItems = parsedMenu;
+        } catch (e) {
+          console.warn('⚠️ Failed to parse saved menu');
+          mergedConfig.menuItems = defaultMenuItems;
+        }
+      } else {
+        mergedConfig.menuItems = defaultMenuItems;
       }
       
       setConfig(mergedConfig);

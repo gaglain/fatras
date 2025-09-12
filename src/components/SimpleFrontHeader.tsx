@@ -36,34 +36,26 @@ export const SimpleFrontHeader: React.FC = () => {
             </h1>
           </div>
           <nav className="flex space-x-6">
-            <a 
-              href="/front" 
-              className="hover:opacity-80 transition-opacity"
-              style={{ color: config.linkColor }}
-            >
-              Accueil
-            </a>
-            <a 
-              href="/front/artistes" 
-              className="hover:opacity-80 transition-opacity"
-              style={{ color: config.linkColor }}
-            >
-              Artistes
-            </a>
-            <a 
-              href="/front/events" 
-              className="hover:opacity-80 transition-opacity"
-              style={{ color: config.linkColor }}
-            >
-              Événements
-            </a>
-            <a 
-              href="/front/contact" 
-              className="hover:opacity-80 transition-opacity"
-              style={{ color: config.linkColor }}
-            >
-              Contact
-            </a>
+            {config.menuItems?.filter(item => item.visible)
+              .sort((a, b) => a.order - b.order)
+              .map((item) => (
+                <a 
+                  key={item.id}
+                  href={item.path} 
+                  className="hover:opacity-80 transition-opacity"
+                  style={{ color: config.linkColor }}
+                >
+                  {item.label}
+                </a>
+              )) || (
+                // Menu par défaut si pas de menuItems
+                <>
+                  <a href="/front" className="hover:opacity-80 transition-opacity" style={{ color: config.linkColor }}>Accueil</a>
+                  <a href="/front/artistes" className="hover:opacity-80 transition-opacity" style={{ color: config.linkColor }}>Artistes</a>
+                  <a href="/front/events" className="hover:opacity-80 transition-opacity" style={{ color: config.linkColor }}>Événements</a>
+                  <a href="/front/contact" className="hover:opacity-80 transition-opacity" style={{ color: config.linkColor }}>Contact</a>
+                </>
+              )}
           </nav>
         </div>
       </div>

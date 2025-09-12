@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Globe, Settings, Eye, ExternalLink, Edit } from 'lucide-react';
 import { WebsiteConfigManager } from '@/components/WebsiteConfigManager';
 import { useWebsiteConfig } from '@/contexts/WebsiteConfigContext';
+import { WebsiteWithSidebar } from '@/components/website/WebsiteWithSidebar';
 
 export const Website: React.FC = () => {
   const [activeTab, setActiveTab] = useState('config');
@@ -23,34 +24,35 @@ export const Website: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 p-4 lg:p-0">
-      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold">Gestion du Site Web</h1>
-          <p className="mt-2 text-gray-600">
-            Configurez et personnalisez votre site web public
-          </p>
+    <WebsiteWithSidebar>
+      <div className="space-y-6 p-4 lg:p-6">
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold">Gestion du Site Web</h1>
+            <p className="mt-2 text-gray-600">
+              Configurez et personnalisez votre site web public
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+            <Button 
+              onClick={handlePreviewSite}
+              variant="outline"
+              className="flex items-center justify-center space-x-2"
+            >
+              <ExternalLink className="h-4 w-4" />
+              <span className="hidden sm:inline">Aperçu du site</span>
+              <span className="sm:hidden">Aperçu</span>
+            </Button>
+            <Button 
+              onClick={handleOpenEditor}
+              className="flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              <Edit className="h-4 w-4" />
+              <span className="hidden sm:inline">Éditeur de pages</span>
+              <span className="sm:hidden">Éditeur</span>
+            </Button>
+          </div>
         </div>
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
-          <Button 
-            onClick={handlePreviewSite}
-            variant="outline"
-            className="flex items-center justify-center space-x-2"
-          >
-            <ExternalLink className="h-4 w-4" />
-            <span className="hidden sm:inline">Aperçu du site</span>
-            <span className="sm:hidden">Aperçu</span>
-          </Button>
-          <Button 
-            onClick={handleOpenEditor}
-            className="flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            <Edit className="h-4 w-4" />
-            <span className="hidden sm:inline">Éditeur de pages</span>
-            <span className="sm:hidden">Éditeur</span>
-          </Button>
-        </div>
-      </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 gap-1">
@@ -88,7 +90,7 @@ export const Website: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="advanced">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
             <Button 
               onClick={() => navigate('/website-manager')} 
               variant="outline" 
@@ -104,14 +106,6 @@ export const Website: React.FC = () => {
             >
               <Edit className="h-8 w-8" />
               <span className="text-sm">Éditeur</span>
-            </Button>
-            <Button 
-              onClick={handlePreviewSite}
-              variant="outline"
-              className="h-24 flex flex-col items-center gap-2"
-            >
-              <Eye className="h-8 w-8" />
-              <span className="text-sm">Aperçu</span>
             </Button>
             <Button 
               onClick={handlePreviewSite}
@@ -184,6 +178,7 @@ export const Website: React.FC = () => {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+      </div>
+    </WebsiteWithSidebar>
   );
 };

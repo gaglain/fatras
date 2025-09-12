@@ -33,6 +33,7 @@ import { Merchandise } from "./pages/Merchandise";
 import { MerchandiseBackoffice } from "./pages/MerchandiseBackoffice";
 import { Website } from "./pages/Website";
 import { WebsiteManager } from "./pages/WebsiteManager";
+import { WebsiteBackoffice } from "./pages/WebsiteBackoffice";
 import { Application } from "./pages/Application";
 import { Quotes } from "./pages/Quotes";
 import { Layout } from "./components/Layout";
@@ -96,8 +97,9 @@ const App = () => {
                 <Route path="/agenda" element={<ProtectedRoute><Layout><Agenda /></Layout></ProtectedRoute>} />
                 <Route path="/merchandise" element={<ProtectedRoute><Layout><Merchandise /></Layout></ProtectedRoute>} />
                 <Route path="/merchandise-backoffice" element={<ProtectedRoute><Layout><MerchandiseBackoffice /></Layout></ProtectedRoute>} />
-                <Route path="/website" element={<ProtectedRoute><Layout><Website /></Layout></ProtectedRoute>} />
-                <Route path="/website-manager" element={<ProtectedRoute><Layout><WebsiteManager /></Layout></ProtectedRoute>} />
+                <Route path="/website" element={<ProtectedRoute><Website /></ProtectedRoute>} />
+                <Route path="/website-manager" element={<ProtectedRoute><WebsiteManager /></ProtectedRoute>} />
+                <Route path="/website-backoffice" element={<ProtectedRoute><WebsiteBackoffice /></ProtectedRoute>} />
                 <Route path="/application" element={<ProtectedRoute><Layout><Application /></Layout></ProtectedRoute>} />
                 <Route path="/quotes" element={<ProtectedRoute><Layout><Quotes /></Layout></ProtectedRoute>} />
                 <Route path="/preferences" element={<ProtectedRoute><Layout><Preferences /></Layout></ProtectedRoute>} />
