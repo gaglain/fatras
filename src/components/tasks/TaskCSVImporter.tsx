@@ -381,7 +381,7 @@ export const TaskCSVImporter: React.FC = () => {
                           <SelectValue placeholder="(Ignorer)" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">(Ignorer)</SelectItem>
+                          <SelectItem value="__ignore__">(Ignorer)</SelectItem>
                           {headers.map((h) => (
                             <SelectItem key={h} value={h}>{h}</SelectItem>
                           ))}
@@ -390,7 +390,7 @@ export const TaskCSVImporter: React.FC = () => {
                     </div>
                   ))}
                 </div>
-                {!columnMapping.title && (
+                {!(columnMapping.title && columnMapping.title !== '__ignore__') && (
                   <p className="text-xs text-red-600">Le champ Titre est requis.</p>
                 )}
                 {previewRows.length > 0 && (
@@ -401,7 +401,7 @@ export const TaskCSVImporter: React.FC = () => {
 
             <Button 
               onClick={importTasks}
-              disabled={importing || !columnMapping.title}
+              disabled={importing || !(columnMapping.title && columnMapping.title !== '__ignore__')}
               className="w-full"
             >
               {importing ? 'Import en cours...' : 'Importer les tâches'}
