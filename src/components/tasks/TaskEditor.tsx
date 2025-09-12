@@ -83,12 +83,12 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
       const updates = {
         title: formData.title,
         description: formData.description,
-        assigned_to: formData.assigned_to !== 'none' ? formData.assigned_to : undefined,
-        contact_id: selectedContact ? selectedContact.id : undefined,
-        event_id: selectedEvent ? selectedEvent.id : undefined,
+        assigned_to: formData.assigned_to && formData.assigned_to !== 'none' ? formData.assigned_to : null,
+        contact_id: selectedContact ? selectedContact.id : null,
+        event_id: selectedEvent ? selectedEvent.id : null,
         priority: formData.priority,
         status: formData.status,
-        due_date: formData.due_date || undefined,
+        due_date: formData.due_date || null,
         tags: formData.tags
       };
 

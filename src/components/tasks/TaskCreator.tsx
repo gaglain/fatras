@@ -71,15 +71,15 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
     try {
       const taskData = {
         user_id: currentUser?.id || '',
-        assigned_to: formData.assignedTo !== 'none' ? formData.assignedTo : undefined,
-        contact_id: selectedContact ? selectedContact.id : undefined,
-        event_id: selectedEvent ? selectedEvent.id : undefined,
+        assigned_to: formData.assignedTo && formData.assignedTo !== 'none' ? formData.assignedTo : null,
+        contact_id: selectedContact ? selectedContact.id : null,
+        event_id: selectedEvent ? selectedEvent.id : null,
         title: formData.title,
         description: formData.description,
         priority: formData.priority,
         status: formData.status === 'done' ? 'completed' : formData.status as 'todo' | 'in_progress' | 'completed',
         task_type: formData.taskType,
-        due_date: formData.dueDate || undefined,
+        due_date: formData.dueDate || null,
         tags: []
       };
 
