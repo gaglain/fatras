@@ -633,6 +633,7 @@ export type Database = {
           email: string | null
           event_id: string | null
           event_type_id: string | null
+          external_id: string | null
           first_name: string
           id: string
           last_name: string
@@ -658,6 +659,7 @@ export type Database = {
           email?: string | null
           event_id?: string | null
           event_type_id?: string | null
+          external_id?: string | null
           first_name: string
           id?: string
           last_name: string
@@ -683,6 +685,7 @@ export type Database = {
           email?: string | null
           event_id?: string | null
           event_type_id?: string | null
+          external_id?: string | null
           first_name?: string
           id?: string
           last_name?: string
@@ -1066,6 +1069,7 @@ export type Database = {
           description: string | null
           end_date: string | null
           event_type: string | null
+          external_id: string | null
           id: string
           notes: string | null
           postal_code: string | null
@@ -1089,6 +1093,7 @@ export type Database = {
           description?: string | null
           end_date?: string | null
           event_type?: string | null
+          external_id?: string | null
           id?: string
           notes?: string | null
           postal_code?: string | null
@@ -1112,6 +1117,7 @@ export type Database = {
           description?: string | null
           end_date?: string | null
           event_type?: string | null
+          external_id?: string | null
           id?: string
           notes?: string | null
           postal_code?: string | null

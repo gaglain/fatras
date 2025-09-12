@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 export interface Contact {
   id: string;
   user_id: string;
+  external_id?: string;
   first_name: string;
   last_name: string;
   email?: string;
@@ -46,6 +47,7 @@ export const useContacts = () => {
         const contactsData: Contact[] = data.map(contact => ({
           id: contact.id,
           user_id: contact.user_id,
+          external_id: contact.external_id || '',
           first_name: contact.first_name,
           last_name: contact.last_name,
           email: contact.email || '',
@@ -106,6 +108,7 @@ export const useContacts = () => {
       const newContact: Contact = {
         id: data.id,
         user_id: data.user_id,
+        external_id: data.external_id || '',
         first_name: data.first_name,
         last_name: data.last_name,
         email: data.email || '',

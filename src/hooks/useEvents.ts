@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 export interface Event {
   id: string;
   user_id: string;
+  external_id?: string;
   contact_id?: string;
   title: string;
   description?: string;
@@ -45,6 +46,7 @@ export const useEvents = () => {
         const eventsData: Event[] = data.map(event => ({
           id: event.id,
           user_id: event.user_id,
+          external_id: event.external_id || '',
           contact_id: event.contact_id || undefined,
           title: event.title,
           description: event.description || '',
@@ -103,6 +105,7 @@ export const useEvents = () => {
       const newEvent: Event = {
         id: data.id,
         user_id: data.user_id,
+        external_id: data.external_id || '',
         contact_id: data.contact_id || undefined,
         title: data.title,
         description: data.description || '',

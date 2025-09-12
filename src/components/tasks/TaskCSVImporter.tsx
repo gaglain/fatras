@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useUser } from '@/contexts/UserContext';
 import { useContacts } from '@/hooks/useContacts';
+import { useEvents } from '@/hooks/useEvents';
 
 interface CSVTask {
   title: string;
@@ -36,6 +37,7 @@ export const TaskCSVImporter: React.FC = () => {
   const { user } = useAuth();
   const { users } = useUser();
   const { contacts } = useContacts();
+  const { events } = useEvents();
 
   const [headers, setHeaders] = useState<string[]>([]);
   const [columnMapping, setColumnMapping] = useState<Record<string, string>>({});
@@ -139,7 +141,20 @@ export const TaskCSVImporter: React.FC = () => {
     const match = contacts.find(c =>
       c.id === value ||
       (c.email && norm(c.email) === v) ||
+      (c.external_id && norm(c.external_id) === v) ||
       norm(`${c.first_name} ${c.last_name}`.trim()) === v
+    );
+    return match?.id;
+  };
+
+  const resolveEventId = (value?: string): string | undefined => {
+    if (!value) return undefined;
+    if (isUUID(value)) return value;
+    const v = norm(value);
+    const match = events.find(e =>
+      e.id === value ||
+      (e.external_id && norm(e.external_id) === v) ||
+      norm(e.title) === v
     );
     return match?.id;
   };
@@ -315,7 +330,7 @@ export const TaskCSVImporter: React.FC = () => {
           const resolvedAssigned = resolveUserId(csvTask.assigned_to);
           const resolvedContact = resolveContactId(csvTask.contact_id);
           const resolvedDue = csvTask.due_date ? (toISODateString(csvTask.due_date) ?? csvTask.due_date) : undefined;
-          const resolvedEvent = isUUID(csvTask.event_id || '') ? csvTask.event_id : undefined;
+          const resolvedEvent = resolveEventId(csvTask.event_id);
           const resolvedArtist = isUUID(csvTask.artist_id || '') ? csvTask.artist_id : undefined;
           
           const taskData: Omit<Task, 'id' | 'created_at' | 'updated_at'> = {
