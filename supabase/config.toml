@@ -7,5 +7,8 @@ schemas = ["public", "storage", "graphql_public"]
 extra_search_path = ["public", "extensions"]
 max_rows = 1000
 
+[functions.resend-webhook]
+verify_jwt = false
+
 [functions.send-email-ovh]
 verify_jwt = false

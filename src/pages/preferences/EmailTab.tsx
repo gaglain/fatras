@@ -235,98 +235,57 @@ export const EmailTab: React.FC = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Server className="h-5 w-5" />
-            Configuration IMAP (Réception)
+            <Inbox className="h-5 w-5" />
+            Réception d'emails via Resend
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="imap_host">Serveur IMAP</Label>
-              <Input
-                id="imap_host"
-                value={emailConfig.imap_host}
-                onChange={(e) => setEmailConfig(prev => ({ ...prev, imap_host: e.target.value }))}
-                placeholder="imap.example.com"
-              />
-            </div>
-            <div>
-              <Label htmlFor="imap_port">Port IMAP</Label>
-              <Input
-                id="imap_port"
-                value={emailConfig.imap_port}
-                onChange={(e) => setEmailConfig(prev => ({ ...prev, imap_port: e.target.value }))}
-                placeholder="993"
-              />
+          <div className="p-4 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-800">
+            <h4 className="font-medium text-green-900 dark:text-green-100 mb-2">
+              Configuration automatique des emails entrants
+            </h4>
+            <div className="text-sm text-green-700 dark:text-green-300 space-y-2">
+              <p>✅ <strong>Webhook configuré automatiquement</strong></p>
+              <p>📧 <strong>URL webhook:</strong> https://nhoemjarkxqwruupqgyd.supabase.co/functions/v1/resend-webhook</p>
+              <p>🔧 <strong>Configuration dans Resend:</strong></p>
+              <ol className="list-decimal list-inside ml-4 space-y-1">
+                <li>Allez sur <a href="https://resend.com/webhooks" target="_blank" className="underline font-medium">resend.com/webhooks</a></li>
+                <li>Créez un nouveau webhook avec l'URL ci-dessus</li>
+                <li>Sélectionnez l'événement "email.received"</li>
+                <li>Configurez votre domaine pour recevoir des emails</li>
+              </ol>
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="imap_security">Sécurité IMAP</Label>
-            <Select
-              value={emailConfig.imap_security}
-              onValueChange={(value) => setEmailConfig(prev => ({ ...prev, imap_security: value }))}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ssl">SSL/TLS (port 993)</SelectItem>
-                <SelectItem value="starttls">STARTTLS (port 143)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="imap_username">Nom d'utilisateur IMAP</Label>
-              <Input
-                id="imap_username"
-                value={emailConfig.imap_username}
-                onChange={(e) => setEmailConfig(prev => ({ ...prev, imap_username: e.target.value }))}
-                placeholder="votre@email.com"
-              />
-            </div>
-            <div>
-              <Label htmlFor="imap_password">Mot de passe IMAP</Label>
-              <Input
-                id="imap_password"
-                type="password"
-                value={emailConfig.imap_password}
-                onChange={(e) => setEmailConfig(prev => ({ ...prev, imap_password: e.target.value }))}
-                placeholder="Mot de passe"
-              />
+          <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
+            <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
+              Instructions pour recevoir des emails
+            </h4>
+            <div className="text-sm text-blue-700 dark:text-blue-300 space-y-2">
+              <p>1. <strong>Domaine vérifié:</strong> Votre domaine doit être vérifié dans Resend</p>
+              <p>2. <strong>MX Records:</strong> Configurez les enregistrements MX pour votre domaine</p>
+              <p>3. <strong>Email utilisateur:</strong> L'email de destination doit correspondre à un utilisateur de votre application</p>
+              <p>4. <strong>Réception automatique:</strong> Les emails arriveront automatiquement dans votre boîte de réception</p>
             </div>
           </div>
 
           <div className="flex gap-2">
             <Button
-              onClick={saveEmailConfig}
-              disabled={isLoading}
-              className="flex-1"
-            >
-              <Settings className="h-4 w-4 mr-2" />
-              {isLoading ? 'Sauvegarde...' : 'Sauvegarder'}
-            </Button>
-
-            <Button
-              onClick={testImapConnection}
-              disabled={isSyncing || !emailConfig.imap_host}
+              onClick={() => window.open('https://resend.com/webhooks', '_blank')}
               variant="outline"
               className="flex-1"
             >
-              <TestTube className="h-4 w-4 mr-2" />
-              {isSyncing ? 'Test en cours...' : 'Tester la connexion IMAP'}
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Configurer les webhooks Resend
             </Button>
             
             <Button
-              onClick={syncEmails}
-              disabled={isSyncing || !emailConfig.imap_host}
+              onClick={() => window.open('https://resend.com/domains', '_blank')}
               variant="outline"
               className="flex-1"
             >
-              <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
-              {isSyncing ? 'Synchronisation...' : 'Synchroniser les emails'}
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Gérer les domaines Resend
             </Button>
           </div>
         </CardContent>
