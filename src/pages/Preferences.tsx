@@ -13,6 +13,7 @@ import { CustomColorsForm } from "./preferences/CustomColorsForm";
 import { GoogleCalendarTab } from "./preferences/GoogleCalendarTab";
 import { GmailTab } from "./preferences/GmailTab";
 import { EmailTestComponent } from '@/components/EmailTestComponent';
+import { EmailInbox } from '@/components/EmailInbox';
 import {
   CompanyTab,
   AppearanceTab,
@@ -83,6 +84,7 @@ export const Preferences: React.FC = () => {
         <TabsContent value="email" className="space-y-6">
           <EmailTab />
           <EmailTestComponent />
+          <EmailInbox />
         </TabsContent>
         <TabsContent value="calendar" className="space-y-4">
           <GoogleCalendarTab />

@@ -27,9 +27,11 @@ export const EmailTestComponent = () => {
         throw new Error('Utilisateur non connecté');
       }
 
-      const { data, error } = await supabase.functions.invoke('test-email-ovh', {
+      const { data, error } = await supabase.functions.invoke('send-email-ovh', {
         body: { 
-          to: email,
+          to: [email],
+          subject: 'Test d\'envoi SMTP',
+          html: `<p>Email de test envoyé le ${new Date().toLocaleString('fr-FR')}</p>`,
           userId: user.id
         }
       });
@@ -42,7 +44,7 @@ export const EmailTestComponent = () => {
       if (data.success) {
         toast.success('Email de test envoyé avec succès !');
       } else {
-        toast.error('Échec de l\'envoi de l\'email de test');
+        toast.error(data.error || 'Échec de l\'envoi de l\'email de test');
       }
     } catch (error: any) {
       console.error('Erreur test email:', error);

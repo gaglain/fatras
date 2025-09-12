@@ -28,6 +28,7 @@ export const EmailTab: React.FC = () => {
     imap_port: '993',
     imap_username: '',
     imap_password: '',
+    imap_security: 'ssl',
     from_email: '',
     from_name: ''
   });
@@ -46,7 +47,7 @@ export const EmailTab: React.FC = () => {
         .from('app_settings')
         .select('setting_key, setting_value')
         .eq('user_id', user.id)
-        .in('setting_key', ['email_provider', 'smtp_host', 'smtp_port', 'smtp_username', 'imap_host', 'imap_port', 'imap_username', 'from_email', 'from_name']);
+        .in('setting_key', ['email_provider', 'smtp_host', 'smtp_port', 'smtp_username', 'smtp_password', 'imap_host', 'imap_port', 'imap_username', 'imap_password', 'imap_security', 'from_email', 'from_name']);
       
       if (error) throw error;
       
@@ -56,9 +57,12 @@ export const EmailTab: React.FC = () => {
         if (setting.setting_key === 'smtp_host') config.smtp_host = setting.setting_value;
         if (setting.setting_key === 'smtp_port') config.smtp_port = setting.setting_value;
         if (setting.setting_key === 'smtp_username') config.smtp_username = setting.setting_value;
+        if (setting.setting_key === 'smtp_password') config.smtp_password = setting.setting_value;
         if (setting.setting_key === 'imap_host') config.imap_host = setting.setting_value;
         if (setting.setting_key === 'imap_port') config.imap_port = setting.setting_value;
         if (setting.setting_key === 'imap_username') config.imap_username = setting.setting_value;
+        if (setting.setting_key === 'imap_password') config.imap_password = setting.setting_value;
+        if (setting.setting_key === 'imap_security') config.imap_security = (setting.setting_value || 'ssl');
         if (setting.setting_key === 'from_email') config.from_email = setting.setting_value;
         if (setting.setting_key === 'from_name') config.from_name = setting.setting_value;
       });
@@ -81,6 +85,7 @@ export const EmailTab: React.FC = () => {
         { setting_key: 'imap_host', setting_value: emailConfig.imap_host },
         { setting_key: 'imap_port', setting_value: emailConfig.imap_port },
         { setting_key: 'imap_username', setting_value: emailConfig.imap_username },
+        { setting_key: 'imap_security', setting_value: emailConfig.imap_security },
         { setting_key: 'from_email', setting_value: emailConfig.from_email },
         { setting_key: 'from_name', setting_value: emailConfig.from_name }
       ];
@@ -250,6 +255,22 @@ export const EmailTab: React.FC = () => {
                 placeholder="993"
               />
             </div>
+          </div>
+
+          <div>
+            <Label htmlFor="imap_security">Sécurité IMAP</Label>
+            <Select
+              value={emailConfig.imap_security}
+              onValueChange={(value) => setEmailConfig(prev => ({ ...prev, imap_security: value }))}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ssl">SSL/TLS (port 993)</SelectItem>
+                <SelectItem value="starttls">STARTTLS (port 143)</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           
           <div className="grid grid-cols-2 gap-4">
