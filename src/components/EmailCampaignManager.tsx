@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useEmailSystem } from '@/hooks/useEmailSystem';
+import { useEmailCampaigns } from '@/hooks/useEmailCampaigns';
 import { useContactLists } from '@/hooks/useContactLists';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,7 +27,7 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({
   campaignId,
   onBack
 }) => {
-  const { campaigns, templates, createCampaign, updateCampaign } = useEmailSystem();
+  const { campaigns, templates, createCampaign, updateCampaign } = useEmailCampaigns();
   const { contactLists } = useContactLists();
   
   const existingCampaign = campaignId ? campaigns.find(c => c.id === campaignId) : null;

@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useEmailSystem } from '@/hooks/useEmailSystem';
+import { useEmailCampaigns } from '@/hooks/useEmailCampaigns';
 import { useEmailTracking } from '@/hooks/useEmailTracking';
 import { supabase } from '@/integrations/supabase/client';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -35,7 +35,7 @@ interface EventData {
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--muted))', 'hsl(var(--accent))'];
 
 export const EmailAnalytics: React.FC = () => {
-  const { campaigns } = useEmailSystem();
+  const { campaigns } = useEmailCampaigns();
   const [selectedCampaign, setSelectedCampaign] = useState<string>('all');
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData[]>([]);
   const [eventHistory, setEventHistory] = useState<EventData[]>([]);
