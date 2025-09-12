@@ -35,22 +35,26 @@ export const MenuManager: React.FC = () => {
   });
 
   useEffect(() => {
-    const savedMenu = localStorage.getItem('website_menu');
+    const savedMenu = localStorage.getItem('websiteMenu') || localStorage.getItem('website_menu');
     if (savedMenu) {
       try {
         setMenuItems(JSON.parse(savedMenu));
       } catch (error) {
         console.error('Erreur chargement menu:', error);
+        localStorage.setItem('websiteMenu', JSON.stringify(defaultMenuItems));
         localStorage.setItem('website_menu', JSON.stringify(defaultMenuItems));
       }
     } else {
+      localStorage.setItem('websiteMenu', JSON.stringify(defaultMenuItems));
       localStorage.setItem('website_menu', JSON.stringify(defaultMenuItems));
     }
   }, []);
 
   const saveMenu = () => {
-    localStorage.setItem('website_menu', JSON.stringify(menuItems));
-    // Déclencher la synchronisation pour le front
+    localStorage.setItem('websiteMenu', JSON.stringify(menuItems));
+    localStorage.setItem('website_menu', JSON.stringify(menuItems)); // compat
+    // Déclencher la synchronisation pour le front (nouveau + compat)
+    window.dispatchEvent(new CustomEvent('websiteMenuUpdated', { detail: menuItems }));
     window.dispatchEvent(new CustomEvent('menuUpdated', { detail: menuItems }));
     toast.success('Menu sauvegardé avec succès');
   };

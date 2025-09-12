@@ -53,20 +53,30 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
     console.log('🎯 FrontLayout mounted - Starting sync');
     
     const loadSettings = () => {
-      const savedSettings = localStorage.getItem('websiteSettings');
-      if (savedSettings) {
-        try {
-          const parsed = JSON.parse(savedSettings);
-          console.log('⚙️ FrontLayout - Settings loaded:', parsed.siteName);
-          setSettings(prev => ({ ...prev, ...parsed }));
-          
-          // Mettre à jour le titre de la page
-          if (parsed.siteName) {
-            document.title = parsed.siteName;
-          }
-        } catch (error) {
-          console.error('❌ FrontLayout - Error loading settings:', error);
+      // 1) Nouvelle clé back-office
+      const savedSiteSettings = localStorage.getItem('site_settings');
+      // 2) Ancienne/standard clé
+      const savedWebsiteSettings = localStorage.getItem('websiteSettings');
+
+      try {
+        let merged: any = { ...settings };
+        if (savedWebsiteSettings) {
+          const parsed = JSON.parse(savedWebsiteSettings);
+          merged = { ...merged, ...parsed };
         }
+        if (savedSiteSettings) {
+          const parsedSite = JSON.parse(savedSiteSettings);
+          // Fusion prioritaire depuis le back-office SiteSettings
+          merged = {
+            ...merged,
+            ...parsedSite,
+            socialLinks: { ...(merged.socialLinks || {}), ...(parsedSite.socialLinks || {}) }
+          };
+        }
+        setSettings(merged);
+        if (merged.siteName) document.title = merged.siteName;
+      } catch (error) {
+        console.error('❌ FrontLayout - Error loading settings:', error);
       }
     };
 
@@ -92,7 +102,7 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
     };
 
     const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === 'websiteSettings' || event.key === 'websiteDesign') {
+      if (event.key === 'websiteSettings' || event.key === 'websiteDesign' || event.key === 'site_settings' || event.key === 'websiteConfig') {
         console.log('💾 FrontLayout - Storage change detected for:', event.key);
         setTimeout(loadSettings, 100);
       }
@@ -100,6 +110,7 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
 
     // Écouter tous les types d'événements possibles
     window.addEventListener('websiteSettingsUpdated', handleSettingsUpdate);
+    window.addEventListener('siteSettingsUpdated', handleSettingsUpdate);
     window.addEventListener('websiteDesignUpdated', handleSettingsUpdate);
     window.addEventListener('websiteSettingsSaved', handleSettingsUpdate);
     window.addEventListener('storage', handleStorageChange);

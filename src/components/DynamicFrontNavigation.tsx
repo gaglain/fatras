@@ -26,19 +26,22 @@ export const DynamicFrontNavigation: React.FC = () => {
     setIsLoading(true);
     
     try {
-      // Charger le menu
-      const savedMenu = localStorage.getItem('websiteMenu');
-      if (savedMenu) {
-        const menu = JSON.parse(savedMenu);
+      // Charger le menu (compat: websiteMenu | website_menu) et mapper url -> path
+      const rawMenu = localStorage.getItem('websiteMenu') || localStorage.getItem('website_menu');
+      if (rawMenu) {
+        const menu = JSON.parse(rawMenu).map((item: any) => ({
+          ...item,
+          path: item.path || item.url // normaliser
+        }));
         const visibleItems = menu
-          .filter((item: MenuItem) => item.visible)
-          .sort((a: MenuItem, b: MenuItem) => a.order - b.order);
+          .filter((item: any) => item.visible)
+          .sort((a: any, b: any) => a.order - b.order);
         setMenuItems(visibleItems);
         console.log('✅ Navigation - Menu loaded:', visibleItems.length, 'items');
       }
 
-      // Charger les paramètres
-      const savedSettings = localStorage.getItem('websiteSettings');
+      // Charger les paramètres (compat: websiteSettings | site_settings)
+      const savedSettings = localStorage.getItem('websiteSettings') || localStorage.getItem('site_settings');
       if (savedSettings) {
         const settings = JSON.parse(savedSettings);
         if (settings.siteName) {
@@ -111,7 +114,7 @@ export const DynamicFrontNavigation: React.FC = () => {
     };
 
     const handleStorageChange = (event: StorageEvent) => {
-      if (['websiteMenu', 'websiteSettings', 'websiteDesign'].includes(event.key || '')) {
+      if (['websiteMenu', 'website_menu', 'websiteSettings', 'site_settings', 'websiteDesign'].includes(event.key || '')) {
         console.log('💾 Navigation - Storage change detected:', event.key);
         setTimeout(loadAllData, 200);
       }
@@ -119,7 +122,9 @@ export const DynamicFrontNavigation: React.FC = () => {
 
     // Event listeners
     window.addEventListener('websiteMenuUpdated', handleMenuUpdate as EventListener);
+    window.addEventListener('menuUpdated', handleMenuUpdate as EventListener);
     window.addEventListener('websiteSettingsUpdated', handleSettingsUpdate as EventListener);
+    window.addEventListener('siteSettingsUpdated', handleSettingsUpdate as EventListener);
     window.addEventListener('websiteDesignUpdated', handleDesignUpdate as EventListener);
     window.addEventListener('storage', handleStorageChange);
 
