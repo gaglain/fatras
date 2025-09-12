@@ -220,18 +220,75 @@ export const EmailTab: React.FC = () => {
         <CardContent className="space-y-4">
           <div className="p-4 bg-amber-50 dark:bg-amber-950 rounded-lg border border-amber-200 dark:border-amber-800">
             <h4 className="font-medium text-amber-900 dark:text-amber-100 mb-2">
-              Paramètres IMAP détectés
+              Paramètres IMAP recommandés (OVH)
             </h4>
-            <div className="text-sm text-amber-800 dark:text-amber-200">
-              <p>Hôte: <strong>{emailConfig.imap_host || '—'}</strong></p>
-              <p>Port: <strong>{emailConfig.imap_port || '—'}</strong> • Sécurité: <strong>{emailConfig.imap_security || '—'}</strong></p>
-              {!emailConfig.imap_host && (
-                <p className="mt-2">Complétez vos paramètres IMAP dans cette page puis sauvegardez.</p>
-              )}
+            <div className="text-sm text-amber-800 dark:text-amber-200 space-y-1">
+              <p>Hôte conseillé: <strong>pro1.mail.ovh.net</strong></p>
+              <p>Port: <strong>993</strong> • Sécurité: <strong>SSL/TLS</strong></p>
+              <p className="mt-2">Mettez à jour ci-dessous puis « Sauvegarder », ensuite testez et synchronisez.</p>
             </div>
           </div>
 
-          <div className="flex gap-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="imap_host">Serveur IMAP</Label>
+              <Input
+                id="imap_host"
+                value={emailConfig.imap_host}
+                onChange={(e) => setEmailConfig(prev => ({ ...prev, imap_host: e.target.value }))}
+                placeholder="pro1.mail.ovh.net"
+              />
+            </div>
+            <div>
+              <Label htmlFor="imap_port">Port</Label>
+              <Input
+                id="imap_port"
+                value={emailConfig.imap_port}
+                onChange={(e) => setEmailConfig(prev => ({ ...prev, imap_port: e.target.value }))}
+                placeholder="993"
+              />
+            </div>
+            <div>
+              <Label htmlFor="imap_username">Utilisateur (email)</Label>
+              <Input
+                id="imap_username"
+                type="email"
+                value={emailConfig.imap_username}
+                onChange={(e) => setEmailConfig(prev => ({ ...prev, imap_username: e.target.value }))}
+                placeholder="votre@email.com"
+              />
+            </div>
+            <div>
+              <Label htmlFor="imap_password">Mot de passe</Label>
+              <Input
+                id="imap_password"
+                type="password"
+                value={emailConfig.imap_password}
+                onChange={(e) => setEmailConfig(prev => ({ ...prev, imap_password: e.target.value }))}
+                placeholder="••••••••"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <Label>Sécurité</Label>
+              <Select
+                value={emailConfig.imap_security}
+                onValueChange={(v) => setEmailConfig(prev => ({ ...prev, imap_security: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionnez la sécurité" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ssl">SSL/TLS (993)</SelectItem>
+                  <SelectItem value="starttls">STARTTLS (143)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={saveEmailConfig} disabled={isLoading}>
+              {isLoading ? 'Sauvegarde...' : 'Sauvegarder'}
+            </Button>
             <Button 
               variant="outline" 
               onClick={testImapConnection}
