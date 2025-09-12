@@ -73,11 +73,18 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     
     const fetchUsers = async () => {
       try {
-        const { data: profiles } = await supabase
+        console.log('🔄 Attempting to fetch user profiles...');
+        const { data: profiles, error } = await supabase
           .from('user_profiles')
           .select('*');
         
+        if (error) {
+          console.error('❌ Error fetching user profiles:', error);
+          return;
+        }
+        
         if (profiles && isMounted) {
+          console.log('✅ Successfully fetched profiles:', profiles.length);
           const usersData: User[] = profiles.map(profile => ({
             id: profile.user_id,
             name: profile.first_name || '',
@@ -100,9 +107,12 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             show_name: profile.show_name || ''
           }));
           setUsers(usersData);
+          console.log('✅ Users data set successfully');
         }
       } catch (error) {
-        console.warn('⚠️ Error fetching users:', error);
+        console.error('❌ Critical error fetching users:', error);
+        // Don't block the app, just set empty users
+        setUsers([]);
       }
     };
 

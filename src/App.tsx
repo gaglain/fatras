@@ -40,6 +40,7 @@ import { Layout } from "./components/Layout";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { UserProvider } from "./contexts/UserContext";
 import { WebsiteConfigProvider } from "./contexts/WebsiteConfigContext";
+import { ErrorBoundary } from "react-error-boundary";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -55,7 +56,19 @@ const App = () => {
   console.log('🚀 App starting - WITH ALL ROUTES...');
   
   return (
-    <QueryClientProvider client={queryClient}>
+    <ErrorBoundary
+      fallback={
+        <div style={{ padding: '20px', textAlign: 'center', color: 'red' }}>
+          <h1>Application Error</h1>
+          <p>Something went wrong loading the application.</p>
+          <p>Please refresh the page or contact support.</p>
+        </div>
+      }
+      onError={(error) => {
+        console.error('💥 React Error Boundary caught error:', error);
+      }}
+    >
+      <QueryClientProvider client={queryClient}>
       <ThemeProvider 
         attribute="class"
         defaultTheme="light"
@@ -112,6 +125,7 @@ const App = () => {
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
+  </ErrorBoundary>
   );
 };
 
