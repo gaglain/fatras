@@ -1,9 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ImageUploader } from '@/components/ui/image-uploader';
 import { 
   ArrowLeft, 
   Save, 
@@ -22,10 +24,13 @@ import {
   Layout
 } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 
 interface Block {
   id: string;
-  type: 'text' | 'image' | 'video' | 'hero' | 'artists-grid' | 'events-list' | 'shop-products' | 'contact-form' | 'columns';
+  type: 'text' | 'image' | 'video' | 'hero' | 'artists-grid' | 'events-list' | 'shop-products' | 'contact-form' | 'form' | 'columns';
   content: any;
   order: number;
 }
@@ -60,7 +65,8 @@ const blockTypes = [
   { type: 'artists-grid', label: 'Grille Artistes', icon: Users, description: 'Affichage des artistes' },
   { type: 'events-list', label: 'Liste Événements', icon: Calendar, description: 'Liste des événements' },
   { type: 'shop-products', label: 'Produits', icon: Store, description: 'Grille de produits' },
-  { type: 'contact-form', label: 'Formulaire Contact', icon: Mail, description: 'Formulaire de contact' },
+  { type: 'form', label: 'Formulaire', icon: Mail, description: 'Formulaire personnalisé' },
+  { type: 'contact-form', label: 'Contact Simple', icon: Mail, description: 'Formulaire de contact basique' },
   { type: 'columns', label: 'Colonnes', icon: Layout, description: 'Mise en page en colonnes' }
 ];
 
@@ -68,6 +74,30 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({ page, onSave, onCancel
   const [currentPage, setCurrentPage] = useState<WebPage>(page);
   const [editingBlock, setEditingBlock] = useState<string | null>(null);
   const [showBlockSelector, setShowBlockSelector] = useState(false);
+  const [availableForms, setAvailableForms] = useState<any[]>([]);
+  const { user } = useAuth();
+
+  // Charger les formulaires disponibles
+  useEffect(() => {
+    const loadForms = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('forms')
+          .select('id, name, description')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        setAvailableForms(data || []);
+      } catch (error) {
+        console.error('Erreur lors du chargement des formulaires:', error);
+      }
+    };
+
+    loadForms();
+  }, [user]);
 
   const getDefaultBlockContent = (type: string) => {
     switch (type) {
@@ -94,6 +124,8 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({ page, onSave, onCancel
         return { title: 'Nos Produits', category: '', limit: 8 };
       case 'contact-form':
         return { title: 'Contactez-nous', fields: ['name', 'email', 'message'] };
+      case 'form':
+        return { title: 'Formulaire', formId: '', customTitle: '' };
       case 'columns':
         return { columns: 2, content: ['', ''] };
       default:
@@ -249,10 +281,9 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({ page, onSave, onCancel
 
               {block.type === 'image' && (
                 <>
-                  <Input
-                    placeholder="URL de l'image"
-                    value={block.content.src}
-                    onChange={(e) => updateBlock(block.id, { ...block.content, src: e.target.value })}
+                  <ImageUploader
+                    currentImage={block.content.src}
+                    onImageUploaded={(imageUrl) => updateBlock(block.id, { ...block.content, src: imageUrl })}
                   />
                   <Input
                     placeholder="Texte alternatif"
@@ -264,6 +295,76 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({ page, onSave, onCancel
                     value={block.content.caption}
                     onChange={(e) => updateBlock(block.id, { ...block.content, caption: e.target.value })}
                   />
+                  <select
+                    className="px-3 py-2 border rounded w-full"
+                    value={block.content.alignment}
+                    onChange={(e) => updateBlock(block.id, { ...block.content, alignment: e.target.value })}
+                  >
+                    <option value="left">Aligné à gauche</option>
+                    <option value="center">Centré</option>
+                    <option value="right">Aligné à droite</option>
+                  </select>
+                </>
+              )}
+
+              {block.type === 'hero' && (
+                <>
+                  <Input
+                    placeholder="Titre principal"
+                    value={block.content.title}
+                    onChange={(e) => updateBlock(block.id, { ...block.content, title: e.target.value })}
+                  />
+                  <Input
+                    placeholder="Sous-titre"
+                    value={block.content.subtitle}
+                    onChange={(e) => updateBlock(block.id, { ...block.content, subtitle: e.target.value })}
+                  />
+                  <ImageUploader
+                    currentImage={block.content.backgroundImage}
+                    onImageUploaded={(imageUrl) => updateBlock(block.id, { ...block.content, backgroundImage: imageUrl })}
+                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <Input
+                      placeholder="Texte du bouton"
+                      value={block.content.buttonText}
+                      onChange={(e) => updateBlock(block.id, { ...block.content, buttonText: e.target.value })}
+                    />
+                    <Input
+                      placeholder="Lien du bouton"
+                      value={block.content.buttonLink}
+                      onChange={(e) => updateBlock(block.id, { ...block.content, buttonLink: e.target.value })}
+                    />
+                  </div>
+                </>
+              )}
+
+              {block.type === 'form' && (
+                <>
+                  <Input
+                    placeholder="Titre personnalisé (optionnel)"
+                    value={block.content.customTitle}
+                    onChange={(e) => updateBlock(block.id, { ...block.content, customTitle: e.target.value })}
+                  />
+                  <Select
+                    value={block.content.formId}
+                    onValueChange={(value) => updateBlock(block.id, { ...block.content, formId: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner un formulaire" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableForms.map((form) => (
+                        <SelectItem key={form.id} value={form.id}>
+                          {form.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {availableForms.length === 0 && (
+                    <p className="text-sm text-gray-500">
+                      Aucun formulaire disponible. Créez d'abord un formulaire dans l'espace Formulaires.
+                    </p>
+                  )}
                 </>
               )}
 
