@@ -297,6 +297,15 @@ export const EmailTab: React.FC = () => {
 
           <div className="flex gap-2">
             <Button
+              onClick={saveEmailConfig}
+              disabled={isLoading}
+              className="flex-1"
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              {isLoading ? 'Sauvegarde...' : 'Sauvegarder'}
+            </Button>
+
+            <Button
               onClick={testImapConnection}
               disabled={isSyncing || !emailConfig.imap_host}
               variant="outline"
