@@ -2477,6 +2477,42 @@ export type Database = {
           },
         ]
       }
+      task_imports: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          errors: Json | null
+          filename: string
+          id: string
+          processed_rows: number | null
+          status: string
+          total_rows: number | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          errors?: Json | null
+          filename: string
+          id?: string
+          processed_rows?: number | null
+          status?: string
+          total_rows?: number | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          errors?: Json | null
+          filename?: string
+          id?: string
+          processed_rows?: number | null
+          status?: string
+          total_rows?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           artist_id: string | null
@@ -2963,6 +2999,10 @@ export type Database = {
           user_id: string
           username: string
         }[]
+      }
+      is_admin_user: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
       }
       is_channel_owner: {
         Args: { channel_id_param: string }

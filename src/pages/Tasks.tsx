@@ -5,9 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CheckSquare, Search, Plus, Trash } from 'lucide-react';
+import { CheckSquare, Search, Plus, Trash, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { TaskCreator } from '@/components/tasks/TaskCreator';
+import { TaskCSVImporter } from '@/components/tasks/TaskCSVImporter';
 import { TaskList } from '@/components/tasks/TaskList';
 import { useUser } from '@/contexts/UserContext';
 import { useTasks } from '@/hooks/useTasks';
@@ -210,11 +211,15 @@ export const Tasks: React.FC = () => {
       </div>
 
       <Tabs defaultValue="all" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="all">Toutes ({filteredTasks.length})</TabsTrigger>
           <TabsTrigger value="todo">À faire ({todoTasks.length})</TabsTrigger>
           <TabsTrigger value="in_progress">En cours ({inProgressTasks.length})</TabsTrigger>
           <TabsTrigger value="completed">Terminées ({completedTasks.length})</TabsTrigger>
+          <TabsTrigger value="import" className="flex items-center gap-1">
+            <Upload className="h-3 w-3" />
+            Import CSV
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="all">
@@ -299,6 +304,10 @@ export const Tasks: React.FC = () => {
             sortBy={sortBy}
             sortOrder={sortOrder}
           />
+        </TabsContent>
+        
+        <TabsContent value="import">
+          <TaskCSVImporter />
         </TabsContent>
       </Tabs>
 

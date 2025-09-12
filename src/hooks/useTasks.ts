@@ -220,25 +220,31 @@ export const useTasks = () => {
     try {
       console.log('🔄 Updating task:', id, updates);
       
+      // Préparer les données pour la mise à jour en filtrant les valeurs undefined
+      const updateData: any = {};
+      
+      if (updates.assigned_to !== undefined) updateData.assigned_to = updates.assigned_to;
+      if (updates.contact_id !== undefined) updateData.contact_id = updates.contact_id;
+      if (updates.event_id !== undefined) updateData.event_id = updates.event_id;
+      if (updates.artist_id !== undefined) updateData.artist_id = updates.artist_id;
+      if (updates.title !== undefined) updateData.title = updates.title;
+      if (updates.description !== undefined) updateData.description = updates.description;
+      if (updates.priority !== undefined) updateData.priority = updates.priority;
+      if (updates.status !== undefined) updateData.status = updates.status;
+      if (updates.task_type !== undefined) updateData.task_type = updates.task_type;
+      if (updates.due_date !== undefined) updateData.due_date = updates.due_date;
+      if (updates.completed_at !== undefined) updateData.completed_at = updates.completed_at;
+      if (updates.tags !== undefined) updateData.tags = updates.tags;
+      
+      // Forcer la mise à jour du timestamp
+      updateData.updated_at = new Date().toISOString();
+
       const { data, error } = await supabase
         .from('tasks')
-        .update({
-          assigned_to: updates.assigned_to,
-          contact_id: updates.contact_id,
-          event_id: updates.event_id,
-          artist_id: updates.artist_id,
-          title: updates.title,
-        description: updates.description,
-        priority: updates.priority,
-        status: updates.status,
-        task_type: updates.task_type,
-        due_date: updates.due_date,
-        completed_at: updates.completed_at,
-        tags: updates.tags
-      })
-      .eq('id', id)
-      .select()
-      .single();
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
 
       if (error) {
         console.error('❌ Error updating task:', error);
@@ -247,9 +253,31 @@ export const useTasks = () => {
 
       if (data) {
         console.log('✅ Task updated successfully:', data);
+        // Construire l'objet task complet pour la mise à jour locale
+        const updatedTask: Task = {
+          id: data.id,
+          user_id: data.user_id,
+          assigned_to: data.assigned_to || undefined,
+          contact_id: data.contact_id || undefined,
+          event_id: data.event_id || undefined,
+          artist_id: data.artist_id || undefined,
+          title: data.title,
+          description: data.description || '',
+          priority: data.priority as 'low' | 'medium' | 'high' | 'urgent',
+          status: data.status as 'todo' | 'in_progress' | 'completed' | 'cancelled',
+          task_type: data.task_type as 'Email' | 'Telephone' | 'RDV' | 'Autre',
+          due_date: data.due_date || undefined,
+          completed_at: data.completed_at || undefined,
+          tags: data.tags || [],
+          created_at: data.created_at,
+          updated_at: data.updated_at
+        };
+        
         setTasks(prev => prev.map(task => 
-          task.id === id ? { ...task, ...updates, updated_at: data.updated_at } : task
+          task.id === id ? updatedTask : task
         ));
+        
+        return updatedTask;
       }
     } catch (error) {
       console.error('Error updating task:', error);
