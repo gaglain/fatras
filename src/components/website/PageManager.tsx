@@ -126,8 +126,9 @@ export const PageManager: React.FC = () => {
 
   const savePages = (pagesToSave: WebPage[]) => {
     localStorage.setItem('websitePages', JSON.stringify(pagesToSave));
-    // Déclencher un événement pour synchroniser avec le front
+    // Déclencher des événements pour synchroniser avec le front
     window.dispatchEvent(new CustomEvent('websitePagesSaved', { detail: pagesToSave }));
+    window.dispatchEvent(new CustomEvent('frontDataRefresh'));
   };
   const updatePage = (updatedPage: WebPage) => {
     const updatedPages = pages.map(page => 
@@ -205,11 +206,14 @@ export const PageManager: React.FC = () => {
   };
 
   const handleSavePage = (updatedPage: WebPage) => {
-    setPages(prev => prev.map(page => 
+    const updatedPages = pages.map(page => 
       page.id === updatedPage.id 
         ? { ...updatedPage, updatedAt: new Date().toISOString() }
         : page
-    ));
+    );
+    setPages(updatedPages);
+    // Sauvegarder dans localStorage avec la bonne clé et notifier le front
+    savePages(updatedPages);
     setEditingPage(null);
     toast.success('Page sauvegardée');
   };

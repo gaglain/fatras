@@ -247,38 +247,7 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({ page, onSave, onCancel
                 </>
               )}
 
-              {block.type === 'hero' && (
-                <>
-                  <Input
-                    placeholder="Titre principal"
-                    value={block.content.title}
-                    onChange={(e) => updateBlock(block.id, { ...block.content, title: e.target.value })}
-                  />
-                  <Input
-                    placeholder="Sous-titre"
-                    value={block.content.subtitle}
-                    onChange={(e) => updateBlock(block.id, { ...block.content, subtitle: e.target.value })}
-                  />
-                  <Input
-                    placeholder="URL de l'image de fond"
-                    value={block.content.backgroundImage}
-                    onChange={(e) => updateBlock(block.id, { ...block.content, backgroundImage: e.target.value })}
-                  />
-                  <div className="grid grid-cols-2 gap-4">
-                    <Input
-                      placeholder="Texte du bouton"
-                      value={block.content.buttonText}
-                      onChange={(e) => updateBlock(block.id, { ...block.content, buttonText: e.target.value })}
-                    />
-                    <Input
-                      placeholder="Lien du bouton"
-                      value={block.content.buttonLink}
-                      onChange={(e) => updateBlock(block.id, { ...block.content, buttonLink: e.target.value })}
-                    />
-                  </div>
-                </>
-              )}
-
+              {/* Hero editor handled below with ImageUploader (single source of truth) */}
               {block.type === 'image' && (
                 <>
                   <ImageUploader

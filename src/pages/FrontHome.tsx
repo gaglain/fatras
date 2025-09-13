@@ -37,6 +37,7 @@ export const FrontHome: React.FC = () => {
     window.addEventListener('websiteDesignUpdated', handleStorageChange);
     window.addEventListener('websitePagesSaved', handleStorageChange);
     window.addEventListener('frontDataRefresh', handleFrontDataRefresh);
+    window.addEventListener('storage', handleStorageChange);
     
     return () => {
       window.removeEventListener('storage', handleStorageChange);
