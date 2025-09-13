@@ -36,12 +36,13 @@ export const FrontHome: React.FC = () => {
     window.addEventListener('websiteDesignUpdated', handleStorageChange);
     window.addEventListener('websitePagesSaved', handleStorageChange);
     window.addEventListener('frontDataRefresh', handleFrontDataRefresh);
-    window.addEventListener('storage', handleStorageChange);
     
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('websiteSettingsUpdated', handleStorageChange);
+      window.removeEventListener('siteSettingsUpdated', handleStorageChange);
       window.removeEventListener('websiteDesignUpdated', handleStorageChange);
+      window.removeEventListener('websitePagesSaved', handleStorageChange);
       window.removeEventListener('frontDataRefresh', handleFrontDataRefresh);
     };
   }, []);

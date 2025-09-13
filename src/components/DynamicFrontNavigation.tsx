@@ -102,11 +102,7 @@ export const DynamicFrontNavigation: React.FC = () => {
     console.log('🚀 Navigation mounted');
     loadAllData();
     
-    // Force sync après un délai
-    setTimeout(() => {
-      console.log('🔄 Navigation - Force sync after mount');
-      forceSync();
-    }, 1000);
+    // Pas de forceSync automatique pour éviter les re-renders inutiles
   }, [loadAllData, forceSync]);
 
   // Écouter les événements de synchronisation

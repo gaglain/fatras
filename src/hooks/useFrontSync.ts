@@ -85,15 +85,13 @@ export const useFrontSync = () => {
     window.addEventListener('websiteMenuSaved', handleUpdate);
     window.addEventListener('storage', handleStorageChange);
     
-    // Sync périodique agressif pour l'aperçu
-    const interval = setInterval(syncAll, 3000);
+    // Pas de sync périodique pour éviter le scintillement
     
     return () => {
       window.removeEventListener('websiteSettingsSaved', handleUpdate);
       window.removeEventListener('websiteDesignSaved', handleUpdate);
       window.removeEventListener('websiteMenuSaved', handleUpdate);
       window.removeEventListener('storage', handleStorageChange);
-      clearInterval(interval);
     };
   }, [syncAll]);
   

@@ -17,16 +17,8 @@ export const useFrontDataSync = () => {
     console.log('🔄 Front data sync - Force sync triggered');
 
     try {
-      // Déclencher tous les événements de synchronisation
-      window.dispatchEvent(new CustomEvent('websiteSettingsUpdated'));
-      window.dispatchEvent(new CustomEvent('websiteDesignUpdated'));
+      // Déclencher un rafraîchissement doux du front (évite le scintillement)
       window.dispatchEvent(new CustomEvent('frontDataRefresh'));
-      
-      // Déclencher l'événement storage pour forcer le rechargement
-      window.dispatchEvent(new StorageEvent('storage', {
-        key: 'websiteSettings',
-        storageArea: localStorage
-      }));
       
     } catch (error) {
       console.error('❌ Error during front sync:', error);
@@ -41,8 +33,7 @@ export const useFrontDataSync = () => {
     // Sync initial
     setTimeout(forceSync, 100);
 
-    // Sync périodique
-    const interval = setInterval(forceSync, 3000);
+    // Pas de sync périodique pour éviter le scintillement
 
     // Listeners pour les changements
     const handleStorageChange = (event: StorageEvent) => {
@@ -63,7 +54,6 @@ export const useFrontDataSync = () => {
     window.addEventListener('websiteSettingsSaved', handleCustomEvent);
 
     return () => {
-      clearInterval(interval);
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('websiteSettingsUpdated', handleCustomEvent);
       window.removeEventListener('websiteDesignUpdated', handleCustomEvent);
