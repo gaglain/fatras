@@ -16,19 +16,40 @@ export const FrontArtists: React.FC = () => {
   const loadArtists = async () => {
     setLoading(true);
     try {
-      const { data: artistsData, error } = await supabase
-        .from('centralized_artists')
-        .select('*')
-        .eq('status', 'active')
-        .order('name', { ascending: true });
-
-      if (error) {
-        console.error('❌ Error loading artists:', error);
+      // Charger depuis localStorage d'abord
+      const savedArtists = localStorage.getItem('backoffice_artists');
+      if (savedArtists) {
+        const parsedArtists = JSON.parse(savedArtists);
+        setArtists(parsedArtists || []);
       } else {
-        setArtists(artistsData || []);
+        // Données d'exemple si rien dans localStorage
+        setArtists([
+          { 
+            id: '1', 
+            name: 'Spectacle Jazz Fusion', 
+            genre: 'Jazz', 
+            bio: 'Un spectacle unique mêlant jazz moderne et fusion électronique.',
+            photo_url: '/placeholder.svg'
+          },
+          { 
+            id: '2', 
+            name: 'Concert Classique', 
+            genre: 'Classique', 
+            bio: 'Soirée de musique classique avec orchestre symphonique.',
+            photo_url: '/placeholder.svg'
+          },
+          { 
+            id: '3', 
+            name: 'Show Rock Énergie', 
+            genre: 'Rock', 
+            bio: 'Concert rock avec une énergie débordante et des guitares électriques.',
+            photo_url: '/placeholder.svg'
+          }
+        ]);
       }
     } catch (error) {
       console.error('❌ Error loading artists:', error);
+      setArtists([]);
     } finally {
       setLoading(false);
     }

@@ -62,7 +62,7 @@ export const FrontHome: React.FC = () => {
 
       // Charger les événements depuis Supabase
       const { data: eventsData, error: eventsError } = await supabase
-        .from('centralized_events')
+        .from('events')
         .select('*')
         .eq('status', 'confirmed')
         .order('start_date', { ascending: true })
@@ -75,19 +75,24 @@ export const FrontHome: React.FC = () => {
         console.log('🎭 Events loaded:', eventsData?.length);
       }
 
-      // Charger les artistes depuis Supabase
-      const { data: artistsData, error: artistsError } = await supabase
-        .from('centralized_artists')
-        .select('*')
-        .eq('status', 'active')
-        .order('name', { ascending: true })
-        .limit(6);
-
-      if (artistsError) {
-        console.error('❌ Error loading artists:', artistsError);
-      } else {
-        setArtists(artistsData || []);
-        console.log('🎤 Artists loaded:', artistsData?.length);
+      // Charger les artistes depuis les données locales ou créer des données d'exemple
+      try {
+        const savedArtists = localStorage.getItem('backoffice_artists');
+        if (savedArtists) {
+          const parsedArtists = JSON.parse(savedArtists);
+          setArtists(parsedArtists.slice(0, 6) || []);
+          console.log('🎤 Artists loaded from localStorage:', parsedArtists.length);
+        } else {
+          // Données d'exemple
+          setArtists([
+            { id: '1', name: 'Spectacle Jazz Fusion', genre: 'Jazz', bio: 'Un spectacle unique mêlant jazz moderne et fusion.' },
+            { id: '2', name: 'Concert Classique', genre: 'Classique', bio: 'Soirée de musique classique avec orchestre.' },
+            { id: '3', name: 'Show Rock Énergie', genre: 'Rock', bio: 'Concert rock avec une énergie débordante.' }
+          ]);
+        }
+      } catch (error) {
+        console.error('❌ Error loading artists:', error);
+        setArtists([]);
       }
 
       // Charger la page d'accueil personnalisée
