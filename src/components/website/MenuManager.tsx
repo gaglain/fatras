@@ -51,14 +51,23 @@ export const MenuManager: React.FC = () => {
   }, []);
 
   const saveMenu = () => {
-    localStorage.setItem('websiteMenu', JSON.stringify(menuItems));
-    localStorage.setItem('website_menu', JSON.stringify(menuItems)); // compat
+    const normalized = menuItems.map((item) => ({
+      ...item,
+      // Ensure both url and path exist for all consumers
+      path: (item as any).path || item.url || '/',
+      url: item.url || (item as any).path || '/',
+      visible: item.visible ?? true,
+      order: typeof item.order === 'number' ? item.order : 0,
+      target: item.target || '_self',
+    }));
+
+    localStorage.setItem('websiteMenu', JSON.stringify(normalized));
+    localStorage.setItem('website_menu', JSON.stringify(normalized)); // compat
     // Déclencher la synchronisation pour le front (nouveau + compat)
-    window.dispatchEvent(new CustomEvent('websiteMenuUpdated', { detail: menuItems }));
-    window.dispatchEvent(new CustomEvent('menuUpdated', { detail: menuItems }));
+    window.dispatchEvent(new CustomEvent('websiteMenuUpdated', { detail: normalized }));
+    window.dispatchEvent(new CustomEvent('menuUpdated', { detail: normalized }));
     toast.success('Menu sauvegardé avec succès');
   };
-
   useEffect(() => {
     saveMenu();
   }, [menuItems]);
