@@ -105,9 +105,15 @@ export const DynamicFrontNavigation: React.FC = () => {
     const handleMenuUpdate = (event: CustomEvent) => {
       console.log('🔄 Navigation - Menu update received');
       if (event.detail && Array.isArray(event.detail)) {
-        const visibleItems = event.detail
-          .filter((item: MenuItem) => item.visible)
-          .sort((a: MenuItem, b: MenuItem) => a.order - b.order);
+        const normalized = event.detail.map((item: any) => ({
+          ...item,
+          path: item.path || item.url || '/',
+          visible: item.visible ?? item.is_visible ?? true,
+          order: item.order ?? item.menu_order ?? 0,
+        }));
+        const visibleItems = normalized
+          .filter((item: any) => item.visible)
+          .sort((a: any, b: any) => a.order - b.order);
         setMenuItems(visibleItems);
       }
     };
@@ -155,13 +161,14 @@ export const DynamicFrontNavigation: React.FC = () => {
   }, [loadAllData]);
 
   const renderMenuItem = (item: MenuItem) => {
-    const isExternal = item.path.startsWith('http') || item.path.startsWith('//');
+    const urlCandidate = (item.path || (item as any).url || '') as string;
+    const isExternal = urlCandidate.startsWith('http') || urlCandidate.startsWith('//');
 
     return (
       <div key={item.id} className="relative">
         {isExternal ? (
           <a
-            href={item.path}
+            href={urlCandidate}
             target="_blank"
             rel="noopener noreferrer"
             className="front-link px-3 py-2 text-sm font-medium transition-colors hover:opacity-80"
@@ -171,7 +178,7 @@ export const DynamicFrontNavigation: React.FC = () => {
           </a>
         ) : (
           <Link
-            to={item.path}
+            to={urlCandidate || '/'}
             className="front-link px-3 py-2 text-sm font-medium transition-colors hover:opacity-80"
             style={{ color: 'var(--site-link-color, #3b82f6)' }}
           >

@@ -45,6 +45,7 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { UserProvider } from "./contexts/UserContext";
 import { FrontLayout } from "./components/FrontLayout";
 import { WebsiteConfigProvider } from "./contexts/WebsiteConfigContext";
+import { WebsiteMenuSyncBridge } from "./components/WebsiteMenuSyncBridge";
 import { ErrorBoundary } from "react-error-boundary";
 
 const queryClient = new QueryClient({
@@ -86,6 +87,7 @@ const App = () => {
             <UserProvider>
               <WebsiteConfigProvider>
                 <Toaster />
+                <WebsiteMenuSyncBridge />
                 <Routes>
                 <Route path="/" element={<Index />} />
                 
