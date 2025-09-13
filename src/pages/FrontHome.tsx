@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { FrontLayout } from '@/components/FrontLayout';
-import { BlockEditor } from '@/components/website/BlockEditor';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -109,12 +108,20 @@ export const FrontHome: React.FC = () => {
     try {
       const savedPages = localStorage.getItem('websitePages');
       if (savedPages) {
-        const pages = JSON.parse(savedPages);
-        const homePage = pages.find((page: any) => page.type === 'home' || page.slug === '/');
-        
-        if (homePage && homePage.blocks) {
-          console.log('🏠 Loading custom home page blocks:', homePage.blocks.length);
-          setHomePageBlocks(homePage.blocks);
+        const parsed = JSON.parse(savedPages);
+        const pages: any[] = Array.isArray(parsed)
+          ? parsed
+          : Array.isArray((parsed as any)?.data)
+            ? (parsed as any).data
+            : Array.isArray((parsed as any)?.pages)
+              ? (parsed as any).pages
+              : [];
+
+        const homePage = pages.find((page: any) => page?.type === 'home' || page?.slug === '/');
+        const blocks = Array.isArray(homePage?.blocks) ? homePage.blocks : [];
+        if (blocks.length) {
+          console.log('🏠 Loading custom home page blocks:', blocks.length);
+          setHomePageBlocks(blocks);
           return;
         }
       }
@@ -142,14 +149,14 @@ export const FrontHome: React.FC = () => {
           showAll: false
         }
       },
-        {
-          id: 'artists-section',
-          type: 'artists', 
-          content: {
-            title: 'Nos Spectacles',
-            showAll: false
-          }
+      {
+        id: 'artists-section',
+        type: 'artists', 
+        content: {
+          title: 'Nos Spectacles',
+          showAll: false
         }
+      }
     ]);
   };
 
@@ -169,7 +176,7 @@ export const FrontHome: React.FC = () => {
   return (
     <FrontLayout>
       <div className="min-h-screen">
-        {homePageBlocks.map((block, index) => (
+        {Array.isArray(homePageBlocks) && homePageBlocks.length > 0 ? homePageBlocks.map((block, index) => (
           <div key={block.id || index} className="block-container">
             
             {/* Section Hero */}
@@ -210,7 +217,7 @@ export const FrontHome: React.FC = () => {
                     {block.content?.title || 'Nos Spectacles'}
                   </h2>
                   
-                  {events.length > 0 ? (
+                  {Array.isArray(events) && events.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {events.map((event) => (
                         <Card key={event.id} className="hover:shadow-lg transition-shadow">
@@ -278,7 +285,7 @@ export const FrontHome: React.FC = () => {
                     {block.content?.title || 'Nos Spectacles'}
                   </h2>
                   
-                  {artists.length > 0 ? (
+                  {Array.isArray(artists) && artists.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {artists.map((artist) => (
                         <Card key={artist.id} className="hover:shadow-lg transition-shadow">
@@ -348,7 +355,13 @@ export const FrontHome: React.FC = () => {
             )}
             
           </div>
-        ))}
+        )) : (
+          <div className="py-12 px-4">
+            <div className="container mx-auto text-center text-muted-foreground">
+              <p>Chargement de la page d'accueil...</p>
+            </div>
+          </div>
+        )}
       </div>
     </FrontLayout>
   );
