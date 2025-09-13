@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,7 +17,7 @@ import {
   Mail
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { BlockEditor } from '@/components/website/BlockEditor';
+import { BlockEditor } from '@/components/BlockEditor/BlockEditor';
 
 interface WebPage {
   id: string;
@@ -73,10 +72,13 @@ const defaultPages: WebPage[] = [
     blocks: [
       {
         id: 'artists-grid-1',
-        type: 'artists-grid',
+        type: 'artist-grid',
         content: {
           title: 'Nos Artistes',
-          showAll: true
+          subtitle: 'Découvrez notre sélection d\'artistes',
+          showRating: false,
+          showStats: true,
+          columns: 3
         }
       }
     ],
@@ -112,7 +114,12 @@ export const PageManager: React.FC = () => {
     if (savedPages) {
       try {
         const parsedPages = JSON.parse(savedPages);
-        setPages(parsedPages);
+        // S'assurer que chaque page a un tableau blocks
+        const pagesWithBlocks = parsedPages.map((page: any) => ({
+          ...page,
+          blocks: page.blocks || []
+        }));
+        setPages(pagesWithBlocks);
       } catch (error) {
         console.error('Error loading pages:', error);
         setPages(defaultPages);
@@ -130,21 +137,6 @@ export const PageManager: React.FC = () => {
     window.dispatchEvent(new CustomEvent('websitePagesSaved', { detail: pagesToSave }));
     window.dispatchEvent(new CustomEvent('frontDataRefresh'));
   };
-  const updatePage = (updatedPage: WebPage) => {
-    const updatedPages = pages.map(page => 
-      page.id === updatedPage.id ? updatedPage : page
-    );
-    setPages(updatedPages);
-    savePages(updatedPages);
-  };
-
-  useEffect(() => {
-    loadPages();
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem('website_pages', JSON.stringify(pages));
-  }, [pages]);
 
   const getPageIcon = (type: WebPage['type']) => {
     switch (type) {
@@ -195,24 +187,31 @@ export const PageManager: React.FC = () => {
       updatedAt: new Date().toISOString()
     };
 
-    setPages(prev => [...prev, newPage]);
+    const updatedPages = [...pages, newPage];
+    setPages(updatedPages);
+    savePages(updatedPages);
     setNewPageData({ title: '', slug: '', type: 'page', status: 'draft' });
     setShowCreateForm(false);
     toast.success('Page créée avec succès');
   };
 
   const handleEditPage = (page: WebPage) => {
-    setEditingPage(page);
+    setEditingPage({ ...page, blocks: page.blocks || [] });
   };
 
-  const handleSavePage = (updatedPage: WebPage) => {
+  const handleSavePage = (blocks: any[]) => {
+    if (!editingPage) return;
+    
+    const updatedPage = {
+      ...editingPage,
+      blocks,
+      updatedAt: new Date().toISOString()
+    };
+    
     const updatedPages = pages.map(page => 
-      page.id === updatedPage.id 
-        ? { ...updatedPage, updatedAt: new Date().toISOString() }
-        : page
+      page.id === updatedPage.id ? updatedPage : page
     );
     setPages(updatedPages);
-    // Sauvegarder dans localStorage avec la bonne clé et notifier le front
     savePages(updatedPages);
     setEditingPage(null);
     toast.success('Page sauvegardée');
@@ -225,27 +224,38 @@ export const PageManager: React.FC = () => {
     }
     
     if (confirm('Êtes-vous sûr de vouloir supprimer cette page ?')) {
-      setPages(prev => prev.filter(page => page.id !== pageId));
+      const updatedPages = pages.filter(page => page.id !== pageId);
+      setPages(updatedPages);
+      savePages(updatedPages);
       toast.success('Page supprimée');
     }
   };
 
   const handlePublishPage = (pageId: string) => {
-    setPages(prev => prev.map(page => 
+    const updatedPages = pages.map(page => 
       page.id === pageId 
         ? { ...page, status: 'published' as const, updatedAt: new Date().toISOString() }
         : page
-    ));
+    );
+    setPages(updatedPages);
+    savePages(updatedPages);
     toast.success('Page publiée');
   };
 
   if (editingPage) {
     return (
-      <BlockEditor
-        page={editingPage}
-        onSave={handleSavePage}
-        onCancel={() => setEditingPage(null)}
-      />
+      <div className="space-y-6">
+        <div className="flex items-center space-x-4 mb-6">
+          <Button variant="outline" onClick={() => setEditingPage(null)}>
+            ← Retour aux pages
+          </Button>
+          <h2 className="text-xl font-semibold">Édition : {editingPage.title}</h2>
+        </div>
+        <BlockEditor
+          initialBlocks={editingPage.blocks || []}
+          onSave={handleSavePage}
+        />
+      </div>
     );
   }
 
@@ -321,6 +331,8 @@ export const PageManager: React.FC = () => {
           <div className="grid gap-4">
             {filteredPages.map((page) => {
               const Icon = getPageIcon(page.type);
+              const blockCount = page.blocks ? page.blocks.length : 0;
+              
               return (
                 <Card key={page.id} className="hover:shadow-md transition-shadow">
                   <CardContent className="flex items-center justify-between p-4">
@@ -334,7 +346,7 @@ export const PageManager: React.FC = () => {
                             {page.status}
                           </Badge>
                           <span className="text-xs text-gray-400">
-                            {page.blocks.length} bloc(s)
+                            {blockCount} bloc(s)
                           </span>
                         </div>
                       </div>
