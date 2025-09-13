@@ -129,7 +129,7 @@ export const ArtistGridBlock: React.FC<ArtistGridBlockProps> = ({ content, isEdi
 
         {artists.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-gray-500">Aucun artiste disponible pour affichage.</p>
+            <p className="text-gray-500">Aucun spectacle disponible pour affichage.</p>
           </div>
         )}
       </div>

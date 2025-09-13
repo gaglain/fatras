@@ -136,14 +136,14 @@ export const FrontHome: React.FC = () => {
           showAll: false
         }
       },
-      {
-        id: 'artists-section',
-        type: 'artists', 
-        content: {
-          title: 'Nos Artistes',
-          showAll: false
+        {
+          id: 'artists-section',
+          type: 'artists', 
+          content: {
+            title: 'Nos Spectacles',
+            showAll: false
+          }
         }
-      }
     ]);
   };
 
@@ -192,7 +192,7 @@ export const FrontHome: React.FC = () => {
             {block.type === 'events' && (
               <div id="spectacles" className="py-12 px-4 bg-background">
                 <div className="container mx-auto">
-                  <h2 className="text-3xl font-bold text-center mb-8">
+                   <h2 className="text-3xl font-bold text-center mb-8">
                     {block.content?.title || 'Nos Spectacles'}
                   </h2>
                   
@@ -260,8 +260,8 @@ export const FrontHome: React.FC = () => {
             {block.type === 'artists' && (
               <div className="py-12 px-4 bg-muted/20">
                 <div className="container mx-auto">
-                  <h2 className="text-3xl font-bold text-center mb-8">
-                    {block.content?.title || 'Nos Artistes'}
+                   <h2 className="text-3xl font-bold text-center mb-8">
+                    {block.content?.title || 'Nos Spectacles'}
                   </h2>
                   
                   {artists.length > 0 ? (
@@ -289,7 +289,7 @@ export const FrontHome: React.FC = () => {
                     </div>
                   ) : (
                     <div className="text-center text-muted-foreground py-8">
-                      <p>Aucun artiste enregistré pour le moment</p>
+                      <p>Aucun spectacle enregistré pour le moment</p>
                     </div>
                   )}
                 </div>
