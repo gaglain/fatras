@@ -7,7 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { GripVertical, Plus, Trash2, Eye, EyeOff, Save, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
-
+import { supabase } from '@/integrations/supabase/client';
 interface MenuItem {
   id: string;
   label: string;
@@ -50,7 +50,7 @@ export const MenuManager: React.FC = () => {
     }
   }, []);
 
-  const saveMenu = () => {
+  const saveMenu = async () => {
     const clean = (s: any) => {
       if (typeof s !== 'string') return s;
       if (s.startsWith('/http://') || s.startsWith('/https://') || s.startsWith('///')) {
@@ -59,7 +59,7 @@ export const MenuManager: React.FC = () => {
       return s;
     };
 
-    const normalized = menuItems.map((item) => {
+    const normalized = menuItems.map((item, idx) => {
       const rawPath = (item as any).path || item.url || '/';
       const rawUrl = item.url || (item as any).path || '/';
       const path = clean(rawPath);
@@ -70,17 +70,48 @@ export const MenuManager: React.FC = () => {
         path,
         url,
         visible: item.visible ?? true,
-        order: typeof item.order === 'number' ? item.order : 0,
+        order: typeof item.order === 'number' ? item.order : (idx + 1),
         target: item.target || (isExternal ? '_blank' : '_self'),
       };
     });
 
+    // 1) Persistance locale + événements front
     localStorage.setItem('websiteMenu', JSON.stringify(normalized));
     localStorage.setItem('website_menu', JSON.stringify(normalized)); // compat
-    // Déclencher la synchronisation pour le front (nouveau + compat)
     window.dispatchEvent(new CustomEvent('websiteMenuUpdated', { detail: normalized }));
     window.dispatchEvent(new CustomEvent('menuUpdated', { detail: normalized }));
-    toast.success('Menu sauvegardé avec succès');
+
+    // 2) Persistance Supabase (reset + insert pour éviter doublons)
+    try {
+      const { data: authData } = await supabase.auth.getUser();
+      const currentUserId = authData?.user?.id;
+      if (currentUserId) {
+        // Supprimer l'ancien menu de l'utilisateur
+        await supabase.from('website_menu').delete().eq('user_id', currentUserId);
+
+        // Insérer le nouveau menu
+        const payload = normalized.map((it, idx) => ({
+          user_id: currentUserId,
+          label: it.label,
+          url: it.url,
+          target: it.target,
+          parent_id: null,
+          menu_order: typeof it.order === 'number' ? it.order : (idx + 1),
+          is_visible: it.visible ?? true,
+          updated_at: new Date().toISOString(),
+        }));
+
+        const { error: insertError } = await supabase.from('website_menu').insert(payload);
+        if (insertError) {
+          console.error('❌ Erreur insertion menu Supabase:', insertError);
+          toast.error("Erreur lors de l'enregistrement en base");
+        } else {
+          toast.success('Menu sauvegardé (base + front)');
+        }
+      }
+    } catch (err) {
+      console.error('❌ Erreur Supabase:', err);
+    }
   };
   useEffect(() => {
     saveMenu();

@@ -38,12 +38,21 @@ export const DynamicFrontNavigation: React.FC = () => {
                 ? (parsed as any).menu
                 : [];
 
-          const normalized = baseArr.map((item: any) => ({
-            ...item,
-            path: item.path || item.url || '/', // normaliser
-            visible: item.visible ?? item.is_visible ?? true,
-            order: item.order ?? item.menu_order ?? 0,
-          }));
+          const clean = (s: any) => {
+            if (typeof s !== 'string') return s;
+            if (s.startsWith('/http://') || s.startsWith('/https://') || s.startsWith('///')) {
+              return s.slice(1);
+            }
+            return s;
+          };
+
+          const normalized = baseArr.map((item: any) => {
+            const rawPath = item.path || item.url || '/';
+            const path = clean(rawPath);
+            const visible = item.visible ?? item.is_visible ?? true;
+            const order = item.order ?? item.menu_order ?? 0;
+            return { ...item, path, visible, order } as MenuItem;
+          });
 
           const visibleItems = normalized
             .filter((item: any) => item.visible)
