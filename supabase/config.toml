@@ -12,3 +12,6 @@ verify_jwt = false
 
 [functions.send-email-ovh]
 verify_jwt = false
+
+[functions.form-submission-handler]
+verify_jwt = false
