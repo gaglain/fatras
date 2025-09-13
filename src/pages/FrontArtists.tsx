@@ -1,116 +1,107 @@
 
 import React, { useState, useEffect } from 'react';
-import { Block } from '@/components/BlockEditor/types';
-import { TextBlock } from '@/components/BlockEditor/blocks/TextBlock';
-import { ImageBlock } from '@/components/BlockEditor/blocks/ImageBlock';
-import { HeroBlock } from '@/components/BlockEditor/blocks/HeroBlock';
-import { ArtistGridBlock } from '@/components/BlockEditor/blocks/ArtistGridBlock';
-import { SEOHead } from '@/components/SEOHead';
-import { useBackofficeArtists } from '@/hooks/useBackofficeData';
-
-interface WebPage {
-  id: string;
-  title: string;
-  slug: string;
-  status: 'published' | 'draft' | 'archived';
-  blocks: Block[];
-  metaDescription: string;
-}
-
-const defaultArtistsPage: WebPage = {
-  id: '2',
-  title: 'Nos Artistes',
-  slug: '/artists',
-  status: 'published',
-  metaDescription: 'Découvrez notre sélection d\'artistes exceptionnels',
-  blocks: [
-    {
-      id: '3',
-      type: 'text',
-      order: 0,
-      content: {
-        text: '<h1>Nos Artistes</h1><p>Découvrez notre sélection d\'artistes talentueux</p>'
-      }
-    },
-    {
-      id: '4',
-      type: 'artist-grid',
-      order: 1,
-      content: {
-        title: 'Tous nos Artistes',
-        showRating: true,
-        showStats: true
-      }
-    }
-  ]
-};
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Users } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 export const FrontArtists: React.FC = () => {
-  const [pageData, setPageData] = useState<WebPage>(defaultArtistsPage);
-  const { artists, loading } = useBackofficeArtists();
+  const [artists, setArtists] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Charger les données de la page depuis localStorage
-    const savedPages = localStorage.getItem('websitePages');
-    if (savedPages) {
-      try {
-        const pages = JSON.parse(savedPages);
-        const artistsPage = pages.find((page: WebPage) => page.slug === '/artists' || page.id === '2');
-        if (artistsPage) {
-          setPageData(artistsPage);
-        }
-      } catch (e) {
-        console.error('Error loading page data:', e);
-      }
-    }
+    loadArtists();
   }, []);
 
-  const renderBlock = (block: Block) => {
-    let BlockComponent;
-    switch (block.type) {
-      case 'text':
-        BlockComponent = TextBlock;
-        break;
-      case 'image':
-        BlockComponent = ImageBlock;
-        break;
-      case 'hero':
-        BlockComponent = HeroBlock;
-        break;
-      case 'artist-grid':
-        BlockComponent = ArtistGridBlock;
-        break;
-      default:
-        return null;
+  const loadArtists = async () => {
+    setLoading(true);
+    try {
+      const { data: artistsData, error } = await supabase
+        .from('centralized_artists')
+        .select('*')
+        .eq('status', 'active')
+        .order('name', { ascending: true });
+
+      if (error) {
+        console.error('❌ Error loading artists:', error);
+      } else {
+        setArtists(artistsData || []);
+      }
+    } catch (error) {
+      console.error('❌ Error loading artists:', error);
+    } finally {
+      setLoading(false);
     }
-
-    // Passer les données d'artistes synchronisées au block artist-grid
-    const blockProps = {
-      content: block.content,
-      isEditing: false,
-      onChange: () => {},
-      ...(block.type === 'artist-grid' && { artists, loading })
-    };
-
-    return (
-      <div key={block.id}>
-        <BlockComponent {...blockProps} />
-      </div>
-    );
   };
 
-  return (
-    <>
-      <SEOHead 
-        title={pageData.title + ' - MusiConnect'}
-        description={pageData.metaDescription}
-      />
-      
-      <div className="min-h-screen">
-        {pageData.blocks
-          .sort((a, b) => a.order - b.order)
-          .map(renderBlock)}
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-lg text-muted-foreground">Chargement...</p>
+        </div>
       </div>
-    </>
+    );
+  }
+
+  return (
+    <div className="min-h-screen py-12 px-4 bg-background">
+      <div className="container mx-auto">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
+            Nos Spectacles
+          </h1>
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+            Découvrez notre sélection d'artistes exceptionnels et leurs spectacles uniques.
+          </p>
+        </div>
+        
+        {artists.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {artists.map((artist) => (
+              <Card key={artist.id} className="hover:shadow-lg transition-shadow">
+                <CardContent className="p-6">
+                  {artist.photo_url && (
+                    <div className="mb-4">
+                      <img 
+                        src={artist.photo_url} 
+                        alt={artist.name}
+                        className="w-full h-48 object-cover rounded-lg"
+                      />
+                    </div>
+                  )}
+                  <div className="text-center">
+                    <h3 className="text-xl font-semibold mb-2">{artist.name}</h3>
+                    {artist.genre && (
+                      <Badge variant="outline" className="mb-3">{artist.genre}</Badge>
+                    )}
+                    {artist.bio && (
+                      <p className="text-muted-foreground text-sm mb-4">{artist.bio}</p>
+                    )}
+                    {artist.website && (
+                      <a 
+                        href={artist.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+                      >
+                        Découvrir
+                      </a>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center text-muted-foreground py-16">
+            <Users className="h-16 w-16 mx-auto mb-6 text-muted-foreground/50" />
+            <h3 className="text-xl font-medium mb-2">Aucun spectacle disponible</h3>
+            <p>Nos spectacles seront bientôt disponibles. Revenez nous voir !</p>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };

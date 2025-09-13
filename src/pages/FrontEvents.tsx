@@ -1,14 +1,40 @@
 
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar, MapPin, Clock, Ticket } from 'lucide-react';
 import { SEOHead } from '@/components/SEOHead';
-import { useBackofficeEvents } from '@/hooks/useBackofficeData';
+import { supabase } from '@/integrations/supabase/client';
 
 export const FrontEvents: React.FC = () => {
-  const { events, loading } = useBackofficeEvents();
+  const [events, setEvents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadEvents();
+  }, []);
+
+  const loadEvents = async () => {
+    setLoading(true);
+    try {
+      const { data: eventsData, error } = await supabase
+        .from('centralized_events')
+        .select('*')
+        .eq('status', 'confirmed')
+        .order('start_date', { ascending: true });
+
+      if (error) {
+        console.error('❌ Error loading events:', error);
+      } else {
+        setEvents(eventsData || []);
+      }
+    } catch (error) {
+      console.error('❌ Error loading events:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -106,8 +132,8 @@ export const FrontEvents: React.FC = () => {
                                event.status === 'cancelled' ? 'Annulé' : event.status}
                             </Badge>
                           </div>
-                          {event.artist && (
-                            <p className="text-lg text-purple-600 font-medium">{event.artist}</p>
+                          {event.artist_id && (
+                            <p className="text-lg text-purple-600 font-medium">{event.artist_id}</p>
                           )}
                           {event.description && (
                             <p className="text-gray-600 mt-2">{event.description}</p>
@@ -117,24 +143,24 @@ export const FrontEvents: React.FC = () => {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
                           <div className="flex items-center">
                             <Calendar className="h-4 w-4 mr-2" />
-                            {formatDate(event.startDate)}
+                            {formatDate(event.start_date)}
                           </div>
                           <div className="flex items-center">
                             <Clock className="h-4 w-4 mr-2" />
-                            {formatTime(event.startDate)}
+                            {formatTime(event.start_date)}
                           </div>
                           <div className="flex items-center">
                             <MapPin className="h-4 w-4 mr-2" />
-                            {event.venue && `${event.venue}, `}{event.city}{event.country && `, ${event.country}`}
+                            {event.venue && `${event.venue}, `}{event.city}
                           </div>
                         </div>
 
-                        {event.eventType && (
+                        {event.event_type && (
                           <div className="flex items-center">
-                            <Badge variant="outline">{event.eventType}</Badge>
-                            {event.attendeesCount && (
+                            <Badge variant="outline">{event.event_type}</Badge>
+                            {event.attendees_count && (
                               <span className="ml-3 text-sm text-gray-500">
-                                Capacité: {event.attendeesCount} personnes
+                                Capacité: {event.attendees_count} personnes
                               </span>
                             )}
                           </div>
@@ -144,7 +170,7 @@ export const FrontEvents: React.FC = () => {
                       <div className="flex flex-col items-end space-y-3 mt-4 lg:mt-0">
                         <div className="text-right">
                           <div className="text-2xl font-bold text-gray-900">
-                            {formatPrice(event.budgetMin, event.budgetMax)}
+                            {formatPrice(event.budget_min, event.budget_max)}
                           </div>
                           <div className="text-sm text-gray-500">par personne</div>
                         </div>
