@@ -26,6 +26,16 @@ const defaultMenuItems: MenuItem[] = [
   { id: 'contact', label: 'Contact', url: '/front/contact', visible: true, order: 5, target: '_self', isSystem: true }
 ];
 
+const StrictModeDroppable: React.FC<any> = ({ children, ...props }) => {
+  const [enabled, setEnabled] = React.useState(false);
+  React.useEffect(() => {
+    const animation = requestAnimationFrame(() => setEnabled(true));
+    return () => cancelAnimationFrame(animation);
+  }, []);
+  if (!enabled) return null;
+  return <Droppable {...props}>{children}</Droppable>;
+};
+
 export const MenuManager: React.FC = () => {
   const [menuItems, setMenuItems] = useState<MenuItem[]>(defaultMenuItems);
   const [newItem, setNewItem] = useState({
@@ -223,8 +233,8 @@ export const MenuManager: React.FC = () => {
           <div>
             <h3 className="font-medium mb-3">Éléments du menu</h3>
             <DragDropContext onDragEnd={handleDragEnd}>
-              <Droppable droppableId="menu-items">
-                {(provided) => (
+<StrictModeDroppable droppableId="menu-items">
+  {(provided) => (
                   <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-2">
                     {menuItems
                       .sort((a, b) => a.order - b.order)
@@ -297,7 +307,7 @@ export const MenuManager: React.FC = () => {
                     {provided.placeholder}
                   </div>
                 )}
-              </Droppable>
+              </StrictModeDroppable>
             </DragDropContext>
           </div>
 
