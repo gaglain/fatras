@@ -12,7 +12,7 @@ export const useWebsiteMenuSync = () => {
   const syncInProgress = useRef(false);
 
   const loadMenu = useCallback(async () => {
-    if (syncInProgress.current) return menu;
+    if (syncInProgress.current) return;
     
     syncInProgress.current = true;
     setLoading(true);
@@ -34,7 +34,7 @@ export const useWebsiteMenuSync = () => {
           const localMenu = JSON.parse(savedMenu);
           console.log('🔗 Utilisation du menu en cache:', localMenu.length);
           setMenu(localMenu);
-          return localMenu;
+          return;
         }
         
         // Menu par défaut si aucune donnée
@@ -56,19 +56,14 @@ export const useWebsiteMenuSync = () => {
         localStorage.setItem('websiteMenu', JSON.stringify(defaultMenu));
         setMenu(defaultMenu);
         console.log('🔗 Menu par défaut créé');
-        return defaultMenu;
+        return;
       }
 
       if (menuData && menuData.length > 0) {
         console.log('✅ Menu loaded from Supabase:', menuData.length);
         localStorage.setItem('websiteMenu', JSON.stringify(menuData));
         setMenu(menuData);
-        
-        // Déclencher l'événement de mise à jour
-        const event = new CustomEvent('websiteMenuUpdated', { detail: menuData });
-        window.dispatchEvent(event);
-        
-        return menuData;
+        return;
       } else {
         // Menu par défaut si pas de données
         const defaultMenu: WebsiteMenuItem[] = [
@@ -89,7 +84,7 @@ export const useWebsiteMenuSync = () => {
         localStorage.setItem('websiteMenu', JSON.stringify(defaultMenu));
         setMenu(defaultMenu);
         console.log('🔗 Menu par défaut créé');
-        return defaultMenu;
+        return;
       }
     } catch (error) {
       console.error('❌ Erreur lors du chargement du menu:', error);
@@ -99,28 +94,27 @@ export const useWebsiteMenuSync = () => {
       if (savedMenu) {
         const localMenu = JSON.parse(savedMenu);
         setMenu(localMenu);
-        return localMenu;
+        return;
       }
       
       setMenu([]);
-      return [];
     } finally {
       syncInProgress.current = false;
       setLoading(false);
     }
-  }, [menu]);
+  }, []);
 
   const refreshMenu = useCallback(async () => {
     const now = Date.now();
     
     // Throttle les appels
     if (now - lastSyncTime.current < 1000) {
-      return menu;
+      return;
     }
     
     lastSyncTime.current = now;
-    return await loadMenu();
-  }, [loadMenu, menu]);
+    await loadMenu();
+  }, [loadMenu]);
 
   const saveMenuItem = useCallback(async (menuItem: Partial<WebsiteMenuItem>) => {
     try {
@@ -278,22 +272,9 @@ export const useWebsiteMenuSync = () => {
   }, []);
 
   useEffect(() => {
-    // Chargement initial
+    // Chargement initial une seule fois
     loadMenu();
-
-    // Écouter les mises à jour du menu
-    const handleMenuUpdate = async (event: CustomEvent) => {
-      if (event.detail && Array.isArray(event.detail)) {
-        await syncMenu(event.detail);
-      }
-    };
-
-    window.addEventListener('websiteMenuUpdated', handleMenuUpdate as EventListener);
-
-    return () => {
-      window.removeEventListener('websiteMenuUpdated', handleMenuUpdate as EventListener);
-    };
-  }, [loadMenu, syncMenu]);
+  }, [loadMenu]);
 
   return { 
     menu,
