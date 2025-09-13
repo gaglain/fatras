@@ -17,7 +17,7 @@ import {
   Mail
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { BlockEditor } from '@/components/BlockEditor/BlockEditor';
+import { AdvancedBlockEditor } from '@/components/BlockEditor/AdvancedBlockEditor';
 
 interface WebPage {
   id: string;
@@ -251,9 +251,10 @@ export const PageManager: React.FC = () => {
           </Button>
           <h2 className="text-xl font-semibold">Édition : {editingPage.title}</h2>
         </div>
-        <BlockEditor
+        <AdvancedBlockEditor
           initialBlocks={editingPage.blocks || []}
           onSave={handleSavePage}
+          onCancel={() => setEditingPage(null)}
         />
       </div>
     );
