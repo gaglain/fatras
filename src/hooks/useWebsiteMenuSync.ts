@@ -215,24 +215,60 @@ export const useWebsiteMenuSync = () => {
     
     try {
       console.log('💾 Synchronisation du menu vers Supabase...');
-      
+
+      // Récupérer l'utilisateur pour peupler user_id si nécessaire
+      const { data: authData } = await supabase.auth.getUser();
+      const currentUserId = authData?.user?.id || null;
+
+      const clean = (s: any) => {
+        if (typeof s !== 'string') return s;
+        if (s.startsWith('/http://') || s.startsWith('/https://') || s.startsWith('///')) {
+          return s.slice(1);
+        }
+        return s;
+      };
+
+      const isUUID = (v: any) => typeof v === 'string' && /^[0-9a-fA-F-]{36}$/.test(v);
+
       for (const item of menuItems) {
+        const rawPath = item.path || item.url || '/';
+        const rawUrl = item.url || item.path || '/';
+        const path = clean(rawPath);
+        const url = clean(rawUrl);
+        const isExternal = (path?.startsWith('http') || path?.startsWith('//') || url?.startsWith('http') || url?.startsWith('//'));
+
+        const payload: any = {
+          label: item.label,
+          url,
+          target: item.target || (isExternal ? '_blank' : '_self'),
+          parent_id: item.parent_id || null,
+          menu_order: item.menu_order ?? item.order ?? 0,
+          is_visible: item.is_visible ?? item.visible ?? true,
+          updated_at: new Date().toISOString(),
+        };
+        if (currentUserId) payload.user_id = currentUserId;
+        if (isUUID(item.id)) payload.id = item.id; // Ne pas envoyer d'id invalide
+
         const { error } = await supabase
           .from('website_menu')
-          .upsert({
-            id: item.id,
-            label: item.label,
-            url: item.url,
-            target: item.target || '_self',
-            parent_id: item.parent_id,
-            menu_order: item.menu_order || 0,
-            is_visible: item.is_visible !== false,
-            updated_at: new Date().toISOString()
-          });
+          .upsert(payload);
 
         if (error) {
           console.error('❌ Erreur lors de la sauvegarde du menu:', item.label, error);
         }
+      }
+      
+      // Recharger depuis Supabase pour obtenir les IDs/ordre à jour
+      const { data: fresh, error: fetchError } = await supabase
+        .from('website_menu')
+        .select('*')
+        .order('menu_order', { ascending: true });
+
+      if (fetchError) {
+        console.error('❌ Erreur de relecture du menu:', fetchError);
+      } else if (fresh) {
+        localStorage.setItem('websiteMenu', JSON.stringify(fresh));
+        window.dispatchEvent(new CustomEvent('websiteMenuUpdated', { detail: fresh }));
       }
       
       console.log('✅ Menu synchronisé avec Supabase');

@@ -51,15 +51,29 @@ export const MenuManager: React.FC = () => {
   }, []);
 
   const saveMenu = () => {
-    const normalized = menuItems.map((item) => ({
-      ...item,
-      // Ensure both url and path exist for all consumers
-      path: (item as any).path || item.url || '/',
-      url: item.url || (item as any).path || '/',
-      visible: item.visible ?? true,
-      order: typeof item.order === 'number' ? item.order : 0,
-      target: item.target || '_self',
-    }));
+    const clean = (s: any) => {
+      if (typeof s !== 'string') return s;
+      if (s.startsWith('/http://') || s.startsWith('/https://') || s.startsWith('///')) {
+        return s.slice(1);
+      }
+      return s;
+    };
+
+    const normalized = menuItems.map((item) => {
+      const rawPath = (item as any).path || item.url || '/';
+      const rawUrl = item.url || (item as any).path || '/';
+      const path = clean(rawPath);
+      const url = clean(rawUrl);
+      const isExternal = (path?.startsWith('http') || path?.startsWith('//') || url?.startsWith('http') || url?.startsWith('//'));
+      return {
+        ...item,
+        path,
+        url,
+        visible: item.visible ?? true,
+        order: typeof item.order === 'number' ? item.order : 0,
+        target: item.target || (isExternal ? '_blank' : '_self'),
+      };
+    });
 
     localStorage.setItem('websiteMenu', JSON.stringify(normalized));
     localStorage.setItem('website_menu', JSON.stringify(normalized)); // compat
@@ -112,7 +126,9 @@ export const MenuManager: React.FC = () => {
     const menuItem: MenuItem = {
       id: Date.now().toString(),
       label: newItem.label,
-      url: newItem.url.startsWith('/') ? newItem.url : '/' + newItem.url,
+      url: newItem.url.startsWith('http') || newItem.url.startsWith('//')
+        ? newItem.url
+        : (newItem.url.startsWith('/') ? newItem.url : '/' + newItem.url),
       visible: true,
       order: menuItems.length + 1,
       target: newItem.target,
