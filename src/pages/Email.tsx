@@ -15,6 +15,8 @@ import EmailTemplates from '@/components/EmailTemplates';
 import { EmailViewer } from '@/components/EmailViewer';
 import { EmailAnalytics } from '@/components/EmailAnalytics';
 import { EmailSender } from '@/components/EmailSender';
+import { EmailInbox } from '@/components/EmailInbox';
+import { EmailDiagnostic } from '@/components/EmailDiagnostic';
 import { toast } from 'sonner';
 import { useEmailSender } from '@/hooks/useEmailSender';
 
@@ -150,6 +152,7 @@ export const Email: React.FC = () => {
   const [showTemplates, setShowTemplates] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [showEmailSender, setShowEmailSender] = useState(false);
+  const [showInbox, setShowInbox] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -334,6 +337,27 @@ export const Email: React.FC = () => {
     );
   }
 
+  if (showInbox) {
+    return (
+      <div className="h-full">
+        <div className="bg-background/80 backdrop-blur-sm border-b border-border/50 p-6 sticky top-0 z-10">
+          <div className="flex items-center gap-4 max-w-7xl mx-auto">
+            <Button variant="outline" onClick={() => setShowInbox(false)}>
+              ← Retour
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold">Boîte de réception</h1>
+              <p className="text-muted-foreground">Consultez vos emails reçus</p>
+            </div>
+          </div>
+        </div>
+        <div className="max-w-4xl mx-auto p-6">
+          <EmailInbox />
+        </div>
+      </div>
+    );
+  }
+
   if (showEmailSender) {
     return (
       <div className="h-full">
@@ -416,6 +440,13 @@ export const Email: React.FC = () => {
               <Send className="h-4 w-4 mr-2" />
               <span className="hidden sm:inline">Email Rapide</span>
               <span className="sm:hidden">Rapide</span>
+            </Button>
+            
+            <Button variant="outline" size="sm" onClick={() => setShowInbox(true)} 
+                    className="border-primary/20 hover:border-primary/40 hover:bg-primary/5 w-full sm:w-auto">
+              <Inbox className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Boîte de réception</span>
+              <span className="sm:hidden">Boîte</span>
             </Button>
             
             <Button variant="outline" size="sm" onClick={() => setShowAnalytics(true)} 

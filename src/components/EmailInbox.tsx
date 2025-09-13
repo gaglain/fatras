@@ -88,9 +88,12 @@ export const EmailInbox: React.FC = () => {
 
   const handleSyncEmails = async () => {
     try {
+      console.log('🔄 Démarrage de la synchronisation des emails...');
       await syncEmails();
+      console.log('✅ Synchronisation terminée, rechargement des emails...');
       await loadEmails();
     } catch (error) {
+      console.error('❌ Erreur lors de la synchronisation:', error);
       // L'erreur est déjà gérée dans useEmailSync
     }
   };
@@ -194,8 +197,17 @@ export const EmailInbox: React.FC = () => {
           ) : emails.length === 0 ? (
             <div className="p-6 text-center text-muted-foreground">
               <Mail className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Aucun email trouvé</p>
-              <p className="text-sm">Cliquez sur "Synchroniser" pour récupérer vos emails</p>
+              <p className="font-medium">Aucun email trouvé</p>
+              <p className="text-sm mb-4">
+                Pour recevoir vos emails, configurez d'abord votre compte IMAP dans les Préférences → Email
+              </p>
+              <div className="space-y-2 text-xs text-left bg-muted/50 p-3 rounded">
+                <p><strong>Étapes de configuration :</strong></p>
+                <p>1. Allez dans Préférences → Email</p>
+                <p>2. Configurez votre serveur IMAP (ex: pro1.mail.ovh.net:993)</p>
+                <p>3. Testez la connexion</p>
+                <p>4. Revenez ici et cliquez sur "Synchroniser"</p>
+              </div>
             </div>
           ) : (
             <div className="divide-y">
