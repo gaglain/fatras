@@ -305,6 +305,43 @@ export const FrontHome: React.FC = () => {
               </div>
             )}
             
+            {/* Section Texte */}
+            {block.type === 'text' && (
+              <div className="py-8 px-4 bg-background">
+                <div className="container mx-auto">
+                  <div 
+                    className={`text-${block.content?.alignment || 'left'} ${
+                      block.content?.size === 'small' ? 'text-sm' :
+                      block.content?.size === 'large' ? 'text-lg' : 'text-base'
+                    }`}
+                    style={{ whiteSpace: 'pre-wrap' }}
+                  >
+                    {block.content?.content || 'Contenu du texte...'}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Section Image */}
+            {block.type === 'image' && block.content?.src && (
+              <div className="py-8 px-4 bg-background">
+                <div className="container mx-auto">
+                  <div className={`text-${block.content?.alignment || 'center'}`}>
+                    <img
+                      src={block.content.src}
+                      alt={block.content.alt || ''}
+                      className="max-w-full h-auto mx-auto rounded-lg shadow-md"
+                    />
+                    {block.content.caption && (
+                      <p className="text-sm text-muted-foreground mt-2">
+                        {block.content.caption}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+            
           </div>
         ))}
       </div>
