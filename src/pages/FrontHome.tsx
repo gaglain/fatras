@@ -169,8 +169,16 @@ export const FrontHome: React.FC = () => {
             
             {/* Section Hero */}
             {block.type === 'hero' && (
-              <div className="bg-gradient-to-br from-primary/5 to-secondary/5 py-16 px-4">
-                <div className="container mx-auto text-center">
+              <div
+                className="relative py-16 px-4"
+                style={block.content?.backgroundImage ? {
+                  backgroundImage: `url(${block.content.backgroundImage})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center'
+                } : {}}
+              >
+                <div className="absolute inset-0 bg-background/60" aria-hidden="true"></div>
+                <div className="container mx-auto text-center relative">
                   <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
                     {block.content?.title || siteSettings.siteName || 'Bienvenue'}
                   </h1>
@@ -190,7 +198,7 @@ export const FrontHome: React.FC = () => {
             )}
             
             {/* Section Spectacles */}
-            {block.type === 'events' && (
+            {(block.type === 'events' || block.type === 'events-list') && (
               <div id="spectacles" className="py-12 px-4 bg-background">
                 <div className="container mx-auto">
                    <h2 className="text-3xl font-bold text-center mb-8">
@@ -258,7 +266,7 @@ export const FrontHome: React.FC = () => {
             )}
             
             {/* Section Artistes */}
-            {block.type === 'artists' && (
+            {(block.type === 'artists' || block.type === 'artists-grid') && (
               <div className="py-12 px-4 bg-muted/20">
                 <div className="container mx-auto">
                    <h2 className="text-3xl font-bold text-center mb-8">

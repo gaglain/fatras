@@ -430,7 +430,7 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({ page, onSave, onCancel
           </div>
         </div>
         <div className="flex items-center space-x-2">
-          <Button variant="outline" onClick={() => window.open(`/front${currentPage.slug}`, '_blank')}>
+          <Button variant="outline" onClick={() => window.open(currentPage.slug === '/' ? '/front' : `/front${currentPage.slug}`, '_blank')}>
             <Eye className="h-4 w-4 mr-2" />
             Prévisualiser
           </Button>
