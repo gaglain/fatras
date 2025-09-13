@@ -26,18 +26,36 @@ export const DynamicFrontNavigation: React.FC = () => {
     setIsLoading(true);
     
     try {
-      // Charger le menu (compat: websiteMenu | website_menu) et mapper url -> path
       const rawMenu = localStorage.getItem('websiteMenu') || localStorage.getItem('website_menu');
       if (rawMenu) {
-        const menu = JSON.parse(rawMenu).map((item: any) => ({
-          ...item,
-          path: item.path || item.url // normaliser
-        }));
-        const visibleItems = menu
-          .filter((item: any) => item.visible)
-          .sort((a: any, b: any) => a.order - b.order);
-        setMenuItems(visibleItems);
-        console.log('✅ Navigation - Menu loaded:', visibleItems.length, 'items');
+        try {
+          const parsed = JSON.parse(rawMenu);
+          const baseArr = Array.isArray(parsed)
+            ? parsed
+            : Array.isArray((parsed as any)?.data)
+              ? (parsed as any).data
+              : Array.isArray((parsed as any)?.menu)
+                ? (parsed as any).menu
+                : [];
+
+          const normalized = baseArr.map((item: any) => ({
+            ...item,
+            path: item.path || item.url || '/', // normaliser
+            visible: item.visible ?? item.is_visible ?? true,
+            order: item.order ?? item.menu_order ?? 0,
+          }));
+
+          const visibleItems = normalized
+            .filter((item: any) => item.visible)
+            .sort((a: any, b: any) => a.order - b.order);
+          setMenuItems(visibleItems);
+          console.log('✅ Navigation - Menu loaded:', visibleItems.length, 'items');
+        } catch (e) {
+          console.error('❌ Navigation - Error parsing menu:', e);
+          setMenuItems([]);
+        }
+      } else {
+        setMenuItems([]);
       }
 
       // Charger les paramètres (compat: websiteSettings | site_settings)

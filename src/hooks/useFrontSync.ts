@@ -31,13 +31,28 @@ export const useFrontSync = () => {
       }
       
       // Synchroniser le menu
-      const savedMenu = localStorage.getItem('websiteMenu');
+      const savedMenu = localStorage.getItem('websiteMenu') || localStorage.getItem('website_menu');
       if (savedMenu) {
-        const menu = JSON.parse(savedMenu);
-        console.log('🔗 Front sync - Menu loaded:', menu.length, 'items');
-        
-        // Déclencher l'événement
-        window.dispatchEvent(new CustomEvent('websiteMenuUpdated', { detail: menu }));
+        try {
+          const parsed = JSON.parse(savedMenu);
+          const arr = Array.isArray(parsed)
+            ? parsed
+            : Array.isArray((parsed as any)?.data)
+              ? (parsed as any).data
+              : Array.isArray((parsed as any)?.menu)
+                ? (parsed as any).menu
+                : [];
+
+          console.log('🔗 Front sync - Menu loaded:', arr.length, 'items');
+          // Déclencher l'événement avec un tableau garanti
+          window.dispatchEvent(new CustomEvent('websiteMenuUpdated', { detail: arr }));
+        } catch (e) {
+          console.error('❌ Front sync - Failed to parse menu:', e);
+          window.dispatchEvent(new CustomEvent('websiteMenuUpdated', { detail: [] }));
+        }
+      } else {
+        // Aucun menu => envoyer un tableau vide pour éviter les erreurs
+        window.dispatchEvent(new CustomEvent('websiteMenuUpdated', { detail: [] }));
       }
       
     } catch (error) {
