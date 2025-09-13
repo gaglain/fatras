@@ -6,6 +6,10 @@ import { ThemeProvider } from "next-themes";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import { FrontHome } from "./pages/FrontHome";
+import { FrontArtists } from "./pages/FrontArtists";
+import { FrontEvents } from "./pages/FrontEvents";
+import { FrontContact } from "./pages/FrontContact";
+import { FrontShop } from "./pages/FrontShop";
 import Dashboard from "./pages/Dashboard";
 import { Artists } from "./pages/Artists";
 import { ArtistDetail } from "./pages/ArtistDetail";
@@ -39,6 +43,7 @@ import { Quotes } from "./pages/Quotes";
 import { Layout } from "./components/Layout";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { UserProvider } from "./contexts/UserContext";
+import { FrontLayout } from "./components/FrontLayout";
 import { WebsiteConfigProvider } from "./contexts/WebsiteConfigContext";
 import { ErrorBoundary } from "react-error-boundary";
 
@@ -83,7 +88,14 @@ const App = () => {
                 <Toaster />
                 <Routes>
                 <Route path="/" element={<Index />} />
+                
+                {/* Routes du front-end - PUBLIC */}
                 <Route path="/front" element={<FrontHome />} />
+                <Route path="/front/artists" element={<FrontLayout><FrontArtists /></FrontLayout>} />
+                <Route path="/front/events" element={<FrontLayout><FrontEvents /></FrontLayout>} />
+                <Route path="/front/contact" element={<FrontLayout><FrontContact /></FrontLayout>} />
+                <Route path="/front/shop" element={<FrontLayout><FrontShop /></FrontLayout>} />
+                
                 <Route path="/artist-showcase" element={<FrontArtistShowcase />} />
                 <Route path="/auth" element={<Auth />} />
                 
