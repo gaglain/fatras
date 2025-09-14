@@ -125,8 +125,9 @@ async function connectEmailAccount(baseUrl: string, apiKey: string, clientId: st
 
     if (provider === 'imap') {
       // Derive robust IMAP/SMTP settings (works for OVH and most providers)
+      let imap_host = (config as any).imap_host ?? config.host;
       const imap_port = (config as any).imap_port ?? config.port ?? 993;
-      const smtp_host = (config as any).smtp_host ?? config.host;
+      let smtp_host = (config as any).smtp_host ?? config.host;
       let smtp_port = (config as any).smtp_port ?? 587;
 
       // Force SMTPS 465 for OVH-like providers that often reject STARTTLS AUTH
@@ -138,7 +139,7 @@ async function connectEmailAccount(baseUrl: string, apiKey: string, clientId: st
       const grantBody = () => JSON.stringify({
         provider: 'imap',
         settings: {
-          imap_host: config.host,
+          imap_host,
           imap_port,
           imap_username: config.email,
           imap_password: config.password,
@@ -173,7 +174,6 @@ async function connectEmailAccount(baseUrl: string, apiKey: string, clientId: st
         if ((/Unrecognized authentication type|AUTH|authentication failed/i.test(providerErr)) && smtp_port !== 465) {
           console.log('🔁 Retrying grant with SMTPS 465/ssl');
           smtp_port = 465;
-          smtp_security = 'ssl';
           grantResponse = await fetch(`${baseUrl}/connect/custom`, {
             method: 'POST',
             headers: {
@@ -182,6 +182,25 @@ async function connectEmailAccount(baseUrl: string, apiKey: string, clientId: st
             },
             body: grantBody(),
           });
+        }
+
+        // OVH fallback to ssl0.ovh.net if provider not responding
+        if (!grantResponse.ok) {
+          const midText = await grantResponse.text();
+          if (/provider_not_responding|Failed to connect|timeout/i.test(midText) && /ovh/i.test(String(smtp_host)) && smtp_host !== 'ssl0.ovh.net') {
+            console.log('🔁 Retrying grant with OVH fallback host ssl0.ovh.net:465');
+            smtp_host = 'ssl0.ovh.net';
+            if (/ovh/i.test(String(imap_host))) imap_host = 'ssl0.ovh.net';
+            smtp_port = 465;
+            grantResponse = await fetch(`${baseUrl}/connect/custom`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json',
+              },
+              body: grantBody(),
+            });
+          }
         }
 
         if (!grantResponse.ok) {
@@ -202,7 +221,7 @@ async function connectEmailAccount(baseUrl: string, apiKey: string, clientId: st
               body: JSON.stringify({
                 provider: 'imap',
                 settings: {
-                  imap_host: config.host,
+                  imap_host,
                   imap_port,
                   smtp_host,
                   smtp_port,
