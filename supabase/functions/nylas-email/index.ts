@@ -130,16 +130,7 @@ async function connectEmailAccount(baseUrl: string, apiKey: string, clientId: st
           let smtp_host = (config as any).smtp_host ?? config.host;
           let smtp_port = (config as any).smtp_port ?? 587;
 
-          // OVH sane defaults: prefer imap.mail.ovh.net:993 and smtp.mail.ovh.net:587 (STARTTLS)
-          if (/ovh/i.test(String(config.host ?? smtp_host ?? imap_host ?? ''))) {
-            imap_host = 'imap.mail.ovh.net';
-            smtp_host = 'smtp.mail.ovh.net';
-            imap_port = 993;
-            smtp_port = 587;
-          }
-
-          const securityFor = (port: number) => (port === 465 || port === 993 ? 'SSL/TLS' : 'STARTTLS');
-
+          // Build Nylas IMAP grant payload (no security flags — Nylas infers from ports)
           const grantBody = () => JSON.stringify({
             provider: 'imap',
             settings: {
@@ -147,17 +138,15 @@ async function connectEmailAccount(baseUrl: string, apiKey: string, clientId: st
               imap_port,
               imap_username: config.email,
               imap_password: config.password,
-              imap_security: securityFor(imap_port),
               smtp_host,
               smtp_port,
               smtp_username: config.email,
               smtp_password: config.password,
-              smtp_security: securityFor(smtp_port),
             }
           });
 
-      // 1) Try to create a grant directly (works if an IMAP connector already exists for the app)
-          console.log('🔍 IMAP connect attempt', { imap_host, imap_port, smtp_host, smtp_port, imap_security: securityFor(imap_port), smtp_security: securityFor(smtp_port) });
+          // Log exact params used (host/ports preserved, no auto-override)
+          console.log('🔍 IMAP connect attempt', { imap_host, imap_port, smtp_host, smtp_port });
           console.log('📨 IMAP: trying direct grant creation');
       let grantResponse = await fetch(`${baseUrl}/connect/custom`, {
         method: 'POST',
@@ -194,7 +183,7 @@ async function connectEmailAccount(baseUrl: string, apiKey: string, clientId: st
         // OVH fallback to ssl0.ovh.net if provider not responding
         if (!grantResponse.ok) {
           const midText = await grantResponse.clone().text();
-          if (/provider_not_responding|Failed to connect|timeout/i.test(midText) && /ovh/i.test(String(smtp_host)) && smtp_host !== 'ssl0.ovh.net') {
+          if (/provider_not_responding|Failed to connect|timeout/i.test(midText) && /ovh/i.test(String(smtp_host)) && smtp_host !== 'ssl0.ovh.net' && !/pro1\.mail\.ovh\.net/i.test(String(smtp_host))) {
             console.log('🔁 Retrying grant with OVH fallback host ssl0.ovh.net:465');
             smtp_host = 'ssl0.ovh.net';
             if (/ovh/i.test(String(imap_host))) imap_host = 'ssl0.ovh.net';
@@ -230,10 +219,8 @@ async function connectEmailAccount(baseUrl: string, apiKey: string, clientId: st
                 settings: {
                   imap_host,
                   imap_port,
-                  imap_security: securityFor(imap_port),
                   smtp_host,
                   smtp_port,
-                  smtp_security: securityFor(smtp_port),
                 }
               }),
             });
