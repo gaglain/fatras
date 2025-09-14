@@ -1,0 +1,413 @@
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.9';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+interface NylasRequest {
+  action: 'connect' | 'sync' | 'send' | 'test' | 'list_accounts';
+  accountId?: string;
+  email?: {
+    to: string;
+    subject: string;
+    content: string;
+    html?: string;
+  };
+  provider?: 'gmail' | 'outlook' | 'imap';
+  config?: {
+    email: string;
+    password?: string;
+    host?: string;
+    port?: number;
+    ssl?: boolean;
+  };
+}
+
+const handler = async (req: Request): Promise<Response> => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const nylasApiKey = Deno.env.get('NYLAS_API_KEY');
+    const nylasClientId = Deno.env.get('NYLAS_CLIENT_ID');
+
+    if (!supabaseUrl || !supabaseServiceKey || !nylasApiKey || !nylasClientId) {
+      throw new Error('Missing required environment variables');
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const { action, accountId, email, provider, config }: NylasRequest = await req.json();
+
+    // Get user from auth header
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('Missing authorization header');
+    }
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser(
+      authHeader.replace('Bearer ', '')
+    );
+
+    if (authError || !user) {
+      throw new Error('Invalid authentication');
+    }
+
+    console.log(`🔄 Nylas action: ${action} for user: ${user.id}`);
+
+    const nylasBaseUrl = 'https://api.us.nylas.com/v3';
+
+    switch (action) {
+      case 'list_accounts':
+        return await listEmailAccounts(nylasBaseUrl, nylasApiKey, supabase, user.id);
+      
+      case 'connect':
+        return await connectEmailAccount(nylasBaseUrl, nylasApiKey, nylasClientId, supabase, user.id, provider!, config!);
+      
+      case 'sync':
+        return await syncEmails(nylasBaseUrl, nylasApiKey, supabase, user.id, accountId!);
+      
+      case 'send':
+        return await sendEmail(nylasBaseUrl, nylasApiKey, supabase, user.id, accountId!, email!);
+      
+      case 'test':
+        return await testConnection(nylasBaseUrl, nylasApiKey, accountId!);
+      
+      default:
+        throw new Error(`Unsupported action: ${action}`);
+    }
+
+  } catch (error: any) {
+    console.error('❌ Nylas error:', error);
+    return new Response(
+      JSON.stringify({ 
+        success: false, 
+        error: error.message 
+      }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
+  }
+};
+
+async function listEmailAccounts(baseUrl: string, apiKey: string, supabase: any, userId: string) {
+  try {
+    const { data: accounts, error } = await supabase
+      .from('email_accounts')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('is_active', true);
+
+    if (error) throw error;
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        accounts: accounts || []
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  } catch (error: any) {
+    throw new Error(`Failed to list accounts: ${error.message}`);
+  }
+}
+
+async function connectEmailAccount(baseUrl: string, apiKey: string, clientId: string, supabase: any, userId: string, provider: string, config: any) {
+  try {
+    console.log(`🔗 Connecting ${provider} account for ${config.email}`);
+
+    // Create Nylas account based on provider
+    let nylasResponse;
+    
+    if (provider === 'gmail') {
+      // For Gmail, use OAuth flow
+      nylasResponse = await fetch(`${baseUrl}/connect/authorize`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          client_id: clientId,
+          provider: 'gmail',
+          scope: ['email'],
+          email_address: config.email,
+        }),
+      });
+    } else if (provider === 'outlook') {
+      // For Outlook, use OAuth flow
+      nylasResponse = await fetch(`${baseUrl}/connect/authorize`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          client_id: clientId,
+          provider: 'microsoft',
+          scope: ['email'],
+          email_address: config.email,
+        }),
+      });
+    } else {
+      // For IMAP (OVH, etc.)
+      nylasResponse = await fetch(`${baseUrl}/connect/authorize`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          client_id: clientId,
+          provider: 'imap',
+          settings: {
+            imap_host: config.host,
+            imap_port: config.port || 993,
+            imap_username: config.email,
+            imap_password: config.password,
+            smtp_host: config.host?.replace('imap', 'smtp') || config.host,
+            smtp_port: 587,
+            smtp_username: config.email,
+            smtp_password: config.password,
+            ssl_required: config.ssl !== false,
+          },
+          email_address: config.email,
+        }),
+      });
+    }
+
+    if (!nylasResponse.ok) {
+      const errorData = await nylasResponse.text();
+      throw new Error(`Nylas API error: ${errorData}`);
+    }
+
+    const nylasData = await nylasResponse.json();
+    console.log('✅ Nylas response:', nylasData);
+
+    // Store account in database
+    const { data: account, error } = await supabase
+      .from('email_accounts')
+      .upsert({
+        user_id: userId,
+        provider: provider,
+        email: config.email,
+        access_token: nylasData.access_token || nylasData.code,
+        imap_config: provider === 'imap' ? config : null,
+        is_active: true,
+        last_sync_at: new Date().toISOString(),
+      }, {
+        onConflict: 'user_id,email'
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        account: account,
+        authorization_url: nylasData.authorization_url || null,
+        message: provider === 'imap' ? 'Account connected successfully' : 'Complete OAuth flow using the authorization URL'
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error: any) {
+    throw new Error(`Failed to connect account: ${error.message}`);
+  }
+}
+
+async function syncEmails(baseUrl: string, apiKey: string, supabase: any, userId: string, accountId: string) {
+  try {
+    console.log(`📧 Syncing emails for account: ${accountId}`);
+
+    // Get account details
+    const { data: account, error: accountError } = await supabase
+      .from('email_accounts')
+      .select('*')
+      .eq('id', accountId)
+      .eq('user_id', userId)
+      .single();
+
+    if (accountError || !account) {
+      throw new Error('Account not found');
+    }
+
+    // Fetch emails from Nylas
+    const emailsResponse = await fetch(`${baseUrl}/grants/${account.access_token}/messages?limit=50`, {
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+      },
+    });
+
+    if (!emailsResponse.ok) {
+      throw new Error(`Failed to fetch emails: ${await emailsResponse.text()}`);
+    }
+
+    const emailsData = await emailsResponse.json();
+    const emails = emailsData.data || [];
+
+    console.log(`📨 Found ${emails.length} emails`);
+
+    let syncedCount = 0;
+
+    for (const email of emails) {
+      // Check if email already exists
+      const { data: existingEmail } = await supabase
+        .from('inbound_emails')
+        .select('id')
+        .eq('message_id', email.id)
+        .single();
+
+      if (!existingEmail) {
+        // Insert new email
+        const { error: insertError } = await supabase
+          .from('inbound_emails')
+          .insert({
+            user_id: userId,
+            message_id: email.id,
+            from_email: email.from?.[0]?.email || '',
+            from_name: email.from?.[0]?.name || '',
+            to_email: email.to?.[0]?.email || account.email,
+            subject: email.subject || '',
+            content: email.body || email.snippet || '',
+            html_content: email.body,
+            provider: 'nylas',
+            received_at: new Date(email.date * 1000).toISOString(),
+            thread_id: email.thread_id,
+            labels: email.folders || [],
+          });
+
+        if (!insertError) {
+          syncedCount++;
+        } else {
+          console.error('Error inserting email:', insertError);
+        }
+      }
+    }
+
+    // Update last sync time
+    await supabase
+      .from('email_accounts')
+      .update({ last_sync_at: new Date().toISOString() })
+      .eq('id', accountId);
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        syncedCount,
+        message: `Synchronized ${syncedCount} new emails`
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error: any) {
+    throw new Error(`Failed to sync emails: ${error.message}`);
+  }
+}
+
+async function sendEmail(baseUrl: string, apiKey: string, supabase: any, userId: string, accountId: string, email: any) {
+  try {
+    console.log(`📤 Sending email from account: ${accountId}`);
+
+    // Get account details
+    const { data: account, error: accountError } = await supabase
+      .from('email_accounts')
+      .select('*')
+      .eq('id', accountId)
+      .eq('user_id', userId)
+      .single();
+
+    if (accountError || !account) {
+      throw new Error('Account not found');
+    }
+
+    // Send email via Nylas
+    const sendResponse = await fetch(`${baseUrl}/grants/${account.access_token}/messages/send`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        to: [{ email: email.to }],
+        subject: email.subject,
+        body: email.html || email.content,
+        reply_to: [{ email: account.email }],
+      }),
+    });
+
+    if (!sendResponse.ok) {
+      const errorData = await sendResponse.text();
+      throw new Error(`Failed to send email: ${errorData}`);
+    }
+
+    const sendData = await sendResponse.json();
+
+    // Save sent email to database
+    await supabase
+      .from('emails')
+      .insert({
+        user_id: userId,
+        from_email: account.email,
+        to_email: email.to,
+        subject: email.subject,
+        content: email.content,
+        html_content: email.html,
+        status: 'sent',
+        sent_at: new Date().toISOString(),
+        metadata: { nylas_message_id: sendData.data?.id }
+      });
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        messageId: sendData.data?.id,
+        message: 'Email sent successfully'
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error: any) {
+    throw new Error(`Failed to send email: ${error.message}`);
+  }
+}
+
+async function testConnection(baseUrl: string, apiKey: string, accountId: string) {
+  try {
+    console.log(`🔧 Testing connection for account: ${accountId}`);
+
+    const testResponse = await fetch(`${baseUrl}/grants/${accountId}/messages?limit=1`, {
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+      },
+    });
+
+    return new Response(
+      JSON.stringify({
+        success: testResponse.ok,
+        message: testResponse.ok ? 'Connection successful' : 'Connection failed'
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error: any) {
+    return new Response(
+      JSON.stringify({
+        success: false,
+        message: `Connection test failed: ${error.message}`
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+}
+
+serve(handler);
