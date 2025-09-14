@@ -19,7 +19,7 @@ interface EmailConfig {
 }
 
 export const NylasEmailManager: React.FC = () => {
-  const { accounts, isLoading, connectAccount, loadAccounts, syncEmails, sendEmail, testConnection } = useNylasEmail();
+  const { accounts, isLoading, connectAccount, loadAccounts, syncEmails, sendEmail, testConnection, testImap, testSmtp } = useNylasEmail();
   const [showAddAccount, setShowAddAccount] = useState(false);
   const [provider, setProvider] = useState<'gmail' | 'outlook' | 'imap'>('gmail');
   const [config, setConfig] = useState<EmailConfig>({
@@ -86,6 +86,26 @@ export const NylasEmailManager: React.FC = () => {
     }
   };
 
+  const handleTestImap = async () => {
+    try {
+      await testImap({ host: config.host || 'pro1.mail.ovh.net', port: config.port || 993 });
+    } catch (error) {
+      console.error('Failed to test IMAP:', error);
+    }
+  };
+
+  const handleTestSmtp = async () => {
+    try {
+      const host = config.host || 'pro1.mail.ovh.net';
+      const first = await testSmtp({ host, port: 465 });
+      if (!first?.success) {
+        await testSmtp({ host, port: 587 });
+      }
+    } catch (error) {
+      console.error('Failed to test SMTP:', error);
+    }
+  };
+
   const handleTestConnection = async (accountId: string) => {
     try {
       await testConnection(accountId);
@@ -93,7 +113,6 @@ export const NylasEmailManager: React.FC = () => {
       console.error('Failed to test connection:', error);
     }
   };
-
   const getProviderConfig = (provider: string) => {
     switch (provider) {
       case 'gmail':
@@ -209,6 +228,15 @@ export const NylasEmailManager: React.FC = () => {
                           onChange={(e) => setConfig(prev => ({ ...prev, port: parseInt(e.target.value) }))}
                         />
                       </div>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Button type="button" variant="outline" onClick={handleTestImap} disabled={isLoading}>
+                        Tester IMAP
+                      </Button>
+                      <Button type="button" variant="outline" onClick={handleTestSmtp} disabled={isLoading}>
+                        Tester SMTP (465/587)
+                      </Button>
                     </div>
                   </>
                 )}

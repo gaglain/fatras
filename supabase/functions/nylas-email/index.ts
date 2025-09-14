@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 interface NylasRequest {
-  action: 'connect' | 'sync' | 'send' | 'test' | 'list_accounts';
+  action: 'connect' | 'sync' | 'send' | 'test' | 'test_imap' | 'test_smtp' | 'list_accounts';
   accountId?: string;
   email?: {
     to: string;
@@ -65,19 +65,18 @@ const handler = async (req: Request): Promise<Response> => {
     switch (action) {
       case 'list_accounts':
         return await listEmailAccounts(nylasBaseUrl, nylasApiKey, supabase, user.id);
-      
       case 'connect':
         return await connectEmailAccount(nylasBaseUrl, nylasApiKey, nylasClientId, supabase, user.id, provider!, config!);
-      
       case 'sync':
         return await syncEmails(nylasBaseUrl, nylasApiKey, supabase, user.id, accountId!);
-      
       case 'send':
         return await sendEmail(nylasBaseUrl, nylasApiKey, supabase, user.id, accountId!, email!);
-      
       case 'test':
         return await testConnection(nylasBaseUrl, nylasApiKey, accountId!);
-      
+      case 'test_imap':
+        return await testImapConnectivity(config!);
+      case 'test_smtp':
+        return await testSmtpConnectivity(config!);
       default:
         throw new Error(`Unsupported action: ${action}`);
     }
@@ -142,6 +141,17 @@ async function connectEmailAccount(baseUrl: string, apiKey: string, clientId: st
               smtp_port,
               smtp_username: config.email,
               smtp_password: config.password,
+            }
+          });
+
+          // IMAP-only (no SMTP) payload for fallback when SMTP fails or is not required
+          const grantBodyImapOnly = () => JSON.stringify({
+            provider: 'imap',
+            settings: {
+              imap_host,
+              imap_port,
+              imap_username: config.email,
+              imap_password: config.password,
             }
           });
 
@@ -254,8 +264,26 @@ async function connectEmailAccount(baseUrl: string, apiKey: string, clientId: st
               throw new Error(`Grant creation failed after ensuring connector: ${retryErr}`);
             }
           } else {
-            // Some other error (not missing connector)
-            throw new Error(`Grant creation failed: ${errText}`);
+            // Some other error (not missing connector) → try IMAP-only fallback if SMTP is the culprit
+            const providerErrorText = errJson?.error?.provider_error?.error || errText;
+            if (/SMTP|authentication|Unrecognized authentication type|STARTTLS/i.test(providerErrorText)) {
+              console.log('🔁 Retrying with IMAP-only (no SMTP)');
+              grantResponse = await fetch(`${baseUrl}/connect/custom`, {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${apiKey}`,
+                  'Content-Type': 'application/json',
+                },
+                body: grantBodyImapOnly(),
+              });
+
+              if (!grantResponse.ok) {
+                const imapOnlyErr = await grantResponse.text();
+                throw new Error(`Grant creation failed (IMAP-only): ${imapOnlyErr}`);
+              }
+            } else {
+              throw new Error(`Grant creation failed: ${errText}`);
+            }
           }
         }
       }
@@ -509,6 +537,54 @@ async function testConnection(baseUrl: string, apiKey: string, accountId: string
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
+  }
+}
+
+async function testImapConnectivity(config: any): Promise<Response> {
+  const host = config?.imap_host ?? config?.host;
+  const port = Number(config?.imap_port ?? config?.port ?? 993);
+  if (!host || !port) {
+    return new Response(JSON.stringify({ success: false, message: 'Missing host/port for IMAP test' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  }
+  const useTls = port === 993;
+  try {
+    console.log('🧪 Testing IMAP connectivity', { host, port, useTls });
+    const conn = useTls
+      ? await Deno.connectTls({ hostname: host, port, tlsHostname: host })
+      : await Deno.connect({ hostname: host, port });
+    const buf = new Uint8Array(512);
+    let n = 0;
+    try { n = (await conn.read(buf)) ?? 0; } catch {}
+    try { conn.close(); } catch {}
+    const banner = new TextDecoder().decode(buf.subarray(0, n));
+    return new Response(JSON.stringify({ success: true, message: 'IMAP reachable', host, port, banner }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  } catch (error: any) {
+    console.error('❌ IMAP test error:', error);
+    return new Response(JSON.stringify({ success: false, message: `IMAP not reachable: ${error.message}`, host, port }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  }
+}
+
+async function testSmtpConnectivity(config: any): Promise<Response> {
+  const host = config?.smtp_host ?? config?.host;
+  const port = Number(config?.smtp_port ?? config?.port ?? 465);
+  if (!host || !port) {
+    return new Response(JSON.stringify({ success: false, message: 'Missing host/port for SMTP test' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  }
+  const useTls = port === 465;
+  try {
+    console.log('🧪 Testing SMTP connectivity', { host, port, useTls });
+    const conn = useTls
+      ? await Deno.connectTls({ hostname: host, port, tlsHostname: host })
+      : await Deno.connect({ hostname: host, port });
+    const buf = new Uint8Array(512);
+    let n = 0;
+    try { n = (await conn.read(buf)) ?? 0; } catch {}
+    try { conn.close(); } catch {}
+    const banner = new TextDecoder().decode(buf.subarray(0, n));
+    return new Response(JSON.stringify({ success: true, message: 'SMTP reachable', host, port, banner }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  } catch (error: any) {
+    console.error('❌ SMTP test error:', error);
+    return new Response(JSON.stringify({ success: false, message: `SMTP not reachable: ${error.message}`, host, port }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 }
 

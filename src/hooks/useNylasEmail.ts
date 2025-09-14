@@ -211,6 +211,50 @@ export const useNylasEmail = () => {
     }
   };
 
+  const testImap = async (config: { host: string; port?: number }) => {
+    if (!user) throw new Error('User must be authenticated');
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('nylas-email', {
+        body: {
+          action: 'test_imap',
+          config: { host: config.host, port: config.port ?? 993 }
+        }
+      });
+      if (error) throw error;
+      if (data.success) {
+        toast.success('IMAP joignable');
+      } else {
+        toast.error(data.message || 'IMAP non joignable');
+      }
+      return data;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const testSmtp = async (config: { host: string; port?: number }) => {
+    if (!user) throw new Error('User must be authenticated');
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('nylas-email', {
+        body: {
+          action: 'test_smtp',
+          config: { host: config.host, port: config.port ?? 465 }
+        }
+      });
+      if (error) throw error;
+      if (data.success) {
+        toast.success('SMTP joignable');
+      } else {
+        toast.error(data.message || 'SMTP non joignable');
+      }
+      return data;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     accounts,
     isLoading,
@@ -218,6 +262,8 @@ export const useNylasEmail = () => {
     loadAccounts,
     syncEmails,
     sendEmail,
-    testConnection
+    testConnection,
+    testImap,
+    testSmtp
   };
 };
