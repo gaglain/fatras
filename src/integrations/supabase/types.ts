@@ -1139,6 +1139,44 @@ export type Database = {
           },
         ]
       }
+      form_submissions: {
+        Row: {
+          created_at: string | null
+          data: Json
+          form_id: string
+          id: string
+          ip_address: string | null
+          submitted_at: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data?: Json
+          form_id: string
+          id?: string
+          ip_address?: string | null
+          submitted_at?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data?: Json
+          form_id?: string
+          id?: string
+          ip_address?: string | null
+          submitted_at?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form_submissions_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "forms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       forms: {
         Row: {
           created_at: string
