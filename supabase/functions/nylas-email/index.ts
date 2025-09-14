@@ -124,6 +124,29 @@ async function connectEmailAccount(baseUrl: string, apiKey: string, clientId: st
     console.log(`🔗 Connecting ${provider} account for ${config.email}`);
 
     if (provider === 'imap') {
+      // Derive robust IMAP/SMTP settings (works for OVH and most providers)
+      const imap_port = config.port ?? 993;
+      const smtp_host = (config as any).smtp_host ?? config.host;
+      let smtp_port = (config as any).smtp_port ?? 587;
+      const imap_security = (config as any).imap_security ?? (imap_port === 993 ? 'ssl' : 'starttls');
+      let smtp_security = (config as any).smtp_security ?? (smtp_port === 465 ? 'ssl' : 'starttls');
+
+      const grantBody = () => JSON.stringify({
+        provider: 'imap',
+        settings: {
+          imap_host: config.host,
+          imap_port,
+          imap_username: config.email,
+          imap_password: config.password,
+          imap_security,
+          smtp_host,
+          smtp_port,
+          smtp_username: config.email,
+          smtp_password: config.password,
+          smtp_security,
+        }
+      });
+
       // 1) Try to create a grant directly (works if an IMAP connector already exists for the app)
       console.log('📨 IMAP: trying direct grant creation');
       let grantResponse = await fetch(`${baseUrl}/connect/custom`, {
@@ -132,88 +155,93 @@ async function connectEmailAccount(baseUrl: string, apiKey: string, clientId: st
           'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          provider: 'imap',
-          settings: {
-            imap_host: config.host,
-            imap_port: config.port || 993,
-            imap_username: config.email,
-            imap_password: config.password,
-            smtp_host: config.host?.replace('imap', 'smtp') || config.host,
-            smtp_port: 587,
-            smtp_username: config.email,
-            smtp_password: config.password,
-            ssl_required: config.ssl !== false,
-          }
-        }),
+        body: grantBody(),
       });
 
       if (!grantResponse.ok) {
-        const firstErr = await grantResponse.text();
-        console.log('⚠️ IMAP grant creation failed, will check connector state:', firstErr);
+        const firstText = await grantResponse.text();
+        let firstJson: any = null;
+        try { firstJson = JSON.parse(firstText); } catch {}
+        console.log('⚠️ IMAP grant creation failed:', firstText);
 
-        // 2) If connector is missing, create it then retry grant
-        if (firstErr.includes('connector.not_found') || firstErr.includes('connector.missing')) {
-          console.log('🧩 IMAP connector missing: creating connector...');
-          const connectorResponse = await fetch(`${baseUrl}/connectors`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${apiKey}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              provider: 'imap',
-              settings: {
-                imap_host: config.host,
-                imap_port: config.port || 993,
-                smtp_host: config.host?.replace('imap', 'smtp') || config.host,
-                smtp_port: 587,
-                ssl_required: config.ssl !== false,
-              }
-            }),
-          });
+        const providerErr: string = firstJson?.error?.provider_error?.error || '';
+        const nylasErrType: string = firstJson?.error?.type || '';
 
-          if (!connectorResponse.ok) {
-            const connErr = await connectorResponse.text();
-            // If connector already exists, ignore and continue to retry grant
-            if (!connErr.includes('connector.already_exists')) {
-              throw new Error(`Connector creation failed: ${connErr}`);
-            }
-            console.log('ℹ️ IMAP connector already exists, continuing.');
-          } else {
-            console.log('✅ IMAP connector created');
-          }
-
-          // Retry grant after connector ensured
+        // 1.a) Retry with SMTPS 465 if STARTTLS/auth fails (common with some providers)
+        if ((/Unrecognized authentication type|AUTH|authentication failed/i.test(providerErr)) && smtp_port !== 465) {
+          console.log('🔁 Retrying grant with SMTPS 465/ssl');
+          smtp_port = 465;
+          smtp_security = 'ssl';
           grantResponse = await fetch(`${baseUrl}/connect/custom`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${apiKey}`,
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-              provider: 'imap',
-              settings: {
-                imap_host: config.host,
-                imap_port: config.port || 993,
-                imap_username: config.email,
-                imap_password: config.password,
-                smtp_host: config.host?.replace('imap', 'smtp') || config.host,
-                smtp_port: 587,
-                smtp_username: config.email,
-                smtp_password: config.password,
-                ssl_required: config.ssl !== false,
-              }
-            }),
+            body: grantBody(),
           });
+        }
 
-          if (!grantResponse.ok) {
-            const retryErr = await grantResponse.text();
-            throw new Error(`Grant creation failed after ensuring connector: ${retryErr}`);
+        if (!grantResponse.ok) {
+          // 1.b) If connector is missing, create it then retry grant
+          const errText = firstJson ? firstText : await grantResponse.text();
+          let errJson: any = firstJson;
+          if (!errJson) { try { errJson = JSON.parse(errText); } catch {} }
+          const errType: string = errJson?.error?.type || '';
+
+          if (/connector\.not_found|connector\.missing/i.test(errType) || /connector\.not_found|connector\.missing/i.test(errText)) {
+            console.log('🧩 IMAP connector missing: creating connector or reusing existing...');
+            const connectorResponse = await fetch(`${baseUrl}/connectors`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                provider: 'imap',
+                settings: {
+                  imap_host: config.host,
+                  imap_port,
+                  imap_security,
+                  smtp_host,
+                  smtp_port,
+                  smtp_security,
+                }
+              }),
+            });
+
+            if (!connectorResponse.ok) {
+              const connText = await connectorResponse.text();
+              let connJson: any = null;
+              try { connJson = JSON.parse(connText); } catch {}
+              const connType: string = connJson?.error?.type || '';
+              // Ignore if connector already exists or conflict
+              if (!/connector\.already_exists/i.test(connType) && !/connector\.already_exists/i.test(connText) && connectorResponse.status !== 409) {
+                throw new Error(`Connector creation failed: ${connText}`);
+              }
+              console.log('ℹ️ IMAP connector already exists, proceeding.');
+            } else {
+              console.log('✅ IMAP connector created');
+            }
+
+            // Retry grant after connector ensured
+            grantResponse = await fetch(`${baseUrl}/connect/custom`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json',
+              },
+              body: grantBody(),
+            });
+
+            if (!grantResponse.ok) {
+              const retryErr = await grantResponse.text();
+              throw new Error(`Grant creation failed after ensuring connector: ${retryErr}`);
+            }
+          } else {
+            // Some other error (not missing connector)
+            throw new Error(`Grant creation failed: ${errText}`);
           }
-        } else {
-          // Some other error (not missing connector)
-          throw new Error(`Grant creation failed: ${firstErr}`);
         }
       }
 
@@ -228,7 +256,7 @@ async function connectEmailAccount(baseUrl: string, apiKey: string, clientId: st
           provider: provider,
           email: config.email,
           access_token: grantData.data?.id || grantData.data?.grant_id || grantData.grant_id, // grant id
-          imap_config: config,
+          imap_config: { ...config, imap_port, smtp_host, smtp_port, imap_security, smtp_security },
           is_active: true,
           last_sync_at: new Date().toISOString(),
         }, {
