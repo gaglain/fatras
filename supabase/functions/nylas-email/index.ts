@@ -125,11 +125,15 @@ async function connectEmailAccount(baseUrl: string, apiKey: string, clientId: st
 
     if (provider === 'imap') {
       // Derive robust IMAP/SMTP settings (works for OVH and most providers)
-      const imap_port = config.port ?? 993;
+      const imap_port = (config as any).imap_port ?? config.port ?? 993;
       const smtp_host = (config as any).smtp_host ?? config.host;
       let smtp_port = (config as any).smtp_port ?? 587;
-      const imap_security = (config as any).imap_security ?? (imap_port === 993 ? 'ssl' : 'starttls');
-      let smtp_security = (config as any).smtp_security ?? (smtp_port === 465 ? 'ssl' : 'starttls');
+
+      // Force SMTPS 465 for OVH-like providers that often reject STARTTLS AUTH
+      if (/ovh/i.test(String(smtp_host)) && smtp_port !== 465) {
+        console.log('🔧 OVH detected: using SMTPS 465');
+        smtp_port = 465;
+      }
 
       const grantBody = () => JSON.stringify({
         provider: 'imap',
