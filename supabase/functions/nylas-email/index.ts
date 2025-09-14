@@ -162,7 +162,7 @@ async function connectEmailAccount(baseUrl: string, apiKey: string, clientId: st
       });
 
       if (!grantResponse.ok) {
-        const firstText = await grantResponse.text();
+        const firstText = await grantResponse.clone().text();
         let firstJson: any = null;
         try { firstJson = JSON.parse(firstText); } catch {}
         console.log('⚠️ IMAP grant creation failed:', firstText);
@@ -186,7 +186,7 @@ async function connectEmailAccount(baseUrl: string, apiKey: string, clientId: st
 
         // OVH fallback to ssl0.ovh.net if provider not responding
         if (!grantResponse.ok) {
-          const midText = await grantResponse.text();
+          const midText = await grantResponse.clone().text();
           if (/provider_not_responding|Failed to connect|timeout/i.test(midText) && /ovh/i.test(String(smtp_host)) && smtp_host !== 'ssl0.ovh.net') {
             console.log('🔁 Retrying grant with OVH fallback host ssl0.ovh.net:465');
             smtp_host = 'ssl0.ovh.net';
@@ -205,7 +205,7 @@ async function connectEmailAccount(baseUrl: string, apiKey: string, clientId: st
 
         if (!grantResponse.ok) {
           // 1.b) If connector is missing, create it then retry grant
-          const errText = firstJson ? firstText : await grantResponse.text();
+          const errText = firstJson ? firstText : await grantResponse.clone().text();
           let errJson: any = firstJson;
           if (!errJson) { try { errJson = JSON.parse(errText); } catch {} }
           const errType: string = errJson?.error?.type || '';
