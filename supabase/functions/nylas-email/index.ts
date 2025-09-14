@@ -123,49 +123,15 @@ async function connectEmailAccount(baseUrl: string, apiKey: string, clientId: st
   try {
     console.log(`🔗 Connecting ${provider} account for ${config.email}`);
 
-    // Create Nylas account based on provider
-    let nylasResponse;
-    
-    if (provider === 'gmail') {
-      // For Gmail, use OAuth flow
-      nylasResponse = await fetch(`${baseUrl}/connect/authorize`, {
+    if (provider === 'imap') {
+      // For IMAP: Create connector first, then grant
+      const connectorResponse = await fetch(`${baseUrl}/connectors`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          client_id: clientId,
-          provider: 'gmail',
-          scope: ['email'],
-          email_address: config.email,
-        }),
-      });
-    } else if (provider === 'outlook') {
-      // For Outlook, use OAuth flow
-      nylasResponse = await fetch(`${baseUrl}/connect/authorize`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          client_id: clientId,
-          provider: 'microsoft',
-          scope: ['email'],
-          email_address: config.email,
-        }),
-      });
-    } else {
-      // For IMAP (OVH, etc.)
-      nylasResponse = await fetch(`${baseUrl}/connect/authorize`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          client_id: clientId,
           provider: 'imap',
           settings: {
             imap_host: config.host,
@@ -177,48 +143,107 @@ async function connectEmailAccount(baseUrl: string, apiKey: string, clientId: st
             smtp_username: config.email,
             smtp_password: config.password,
             ssl_required: config.ssl !== false,
-          },
-          email_address: config.email,
+          }
         }),
       });
+
+      if (!connectorResponse.ok) {
+        const errorData = await connectorResponse.text();
+        throw new Error(`Connector creation failed: ${errorData}`);
+      }
+
+      const connectorData = await connectorResponse.json();
+      console.log('✅ IMAP Connector created:', connectorData);
+
+      // Create grant for IMAP
+      const grantResponse = await fetch(`${baseUrl}/connect/custom`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          provider: 'imap',
+          settings: {
+            imap_host: config.host,
+            imap_port: config.port || 993,
+            imap_username: config.email,
+            imap_password: config.password,
+            smtp_host: config.host?.replace('imap', 'smtp') || config.host,
+            smtp_port: 587,
+            smtp_username: config.email,
+            smtp_password: config.password,
+            ssl_required: config.ssl !== false,
+          }
+        }),
+      });
+
+      if (!grantResponse.ok) {
+        const errorData = await grantResponse.text();
+        throw new Error(`Grant creation failed: ${errorData}`);
+      }
+
+      const grantData = await grantResponse.json();
+      console.log('✅ IMAP Grant created:', grantData);
+
+      // Store account in database
+      const { data: account, error } = await supabase
+        .from('email_accounts')
+        .upsert({
+          user_id: userId,
+          provider: provider,
+          email: config.email,
+          access_token: grantData.data.id, // Store grant_id as access_token
+          imap_config: config,
+          is_active: true,
+          last_sync_at: new Date().toISOString(),
+        }, {
+          onConflict: 'user_id,email'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          account: account,
+          grant_id: grantData.data.id,
+          message: 'IMAP account connected successfully'
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+
+    } else {
+      // For OAuth (Gmail/Outlook): Return authorization URL
+      const callbackUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/nylas-email-callback`;
+      
+      const authUrlParams = new URLSearchParams({
+        client_id: clientId,
+        response_type: 'code',
+        scope: provider === 'gmail' ? 'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send' : 'https://graph.microsoft.com/mail.read https://graph.microsoft.com/mail.send',
+        redirect_uri: callbackUri,
+        access_type: 'offline',
+        login_hint: config.email,
+        state: `${userId}:${provider}:${config.email}`
+      });
+
+      const authUrl = provider === 'gmail' 
+        ? `https://accounts.google.com/o/oauth2/v2/auth?${authUrlParams}`
+        : `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?${authUrlParams}`;
+
+      console.log('✅ OAuth URL generated:', authUrl);
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          authorization_url: authUrl,
+          message: 'Complete OAuth flow using the authorization URL'
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
-
-    if (!nylasResponse.ok) {
-      const errorData = await nylasResponse.text();
-      throw new Error(`Nylas API error: ${errorData}`);
-    }
-
-    const nylasData = await nylasResponse.json();
-    console.log('✅ Nylas response:', nylasData);
-
-    // Store account in database
-    const { data: account, error } = await supabase
-      .from('email_accounts')
-      .upsert({
-        user_id: userId,
-        provider: provider,
-        email: config.email,
-        access_token: nylasData.access_token || nylasData.code,
-        imap_config: provider === 'imap' ? config : null,
-        is_active: true,
-        last_sync_at: new Date().toISOString(),
-      }, {
-        onConflict: 'user_id,email'
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        account: account,
-        authorization_url: nylasData.authorization_url || null,
-        message: provider === 'imap' ? 'Account connected successfully' : 'Complete OAuth flow using the authorization URL'
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
 
   } catch (error: any) {
     throw new Error(`Failed to connect account: ${error.message}`);
