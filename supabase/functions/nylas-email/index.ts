@@ -123,35 +123,42 @@ async function connectEmailAccount(baseUrl: string, apiKey: string, clientId: st
   try {
     console.log(`🔗 Connecting ${provider} account for ${config.email}`);
 
-    if (provider === 'imap') {
-      // Derive robust IMAP/SMTP settings (works for OVH and most providers)
-      let imap_host = (config as any).imap_host ?? config.host;
-      const imap_port = (config as any).imap_port ?? config.port ?? 993;
-      let smtp_host = (config as any).smtp_host ?? config.host;
-      let smtp_port = (config as any).smtp_port ?? 587;
+        if (provider === 'imap') {
+          // Derive robust IMAP/SMTP settings (optimized for OVH and common providers)
+          let imap_host = (config as any).imap_host ?? config.host;
+          let imap_port = (config as any).imap_port ?? config.port ?? 993;
+          let smtp_host = (config as any).smtp_host ?? config.host;
+          let smtp_port = (config as any).smtp_port ?? 587;
 
-      // Force SMTPS 465 for OVH-like providers that often reject STARTTLS AUTH
-      if (/ovh/i.test(String(smtp_host)) && smtp_port !== 465) {
-        console.log('🔧 OVH detected: using SMTPS 465');
-        smtp_port = 465;
-      }
+          // OVH sane defaults: prefer imap.mail.ovh.net:993 and smtp.mail.ovh.net:587 (STARTTLS)
+          if (/ovh/i.test(String(config.host ?? smtp_host ?? imap_host ?? ''))) {
+            imap_host = 'imap.mail.ovh.net';
+            smtp_host = 'smtp.mail.ovh.net';
+            imap_port = 993;
+            smtp_port = 587;
+          }
 
-      const grantBody = () => JSON.stringify({
-        provider: 'imap',
-        settings: {
-          imap_host,
-          imap_port,
-          imap_username: config.email,
-          imap_password: config.password,
-          smtp_host,
-          smtp_port,
-          smtp_username: config.email,
-          smtp_password: config.password,
-        }
-      });
+          const securityFor = (port: number) => (port === 465 || port === 993 ? 'SSL/TLS' : 'STARTTLS');
+
+          const grantBody = () => JSON.stringify({
+            provider: 'imap',
+            settings: {
+              imap_host,
+              imap_port,
+              imap_username: config.email,
+              imap_password: config.password,
+              imap_security: securityFor(imap_port),
+              smtp_host,
+              smtp_port,
+              smtp_username: config.email,
+              smtp_password: config.password,
+              smtp_security: securityFor(smtp_port),
+            }
+          });
 
       // 1) Try to create a grant directly (works if an IMAP connector already exists for the app)
-      console.log('📨 IMAP: trying direct grant creation');
+          console.log('🔍 IMAP connect attempt', { imap_host, imap_port, smtp_host, smtp_port, imap_security: securityFor(imap_port), smtp_security: securityFor(smtp_port) });
+          console.log('📨 IMAP: trying direct grant creation');
       let grantResponse = await fetch(`${baseUrl}/connect/custom`, {
         method: 'POST',
         headers: {
@@ -223,8 +230,10 @@ async function connectEmailAccount(baseUrl: string, apiKey: string, clientId: st
                 settings: {
                   imap_host,
                   imap_port,
+                  imap_security: securityFor(imap_port),
                   smtp_host,
                   smtp_port,
+                  smtp_security: securityFor(smtp_port),
                 }
               }),
             });
