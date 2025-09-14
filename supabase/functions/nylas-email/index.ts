@@ -138,12 +138,10 @@ async function connectEmailAccount(baseUrl: string, apiKey: string, clientId: st
           imap_port,
           imap_username: config.email,
           imap_password: config.password,
-          imap_security,
           smtp_host,
           smtp_port,
           smtp_username: config.email,
           smtp_password: config.password,
-          smtp_security,
         }
       });
 
@@ -202,10 +200,8 @@ async function connectEmailAccount(baseUrl: string, apiKey: string, clientId: st
                 settings: {
                   imap_host: config.host,
                   imap_port,
-                  imap_security,
                   smtp_host,
                   smtp_port,
-                  smtp_security,
                 }
               }),
             });
@@ -256,7 +252,7 @@ async function connectEmailAccount(baseUrl: string, apiKey: string, clientId: st
           provider: provider,
           email: config.email,
           access_token: grantData.data?.id || grantData.data?.grant_id || grantData.grant_id, // grant id
-          imap_config: { ...config, imap_port, smtp_host, smtp_port, imap_security, smtp_security },
+          imap_config: { ...config, imap_port, smtp_host, smtp_port },
           is_active: true,
           last_sync_at: new Date().toISOString(),
         }, {
