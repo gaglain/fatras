@@ -339,51 +339,47 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Filtres des calendriers */}
-        <div className="lg:col-span-1">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                Calendriers
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {calendars.map(calendar => (
-                <div key={calendar.id} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={calendar.id}
-                    checked={calendar.visible}
-                    onCheckedChange={() => onCalendarToggle(calendar.id)}
+      {/* Filtres des calendriers en haut */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Calendar className="h-5 w-5" />
+            Calendriers
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <div className="flex flex-wrap gap-3">
+            {calendars.map(calendar => (
+              <div key={calendar.id} className="flex items-center space-x-2">
+                <Checkbox
+                  id={calendar.id}
+                  checked={calendar.visible}
+                  onCheckedChange={() => onCalendarToggle(calendar.id)}
+                />
+                <div className="flex items-center gap-2">
+                  <div 
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: calendar.color }}
                   />
-                  <div className="flex items-center gap-2 flex-1">
-                    <div 
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: calendar.color }}
-                    />
-                    <label htmlFor={calendar.id} className="text-sm font-medium cursor-pointer flex-1">
-                      {calendar.name}
-                    </label>
-                    <Badge variant="secondary" className="text-xs">
-                      {calendar.provider}
-                    </Badge>
-                  </div>
+                  <label htmlFor={calendar.id} className="text-sm font-medium cursor-pointer">
+                    {calendar.name}
+                  </label>
+                  <Badge variant="secondary" className="text-xs">
+                    {calendar.provider}
+                  </Badge>
                 </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
-        {/* Vue du calendrier */}
-        <div className="lg:col-span-3">
-          <Card>
-            <CardContent className="p-6">
-              {renderCurrentView()}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+      {/* Vue du calendrier pleine largeur */}
+      <Card>
+        <CardContent className="p-6">
+          {renderCurrentView()}
+        </CardContent>
+      </Card>
     </div>
   );
 };
