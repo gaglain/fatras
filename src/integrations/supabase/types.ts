@@ -910,6 +910,47 @@ export type Database = {
         }
         Relationships: []
       }
+      email_notifications: {
+        Row: {
+          created_at: string | null
+          email_id: string | null
+          id: string
+          is_read: boolean | null
+          message: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email_id?: string | null
+          id?: string
+          is_read?: boolean | null
+          message?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          email_id?: string | null
+          id?: string
+          is_read?: boolean | null
+          message?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_notifications_email_id_fkey"
+            columns: ["email_id"]
+            isOneToOne: false
+            referencedRelation: "emails"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_templates: {
         Row: {
           category: string
@@ -952,67 +993,103 @@ export type Database = {
       emails: {
         Row: {
           attachments: Json | null
+          bcc_emails: string[] | null
           campaign_id: string | null
           cc_email: string | null
-          content: string
+          cc_emails: string[] | null
+          contact_id: string | null
+          content: string | null
           created_at: string
           delivered_at: string | null
-          from_email: string
+          direction: string | null
+          from_email: string | null
+          from_name: string | null
           html_content: string | null
           id: string
           is_read: boolean | null
           is_starred: boolean | null
+          labels: string[] | null
+          message_id: string | null
           metadata: Json | null
           opened_at: string | null
+          provider: string | null
+          read_at: string | null
+          received_at: string | null
           scheduled_at: string | null
           sent_at: string | null
-          status: string
-          subject: string
-          to_email: string
+          status: string | null
+          subject: string | null
+          thread_id: string | null
+          to_email: string | null
+          to_name: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           attachments?: Json | null
+          bcc_emails?: string[] | null
           campaign_id?: string | null
           cc_email?: string | null
-          content: string
+          cc_emails?: string[] | null
+          contact_id?: string | null
+          content?: string | null
           created_at?: string
           delivered_at?: string | null
-          from_email: string
+          direction?: string | null
+          from_email?: string | null
+          from_name?: string | null
           html_content?: string | null
           id?: string
           is_read?: boolean | null
           is_starred?: boolean | null
+          labels?: string[] | null
+          message_id?: string | null
           metadata?: Json | null
           opened_at?: string | null
+          provider?: string | null
+          read_at?: string | null
+          received_at?: string | null
           scheduled_at?: string | null
           sent_at?: string | null
-          status?: string
-          subject: string
-          to_email: string
+          status?: string | null
+          subject?: string | null
+          thread_id?: string | null
+          to_email?: string | null
+          to_name?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           attachments?: Json | null
+          bcc_emails?: string[] | null
           campaign_id?: string | null
           cc_email?: string | null
-          content?: string
+          cc_emails?: string[] | null
+          contact_id?: string | null
+          content?: string | null
           created_at?: string
           delivered_at?: string | null
-          from_email?: string
+          direction?: string | null
+          from_email?: string | null
+          from_name?: string | null
           html_content?: string | null
           id?: string
           is_read?: boolean | null
           is_starred?: boolean | null
+          labels?: string[] | null
+          message_id?: string | null
           metadata?: Json | null
           opened_at?: string | null
+          provider?: string | null
+          read_at?: string | null
+          received_at?: string | null
           scheduled_at?: string | null
           sent_at?: string | null
-          status?: string
-          subject?: string
-          to_email?: string
+          status?: string | null
+          subject?: string | null
+          thread_id?: string | null
+          to_email?: string | null
+          to_name?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -1022,6 +1099,13 @@ export type Database = {
             columns: ["campaign_id"]
             isOneToOne: false
             referencedRelation: "email_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "emails_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
             referencedColumns: ["id"]
           },
         ]
@@ -1215,6 +1299,7 @@ export type Database = {
           attachments: Json | null
           content: string | null
           created_at: string | null
+          direction: string | null
           from_email: string
           from_name: string | null
           html_content: string | null
@@ -1224,6 +1309,7 @@ export type Database = {
           provider: string
           read_at: string | null
           received_at: string | null
+          sender_name: string | null
           subject: string | null
           thread_id: string | null
           to_email: string
@@ -1234,6 +1320,7 @@ export type Database = {
           attachments?: Json | null
           content?: string | null
           created_at?: string | null
+          direction?: string | null
           from_email: string
           from_name?: string | null
           html_content?: string | null
@@ -1243,6 +1330,7 @@ export type Database = {
           provider: string
           read_at?: string | null
           received_at?: string | null
+          sender_name?: string | null
           subject?: string | null
           thread_id?: string | null
           to_email: string
@@ -1253,6 +1341,7 @@ export type Database = {
           attachments?: Json | null
           content?: string | null
           created_at?: string | null
+          direction?: string | null
           from_email?: string
           from_name?: string | null
           html_content?: string | null
@@ -1262,6 +1351,7 @@ export type Database = {
           provider?: string
           read_at?: string | null
           received_at?: string | null
+          sender_name?: string | null
           subject?: string | null
           thread_id?: string | null
           to_email?: string

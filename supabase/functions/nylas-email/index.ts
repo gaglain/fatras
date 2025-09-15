@@ -405,8 +405,8 @@ async function syncEmails(baseUrl: string, apiKey: string, supabase: any, userId
         .single();
 
       if (!existingEmail) {
-        // Insert new email
-        const { error: insertError } = await supabase
+        // Insert new email in both inbound_emails and unified emails table
+        const { error: inboundError } = await supabase
           .from('inbound_emails')
           .insert({
             user_id: userId,
@@ -421,12 +421,33 @@ async function syncEmails(baseUrl: string, apiKey: string, supabase: any, userId
             received_at: new Date(email.date * 1000).toISOString(),
             thread_id: email.thread_id,
             labels: email.folders || [],
+            direction: 'received'
           });
 
-        if (!insertError) {
+        // Also insert into unified emails table
+        const { error: unifiedError } = await supabase
+          .from('emails')
+          .insert({
+            user_id: userId,
+            message_id: email.id,
+            direction: 'received',
+            from_email: email.from?.[0]?.email || '',
+            from_name: email.from?.[0]?.name || '',
+            to_email: email.to?.[0]?.email || account.email,
+            subject: email.subject || '',
+            content: email.body || email.snippet || '',
+            html_content: email.body,
+            provider: 'nylas',
+            received_at: new Date(email.date * 1000).toISOString(),
+            thread_id: email.thread_id,
+            labels: email.folders || [],
+            status: 'delivered'
+          });
+
+        if (!inboundError && !unifiedError) {
           syncedCount++;
         } else {
-          console.error('Error inserting email:', insertError);
+          console.error('Error inserting email:', { inboundError, unifiedError });
         }
       }
     }
@@ -478,6 +499,7 @@ async function sendEmail(baseUrl: string, apiKey: string, supabase: any, userId:
         to: [{ email: email.to }],
         subject: email.subject,
         body: email.html || email.content,
+        from: [{ email: account.email, name: account.email.split('@')[0] }],
         reply_to: [{ email: account.email }],
       }),
     });
@@ -489,19 +511,22 @@ async function sendEmail(baseUrl: string, apiKey: string, supabase: any, userId:
 
     const sendData = await sendResponse.json();
 
-    // Save sent email to database
+    // Save sent email to database in unified emails table
     await supabase
       .from('emails')
       .insert({
         user_id: userId,
+        message_id: sendData.data?.id,
+        direction: 'sent',
         from_email: account.email,
+        from_name: account.email.split('@')[0], // Use email prefix as name for now
         to_email: email.to,
         subject: email.subject,
         content: email.content,
         html_content: email.html,
-        status: 'sent',
-        sent_at: new Date().toISOString(),
-        metadata: { nylas_message_id: sendData.data?.id }
+        status: 'delivered',
+        provider: 'nylas',
+        sent_at: new Date().toISOString()
       });
 
     return new Response(

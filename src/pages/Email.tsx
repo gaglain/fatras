@@ -17,6 +17,8 @@ import { EmailAnalytics } from '@/components/EmailAnalytics';
 import { EmailSender } from '@/components/EmailSender';
 import { EmailInbox } from '@/components/EmailInbox';
 import { EmailDiagnostic } from '@/components/EmailDiagnostic';
+import { UnifiedEmailManager } from '@/components/UnifiedEmailManager';
+import { EmailNotificationCenter } from '@/components/EmailNotificationCenter';
 import { toast } from 'sonner';
 import { useEmailSender } from '@/hooks/useEmailSender';
 
@@ -153,6 +155,7 @@ export const Email: React.FC = () => {
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [showEmailSender, setShowEmailSender] = useState(false);
   const [showInbox, setShowInbox] = useState(false);
+  const [showUnifiedEmails, setShowUnifiedEmails] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -337,6 +340,27 @@ export const Email: React.FC = () => {
     );
   }
 
+  if (showUnifiedEmails) {
+    return (
+      <div className="h-full">
+        <div className="bg-background/80 backdrop-blur-sm border-b border-border/50 p-6 sticky top-0 z-10">
+          <div className="flex items-center gap-4 max-w-7xl mx-auto">
+            <Button variant="outline" onClick={() => setShowUnifiedEmails(false)}>
+              ← Retour
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold">Gestionnaire Email Unifié</h1>
+              <p className="text-muted-foreground">Tous vos emails envoyés et reçus</p>
+            </div>
+          </div>
+        </div>
+        <div className="max-w-6xl mx-auto p-6">
+          <UnifiedEmailManager />
+        </div>
+      </div>
+    );
+  }
+
   if (showInbox) {
     return (
       <div className="h-full">
@@ -440,6 +464,13 @@ export const Email: React.FC = () => {
               <Send className="h-4 w-4 mr-2" />
               <span className="hidden sm:inline">Email Rapide</span>
               <span className="sm:hidden">Rapide</span>
+            </Button>
+            
+            <Button variant="default" size="sm" onClick={() => setShowUnifiedEmails(true)} 
+                    className="w-full sm:w-auto">
+              <Mail className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Mail</span>
+              <span className="sm:hidden">Mail</span>
             </Button>
             
             <Button variant="outline" size="sm" onClick={() => setShowInbox(true)} 

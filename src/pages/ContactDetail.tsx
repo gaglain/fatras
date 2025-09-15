@@ -27,6 +27,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useEntityConnections } from '@/hooks/useEntityConnections';
 import { Contact } from '@/types/contact.types';
 import { ContactDialog } from '@/components/contacts/ContactDialog';
+import { ContactEmailHistory } from '@/components/ContactEmailHistory';
 import { toast } from 'sonner';
 
 export const ContactDetail: React.FC = () => {
@@ -45,13 +46,11 @@ export const ContactDetail: React.FC = () => {
   });
   const [loading, setLoading] = useState(true);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [emailHistory, setEmailHistory] = useState<any[]>([]);
 
   useEffect(() => {
     if (id && user) {
       loadContact();
       loadConnections();
-      loadEmailHistory();
     }
   }, [id, user]);
 
@@ -82,25 +81,6 @@ export const ContactDetail: React.FC = () => {
     
     const data = await getContactConnections(id);
     setConnections(data);
-  };
-
-  const loadEmailHistory = async () => {
-    if (!id || !user) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('emails')
-        .select('*')
-        .eq('user_id', user.id)
-        .ilike('to_email', `%${contact?.email}%`)
-        .order('created_at', { ascending: false })
-        .limit(20);
-
-      if (error) throw error;
-      setEmailHistory(data || []);
-    } catch (error) {
-      console.error('Erreur lors du chargement de l\'historique email:', error);
-    }
   };
 
   const getEntityIcon = (type: string) => {
@@ -282,7 +262,7 @@ export const ContactDetail: React.FC = () => {
         <TabsList>
           <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
           <TabsTrigger value="activity">Activité ({allConnections.length})</TabsTrigger>
-          <TabsTrigger value="emails">Emails ({emailHistory.length})</TabsTrigger>
+          <TabsTrigger value="emails">Emails</TabsTrigger>
           <TabsTrigger value="details">Détails</TabsTrigger>
         </TabsList>
 
@@ -351,11 +331,7 @@ export const ContactDetail: React.FC = () => {
                   <span className="text-sm text-muted-foreground">Tâches</span>
                   <span className="font-medium">{connections.tasks?.length || 0}</span>
                 </div>
-                <Separator />
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Emails envoyés</span>
-                  <span className="font-medium">{emailHistory.length}</span>
-                </div>
+                {/* Note: Email stats will be handled by ContactEmailHistory component */}
               </CardContent>
             </Card>
           </div>
@@ -403,33 +379,10 @@ export const ContactDetail: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="emails" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Historique des emails</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {emailHistory.length === 0 ? (
-                <p className="text-muted-foreground">Aucun email envoyé à ce contact</p>
-              ) : (
-                <div className="space-y-3">
-                  {emailHistory.map((email, index) => (
-                    <div key={index} className="flex items-start space-x-3 p-3 border rounded-lg">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100">
-                        <Mail className="h-4 w-4 text-blue-600" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="font-medium">{email.subject}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {email.status} • {formatDate(email.created_at)}
-                        </div>
-                      </div>
-                      <Badge variant="outline">{email.status}</Badge>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <ContactEmailHistory 
+            contactId={id!} 
+            contactEmail={contact?.email} 
+          />
         </TabsContent>
 
         <TabsContent value="details" className="space-y-4">
