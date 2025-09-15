@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Mail, Send, Inbox, Clock, User } from 'lucide-react';
 import { useUnifiedEmails } from '@/hooks/useUnifiedEmails';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 interface ContactEmailHistoryProps {
   contactId: string;
@@ -15,6 +16,14 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
   contactEmail 
 }) => {
   const { emails, isLoading, loadEmails, markAsRead } = useUnifiedEmails();
+  const [selectedEmail, setSelectedEmail] = React.useState<any | null>(null);
+
+  const stripTags = (s: string) => s ? s.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '').replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim() : '';
+  const getPreviewText = (email: any) => {
+    const base = email?.html_content || email?.content || '';
+    return stripTags(base).slice(0, 120);
+  };
+  const sanitizeHtml = (s: string) => s ? s.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '') : '';
 
   React.useEffect(() => {
     loadEmails();
@@ -41,6 +50,7 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
     if (email.direction === 'received' && !email.read_at) {
       markAsRead(email.id);
     }
+    setSelectedEmail(email);
   };
 
   if (isLoading) {

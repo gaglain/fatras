@@ -37,9 +37,14 @@ export const useUnifiedEmails = () => {
 
     loadEmails();
     const cleanup = setupRealtimeSubscription();
+
+    // Auto-sync Nylas accounts once on mount, then every 3 minutes
+    syncAllAccounts();
+    const interval = setInterval(syncAllAccounts, 180000);
+
     return () => {
-      // Assure qu'on se désabonne proprement quand l'utilisateur change ou au démontage
       cleanup?.();
+      clearInterval(interval);
     };
   }, [user]);
 
@@ -228,6 +233,30 @@ export const useUnifiedEmails = () => {
     };
   };
 
+  const syncAllAccounts = async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase.functions.invoke('nylas-email', {
+        body: { action: 'list_accounts' }
+      });
+      if (error) throw error;
+      const accounts = (data?.accounts ?? []) as Array<{ id: string; is_active: boolean }>;
+      for (const acc of accounts) {
+        if (!acc?.id) continue;
+        try {
+          await supabase.functions.invoke('nylas-email', {
+            body: { action: 'sync', accountId: acc.id }
+          });
+        } catch (e) {
+          console.error('Sync error for account', acc.id, e);
+        }
+      }
+      await loadEmails();
+    } catch (e) {
+      console.error('Erreur synchro auto Nylas:', e);
+    }
+  };
+
   const markAsRead = async (emailId: string) => {
     try {
       const { error } = await supabase
@@ -264,6 +293,7 @@ export const useUnifiedEmails = () => {
     markAsRead,
     getEmailsByDirection,
     getEmailsByContact,
-    getUnreadCount
+    getUnreadCount,
+    syncNow: syncAllAccounts,
   };
 };
