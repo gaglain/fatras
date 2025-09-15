@@ -355,7 +355,7 @@ async function connectEmailAccount(baseUrl: string, apiKey: string, clientId: st
         params.set('prompt', 'consent');
       }
 
-      const authUrl = `${nylasBaseUrl}/connect/auth?${params.toString()}`;
+      const authUrl = `${baseUrl}/connect/auth?${params.toString()}`;
       console.log('✅ Nylas Hosted Auth URL generated:', authUrl);
 
       return new Response(
