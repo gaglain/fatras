@@ -9,6 +9,8 @@ import { useEmailSender } from '@/hooks/useEmailSender';
 import { generateEmailSignature } from '@/utils/emailSignature';
 import { useUser } from '@/contexts/UserContext';
 import { toast } from 'sonner';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useNylasEmail } from '@/hooks/useNylasEmail';
 
 interface EmailComposerProps {
   isOpen: boolean;
@@ -27,15 +29,29 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
 }) => {
   const { currentUser } = useUser();
   const { sendEmail, sending } = useEmailSender();
+  const { accounts, loadAccounts, sendEmail: sendViaNylas } = useNylasEmail();
   const [to, setTo] = useState(toEmail);
   const [emailSubject, setEmailSubject] = useState(subject);
   const [content, setContent] = useState(preText);
+  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
 
   React.useEffect(() => {
     setTo(toEmail);
     setEmailSubject(subject);
     setContent(preText);
   }, [toEmail, subject, preText, isOpen]);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      loadAccounts();
+    }
+  }, [isOpen]);
+
+  React.useEffect(() => {
+    if (accounts.length > 0 && !selectedAccountId) {
+      setSelectedAccountId(accounts[0].id);
+    }
+  }, [accounts, selectedAccountId]);
 
   const handleSend = async () => {
     if (!to || !emailSubject || !content) {
@@ -52,12 +68,21 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
         </div>
       `;
 
-      await sendEmail({
-        to: [to],
-        subject: emailSubject,
-        html: htmlContent,
-        from: currentUser?.email || 'noreply@example.com'
-      });
+      if (selectedAccountId) {
+        await sendViaNylas(selectedAccountId, {
+          to,
+          subject: emailSubject,
+          content,
+          html: htmlContent,
+        });
+      } else {
+        await sendEmail({
+          to: [to],
+          subject: emailSubject,
+          html: htmlContent,
+          from: currentUser?.email || 'noreply@example.com'
+        });
+      }
 
       toast.success('Email envoyé avec succès');
       onClose();
@@ -81,6 +106,21 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
         </DialogHeader>
 
         <div className="space-y-4">
+          {accounts.length > 0 && (
+            <div>
+              <Label htmlFor="from">Compte d'envoi</Label>
+              <Select value={selectedAccountId ?? ''} onValueChange={(v) => setSelectedAccountId(v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choisir un compte" />
+                </SelectTrigger>
+                <SelectContent>
+                  {accounts.map((acc) => (
+                    <SelectItem key={acc.id} value={acc.id}>{acc.email}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div>
             <Label htmlFor="to">Destinataire *</Label>
             <Input

@@ -38,30 +38,32 @@ export const useEntityConnections = () => {
         opportunitiesRes,
         quotesRes,
         tasksRes,
-        roadshowRes
+        roadshowRes,
+        eventsMapRes,
+        quotesMapRes
       ] = await Promise.all([
-        // Événements liés directement et via contact_events
+        // Événements liés directement
         supabase
           .from('events')
           .select('id, title, status, start_date')
           .eq('contact_id', contactId)
           .eq('user_id', user.id),
         
-        // Opportunités liées directement et via contact_opportunities
+        // Opportunités liées directement
         supabase
           .from('opportunities')
           .select('id, title, status, date')
           .eq('contact_id', contactId)
           .eq('user_id', user.id),
         
-        // Devis liés directement et via contact_quotes
+        // Devis liés directement
         supabase
           .from('quotes')
           .select('id, title, status, created_at')
           .eq('contact_id', contactId)
           .eq('user_id', user.id),
         
-        // Tâches liées directement et via task_entities
+        // Tâches liées directement
         supabase
           .from('tasks')
           .select('id, title, status, due_date')
@@ -72,6 +74,18 @@ export const useEntityConnections = () => {
         supabase
           .from('roadshow_contacts')
           .select('roadshow_stop_id, role, roadshow_stops(id, city, status, event_date)')
+          .eq('contact_id', contactId),
+
+        // Événements via table de liaison contact_events
+        supabase
+          .from('contact_events')
+          .select('event_id, role, events(id, title, status, start_date)')
+          .eq('contact_id', contactId),
+
+        // Devis via table de liaison contact_quotes
+        supabase
+          .from('contact_quotes')
+          .select('quote_id, role, quotes(id, title, status, created_at)')
           .eq('contact_id', contactId)
       ]);
 
