@@ -14,7 +14,11 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
   contactId, 
   contactEmail 
 }) => {
-  const { emails, isLoading, markAsRead } = useUnifiedEmails();
+  const { emails, isLoading, loadEmails, markAsRead } = useUnifiedEmails();
+
+  React.useEffect(() => {
+    loadEmails();
+  }, []);
 
   // Filter emails for this specific contact
   const contactEmails = emails.filter(email => 
