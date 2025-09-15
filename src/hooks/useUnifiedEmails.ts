@@ -33,10 +33,14 @@ export const useUnifiedEmails = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
-      loadEmails();
-      setupRealtimeSubscription();
-    }
+    if (!user) return;
+
+    loadEmails();
+    const cleanup = setupRealtimeSubscription();
+    return () => {
+      // Assure qu'on se désabonne proprement quand l'utilisateur change ou au démontage
+      cleanup?.();
+    };
   }, [user]);
 
   const loadEmails = async () => {
@@ -75,7 +79,7 @@ export const useUnifiedEmails = () => {
     if (!user) return;
 
     const channel = supabase
-      .channel('emails_changes')
+      .channel(`emails_changes_${user.id}`)
       .on(
         'postgres_changes',
         {
