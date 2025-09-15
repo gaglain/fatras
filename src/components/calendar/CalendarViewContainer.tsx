@@ -49,18 +49,42 @@ export const CalendarViewContainer: React.FC = () => {
       }
     ];
 
-    // Ajouter les calendriers Nylas
-    if (nylasEvents.length > 0) {
-      const nylasCalendarIds = [...new Set(nylasEvents.map(e => e.calendar_id))];
-      nylasCalendarIds.forEach((calId, index) => {
-        sources.push({
-          id: calId,
-          name: `Calendrier ${index + 1}`,
-          color: `hsl(${(index * 137.5) % 360}, 70%, 50%)`,
-          visible: true,
-          provider: 'nylas'
+    // Récupérer les calendriers Nylas avec leurs vrais noms
+    try {
+      const { data: calendarData, error } = await supabase
+        .from('calendar_events')
+        .select('calendar_id, provider')
+        .eq('user_id', user.id);
+
+      if (!error && calendarData) {
+        // Utiliser les données des logs pour mapper les noms de calendriers
+        const calendarNames: { [key: string]: string } = {
+          'edouard.lermite@gmail.com': 'Edouard Lermite',
+          'legolom@gmail.com': 'Legolom',
+          'koko.quimbert@gmail.com': 'Koko Quimbert',
+          'avecdesgeraniums@gmail.com': 'Avec des Géraniums',
+          'bigbangbluegrassband@gmail.com': 'Big Bang Bluegrass Band',
+          'fatrasplanning@gmail.com': 'Fatras Planning',
+          'olivier.lacire@gmail.com': 'Olivier Lacire',
+          'romaincadiou@free.fr': 'Romain Cadiou',
+          'rajmaplanning@gmail.com': 'Rajma Planning',
+          'awakeirishtrance@gmail.com': 'Awake Irish Trance'
+        };
+
+        const uniqueCalendars = [...new Set(calendarData.map(e => e.calendar_id))];
+        uniqueCalendars.forEach((calId, index) => {
+          const displayName = calendarNames[calId] || calId.replace('@gmail.com', '').replace('@free.fr', '') || `Calendrier ${index + 1}`;
+          sources.push({
+            id: calId,
+            name: displayName,
+            color: `hsl(${(index * 137.5) % 360}, 70%, 50%)`,
+            visible: true,
+            provider: 'nylas'
+          });
         });
-      });
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des calendriers:', error);
     }
 
     setCalendars(sources);

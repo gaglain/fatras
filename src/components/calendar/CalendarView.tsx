@@ -202,14 +202,19 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                   {dayEvents.slice(0, 3).map(event => (
                     <div
                       key={event.id}
-                      className="p-1 rounded text-xs cursor-pointer hover:opacity-80"
-                      style={{ backgroundColor: `${getCalendarColor(event.calendar_id)}20`, color: getCalendarColor(event.calendar_id) }}
+                      className="p-2 rounded text-xs cursor-pointer hover:opacity-80 border-l-2 bg-background/50"
+                      style={{ borderLeftColor: getCalendarColor(event.calendar_id) }}
                       onClick={() => onEventClick?.(event)}
                     >
-                      <div className="font-medium truncate">{event.title}</div>
-                      <div className="text-xs opacity-70">
+                      <div className="font-medium truncate text-foreground">{event.title}</div>
+                      <div className="text-xs text-muted-foreground">
                         {format(new Date(event.start_time), 'HH:mm')}
                       </div>
+                      {event.location && (
+                        <div className="text-xs text-muted-foreground truncate">
+                          📍 {event.location}
+                        </div>
+                      )}
                     </div>
                   ))}
                   {dayEvents.length > 3 && (
@@ -267,18 +272,23 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                     {format(day, 'd')}
                   </div>
                   <div className="space-y-1">
-                    {dayEvents.slice(0, 2).map(event => (
+                    {dayEvents.slice(0, 3).map(event => (
                       <div
                         key={event.id}
-                        className="w-full h-1 rounded cursor-pointer"
-                        style={{ backgroundColor: getCalendarColor(event.calendar_id) }}
+                        className="text-xs p-1 rounded cursor-pointer hover:opacity-80 border-l-2 bg-background/50 mb-1"
+                        style={{ borderLeftColor: getCalendarColor(event.calendar_id) }}
                         onClick={() => onEventClick?.(event)}
                         title={`${event.title} - ${formatEventTime(event.start_time, event.end_time)}`}
-                      />
+                      >
+                        <div className="font-medium truncate text-foreground">{event.title}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {format(new Date(event.start_time), 'HH:mm')}
+                        </div>
+                      </div>
                     ))}
-                    {dayEvents.length > 2 && (
+                    {dayEvents.length > 3 && (
                       <div className="text-xs text-muted-foreground">
-                        +{dayEvents.length - 2}
+                        +{dayEvents.length - 3} autres
                       </div>
                     )}
                   </div>
