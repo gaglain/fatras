@@ -62,9 +62,10 @@ export const NylasCalendarIntegration: React.FC = () => {
       })) || [];
       setAccounts(accountsWithGrants);
       
-      // Auto-select first account
+      // Auto-select preferred account (prefer non-IMAP like Gmail/Outlook)
       if (accountsWithGrants.length > 0 && !selectedAccount) {
-        setSelectedAccount(accountsWithGrants[0].grant_id || '');
+        const preferred = accountsWithGrants.find(a => a.provider !== 'imap') || accountsWithGrants[0];
+        setSelectedAccount(preferred.grant_id || preferred.id);
       }
     } catch (error) {
       console.error('Erreur chargement comptes:', error);
