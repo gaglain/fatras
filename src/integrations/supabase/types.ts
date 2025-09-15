@@ -172,6 +172,54 @@ export type Database = {
           },
         ]
       }
+      calendar_events: {
+        Row: {
+          attendees: string[] | null
+          calendar_id: string
+          created_at: string
+          description: string | null
+          end_time: string
+          external_id: string
+          id: string
+          location: string | null
+          provider: string
+          start_time: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attendees?: string[] | null
+          calendar_id: string
+          created_at?: string
+          description?: string | null
+          end_time: string
+          external_id: string
+          id?: string
+          location?: string | null
+          provider?: string
+          start_time: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attendees?: string[] | null
+          calendar_id?: string
+          created_at?: string
+          description?: string | null
+          end_time?: string
+          external_id?: string
+          id?: string
+          location?: string | null
+          provider?: string
+          start_time?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       campaign_contact_lists: {
         Row: {
           campaign_id: string
