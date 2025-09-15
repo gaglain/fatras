@@ -240,14 +240,42 @@ export const useNylasEmail = () => {
       const { data, error } = await supabase.functions.invoke('nylas-email', {
         body: {
           action: 'test_smtp',
-          config: { host: config.host, port: config.port ?? 465 }
+          config: { 
+            host: config.host, 
+            port: config.port ?? 587,
+            smtp_host: config.host,
+            smtp_port: config.port ?? 587
+          }
         }
       });
       if (error) throw error;
       if (data.success) {
-        toast.success('SMTP joignable');
+        toast.success(`SMTP accessible via ${data.connection_type} sur ${data.host}:${data.port}`);
       } else {
-        toast.error(data.message || 'SMTP non joignable');
+        toast.warning(data.message || 'SMTP non joignable');
+      }
+      return data;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const sendTestEmail = async (accountId: string, testEmail: string) => {
+    if (!user) throw new Error('User must be authenticated');
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('nylas-email', {
+        body: {
+          action: 'send_test_email',
+          accountId,
+          testEmail
+        }
+      });
+      if (error) throw error;
+      if (data.success) {
+        toast.success(`Email de test envoyé avec succès à ${testEmail}`);
+      } else {
+        toast.error(data.message || 'Échec de l\'envoi du test');
       }
       return data;
     } finally {
@@ -264,6 +292,7 @@ export const useNylasEmail = () => {
     sendEmail,
     testConnection,
     testImap,
-    testSmtp
+    testSmtp,
+    sendTestEmail
   };
 };

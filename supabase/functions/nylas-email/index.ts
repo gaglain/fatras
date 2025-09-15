@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 interface NylasRequest {
-  action: 'connect' | 'sync' | 'send' | 'test' | 'test_imap' | 'test_smtp' | 'list_accounts';
+  action: 'connect' | 'sync' | 'send' | 'test' | 'test_imap' | 'test_smtp' | 'list_accounts' | 'send_test_email';
   accountId?: string;
   email?: {
     to: string;
@@ -15,6 +15,7 @@ interface NylasRequest {
     content: string;
     html?: string;
   };
+  testEmail?: string;
   provider?: 'gmail' | 'outlook' | 'imap';
   config?: {
     email: string;
@@ -22,6 +23,10 @@ interface NylasRequest {
     host?: string;
     port?: number;
     ssl?: boolean;
+    imap_host?: string;
+    imap_port?: number;
+    smtp_host?: string;
+    smtp_port?: number;
   };
 }
 
@@ -42,7 +47,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    const { action, accountId, email, provider, config }: NylasRequest = await req.json();
+    const { action, accountId, email, testEmail, provider, config }: NylasRequest = await req.json();
 
     // Get user from auth header
     const authHeader = req.headers.get('Authorization');
@@ -77,6 +82,8 @@ const handler = async (req: Request): Promise<Response> => {
         return await testImapConnectivity(config!);
       case 'test_smtp':
         return await testSmtpConnectivity(config!);
+      case 'send_test_email':
+        return await sendTestEmail(nylasBaseUrl, nylasApiKey, supabase, user.id, accountId!, testEmail!);
       default:
         throw new Error(`Unsupported action: ${action}`);
     }
@@ -566,25 +573,189 @@ async function testImapConnectivity(config: any): Promise<Response> {
 
 async function testSmtpConnectivity(config: any): Promise<Response> {
   const host = config?.smtp_host ?? config?.host;
-  const port = Number(config?.smtp_port ?? config?.port ?? 465);
-  if (!host || !port) {
-    return new Response(JSON.stringify({ success: false, message: 'Missing host/port for SMTP test' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  
+  if (!host) {
+    return new Response(JSON.stringify({ success: false, message: 'Missing host for SMTP test' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
-  const useTls = port === 465;
+
+  // Try port 587 first (STARTTLS), then 465 (SSL) for better compatibility
+  const portsToTry = [
+    { port: Number(config?.smtp_port ?? 587), description: 'STARTTLS' },
+    { port: 465, description: 'SSL' }
+  ];
+
+  let lastError: any = null;
+  
+  for (const { port, description } of portsToTry) {
+    const useTls = port === 465;
+    try {
+      console.log(`🧪 Testing SMTP connectivity ${description}`, { host, port, useTls });
+      
+      // Set a reasonable timeout for the connection test
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Connection timeout (15s)')), 15000)
+      );
+      
+      const connectPromise = useTls
+        ? Deno.connectTls({ hostname: host, port, tlsHostname: host })
+        : Deno.connect({ hostname: host, port });
+      
+      const conn = await Promise.race([connectPromise, timeoutPromise]);
+      
+      const buf = new Uint8Array(512);
+      let n = 0;
+      try { n = (await conn.read(buf)) ?? 0; } catch {}
+      try { conn.close(); } catch {}
+      const banner = new TextDecoder().decode(buf.subarray(0, n));
+      
+      return new Response(JSON.stringify({ 
+        success: true, 
+        message: `SMTP reachable via ${description}`, 
+        host, 
+        port, 
+        banner,
+        connection_type: description
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      
+    } catch (error: any) {
+      console.error(`❌ SMTP test error (${description}):`, error);
+      lastError = error;
+      
+      // If this was the user's specified port, don't try others
+      if (config?.smtp_port && Number(config.smtp_port) === port) {
+        break;
+      }
+    }
+  }
+
+  return new Response(JSON.stringify({ 
+    success: false, 
+    message: `SMTP not reachable: ${lastError?.message || 'Connection failed'}. Note: Cette erreur peut être due aux restrictions réseau des edge functions. L'envoi via Nylas peut toujours fonctionner.`, 
+    host, 
+    ports_tested: portsToTry.map(p => p.port),
+    warning: 'Les timeouts réseau n\'indiquent pas forcément un problème avec votre configuration email. Testez l\'envoi via Nylas pour vérifier.'
+  }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+}
+
+async function sendTestEmail(baseUrl: string, apiKey: string, supabase: any, userId: string, accountId: string, testEmail: string) {
   try {
-    console.log('🧪 Testing SMTP connectivity', { host, port, useTls });
-    const conn = useTls
-      ? await Deno.connectTls({ hostname: host, port, tlsHostname: host })
-      : await Deno.connect({ hostname: host, port });
-    const buf = new Uint8Array(512);
-    let n = 0;
-    try { n = (await conn.read(buf)) ?? 0; } catch {}
-    try { conn.close(); } catch {}
-    const banner = new TextDecoder().decode(buf.subarray(0, n));
-    return new Response(JSON.stringify({ success: true, message: 'SMTP reachable', host, port, banner }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    console.log(`🧪 Sending test email from account: ${accountId} to: ${testEmail}`);
+
+    // Get account details
+    const { data: account, error: accountError } = await supabase
+      .from('email_accounts')
+      .select('*')
+      .eq('id', accountId)
+      .eq('user_id', userId)
+      .single();
+
+    if (accountError || !account) {
+      throw new Error('Account not found');
+    }
+
+    // Send test email via Nylas
+    const testEmailContent = {
+      to: testEmail,
+      subject: 'Test de configuration email - Fatras Booking',
+      content: `Bonjour,
+
+Ceci est un email de test automatique envoyé depuis votre configuration Nylas.
+
+Si vous recevez ce message, cela signifie que:
+✅ Votre compte email ${account.email} est correctement configuré
+✅ L'envoi d'emails via Nylas fonctionne parfaitement
+✅ Vous pouvez maintenant utiliser cette configuration pour vos campagnes email
+
+Détails techniques:
+- Compte: ${account.email}
+- Provider: ${account.provider}
+- Grant ID: ${account.access_token}
+- Date/heure: ${new Date().toLocaleString('fr-FR')}
+
+Cordialement,
+L'équipe Fatras Booking`,
+      html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #333;">Test de configuration email - Fatras Booking</h2>
+        <p>Bonjour,</p>
+        <p>Ceci est un email de test automatique envoyé depuis votre configuration Nylas.</p>
+        <p>Si vous recevez ce message, cela signifie que:</p>
+        <ul style="color: #28a745;">
+          <li>✅ Votre compte email <strong>${account.email}</strong> est correctement configuré</li>
+          <li>✅ L'envoi d'emails via Nylas fonctionne parfaitement</li>
+          <li>✅ Vous pouvez maintenant utiliser cette configuration pour vos campagnes email</li>
+        </ul>
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+          <h4 style="margin-top: 0;">Détails techniques:</h4>
+          <ul style="margin: 0;">
+            <li><strong>Compte:</strong> ${account.email}</li>
+            <li><strong>Provider:</strong> ${account.provider}</li>
+            <li><strong>Grant ID:</strong> ${account.access_token}</li>
+            <li><strong>Date/heure:</strong> ${new Date().toLocaleString('fr-FR')}</li>
+          </ul>
+        </div>
+        <p>Cordialement,<br><strong>L'équipe Fatras Booking</strong></p>
+      </div>`
+    };
+
+    // Send email via Nylas
+    const sendResponse = await fetch(`${baseUrl}/grants/${account.access_token}/messages/send`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        to: [{ email: testEmail }],
+        subject: testEmailContent.subject,
+        body: testEmailContent.html,
+        reply_to: [{ email: account.email }],
+      }),
+    });
+
+    if (!sendResponse.ok) {
+      const errorData = await sendResponse.text();
+      throw new Error(`Failed to send test email: ${errorData}`);
+    }
+
+    const sendData = await sendResponse.json();
+
+    // Save sent test email to database
+    await supabase
+      .from('emails')
+      .insert({
+        user_id: userId,
+        from_email: account.email,
+        to_email: testEmail,
+        subject: testEmailContent.subject,
+        content: testEmailContent.content,
+        html_content: testEmailContent.html,
+        status: 'sent',
+        sent_at: new Date().toISOString(),
+        metadata: { 
+          nylas_message_id: sendData.data?.id,
+          test_email: true,
+          account_id: accountId
+        }
+      });
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        messageId: sendData.data?.id,
+        message: `Email de test envoyé avec succès à ${testEmail}`,
+        details: {
+          from: account.email,
+          to: testEmail,
+          provider: account.provider,
+          grant_id: account.access_token
+        }
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
   } catch (error: any) {
-    console.error('❌ SMTP test error:', error);
-    return new Response(JSON.stringify({ success: false, message: `SMTP not reachable: ${error.message}`, host, port }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    console.error('❌ Test email error:', error);
+    throw new Error(`Failed to send test email: ${error.message}`);
   }
 }
 

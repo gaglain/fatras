@@ -19,7 +19,7 @@ interface EmailConfig {
 }
 
 export const NylasEmailManager: React.FC = () => {
-  const { accounts, isLoading, connectAccount, loadAccounts, syncEmails, sendEmail, testConnection, testImap, testSmtp } = useNylasEmail();
+  const { accounts, isLoading, connectAccount, loadAccounts, syncEmails, sendEmail, testConnection, testImap, testSmtp, sendTestEmail } = useNylasEmail();
   const [showAddAccount, setShowAddAccount] = useState(false);
   const [provider, setProvider] = useState<'gmail' | 'outlook' | 'imap'>('gmail');
   const [config, setConfig] = useState<EmailConfig>({
@@ -38,6 +38,7 @@ export const NylasEmailManager: React.FC = () => {
   });
 
   const [selectedAccount, setSelectedAccount] = useState<string>('');
+  const [testEmailAddress, setTestEmailAddress] = useState<string>('');
 
   useEffect(() => {
     loadAccounts();
@@ -111,6 +112,19 @@ export const NylasEmailManager: React.FC = () => {
       await testConnection(accountId);
     } catch (error) {
       console.error('Failed to test connection:', error);
+    }
+  };
+
+  const handleSendTestEmail = async (accountId: string) => {
+    if (!testEmailAddress) {
+      toast.error('Veuillez saisir une adresse email de test');
+      return;
+    }
+    try {
+      await sendTestEmail(accountId, testEmailAddress);
+      setTestEmailAddress('');
+    } catch (error) {
+      console.error('Failed to send test email:', error);
     }
   };
   const getProviderConfig = (provider: string) => {
@@ -285,33 +299,60 @@ export const NylasEmailManager: React.FC = () => {
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={account.is_active ? 'default' : 'secondary'}>
-                        {account.is_active ? 'Actif' : 'Inactif'}
-                      </Badge>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleTestConnection(account.id)}
-                        disabled={isLoading}
-                      >
-                        <TestTube className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleSyncEmails(account.id)}
-                        disabled={isLoading}
-                      >
-                        <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                      </Button>
-                    </div>
+                     <div className="flex items-center gap-2">
+                       <Badge variant={account.is_active ? 'default' : 'secondary'}>
+                         {account.is_active ? 'Actif' : 'Inactif'}
+                       </Badge>
+                       <Button
+                         size="sm"
+                         variant="outline"
+                         onClick={() => handleTestConnection(account.id)}
+                         disabled={isLoading}
+                         title="Tester la connexion Nylas"
+                       >
+                         <TestTube className="h-4 w-4" />
+                       </Button>
+                       <Button
+                         size="sm"
+                         variant="outline"
+                         onClick={() => handleSyncEmails(account.id)}
+                         disabled={isLoading}
+                         title="Synchroniser les emails"
+                       >
+                         <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                       </Button>
+                     </div>
                   </div>
-                  {account.last_sync_at && (
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Dernière sync: {new Date(account.last_sync_at).toLocaleString()}
-                    </p>
-                  )}
+                   {account.last_sync_at && (
+                     <p className="text-xs text-muted-foreground mt-2">
+                       Dernière sync: {new Date(account.last_sync_at).toLocaleString()}
+                     </p>
+                   )}
+                   
+                   {/* Test d'envoi d'email */}
+                   <div className="mt-4 pt-4 border-t">
+                     <p className="text-sm font-medium mb-2">Test d'envoi d'email via Nylas</p>
+                     <div className="flex gap-2">
+                       <Input
+                         placeholder="email@test.com"
+                         value={testEmailAddress}
+                         onChange={(e) => setTestEmailAddress(e.target.value)}
+                         className="text-sm"
+                       />
+                       <Button
+                         size="sm"
+                         onClick={() => handleSendTestEmail(account.id)}
+                         disabled={isLoading || !testEmailAddress}
+                         className="flex items-center gap-1"
+                       >
+                         <Send className="h-3 w-3" />
+                         Test
+                       </Button>
+                     </div>
+                     <p className="text-xs text-muted-foreground mt-1">
+                       Envoie un email de test pour vérifier que la configuration fonctionne
+                     </p>
+                   </div>
                 </CardContent>
               </Card>
             ))}
