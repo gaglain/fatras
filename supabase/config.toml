@@ -15,3 +15,6 @@ verify_jwt = false
 
 [functions.form-submission-handler]
 verify_jwt = false
+
+[functions.nylas-email-callback]
+verify_jwt = false

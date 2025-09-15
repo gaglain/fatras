@@ -252,7 +252,7 @@ export const useNylasEmail = () => {
       if (data.success) {
         toast.success(`SMTP accessible via ${data.connection_type} sur ${data.host}:${data.port}`);
       } else {
-        toast.warning(data.message || 'SMTP non joignable');
+        toast.error(data.message || 'SMTP non joignable');
       }
       return data;
     } finally {
