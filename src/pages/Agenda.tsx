@@ -12,9 +12,11 @@ import { toast } from 'sonner';
 import { AgendaCSVImporter } from '@/components/agenda/AgendaCSVImporter';
 import { AgendaCSVExporter } from '@/components/agenda/AgendaCSVExporter';
 import { GoogleCalendarDisplay } from '@/components/integrations/GoogleCalendarDisplay';
+import { CalendarViewContainer } from '@/components/calendar/CalendarViewContainer';
 import { useEvents } from '@/hooks/useEvents';
 import { useUser } from '@/contexts/UserContext';
 import { useAuth } from '@/hooks/useAuth';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface AgendaEvent {
   id: string;
@@ -287,7 +289,7 @@ export const Agenda: React.FC = () => {
           <Button variant="outline" asChild className="w-full sm:w-auto">
             <Link to="/preferences?tab=calendar">
               <Settings className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">Configuration Google</span>
+              <span className="hidden sm:inline">Configuration</span>
               <span className="sm:hidden">Config</span>
             </Link>
           </Button>
@@ -298,6 +300,18 @@ export const Agenda: React.FC = () => {
           </Button>
         </div>
       </div>
+
+      <Tabs defaultValue="calendar" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="calendar">Vue Calendrier</TabsTrigger>
+          <TabsTrigger value="list">Vue Liste</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="calendar" className="space-y-6">
+          <CalendarViewContainer />
+        </TabsContent>
+        
+        <TabsContent value="list" className="space-y-6">
 
       {/* Sélecteur d'utilisateurs */}
       <Card className="mb-6">
@@ -450,6 +464,8 @@ export const Agenda: React.FC = () => {
           )}
         </CardContent>
       </Card>
+        </TabsContent>
+      </Tabs>
 
       {/* CSV Import Dialog */}
       <AgendaCSVImporter
