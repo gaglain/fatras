@@ -59,7 +59,7 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    const tokenRes = await fetch(`${nylasBaseUrl}/connect/oauth2/token`, {
+    const tokenRes = await fetch(`${nylasBaseUrl}/connect/token`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -69,7 +69,6 @@ serve(async (req: Request): Promise<Response> => {
         client_secret: nylasClientSecret,
         code,
         redirect_uri: redirectUri,
-        provider,
       }),
     });
 

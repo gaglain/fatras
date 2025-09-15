@@ -328,30 +328,40 @@ async function connectEmailAccount(baseUrl: string, apiKey: string, clientId: st
       );
 
     } else {
-      // For OAuth (Gmail/Outlook): Return authorization URL (provider login)
+      // For OAuth (Gmail/Outlook) use Nylas Hosted Auth (not direct Google/Microsoft OAuth)
       const callbackUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/nylas-email-callback`;
-      
-      const authUrlParams = new URLSearchParams({
+
+      // Map provider names to Nylas providers
+      const nylasProvider = provider === 'gmail' ? 'google' : provider === 'outlook' ? 'microsoft' : provider;
+
+      const params = new URLSearchParams({
         client_id: clientId,
-        response_type: 'code',
-        scope: provider === 'gmail' ? 'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send' : 'https://graph.microsoft.com/mail.read https://graph.microsoft.com/mail.send',
+        provider: String(nylasProvider),
         redirect_uri: callbackUri,
-        access_type: 'offline',
+        response_type: 'code',
         login_hint: config.email,
-        state: `${userId}:${provider}:${config.email}`
+        state: `${userId}:${provider}:${config.email}`,
       });
 
-      const authUrl = provider === 'gmail' 
-        ? `https://accounts.google.com/o/oauth2/v2/auth?${authUrlParams}`
-        : `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?${authUrlParams}`;
+      // Request both Mail and Calendar permissions for Google
+      if (provider === 'gmail') {
+        params.set('provider_scopes', [
+          'https://www.googleapis.com/auth/gmail.readonly',
+          'https://www.googleapis.com/auth/gmail.send',
+          'https://www.googleapis.com/auth/calendar'
+        ].join(' '));
+        params.set('access_type', 'offline');
+        params.set('prompt', 'consent');
+      }
 
-      console.log('✅ OAuth URL generated:', authUrl);
+      const authUrl = `${nylasBaseUrl}/connect/auth?${params.toString()}`;
+      console.log('✅ Nylas Hosted Auth URL generated:', authUrl);
 
       return new Response(
         JSON.stringify({
           success: true,
           authorization_url: authUrl,
-          message: 'Complete OAuth flow using the authorization URL'
+          message: 'Complete OAuth flow using the Nylas Hosted Auth URL'
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
