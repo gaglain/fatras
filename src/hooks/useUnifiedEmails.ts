@@ -81,29 +81,37 @@ export const useUnifiedEmails = () => {
       if (inboundRes.error) throw inboundRes.error;
 
       const unified = (unifiedRes.data as UnifiedEmail[]) ?? [];
-      const inboundMapped: UnifiedEmail[] = ((inboundRes.data as any[]) ?? []).map((ie) => ({
-        id: ie.id,
-        message_id: ie.message_id,
-        direction: (ie.direction as 'received' | 'sent') || 'received',
-        from_email: ie.from_email,
-        from_name: ie.from_name || ie.sender_name,
-        to_email: ie.to_email,
-        to_name: ie.to_name,
-        subject: ie.subject,
-        content: ie.content,
-        html_content: ie.html_content,
-        status: 'delivered',
-        provider: ie.provider || 'imap',
-        thread_id: ie.thread_id,
-        labels: ie.labels,
-        attachments: ie.attachments,
-        contact_id: ie.contact_id,
-        sent_at: ie.sent_at,
-        received_at: ie.received_at,
-        read_at: ie.read_at,
-        created_at: ie.created_at ?? ie.received_at ?? new Date().toISOString(),
-        updated_at: ie.updated_at ?? ie.received_at ?? new Date().toISOString(),
-      }));
+      const inboundMapped: UnifiedEmail[] = ((inboundRes.data as any[]) ?? []).map((ie) => {
+        // Déterminer la direction basée sur l'email de l'expéditeur
+        const userEmails = ['booking@fatras.net', 'fatrasplanning@gmail.com']; // Ajouter les emails de l'utilisateur
+        const isFromUser = userEmails.some(email => 
+          ie.from_email?.toLowerCase().includes(email.toLowerCase())
+        );
+        
+        return {
+          id: ie.id,
+          message_id: ie.message_id,
+          direction: isFromUser ? 'sent' : 'received',
+          from_email: ie.from_email,
+          from_name: ie.from_name || ie.sender_name,
+          to_email: ie.to_email,
+          to_name: ie.to_name,
+          subject: ie.subject,
+          content: ie.content,
+          html_content: ie.html_content,
+          status: 'delivered',
+          provider: ie.provider || 'imap',
+          thread_id: ie.thread_id,
+          labels: ie.labels,
+          attachments: ie.attachments,
+          contact_id: ie.contact_id,
+          sent_at: ie.sent_at,
+          received_at: ie.received_at,
+          read_at: ie.read_at,
+          created_at: ie.created_at ?? ie.received_at ?? new Date().toISOString(),
+          updated_at: ie.updated_at ?? ie.received_at ?? new Date().toISOString(),
+        };
+      });
 
       const combined: UnifiedEmail[] = [...unified, ...inboundMapped].sort((a, b) => {
         const da = new Date(a.received_at || a.sent_at || a.created_at).getTime();
