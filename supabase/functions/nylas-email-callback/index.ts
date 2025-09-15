@@ -67,6 +67,7 @@ serve(async (req: Request): Promise<Response> => {
       body: JSON.stringify({
         client_id: nylasClientId,
         client_secret: nylasClientSecret,
+        grant_type: 'authorization_code',
         code,
         redirect_uri: redirectUri,
       }),
