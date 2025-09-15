@@ -108,14 +108,16 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
         <div className="space-y-4">
           {accounts.length > 0 && (
             <div>
-              <Label htmlFor="from">Compte d'envoi</Label>
+              <Label htmlFor="from">Envoyer depuis</Label>
               <Select value={selectedAccountId ?? ''} onValueChange={(v) => setSelectedAccountId(v)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Choisir un compte" />
+                  <SelectValue placeholder="Choisir un compte d'envoi" />
                 </SelectTrigger>
                 <SelectContent>
                   {accounts.map((acc) => (
-                    <SelectItem key={acc.id} value={acc.id}>{acc.email}</SelectItem>
+                    <SelectItem key={acc.id} value={acc.id}>
+                      {acc.email} ({acc.provider})
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>

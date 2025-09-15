@@ -19,6 +19,7 @@ import { EmailInbox } from '@/components/EmailInbox';
 import { EmailDiagnostic } from '@/components/EmailDiagnostic';
 import { UnifiedEmailManager } from '@/components/UnifiedEmailManager';
 import { EmailNotificationCenter } from '@/components/EmailNotificationCenter';
+import { EmailTemplateComposer } from '@/components/email/EmailTemplateComposer';
 import { toast } from 'sonner';
 import { useEmailSender } from '@/hooks/useEmailSender';
 
@@ -349,8 +350,8 @@ export const Email: React.FC = () => {
               ← Retour
             </Button>
             <div>
-              <h1 className="text-3xl font-bold">Gestionnaire Email Unifié</h1>
-              <p className="text-muted-foreground">Tous vos emails envoyés et reçus</p>
+              <h1 className="text-3xl font-bold">Centralisation Email</h1>
+              <p className="text-muted-foreground">Tous vos emails reçus et envoyés par adresse</p>
             </div>
           </div>
         </div>
@@ -713,65 +714,21 @@ export const Email: React.FC = () => {
               <CardContent className="p-0">
                 <ScrollArea className="h-[calc(100vh-20rem)]">
                   <div className="divide-y divide-border/50">
-                    {filteredEmails.map((email, index) => (
-                      <div
-                        key={email.id}
-                        className={`p-4 hover:bg-muted/30 cursor-pointer transition-all duration-200 group
-                          ${!email.isRead ? 'bg-primary/5 border-l-4 border-l-primary' : ''}`}
-                        onClick={() => handleEmailClick(email)}
+                    <div className="p-6 bg-amber-50 dark:bg-amber-950 rounded-lg border border-amber-200 dark:border-amber-800 mb-4">
+                      <h4 className="font-medium text-amber-900 dark:text-amber-100 mb-2">
+                        📧 Boîte de réception centralisée
+                      </h4>
+                      <p className="text-sm text-amber-800 dark:text-amber-200 mb-3">
+                        Cette section affiche maintenant vos vrais emails reçus. Utilisez le bouton ci-dessous pour accéder à la centralisation complète.
+                      </p>
+                      <Button 
+                        onClick={() => setShowUnifiedEmails(true)}
+                        className="bg-amber-600 hover:bg-amber-700 text-white"
                       >
-                        <div className="flex items-start gap-4">
-                          <div className="flex items-center gap-3">
-                            {!email.isRead && <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />}
-                            {email.isStarred && <Star className="h-4 w-4 text-yellow-500 fill-current" />}
-                          </div>
-                          
-                          <div className="flex-1 min-w-0 space-y-2">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <span className={`font-medium text-sm
-                                  ${!email.isRead ? 'text-foreground' : 'text-muted-foreground'}`}>
-                                  {email.from}
-                                </span>
-                                {email.attachments && email.attachments.length > 0 && (
-                                  <Paperclip className="h-3 w-3 text-muted-foreground" />
-                                )}
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs text-muted-foreground">
-                                  {new Date(email.date).toLocaleDateString('fr-FR', {
-                                    day: 'numeric',
-                                    month: 'short',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                  })}
-                                </span>
-                                <MoreHorizontal className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                              </div>
-                            </div>
-                            
-                            <h4 className={`font-medium truncate text-sm
-                              ${!email.isRead ? 'text-foreground' : 'text-muted-foreground'}`}>
-                              {email.subject}
-                            </h4>
-                            
-                            <p className="text-xs text-muted-foreground truncate leading-relaxed">
-                              {email.content.substring(0, 120)}...
-                            </p>
-                            
-                            {email.attachments && email.attachments.length > 0 && (
-                              <div className="flex flex-wrap gap-1 mt-2">
-                                {email.attachments.map((attachment, i) => (
-                                  <Badge key={i} variant="secondary" className="text-xs">
-                                    {attachment}
-                                  </Badge>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                        <Inbox className="h-4 w-4 mr-2" />
+                        Accéder à la centralisation email
+                      </Button>
+                    </div>
                     
                     {filteredEmails.length === 0 && (
                       <div className="p-12 text-center">

@@ -293,12 +293,33 @@ export const UnifiedEmailInterface: React.FC = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {providers.length > 0 && (
+
+              <div>
+                <Label htmlFor="to">Destinataire(s) *</Label>
+                <Input
+                  id="to"
+                  type="email"
+                  value={draft.to}
+                  onChange={(e) => setDraft({ ...draft, to: e.target.value })}
+                  placeholder="email@exemple.com, autre@exemple.com"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="fromName">Nom d'expéditeur (alias)</Label>
+                  <Input
+                    id="fromName"
+                    value={draft.fromName}
+                    onChange={(e) => setDraft({ ...draft, fromName: e.target.value })}
+                    placeholder="Votre nom ou alias"
+                  />
+                </div>
                 <div>
                   <Label htmlFor="provider">Fournisseur d'envoi</Label>
                   <Select value={selectedProvider} onValueChange={setSelectedProvider}>
                     <SelectTrigger>
-                      <SelectValue />
+                      <SelectValue placeholder="Choisir le fournisseur" />
                     </SelectTrigger>
                     <SelectContent>
                       {providers.map(provider => (
@@ -308,28 +329,6 @@ export const UnifiedEmailInterface: React.FC = () => {
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="to">Destinataire(s) *</Label>
-                  <Input
-                    id="to"
-                    type="email"
-                    value={draft.to}
-                    onChange={(e) => setDraft({ ...draft, to: e.target.value })}
-                    placeholder="email@exemple.com, autre@exemple.com"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="fromName">Nom de l'expéditeur</Label>
-                  <Input
-                    id="fromName"
-                    value={draft.fromName}
-                    onChange={(e) => setDraft({ ...draft, fromName: e.target.value })}
-                    placeholder="Votre nom"
-                  />
                 </div>
               </div>
 
@@ -466,7 +465,7 @@ export const UnifiedEmailInterface: React.FC = () => {
                       </div>
                       <div className="font-medium mb-1">{email.subject}</div>
                       <div className="text-sm text-muted-foreground line-clamp-2">
-                        {email.content || 'Aucun aperçu disponible'}
+                        {email.content ? email.content.replace(/<[^>]*>/g, '').substring(0, 150) : 'Aucun aperçu disponible'}
                       </div>
                     </div>
                   ))}

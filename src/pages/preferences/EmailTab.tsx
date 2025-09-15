@@ -345,6 +345,28 @@ export const EmailTab: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="from_email">Email d'expéditeur par défaut</Label>
+                  <Input
+                    id="from_email"
+                    type="email"
+                    value={emailConfig.from_email}
+                    onChange={(e) => setEmailConfig(prev => ({ ...prev, from_email: e.target.value }))}
+                    placeholder="votre@email.com"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="from_name">Nom d'expéditeur par défaut (alias)</Label>
+                  <Input
+                    id="from_name"
+                    value={emailConfig.from_name}
+                    onChange={(e) => setEmailConfig(prev => ({ ...prev, from_name: e.target.value }))}
+                    placeholder="Votre nom ou alias"
+                  />
+                </div>
+              </div>
+
               <div className="grid gap-4">
                 <Button
                   onClick={() => setShowSignatureManager(true)}
