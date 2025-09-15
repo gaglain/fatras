@@ -90,13 +90,14 @@ const handler = async (req: Request): Promise<Response> => {
 
   } catch (error: any) {
     console.error('❌ Nylas error:', error);
+    // Renvoyer 200 pour éviter FunctionsHttpError côté client, tout en exposant l'erreur
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error.message 
+        error: error?.message || String(error)
       }),
       {
-        status: 500,
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
