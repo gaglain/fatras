@@ -346,13 +346,13 @@ async function connectEmailAccount(baseUrl: string, apiKey: string, clientId: st
 
       // Request both Mail and Calendar permissions for Google
       if (provider === 'gmail') {
-        params.set('provider_scopes', [
+        params.set('scope', [
           'https://www.googleapis.com/auth/gmail.readonly',
           'https://www.googleapis.com/auth/gmail.send',
           'https://www.googleapis.com/auth/calendar'
         ].join(' '));
         params.set('access_type', 'offline');
-        params.set('prompt', 'consent');
+        // Removed: Nylas Hosted Auth does not support 'prompt=consent'
       }
 
       const authUrl = `${baseUrl}/connect/auth?${params.toString()}`;
