@@ -66,70 +66,62 @@ export const GoogleCalendarDisplay: React.FC = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Vérifier s'il y a une intégration Google Calendar active
+      // 1) Priorité: événements synchronisés via Nylas (table calendar_events)
+      const { data: nylasEvents, error: nylasErr } = await supabase
+        .from('calendar_events')
+        .select('*')
+        .eq('user_id', user.id)
+        .gte('start_time', new Date().toISOString())
+        .order('start_time', { ascending: true })
+        .limit(10);
+
+      if (!nylasErr && Array.isArray(nylasEvents) && nylasEvents.length > 0) {
+        const calendarEvents: GoogleCalendarEvent[] = nylasEvents.map((e: any) => ({
+          id: e.id,
+          summary: e.title,
+          description: e.description,
+          start: { dateTime: e.start_time },
+          end: { dateTime: e.end_time },
+          location: e.location,
+          status: 'confirmed'
+        }));
+        setEvents(calendarEvents);
+        toast.success(`${calendarEvents.length} événements synchronisés depuis votre agenda officiel`);
+        return;
+      }
+
+      // 2) Sinon: fallback historique (intégration Google locale ou événements "events")
       const { data: integration } = await supabase
         .from('integrations')
         .select('settings')
         .eq('service', 'google_calendar')
         .eq('is_active', true)
-        .single();
+        .maybeSingle();
 
-      if (!integration) {
-        // Fallback: récupérer les événements de l'utilisateur depuis la base de données
-        const { data: userEvents, error } = await supabase
-          .from('events')
-          .select('*')
-          .eq('user_id', user.id)
-          .gte('start_date', new Date().toISOString())
-          .order('start_date', { ascending: true })
-          .limit(10);
+      // Fallback: récupérer les événements de l'utilisateur depuis la table events
+      const { data: userEvents, error } = await supabase
+        .from('events')
+        .select('*')
+        .eq('user_id', user.id)
+        .gte('start_date', new Date().toISOString())
+        .order('start_date', { ascending: true })
+        .limit(10);
 
-        if (error) throw error;
+      if (error) throw error;
 
-        // Convertir les événements au format Google Calendar
-        const calendarEvents: GoogleCalendarEvent[] = userEvents?.map(event => ({
-          id: event.id,
-          summary: event.title,
-          description: event.description,
-          start: event.start_date ? { dateTime: event.start_date } : { date: new Date().toISOString().split('T')[0] },
-          end: event.end_date ? { dateTime: event.end_date } : { date: new Date().toISOString().split('T')[0] },
-          location: `${event.venue || ''} ${event.address || ''} ${event.city || ''}`.trim(),
-          status: event.status === 'confirmed' ? 'confirmed' : event.status === 'pending' ? 'tentative' : 'tentative'
-        })) || [];
+      const calendarEvents: GoogleCalendarEvent[] = userEvents?.map((event: any) => ({
+        id: event.id,
+        summary: event.title,
+        description: event.description,
+        start: event.start_date ? { dateTime: event.start_date } : { date: new Date().toISOString().split('T')[0] },
+        end: event.end_date ? { dateTime: event.end_date } : { date: new Date().toISOString().split('T')[0] },
+        location: `${event.venue || ''} ${event.address || ''} ${event.city || ''}`.trim(),
+        status: event.status === 'confirmed' ? 'confirmed' : event.status === 'pending' ? 'tentative' : 'tentative'
+      })) || [];
 
-        setEvents(calendarEvents);
-        return;
-      }
-
-      // Si Google Calendar est connecté, utiliser l'API Google
-      try {
-        // Ici on pourrait faire un appel à une edge function pour récupérer les événements Google
-        // Pour l'instant, on utilise les événements locaux comme fallback
-        const { data: userEvents, error } = await supabase
-          .from('events')
-          .select('*')
-          .eq('user_id', user.id)
-          .gte('start_date', new Date().toISOString())
-          .order('start_date', { ascending: true })
-          .limit(10);
-
-        if (error) throw error;
-
-        const calendarEvents: GoogleCalendarEvent[] = userEvents?.map(event => ({
-          id: event.id,
-          summary: event.title,
-          description: event.description,
-          start: event.start_date ? { dateTime: event.start_date } : { date: new Date().toISOString().split('T')[0] },
-          end: event.end_date ? { dateTime: event.end_date } : { date: new Date().toISOString().split('T')[0] },
-          location: `${event.venue || ''} ${event.address || ''} ${event.city || ''}`.trim(),
-          status: event.status === 'confirmed' ? 'confirmed' : event.status === 'pending' ? 'tentative' : 'tentative'
-        })) || [];
-
-        setEvents(calendarEvents);
-        toast.success(`${calendarEvents.length} événements synchronisés`);
-      } catch (calendarError) {
-        console.error('Erreur Google Calendar API:', calendarError);
-        throw calendarError;
+      setEvents(calendarEvents);
+      if (integration) {
+        toast.success(`${calendarEvents.length} événements affichés (fallback)`);
       }
     } catch (error) {
       console.error('Erreur lors de la récupération des événements:', error);

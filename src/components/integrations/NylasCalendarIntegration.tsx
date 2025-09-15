@@ -55,14 +55,11 @@ export const NylasCalendarIntegration: React.FC = () => {
 
       if (error) throw error;
       
-      // For now, we'll simulate grant_id from the account data
-      // In a real implementation, you'd store the grant_id when connecting the account
       const accountsWithGrants = data?.map(account => ({
         ...account,
-        grant_id: account.id, // Temporary: use account id as grant_id
+        grant_id: account.access_token || account.id,
         sync_status: account.is_active ? 'active' : 'inactive'
       })) || [];
-      
       setAccounts(accountsWithGrants);
       
       // Auto-select first account
