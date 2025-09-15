@@ -18,6 +18,34 @@ interface CalendarEvent {
   attendees?: string[]
 }
 
+// Normalize Nylas "when" into ISO datetimes
+function normalizeNylasWhen(when: any): { startIso: string; endIso: string } {
+  const toMs = (v: any): number | null => {
+    if (v === null || v === undefined) return null;
+    if (typeof v === 'number') {
+      // seconds vs milliseconds
+      return v > 1e12 ? v : v * 1000;
+    }
+    // if it's a date string (e.g., "2025-09-15" or ISO)
+    const d = new Date(v);
+    const ms = d.getTime();
+    return isNaN(ms) ? null : ms;
+  };
+
+  let startMs: number | null = null;
+  let endMs: number | null = null;
+
+  if (when) {
+    startMs = toMs(when.start_time) ?? toMs(when.start_date) ?? toMs(when.time);
+    endMs = toMs(when.end_time) ?? toMs(when.end_date) ?? (startMs ? startMs + 60 * 60 * 1000 : null);
+  }
+
+  if (!startMs) startMs = Date.now();
+  if (!endMs) endMs = startMs + 60 * 60 * 1000; // default 1h
+
+  return { startIso: new Date(startMs).toISOString(), endIso: new Date(endMs).toISOString() };
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -82,11 +110,12 @@ Deno.serve(async (req) => {
 
         // Insérer/mettre à jour les événements dans Supabase
         for (const event of eventsData.data || []) {
+          const { startIso, endIso } = normalizeNylasWhen(event.when);
           const calendarEvent: Partial<CalendarEvent> = {
             title: event.title || 'Sans titre',
             description: event.description,
-            start_time: new Date(event.when.start_time * 1000).toISOString(),
-            end_time: new Date(event.when.end_time * 1000).toISOString(),
+            start_time: startIso,
+            end_time: endIso,
             location: event.location,
             calendar_id: calendar.id,
             provider: 'nylas',
