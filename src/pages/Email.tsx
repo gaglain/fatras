@@ -18,6 +18,7 @@ import { EmailSender } from '@/components/EmailSender';
 import { EmailInbox } from '@/components/EmailInbox';
 import { EmailDiagnostic } from '@/components/EmailDiagnostic';
 import { UnifiedEmailManager } from '@/components/UnifiedEmailManager';
+import { UnifiedEmailInterface } from '@/components/email/UnifiedEmailInterface';
 import { EmailNotificationCenter } from '@/components/EmailNotificationCenter';
 import { EmailTemplateComposer } from '@/components/email/EmailTemplateComposer';
 import { toast } from 'sonner';
@@ -714,21 +715,9 @@ export const Email: React.FC = () => {
               <CardContent className="p-0">
                 <ScrollArea className="h-[calc(100vh-20rem)]">
                   <div className="divide-y divide-border/50">
-                    <div className="p-6 bg-amber-50 dark:bg-amber-950 rounded-lg border border-amber-200 dark:border-amber-800 mb-4">
-                      <h4 className="font-medium text-amber-900 dark:text-amber-100 mb-2">
-                        📧 Boîte de réception centralisée
-                      </h4>
-                      <p className="text-sm text-amber-800 dark:text-amber-200 mb-3">
-                        Cette section affiche maintenant vos vrais emails reçus. Utilisez le bouton ci-dessous pour accéder à la centralisation complète.
-                      </p>
-                      <Button 
-                        onClick={() => setShowUnifiedEmails(true)}
-                        className="bg-amber-600 hover:bg-amber-700 text-white"
-                      >
-                        <Inbox className="h-4 w-4 mr-2" />
-                        Accéder à la centralisation email
-                      </Button>
-                    </div>
+                     <div className="p-4">
+                       <UnifiedEmailInterface />
+                     </div>
                     
                     {filteredEmails.length === 0 && (
                       <div className="p-12 text-center">

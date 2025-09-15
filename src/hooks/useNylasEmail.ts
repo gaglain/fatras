@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { toast } from 'sonner';
@@ -23,6 +23,13 @@ export const useNylasEmail = () => {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [accounts, setAccounts] = useState<EmailAccount[]>([]);
+
+  // Charger les comptes automatiquement quand l'utilisateur change
+  useEffect(() => {
+    if (user) {
+      loadAccounts();
+    }
+  }, [user]);
 
   const connectAccount = async (provider: 'gmail' | 'outlook' | 'imap', config: EmailConfig) => {
     if (!user) {
@@ -74,16 +81,26 @@ export const useNylasEmail = () => {
     if (!user) return;
 
     try {
+      console.log('📋 Loading Nylas accounts...');
+      
+      // Récupérer les comptes via l'Edge Function Nylas
       const { data, error } = await supabase.functions.invoke('nylas-email', {
         body: {
           action: 'list_accounts'
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Edge Function error:', error);
+        throw error;
+      }
 
-      if (data.success) {
+      console.log('✅ Loaded accounts from Nylas:', data);
+      
+      if (data.success && data.accounts) {
         setAccounts(data.accounts);
+      } else {
+        setAccounts([]);
       }
     } catch (error: any) {
       console.error('❌ Error loading accounts:', error);
