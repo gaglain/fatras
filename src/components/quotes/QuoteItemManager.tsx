@@ -100,11 +100,22 @@ export const QuoteItemManager: React.FC<QuoteItemManagerProps> = ({
   const updateQuoteTotal = async () => {
     if (!quoteId || !quote) return;
     
-    // Calculer le nouveau total basé sur les items
-    const totalAmount = items.reduce((sum, item) => sum + (item.total_price || 0), 0);
+    // Calculer le nouveau total basé sur les items actuels
+    const subtotal = items.reduce((sum, item) => sum + (item.total_price || 0), 0);
+    const taxRate = 0.20; // 20% TVA
+    const taxAmount = subtotal * taxRate;
+    const totalAmount = subtotal + taxAmount;
     
     try {
-      await updateQuote(quoteId, { total_amount: totalAmount });
+      await updateQuote(quoteId, { 
+        total_amount: totalAmount,
+        tax_amount: taxAmount 
+      });
+      
+      // Notifier le parent des changements
+      if (onItemsChange) {
+        onItemsChange(items);
+      }
     } catch (error) {
       console.error('Erreur lors de la mise à jour du total:', error);
     }

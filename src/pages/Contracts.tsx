@@ -222,7 +222,7 @@ export const Contracts: React.FC = () => {
       valid_until: quote.valid_until || '',
       terms: quote.terms || 'Paiement à 30 jours. Acompte de 30% à la signature.',
       notes: quote.notes || '',
-      items: [{ name: 'Service', description: '', quantity: 1, unit_price: (quote.total_amount - quote.tax_amount) || 0 }]
+      items: []  // On laisse vide, les items seront gérés par QuoteItemManager
     });
     setShowForm(true);
   };
@@ -584,6 +584,27 @@ export const Contracts: React.FC = () => {
           </Card>
         ))}
       </div>
+
+      {/* Gestionnaire d'items pour le devis sélectionné */}
+      {editingQuote && (
+        <div className="mt-6">
+          <QuoteItemManager 
+            quoteId={editingQuote.id}
+            quote={editingQuote}
+            onItemsChange={(items) => {
+              // Recalculer le total automatiquement
+              const subtotal = items.reduce((sum, item) => sum + item.total_price, 0);
+              const tax = subtotal * 0.20; // 20% TVA
+              const total = subtotal + tax;
+              
+              updateQuote(editingQuote.id, {
+                total_amount: total,
+                tax_amount: tax
+              });
+            }}
+          />
+        </div>
+      )}
 
       {quotes.length === 0 && (
         <div className="text-center py-12">
