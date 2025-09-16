@@ -2,6 +2,7 @@
 import React from 'react';
 import { DashboardHome } from '@/components/dashboard/DashboardHome';
 import { DebugTest } from '@/components/DebugTest';
+import { NotificationTester } from '@/components/debug/NotificationTester';
 
 const Dashboard = () => {
   console.log('📊 Dashboard - Rendering Dashboard page...');
@@ -11,7 +12,10 @@ const Dashboard = () => {
       <DashboardHome />
       <div className="border-t pt-6">
         <h2 className="text-lg font-semibold mb-4">🔧 Zone de test (temporaire)</h2>
-        <DebugTest />
+        <div className="grid gap-4 md:grid-cols-2">
+          <DebugTest />
+          <NotificationTester />
+        </div>
       </div>
     </div>
   );

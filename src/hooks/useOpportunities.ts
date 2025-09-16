@@ -11,6 +11,7 @@ export interface Opportunity {
   location: string;
   date: string;
   budget: number;
+  probability_percentage: number;
   status: 'open' | 'applied' | 'won' | 'lost';
   deadline: string;
   requirements: string;
@@ -49,6 +50,7 @@ export const useOpportunities = () => {
           location: opp.location || '',
           date: opp.date || '',
           budget: opp.budget || 0,
+          probability_percentage: opp.probability_percentage || 50,
           status: opp.status as 'open' | 'applied' | 'won' | 'lost',
           deadline: opp.deadline || '',
           requirements: opp.requirements || '',
@@ -80,6 +82,7 @@ export const useOpportunities = () => {
           location: opportunityData.location,
           date: opportunityData.date || null,
           budget: opportunityData.budget,
+          probability_percentage: opportunityData.probability_percentage,
           status: opportunityData.status,
           deadline: opportunityData.deadline || null,
           requirements: opportunityData.requirements,
@@ -103,6 +106,7 @@ export const useOpportunities = () => {
         location: data.location || '',
         date: data.date || '',
         budget: data.budget || 0,
+        probability_percentage: data.probability_percentage || 50,
         status: data.status as 'open' | 'applied' | 'won' | 'lost',
         deadline: data.deadline || '',
         requirements: data.requirements || '',
@@ -132,6 +136,7 @@ export const useOpportunities = () => {
         location: updates.location,
         date: updates.date || null,
         budget: updates.budget,
+        probability_percentage: updates.probability_percentage,
         status: updates.status,
         deadline: updates.deadline || null,
         requirements: updates.requirements,

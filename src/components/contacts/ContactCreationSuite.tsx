@@ -1,0 +1,489 @@
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Stepper } from '@/components/ui/stepper';
+import { Calendar } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { useEvents } from '@/hooks/useEvents';
+import { useOpportunities } from '@/hooks/useOpportunities';
+import { useTasks } from '@/hooks/useTasks';
+import { toast } from 'sonner';
+
+interface ContactCreationSuiteProps {
+  isOpen: boolean;
+  onClose: () => void;
+  contactId: string;
+  contactName: string;
+}
+
+const steps = [
+  { id: 1, name: 'Événement', description: 'Créer un événement lié' },
+  { id: 2, name: 'Opportunité', description: 'Créer une opportunité' },
+  { id: 3, name: 'Tâche', description: 'Créer une tâche de suivi' }
+];
+
+export const ContactCreationSuite: React.FC<ContactCreationSuiteProps> = ({
+  isOpen,
+  onClose,
+  contactId,
+  contactName
+}) => {
+  const { user } = useAuth();
+  const { addEvent } = useEvents();
+  const { addOpportunity } = useOpportunities();
+  const { addTask } = useTasks();
+  
+  const [currentStep, setCurrentStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [createdIds, setCreatedIds] = useState<{
+    eventId?: string;
+    opportunityId?: string;
+    taskId?: string;
+  }>({});
+
+  const [eventData, setEventData] = useState({
+    title: '',
+    description: '',
+    event_type: 'concert',
+    venue: '',
+    city: '',
+    start_date: '',
+    budget_min: 0,
+    budget_max: 0
+  });
+
+  const [opportunityData, setOpportunityData] = useState({
+    title: '',
+    description: '',
+    venue: '',
+    location: '',
+    budget: 0,
+    probability_percentage: 50,
+    deadline: '',
+    requirements: ''
+  });
+
+  const [taskData, setTaskData] = useState({
+    title: '',
+    description: '',
+    task_type: 'Autre' as 'Email' | 'Telephone' | 'RDV' | 'Autre',
+    priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent',
+    due_date: ''
+  });
+
+  const handleCreateEvent = async () => {
+    if (!user) return;
+
+    setLoading(true);
+    try {
+      const event = await addEvent({
+        user_id: user.id,
+        contact_id: contactId,
+        title: eventData.title,
+        description: eventData.description,
+        event_type: eventData.event_type,
+        venue: eventData.venue,
+        city: eventData.city,
+        start_date: eventData.start_date,
+        budget_min: eventData.budget_min,
+        budget_max: eventData.budget_max,
+        status: 'pending'
+      });
+
+      if (event) {
+        setCreatedIds(prev => ({ ...prev, eventId: event.id }));
+        toast.success('Événement créé avec succès');
+        setCurrentStep(2);
+      }
+    } catch (error) {
+      toast.error('Erreur lors de la création de l\'événement');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateOpportunity = async () => {
+    if (!user) return;
+
+    setLoading(true);
+    try {
+      const opportunity = await addOpportunity({
+        user_id: user.id,
+        contact_id: contactId,
+        event_id: createdIds.eventId,
+        title: opportunityData.title,
+        description: opportunityData.description,
+        venue: opportunityData.venue,
+        location: opportunityData.location,
+        budget: opportunityData.budget,
+        probability_percentage: opportunityData.probability_percentage,
+        deadline: opportunityData.deadline,
+        requirements: opportunityData.requirements,
+        status: 'open',
+        contact: contactName,
+        date: ''
+      });
+
+      if (opportunity) {
+        setCreatedIds(prev => ({ ...prev, opportunityId: opportunity.id }));
+        toast.success('Opportunité créée avec succès');
+        setCurrentStep(3);
+      }
+    } catch (error) {
+      toast.error('Erreur lors de la création de l\'opportunité');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateTask = async () => {
+    if (!user) return;
+
+    setLoading(true);
+    try {
+      const task = await addTask({
+        user_id: user.id,
+        contact_id: contactId,
+        event_id: createdIds.eventId,
+        title: taskData.title,
+        description: taskData.description,
+        task_type: taskData.task_type,
+        priority: taskData.priority,
+        status: 'todo',
+        due_date: taskData.due_date
+      });
+
+      if (task) {
+        setCreatedIds(prev => ({ ...prev, taskId: task.id }));
+        toast.success('Tâche créée avec succès');
+        toast.success('Suite de création terminée !');
+        onClose();
+      }
+    } catch (error) {
+      toast.error('Erreur lors de la création de la tâche');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="event-title">Titre de l'événement *</Label>
+              <Input
+                id="event-title"
+                value={eventData.title}
+                onChange={(e) => setEventData(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="Concert, festival, spectacle..."
+                required
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="event-type">Type d'événement</Label>
+              <Select value={eventData.event_type} onValueChange={(value) => setEventData(prev => ({ ...prev, event_type: value }))}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="concert">Concert</SelectItem>
+                  <SelectItem value="festival">Festival</SelectItem>
+                  <SelectItem value="spectacle">Spectacle</SelectItem>
+                  <SelectItem value="conference">Conférence</SelectItem>
+                  <SelectItem value="autre">Autre</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="venue">Lieu</Label>
+                <Input
+                  id="venue"
+                  value={eventData.venue}
+                  onChange={(e) => setEventData(prev => ({ ...prev, venue: e.target.value }))}
+                  placeholder="Nom de la salle/lieu"
+                />
+              </div>
+              <div>
+                <Label htmlFor="city">Ville</Label>
+                <Input
+                  id="city"
+                  value={eventData.city}
+                  onChange={(e) => setEventData(prev => ({ ...prev, city: e.target.value }))}
+                  placeholder="Ville"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="start-date">Date de début</Label>
+              <Input
+                id="start-date"
+                type="datetime-local"
+                value={eventData.start_date}
+                onChange={(e) => setEventData(prev => ({ ...prev, start_date: e.target.value }))}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="budget-min">Budget min (€)</Label>
+                <Input
+                  id="budget-min"
+                  type="number"
+                  value={eventData.budget_min}
+                  onChange={(e) => setEventData(prev => ({ ...prev, budget_min: Number(e.target.value) }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="budget-max">Budget max (€)</Label>
+                <Input
+                  id="budget-max"
+                  type="number"
+                  value={eventData.budget_max}
+                  onChange={(e) => setEventData(prev => ({ ...prev, budget_max: Number(e.target.value) }))}
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="event-description">Description</Label>
+              <Textarea
+                id="event-description"
+                value={eventData.description}
+                onChange={(e) => setEventData(prev => ({ ...prev, description: e.target.value }))}
+                rows={3}
+              />
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <Button type="button" variant="outline" onClick={onClose}>
+                Annuler
+              </Button>
+              <Button onClick={handleCreateEvent} disabled={loading || !eventData.title}>
+                {loading ? 'Création...' : 'Créer l\'événement'}
+              </Button>
+            </div>
+          </div>
+        );
+
+      case 2:
+        return (
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="opp-title">Titre de l'opportunité *</Label>
+              <Input
+                id="opp-title"
+                value={opportunityData.title}
+                onChange={(e) => setOpportunityData(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="Opportunité commerciale..."
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="opp-venue">Lieu</Label>
+                <Input
+                  id="opp-venue"
+                  value={opportunityData.venue}
+                  onChange={(e) => setOpportunityData(prev => ({ ...prev, venue: e.target.value }))}
+                  placeholder="Nom du lieu"
+                />
+              </div>
+              <div>
+                <Label htmlFor="opp-location">Localisation</Label>
+                <Input
+                  id="opp-location"
+                  value={opportunityData.location}
+                  onChange={(e) => setOpportunityData(prev => ({ ...prev, location: e.target.value }))}
+                  placeholder="Ville, région..."
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="opp-budget">Budget (€)</Label>
+                <Input
+                  id="opp-budget"
+                  type="number"
+                  value={opportunityData.budget}
+                  onChange={(e) => setOpportunityData(prev => ({ ...prev, budget: Number(e.target.value) }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="probability">Probabilité (%)</Label>
+                <Select 
+                  value={opportunityData.probability_percentage.toString()} 
+                  onValueChange={(value) => setOpportunityData(prev => ({ ...prev, probability_percentage: Number(value) }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map(prob => (
+                      <SelectItem key={prob} value={prob.toString()}>{prob}%</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="deadline">Échéance</Label>
+              <Input
+                id="deadline"
+                type="date"
+                value={opportunityData.deadline}
+                onChange={(e) => setOpportunityData(prev => ({ ...prev, deadline: e.target.value }))}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="opp-description">Description</Label>
+              <Textarea
+                id="opp-description"
+                value={opportunityData.description}
+                onChange={(e) => setOpportunityData(prev => ({ ...prev, description: e.target.value }))}
+                rows={3}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="requirements">Exigences</Label>
+              <Textarea
+                id="requirements"
+                value={opportunityData.requirements}
+                onChange={(e) => setOpportunityData(prev => ({ ...prev, requirements: e.target.value }))}
+                rows={2}
+              />
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <Button type="button" variant="outline" onClick={() => setCurrentStep(1)}>
+                Retour
+              </Button>
+              <Button onClick={handleCreateOpportunity} disabled={loading || !opportunityData.title}>
+                {loading ? 'Création...' : 'Créer l\'opportunité'}
+              </Button>
+            </div>
+          </div>
+        );
+
+      case 3:
+        return (
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="task-title">Titre de la tâche *</Label>
+              <Input
+                id="task-title"
+                value={taskData.title}
+                onChange={(e) => setTaskData(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="Appeler le contact, envoyer un devis..."
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="task-type">Type de tâche</Label>
+                <Select value={taskData.task_type} onValueChange={(value: any) => setTaskData(prev => ({ ...prev, task_type: value }))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Email">Email</SelectItem>
+                    <SelectItem value="Telephone">Téléphone</SelectItem>
+                    <SelectItem value="RDV">Rendez-vous</SelectItem>
+                    <SelectItem value="Autre">Autre</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="priority">Priorité</Label>
+                <Select value={taskData.priority} onValueChange={(value: any) => setTaskData(prev => ({ ...prev, priority: value }))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Faible</SelectItem>
+                    <SelectItem value="medium">Moyenne</SelectItem>
+                    <SelectItem value="high">Haute</SelectItem>
+                    <SelectItem value="urgent">Urgente</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="due-date">Échéance</Label>
+              <Input
+                id="due-date"
+                type="datetime-local"
+                value={taskData.due_date}
+                onChange={(e) => setTaskData(prev => ({ ...prev, due_date: e.target.value }))}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="task-description">Description</Label>
+              <Textarea
+                id="task-description"
+                value={taskData.description}
+                onChange={(e) => setTaskData(prev => ({ ...prev, description: e.target.value }))}
+                rows={3}
+              />
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <Button type="button" variant="outline" onClick={() => setCurrentStep(2)}>
+                Retour
+              </Button>
+              <Button onClick={handleCreateTask} disabled={loading || !taskData.title}>
+                {loading ? 'Création...' : 'Créer la tâche'}
+              </Button>
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
+            Suite de création pour {contactName}
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="mb-6">
+          <Stepper 
+            steps={steps} 
+            currentStep={currentStep}
+            onStepClick={(step) => {
+              if (step < currentStep) {
+                setCurrentStep(step);
+              }
+            }}
+          />
+        </div>
+
+        {renderStepContent()}
+      </DialogContent>
+    </Dialog>
+  );
+};

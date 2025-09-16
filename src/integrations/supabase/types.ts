@@ -1686,6 +1686,7 @@ export type Database = {
           event_id: string | null
           id: string
           location: string | null
+          probability_percentage: number | null
           requirements: string | null
           status: string | null
           task_id: string | null
@@ -1706,6 +1707,7 @@ export type Database = {
           event_id?: string | null
           id?: string
           location?: string | null
+          probability_percentage?: number | null
           requirements?: string | null
           status?: string | null
           task_id?: string | null
@@ -1726,6 +1728,7 @@ export type Database = {
           event_id?: string | null
           id?: string
           location?: string | null
+          probability_percentage?: number | null
           requirements?: string | null
           status?: string | null
           task_id?: string | null

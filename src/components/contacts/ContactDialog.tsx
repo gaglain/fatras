@@ -12,6 +12,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { Contact } from '@/types/contact.types';
 import { ContactRelatedEntities } from './ContactRelatedEntities';
+import { ContactCreationSuite } from './ContactCreationSuite';
 
 interface Spectacle {
   id: string;
@@ -53,6 +54,8 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
   });
   const [newTag, setNewTag] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showCreationSuite, setShowCreationSuite] = useState(false);
+  const [createdContactId, setCreatedContactId] = useState<string | null>(null);
 
   const fetchSpectacles = async () => {
     if (!user) return;
@@ -149,6 +152,12 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
         }
         console.log('Contact created successfully:', data);
         toast.success('Contact créé avec succès');
+        
+        // Proposer la suite de création
+        if (data && data[0]) {
+          setCreatedContactId(data[0].id);
+          setShowCreationSuite(true);
+        }
       }
 
       onSave();
@@ -179,6 +188,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
   };
 
   return (
+    <>
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -381,5 +391,20 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
         )}
       </DialogContent>
     </Dialog>
+
+    {/* Suite de création */}
+    {createdContactId && (
+      <ContactCreationSuite
+        isOpen={showCreationSuite}
+        onClose={() => {
+          setShowCreationSuite(false);
+          setCreatedContactId(null);
+          onClose();
+        }}
+        contactId={createdContactId}
+        contactName={`${formData.first_name} ${formData.last_name}`}
+      />
+    )}
+    </>
   );
 };
