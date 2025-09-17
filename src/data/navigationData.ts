@@ -88,12 +88,12 @@ export const navigationData: MenuItem[] = [
       { name: 'Calendrier de publication', href: '/publication-calendar', icon: CalendarCheck, visible: true }
     ]
   },
-  { 
-    name: 'Ressources', 
-    href: '/show-bible', 
-    icon: FileStack, 
-    visible: true 
-  },
+{ 
+  name: 'Ressources', 
+  href: '/resources', 
+  icon: FileStack, 
+  visible: true 
+},
   { 
     name: 'Boutique', 
     href: '/merchandise', 

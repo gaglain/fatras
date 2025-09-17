@@ -13,6 +13,7 @@ import { UserProfile } from './UserProfile';
 import { NotificationCenter } from './NotificationCenter';
 import { AppSidebar } from '@/components/AppSidebar';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { useNotifications } from '@/hooks/useNotifications';
 
 export const BackOfficeHeader: React.FC = () => {
   const { theme } = useTheme();
@@ -28,12 +29,12 @@ export const BackOfficeHeader: React.FC = () => {
     currentUser = null;
   }
   
-  const [showUserProfile, setShowUserProfile] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [unreadCount] = useState(0);
+const [showUserProfile, setShowUserProfile] = useState(false);
+const [showNotifications, setShowNotifications] = useState(false);
+const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+const { unreadCount } = useNotifications();
 
-  const isDark = theme === "dark";
+const isDark = theme === "dark";
 
   const handleNotificationClick = () => {
     setShowNotifications(prev => !prev);

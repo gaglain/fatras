@@ -24,6 +24,7 @@ interface Opportunity {
   location: string;
   date: string;
   budget: number;
+  probability_percentage?: number;
   status: 'open' | 'applied' | 'won' | 'lost';
   deadline: string;
   requirements: string;
@@ -46,22 +47,23 @@ export const Opportunities: React.FC = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingOpportunity, setEditingOpportunity] = useState<Opportunity | null>(null);
   const [loading, setLoading] = useState(true);
-  const [newOpportunity, setNewOpportunity] = useState({
-    title: '',
-    description: '',
-    venue: '',
-    location: '',
-    date: '',
-    budget: 0,
-    status: 'open' as 'open' | 'applied' | 'won' | 'lost',
-    deadline: '',
-    requirements: '',
-    contact: '',
-    artist_id: '',
-    contact_id: '',
-    event_id: '',
-    task_id: ''
-  });
+const [newOpportunity, setNewOpportunity] = useState({
+  title: '',
+  description: '',
+  venue: '',
+  location: '',
+  date: '',
+  budget: 0,
+  probability_percentage: 50,
+  status: 'open' as 'open' | 'applied' | 'won' | 'lost',
+  deadline: '',
+  requirements: '',
+  contact: '',
+  artist_id: '',
+  contact_id: '',
+  event_id: '',
+  task_id: ''
+});
 
   // Charger les opportunités depuis Supabase
   useEffect(() => {
@@ -79,24 +81,25 @@ export const Opportunities: React.FC = () => {
         console.error('Erreur lors du chargement des opportunités:', error);
         toast.error('Erreur lors du chargement des opportunités');
       } else {
-        const formattedOpportunities = data.map(opp => ({
-          id: opp.id,
-          title: opp.title,
-          description: opp.description || '',
-          venue: opp.venue || '',
-          location: opp.location || '',
-          date: opp.date || '',
-          budget: opp.budget || 0,
-          status: opp.status as 'open' | 'applied' | 'won' | 'lost',
-          deadline: opp.deadline || '',
-          requirements: opp.requirements || '',
-          contact: opp.contact || '',
-          artist_id: opp.artist_id || '',
-          contact_id: opp.contact_id || '',
-          event_id: opp.event_id || '',
-          task_id: opp.task_id || '',
-          createdAt: opp.created_at
-        }));
+const formattedOpportunities = data.map(opp => ({
+  id: opp.id,
+  title: opp.title,
+  description: opp.description || '',
+  venue: opp.venue || '',
+  location: opp.location || '',
+  date: opp.date || '',
+  budget: opp.budget || 0,
+  probability_percentage: opp.probability_percentage || 50,
+  status: opp.status as 'open' | 'applied' | 'won' | 'lost',
+  deadline: opp.deadline || '',
+  requirements: opp.requirements || '',
+  contact: opp.contact || '',
+  artist_id: opp.artist_id || '',
+  contact_id: opp.contact_id || '',
+  event_id: opp.event_id || '',
+  task_id: opp.task_id || '',
+  createdAt: opp.created_at
+}));
         setOpportunities(formattedOpportunities);
       }
       setLoading(false);
@@ -117,67 +120,70 @@ export const Opportunities: React.FC = () => {
       return;
     }
 
-    try {
-      const { data, error } = await supabase
-        .from('opportunities')
-        .insert({
-          user_id: user.id,
-          title: newOpportunity.title,
-          description: newOpportunity.description,
-          venue: newOpportunity.venue,
-          location: newOpportunity.location,
-          date: newOpportunity.date || null,
-          budget: newOpportunity.budget,
-          status: newOpportunity.status,
-          deadline: newOpportunity.deadline || null,
-          requirements: newOpportunity.requirements,
-          contact: newOpportunity.contact,
-          artist_id: newOpportunity.artist_id || null,
-          contact_id: newOpportunity.contact_id || null,
-          event_id: newOpportunity.event_id || null,
-          task_id: newOpportunity.task_id || null
-        })
-        .select()
-        .single();
+try {
+  const { data, error } = await supabase
+    .from('opportunities')
+    .insert({
+      user_id: user.id,
+      title: newOpportunity.title,
+      description: newOpportunity.description,
+      venue: newOpportunity.venue,
+      location: newOpportunity.location,
+      date: newOpportunity.date || null,
+      budget: newOpportunity.budget,
+      probability_percentage: newOpportunity.probability_percentage,
+      status: newOpportunity.status,
+      deadline: newOpportunity.deadline || null,
+      requirements: newOpportunity.requirements,
+      contact: newOpportunity.contact,
+      artist_id: newOpportunity.artist_id || null,
+      contact_id: newOpportunity.contact_id || null,
+      event_id: newOpportunity.event_id || null,
+      task_id: newOpportunity.task_id || null
+    })
+    .select()
+    .single();
 
       if (error) throw error;
 
-      const opportunity: Opportunity = {
-        id: data.id,
-        title: data.title,
-        description: data.description || '',
-        venue: data.venue || '',
-        location: data.location || '',
-        date: data.date || '',
-        budget: data.budget || 0,
-        status: data.status as 'open' | 'applied' | 'won' | 'lost',
-        deadline: data.deadline || '',
-        requirements: data.requirements || '',
-        contact: data.contact || '',
-        artist_id: data.artist_id || '',
-        contact_id: data.contact_id || '',
-        event_id: data.event_id || '',
-        task_id: data.task_id || '',
-        createdAt: data.created_at
-      };
+const opportunity: Opportunity = {
+  id: data.id,
+  title: data.title,
+  description: data.description || '',
+  venue: data.venue || '',
+  location: data.location || '',
+  date: data.date || '',
+  budget: data.budget || 0,
+  probability_percentage: data.probability_percentage || 50,
+  status: data.status as 'open' | 'applied' | 'won' | 'lost',
+  deadline: data.deadline || '',
+  requirements: data.requirements || '',
+  contact: data.contact || '',
+  artist_id: data.artist_id || '',
+  contact_id: data.contact_id || '',
+  event_id: data.event_id || '',
+  task_id: data.task_id || '',
+  createdAt: data.created_at
+};
 
       setOpportunities(prev => [opportunity, ...prev]);
-      setNewOpportunity({
-        title: '',
-        description: '',
-        venue: '',
-        location: '',
-        date: '',
-        budget: 0,
-        status: 'open' as 'open' | 'applied' | 'won' | 'lost',
-        deadline: '',
-        requirements: '',
-        contact: '',
-        artist_id: '',
-        contact_id: '',
-        event_id: '',
-        task_id: ''
-      });
+setNewOpportunity({
+  title: '',
+  description: '',
+  venue: '',
+  location: '',
+  date: '',
+  budget: 0,
+  probability_percentage: 50,
+  status: 'open' as 'open' | 'applied' | 'won' | 'lost',
+  deadline: '',
+  requirements: '',
+  contact: '',
+  artist_id: '',
+  contact_id: '',
+  event_id: '',
+  task_id: ''
+});
       setShowAddForm(false);
       toast.success('Opportunité créée avec succès');
     } catch (error) {
@@ -188,48 +194,50 @@ export const Opportunities: React.FC = () => {
 
   const handleEditOpportunity = (opportunity: Opportunity) => {
     setEditingOpportunity(opportunity);
-    setNewOpportunity({
-      title: opportunity.title,
-      description: opportunity.description,
-      venue: opportunity.venue,
-      location: opportunity.location,
-      date: opportunity.date,
-      budget: opportunity.budget,
-      status: opportunity.status,
-      deadline: opportunity.deadline,
-      requirements: opportunity.requirements,
-      contact: opportunity.contact,
-      artist_id: opportunity.artist_id || '',
-      contact_id: opportunity.contact_id || '',
-      event_id: opportunity.event_id || '',
-      task_id: opportunity.task_id || ''
-    });
+setNewOpportunity({
+  title: opportunity.title,
+  description: opportunity.description,
+  venue: opportunity.venue,
+  location: opportunity.location,
+  date: opportunity.date,
+  budget: opportunity.budget,
+  probability_percentage: opportunity.probability_percentage || 50,
+  status: opportunity.status,
+  deadline: opportunity.deadline,
+  requirements: opportunity.requirements,
+  contact: opportunity.contact,
+  artist_id: opportunity.artist_id || '',
+  contact_id: opportunity.contact_id || '',
+  event_id: opportunity.event_id || '',
+  task_id: opportunity.task_id || ''
+});
   };
 
   const handleUpdateOpportunity = async () => {
     if (!editingOpportunity || !user) return;
 
     try {
-      const { error } = await supabase
-        .from('opportunities')
-        .update({
-          title: newOpportunity.title,
-          description: newOpportunity.description,
-          venue: newOpportunity.venue,
-          location: newOpportunity.location,
-          date: newOpportunity.date || null,
-          budget: newOpportunity.budget,
-          status: newOpportunity.status,
-          deadline: newOpportunity.deadline || null,
-          requirements: newOpportunity.requirements,
-          contact: newOpportunity.contact,
-          artist_id: newOpportunity.artist_id || null,
-          contact_id: newOpportunity.contact_id || null,
-          event_id: newOpportunity.event_id || null,
-          task_id: newOpportunity.task_id || null
-        })
-        .eq('id', editingOpportunity.id)
-        .eq('user_id', user.id);
+const { error } = await supabase
+  .from('opportunities')
+  .update({
+    title: newOpportunity.title,
+    description: newOpportunity.description,
+    venue: newOpportunity.venue,
+    location: newOpportunity.location,
+    date: newOpportunity.date || null,
+    budget: newOpportunity.budget,
+    probability_percentage: newOpportunity.probability_percentage,
+    status: newOpportunity.status,
+    deadline: newOpportunity.deadline || null,
+    requirements: newOpportunity.requirements,
+    contact: newOpportunity.contact,
+    artist_id: newOpportunity.artist_id || null,
+    contact_id: newOpportunity.contact_id || null,
+    event_id: newOpportunity.event_id || null,
+    task_id: newOpportunity.task_id || null
+  })
+  .eq('id', editingOpportunity.id)
+  .eq('user_id', user.id);
 
       if (error) throw error;
 
@@ -240,22 +248,23 @@ export const Opportunities: React.FC = () => {
       ));
       
       setEditingOpportunity(null);
-      setNewOpportunity({
-        title: '',
-        description: '',
-        venue: '',
-        location: '',
-        date: '',
-        budget: 0,
-        status: 'open' as 'open' | 'applied' | 'won' | 'lost',
-        deadline: '',
-        requirements: '',
-        contact: '',
-        artist_id: '',
-        contact_id: '',
-        event_id: '',
-        task_id: ''
-      });
+setNewOpportunity({
+  title: '',
+  description: '',
+  venue: '',
+  location: '',
+  date: '',
+  budget: 0,
+  probability_percentage: 50,
+  status: 'open' as 'open' | 'applied' | 'won' | 'lost',
+  deadline: '',
+  requirements: '',
+  contact: '',
+  artist_id: '',
+  contact_id: '',
+  event_id: '',
+  task_id: ''
+});
       toast.success('Opportunité mise à jour avec succès');
     } catch (error) {
       console.error('Erreur lors de la mise à jour:', error);
@@ -488,29 +497,30 @@ export const Opportunities: React.FC = () => {
       </div>
 
       {(showAddForm || editingOpportunity) && (
-        <Dialog open={showAddForm || !!editingOpportunity} onOpenChange={(open) => {
-          if (!open) {
-            setShowAddForm(false);
-            setEditingOpportunity(null);
-                  setNewOpportunity({
-                    title: '',
-                    description: '',
-                    venue: '',
-                    location: '',
-                    date: '',
-                    budget: 0,
-                    status: 'open' as 'open' | 'applied' | 'won' | 'lost',
-                    deadline: '',
-                    requirements: '',
-                    contact: '',
-                    artist_id: '',
-                    contact_id: '',
-                    event_id: '',
-                    task_id: ''
-                  });
-          }
-        }}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+<Dialog open={showAddForm || !!editingOpportunity} onOpenChange={(open) => {
+  if (!open) {
+    setShowAddForm(false);
+    setEditingOpportunity(null);
+          setNewOpportunity({
+            title: '',
+            description: '',
+            venue: '',
+            location: '',
+            date: '',
+            budget: 0,
+            probability_percentage: 50,
+            status: 'open' as 'open' | 'applied' | 'won' | 'lost',
+            deadline: '',
+            requirements: '',
+            contact: '',
+            artist_id: '',
+            contact_id: '',
+            event_id: '',
+            task_id: ''
+          });
+  }
+}}>
+  <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
                 {editingOpportunity ? 'Modifier l\'opportunité' : 'Créer une nouvelle opportunité'}
@@ -561,6 +571,23 @@ export const Opportunities: React.FC = () => {
                   onChange={(e) => setNewOpportunity({ ...newOpportunity, budget: Number(e.target.value) })}
                   placeholder="0"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Probabilité (%)</label>
+                <Select
+                  value={String(newOpportunity.probability_percentage)}
+                  onValueChange={(value) => setNewOpportunity({ ...newOpportunity, probability_percentage: parseInt(value) })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choisir une probabilité" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[10,20,30,40,50,60,70,80,90,100].map((p) => (
+                      <SelectItem key={p} value={String(p)}>{p}%</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div>

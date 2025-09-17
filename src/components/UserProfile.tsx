@@ -11,7 +11,8 @@ import { toast } from 'sonner';
 interface UserProfileProps {
   onClose: () => void;
 }
-
+import { LogoutButton } from '@/components/ui/logout-button';
+ 
 export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
   const { currentUser } = useUser();
   const { user: authUser } = useAuth();
@@ -135,30 +136,31 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
               )}
             </div>
 
-            {/* Action Button */}
-            <div className="pt-4 space-y-2">
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => setIsEditing(true)}
-                disabled={loading}
-              >
-                <Edit2 className="h-4 w-4 mr-2" />
-                Modifier le profil
-              </Button>
-              {currentUser?.role === 'super_admin' || currentUser?.role === 'admin' ? (
-                <Button 
-                  variant="ghost" 
-                  className="w-full text-muted-foreground"
-                  onClick={() => {
-                    onClose();
-                    window.location.href = '/user-management';
-                  }}
-                >
-                  Aller à la gestion des utilisateurs
-                </Button>
-              ) : null}
-            </div>
+{/* Action Button */}
+<div className="pt-4 space-y-2">
+  <Button 
+    variant="outline" 
+    className="w-full"
+    onClick={() => setIsEditing(true)}
+    disabled={loading}
+  >
+    <Edit2 className="h-4 w-4 mr-2" />
+    Modifier le profil
+  </Button>
+  <LogoutButton variant="outline" className="w-full" />
+  {currentUser?.role === 'super_admin' || currentUser?.role === 'admin' ? (
+    <Button 
+      variant="ghost" 
+      className="w-full text-muted-foreground"
+      onClick={() => {
+        onClose();
+        window.location.href = '/user-management';
+      }}
+    >
+      Aller à la gestion des utilisateurs
+    </Button>
+  ) : null}
+</div>
           </CardContent>
         </Card>
       </div>
