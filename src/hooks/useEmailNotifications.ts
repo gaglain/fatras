@@ -20,10 +20,13 @@ export const useEmailNotifications = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
-      loadNotifications();
-      setupRealtimeSubscription();
-    }
+    if (!user) return;
+
+    loadNotifications();
+    const cleanup = setupRealtimeSubscription();
+    return () => {
+      cleanup?.();
+    };
   }, [user]);
 
   const loadNotifications = async () => {
@@ -52,7 +55,7 @@ export const useEmailNotifications = () => {
     if (!user) return;
 
     const channel = supabase
-      .channel('email_notifications_changes')
+      .channel(`email_notifications_changes_${user.id}_${Date.now()}`)
       .on(
         'postgres_changes',
         {
