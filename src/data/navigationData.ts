@@ -89,8 +89,8 @@ export const navigationData: MenuItem[] = [
     ]
   },
 { 
-  name: 'Ressources', 
-  href: '/resources', 
+  name: 'Show Bible', 
+  href: '/show-bible', 
   icon: FileStack, 
   visible: true 
 },

@@ -114,11 +114,8 @@ const isDark = theme === "dark";
                 >
                   <Bell className="h-5 w-5" />
                   {unreadCount > 0 && (
-                    <div className="absolute -top-1 -right-1">
-                      <div className="absolute w-6 h-6 bg-red-500 rounded-full animate-pulse -top-px -left-px"></div>
-                      <div className="relative h-5 w-5 bg-red-500 text-white flex items-center justify-center text-xs rounded-full border-2 border-white font-semibold">
-                        {unreadCount}
-                      </div>
+                    <div className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white flex items-center justify-center text-xs rounded-full font-semibold">
+                      {unreadCount}
                     </div>
                   )}
                 </Button>

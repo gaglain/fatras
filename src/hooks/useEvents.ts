@@ -76,32 +76,38 @@ export const useEvents = () => {
   }, [user]);
 
   const addEvent = async (eventData: Omit<Event, 'id' | 'created_at' | 'updated_at'>) => {
-    const { data, error } = await supabase
-      .from('events')
-      .insert({
-        user_id: eventData.user_id,
-        contact_id: eventData.contact_id,
-        title: eventData.title,
-        description: eventData.description,
-        event_type: eventData.event_type,
-        venue: eventData.venue,
-        address: eventData.address,
-        city: eventData.city,
-        postal_code: eventData.postal_code,
-        country: eventData.country,
-        start_date: eventData.start_date,
-        end_date: eventData.end_date,
-        status: eventData.status,
-        requirements: eventData.requirements,
-        notes: eventData.notes,
-        budget_min: eventData.budget_min,
-        budget_max: eventData.budget_max,
-        attendees_count: eventData.attendees_count
-      })
-      .select()
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('events')
+        .insert({
+          user_id: eventData.user_id,
+          contact_id: eventData.contact_id,
+          title: eventData.title,
+          description: eventData.description,
+          event_type: eventData.event_type,
+          venue: eventData.venue,
+          address: eventData.address,
+          city: eventData.city,
+          postal_code: eventData.postal_code,
+          country: eventData.country,
+          start_date: eventData.start_date || null,
+          end_date: eventData.end_date || null,
+          status: eventData.status,
+          requirements: eventData.requirements,
+          notes: eventData.notes,
+          budget_min: eventData.budget_min || null,
+          budget_max: eventData.budget_max || null,
+          attendees_count: eventData.attendees_count || null
+        })
+        .select()
+        .single();
 
-    if (data && !error) {
+      if (error) {
+        console.error('Erreur création événement:', error);
+        throw error;
+      }
+
+      if (data) {
       const newEvent: Event = {
         id: data.id,
         user_id: data.user_id,
@@ -128,8 +134,12 @@ export const useEvents = () => {
       };
       setEvents(prev => [...prev, newEvent]);
       return newEvent;
+      }
+      return null;
+    } catch (error) {
+      console.error('Erreur addEvent:', error);
+      throw error;
     }
-    return null;
   };
 
   const updateEvent = async (id: string, updates: Partial<Event>) => {
