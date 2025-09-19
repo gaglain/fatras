@@ -21,7 +21,7 @@ import { useUser, UserRole } from '@/contexts/UserContext';
 import { useEmailSender } from '@/hooks/useEmailSender';
 import { useUserManagement } from '@/hooks/useUserManagement';
 import { ExtendedUserForm } from '@/components/users/ExtendedUserForm';
-import { TestUserCreator } from '@/components/TestUserCreator';
+
 
 export const UserManagement: React.FC = () => {
   console.log('📊 UserManagement component rendering...');
@@ -216,10 +216,7 @@ export const UserManagement: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Créateur d'utilisateur test */}
-      <div className="mb-6">
-        <TestUserCreator />
-      </div>
+      {/* Section supprimée - Créateur d'utilisateur test retiré */}
 
       {/* Liste des utilisateurs */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">

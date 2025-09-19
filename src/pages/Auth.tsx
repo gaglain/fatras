@@ -10,12 +10,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import { PasswordResetForm } from '@/components/auth/PasswordResetForm';
 
 const Auth: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showResetForm, setShowResetForm] = useState(false);
   
   const [loginData, setLoginData] = useState({
     email: '',
@@ -137,6 +139,22 @@ const Auth: React.FC = () => {
     }
   };
 
+  if (showResetForm) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <div className="w-full max-w-md space-y-8">
+          <div className="text-center">
+            <h2 className="text-3xl font-bold">Fatras Booking</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Réinitialisation du mot de passe
+            </p>
+          </div>
+          <PasswordResetForm onBackToLogin={() => setShowResetForm(false)} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
@@ -202,6 +220,15 @@ const Auth: React.FC = () => {
 
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? 'Connexion...' : 'Se connecter'}
+                </Button>
+                
+                <Button 
+                  type="button"
+                  variant="ghost" 
+                  className="w-full text-sm" 
+                  onClick={() => setShowResetForm(true)}
+                >
+                  Mot de passe oublié ?
                 </Button>
               </form>
             </TabsContent>
