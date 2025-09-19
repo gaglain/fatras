@@ -132,7 +132,7 @@ export const useUnifiedEmails = () => {
     if (!user) return;
 
     const channel = supabase
-      .channel(`emails_changes_${user.id}`)
+      .channel(`emails_changes_${user.id}_${Date.now()}`)
       .on(
         'postgres_changes',
         {
