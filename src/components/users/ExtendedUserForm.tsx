@@ -139,6 +139,10 @@ export const ExtendedUserForm: React.FC<ExtendedUserFormProps> = ({
       console.log('✅ Form saved successfully');
     } catch (error) {
       console.error('❌ Form save error:', error);
+      if (error.message?.includes('foreign key constraint')) {
+        throw new Error('Erreur de création utilisateur. Veuillez réessayer ou contacter l\'administrateur.');
+      }
+      throw error;
     } finally {
       setLoading(false);
     }

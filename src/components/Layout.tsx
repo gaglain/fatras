@@ -5,6 +5,7 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { BackOfficeHeader } from '@/components/BackOfficeHeader';
 import { ChatWidget } from '@/components/ChatWidget';
+import { TaskNotificationBanner } from '@/components/TaskNotificationBanner';
 
 const adminRoutes = [
   '/admin', '/dashboard', '/artists', '/events', '/agenda', '/contacts',
@@ -46,6 +47,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           <BackOfficeHeader />
           
           <main className="flex-1 overflow-auto p-4 lg:p-6">
+            <TaskNotificationBanner className="mb-4" />
             {children}
           </main>
         </div>

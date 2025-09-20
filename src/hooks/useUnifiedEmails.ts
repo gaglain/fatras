@@ -143,9 +143,35 @@ export const useUnifiedEmails = () => {
         },
         (payload) => {
           console.log('Nouvel email reçu:', payload);
-          setEmails(prev => [payload.new as UnifiedEmail, ...prev]);
-          if (payload.new.direction === 'received') {
-            toast.success(`Nouveau email de ${payload.new.from_name || payload.new.from_email}`);
+          const newEmail = payload.new as UnifiedEmail;
+          setEmails(prev => [newEmail, ...prev]);
+          
+          if (newEmail.direction === 'received') {
+            // Notification toast
+            toast.success(`📧 Nouveau email de ${newEmail.from_name || newEmail.from_email}`, {
+              description: newEmail.subject || 'Sans objet',
+              duration: 5000,
+            });
+            
+            // Créer une notification dans la base de données
+            supabase
+              .from('notifications')
+              .insert({
+                user_id: user.id,
+                type: 'new_email',
+                title: 'Nouveau email reçu',
+                message: `De: ${newEmail.from_name || newEmail.from_email} - ${newEmail.subject || 'Sans objet'}`,
+                data: {
+                  email_id: newEmail.id,
+                  from_email: newEmail.from_email,
+                  from_name: newEmail.from_name,
+                  subject: newEmail.subject
+                },
+                read: false
+              })
+              .then(({ error }) => {
+                if (error) console.error('Erreur création notification email:', error);
+              });
           }
         }
       )
@@ -197,7 +223,34 @@ export const useUnifiedEmails = () => {
             updated_at: ie.updated_at ?? ie.received_at ?? new Date().toISOString(),
           };
           setEmails(prev => [mapped, ...prev]);
-          toast.success(`Nouveau email de ${mapped.from_name || mapped.from_email}`);
+          
+          // Notification toast
+          toast.success(`📧 Nouveau email de ${mapped.from_name || mapped.from_email}`, {
+            description: mapped.subject || 'Sans objet',
+            duration: 5000,
+          });
+          
+          // Créer une notification dans la base de données pour les emails reçus
+          if (mapped.direction === 'received') {
+            supabase
+              .from('notifications')
+              .insert({
+                user_id: user.id,
+                type: 'new_email',
+                title: 'Nouveau email reçu',
+                message: `De: ${mapped.from_name || mapped.from_email} - ${mapped.subject || 'Sans objet'}`,
+                data: {
+                  email_id: mapped.id,
+                  from_email: mapped.from_email,
+                  from_name: mapped.from_name,
+                  subject: mapped.subject
+                },
+                read: false
+              })
+              .then(({ error }) => {
+                if (error) console.error('Erreur création notification email:', error);
+              });
+          }
         }
       )
       .on(
@@ -244,11 +297,35 @@ export const useUnifiedEmails = () => {
   const syncAllAccounts = async () => {
     if (!user) return;
     try {
+      console.log('🔄 Démarrage de la synchronisation automatique des emails...');
+      
+      // Essayer d'abord la fonction sync-imap-emails pour la synchronisation IMAP
+      try {
+        const { data: imapData, error: imapError } = await supabase.functions.invoke('sync-imap-emails', {
+          body: {
+            userId: user.id,
+            action: 'sync'
+          }
+        });
+
+        if (!imapError && imapData?.success) {
+          console.log('✅ Synchronisation IMAP réussie:', imapData);
+          await loadEmails();
+          return;
+        }
+      } catch (imapError) {
+        console.log('📧 IMAP sync non disponible, essai avec Nylas...');
+      }
+
+      // Si IMAP échoue, essayer avec Nylas
       const { data, error } = await supabase.functions.invoke('nylas-email', {
         body: { action: 'list_accounts' }
       });
+      
       if (error) throw error;
+      
       const accounts = (data?.accounts ?? []) as Array<{ id: string; is_active: boolean }>;
+      
       for (const acc of accounts) {
         if (!acc?.id) continue;
         try {
@@ -259,9 +336,11 @@ export const useUnifiedEmails = () => {
           console.error('Sync error for account', acc.id, e);
         }
       }
+      
       await loadEmails();
+      console.log('✅ Synchronisation Nylas terminée');
     } catch (e) {
-      console.error('Erreur synchro auto Nylas:', e);
+      console.error('❌ Erreur synchro auto:', e);
     }
   };
 
