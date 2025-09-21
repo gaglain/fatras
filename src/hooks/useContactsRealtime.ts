@@ -44,12 +44,13 @@ export const useContactsRealtime = ({
     if (channelRef.current) {
       console.log('🔌 Cleaning up previous contacts channel');
       supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
     }
 
     console.log('🔄 Setting up contacts real-time sync');
 
     const channel = supabase
-      .channel('contacts-realtime-' + Date.now())
+      .channel('contacts-rt-' + Date.now())
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',

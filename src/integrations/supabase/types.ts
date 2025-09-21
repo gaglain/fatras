@@ -2816,7 +2816,7 @@ export type Database = {
           social_security_number: string | null
           tax_reduction: boolean | null
           updated_at: string
-          user_id: string
+          user_id: string | null
           username: string | null
         }
         Insert: {
@@ -2850,7 +2850,7 @@ export type Database = {
           social_security_number?: string | null
           tax_reduction?: boolean | null
           updated_at?: string
-          user_id: string
+          user_id?: string | null
           username?: string | null
         }
         Update: {
@@ -2884,7 +2884,7 @@ export type Database = {
           social_security_number?: string | null
           tax_reduction?: boolean | null
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
           username?: string | null
         }
         Relationships: []

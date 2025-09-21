@@ -385,7 +385,7 @@ export const useMessaging = () => {
     console.log('📡 Setting up real-time subscription for messaging for user:', user.id);
     
     // Create a unique channel name to avoid conflicts
-    const channelName = `messaging_realtime_${user.id}_${Date.now()}`;
+    const channelName = `msg-rt-${user.id}-${Date.now()}`;
     console.log('📡 Creating messaging channel:', channelName);
     
     const channelSubscription = supabase
