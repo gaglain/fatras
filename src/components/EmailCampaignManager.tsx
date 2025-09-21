@@ -27,7 +27,7 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({
   campaignId,
   onBack
 }) => {
-  const { campaigns, templates, createCampaign, updateCampaign } = useEmailCampaigns();
+  const { campaigns, templates, createCampaign, updateCampaign, createTemplate } = useEmailCampaigns();
   const { contactLists } = useContactLists();
   
   const existingCampaign = campaignId ? campaigns.find(c => c.id === campaignId) : null;
@@ -42,6 +42,8 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({
   
   const [activeTab, setActiveTab] = useState('design');
   const [sending, setSending] = useState(false);
+  const [templateName, setTemplateName] = useState('');
+  const [templateCategory, setTemplateCategory] = useState('Newsletter');
 
   const handleSave = async () => {
     if (!campaignData.name || !campaignData.subject) {
@@ -67,6 +69,26 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({
       }
     } catch (error) {
       toast.error('Erreur lors de la sauvegarde');
+    }
+  };
+
+  const handleSaveAsTemplate = async () => {
+    if (!templateName.trim()) {
+      toast.error('Nom du template requis');
+      return;
+    }
+    try {
+      await createTemplate({
+        name: templateName.trim(),
+        category: templateCategory,
+        subject: campaignData.subject || 'Sans sujet',
+        content: JSON.stringify(campaignData.content),
+        variables: []
+      });
+      toast.success('Template enregistré');
+      setTemplateName('');
+    } catch (error: any) {
+      toast.error("Erreur lors de l'enregistrement du template");
     }
   };
 
@@ -265,6 +287,24 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({
                   </Select>
                 </div>
               )}
+
+              <div className="mt-6 p-4 border rounded-md">
+                <Label>Enregistrer comme template</Label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-2">
+                  <div>
+                    <Label htmlFor="tplName">Nom</Label>
+                    <Input id="tplName" value={templateName} onChange={(e) => setTemplateName(e.target.value)} placeholder="Nom du template" />
+                  </div>
+                  <div>
+                    <Label htmlFor="tplCat">Catégorie</Label>
+                    <Input id="tplCat" value={templateCategory} onChange={(e) => setTemplateCategory(e.target.value)} placeholder="Ex: Newsletter" />
+                  </div>
+                  <div className="flex items-end">
+                    <Button onClick={handleSaveAsTemplate} disabled={!campaignData.content || (campaignData.content as any[]).length === 0}>Enregistrer</Button>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">Le contenu actuel sera sauvegardé comme modèle réutilisable.</p>
+              </div>
             </CardContent>
           </Card>
 

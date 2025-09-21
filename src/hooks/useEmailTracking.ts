@@ -41,14 +41,14 @@ export const useEmailTracking = () => {
   };
 
   const generateTrackingPixel = (campaignId: string, contactId: string) => {
-    const baseUrl = window.location.origin;
-    return `${baseUrl}/api/track-email-open?campaign=${campaignId}&contact=${contactId}`;
+    const fnBase = 'https://nhoemjarkxqwruupqgyd.functions.supabase.co';
+    return `${fnBase}/track-email-open?campaign=${campaignId}&contact=${contactId}`;
   };
 
   const generateClickTrackingUrl = (campaignId: string, contactId: string, originalUrl: string) => {
-    const baseUrl = window.location.origin;
+    const fnBase = 'https://nhoemjarkxqwruupqgyd.functions.supabase.co';
     const encoded = encodeURIComponent(originalUrl);
-    return `${baseUrl}/api/track-email-click?campaign=${campaignId}&contact=${contactId}&url=${encoded}`;
+    return `${fnBase}/track-email-click?campaign=${campaignId}&contact=${contactId}&url=${encoded}`;
   };
 
   return {

@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -129,8 +129,10 @@ const App = () => {
 <Route path="/website-backoffice" element={<ProtectedRoute><WebsiteBackoffice /></ProtectedRoute>} />
 <Route path="/application" element={<ProtectedRoute><Layout><Application /></Layout></ProtectedRoute>} />
 <Route path="/quotes" element={<ProtectedRoute><Layout><Quotes /></Layout></ProtectedRoute>} />
-<Route path="/preferences" element={<ProtectedRoute><Layout><Preferences /></Layout></ProtectedRoute>} />
-                
+                <Route path="/preferences" element={<ProtectedRoute><Layout><Preferences /></Layout></ProtectedRoute>} />
+                {/* Admin aliases */}
+                <Route path="/admin" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/Admin" element={<Navigate to="/dashboard" replace />} />
                 <Route path="*" element={<NotFound />} />
                 </Routes>
               </WebsiteConfigProvider>
