@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useEmailSender } from './useEmailSender';
 
 export interface ExtendedUserProfile {
   id: string;
@@ -36,6 +37,7 @@ export interface ExtendedUserProfile {
 export const useUserManagement = () => {
   const [users, setUsers] = useState<ExtendedUserProfile[]>([]);
   const [loading, setLoading] = useState(false);
+  const { sendUserWelcomeEmail } = useEmailSender();
 
   const fetchUsers = async () => {
     try {
@@ -182,6 +184,19 @@ export const useUserManagement = () => {
         }
       } else {
         console.log('ℹ️ Pas d\'auth user, le profil reste avec un user_id temporaire');
+      }
+
+      // Envoyer l'email de bienvenue avec le mot de passe
+      try {
+        await sendUserWelcomeEmail(
+          userData.email,
+          `${userData.first_name} ${userData.last_name}`,
+          userData.password
+        );
+        console.log('✅ Email de bienvenue envoyé');
+      } catch (emailError) {
+        console.error('❌ Erreur envoi email:', emailError);
+        toast.error('Utilisateur créé mais erreur envoi email');
       }
 
       toast.success('Utilisateur créé avec succès !');
