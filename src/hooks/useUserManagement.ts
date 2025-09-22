@@ -142,13 +142,13 @@ export const useUserManagement = () => {
 
       console.log('✅ Profil utilisateur créé dans la base:', result);
 
-      // Maintenant créer l'utilisateur auth côté client pour l'authentification
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: userData.email,
-        password: userData.password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`,
-          data: {
+      // Créer l'utilisateur via l'Edge Function admin (email déjà confirmé)
+      const { data: createData, error: createError } = await supabase.functions.invoke('admin-create-user', {
+        body: {
+          action: 'create',
+          email: userData.email,
+          password: userData.password,
+          metadata: {
             first_name: userData.first_name,
             last_name: userData.last_name,
             username: userData.username || userData.email.split('@')[0],
@@ -157,33 +157,23 @@ export const useUserManagement = () => {
         }
       });
 
-      console.log('📊 Résultat auth signUp:', { authData, authError });
-
-      if (authError && !authError.message.includes('already registered')) {
-        console.error('❌ Erreur création auth:', authError);
-        // Si l'auth échoue mais le profil est créé, on peut continuer
-        console.log('⚠️ Auth échoué mais profil créé, continuons...');
+      if (createError || !createData?.success) {
+        console.error('❌ Erreur création utilisateur (admin):', createError || createData?.error);
+        toast.error(`Erreur création auth: ${createError?.message || createData?.error || 'inconnue'}`);
       }
 
-      if (authData?.user) {
-        // Mettre à jour le profil avec l'ID auth correct
-        console.log('🔄 Mise à jour du profil avec user_id auth:', authData.user.id);
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
+      const newUserId = createData?.user?.id as string | undefined;
+      if (newUserId) {
+        console.log('🔄 Mise à jour du profil avec user_id auth:', newUserId);
         const { error: updateError } = await supabase
           .from('user_profiles')
-          .update({
-            user_id: authData.user.id
-          })
+          .update({ user_id: newUserId })
           .eq('email', userData.email);
-
         if (updateError) {
           console.error('❌ Erreur mise à jour user_id:', updateError);
         } else {
           console.log('✅ Profil mis à jour avec user_id auth');
         }
-      } else {
-        console.log('ℹ️ Pas d\'auth user, le profil reste avec un user_id temporaire');
       }
 
       // Envoyer l'email de bienvenue via Nylas
