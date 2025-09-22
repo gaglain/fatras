@@ -86,30 +86,47 @@ serve(async (req) => {
     if (createErr) {
       console.error("createUser error:", createErr);
 
-      // If already exists, try to reset password and fetch user by doing an invite (won't send email) or list
-      if (String(createErr.message || "").toLowerCase().includes("already")) {
-        // Attempt to find existing user by inviting (will return user if exists)
-        const { data: inviteData, error: inviteErr } = await admin.auth.admin.inviteUserByEmail(
-          body.email,
-          { redirectTo: `${SUPABASE_URL}` },
-        );
+      // If already exists, try to reset password for the existing user (no invite)
+      if (
+        String(createErr.message || "").toLowerCase().includes("already") ||
+        String((createErr as any).code || "").toLowerCase().includes("email_exists")
+      ) {
+        // Try to find the auth user id via our public.user_profiles table first
+        const { data: profileByEmail, error: profileByEmailErr } = await admin
+          .from("user_profiles")
+          .select("user_id")
+          .eq("email", body.email)
+          .not("user_id", "is", null)
+          .single();
 
-        if (inviteErr && !String(inviteErr.message || "").toLowerCase().includes("already")) {
-          console.error("inviteUserByEmail error:", inviteErr);
+        let existingUserId: string | null = null;
+        if (!profileByEmailErr && profileByEmail?.user_id) {
+          existingUserId = profileByEmail.user_id as string;
+        } else {
+          // Fallback: list users and match by email
+          try {
+            const { data: listRes, error: listErr } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 } as any);
+            if (!listErr && listRes?.users?.length) {
+              const found = listRes.users.find((u: any) => (u.email || "").toLowerCase() === body.email.toLowerCase());
+              existingUserId = found?.id ?? null;
+            }
+          } catch (lerr) {
+            console.error("listUsers fallback error:", lerr);
+          }
         }
 
-        const user = (created?.user ?? inviteData?.user) as any;
-
-        if (!user) {
+        if (!existingUserId) {
           return new Response(
-            JSON.stringify({ success: false, error: createErr.message || "create user failed" }),
+            JSON.stringify({ success: false, error: "L'utilisateur existe déjà mais n'a pas pu être récupéré" }),
             { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } },
           );
         }
 
-        // Update password
-        const { error: updErr } = await admin.auth.admin.updateUserById(user.id, {
+        // Update password and ensure email is confirmed
+        const { error: updErr } = await admin.auth.admin.updateUserById(existingUserId, {
           password: body.password,
+          email_confirm: true,
+          user_metadata: body.metadata ?? {},
         } as any);
         if (updErr) {
           console.error("updateUserById error:", updErr);
@@ -120,7 +137,7 @@ serve(async (req) => {
         }
 
         return new Response(
-          JSON.stringify({ success: true, user: { id: user.id, email: body.email } }),
+          JSON.stringify({ success: true, user: { id: existingUserId, email: body.email } }),
           { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } },
         );
       }
