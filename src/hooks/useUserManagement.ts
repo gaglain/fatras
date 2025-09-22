@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { useEmailSender } from './useEmailSender';
+import { useNylasEmail } from './useNylasEmail';
 
 export interface ExtendedUserProfile {
   id: string;
@@ -37,7 +37,7 @@ export interface ExtendedUserProfile {
 export const useUserManagement = () => {
   const [users, setUsers] = useState<ExtendedUserProfile[]>([]);
   const [loading, setLoading] = useState(false);
-  const { sendUserWelcomeEmail } = useEmailSender();
+  const { accounts, sendEmail: sendEmailViaNylas } = useNylasEmail();
 
   const fetchUsers = async () => {
     try {
@@ -186,16 +186,45 @@ export const useUserManagement = () => {
         console.log('ℹ️ Pas d\'auth user, le profil reste avec un user_id temporaire');
       }
 
-      // Envoyer l'email de bienvenue avec le mot de passe
+      // Envoyer l'email de bienvenue via Nylas
       try {
-        await sendUserWelcomeEmail(
-          userData.email,
-          `${userData.first_name} ${userData.last_name}`,
-          userData.password
-        );
-        console.log('✅ Email de bienvenue envoyé');
+        if (accounts.length > 0) {
+          const activeAccount = accounts.find(acc => acc.is_active) || accounts[0];
+          
+          await sendEmailViaNylas(activeAccount.id, {
+            to: userData.email,
+            subject: 'Bienvenue - Votre accès a été créé',
+            content: `Bonjour ${userData.first_name} ${userData.last_name},
+
+Votre compte a été créé avec succès !
+
+Voici vos informations de connexion :
+- Email : ${userData.email}
+- Mot de passe temporaire : ${userData.password}
+
+Veuillez vous connecter et changer votre mot de passe lors de votre première connexion.
+
+Cordialement,
+L'équipe`,
+            html: `
+              <h2>Bienvenue ${userData.first_name} ${userData.last_name} !</h2>
+              <p>Votre compte a été créé avec succès.</p>
+              <h3>Informations de connexion :</h3>
+              <ul>
+                <li><strong>Email :</strong> ${userData.email}</li>
+                <li><strong>Mot de passe temporaire :</strong> <code>${userData.password}</code></li>
+              </ul>
+              <p>Veuillez vous connecter et changer votre mot de passe lors de votre première connexion.</p>
+              <p>Cordialement,<br>L'équipe</p>
+            `
+          });
+          console.log('✅ Email de bienvenue envoyé via Nylas');
+        } else {
+          console.warn('⚠️ Aucun compte Nylas configuré pour l\'envoi d\'emails');
+          toast.error('Utilisateur créé mais aucun compte email configuré');
+        }
       } catch (emailError) {
-        console.error('❌ Erreur envoi email:', emailError);
+        console.error('❌ Erreur envoi email via Nylas:', emailError);
         toast.error('Utilisateur créé mais erreur envoi email');
       }
 
