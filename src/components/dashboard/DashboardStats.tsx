@@ -69,7 +69,7 @@ export const DashboardStats: React.FC = () => {
 
   const totalRevenue = quotes.filter(q => q.status === 'accepted').reduce((total, quote) => total + (Number(quote.total_amount) || 0), 0);
   const pendingQuotes = quotes.filter(q => q.status === 'pending' || q.status === 'draft').length;
-  const confirmedOpportunities = opportunities.filter(o => o.status === 'confirmed').length;
+  const totalOpportunities = opportunities.length;
 
   const stats = [
     {
@@ -88,9 +88,9 @@ export const DashboardStats: React.FC = () => {
     },
     {
       title: 'Opportunités',
-      value: confirmedOpportunities.toString(),
+      value: totalOpportunities.toString(),
       icon: TrendingUp,
-      description: 'Confirmées',
+      description: 'Total opportunités',
       color: 'text-purple-600'
     },
     {

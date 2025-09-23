@@ -4,7 +4,7 @@ import { useLocation } from 'react-router-dom';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { BackOfficeHeader } from '@/components/BackOfficeHeader';
-import { ChatWidget } from '@/components/ChatWidget';
+// import { ChatWidget } from '@/components/ChatWidget'; // Temporarily disabled
 import { TaskNotificationBanner } from '@/components/TaskNotificationBanner';
 
 const adminRoutes = [
@@ -31,7 +31,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     return (
       <>
         {children}
-        <ChatWidget />
+        {/* <ChatWidget /> Temporarily disabled to fix subscription errors */}
       </>
     );
   }
@@ -52,7 +52,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           </main>
         </div>
       </div>
-      <ChatWidget />
+      {/* <ChatWidget /> Temporarily disabled to fix subscription errors */}
     </SidebarProvider>
   );
 };
