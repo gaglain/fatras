@@ -274,7 +274,7 @@ export const UserManagement: React.FC = () => {
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={() => handleDelete(user.user_id)}
+                    onClick={() => handleDelete(user.user_id || user.id)}
                     className="text-destructive hover:text-destructive hover:bg-destructive/10"
                   >
                     <Trash2 className="h-3 w-3" />
