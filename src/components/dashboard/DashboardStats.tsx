@@ -6,8 +6,8 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 export const DashboardStats: React.FC = () => {
-  // Récupération des données réelles depuis Supabase
-  const { data: contacts = [] } = useQuery({
+  // Récupération des données réelles depuis Supabase avec refetch automatique
+  const { data: contacts = [], refetch: refetchContacts } = useQuery({
     queryKey: ['dashboard-contacts'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -16,10 +16,11 @@ export const DashboardStats: React.FC = () => {
       
       if (error) throw error;
       return data || [];
-    }
+    },
+    refetchInterval: 30000, // Refetch every 30 seconds
   });
 
-  const { data: events = [] } = useQuery({
+  const { data: events = [], refetch: refetchEvents } = useQuery({
     queryKey: ['dashboard-events'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -28,10 +29,11 @@ export const DashboardStats: React.FC = () => {
       
       if (error) throw error;
       return data || [];
-    }
+    },
+    refetchInterval: 30000,
   });
 
-  const { data: quotes = [] } = useQuery({
+  const { data: quotes = [], refetch: refetchQuotes } = useQuery({
     queryKey: ['dashboard-quotes'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -40,10 +42,24 @@ export const DashboardStats: React.FC = () => {
       
       if (error) throw error;
       return data || [];
-    }
+    },
+    refetchInterval: 30000,
   });
 
-  // Calculs basés sur les vraies données
+  const { data: opportunities = [] } = useQuery({
+    queryKey: ['dashboard-opportunities'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('opportunities')
+        .select('*');
+      
+      if (error) throw error;
+      return data || [];
+    },
+    refetchInterval: 30000,
+  });
+
+  // Calculs basés sur les vraies données avec opportunités
   const thisMonthEvents = events.filter(e => {
     if (!e.start_date) return false;
     const eventDate = new Date(e.start_date);
@@ -53,6 +69,7 @@ export const DashboardStats: React.FC = () => {
 
   const totalRevenue = quotes.filter(q => q.status === 'accepted').reduce((total, quote) => total + (Number(quote.total_amount) || 0), 0);
   const pendingQuotes = quotes.filter(q => q.status === 'pending' || q.status === 'draft').length;
+  const confirmedOpportunities = opportunities.filter(o => o.status === 'confirmed').length;
 
   const stats = [
     {
@@ -70,18 +87,18 @@ export const DashboardStats: React.FC = () => {
       color: 'text-green-600'
     },
     {
-      title: 'Devis',
-      value: pendingQuotes.toString(),
-      icon: FileText,
-      description: 'En attente',
-      color: 'text-orange-600'
+      title: 'Opportunités',
+      value: confirmedOpportunities.toString(),
+      icon: TrendingUp,
+      description: 'Confirmées',
+      color: 'text-purple-600'
     },
     {
       title: 'Revenus',
       value: `€${totalRevenue.toLocaleString('fr-FR')}`,
-      icon: TrendingUp,
+      icon: FileText,
       description: 'Devis acceptés',
-      color: 'text-purple-600'
+      color: 'text-orange-600'
     }
   ];
 

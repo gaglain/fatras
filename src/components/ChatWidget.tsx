@@ -217,26 +217,32 @@ export const ChatWidget: React.FC = () => {
             </div>
           </ScrollArea>
 
-          <div className="p-4 border-t bg-card">
-            <div className="flex space-x-2">
-              <Input
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder={`Message ${currentChannel ? getChannelDisplayName(currentChannel) : ''}...`}
-                className="flex-1 text-sm bg-background text-foreground"
-                disabled={!currentChannel}
-              />
-              <Button 
-                onClick={handleSendMessage} 
-                disabled={!inputValue.trim() || !currentChannel} 
-                size="sm"
-                className="bg-primary text-primary-foreground hover:bg-primary/90"
-              >
-                <Send className="h-4 w-4" />
-              </Button>
+          {currentChannel && (
+            <div className="p-4 border-t bg-card">
+              <div className="flex space-x-2">
+                <Input
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage();
+                    }
+                  }}
+                  placeholder={`Message ${getChannelDisplayName(currentChannel)}...`}
+                  className="flex-1 text-sm bg-background text-foreground"
+                />
+                <Button 
+                  onClick={handleSendMessage} 
+                  disabled={!inputValue.trim()} 
+                  size="sm"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
       

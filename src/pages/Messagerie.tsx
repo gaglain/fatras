@@ -244,26 +244,32 @@ export const Messagerie: React.FC = () => {
         </ScrollArea>
 
         {/* Message Input */}
-        <div className="p-2 sm:p-4 border-t border-border bg-card">
-          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-            <Input
-              placeholder={`Message ${currentChannel ? getChannelDisplayName(currentChannel) : ''}...`}
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-              className="flex-1"
-              disabled={!currentChannel}
-            />
-            <Button 
-              onClick={handleSendMessage} 
-              disabled={!message.trim() || !currentChannel}
-              className="w-full sm:w-auto"
-            >
-              <Send className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Envoyer</span>
-            </Button>
+        {currentChannel && (
+          <div className="p-2 sm:p-4 border-t border-border bg-card">
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+              <Input
+                placeholder={`Message ${getChannelDisplayName(currentChannel)}...`}
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                  }
+                }}
+                className="flex-1"
+              />
+              <Button 
+                onClick={handleSendMessage} 
+                disabled={!message.trim()}
+                className="w-full sm:w-auto"
+              >
+                <Send className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Envoyer</span>
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
