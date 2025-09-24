@@ -24,7 +24,8 @@ export const ChatWidget: React.FC = () => {
     loading,
     fetchMessages, 
     sendMessage, 
-    markChannelAsRead 
+    markChannelAsRead,
+    createChannel
   } = useMessaging();
 
   // Auto-select first channel when opening
@@ -33,6 +34,21 @@ export const ChatWidget: React.FC = () => {
       setSelectedChannel(channels[0].id);
     }
   }, [isOpen, channels, selectedChannel]);
+
+  // Auto-create a default #general channel if none exists
+  useEffect(() => {
+    const createDefault = async () => {
+      try {
+        if (isOpen && !loading && channels.length === 0) {
+          const id = await createChannel('general', 'Canal par défaut', 'public', []);
+          if (id) setSelectedChannel(id);
+        }
+      } catch (err) {
+        console.error('Error creating default channel:', err);
+      }
+    };
+    createDefault();
+  }, [isOpen, loading, channels.length, createChannel]);
 
   // Fetch messages when selecting a channel
   useEffect(() => {

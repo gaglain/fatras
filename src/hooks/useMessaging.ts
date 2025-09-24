@@ -190,8 +190,8 @@ export const useMessaging = () => {
     try {
       console.log('Creating DM with user:', otherUserId);
       
-      // Vérifier si un canal DM existe déjà en utilisant la fonction SQL
-      const { data: existingChannelId, error: checkError } = await supabase.rpc('create_direct_message_channel', {
+      // Create or get existing DM channel
+      const { data: channelId, error: checkError } = await supabase.rpc('create_direct_message_channel', {
         other_user_id: otherUserId
       });
 
@@ -200,14 +200,34 @@ export const useMessaging = () => {
         throw checkError;
       }
 
-      console.log('DM channel ID:', existingChannelId);
+      console.log('DM channel ID:', channelId);
+
+      // Ensure the other user is a member of this channel (in case RPC didn't add them)
+      try {
+        const { data: memberRows, error: memberErr } = await supabase
+          .from('messaging_channel_members')
+          .select('id')
+          .eq('channel_id', channelId)
+          .eq('user_id', otherUserId);
+        if (memberErr) {
+          console.warn('Membership check error (non-blocking):', memberErr);
+        }
+        if (!memberRows || memberRows.length === 0) {
+          const { error: insertErr } = await supabase
+            .from('messaging_channel_members')
+            .insert({ channel_id: channelId, user_id: otherUserId, role: 'member' });
+          if (insertErr) console.warn('Could not add other user to DM channel (may already exist):', insertErr);
+        }
+      } catch (e) {
+        console.warn('Non-blocking error ensuring DM membership:', e);
+      }
       
-      // Refresh channels pour s'assurer que le nouveau canal est affiché
+      // Refresh channels to ensure the new/updated channel appears
       setTimeout(() => {
         fetchChannels();
       }, 100);
       
-      return existingChannelId;
+      return channelId as string;
     } catch (error) {
       console.error('Error creating DM:', error);
       return null;
@@ -433,6 +453,19 @@ export const useMessaging = () => {
         },
         (payload) => {
           console.log('📢 New channel created:', payload.new);
+          fetchChannels();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messaging_channel_members',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          console.log('👤 You were added to a channel, refreshing channels');
           fetchChannels();
         }
       )
