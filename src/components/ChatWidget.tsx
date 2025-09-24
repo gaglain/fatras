@@ -233,7 +233,7 @@ export const ChatWidget: React.FC = () => {
             </div>
           </ScrollArea>
 
-          {currentChannel && (
+          {selectedChannel && (
             <div className="p-4 border-t bg-card">
               <div className="flex space-x-2">
                 <Input
@@ -245,7 +245,7 @@ export const ChatWidget: React.FC = () => {
                       handleSendMessage();
                     }
                   }}
-                  placeholder={`Message ${getChannelDisplayName(currentChannel)}...`}
+                  placeholder={`Message ${currentChannel ? getChannelDisplayName(currentChannel) : 'canal'}...`}
                   className="flex-1 text-sm bg-background text-foreground"
                 />
                 <Button 
