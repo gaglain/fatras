@@ -370,80 +370,81 @@ export const useMessaging = () => {
   };
 
   useEffect(() => {
-    if (user) {
-      console.log('🔄 Fetching messaging data for user:', user.id);
-      fetchChannels();
-      fetchAvailableUsers();
+    if (!user?.id) {
+      setLoading(false);
+      return;
     }
+
+    console.log('🔄 Fetching messaging data for user:', user.id);
+    fetchChannels();
+    fetchAvailableUsers();
     setLoading(false);
-  }, [user]);
+  }, [user?.id]);
 
-  // Fixed real-time subscriptions to prevent multiple subscriptions
+  // Fixed real-time subscriptions with proper cleanup
   useEffect(() => {
-    if (!user) return;
+    if (!user?.id) return;
 
-    let subscription: any = null;
+    console.log('📡 Setting up real-time subscription for messaging');
+    
+    // Remove any existing subscriptions first
+    const existingChannels = supabase.getChannels();
+    existingChannels.forEach(channel => {
+      if (channel.topic.includes('messaging')) {
+        console.log('🧹 Removing existing channel:', channel.topic);
+        supabase.removeChannel(channel);
+      }
+    });
 
-    const setupRealtimeSubscription = () => {
-      console.log('📡 Setting up real-time subscription for messaging for user:', user.id);
-      
-      // Use a simple channel name without timestamp to avoid multiple subscriptions
-      const channelName = `messaging-${user.id}`;
-      
-      subscription = supabase
-        .channel(channelName)
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'messaging_messages'
-          },
-          (payload) => {
-            console.log('📨 New message received:', payload.new);
-            const newMessage = payload.new as Message;
-            setMessages(prev => ({
-              ...prev,
-              [newMessage.channel_id]: [...(prev[newMessage.channel_id] || []), newMessage]
-            }));
-            
-            // Update channel's updated_at for proper ordering
-            setChannels(prev => prev.map(channel => 
-              channel.id === newMessage.channel_id 
-                ? { ...channel, updated_at: newMessage.created_at }
-                : channel
-            ));
-          }
-        )
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'messaging_channels'
-          },
-          (payload) => {
-            console.log('📢 New channel created:', payload.new);
-            fetchChannels();
-          }
-        )
-        .subscribe((status) => {
-          console.log('📡 Messaging subscription status:', status);
-          if (status === 'SUBSCRIBED') {
-            console.log('✅ Successfully subscribed to messaging updates');
-          }
-        });
-    };
-
-    setupRealtimeSubscription();
+    // Create a unique channel name based on timestamp to avoid conflicts
+    const channelName = `messaging-realtime-${Date.now()}`;
+    
+    const channel = supabase
+      .channel(channelName)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messaging_messages'
+        },
+        (payload) => {
+          console.log('📨 New message received:', payload.new);
+          const newMessage = payload.new as Message;
+          setMessages(prev => ({
+            ...prev,
+            [newMessage.channel_id]: [...(prev[newMessage.channel_id] || []), newMessage]
+          }));
+          
+          // Update channel's updated_at for proper ordering
+          setChannels(prev => prev.map(ch => 
+            ch.id === newMessage.channel_id 
+              ? { ...ch, updated_at: newMessage.created_at }
+              : ch
+          ));
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messaging_channels'
+        },
+        (payload) => {
+          console.log('📢 New channel created:', payload.new);
+          fetchChannels();
+        }
+      )
+      .subscribe((status) => {
+        console.log('📡 Messaging subscription status:', status);
+      });
 
     return () => {
-      if (subscription) {
-        console.log('🧹 Cleaning up messaging subscription');
-        subscription.unsubscribe();
-      }
+      console.log('🧹 Cleaning up messaging subscription');
+      supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user?.id]);
 
   return {
     channels,
