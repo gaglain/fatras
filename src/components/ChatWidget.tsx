@@ -234,48 +234,46 @@ export const ChatWidget: React.FC = () => {
             </div>
           </ScrollArea>
 
-          {selectedChannel && (
-            <div className="p-4 border-t bg-card">
-              {selectedChannel ? (
-                <div className="flex space-x-2">
-                  <Input
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSendMessage();
-                      }
-                    }}
-                    placeholder={`Message ${currentChannel ? getChannelDisplayName(currentChannel) : 'canal'}...`}
-                    className="flex-1 text-sm bg-background text-foreground"
-                  />
-                  <Button 
-                    onClick={handleSendMessage} 
-                    disabled={!inputValue.trim()} 
-                    size="sm"
-                    className="bg-primary text-primary-foreground hover:bg-primary/90"
-                  >
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-sm text-muted-foreground">Aucun canal sélectionné. Créez #general pour commencer.</p>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={async () => {
-                      const id = await createChannel('general', 'Canal par défaut', 'public', []);
-                      if (id) setSelectedChannel(id);
-                    }}
-                  >
-                    <Plus className="h-3 w-3 mr-1" /> Créer #general
-                  </Button>
-                </div>
-              )}
-            </div>
-          )}
+          <div className="p-4 border-t bg-card">
+            {selectedChannel ? (
+              <div className="flex space-x-2">
+                <Input
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage();
+                    }
+                  }}
+                  placeholder={`Message ${currentChannel ? getChannelDisplayName(currentChannel) : 'canal'}...`}
+                  className="flex-1 text-sm bg-background text-foreground"
+                />
+                <Button 
+                  onClick={handleSendMessage} 
+                  disabled={!inputValue.trim()} 
+                  size="sm"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-sm text-muted-foreground">Aucun canal sélectionné. Créez #general pour commencer.</p>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={async () => {
+                    const id = await createChannel('general', 'Canal par défaut', 'public', []);
+                    if (id) setSelectedChannel(id);
+                  }}
+                >
+                  <Plus className="h-3 w-3 mr-1" /> Créer #general
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
       )}
       
