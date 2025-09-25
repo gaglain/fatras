@@ -10,9 +10,10 @@ import { toast } from 'sonner';
 
 interface DirectMessageManagerProps {
   trigger?: React.ReactNode;
+  onChannelCreated?: (channelId: string) => void;
 }
 
-export const DirectMessageManager: React.FC<DirectMessageManagerProps> = ({ trigger }) => {
+export const DirectMessageManager: React.FC<DirectMessageManagerProps> = ({ trigger, onChannelCreated }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -39,6 +40,7 @@ export const DirectMessageManager: React.FC<DirectMessageManagerProps> = ({ trig
       
       if (channelId) {
         toast.success('Conversation privée créée');
+        onChannelCreated?.(channelId);
         setIsOpen(false);
         setSelectedUserId('');
       } else {
