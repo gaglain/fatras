@@ -13,6 +13,33 @@ export interface TaskNotification {
   message: string;
   created_at: string;
 }
+const TASK_TOAST_STORAGE_KEY = 'task_toast_shown';
+
+const readToastStore = () => {
+  try {
+    const raw = localStorage.getItem(TASK_TOAST_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as Record<string, string>) : {};
+  } catch {
+    return {} as Record<string, string>;
+  }
+};
+
+const writeToastStore = (map: Record<string, string>) => {
+  try {
+    localStorage.setItem(TASK_TOAST_STORAGE_KEY, JSON.stringify(map));
+  } catch {}
+};
+
+const hasShownToast = (key: string) => {
+  const map = readToastStore();
+  return !!map[key];
+};
+
+const markToastShown = (key: string) => {
+  const map = readToastStore();
+  map[key] = new Date().toISOString();
+  writeToastStore(map);
+};
 
 export const useTaskNotifications = () => {
   const { user } = useAuth();
@@ -51,16 +78,24 @@ export const useTaskNotifications = () => {
       if (error) throw error;
 
       for (const task of tasks || []) {
-        // Vérifier si on a déjà notifié pour cette tâche
-        const existingNotification = await supabase
+        const key = `overdue:${task.id}`;
+        if (hasShownToast(key)) continue;
+
+        const { data: existing, error: existingError } = await supabase
           .from('notifications')
           .select('id')
           .eq('type', 'task_overdue')
-          .eq('data->>task_id', task.id)
-          .single();
+          .eq('data->>task_id', String(task.id))
+          .maybeSingle();
 
-        if (!existingNotification.data) {
-          // Créer une notification de tâche en retard
+        if (existingError) {
+          console.warn('⚠️ Impossible de vérifier les notifications existantes (overdue):', existingError);
+          // Évite le spam si la vérification échoue
+          markToastShown(key);
+          continue;
+        }
+
+        if (!existing) {
           await supabase
             .from('notifications')
             .insert({
@@ -77,11 +112,14 @@ export const useTaskNotifications = () => {
               read: false
             });
 
-          // Afficher une notification toast
           toast.error(`Tâche en retard: ${task.title}`, {
             description: `Due le ${new Date(task.due_date).toLocaleDateString('fr-FR')}`,
             duration: 8000,
           });
+          markToastShown(key);
+        } else {
+          // Déjà notifiée auparavant -> ne pas réafficher
+          markToastShown(key);
         }
       }
     } catch (error) {
@@ -109,56 +147,62 @@ export const useTaskNotifications = () => {
       if (error) throw error;
 
       for (const task of tasks || []) {
-        // Vérifier si on a déjà notifié pour cette tâche aujourd'hui
         const today = new Date().toISOString().split('T')[0];
-        const existingNotification = await supabase
+        const key = `due_soon:${task.id}:${today}`;
+        if (hasShownToast(key)) continue;
+
+        const { data: existing, error: existingError } = await supabase
           .from('notifications')
           .select('id')
           .eq('type', 'task_due_soon')
-          .eq('data->>task_id', task.id)
+          .eq('data->>task_id', String(task.id))
           .gte('created_at', `${today}T00:00:00Z`)
-          .single();
+          .maybeSingle();
 
-        if (!existingNotification.data) {
-          const dueDate = new Date(task.due_date);
-          const now = new Date();
-          const hoursUntilDue = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60));
-
-          let message = '';
-          if (hoursUntilDue <= 1) {
-            message = `La tâche "${task.title}" est due dans moins d'une heure`;
-          } else if (hoursUntilDue <= 24) {
-            message = `La tâche "${task.title}" est due dans ${hoursUntilDue} heures`;
-          }
-
-          if (message && hoursUntilDue <= 24) {
-            // Créer une notification de tâche bientôt due
-            await supabase
-              .from('notifications')
-              .insert({
-                user_id: task.assigned_to || task.user_id,
-                type: 'task_due_soon',
-                title: 'Tâche bientôt due',
-                message,
-                data: {
-                  task_id: task.id,
-                  task_title: task.title,
-                  due_date: task.due_date,
-                  priority: task.priority,
-                  hours_until_due: hoursUntilDue
-                },
-                read: false
-              });
-
-            // Afficher une notification toast pour les tâches urgentes (moins de 2 heures)
-            if (hoursUntilDue <= 2) {
-              toast.warning(`Tâche urgente: ${task.title}`, {
-                description: message,
-                duration: 6000,
-              });
-            }
-          }
+        if (existingError) {
+          console.warn('⚠️ Impossible de vérifier les notifications existantes (due_soon):', existingError);
+          markToastShown(key);
+          continue;
         }
+
+        const dueDate = new Date(task.due_date);
+        const now = new Date();
+        const hoursUntilDue = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60));
+
+        let message = '';
+        if (hoursUntilDue <= 1) {
+          message = `La tâche "${task.title}" est due dans moins d'une heure`;
+        } else if (hoursUntilDue <= 24) {
+          message = `La tâche "${task.title}" est due dans ${hoursUntilDue} heures`;
+        }
+
+        if (!existing) {
+          await supabase
+            .from('notifications')
+            .insert({
+              user_id: task.assigned_to || task.user_id,
+              type: 'task_due_soon',
+              title: 'Tâche bientôt due',
+              message: message || `La tâche "${task.title}" est bientôt due`,
+              data: {
+                task_id: task.id,
+                task_title: task.title,
+                due_date: task.due_date,
+                priority: task.priority,
+                hours_until_due: hoursUntilDue
+              },
+              read: false
+            });
+        }
+
+        if (hoursUntilDue <= 2 && message) {
+          toast.warning(`Tâche urgente: ${task.title}`, {
+            description: message,
+            duration: 6000,
+          });
+        }
+
+        markToastShown(key);
       }
     } catch (error) {
       console.error('Erreur lors de la vérification des tâches à venir:', error);
