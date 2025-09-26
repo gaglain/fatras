@@ -431,6 +431,7 @@ export const useMessaging = () => {
         (payload) => {
           console.log('📨 New message received:', payload.new);
           const newMessage = payload.new as Message;
+          // Update local state immediately
           setMessages(prev => ({
             ...prev,
             [newMessage.channel_id]: [...(prev[newMessage.channel_id] || []), newMessage]
@@ -442,6 +443,9 @@ export const useMessaging = () => {
               ? { ...ch, updated_at: newMessage.created_at }
               : ch
           ));
+
+          // Ensure full thread is loaded on receivers (avoids missing history)
+          fetchMessages(newMessage.channel_id);
         }
       )
       .on(
