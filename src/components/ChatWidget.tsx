@@ -22,6 +22,7 @@ export const ChatWidget: React.FC = () => {
     channels, 
     messages, 
     loading,
+    fetchChannels,
     fetchMessages, 
     sendMessage, 
     markChannelAsRead,
@@ -41,7 +42,7 @@ export const ChatWidget: React.FC = () => {
       try {
         if (isOpen && !loading && channels.length === 0) {
           const id = await createChannel('general', 'Canal par défaut', 'public', []);
-          if (id) setSelectedChannel(id);
+          if (id) { setSelectedChannel(id); await fetchChannels(); }
         }
       } catch (err) {
         console.error('Error creating default channel:', err);
@@ -129,27 +130,27 @@ export const ChatWidget: React.FC = () => {
     <div className="fixed bottom-6 right-6 z-50">
       {isOpen && (
         <div 
-          className="mb-4 shadow-2xl rounded-xl overflow-hidden border bg-card text-card-foreground"
+          className="mb-4 shadow-2xl rounded-xl overflow-hidden border bg-card text-card-foreground flex flex-col"
           style={{ width: '420px', height: '600px' }}
         >
           <div className="p-4 border-b bg-primary text-primary-foreground">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center space-x-2">
-                <MessageSquare className="h-5 w-5" />
-                <span className="font-medium">Chat Interne</span>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-2">
+                  <MessageSquare className="h-5 w-5" />
+                  <span className="font-medium">Chat Interne</span>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setIsOpen(false)} 
+                  className="text-primary-foreground hover:bg-primary-foreground/20"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => setIsOpen(false)} 
-                className="text-primary-foreground hover:bg-primary-foreground/20"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
             
             <div className="space-y-2">
-              <Select value={selectedChannel} onValueChange={setSelectedChannel}>
+              <Select value={selectedChannel} onValueChange={(v) => { setSelectedChannel(v); }}>
                 <SelectTrigger className="flex-1 h-8 text-xs bg-background text-foreground">
                   <SelectValue placeholder="Sélectionner un canal" />
                 </SelectTrigger>
@@ -180,7 +181,7 @@ export const ChatWidget: React.FC = () => {
             </div>
           </div>
 
-          <ScrollArea className="h-96 p-4 bg-background">
+          <ScrollArea className="flex-1 p-4 bg-background">
             <div className="space-y-3">
               {loading ? (
                 <div className="text-center py-8 text-muted-foreground">
@@ -264,10 +265,10 @@ export const ChatWidget: React.FC = () => {
                 <Button
                   size="sm"
                   variant="secondary"
-                  onClick={async () => {
-                    const id = await createChannel('general', 'Canal par défaut', 'public', []);
-                    if (id) setSelectedChannel(id);
-                  }}
+                    onClick={async () => {
+                      const id = await createChannel('general', 'Canal par défaut', 'public', []);
+                      if (id) { setSelectedChannel(id); await fetchChannels(); }
+                    }}
                 >
                   <Plus className="h-3 w-3 mr-1" /> Créer #general
                 </Button>
