@@ -17,7 +17,9 @@ export const PublicChatWidget: React.FC = () => {
     sendMessage, 
     createChannel, 
     createDirectMessage,
-    availableUsers 
+    availableUsers,
+    fetchMessages,
+    markChannelAsRead,
   } = useMessaging();
   
   const [isOpen, setIsOpen] = useState(false);
@@ -32,6 +34,14 @@ export const PublicChatWidget: React.FC = () => {
       setActiveChannel(channels[0].id);
     }
   }, [channels, activeChannel]);
+
+  // Charger l'historique et marquer comme lu lors de la sélection
+  useEffect(() => {
+    if (activeChannel) {
+      fetchMessages(activeChannel);
+      markChannelAsRead(activeChannel);
+    }
+  }, [activeChannel, fetchMessages, markChannelAsRead]);
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !activeChannel) return;
@@ -150,7 +160,7 @@ export const PublicChatWidget: React.FC = () => {
                   >
                     <option value="">Sélectionner un utilisateur pour DM</option>
                     {availableUsers.map((user) => (
-                      <option key={user.id} value={user.id}>
+                      <option key={user.user_id} value={user.user_id}>
                         {user.username || user.email}
                       </option>
                     ))}
