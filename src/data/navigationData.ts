@@ -113,6 +113,7 @@ export const navigationData: MenuItem[] = [
     visible: true,
     children: [
       { name: 'Gestion Utilisateurs', href: '/user-management', icon: UserCog, visible: true },
+      { name: 'Permissions des Rôles', href: '/role-permissions', icon: Settings, visible: true },
       { name: 'Application', href: '/application', icon: Settings, visible: true },
       { name: 'Préférences', href: '/preferences', icon: Settings, visible: true }
     ]
