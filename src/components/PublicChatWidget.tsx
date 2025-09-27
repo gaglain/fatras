@@ -11,7 +11,9 @@ import { toast } from 'sonner';
 
 export const PublicChatWidget: React.FC = () => {
   const { user } = useAuth();
-  const { 
+  console.log('👤 PublicChatWidget - Current user:', user?.id);
+  
+  const {
     channels, 
     messages, 
     sendMessage, 
@@ -161,7 +163,9 @@ export const PublicChatWidget: React.FC = () => {
                     <option value="">Sélectionner un utilisateur pour DM</option>
                     {availableUsers.map((user) => (
                       <option key={user.user_id} value={user.user_id}>
-                        {user.username || user.email}
+                        {user.first_name && user.last_name 
+                          ? `${user.first_name} ${user.last_name}` 
+                          : user.username || user.email}
                       </option>
                     ))}
                   </select>
@@ -211,12 +215,12 @@ export const PublicChatWidget: React.FC = () => {
                     <div
                       key={message.id}
                       className={`flex ${
-                        message.user_id === user.id ? 'justify-end' : 'justify-start'
+                        message.user_id === user?.id ? 'justify-end' : 'justify-start'
                       }`}
                     >
                       <div
                         className={`max-w-[80%] p-2 rounded-lg ${
-                          message.user_id === user.id
+                          message.user_id === user?.id
                             ? 'bg-primary text-primary-foreground'
                             : 'bg-muted'
                         }`}

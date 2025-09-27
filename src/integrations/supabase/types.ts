@@ -2522,6 +2522,39 @@ export type Database = {
         }
         Relationships: []
       }
+      role_permissions: {
+        Row: {
+          can_create: boolean
+          can_delete: boolean
+          can_read: boolean
+          can_update: boolean
+          created_at: string
+          id: string
+          resource: string
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Insert: {
+          can_create?: boolean
+          can_delete?: boolean
+          can_read?: boolean
+          can_update?: boolean
+          created_at?: string
+          id?: string
+          resource: string
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Update: {
+          can_create?: boolean
+          can_delete?: boolean
+          can_read?: boolean
+          can_update?: boolean
+          created_at?: string
+          id?: string
+          resource?: string
+          role?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: []
+      }
       shop_orders: {
         Row: {
           created_at: string | null
@@ -2889,6 +2922,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       website_designs: {
         Row: {
           accent_color: string
@@ -3185,6 +3239,17 @@ export type Database = {
           username: string
         }[]
       }
+      has_permission: {
+        Args: { _action: string; _resource: string; _user_id: string }
+        Returns: boolean
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_admin_user: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -3207,7 +3272,13 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      app_role:
+        | "super_admin"
+        | "admin"
+        | "manager"
+        | "collaborator"
+        | "artiste"
+        | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3334,6 +3405,15 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: [
+        "super_admin",
+        "admin",
+        "manager",
+        "collaborator",
+        "artiste",
+        "user",
+      ],
+    },
   },
 } as const

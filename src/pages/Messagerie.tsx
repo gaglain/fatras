@@ -6,10 +6,13 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send, Hash, MessageSquare, Users, Plus, Lock, Trash2 } from 'lucide-react';
 import { useMessaging } from '@/hooks/useMessaging';
+import { useAuth } from '@/hooks/useAuth';
 import { ChannelManager } from '@/components/messaging/ChannelManager';
 import { DirectMessageManager } from '@/components/messaging/DirectMessageManager';
 
 export const Messagerie: React.FC = () => {
+  const { user } = useAuth();
+  console.log('👤 Messagerie - Current user:', user?.id);
   const [selectedChannel, setSelectedChannel] = useState<string>('');
   const [message, setMessage] = useState('');
   
@@ -209,9 +212,8 @@ export const Messagerie: React.FC = () => {
               </div>
             ) : (
               currentMessages.map((msg) => {
-                // We'll need to get the current user from auth context
-                const isMe = false; // TODO: Compare with current user ID from auth
-                const displayName = 'Utilisateur';
+                const isMe = msg.user_id === user?.id;
+                const displayName = msg.user_profile?.first_name || 'Utilisateur';
                 
                 return (
                   <div

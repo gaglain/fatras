@@ -144,7 +144,7 @@ export const useMessaging = () => {
     try {
       const { data, error } = await supabase
         .from('user_profiles')
-        .select('user_id, first_name, last_name, username, email')
+        .select('id, user_id, first_name, last_name, username, email')
         .eq('is_active', true);
 
       if (error) throw error;
