@@ -22,7 +22,7 @@ import { RoadShow } from "./pages/RoadShow";
 import { Messagerie } from "./pages/Messagerie";
 import { ShowBible } from "./pages/ShowBible";
 import { Contracts } from "./pages/Contracts";
-import { Email } from "./pages/Email";
+import Email from "./pages/EmailSimple";
 import { EmailCampaigns } from "./pages/EmailCampaigns";
 import { ContactLists } from "./pages/ContactLists";
 import { ContactDetail } from "./pages/ContactDetail";

@@ -49,7 +49,7 @@ export const useSyncTasks = () => {
         return;
       }
 
-      setTasks(data || []);
+      setTasks((data || []) as SyncTask[]);
     } catch (error: any) {
       console.error('Error loading sync tasks:', error);
       toast.error('Erreur lors du chargement des tâches de synchronisation');
@@ -72,7 +72,7 @@ export const useSyncTasks = () => {
         return;
       }
 
-      setNotifications(data || []);
+      setNotifications((data || []) as SyncNotification[]);
     } catch (error: any) {
       console.error('Error loading sync notifications:', error);
     }

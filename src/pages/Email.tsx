@@ -8,6 +8,7 @@ import { RichTextEditor } from '@/components/RichTextEditor';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Mail, Send, Calendar, Phone, FileText, Edit, Trash2, Inbox, Search, Star, Archive, 
          Paperclip, Reply, Forward, MoreHorizontal, Clock, Users, TrendingUp, Filter,
          Settings, RefreshCw, AlertCircle, CheckCircle, Zap, Layout } from 'lucide-react';
@@ -21,6 +22,7 @@ import { UnifiedEmailManager } from '@/components/UnifiedEmailManager';
 import { UnifiedEmailInterface } from '@/components/email/UnifiedEmailInterface';
 import { EmailNotificationCenter } from '@/components/EmailNotificationCenter';
 import { EmailTemplateComposer } from '@/components/email/EmailTemplateComposer';
+import { SyncManager } from '@/components/SyncManager';
 import { toast } from 'sonner';
 import { useEmailSender } from '@/hooks/useEmailSender';
 
@@ -158,6 +160,8 @@ export const Email: React.FC = () => {
   const [showEmailSender, setShowEmailSender] = useState(false);
   const [showInbox, setShowInbox] = useState(false);
   const [showUnifiedEmails, setShowUnifiedEmails] = useState(false);
+  const [showSync, setShowSync] = useState(false);
+  const [showEmailDiagnostic, setShowEmailDiagnostic] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');

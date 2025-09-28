@@ -182,10 +182,15 @@ const handler = async (req: Request): Promise<Response> => {
         throw new Error(`CAPABILITY failed: ${response}`);
       }
 
-      // LOGIN (entre guillemets pour gérer les caractères spéciaux)
-      response = await sendCommand(`LOGIN "${imapUsername}" "${imapPassword}"`);
-      if (!/\bOK\b/.test(response)) {
-        throw new Error(`LOGIN failed: ${response}`);
+      // Authenticate using LOGIN
+      console.log('📝 Authenticating...');
+      await sendCommand(`LOGIN "${imapUsername}" "${imapPassword}"`);
+      const loginResponse = await readResponse();
+      console.log('🔓 Authentication response:', loginResponse);
+      
+      if (!loginResponse.includes('OK')) {
+        console.error('❌ IMAP authentication failed:', loginResponse);
+        throw new Error(`IMAP authentication failed. Please verify your username and password.`);
       }
 
       console.log('✅ IMAP authentication successful');
