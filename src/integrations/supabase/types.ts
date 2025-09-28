@@ -2663,6 +2663,78 @@ export type Database = {
         }
         Relationships: []
       }
+      sync_notifications: {
+        Row: {
+          created_at: string
+          details: Json | null
+          id: string
+          is_read: boolean
+          message: string
+          notification_type: string
+          sync_type: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          details?: Json | null
+          id?: string
+          is_read?: boolean
+          message: string
+          notification_type: string
+          sync_type: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          details?: Json | null
+          id?: string
+          is_read?: boolean
+          message?: string
+          notification_type?: string
+          sync_type?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      sync_tasks: {
+        Row: {
+          created_at: string
+          id: string
+          is_enabled: boolean
+          last_sync_at: string | null
+          next_sync_at: string | null
+          sync_interval_minutes: number
+          sync_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          last_sync_at?: string | null
+          next_sync_at?: string | null
+          sync_interval_minutes?: number
+          sync_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          last_sync_at?: string | null
+          next_sync_at?: string | null
+          sync_interval_minutes?: number
+          sync_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       task_entities: {
         Row: {
           created_at: string
