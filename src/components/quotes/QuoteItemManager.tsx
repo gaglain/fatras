@@ -31,6 +31,7 @@ export const QuoteItemManager: React.FC<QuoteItemManagerProps> = ({
   });
   const [loading, setLoading] = useState(false);
   const [editingItem, setEditingItem] = useState<string | null>(null);
+  const [editMap, setEditMap] = useState<Record<string, QuoteItem>>({});
   const { addQuoteItem, updateQuoteItem, deleteQuoteItem, getQuoteItems, updateQuote } = useQuotes();
 
   useEffect(() => {
@@ -287,7 +288,7 @@ export const QuoteItemManager: React.FC<QuoteItemManagerProps> = ({
               <TableBody>
                 {items.map((item) => {
                   const isEditing = editingItem === item.id;
-                  const [editData, setEditData] = useState(item);
+                  const editData = isEditing ? (editMap[item.id] ?? item) : item;
                   
                   return (
                     <TableRow key={item.id}>
@@ -295,7 +296,10 @@ export const QuoteItemManager: React.FC<QuoteItemManagerProps> = ({
                         {isEditing ? (
                           <Input
                             value={editData.name}
-                            onChange={(e) => setEditData({...editData, name: e.target.value})}
+                            onChange={(e) => setEditMap(prev => ({
+                              ...prev,
+                              [item.id]: { ...editData, name: e.target.value }
+                            }))}
                             className="w-full"
                           />
                         ) : (
@@ -306,7 +310,10 @@ export const QuoteItemManager: React.FC<QuoteItemManagerProps> = ({
                         {isEditing ? (
                           <Input
                             value={editData.description || ''}
-                            onChange={(e) => setEditData({...editData, description: e.target.value})}
+                            onChange={(e) => setEditMap(prev => ({
+                              ...prev,
+                              [item.id]: { ...editData, description: e.target.value }
+                            }))}
                             className="w-full"
                           />
                         ) : (
@@ -320,11 +327,10 @@ export const QuoteItemManager: React.FC<QuoteItemManagerProps> = ({
                             value={editData.quantity}
                             onChange={(e) => {
                               const quantity = parseInt(e.target.value) || 1;
-                              setEditData({
-                                ...editData, 
-                                quantity,
-                                total_price: quantity * editData.unit_price
-                              });
+                              setEditMap(prev => ({
+                                ...prev,
+                                [item.id]: { ...editData, quantity, total_price: quantity * (editData.unit_price || 0) }
+                              }));
                             }}
                             className="w-20"
                           />
@@ -340,11 +346,10 @@ export const QuoteItemManager: React.FC<QuoteItemManagerProps> = ({
                             value={editData.unit_price}
                             onChange={(e) => {
                               const unit_price = parseFloat(e.target.value) || 0;
-                              setEditData({
-                                ...editData, 
-                                unit_price,
-                                total_price: editData.quantity * unit_price
-                              });
+                              setEditMap(prev => ({
+                                ...prev,
+                                [item.id]: { ...editData, unit_price, total_price: (editData.quantity || 1) * unit_price }
+                              }));
                             }}
                             className="w-24"
                           />
@@ -366,7 +371,10 @@ export const QuoteItemManager: React.FC<QuoteItemManagerProps> = ({
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => handleUpdateItem(item.id, editData)}
+                                onClick={() => {
+                                  const data = editMap[item.id] || item;
+                                  handleUpdateItem(item.id, data);
+                                }}
                                 className="text-green-600 hover:text-green-700"
                               >
                                 <Save className="h-4 w-4" />
@@ -374,7 +382,10 @@ export const QuoteItemManager: React.FC<QuoteItemManagerProps> = ({
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => setEditingItem(null)}
+                                onClick={() => {
+                                  setEditingItem(null);
+                                  setEditMap(prev => { const n = { ...prev }; delete n[item.id]; return n; });
+                                }}
                                 className="text-gray-600 hover:text-gray-700"
                               >
                                 <X className="h-4 w-4" />
@@ -385,7 +396,7 @@ export const QuoteItemManager: React.FC<QuoteItemManagerProps> = ({
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => setEditingItem(item.id)}
+                                onClick={() => { setEditingItem(item.id); setEditMap(prev => ({ ...prev, [item.id]: item })); }}
                                 className="text-blue-600 hover:text-blue-700"
                               >
                                 ✏️

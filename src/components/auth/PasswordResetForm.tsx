@@ -27,12 +27,17 @@ export const PasswordResetForm: React.FC<PasswordResetFormProps> = ({ onBackToLo
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`
+      // Utilise l’Edge Function Resend (plus fiable que resetPasswordForEmail)
+      const { data, error } = await supabase.functions.invoke('send-password-reset', {
+        body: {
+          email,
+          resetUrl: `${window.location.origin}/auth/reset-password`,
+        },
       });
 
-      if (error) {
-        toast.error(error.message);
+      if (error || (data && data.success === false)) {
+        const msg = (error as any)?.message || data?.error || "Erreur lors de l'envoi de l'email de réinitialisation";
+        toast.error(msg);
       } else {
         setEmailSent(true);
         toast.success('Email de réinitialisation envoyé !');

@@ -94,11 +94,11 @@ export const RolePermissions: React.FC = () => {
   const savePermissions = async () => {
     setSaving(true);
     try {
-      // Supprimer toutes les permissions existantes et les recréer
-      await supabase.from('role_permissions').delete().gte('id', 0);
+      // Supprimer toutes les permissions existantes et les recréer (utilise un filtre valide)
+      await supabase.from('role_permissions').delete().not('id', 'is', null);
       
       // Insérer les nouvelles permissions
-      const newPermissions = [];
+      const newPermissions = [] as any[];
       Object.entries(permissionsState).forEach(([key, perms]) => {
         const [role, resource] = key.split('-');
         newPermissions.push({
