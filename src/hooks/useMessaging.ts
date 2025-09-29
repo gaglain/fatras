@@ -156,8 +156,8 @@ export const useMessaging = () => {
 
   // Create a new channel
   const createChannel = async (
-    name: string, 
-    description: string = '', 
+    name: string,
+    description: string = '',
     type: 'public' | 'private' = 'public',
     memberIds: string[] = [],
     roadshowId?: string
@@ -165,20 +165,55 @@ export const useMessaging = () => {
     if (!user) return null;
 
     try {
+      // Try RPC first
       const { data, error } = await supabase.rpc('create_messaging_channel', {
         channel_name: name,
         channel_description: description,
         channel_type: type,
         member_user_ids: memberIds,
-        roadshow_ref_id: roadshowId
+        roadshow_ref_id: roadshowId,
       });
 
-      if (error) throw error;
+      if (!error && data) {
+        await fetchChannels();
+        return data as string;
+      }
+
+      // Fallback: manual creation if RPC is unavailable
+      console.warn('RPC create_messaging_channel not available, falling back to manual insert', error);
+
+      const { data: channelRow, error: insertErr } = await supabase
+        .from('messaging_channels')
+        .insert({
+          name,
+          description,
+          type,
+          user_id: user.id,
+          roadshow_id: roadshowId,
+          is_active: true,
+        })
+        .select('id')
+        .single();
+
+      if (insertErr || !channelRow) throw insertErr;
+
+      const baseMembers = [user.id, ...memberIds.filter((id) => id !== user.id)];
+      if (baseMembers.length > 0) {
+        const membersPayload = baseMembers.map((uid) => ({
+          channel_id: channelRow.id,
+          user_id: uid,
+          role: uid === user.id ? 'admin' : 'member',
+        }));
+        const { error: membersErr } = await supabase
+          .from('messaging_channel_members')
+          .insert(membersPayload);
+        if (membersErr) console.warn('Members insert warning:', membersErr);
+      }
 
       await fetchChannels();
-      return data;
+      return channelRow.id as string;
     } catch (error) {
-      console.error('Error creating channel:', error);
+      console.error('Error creating channel (RPC + fallback failed):', error);
       return null;
     }
   };
@@ -188,48 +223,46 @@ export const useMessaging = () => {
     if (!user) return null;
 
     try {
-      console.log('Creating DM with user:', otherUserId);
-      
-      // Create or get existing DM channel
-      const { data: channelId, error: checkError } = await supabase.rpc('create_direct_message_channel', {
-        other_user_id: otherUserId
-      });
+      // Try RPC first
+      const { data: channelId, error: rpcErr } = await supabase.rpc(
+        'create_direct_message_channel',
+        { other_user_id: otherUserId }
+      );
 
-      if (checkError) {
-        console.error('Error creating/finding DM:', checkError);
-        throw checkError;
+      if (!rpcErr && channelId) {
+        setTimeout(() => { fetchChannels(); }, 100);
+        return channelId as string;
       }
 
-      console.log('DM channel ID:', channelId);
+      // Fallback: manual creation
+      console.warn('RPC create_direct_message_channel not available, falling back to manual insert', rpcErr);
 
-      // Ensure the other user is a member of this channel (in case RPC didn't add them)
-      try {
-        const { data: memberRows, error: memberErr } = await supabase
-          .from('messaging_channel_members')
-          .select('id')
-          .eq('channel_id', channelId)
-          .eq('user_id', otherUserId);
-        if (memberErr) {
-          console.warn('Membership check error (non-blocking):', memberErr);
-        }
-        if (!memberRows || memberRows.length === 0) {
-          const { error: insertErr } = await supabase
-            .from('messaging_channel_members')
-            .insert({ channel_id: channelId, user_id: otherUserId, role: 'member' });
-          if (insertErr) console.warn('Could not add other user to DM channel (may already exist):', insertErr);
-        }
-      } catch (e) {
-        console.warn('Non-blocking error ensuring DM membership:', e);
-      }
-      
-      // Refresh channels to ensure the new/updated channel appears
-      setTimeout(() => {
-        fetchChannels();
-      }, 100);
-      
-      return channelId as string;
+      const dmName = `DM-${user.id}-${otherUserId}`;
+      const { data: channelRow, error: insertErr } = await supabase
+        .from('messaging_channels')
+        .insert({
+          name: dmName,
+          type: 'direct',
+          user_id: user.id,
+          is_active: true,
+        })
+        .select('id')
+        .single();
+
+      if (insertErr || !channelRow) throw insertErr;
+
+      const { error: membersErr } = await supabase
+        .from('messaging_channel_members')
+        .insert([
+          { channel_id: channelRow.id, user_id: user.id, role: 'admin' },
+          { channel_id: channelRow.id, user_id: otherUserId, role: 'member' },
+        ]);
+      if (membersErr) console.warn('DM members insert warning:', membersErr);
+
+      setTimeout(() => { fetchChannels(); }, 100);
+      return channelRow.id as string;
     } catch (error) {
-      console.error('Error creating DM:', error);
+      console.error('Error creating DM (RPC + fallback failed):', error);
       return null;
     }
   };

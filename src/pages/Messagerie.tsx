@@ -9,6 +9,7 @@ import { useMessaging } from '@/hooks/useMessaging';
 import { useAuth } from '@/hooks/useAuth';
 import { ChannelManager } from '@/components/messaging/ChannelManager';
 import { DirectMessageManager } from '@/components/messaging/DirectMessageManager';
+import { toast } from 'sonner';
 
 export const Messagerie: React.FC = () => {
   const { user } = useAuth();
@@ -44,10 +45,12 @@ export const Messagerie: React.FC = () => {
   const handleSendMessage = async () => {
     if (!message.trim() || !selectedChannel) return;
 
-    const success = await sendMessage(selectedChannel, message.trim());
-    if (success) {
-      setMessage('');
+    const res = await sendMessage(selectedChannel, message.trim());
+    if (!res) {
+      toast.error("L'envoi du message a échoué. Vérifiez vos droits sur ce canal.");
+      return;
     }
+    setMessage('');
   };
 
   const handleChannelCreated = (channelId: string) => {

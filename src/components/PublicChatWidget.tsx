@@ -48,13 +48,13 @@ export const PublicChatWidget: React.FC = () => {
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !activeChannel) return;
 
-    try {
-      await sendMessage(activeChannel, newMessage);
-      setNewMessage('');
-    } catch (error) {
-      console.error('Erreur envoi message:', error);
-      toast.error('Erreur lors de l\'envoi du message');
+    const res = await sendMessage(activeChannel, newMessage.trim());
+    if (!res) {
+      console.error('Erreur envoi message: sendMessage a retourné null');
+      toast.error("L'envoi du message a échoué. Vérifiez vos droits et réessayez.");
+      return;
     }
+    setNewMessage('');
   };
 
   const handleCreateChannel = async () => {

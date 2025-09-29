@@ -10,6 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useNotifications } from '@/hooks/useNotifications';
 import { ChannelManager } from '@/components/messaging/ChannelManager';
 import { DirectMessageManager } from '@/components/messaging/DirectMessageManager';
+import { toast } from 'sonner';
 
 export const ChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -86,10 +87,12 @@ export const ChatWidget: React.FC = () => {
   const handleSendMessage = async () => {
     if (!inputValue.trim() || !selectedChannel) return;
 
-    const success = await sendMessage(selectedChannel, inputValue.trim());
-    if (success) {
-      setInputValue('');
+    const res = await sendMessage(selectedChannel, inputValue.trim());
+    if (!res) {
+      toast.error("L'envoi du message a échoué. Réessayez plus tard.");
+      return;
     }
+    setInputValue('');
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
