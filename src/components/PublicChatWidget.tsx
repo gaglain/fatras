@@ -21,6 +21,8 @@ export const PublicChatWidget: React.FC = () => {
     createDirectMessage,
     availableUsers,
     fetchMessages,
+    fetchAvailableChannels,
+    joinChannel,
     ensureMembership,
     markChannelAsRead,
   } = useMessaging();
@@ -29,6 +31,8 @@ export const PublicChatWidget: React.FC = () => {
   const [activeChannel, setActiveChannel] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState('');
   const [showChannelCreator, setShowChannelCreator] = useState(false);
+  const [showChannelBrowser, setShowChannelBrowser] = useState(false);
+  const [availableChannels, setAvailableChannels] = useState<any[]>([]);
   const [newChannelName, setNewChannelName] = useState('');
   const [selectedUser, setSelectedUser] = useState<string>('');
 
@@ -99,6 +103,27 @@ export const PublicChatWidget: React.FC = () => {
     }
   };
 
+  const loadAvailableChannels = async () => {
+    try {
+      const channels = await fetchAvailableChannels();
+      setAvailableChannels(channels);
+    } catch (error) {
+      console.error('Error loading available channels:', error);
+    }
+  };
+
+  const handleJoinChannel = async (channelId: string, channelName: string) => {
+    const success = await joinChannel(channelId);
+    if (success) {
+      setActiveChannel(channelId);
+      setShowChannelBrowser(false);
+      toast.success(`Vous avez rejoint #${channelName}`);
+      await loadAvailableChannels();
+    } else {
+      toast.error('Erreur lors de l\'adhésion au canal');
+    }
+  };
+
   const activeChannelData = channels.find(c => c.id === activeChannel);
   const channelMessages = activeChannel ? messages[activeChannel] || [] : [];
 
@@ -130,6 +155,16 @@ export const PublicChatWidget: React.FC = () => {
                   onClick={() => setShowChannelCreator(!showChannelCreator)}
                 >
                   <Plus className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setShowChannelBrowser(!showChannelBrowser);
+                    if (!showChannelBrowser) loadAvailableChannels();
+                  }}
+                >
+                  Parcourir
                 </Button>
               </div>
             </div>
@@ -180,7 +215,50 @@ export const PublicChatWidget: React.FC = () => {
                     >
                       Créer Message Privé
                     </Button>
-                  )}
+            )}
+            
+            {/* Channel Browser */}
+            {showChannelBrowser && (
+              <div className="space-y-2 p-3 bg-muted rounded-lg max-h-48 overflow-y-auto">
+                <h4 className="font-medium text-sm">Canaux disponibles</h4>
+                {availableChannels.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Aucun canal public disponible</p>
+                ) : (
+                  <div className="space-y-1">
+                    {availableChannels.map((channel) => (
+                      <div key={channel.id} className="flex items-center justify-between p-2 bg-background rounded">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-1">
+                            <span className="text-sm font-medium">#{channel.name}</span>
+                            {channel.is_member && <span className="text-xs text-muted-foreground">(Membre)</span>}
+                          </div>
+                          {channel.description && (
+                            <p className="text-xs text-muted-foreground">{channel.description}</p>
+                          )}
+                        </div>
+                        {!channel.is_member && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleJoinChannel(channel.id, channel.name)}
+                          >
+                            Rejoindre
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowChannelBrowser(false)}
+                  className="w-full"
+                >
+                  Fermer
+                </Button>
+              </div>
+            )}
                 </div>
               </div>
             )}

@@ -9,6 +9,7 @@ import { useMessaging } from '@/hooks/useMessaging';
 import { useAuth } from '@/hooks/useAuth';
 import { ChannelManager } from '@/components/messaging/ChannelManager';
 import { DirectMessageManager } from '@/components/messaging/DirectMessageManager';
+import { ChannelBrowser } from '@/components/messaging/ChannelBrowser';
 import { toast } from 'sonner';
 
 export const Messagerie: React.FC = () => {
@@ -103,6 +104,15 @@ export const Messagerie: React.FC = () => {
             <div className="flex gap-2">
               <ChannelManager onChannelCreated={handleChannelCreated} />
               <DirectMessageManager />
+              <ChannelBrowser 
+                trigger={
+                  <Button variant="outline" size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Parcourir
+                  </Button>
+                }
+                onChannelJoined={handleChannelCreated}
+              />
             </div>
           </div>
         </div>

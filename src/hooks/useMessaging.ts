@@ -54,7 +54,7 @@ export const useMessaging = () => {
   const [availableUsers, setAvailableUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch user channels
+  // Fetch user channels (joined channels)
   const fetchChannels = async () => {
     if (!user) return;
 
@@ -101,6 +101,34 @@ export const useMessaging = () => {
       setChannels(transformedChannels);
     } catch (error) {
       console.error('Error fetching channels:', error);
+    }
+  };
+
+  // Fetch all available public channels (Slack-style discovery)
+  const fetchAvailableChannels = async () => {
+    if (!user) return [];
+
+    try {
+      const { data, error } = await supabase
+        .from('messaging_channels')
+        .select(`
+          *,
+          messaging_channel_members(user_id)
+        `)
+        .eq('type', 'public')
+        .eq('is_active', true)
+        .order('name');
+
+      if (error) throw error;
+
+      return (data || []).map(ch => ({
+        ...ch,
+        is_member: ch.messaging_channel_members?.some((m: any) => m.user_id === user.id) || false,
+        member_count: ch.messaging_channel_members?.length || 0
+      }));
+    } catch (error) {
+      console.error('Error fetching available channels:', error);
+      return [];
     }
   };
 
@@ -566,12 +594,32 @@ export const useMessaging = () => {
     };
   }, [user?.id]);
 
+  // Join a public channel (Slack-style)
+  const joinChannel = async (channelId: string) => {
+    if (!user) return false;
+
+    try {
+      const { error } = await supabase
+        .from('messaging_channel_members')
+        .insert({ channel_id: channelId, user_id: user.id, role: 'member' });
+
+      if (error) throw error;
+
+      await fetchChannels();
+      return true;
+    } catch (error) {
+      console.error('Error joining channel:', error);
+      return false;
+    }
+  };
+
   return {
     channels,
     messages,
     availableUsers,
     loading,
     fetchChannels,
+    fetchAvailableChannels,
     fetchMessages,
     createChannel,
     createDirectMessage,
@@ -581,6 +629,7 @@ export const useMessaging = () => {
     addChannelMembers,
     ensureMembership,
     removeChannelMember,
+    joinChannel,
     markChannelAsRead
   };
 };

@@ -10,6 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useNotifications } from '@/hooks/useNotifications';
 import { ChannelManager } from '@/components/messaging/ChannelManager';
 import { DirectMessageManager } from '@/components/messaging/DirectMessageManager';
+import { ChannelBrowser } from '@/components/messaging/ChannelBrowser';
 import { toast } from 'sonner';
 
 export const ChatWidget: React.FC = () => {
@@ -182,6 +183,15 @@ export const ChatWidget: React.FC = () => {
                       DM
                     </Button>
                   }
+                />
+                <ChannelBrowser
+                  trigger={
+                    <Button size="sm" variant="secondary" className="flex-1">
+                      <Plus className="h-3 w-3 mr-1" />
+                      Parcourir
+                    </Button>
+                  }
+                  onChannelJoined={(channelId) => setSelectedChannel(channelId)}
                 />
               </div>
             </div>
