@@ -267,25 +267,46 @@ export const useMessaging = () => {
     }
   };
 
-  // Send a message
+  // Send a message (auto-join channel if not a member)
   const sendMessage = async (channelId: string, content: string) => {
     if (!user) return null;
 
     try {
+      // Ensure current user is a member of the channel (RLS requires membership to send)
+      const { data: existingMember, error: memberCheckErr } = await supabase
+        .from('messaging_channel_members')
+        .select('id')
+        .eq('channel_id', channelId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (memberCheckErr) {
+        console.warn('Membership check warning:', memberCheckErr);
+      }
+
+      if (!existingMember) {
+        const { error: joinErr } = await supabase
+          .from('messaging_channel_members')
+          .insert({ channel_id: channelId, user_id: user.id, role: 'member' });
+        if (joinErr) {
+          // Not fatal for sender if they were already member or policy restricts; continue sending anyway
+          console.warn('Join channel (self) warning:', joinErr);
+        }
+      }
+
       const { data, error } = await supabase
         .from('messaging_messages')
         .insert({
           channel_id: channelId,
           user_id: user.id,
           content,
-          message_type: 'text'
+          message_type: 'text',
         })
         .select('*')
         .single();
 
       if (error) throw error;
 
-      // Transform the message to match our interface
       const transformedMessage: Message = {
         id: data.id,
         channel_id: data.channel_id,
@@ -295,20 +316,23 @@ export const useMessaging = () => {
         created_at: data.created_at,
         edited_at: data.edited_at,
         reply_to_id: data.reply_to_id,
-        metadata: data.metadata
+        metadata: data.metadata,
       };
 
-      // Update messages in state
-      setMessages(prev => ({
+      setMessages((prev) => ({
         ...prev,
-        [channelId]: [...(prev[channelId] || []), transformedMessage]
+        [channelId]: [...(prev[channelId] || []), transformedMessage],
       }));
 
-      // Update channel's updated_at
-      await supabase
-        .from('messaging_channels')
-        .update({ updated_at: new Date().toISOString() })
-        .eq('id', channelId);
+      // Best-effort: update channel ordering; may fail for non-owners due to RLS, so ignore errors
+      try {
+        await supabase
+          .from('messaging_channels')
+          .update({ updated_at: new Date().toISOString() })
+          .eq('id', channelId);
+      } catch (e) {
+        console.debug('Non-owner channel update ignored:', e);
+      }
 
       return transformedMessage;
     } catch (error) {
