@@ -408,6 +408,32 @@ export const useMessaging = () => {
     }
   };
 
+  // Ensure current user is a member of the channel (join-on-view)
+  const ensureMembership = async (channelId: string): Promise<boolean> => {
+    if (!user) return false;
+    try {
+      const { data: existing, error: checkErr } = await supabase
+        .from('messaging_channel_members')
+        .select('id')
+        .eq('channel_id', channelId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (checkErr) console.warn('ensureMembership check warning:', checkErr);
+      if (existing) return true;
+      const { error: insertErr } = await supabase
+        .from('messaging_channel_members')
+        .insert({ channel_id: channelId, user_id: user.id, role: 'member' });
+      if (insertErr) {
+        console.warn('ensureMembership insert warning:', insertErr);
+        return false;
+      }
+      return true;
+    } catch (e) {
+      console.error('ensureMembership error:', e);
+      return false;
+    }
+  };
+
   // Remove member from channel
   const removeChannelMember = async (channelId: string, userId: string) => {
     if (!user) return false;
@@ -553,6 +579,7 @@ export const useMessaging = () => {
     deleteChannel,
     deleteChannelsByRoadshow,
     addChannelMembers,
+    ensureMembership,
     removeChannelMember,
     markChannelAsRead
   };

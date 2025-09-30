@@ -25,6 +25,7 @@ export const ChatWidget: React.FC = () => {
     loading,
     fetchChannels,
     fetchMessages, 
+    ensureMembership,
     sendMessage, 
     markChannelAsRead,
     createChannel
@@ -52,13 +53,15 @@ export const ChatWidget: React.FC = () => {
     createDefault();
   }, [isOpen, loading, channels.length, createChannel]);
 
-  // Fetch messages when selecting a channel
+  // Fetch messages when selecting a channel (with auto-join)
   useEffect(() => {
     if (selectedChannel && isOpen) {
-      fetchMessages(selectedChannel);
-      markChannelAsRead(selectedChannel);
+      ensureMembership(selectedChannel).finally(() => {
+        fetchMessages(selectedChannel);
+        markChannelAsRead(selectedChannel);
+      });
     }
-  }, [selectedChannel, isOpen, fetchMessages, markChannelAsRead]);
+  }, [selectedChannel, isOpen, ensureMembership, fetchMessages, markChannelAsRead]);
 
   // Listen for new messages and create notifications when widget is closed
   useEffect(() => {

@@ -22,6 +22,7 @@ export const Messagerie: React.FC = () => {
     messages, 
     loading,
     fetchMessages, 
+    ensureMembership,
     sendMessage, 
     markChannelAsRead,
     deleteChannel 
@@ -34,13 +35,15 @@ export const Messagerie: React.FC = () => {
     }
   }, [channels, selectedChannel]);
 
-  // Fetch messages and mark as read when selecting a channel
+  // Fetch messages and mark as read when selecting a channel (with auto-join)
   useEffect(() => {
     if (selectedChannel) {
-      fetchMessages(selectedChannel);
-      markChannelAsRead(selectedChannel);
+      ensureMembership(selectedChannel).finally(() => {
+        fetchMessages(selectedChannel);
+        markChannelAsRead(selectedChannel);
+      });
     }
-  }, [selectedChannel, fetchMessages, markChannelAsRead]);
+  }, [selectedChannel, ensureMembership, fetchMessages, markChannelAsRead]);
 
   const handleSendMessage = async () => {
     if (!message.trim() || !selectedChannel) return;

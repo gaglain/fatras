@@ -21,6 +21,7 @@ export const PublicChatWidget: React.FC = () => {
     createDirectMessage,
     availableUsers,
     fetchMessages,
+    ensureMembership,
     markChannelAsRead,
   } = useMessaging();
   
@@ -37,13 +38,15 @@ export const PublicChatWidget: React.FC = () => {
     }
   }, [channels, activeChannel]);
 
-  // Charger l'historique et marquer comme lu lors de la sélection
+  // Charger l'historique et marquer comme lu lors de la sélection (avec auto-adhésion)
   useEffect(() => {
     if (activeChannel) {
-      fetchMessages(activeChannel);
-      markChannelAsRead(activeChannel);
+      ensureMembership(activeChannel).finally(() => {
+        fetchMessages(activeChannel);
+        markChannelAsRead(activeChannel);
+      });
     }
-  }, [activeChannel, fetchMessages, markChannelAsRead]);
+  }, [activeChannel, ensureMembership, fetchMessages, markChannelAsRead]);
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !activeChannel) return;
