@@ -462,6 +462,66 @@ export const useMessaging = () => {
     }
   };
 
+  // Ensure user is in #general (Slack-like default)
+  const ensureDefaultGeneralMembership = async () => {
+    if (!user) return;
+    try {
+      // 1) Find existing public #general channel
+      const { data: general, error } = await supabase
+        .from('messaging_channels')
+        .select('id')
+        .eq('name', 'general')
+        .eq('type', 'public')
+        .eq('is_active', true)
+        .maybeSingle();
+
+      let channelId: string | undefined = (general as any)?.id;
+
+      // 2) Create it if missing (RPC first, then fallback re-check)
+      if (!channelId) {
+        const { data: newId, error: rpcErr } = await supabase.rpc('create_messaging_channel', {
+          channel_name: 'general',
+          channel_description: 'Canal par défaut',
+          channel_type: 'public',
+          member_user_ids: [],
+          roadshow_ref_id: null,
+        });
+
+        if (!rpcErr && newId) {
+          channelId = newId as string;
+        } else {
+          // Recheck in case it was created concurrently
+          const { data: again } = await supabase
+            .from('messaging_channels')
+            .select('id')
+            .eq('name', 'general')
+            .eq('type', 'public')
+            .eq('is_active', true)
+            .maybeSingle();
+          channelId = (again as any)?.id;
+        }
+      }
+
+      if (!channelId) return;
+
+      // 3) Ensure current user is a member
+      const { data: existing } = await supabase
+        .from('messaging_channel_members')
+        .select('id')
+        .eq('channel_id', channelId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (!existing) {
+        await supabase
+          .from('messaging_channel_members')
+          .insert({ channel_id: channelId, user_id: user.id, role: 'member' });
+      }
+    } catch (e) {
+      console.warn('ensureDefaultGeneralMembership error:', e);
+    }
+  };
+
   // Remove member from channel
   const removeChannelMember = async (channelId: string, userId: string) => {
     if (!user) return false;
@@ -509,6 +569,7 @@ export const useMessaging = () => {
     console.log('🔄 Fetching messaging data for user:', user.id);
     fetchChannels();
     fetchAvailableUsers();
+    ensureDefaultGeneralMembership();
     setLoading(false);
   }, [user?.id]);
 
