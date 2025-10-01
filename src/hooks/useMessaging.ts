@@ -467,15 +467,16 @@ export const useMessaging = () => {
     if (!user) return;
     try {
       // 1) Find existing public #general channel
-      const { data: general, error } = await supabase
+      // 1) Find all active public #general, prefer oldest
+      const { data: generals, error: listErr } = await supabase
         .from('messaging_channels')
-        .select('id')
+        .select('id, created_at')
         .eq('name', 'general')
         .eq('type', 'public')
         .eq('is_active', true)
-        .maybeSingle();
+        .order('created_at', { ascending: true });
 
-      let channelId: string | undefined = (general as any)?.id;
+      let channelId: string | undefined = generals?.[0]?.id;
 
       // 2) Create it if missing (RPC first, then fallback re-check)
       if (!channelId) {
@@ -490,15 +491,15 @@ export const useMessaging = () => {
         if (!rpcErr && newId) {
           channelId = newId as string;
         } else {
-          // Recheck in case it was created concurrently
-          const { data: again } = await supabase
+          // Recheck in case it was created concurrently; pick oldest
+          const { data: againList } = await supabase
             .from('messaging_channels')
-            .select('id')
+            .select('id, created_at')
             .eq('name', 'general')
             .eq('type', 'public')
             .eq('is_active', true)
-            .maybeSingle();
-          channelId = (again as any)?.id;
+            .order('created_at', { ascending: true });
+          channelId = againList?.[0]?.id;
         }
       }
 
@@ -516,6 +517,28 @@ export const useMessaging = () => {
         await supabase
           .from('messaging_channel_members')
           .insert({ channel_id: channelId, user_id: user.id, role: 'member' });
+      }
+
+      // Clean up duplicate #general memberships for this user (keep canonical oldest)
+      try {
+        const { data: others } = await supabase
+          .from('messaging_channels')
+          .select('id')
+          .eq('name', 'general')
+          .eq('type', 'public')
+          .eq('is_active', true)
+          .neq('id', channelId);
+
+        const otherIds = (others || []).map((c: any) => c.id);
+        if (otherIds.length > 0) {
+          await supabase
+            .from('messaging_channel_members')
+            .delete()
+            .in('channel_id', otherIds)
+            .eq('user_id', user.id);
+        }
+      } catch (_e) {
+        // ignore cleanup errors
       }
     } catch (e) {
       console.warn('ensureDefaultGeneralMembership error:', e);
