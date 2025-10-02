@@ -3244,6 +3244,19 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: Json
       }
+      get_active_users_basic: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          avatar_url: string
+          email: string
+          first_name: string
+          is_active: boolean
+          last_name: string
+          role: string
+          user_id: string
+          username: string
+        }[]
+      }
       get_event_contacts: {
         Args: { event_id_param: string }
         Returns: {
