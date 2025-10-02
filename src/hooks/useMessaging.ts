@@ -170,15 +170,13 @@ export const useMessaging = () => {
   // Fetch available users for adding to channels
   const fetchAvailableUsers = async () => {
     try {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('id, user_id, first_name, last_name, username, email')
-        .eq('is_active', true);
-
+      // Use security definer RPC to bypass RLS safely and fetch minimal public user info
+      const { data, error } = await (supabase as any).rpc('get_active_users_basic');
       if (error) throw error;
-      setAvailableUsers(data || []);
+      setAvailableUsers((data as any[]) || []);
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error('Error fetching users via RPC:', error);
+      setAvailableUsers([]);
     }
   };
 
@@ -462,42 +460,40 @@ export const useMessaging = () => {
     }
   };
 
-  // Ensure user is in #general (Slack-like default)
+  // Ensure user is in #general (default public channel)
   const ensureDefaultGeneralMembership = async () => {
     if (!user) return;
     try {
-      // 1) Find existing public #general channel
-      // 1) Find all active public #general, prefer oldest
-      const { data: generals, error: listErr } = await supabase
+      // Prefer oldest active public channel named "general" or "général" (case-sensitive variants included)
+      const { data: generals } = await supabase
         .from('messaging_channels')
         .select('id, created_at')
-        .eq('name', 'general')
         .eq('type', 'public')
         .eq('is_active', true)
+        .or('name.eq.general,name.eq.General,name.eq.général,name.eq.Général')
         .order('created_at', { ascending: true });
 
       let channelId: string | undefined = generals?.[0]?.id;
 
-      // 2) Create it if missing (RPC first, then fallback re-check)
+      // Create it if missing (use a friendly French label by default)
       if (!channelId) {
-        const { data: newId, error: rpcErr } = await supabase.rpc('create_messaging_channel', {
-          channel_name: 'general',
+        const { data: newId, error: rpcErr } = await (supabase as any).rpc('create_messaging_channel', {
+          channel_name: 'Général',
           channel_description: 'Canal par défaut',
           channel_type: 'public',
           member_user_ids: [],
           roadshow_ref_id: null,
         });
-
         if (!rpcErr && newId) {
           channelId = newId as string;
         } else {
-          // Recheck in case it was created concurrently; pick oldest
+          // Re-check in case it was created concurrently
           const { data: againList } = await supabase
             .from('messaging_channels')
             .select('id, created_at')
-            .eq('name', 'general')
             .eq('type', 'public')
             .eq('is_active', true)
+            .or('name.eq.general,name.eq.General,name.eq.général,name.eq.Général')
             .order('created_at', { ascending: true });
           channelId = againList?.[0]?.id;
         }
@@ -505,7 +501,7 @@ export const useMessaging = () => {
 
       if (!channelId) return;
 
-      // 3) Ensure current user is a member
+      // Ensure current user is a member
       const { data: existing } = await supabase
         .from('messaging_channel_members')
         .select('id')
@@ -519,16 +515,15 @@ export const useMessaging = () => {
           .insert({ channel_id: channelId, user_id: user.id, role: 'member' });
       }
 
-      // Clean up duplicate #general memberships for this user (keep canonical oldest)
+      // Optional cleanup: leave other "general" duplicates for this user
       try {
         const { data: others } = await supabase
           .from('messaging_channels')
           .select('id')
-          .eq('name', 'general')
           .eq('type', 'public')
           .eq('is_active', true)
+          .or('name.eq.general,name.eq.General,name.eq.général,name.eq.Général')
           .neq('id', channelId);
-
         const otherIds = (others || []).map((c: any) => c.id);
         if (otherIds.length > 0) {
           await supabase
@@ -540,6 +535,9 @@ export const useMessaging = () => {
       } catch (_e) {
         // ignore cleanup errors
       }
+
+      // Refresh channels list to include the default if it was just created
+      await fetchChannels();
     } catch (e) {
       console.warn('ensureDefaultGeneralMembership error:', e);
     }

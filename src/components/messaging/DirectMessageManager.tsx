@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MessageSquare, User } from 'lucide-react';
-import { useUserManagement } from '@/hooks/useUserManagement';
+import { useAuth } from '@/hooks/useAuth';
 import { useMessaging } from '@/hooks/useMessaging';
 import { UserAvatar } from './UserAvatar';
 import { toast } from 'sonner';
@@ -17,8 +17,8 @@ export const DirectMessageManager: React.FC<DirectMessageManagerProps> = ({ trig
   const [isOpen, setIsOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { users } = useUserManagement();
-  const { createDirectMessage } = useMessaging();
+  const { user } = useAuth();
+  const { availableUsers, createDirectMessage } = useMessaging();
 
   React.useEffect(() => {
     if (isOpen) {
@@ -54,7 +54,7 @@ export const DirectMessageManager: React.FC<DirectMessageManagerProps> = ({ trig
     }
   };
 
-  const activeUsers = users.filter(user => user.is_active);
+  const activeUsers = availableUsers.filter(u => u.is_active && u.user_id !== user?.id);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
