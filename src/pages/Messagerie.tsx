@@ -75,8 +75,14 @@ export const Messagerie: React.FC = () => {
 
   const getChannelDisplayName = (channel: any) => {
     if (channel.type === 'direct') {
-      // For DM channels, show the other user's name
-      return channel.name.replace(/^DM-.*?-.*?$/, 'Message Direct');
+      // For DM channels, get the other user from members
+      const otherMember = channel.members?.find((m: any) => m.user_id !== user?.id);
+      if (otherMember?.user_profile) {
+        const firstName = otherMember.user_profile.first_name || '';
+        const lastName = otherMember.user_profile.last_name || '';
+        return `${firstName} ${lastName}`.trim() || otherMember.user_profile.username || 'Message Direct';
+      }
+      return 'Message Direct';
     }
     return channel.name;
   };

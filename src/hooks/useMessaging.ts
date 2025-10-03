@@ -68,7 +68,12 @@ export const useMessaging = () => {
             user_id,
             role,
             joined_at,
-            last_read_at
+            last_read_at,
+            user_profiles:user_id (
+              first_name,
+              last_name,
+              username
+            )
           )
         `)
         .eq('messaging_channel_members.user_id', user.id)
@@ -94,7 +99,8 @@ export const useMessaging = () => {
           user_id: member.user_id,
           role: member.role as 'admin' | 'member',
           joined_at: member.joined_at,
-          last_read_at: member.last_read_at
+          last_read_at: member.last_read_at,
+          user_profile: member.user_profiles
         }))
       }));
 

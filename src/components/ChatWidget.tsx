@@ -64,29 +64,12 @@ export const ChatWidget: React.FC = () => {
     }
   }, [selectedChannel, isOpen, ensureMembership, fetchMessages, markChannelAsRead]);
 
-  // Listen for new messages and create notifications when widget is closed
+  // Mark channel as read when widget is opened
   useEffect(() => {
-    if (!isOpen && selectedChannel) {
-      const currentMessages = messages[selectedChannel] || [];
-      const lastMessage = currentMessages[currentMessages.length - 1];
-      
-      if (lastMessage && lastMessage.user_id !== user?.id) {
-        // Create notification for new message when widget is closed
-        createNotification({
-          user_id: user?.id || '',
-          type: 'new_message',
-          title: 'Nouveau message',
-          message: `Nouveau message dans #${channels.find(c => c.id === selectedChannel)?.name || 'canal'}`,
-          read: false,
-          data: { 
-            channel_id: selectedChannel, 
-            message_id: lastMessage.id,
-            sender: lastMessage.user_profile?.first_name || 'Utilisateur'
-          }
-        });
-      }
+    if (isOpen && selectedChannel) {
+      markChannelAsRead(selectedChannel);
     }
-  }, [messages, selectedChannel, isOpen, user?.id, createNotification, channels]);
+  }, [isOpen, selectedChannel, markChannelAsRead]);
 
   const handleSendMessage = async () => {
     if (!inputValue.trim() || !selectedChannel) return;
