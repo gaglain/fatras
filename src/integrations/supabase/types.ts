@@ -3343,6 +3343,18 @@ export type Database = {
         Args: { channel_id_param: string }
         Returns: boolean
       }
+      is_member_of_channel: {
+        Args: { _channel_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_owner_of_channel: {
+        Args: { _channel_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_public_active_channel: {
+        Args: { _channel_id: string }
+        Returns: boolean
+      }
       refresh_shop_stats: {
         Args: Record<PropertyKey, never>
         Returns: undefined
