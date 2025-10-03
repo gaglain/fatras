@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,6 +25,8 @@ import { EmailTemplateComposer } from '@/components/email/EmailTemplateComposer'
 import { SyncManager } from '@/components/SyncManager';
 import { toast } from 'sonner';
 import { useEmailSender } from '@/hooks/useEmailSender';
+import { useContacts } from '@/hooks/useContacts';
+import { useSearchParams } from 'react-router-dom';
 
 interface Email {
   id: string;
@@ -150,6 +152,8 @@ const scheduledEmails: ScheduledEmail[] = [
 ];
 
 export const Email: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const { contacts } = useContacts();
   const [emails, setEmails] = useState<Email[]>(sampleEmails);
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
   const [showCompose, setShowCompose] = useState(false);
@@ -176,6 +180,28 @@ export const Email: React.FC = () => {
     content: '',
     selectedTemplateId: ''
   });
+
+  // Handle URL params for composing emails from tasks
+  useEffect(() => {
+    const shouldCompose = searchParams.get('compose');
+    const contactId = searchParams.get('contactId');
+    const subject = searchParams.get('subject');
+
+    if (shouldCompose === 'true' && contactId) {
+      const contact = contacts.find(c => c.id === contactId);
+      if (contact) {
+        setComposeData({
+          to: contact.email || '',
+          cc: '',
+          subject: subject ? decodeURIComponent(subject) : '',
+          content: '',
+          selectedTemplateId: ''
+        });
+        setShowCompose(true);
+        setShowTemplates(true); // Show templates first for quick selection
+      }
+    }
+  }, [searchParams, contacts]);
   
   // État pour la gestion d'erreurs
   const [validationErrors, setValidationErrors] = useState<{
@@ -334,7 +360,7 @@ export const Email: React.FC = () => {
     }));
     setShowTemplates(false);
     setShowCompose(true);
-    toast.success(`Template "${template.name}" appliqué`);
+    toast.success(`Modèle "${template.name}" appliqué`);
   };
 
   if (showTemplates) {

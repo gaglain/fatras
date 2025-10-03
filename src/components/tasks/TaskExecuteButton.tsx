@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Mail, Phone, Calendar, PlayCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useContacts } from '@/hooks/useContacts';
+import { useNavigate } from 'react-router-dom';
 
 interface Task {
   id: string;
@@ -17,6 +18,7 @@ interface TaskExecuteButtonProps {
 
 export const TaskExecuteButton: React.FC<TaskExecuteButtonProps> = ({ task }) => {
   const { contacts } = useContacts();
+  const navigate = useNavigate();
 
   const getContactEmail = () => {
     if (!task.contact_id) return '';
@@ -36,10 +38,9 @@ export const TaskExecuteButton: React.FC<TaskExecuteButtonProps> = ({ task }) =>
 
     switch (task.task_type) {
       case 'Email':
-        if (contactEmail) {
-          const subject = encodeURIComponent(`Re: ${task.title || 'Tâche'}`);
-          const body = encodeURIComponent(`Bonjour,\n\nSuite à notre tâche "${task.title}", je vous contacte...\n\nCordialement`);
-          window.open(`mailto:${contactEmail}?subject=${subject}&body=${body}`);
+        if (contactEmail && task.contact_id) {
+          // Navigate to email page with contact info pre-filled
+          navigate(`/email?compose=true&contactId=${task.contact_id}&subject=${encodeURIComponent(`Re: ${task.title || 'Tâche'}`)}`);
         } else {
           toast.error('Aucun email de contact disponible pour cette tâche');
         }
