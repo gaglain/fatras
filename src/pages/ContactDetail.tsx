@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -28,11 +28,13 @@ import { useEntityConnections } from '@/hooks/useEntityConnections';
 import { Contact } from '@/types/contact.types';
 import { ContactDialog } from '@/components/contacts/ContactDialog';
 import { ContactEmailHistory } from '@/components/ContactEmailHistory';
+import { EmailTemplateComposer } from '@/components/email/EmailTemplateComposer';
 import { toast } from 'sonner';
 
 export const ContactDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { getContactConnections, loading: connectionsLoading } = useEntityConnections();
   
@@ -46,6 +48,8 @@ export const ContactDetail: React.FC = () => {
   });
   const [loading, setLoading] = useState(true);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [showEmailComposer, setShowEmailComposer] = useState(false);
+  const [defaultActiveTab, setDefaultActiveTab] = useState('overview');
 
   useEffect(() => {
     if (id && user) {
@@ -53,6 +57,15 @@ export const ContactDetail: React.FC = () => {
       loadConnections();
     }
   }, [id, user]);
+
+  // Handle URL params for composing emails from tasks
+  useEffect(() => {
+    const shouldCompose = searchParams.get('compose');
+    if (shouldCompose === 'true') {
+      setShowEmailComposer(true);
+      setDefaultActiveTab('email');
+    }
+  }, [searchParams]);
 
   const loadContact = async () => {
     if (!id || !user) return;
@@ -258,11 +271,15 @@ export const ContactDetail: React.FC = () => {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="overview" className="space-y-4">
+      <Tabs value={defaultActiveTab} onValueChange={setDefaultActiveTab} className="space-y-4">
         <TabsList>
           <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
           <TabsTrigger value="activity">Activité ({allConnections.length})</TabsTrigger>
-          <TabsTrigger value="emails">Emails</TabsTrigger>
+          <TabsTrigger value="email">
+            <Mail className="h-4 w-4 mr-2" />
+            Envoyer un Email
+          </TabsTrigger>
+          <TabsTrigger value="emails">Historique Emails</TabsTrigger>
           <TabsTrigger value="details">Détails</TabsTrigger>
         </TabsList>
 
@@ -376,6 +393,13 @@ export const ContactDetail: React.FC = () => {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="email" className="space-y-4">
+          <EmailTemplateComposer 
+            defaultRecipient={contact?.email}
+            defaultSubject={searchParams.get('subject') ? decodeURIComponent(searchParams.get('subject')!) : ''}
+          />
         </TabsContent>
 
         <TabsContent value="emails" className="space-y-4">

@@ -38,11 +38,11 @@ export const TaskExecuteButton: React.FC<TaskExecuteButtonProps> = ({ task }) =>
 
     switch (task.task_type) {
       case 'Email':
-        if (contactEmail && task.contact_id) {
-          // Navigate to email page with contact info pre-filled
-          navigate(`/email?compose=true&contactId=${task.contact_id}&subject=${encodeURIComponent(`Re: ${task.title || 'Tâche'}`)}`);
+        if (task.contact_id) {
+          // Navigate to contact page to send email
+          navigate(`/contacts/${task.contact_id}?compose=true&subject=${encodeURIComponent(`Re: ${task.title || 'Tâche'}`)}`);
         } else {
-          toast.error('Aucun email de contact disponible pour cette tâche');
+          toast.error('Aucun contact lié à cette tâche');
         }
         break;
       

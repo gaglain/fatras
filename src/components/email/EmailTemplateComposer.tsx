@@ -41,15 +41,23 @@ const emailTemplates: EmailTemplate[] = [
   }
 ];
 
-export const EmailTemplateComposer: React.FC = () => {
+interface EmailTemplateComposerProps {
+  defaultRecipient?: string;
+  defaultSubject?: string;
+}
+
+export const EmailTemplateComposer: React.FC<EmailTemplateComposerProps> = ({ 
+  defaultRecipient = '', 
+  defaultSubject = '' 
+}) => {
   const { user } = useAuth();
   const { sendEmail, sending } = useEmailSender();
   const { accounts, loadAccounts, sendEmail: sendViaNylas } = useNylasEmail();
   
   const [selectedAccount, setSelectedAccount] = useState<string>('');
   const [fromName, setFromName] = useState('');
-  const [to, setTo] = useState('');
-  const [subject, setSubject] = useState('');
+  const [to, setTo] = useState(defaultRecipient);
+  const [subject, setSubject] = useState(defaultSubject);
   const [content, setContent] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
   const [showTemplates, setShowTemplates] = useState(false);
@@ -63,6 +71,12 @@ export const EmailTemplateComposer: React.FC = () => {
       setSelectedAccount(accounts[0].id);
     }
   }, [accounts, selectedAccount]);
+
+  // Update recipient and subject when props change
+  React.useEffect(() => {
+    if (defaultRecipient) setTo(defaultRecipient);
+    if (defaultSubject) setSubject(defaultSubject);
+  }, [defaultRecipient, defaultSubject]);
 
   const applyTemplate = (template: EmailTemplate) => {
     setSelectedTemplate(template);
