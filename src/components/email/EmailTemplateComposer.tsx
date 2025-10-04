@@ -12,6 +12,7 @@ import { useEmailSender } from '@/hooks/useEmailSender';
 import { useNylasEmail } from '@/hooks/useNylasEmail';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { useEmailTemplates } from '@/hooks/useEmailTemplates';
 
 interface EmailTemplate {
   id: string;
@@ -22,24 +23,7 @@ interface EmailTemplate {
   variables: string[];
 }
 
-const emailTemplates: EmailTemplate[] = [
-  {
-    id: '1',
-    name: 'Suivi de Contrat',
-    subject: 'Suivi du contrat pour {{event_name}}',
-    category: 'Contrat',
-    content: 'Bonjour {{contact_name}},\n\nJ\'espère que ce email vous trouve en bonne santé. Je souhaitais faire le suivi du contrat que nous avons envoyé pour {{event_name}} le {{event_date}}.\n\nSi vous avez des questions, n\'hésitez pas à me contacter.\n\nCordialement,\n{{user_name}}',
-    variables: ['contact_name', 'event_name', 'event_date', 'user_name']
-  },
-  {
-    id: '2',
-    name: 'Confirmation de Spectacle',
-    subject: 'Confirmation de spectacle - {{artist_name}} à {{venue_name}}',
-    category: 'Réservation',
-    content: 'Cher {{contact_name}},\n\nNous sommes heureux de confirmer la réservation pour {{artist_name}} à {{venue_name}} le {{event_date}}.\n\nCordialement,\n{{user_name}}',
-    variables: ['contact_name', 'artist_name', 'venue_name', 'event_date', 'user_name']
-  }
-];
+// Templates are now loaded from database via useEmailTemplates hook
 
 interface EmailTemplateComposerProps {
   defaultRecipient?: string;
@@ -53,6 +37,7 @@ export const EmailTemplateComposer: React.FC<EmailTemplateComposerProps> = ({
   const { user } = useAuth();
   const { sendEmail, sending } = useEmailSender();
   const { accounts, loadAccounts, sendEmail: sendViaNylas } = useNylasEmail();
+  const { templates } = useEmailTemplates();
   
   const [selectedAccount, setSelectedAccount] = useState<string>('');
   const [fromName, setFromName] = useState('');
@@ -199,22 +184,28 @@ export const EmailTemplateComposer: React.FC<EmailTemplateComposerProps> = ({
                   <DialogTitle>Choisir un modèle d'email</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {emailTemplates.map((template) => (
-                    <div
-                      key={template.id}
-                      className="p-3 border rounded-lg cursor-pointer hover:bg-muted/50"
-                      onClick={() => applyTemplate(template)}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-medium">{template.name}</h4>
-                        <Badge variant="outline">{template.category}</Badge>
+                  {templates.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      Aucun modèle disponible. Créez-en un dans la gestion des modèles.
+                    </p>
+                  ) : (
+                    templates.map((template) => (
+                      <div
+                        key={template.id}
+                        className="p-3 border rounded-lg cursor-pointer hover:bg-muted/50"
+                        onClick={() => applyTemplate(template)}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-medium">{template.name}</h4>
+                          <Badge variant="outline">{template.category}</Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-2">{template.subject}</p>
+                        <p className="text-xs text-muted-foreground line-clamp-2">
+                          {template.content.substring(0, 100)}...
+                        </p>
                       </div>
-                      <p className="text-sm text-muted-foreground mb-2">{template.subject}</p>
-                      <p className="text-xs text-muted-foreground line-clamp-2">
-                        {template.content.substring(0, 100)}...
-                      </p>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </DialogContent>
             </Dialog>
