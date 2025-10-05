@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 
 export interface Channel {
   id: string;
@@ -606,14 +607,7 @@ export const useMessaging = () => {
 
     console.log('📡 Setting up real-time subscription for messaging');
     
-    // Remove any existing subscriptions first
-    const existingChannels = supabase.getChannels();
-    existingChannels.forEach(channel => {
-      if (channel.topic.includes('messaging')) {
-        console.log('🧹 Removing existing channel:', channel.topic);
-        supabase.removeChannel(channel);
-      }
-    });
+    // Keep existing channels; avoid removing other components' subscriptions
 
     // Create a unique channel name based on timestamp to avoid conflicts
     const channelName = `messaging-realtime-${Date.now()}`;
@@ -628,23 +622,30 @@ export const useMessaging = () => {
           table: 'messaging_messages'
         },
         (payload) => {
-          console.log('📨 New message received:', payload.new);
           const newMessage = payload.new as Message;
-          // Update local state immediately
-          setMessages(prev => ({
-            ...prev,
-            [newMessage.channel_id]: [...(prev[newMessage.channel_id] || []), newMessage]
-          }));
-          
-          // Update channel's updated_at for proper ordering
-          setChannels(prev => prev.map(ch => 
-            ch.id === newMessage.channel_id 
+
+          // De-dupe by message id and append
+          setMessages(prev => {
+            const existing = prev[newMessage.channel_id] || [];
+            if (existing.some(m => m.id === newMessage.id)) return prev;
+            return {
+              ...prev,
+              [newMessage.channel_id]: [...existing, newMessage]
+            };
+          });
+
+          // Notify only for messages from others
+          if (newMessage.user_id !== user!.id) {
+            const preview = newMessage.content?.slice(0, 120) || 'Nouveau message';
+            toast.info('Nouveau message', { description: preview });
+          }
+
+          // Update channel ordering timestamp locally
+          setChannels(prev => prev.map(ch =>
+            ch.id === newMessage.channel_id
               ? { ...ch, updated_at: newMessage.created_at }
               : ch
           ));
-
-          // Ensure full thread is loaded on receivers (avoids missing history)
-          fetchMessages(newMessage.channel_id);
         }
       )
       .on(

@@ -8,7 +8,8 @@ import { SyncManager } from '@/components/SyncManager';
 import { EmailProviderConfig } from '@/components/email/EmailProviderConfig';
 import { EmailAnalytics } from '@/components/EmailAnalytics';
 import { EmailSender } from '@/components/EmailSender';
-import { Settings, Inbox, Gauge, RefreshCw, TrendingUp, Send, Mail } from 'lucide-react';
+import { EmailTemplateManager } from '@/components/email/EmailTemplateManager';
+import { Settings, Inbox, Gauge, RefreshCw, TrendingUp, Send, Mail, FileText } from 'lucide-react';
 
 const Email: React.FC = () => {
   const [activeTab, setActiveTab] = useState('inbox');
@@ -28,7 +29,7 @@ const Email: React.FC = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="inbox" className="flex items-center gap-2">
             <Inbox className="h-4 w-4" />
             Boîte
@@ -48,6 +49,10 @@ const Email: React.FC = () => {
           <TabsTrigger value="diagnostic" className="flex items-center gap-2">
             <Gauge className="h-4 w-4" />
             Diagnostic
+          </TabsTrigger>
+          <TabsTrigger value="templates" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Modèles
           </TabsTrigger>
           <TabsTrigger value="config" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
@@ -103,6 +108,18 @@ const Email: React.FC = () => {
 
         <TabsContent value="diagnostic" className="space-y-6">
           <EmailDiagnostic />
+        </TabsContent>
+
+        <TabsContent value="templates" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Modèles d'email</CardTitle>
+              <CardDescription>Créez, gérez et réutilisez vos modèles</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <EmailTemplateManager />
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="config" className="space-y-6">

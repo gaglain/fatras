@@ -107,11 +107,13 @@ export const ChatWidget: React.FC = () => {
     }
   };
 
-  // Count unread messages across all channels
+  // Count unread messages using last_read_at per channel member
   const totalUnreadCount = channels.reduce((total, channel) => {
     const channelMessages = messages[channel.id] || [];
-    const unreadCount = channelMessages.filter(msg => 
-      msg.user_id !== user?.id && !msg.metadata?.read_by?.includes(user?.id)
+    const myMember = channel.members?.find(m => m.user_id === user?.id);
+    const lastRead = myMember?.last_read_at ? new Date(myMember.last_read_at).getTime() : 0;
+    const unreadCount = channelMessages.filter(msg =>
+      msg.user_id !== user?.id && new Date(msg.created_at).getTime() > lastRead
     ).length;
     return total + unreadCount;
   }, 0);
