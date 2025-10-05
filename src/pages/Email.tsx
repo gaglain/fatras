@@ -22,6 +22,7 @@ import { UnifiedEmailManager } from '@/components/UnifiedEmailManager';
 import { UnifiedEmailInterface } from '@/components/email/UnifiedEmailInterface';
 import { EmailNotificationCenter } from '@/components/EmailNotificationCenter';
 import { EmailTemplateComposer } from '@/components/email/EmailTemplateComposer';
+import { EmailTemplateManager } from '@/components/email/EmailTemplateManager';
 import { SyncManager } from '@/components/SyncManager';
 import { toast } from 'sonner';
 import { useEmailSender } from '@/hooks/useEmailSender';
@@ -166,6 +167,7 @@ export const Email: React.FC = () => {
   const [showUnifiedEmails, setShowUnifiedEmails] = useState(false);
   const [showSync, setShowSync] = useState(false);
   const [showEmailDiagnostic, setShowEmailDiagnostic] = useState(false);
+  const [activeTab, setActiveTab] = useState('inbox');
   const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -681,8 +683,37 @@ export const Email: React.FC = () => {
         </div>
       </div>
 
-      {/* Enhanced Email Dashboard */}
+      {/* Enhanced Email Dashboard with Tabs */}
       <div className="max-w-7xl mx-auto p-6 space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full max-w-3xl grid-cols-6 mb-6">
+            <TabsTrigger value="inbox">
+              <Inbox className="h-4 w-4 mr-2" />
+              Boîte
+            </TabsTrigger>
+            <TabsTrigger value="send">
+              <Send className="h-4 w-4 mr-2" />
+              Envoyer
+            </TabsTrigger>
+            <TabsTrigger value="sync">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Sync
+            </TabsTrigger>
+            <TabsTrigger value="analytics">
+              <TrendingUp className="h-4 w-4 mr-2" />
+              Analytics
+            </TabsTrigger>
+            <TabsTrigger value="diagnostic">
+              <AlertCircle className="h-4 w-4 mr-2" />
+              Diagnostic
+            </TabsTrigger>
+            <TabsTrigger value="templates">
+              <FileText className="h-4 w-4 mr-2" />
+              Modèles
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="inbox" className="space-y-4">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Main Email List */}
           <div className="lg:col-span-3">
@@ -863,6 +894,28 @@ export const Email: React.FC = () => {
             </Card>
           </div>
         </div>
+          </TabsContent>
+
+          <TabsContent value="send" className="space-y-4">
+            <EmailTemplateComposer />
+          </TabsContent>
+
+          <TabsContent value="sync" className="space-y-4">
+            <SyncManager />
+          </TabsContent>
+
+          <TabsContent value="analytics" className="space-y-4">
+            <EmailAnalytics />
+          </TabsContent>
+
+          <TabsContent value="diagnostic" className="space-y-4">
+            <EmailDiagnostic />
+          </TabsContent>
+
+          <TabsContent value="templates" className="space-y-4">
+            <EmailTemplateManager />
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Scheduled Emails */}
