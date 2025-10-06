@@ -9,6 +9,7 @@ import { EmailProviderConfig } from '@/components/email/EmailProviderConfig';
 import { EmailAnalytics } from '@/components/EmailAnalytics';
 import { EmailSender } from '@/components/EmailSender';
 import { EmailTemplateManager } from '@/components/email/EmailTemplateManager';
+import { EmailTemplateComposer } from '@/components/email/EmailTemplateComposer';
 import { Settings, Inbox, Gauge, RefreshCw, TrendingUp, Send, Mail, FileText } from 'lucide-react';
 
 const Email: React.FC = () => {
@@ -83,7 +84,7 @@ const Email: React.FC = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <EmailSender />
+              <EmailTemplateComposer />
             </CardContent>
           </Card>
         </TabsContent>

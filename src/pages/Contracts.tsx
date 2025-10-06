@@ -173,8 +173,10 @@ export const Contracts: React.FC = () => {
         toast.success('Devis créé avec succès');
       }
       resetForm();
-    } catch (error) {
-      toast.error('Erreur lors de la sauvegarde');
+    } catch (error: any) {
+      console.error('Erreur lors de la sauvegarde du devis:', error);
+      const message = error?.message || (typeof error === 'string' ? error : 'Erreur lors de la sauvegarde');
+      toast.error(message);
     }
   };
 
