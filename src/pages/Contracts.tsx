@@ -477,24 +477,34 @@ export const Contracts: React.FC = () => {
                 ))}
               </div>
 
-              {/* Totaux */}
-              <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span>Sous-total:</span>
-                    <span>{calculateTotal().toFixed(2)} €</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>TVA (20%):</span>
-                    <span>{calculateTax(calculateTotal()).toFixed(2)} €</span>
-                  </div>
-                  <div className="flex justify-between text-lg font-bold border-t pt-2">
-                    <span>Total TTC:</span>
-                    <span>{(calculateTotal() + calculateTax(calculateTotal())).toFixed(2)} €</span>
+              {/* Totaux - seulement lors de la création */}
+              {!editingQuote && (
+                <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span>Sous-total:</span>
+                      <span>{calculateTotal().toFixed(2)} €</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>TVA (20%):</span>
+                      <span>{calculateTax(calculateTotal()).toFixed(2)} €</span>
+                    </div>
+                    <div className="flex justify-between text-lg font-bold border-t pt-2">
+                      <span>Total TTC:</span>
+                      <span>{(calculateTotal() + calculateTax(calculateTotal())).toFixed(2)} €</span>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
+
+            {/* QuoteItemManager - visible seulement lors de l'édition pour gérer les lignes */}
+            {editingQuote && (
+              <QuoteItemManager 
+                quoteId={editingQuote.id} 
+                quote={editingQuote}
+              />
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
