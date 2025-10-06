@@ -94,7 +94,7 @@ export const PublicationCalendar: React.FC = () => {
         content: formData.content,
         scheduled_date: formData.scheduled_date,
         platform: formData.platform,
-        assigned_to: formData.assigned_to || '',
+        assigned_to: formData.assigned_to || null,
         assigned_username: assignedProfile?.username || '',
         media_url: formData.media_url || '',
         media_type: formData.media_type || 'image' as const,
