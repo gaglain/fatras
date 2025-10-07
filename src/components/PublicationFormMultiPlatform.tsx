@@ -62,7 +62,7 @@ export const PublicationFormMultiPlatform: React.FC<PublicationFormMultiPlatform
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && Object.keys(initialData).length > 0) {
       setFormData({
         title: initialData.title || '',
         content: initialData.content || '',

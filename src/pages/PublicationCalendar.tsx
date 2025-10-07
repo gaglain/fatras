@@ -33,6 +33,41 @@ export const PublicationCalendar: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [realPublications, setRealPublications] = useState<Publication[]>([]);
 
+  // Charger les données sauvegardées au démarrage
+  const loadSavedFormData = () => {
+    const saved = localStorage.getItem('publication_draft');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error('Erreur lors du chargement du brouillon:', e);
+      }
+    }
+    return {
+      title: '',
+      content: '',
+      scheduled_date: '',
+      platforms: [] as string[],
+      assigned_to: '',
+      media_url: '',
+      media_type: 'image' as 'image' | 'video',
+      external_link: ''
+    };
+  };
+
+  const [formData, setFormData] = useState(loadSavedFormData);
+
+  // Sauvegarder automatiquement les modifications
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (formData.title || formData.content) {
+        localStorage.setItem('publication_draft', JSON.stringify(formData));
+      }
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [formData]);
+
   // Charger les publications depuis Supabase
   useEffect(() => {
     if (!currentUser) return;
@@ -170,8 +205,12 @@ export const PublicationCalendar: React.FC = () => {
         : `${platforms.length} publication(s) créée(s) avec succès`
       );
 
+      // Effacer le brouillon après création réussie
+      localStorage.removeItem('publication_draft');
+      
       setEditingPublication(null);
       setShowForm(false);
+      setFormData(loadSavedFormData());
       console.log('✅ Publication operation completed successfully');
     } catch (error) {
       console.error('❌ Error in handleFormSubmit:', error);
@@ -463,7 +502,16 @@ export const PublicationCalendar: React.FC = () => {
           setEditingPublication(null);
         }}
         onSubmit={handleFormSubmit}
-        initialData={editingPublication || {}}
+        initialData={editingPublication ? {
+          title: editingPublication.title,
+          content: editingPublication.content,
+          scheduled_date: editingPublication.scheduled_date,
+          platforms: [editingPublication.platform],
+          assigned_to: editingPublication.assigned_to,
+          media_url: editingPublication.media_url,
+          media_type: editingPublication.media_type,
+          external_link: editingPublication.external_link
+        } : formData}
         userProfiles={users.map(u => ({ 
           user_id: u.user_id, 
           username: u.username || u.email, 
