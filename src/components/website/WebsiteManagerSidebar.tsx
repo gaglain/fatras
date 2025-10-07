@@ -87,6 +87,14 @@ export const WebsiteManagerSidebar: React.FC = () => {
         <Button
           variant="outline"
           className="w-full justify-start"
+          onClick={() => navigate('/dashboard')}
+        >
+          <Home className="h-4 w-4 mr-2" />
+          Dashboard
+        </Button>
+        <Button
+          variant="outline"
+          className="w-full justify-start"
           onClick={handlePreviewSite}
         >
           <Eye className="h-4 w-4 mr-2" />

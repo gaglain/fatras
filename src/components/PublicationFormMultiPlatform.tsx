@@ -34,7 +34,6 @@ interface PublicationFormMultiPlatformProps {
 const platforms = [
   { value: 'facebook', label: 'Facebook', color: 'bg-blue-600' },
   { value: 'instagram', label: 'Instagram', color: 'bg-pink-600' },
-  { value: 'twitter', label: 'X (Twitter)', color: 'bg-black' },
   { value: 'linkedin', label: 'LinkedIn', color: 'bg-blue-700' },
   { value: 'youtube', label: 'YouTube', color: 'bg-red-600' },
   { value: 'tiktok', label: 'TikTok', color: 'bg-black' }

@@ -89,55 +89,86 @@ export const PublicationCalendar: React.FC = () => {
       const assignedProfile = users.find(p => p.user_id === formData.assigned_to);
       console.log('👤 Assigned profile found:', assignedProfile);
 
-      const publicationData = {
-        title: formData.title,
-        content: formData.content,
-        scheduled_date: formData.scheduled_date,
-        platform: formData.platform,
-        assigned_to: formData.assigned_to || null,
-        assigned_username: assignedProfile?.username || '',
-        media_url: formData.media_url || '',
-        media_type: formData.media_type || 'image' as const,
-        external_link: formData.external_link || '',
-        status: editingPublication?.status || 'draft' as const,
-        created_by: currentUser.id,
-        user_id: currentUser.id
-      };
-
-      if (editingPublication) {
-        // Mise à jour dans Supabase
-        const { error } = await supabase
-          .from('publications')
-          .update(publicationData)
-          .eq('id', editingPublication.id)
-          .eq('user_id', currentUser.id);
-
-        if (error) throw error;
-        
-        // Mettre à jour la liste locale
-        setRealPublications(prev => prev.map(pub => 
-          pub.id === editingPublication.id ? { ...pub, ...publicationData } : pub
-        ));
-        toast.success('Publication modifiée avec succès');
-      } else {
-        // Création dans Supabase
-        const { error } = await supabase
-          .from('publications')
-          .insert(publicationData);
-
-        if (error) throw error;
-        
-        // Ajouter à la liste locale
-        const newPublication: Publication = {
-          id: new Date().getTime().toString(),
-          ...publicationData,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          comments: []
-        };
-        setRealPublications(prev => [newPublication, ...prev]);
-        toast.success('Publication créée avec succès');
+      // Créer une publication pour chaque plateforme sélectionnée
+      const platforms = formData.platforms || [];
+      
+      if (platforms.length === 0) {
+        toast.error('Veuillez sélectionner au moins une plateforme');
+        setIsLoading(false);
+        return;
       }
+
+      const publicationPromises = platforms.map((platform: string) => {
+        const publicationData = {
+          title: formData.title,
+          content: formData.content,
+          scheduled_date: formData.scheduled_date,
+          platform: platform,
+          assigned_to: formData.assigned_to || null,
+          assigned_username: assignedProfile?.username || '',
+          media_url: formData.media_url || '',
+          media_type: formData.media_type || 'image' as const,
+          external_link: formData.external_link || '',
+          status: editingPublication?.status || 'draft' as const,
+          created_by: currentUser.id,
+          user_id: currentUser.id
+        };
+
+        if (editingPublication) {
+          return supabase
+            .from('publications')
+            .update(publicationData)
+            .eq('id', editingPublication.id)
+            .eq('user_id', currentUser.id);
+        } else {
+          return supabase
+            .from('publications')
+            .insert(publicationData);
+        }
+      });
+
+      // Exécuter toutes les insertions/mises à jour
+      const results = await Promise.all(publicationPromises);
+      
+      // Vérifier les erreurs
+      const errors = results.filter(r => r.error);
+      if (errors.length > 0) {
+        throw errors[0].error;
+      }
+
+      // Recharger les publications
+      const { data, error } = await supabase
+        .from('publications')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .order('created_at', { ascending: false });
+
+      if (!error && data) {
+        const formattedPublications: Publication[] = data.map(pub => ({
+          id: pub.id,
+          title: pub.title,
+          content: pub.content,
+          scheduled_date: pub.scheduled_date,
+          platform: pub.platform,
+          assigned_to: pub.assigned_to || '',
+          assigned_username: pub.assigned_username || '',
+          media_url: pub.media_url || '',
+          media_type: (pub.media_type === 'gif' ? 'image' : pub.media_type) as 'image' | 'video',
+          external_link: pub.external_link || '',
+          status: pub.status as 'draft' | 'scheduled' | 'published' | 'pending_approval',
+          created_by: pub.created_by || currentUser.id,
+          user_id: pub.user_id,
+          created_at: pub.created_at,
+          updated_at: pub.updated_at,
+          comments: []
+        }));
+        setRealPublications(formattedPublications);
+      }
+
+      toast.success(editingPublication 
+        ? 'Publication modifiée avec succès' 
+        : `${platforms.length} publication(s) créée(s) avec succès`
+      );
 
       setEditingPublication(null);
       setShowForm(false);
