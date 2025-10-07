@@ -279,6 +279,7 @@ export const PublicationFormMultiPlatform: React.FC<PublicationFormMultiPlatform
                 <SelectValue placeholder="Choisir un utilisateur" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="">Non assigné</SelectItem>
                 {userProfiles.length === 0 ? (
                   <SelectItem value="no-users" disabled>
                     Aucun utilisateur disponible
@@ -286,7 +287,7 @@ export const PublicationFormMultiPlatform: React.FC<PublicationFormMultiPlatform
                 ) : (
                   userProfiles.map((profile) => (
                     <SelectItem key={profile.user_id} value={profile.user_id}>
-                      @{profile.username} ({profile.first_name} {profile.last_name})
+                      {profile.username || `${profile.first_name} ${profile.last_name}`.trim()}
                     </SelectItem>
                   ))
                 )}
