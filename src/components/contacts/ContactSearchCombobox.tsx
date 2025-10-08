@@ -18,10 +18,19 @@ export const ContactSearchCombobox: React.FC<ContactSearchComboboxProps> = ({
   placeholder = "Sélectionner un contact..."
 }) => {
   const [open, setOpen] = React.useState(false);
-  const { contacts } = useContacts();
+  const { contacts, loading } = useContacts();
 
-  const contactsList = contacts || [];
+  const contactsList = Array.isArray(contacts) ? contacts : [];
   const selectedContact = contactsList.find(c => c.id === value);
+
+  if (loading) {
+    return (
+      <Button variant="outline" disabled className="w-full justify-between">
+        Chargement...
+        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+      </Button>
+    );
+  }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

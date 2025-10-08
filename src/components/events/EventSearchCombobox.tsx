@@ -18,10 +18,19 @@ export const EventSearchCombobox: React.FC<EventSearchComboboxProps> = ({
   placeholder = "Sélectionner un événement..."
 }) => {
   const [open, setOpen] = React.useState(false);
-  const { events } = useEvents();
+  const { events, loading } = useEvents();
 
-  const eventsList = events || [];
+  const eventsList = Array.isArray(events) ? events : [];
   const selectedEvent = eventsList.find(e => e.id === value);
+
+  if (loading) {
+    return (
+      <Button variant="outline" disabled className="w-full justify-between">
+        Chargement...
+        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+      </Button>
+    );
+  }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
