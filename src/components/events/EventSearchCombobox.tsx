@@ -20,7 +20,8 @@ export const EventSearchCombobox: React.FC<EventSearchComboboxProps> = ({
   const [open, setOpen] = React.useState(false);
   const { events } = useEvents();
 
-  const selectedEvent = events.find(e => e.id === value);
+  const eventsList = events || [];
+  const selectedEvent = eventsList.find(e => e.id === value);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -55,7 +56,7 @@ export const EventSearchCombobox: React.FC<EventSearchComboboxProps> = ({
               />
               Aucun événement
             </CommandItem>
-            {events.map((event) => (
+            {eventsList.map((event) => (
               <CommandItem
                 key={event.id}
                 value={`${event.title} ${event.venue || ''} ${event.city || ''}`}

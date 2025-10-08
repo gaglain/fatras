@@ -20,7 +20,8 @@ export const ContactSearchCombobox: React.FC<ContactSearchComboboxProps> = ({
   const [open, setOpen] = React.useState(false);
   const { contacts } = useContacts();
 
-  const selectedContact = contacts.find(c => c.id === value);
+  const contactsList = contacts || [];
+  const selectedContact = contactsList.find(c => c.id === value);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -57,7 +58,7 @@ export const ContactSearchCombobox: React.FC<ContactSearchComboboxProps> = ({
               />
               Aucun contact
             </CommandItem>
-            {contacts.map((contact) => (
+            {contactsList.map((contact) => (
               <CommandItem
                 key={contact.id}
                 value={`${contact.first_name} ${contact.last_name} ${contact.email}`}
