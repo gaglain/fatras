@@ -13,6 +13,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useContacts } from '@/hooks/useContacts';
 import { useEvents } from '@/hooks/useEvents';
+import { ContactSearchCombobox } from '@/components/contacts/ContactSearchCombobox';
+import { EventSearchCombobox } from '@/components/events/EventSearchCombobox';
 import { useTasks } from '@/hooks/useTasks';
 import { useCentralizedData } from '@/hooks/useCentralizedData';
 
@@ -655,42 +657,20 @@ setNewOpportunity({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-1">Contact associé</label>
-                    <Select
+                    <ContactSearchCombobox
                       value={newOpportunity.contact_id}
-                      onValueChange={(value) => setNewOpportunity({ ...newOpportunity, contact_id: value === "none" ? "" : value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner un contact" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Aucun contact</SelectItem>
-                        {contacts.map((contact) => (
-                          <SelectItem key={contact.id} value={contact.id}>
-                            {contact.first_name} {contact.last_name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      onValueChange={(value) => setNewOpportunity({ ...newOpportunity, contact_id: value })}
+                      placeholder="Rechercher un contact..."
+                    />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium mb-1">Événement associé</label>
-                    <Select
+                    <EventSearchCombobox
                       value={newOpportunity.event_id}
-                      onValueChange={(value) => setNewOpportunity({ ...newOpportunity, event_id: value === "none" ? "" : value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner un événement" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Aucun événement</SelectItem>
-                        {events.map((event) => (
-                          <SelectItem key={event.id} value={event.id}>
-                            {event.title}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      onValueChange={(value) => setNewOpportunity({ ...newOpportunity, event_id: value })}
+                      placeholder="Rechercher un événement..."
+                    />
                   </div>
 
                    <div>
