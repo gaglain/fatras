@@ -1,5 +1,5 @@
 import React from 'react';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Check, ChevronsUpDown } from 'lucide-react';
@@ -48,49 +48,51 @@ export const EventSearchCombobox: React.FC<EventSearchComboboxProps> = ({
       <PopoverContent className="w-full p-0">
         <Command>
           <CommandInput placeholder="Rechercher un événement..." />
-          <CommandEmpty>Aucun événement trouvé.</CommandEmpty>
-          <CommandGroup className="max-h-64 overflow-auto">
-            <CommandItem
-              value=""
-              onSelect={() => {
-                onValueChange("");
-                setOpen(false);
-              }}
-            >
-              <Check
-                className={cn(
-                  "mr-2 h-4 w-4",
-                  !value ? "opacity-100" : "opacity-0"
-                )}
-              />
-              Aucun événement
-            </CommandItem>
-            {eventsList.map((event) => (
+          <CommandList>
+            <CommandEmpty>Aucun événement trouvé.</CommandEmpty>
+            <CommandGroup className="max-h-64 overflow-auto">
               <CommandItem
-                key={event.id}
-                value={`${event.title} ${event.venue || ''} ${event.city || ''}`}
+                value=""
                 onSelect={() => {
-                  onValueChange(event.id);
+                  onValueChange("");
                   setOpen(false);
                 }}
               >
                 <Check
                   className={cn(
                     "mr-2 h-4 w-4",
-                    value === event.id ? "opacity-100" : "opacity-0"
+                    !value ? "opacity-100" : "opacity-0"
                   )}
                 />
-                <div className="flex flex-col">
-                  <span>{event.title}</span>
-                  {(event.venue || event.city) && (
-                    <span className="text-xs text-muted-foreground">
-                      {[event.venue, event.city].filter(Boolean).join(' - ')}
-                    </span>
-                  )}
-                </div>
+                Aucun événement
               </CommandItem>
-            ))}
-          </CommandGroup>
+              {eventsList.map((event) => (
+                <CommandItem
+                  key={event.id}
+                  value={`${event.title} ${event.venue || ''} ${event.city || ''}`}
+                  onSelect={() => {
+                    onValueChange(event.id);
+                    setOpen(false);
+                  }}
+                >
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      value === event.id ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                  <div className="flex flex-col">
+                    <span>{event.title}</span>
+                    {(event.venue || event.city) && (
+                      <span className="text-xs text-muted-foreground">
+                        {[event.venue, event.city].filter(Boolean).join(' - ')}
+                      </span>
+                    )}
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
         </Command>
       </PopoverContent>
     </Popover>
