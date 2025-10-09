@@ -47,11 +47,6 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
     }
   }, [isOpen]);
 
-  React.useEffect(() => {
-    if (accounts.length > 0 && !selectedAccountId) {
-      setSelectedAccountId(accounts[0].id);
-    }
-  }, [accounts, selectedAccountId]);
 
   const handleSend = async () => {
     if (!to || !emailSubject || !content) {
