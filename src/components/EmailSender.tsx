@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { RichTextEditor } from '@/components/RichTextEditor';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Send, Plus, X } from 'lucide-react';
+import { Send, Plus, X, Paperclip } from 'lucide-react';
 
 interface EmailRecipient {
   email: string;
@@ -19,6 +19,8 @@ export const EmailSender: React.FC = () => {
   const [subject, setSubject] = useState('');
   const [content, setContent] = useState('');
   const [sending, setSending] = useState(false);
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const [uploading, setUploading] = useState(false);
 
   const addRecipient = () => {
     setRecipients([...recipients, { email: '', name: '' }]);
@@ -34,6 +36,17 @@ export const EmailSender: React.FC = () => {
     const updatedRecipients = [...recipients];
     updatedRecipients[index] = { ...updatedRecipients[index], [field]: value };
     setRecipients(updatedRecipients);
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    const newFiles = Array.from(files);
+    setAttachments(prev => [...prev, ...newFiles]);
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSend = async () => {
@@ -60,6 +73,27 @@ export const EmailSender: React.FC = () => {
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
+
+      // Upload attachments to Supabase Storage if any
+      setUploading(true);
+      const attachmentUrls: Array<{name: string; url: string}> = [];
+      if (attachments.length > 0) {
+        for (const file of attachments) {
+          const fileName = `${Date.now()}-${file.name}`;
+          const { data, error } = await supabase.storage
+            .from('email-attachments')
+            .upload(fileName, file);
+
+          if (error) throw error;
+
+          const { data: { publicUrl } } = supabase.storage
+            .from('email-attachments')
+            .getPublicUrl(fileName);
+
+          attachmentUrls.push({ name: file.name, url: publicUrl });
+        }
+      }
+      setUploading(false);
 
       // Create email record
       const { data: emailData, error: emailError } = await supabase
@@ -96,12 +130,14 @@ export const EmailSender: React.FC = () => {
       setRecipients([{ email: '', name: '' }]);
       setSubject('');
       setContent('');
+      setAttachments([]);
 
     } catch (error: any) {
       console.error('Error sending email:', error);
       toast.error('Erreur lors de l\'envoi: ' + error.message);
     } finally {
       setSending(false);
+      setUploading(false);
     }
   };
 
@@ -190,11 +226,52 @@ export const EmailSender: React.FC = () => {
           />
         </div>
 
+        {/* Pièces jointes */}
+        <div>
+          <Label htmlFor="attachments">Pièces jointes</Label>
+          <div className="space-y-2">
+            <input
+              id="attachments"
+              type="file"
+              multiple
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => document.getElementById('attachments')?.click()}
+              className="w-full"
+            >
+              <Paperclip className="h-4 w-4 mr-2" />
+              Ajouter des pièces jointes
+            </Button>
+            
+            {attachments.length > 0 && (
+              <div className="space-y-1">
+                {attachments.map((file, index) => (
+                  <div key={index} className="flex items-center justify-between p-2 bg-accent/50 rounded-md">
+                    <span className="text-sm truncate flex-1">{file.name}</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeAttachment(index)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Send Button */}
         <div className="flex justify-end">
-          <Button onClick={handleSend} disabled={sending}>
+          <Button onClick={handleSend} disabled={sending || uploading}>
             <Send className="h-4 w-4 mr-2" />
-            {sending ? 'Envoi...' : 'Envoyer l\'email'}
+            {uploading ? 'Téléchargement...' : sending ? 'Envoi...' : 'Envoyer l\'email'}
           </Button>
         </div>
       </CardContent>

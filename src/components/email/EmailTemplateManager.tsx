@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditor } from '@/components/RichTextEditor';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
@@ -147,13 +147,11 @@ export const EmailTemplateManager: React.FC = () => {
 
               <div>
                 <Label htmlFor="content">Contenu *</Label>
-                <Textarea
-                  id="content"
+                <RichTextEditor
                   value={formData.content}
-                  onChange={(e) => handleContentChange(e.target.value)}
+                  onChange={handleContentChange}
                   placeholder="Bonjour {{contact_name}},&#10;&#10;Votre message ici...&#10;&#10;Cordialement,&#10;{{user_name}}"
-                  rows={12}
-                  className="min-h-[200px]"
+                  className="min-h-[300px]"
                 />
               </div>
 
@@ -278,12 +276,10 @@ export const EmailTemplateManager: React.FC = () => {
 
             <div>
               <Label htmlFor="edit-content">Contenu *</Label>
-              <Textarea
-                id="edit-content"
+              <RichTextEditor
                 value={formData.content}
-                onChange={(e) => handleContentChange(e.target.value)}
-                rows={12}
-                className="min-h-[200px]"
+                onChange={handleContentChange}
+                className="min-h-[300px]"
               />
             </div>
 

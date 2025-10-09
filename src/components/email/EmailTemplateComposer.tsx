@@ -3,11 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditor } from '@/components/RichTextEditor';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Mail, Send, FileText, X } from 'lucide-react';
+import { Mail, Send, FileText, X, Paperclip } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { useEmailSender } from '@/hooks/useEmailSender';
 import { useNylasEmail } from '@/hooks/useNylasEmail';
 import { useAuth } from '@/hooks/useAuth';
@@ -46,6 +47,8 @@ export const EmailTemplateComposer: React.FC<EmailTemplateComposerProps> = ({
   const [content, setContent] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
   const [showTemplates, setShowTemplates] = useState(false);
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const [uploading, setUploading] = useState(false);
 
   React.useEffect(() => {
     loadAccounts();
@@ -71,6 +74,17 @@ export const EmailTemplateComposer: React.FC<EmailTemplateComposerProps> = ({
     toast.success(`Modèle "${template.name}" appliqué`);
   };
 
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    const newFiles = Array.from(files);
+    setAttachments(prev => [...prev, ...newFiles]);
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleSend = async () => {
     if (!to || !subject || !content) {
       toast.error('Veuillez remplir tous les champs obligatoires');
@@ -78,11 +92,31 @@ export const EmailTemplateComposer: React.FC<EmailTemplateComposerProps> = ({
     }
 
     try {
+      setUploading(true);
       const htmlContent = `
         <div style="font-family: Arial, sans-serif; line-height: 1.6;">
           ${content.replace(/\n/g, '<br>')}
         </div>
       `;
+
+      // Upload attachments to Supabase Storage if any
+      const attachmentUrls: Array<{name: string; url: string}> = [];
+      if (attachments.length > 0) {
+        for (const file of attachments) {
+          const fileName = `${Date.now()}-${file.name}`;
+          const { data, error } = await supabase.storage
+            .from('email-attachments')
+            .upload(fileName, file);
+
+          if (error) throw error;
+
+          const { data: { publicUrl } } = supabase.storage
+            .from('email-attachments')
+            .getPublicUrl(fileName);
+
+          attachmentUrls.push({ name: file.name, url: publicUrl });
+        }
+      }
 
       if (selectedAccount) {
         await sendViaNylas(selectedAccount, {
@@ -108,9 +142,12 @@ export const EmailTemplateComposer: React.FC<EmailTemplateComposerProps> = ({
       setContent('');
       setSelectedTemplate(null);
       setFromName('');
+      setAttachments([]);
     } catch (error) {
       console.error('Erreur envoi email:', error);
       toast.error('Erreur lors de l\'envoi de l\'email');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -240,14 +277,11 @@ export const EmailTemplateComposer: React.FC<EmailTemplateComposerProps> = ({
         {/* Contenu */}
         <div>
           <Label htmlFor="content">Message *</Label>
-          <Textarea
-            id="content"
+          <RichTextEditor
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={setContent}
             placeholder="Votre message..."
-            rows={12}
-            className="min-h-[200px]"
-            required
+            className="min-h-[300px]"
           />
         </div>
 
@@ -268,15 +302,56 @@ export const EmailTemplateComposer: React.FC<EmailTemplateComposerProps> = ({
           </div>
         )}
 
+        {/* Pièces jointes */}
+        <div>
+          <Label htmlFor="attachments">Pièces jointes</Label>
+          <div className="space-y-2">
+            <input
+              id="attachments"
+              type="file"
+              multiple
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => document.getElementById('attachments')?.click()}
+              className="w-full"
+            >
+              <Paperclip className="h-4 w-4 mr-2" />
+              Ajouter des pièces jointes
+            </Button>
+            
+            {attachments.length > 0 && (
+              <div className="space-y-1">
+                {attachments.map((file, index) => (
+                  <div key={index} className="flex items-center justify-between p-2 bg-accent/50 rounded-md">
+                    <span className="text-sm truncate flex-1">{file.name}</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeAttachment(index)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Bouton d'envoi */}
         <div className="flex justify-end">
           <Button 
             onClick={handleSend}
-            disabled={sending || !to || !subject || !content}
+            disabled={sending || uploading || !to || !subject || !content}
             className="flex items-center gap-2"
           >
             <Send className="h-4 w-4" />
-            {sending ? 'Envoi...' : 'Envoyer'}
+            {uploading ? 'Téléchargement...' : sending ? 'Envoi...' : 'Envoyer'}
           </Button>
         </div>
       </CardContent>
