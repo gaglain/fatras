@@ -3,14 +3,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Mail, X } from 'lucide-react';
-import { useEmailSender } from '@/hooks/useEmailSender';
+import { Mail, X, Paperclip } from 'lucide-react';
+import { RichTextEditor } from '@/components/RichTextEditor';
 import { generateEmailSignature } from '@/utils/emailSignature';
 import { useUser } from '@/contexts/UserContext';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useNylasEmail } from '@/hooks/useNylasEmail';
+import { supabase } from '@/integrations/supabase/client';
 
 interface EmailComposerProps {
   isOpen: boolean;
@@ -28,12 +28,14 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
   preText = ''
 }) => {
   const { currentUser } = useUser();
-  const { sendEmail, sending } = useEmailSender();
   const { accounts, loadAccounts, sendEmail: sendViaNylas } = useNylasEmail();
   const [to, setTo] = useState(toEmail);
   const [emailSubject, setEmailSubject] = useState(subject);
   const [content, setContent] = useState(preText);
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [sending, setSending] = useState(false);
 
   React.useEffect(() => {
     setTo(toEmail);
@@ -47,6 +49,23 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
     }
   }, [isOpen]);
 
+  React.useEffect(() => {
+    if (accounts.length > 0 && !selectedAccountId) {
+      setSelectedAccountId(accounts[0].id);
+    }
+  }, [accounts, selectedAccountId]);
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    const newFiles = Array.from(files);
+    setAttachments(prev => [...prev, ...newFiles]);
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments(prev => prev.filter((_, i) => i !== index));
+  };
 
   const handleSend = async () => {
     if (!to || !emailSubject || !content) {
@@ -54,39 +73,61 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
       return;
     }
 
+    if (!selectedAccountId) {
+      toast.error('Veuillez sélectionner un compte d\'envoi');
+      return;
+    }
+
     try {
+      setSending(true);
       const signature = generateEmailSignature(currentUser);
       const htmlContent = `
         <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-          ${content.replace(/\n/g, '<br>')}
+          ${content}
           ${signature}
         </div>
       `;
 
-      if (selectedAccountId) {
-        await sendViaNylas(selectedAccountId, {
-          to,
-          subject: emailSubject,
-          content,
-          html: htmlContent,
-        });
-      } else {
-        await sendEmail({
-          to: [to],
-          subject: emailSubject,
-          html: htmlContent,
-          from: currentUser?.email || 'noreply@example.com'
-        });
+      // Upload attachments to Supabase Storage if any
+      const attachmentUrls: Array<{name: string; url: string}> = [];
+      if (attachments.length > 0) {
+        setUploading(true);
+        for (const file of attachments) {
+          const fileName = `${Date.now()}-${file.name}`;
+          const { data, error } = await supabase.storage
+            .from('email-attachments')
+            .upload(fileName, file);
+
+          if (error) throw error;
+
+          const { data: { publicUrl } } = supabase.storage
+            .from('email-attachments')
+            .getPublicUrl(fileName);
+
+          attachmentUrls.push({ name: file.name, url: publicUrl });
+        }
+        setUploading(false);
       }
+
+      await sendViaNylas(selectedAccountId, {
+        to,
+        subject: emailSubject,
+        content,
+        html: htmlContent,
+      });
 
       toast.success('Email envoyé avec succès');
       onClose();
       setTo('');
       setEmailSubject('');
       setContent('');
+      setAttachments([]);
     } catch (error) {
       console.error('Erreur envoi email:', error);
       toast.error('Erreur lors de l\'envoi de l\'email');
+    } finally {
+      setSending(false);
+      setUploading(false);
     }
   };
 
@@ -101,9 +142,15 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
         </DialogHeader>
 
         <div className="space-y-4">
-          {accounts.length > 0 && (
+          {accounts.length === 0 ? (
+            <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+              <p className="text-sm text-destructive">
+                Aucun compte email Nylas configuré. Veuillez configurer un compte dans les préférences.
+              </p>
+            </div>
+          ) : (
             <div>
-              <Label htmlFor="from">Envoyer depuis</Label>
+              <Label htmlFor="from">Envoyer depuis *</Label>
               <Select value={selectedAccountId ?? ''} onValueChange={(v) => setSelectedAccountId(v)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Choisir un compte d'envoi" />
@@ -118,6 +165,7 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
               </Select>
             </div>
           )}
+          
           <div>
             <Label htmlFor="to">Destinataire *</Label>
             <Input
@@ -143,15 +191,52 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
 
           <div>
             <Label htmlFor="content">Message *</Label>
-            <Textarea
-              id="content"
+            <RichTextEditor
               value={content}
-              onChange={(e) => setContent(e.target.value)}
+              onChange={setContent}
               placeholder="Votre message..."
-              rows={10}
-              className="min-h-[200px]"
-              required
+              className="min-h-[300px]"
             />
+          </div>
+
+          <div>
+            <Label htmlFor="attachments">Pièces jointes</Label>
+            <div className="space-y-2">
+              <input
+                id="attachments"
+                type="file"
+                multiple
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => document.getElementById('attachments')?.click()}
+                className="w-full"
+              >
+                <Paperclip className="h-4 w-4 mr-2" />
+                Ajouter des pièces jointes
+              </Button>
+              
+              {attachments.length > 0 && (
+                <div className="space-y-1">
+                  {attachments.map((file, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 bg-accent/50 rounded-md">
+                      <span className="text-sm truncate flex-1">{file.name}</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeAttachment(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="text-sm text-muted-foreground">
@@ -162,8 +247,11 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
             <Button variant="outline" onClick={onClose}>
               Annuler
             </Button>
-            <Button onClick={handleSend} disabled={sending}>
-              {sending ? 'Envoi...' : 'Envoyer'}
+            <Button 
+              onClick={handleSend} 
+              disabled={sending || uploading || accounts.length === 0}
+            >
+              {uploading ? 'Téléchargement...' : sending ? 'Envoi...' : 'Envoyer'}
             </Button>
           </div>
         </div>
