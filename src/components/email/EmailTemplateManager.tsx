@@ -7,8 +7,10 @@ import { RichTextEditor } from '@/components/RichTextEditor';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Plus, Edit2, Trash2, Save, X } from 'lucide-react';
+import { FileText, Plus, Edit2, Trash2, Save, X, Paperclip } from 'lucide-react';
 import { useEmailTemplates, EmailTemplate } from '@/hooks/useEmailTemplates';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export const EmailTemplateManager: React.FC = () => {
   const { templates, loading, createTemplate, updateTemplate, deleteTemplate } = useEmailTemplates();
@@ -19,8 +21,11 @@ export const EmailTemplateManager: React.FC = () => {
     subject: '',
     content: '',
     category: 'general',
-    variables: [] as string[]
+    variables: [] as string[],
+    attachments: [] as Array<{ name: string; url: string; size: number }>
   });
+  const [attachmentFiles, setAttachmentFiles] = useState<File[]>([]);
+  const [uploading, setUploading] = useState(false);
 
   const categories = [
     { value: 'general', label: 'Général' },
@@ -31,16 +36,33 @@ export const EmailTemplateManager: React.FC = () => {
   ];
 
   const handleCreate = async () => {
-    await createTemplate(formData);
-    setShowCreateDialog(false);
-    resetForm();
+    try {
+      setUploading(true);
+      const uploadedAttachments = await uploadAttachments();
+      await createTemplate({ ...formData, attachments: uploadedAttachments });
+      setShowCreateDialog(false);
+      resetForm();
+    } catch (error) {
+      console.error('Error creating template:', error);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleUpdate = async () => {
     if (editingTemplate) {
-      await updateTemplate(editingTemplate.id, formData);
-      setEditingTemplate(null);
-      resetForm();
+      try {
+        setUploading(true);
+        const uploadedAttachments = await uploadAttachments();
+        const allAttachments = [...(formData.attachments || []), ...uploadedAttachments];
+        await updateTemplate(editingTemplate.id, { ...formData, attachments: allAttachments });
+        setEditingTemplate(null);
+        resetForm();
+      } catch (error) {
+        console.error('Error updating template:', error);
+      } finally {
+        setUploading(false);
+      }
     }
   };
 
@@ -51,8 +73,10 @@ export const EmailTemplateManager: React.FC = () => {
       subject: template.subject,
       content: template.content,
       category: template.category,
-      variables: template.variables
+      variables: template.variables,
+      attachments: template.attachments || []
     });
+    setAttachmentFiles([]);
   };
 
   const handleDelete = async (id: string) => {
@@ -67,8 +91,59 @@ export const EmailTemplateManager: React.FC = () => {
       subject: '',
       content: '',
       category: 'general',
-      variables: []
+      variables: [],
+      attachments: []
     });
+    setAttachmentFiles([]);
+  };
+
+  const uploadAttachments = async (): Promise<Array<{ name: string; url: string; size: number }>> => {
+    if (attachmentFiles.length === 0) return [];
+
+    const uploaded: Array<{ name: string; url: string; size: number }> = [];
+    
+    for (const file of attachmentFiles) {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `email-attachments/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('app-files')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        toast.error(`Erreur lors du téléchargement de ${file.name}`);
+        continue;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('app-files')
+        .getPublicUrl(filePath);
+
+      uploaded.push({
+        name: file.name,
+        url: publicUrl,
+        size: file.size
+      });
+    }
+
+    return uploaded;
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setAttachmentFiles(prev => [...prev, ...files]);
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachmentFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeExistingAttachment = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      attachments: prev.attachments?.filter((_, i) => i !== index) || []
+    }));
   };
 
   const extractVariables = (text: string): string[] => {
@@ -171,13 +246,50 @@ export const EmailTemplateManager: React.FC = () => {
                 </div>
               )}
 
+              <div>
+                <Label>Pièces jointes</Label>
+                <input
+                  type="file"
+                  id="template-attachments"
+                  multiple
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => document.getElementById('template-attachments')?.click()}
+                  className="w-full"
+                >
+                  <Paperclip className="h-4 w-4 mr-2" />
+                  Ajouter des pièces jointes
+                </Button>
+                {attachmentFiles.length > 0 && (
+                  <div className="mt-2 space-y-2">
+                    {attachmentFiles.map((file, index) => (
+                      <div key={index} className="flex items-center justify-between p-2 bg-muted rounded-lg">
+                        <span className="text-sm truncate flex-1">{file.name}</span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeAttachment(index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => { setShowCreateDialog(false); resetForm(); }}>
                   Annuler
                 </Button>
-                <Button onClick={handleCreate} disabled={!formData.name || !formData.subject || !formData.content}>
+                <Button onClick={handleCreate} disabled={!formData.name || !formData.subject || !formData.content || uploading}>
                   <Save className="h-4 w-4 mr-2" />
-                  Créer
+                  {uploading ? 'Téléchargement...' : 'Créer'}
                 </Button>
               </div>
             </div>
@@ -225,6 +337,13 @@ export const EmailTemplateManager: React.FC = () => {
                         {`{{${variable}}}`}
                       </Badge>
                     ))}
+                  </div>
+                )}
+                {template.attachments && template.attachments.length > 0 && (
+                  <div className="mt-3">
+                    <p className="text-xs text-muted-foreground mb-1">
+                      {template.attachments.length} pièce(s) jointe(s)
+                    </p>
                   </div>
                 )}
               </CardContent>
@@ -296,14 +415,68 @@ export const EmailTemplateManager: React.FC = () => {
               </div>
             )}
 
+            <div>
+              <Label>Pièces jointes existantes</Label>
+              {formData.attachments && formData.attachments.length > 0 && (
+                <div className="space-y-2 mb-3">
+                  {formData.attachments.map((att, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 bg-muted rounded-lg">
+                      <span className="text-sm truncate flex-1">{att.name}</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeExistingAttachment(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <input
+                type="file"
+                id="template-attachments-edit"
+                multiple
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => document.getElementById('template-attachments-edit')?.click()}
+                className="w-full"
+              >
+                <Paperclip className="h-4 w-4 mr-2" />
+                Ajouter des pièces jointes
+              </Button>
+              {attachmentFiles.length > 0 && (
+                <div className="mt-2 space-y-2">
+                  {attachmentFiles.map((file, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 bg-muted rounded-lg">
+                      <span className="text-sm truncate flex-1">{file.name}</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeAttachment(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => { setEditingTemplate(null); resetForm(); }}>
                 <X className="h-4 w-4 mr-2" />
                 Annuler
               </Button>
-              <Button onClick={handleUpdate}>
+              <Button onClick={handleUpdate} disabled={uploading}>
                 <Save className="h-4 w-4 mr-2" />
-                Enregistrer
+                {uploading ? 'Téléchargement...' : 'Enregistrer'}
               </Button>
             </div>
           </div>

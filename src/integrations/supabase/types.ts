@@ -1001,6 +1001,7 @@ export type Database = {
       }
       email_templates: {
         Row: {
+          attachments: Json | null
           category: string
           content: string
           created_at: string
@@ -1013,6 +1014,7 @@ export type Database = {
           variables: Json | null
         }
         Insert: {
+          attachments?: Json | null
           category: string
           content: string
           created_at?: string
@@ -1025,6 +1027,7 @@ export type Database = {
           variables?: Json | null
         }
         Update: {
+          attachments?: Json | null
           category?: string
           content?: string
           created_at?: string

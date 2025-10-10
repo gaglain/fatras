@@ -10,6 +10,7 @@ export interface EmailTemplate {
   content: string;
   category: string;
   variables: string[];
+  attachments?: Array<{ name: string; url: string; size: number }>;
   is_system?: boolean;
   created_at: string;
   updated_at: string;
@@ -31,7 +32,8 @@ export const useEmailTemplates = () => {
       // Convert Json type to string[] for variables
       const formattedData = (data || []).map(t => ({
         ...t,
-        variables: Array.isArray(t.variables) ? t.variables as string[] : []
+        variables: Array.isArray(t.variables) ? t.variables as string[] : [],
+        attachments: Array.isArray(t.attachments) ? t.attachments as Array<{ name: string; url: string; size: number }> : []
       }));
       setTemplates(formattedData);
     } catch (error) {
@@ -55,6 +57,7 @@ export const useEmailTemplates = () => {
           content: template.content,
           category: template.category,
           variables: template.variables,
+          attachments: template.attachments || [],
           user_id: user.id
         }])
         .select()
