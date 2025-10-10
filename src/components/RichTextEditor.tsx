@@ -1,4 +1,4 @@
-import React, { useRef, useCallback } from 'react';
+import React, { useRef, useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   Bold, 
@@ -10,9 +10,12 @@ import {
   AlignCenter, 
   AlignRight,
   Link,
-  Type
+  Type,
+  Image
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useFileUpload } from '@/hooks/useFileUpload';
+import { toast } from 'sonner';
 
 interface RichTextEditorProps {
   value: string;
@@ -28,6 +31,8 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   className
 }) => {
   const editorRef = useRef<HTMLDivElement>(null);
+  const { uploadImage, isUploading } = useFileUpload();
+  const [imageUploading, setImageUploading] = useState(false);
 
   const execCommand = useCallback((command: string, value?: string) => {
     document.execCommand(command, false, value);
@@ -41,6 +46,33 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       onChange(editorRef.current.innerHTML);
     }
   }, [onChange]);
+
+  const handleImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Veuillez sélectionner une image');
+      return;
+    }
+
+    setImageUploading(true);
+    try {
+      const result = await uploadImage(file);
+      
+      // Insérer l'image dans l'éditeur
+      const img = `<img src="${result.url}" alt="${result.name}" style="max-width: 100%; height: auto;" />`;
+      document.execCommand('insertHTML', false, img);
+      
+      if (editorRef.current) {
+        onChange(editorRef.current.innerHTML);
+      }
+    } catch (error) {
+      console.error('Image upload error:', error);
+    } finally {
+      setImageUploading(false);
+    }
+  }, [uploadImage, onChange]);
 
   const formatButtons = [
     { icon: Bold, command: 'bold', tooltip: 'Gras' },
@@ -103,6 +135,27 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
             className="h-8 w-8 p-1 hover:bg-accent transition-colors"
           >
             <Link className="h-3.5 w-3.5" />
+          </Button>
+
+          <div className="h-6 w-px bg-border mx-1" />
+
+          {/* Image upload */}
+          <input
+            type="file"
+            id="image-upload"
+            accept="image/*"
+            onChange={handleImageUpload}
+            className="hidden"
+          />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => document.getElementById('image-upload')?.click()}
+            disabled={imageUploading}
+            title="Insérer une image"
+            className="h-8 w-8 p-1 hover:bg-accent transition-colors"
+          >
+            <Image className="h-3.5 w-3.5" />
           </Button>
         </div>
       </div>
