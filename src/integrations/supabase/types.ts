@@ -172,6 +172,38 @@ export type Database = {
           },
         ]
       }
+      artist_users: {
+        Row: {
+          artist_id: string
+          created_at: string | null
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          artist_id: string
+          created_at?: string | null
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          artist_id?: string
+          created_at?: string | null
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "artist_users_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "centralized_artists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendar_events: {
         Row: {
           attendees: string[] | null
@@ -334,16 +366,22 @@ export type Database = {
           contact_phone: string | null
           created_at: string
           current_tour: string | null
+          email_template_id: string | null
           facebook: string | null
           genre: string
           id: string
           image: string | null
           instagram: string | null
+          logo_url: string | null
           name: string
+          official_photos: string[] | null
           photos: string[] | null
           presentation_pdf_url: string | null
           presentation_text: string | null
+          press_kit_url: string | null
+          quote_template_id: string | null
           rating: number | null
+          short_description: string | null
           status: string
           tech_sheet_pdf_url: string | null
           technical_contact_id: string | null
@@ -362,16 +400,22 @@ export type Database = {
           contact_phone?: string | null
           created_at?: string
           current_tour?: string | null
+          email_template_id?: string | null
           facebook?: string | null
           genre: string
           id?: string
           image?: string | null
           instagram?: string | null
+          logo_url?: string | null
           name: string
+          official_photos?: string[] | null
           photos?: string[] | null
           presentation_pdf_url?: string | null
           presentation_text?: string | null
+          press_kit_url?: string | null
+          quote_template_id?: string | null
           rating?: number | null
+          short_description?: string | null
           status?: string
           tech_sheet_pdf_url?: string | null
           technical_contact_id?: string | null
@@ -390,16 +434,22 @@ export type Database = {
           contact_phone?: string | null
           created_at?: string
           current_tour?: string | null
+          email_template_id?: string | null
           facebook?: string | null
           genre?: string
           id?: string
           image?: string | null
           instagram?: string | null
+          logo_url?: string | null
           name?: string
+          official_photos?: string[] | null
           photos?: string[] | null
           presentation_pdf_url?: string | null
           presentation_text?: string | null
+          press_kit_url?: string | null
+          quote_template_id?: string | null
           rating?: number | null
+          short_description?: string | null
           status?: string
           tech_sheet_pdf_url?: string | null
           technical_contact_id?: string | null
@@ -416,6 +466,20 @@ export type Database = {
             columns: ["booking_contact_id"]
             isOneToOne: false
             referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "centralized_artists_email_template_id_fkey"
+            columns: ["email_template_id"]
+            isOneToOne: false
+            referencedRelation: "email_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "centralized_artists_quote_template_id_fkey"
+            columns: ["quote_template_id"]
+            isOneToOne: false
+            referencedRelation: "quote_templates"
             referencedColumns: ["id"]
           },
           {

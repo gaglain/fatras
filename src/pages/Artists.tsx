@@ -232,7 +232,7 @@ export const Artists: React.FC = () => {
                 className={`cursor-pointer hover:shadow-md transition-shadow ${
                   selectedArtist === artist.id ? 'ring-2 ring-purple-500' : ''
                 }`}
-                onClick={() => setSelectedArtist(artist.id)}
+                onClick={() => navigate(`/artists/${artist.id}`)}
               >
                 <CardContent className="p-4">
                   <div className="flex items-center space-x-3 mb-2">

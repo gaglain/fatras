@@ -13,6 +13,7 @@ import { FrontShop } from "./pages/FrontShop";
 import Dashboard from "./pages/Dashboard";
 import { Artists } from "./pages/Artists";
 import { ArtistDetail } from "./pages/ArtistDetail";
+import { ArtistDetailPage } from "./pages/ArtistDetailPage";
 import { Events } from "./pages/Events";
 import { Contacts } from "./pages/Contacts";
 import { Preferences } from "./pages/Preferences";
@@ -105,7 +106,7 @@ const App = () => {
                 {/* Routes du back-office - PROTÉGÉES */}
                 <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
                 <Route path="/artists" element={<ProtectedRoute><Layout><Artists /></Layout></ProtectedRoute>} />
-                <Route path="/artists/:id" element={<ProtectedRoute><Layout><ArtistDetail /></Layout></ProtectedRoute>} />
+                <Route path="/artists/:id" element={<ProtectedRoute><Layout><ArtistDetailPage /></Layout></ProtectedRoute>} />
                 <Route path="/events" element={<ProtectedRoute><Layout><Events /></Layout></ProtectedRoute>} />
                 <Route path="/contacts" element={<ProtectedRoute><Layout><Contacts /></Layout></ProtectedRoute>} />
                 <Route path="/contacts/:id" element={<ProtectedRoute><Layout><ContactDetail /></Layout></ProtectedRoute>} />

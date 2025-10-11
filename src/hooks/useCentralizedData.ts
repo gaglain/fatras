@@ -20,6 +20,17 @@ export interface CentralizedArtist {
   website?: string;
   instagram?: string;
   facebook?: string;
+  logo_url?: string;
+  press_kit_url?: string;
+  short_description?: string;
+  official_photos?: string[];
+  presentation_text?: string;
+  presentation_pdf_url?: string;
+  tech_sheet_pdf_url?: string;
+  video_url?: string;
+  audio_url?: string;
+  quote_template_id?: string;
+  email_template_id?: string;
   created_at: string;
   updated_at: string;
 }
