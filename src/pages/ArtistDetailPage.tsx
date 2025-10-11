@@ -4,6 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeft, Edit2 } from 'lucide-react';
 import { useCentralizedData } from '@/hooks/useCentralizedData';
 import { ArtistDashboard } from '@/components/ArtistDashboard';
@@ -17,11 +21,34 @@ export const ArtistDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const { artists, updateArtist } = useCentralizedData();
   const [artist, setArtist] = useState(artists.find(a => a.id === id));
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    genre: '',
+    bio: '',
+    contact_email: '',
+    contact_phone: '',
+    website: '',
+    instagram: '',
+    facebook: '',
+    current_tour: ''
+  });
 
   useEffect(() => {
     const foundArtist = artists.find(a => a.id === id);
     if (foundArtist) {
       setArtist(foundArtist);
+      setEditForm({
+        name: foundArtist.name || '',
+        genre: foundArtist.genre || '',
+        bio: foundArtist.bio || '',
+        contact_email: foundArtist.contact_email || '',
+        contact_phone: foundArtist.contact_phone || '',
+        website: foundArtist.website || '',
+        instagram: foundArtist.instagram || '',
+        facebook: foundArtist.facebook || '',
+        current_tour: foundArtist.current_tour || ''
+      });
     }
   }, [id, artists]);
 
@@ -43,6 +70,12 @@ export const ArtistDetailPage: React.FC = () => {
     setArtist({ ...artist, ...updates });
   };
 
+  const handleSaveGeneralInfo = async () => {
+    await handleUpdate(editForm);
+    setEditDialogOpen(false);
+    toast.success('Informations mises à jour');
+  };
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       {/* Header */}
@@ -62,10 +95,109 @@ export const ArtistDetailPage: React.FC = () => {
             </div>
           </div>
         </div>
-        <Button variant="outline">
-          <Edit2 className="h-4 w-4 mr-2" />
-          Modifier les infos générales
-        </Button>
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline">
+              <Edit2 className="h-4 w-4 mr-2" />
+              Modifier les infos générales
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Modifier les informations générales</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Nom du spectacle</Label>
+                  <Input
+                    id="name"
+                    value={editForm.name}
+                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="genre">Genre</Label>
+                  <Input
+                    id="genre"
+                    value={editForm.genre}
+                    onChange={(e) => setEditForm({ ...editForm, genre: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="bio">Biographie</Label>
+                <Textarea
+                  id="bio"
+                  value={editForm.bio}
+                  onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
+                  rows={4}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="contact_email">Email de contact</Label>
+                  <Input
+                    id="contact_email"
+                    type="email"
+                    value={editForm.contact_email}
+                    onChange={(e) => setEditForm({ ...editForm, contact_email: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="contact_phone">Téléphone de contact</Label>
+                  <Input
+                    id="contact_phone"
+                    value={editForm.contact_phone}
+                    onChange={(e) => setEditForm({ ...editForm, contact_phone: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="website">Site web</Label>
+                <Input
+                  id="website"
+                  value={editForm.website}
+                  onChange={(e) => setEditForm({ ...editForm, website: e.target.value })}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="instagram">Instagram</Label>
+                  <Input
+                    id="instagram"
+                    value={editForm.instagram}
+                    onChange={(e) => setEditForm({ ...editForm, instagram: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="facebook">Facebook</Label>
+                  <Input
+                    id="facebook"
+                    value={editForm.facebook}
+                    onChange={(e) => setEditForm({ ...editForm, facebook: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="current_tour">Tournée en cours</Label>
+                <Input
+                  id="current_tour"
+                  value={editForm.current_tour}
+                  onChange={(e) => setEditForm({ ...editForm, current_tour: e.target.value })}
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+                  Annuler
+                </Button>
+                <Button onClick={handleSaveGeneralInfo}>
+                  Enregistrer
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Artist Image */}

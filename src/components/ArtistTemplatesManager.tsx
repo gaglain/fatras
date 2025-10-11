@@ -80,12 +80,11 @@ export const ArtistTemplatesManager: React.FC<ArtistTemplatesManagerProps> = ({
         </CardHeader>
         <CardContent>
           <div className="flex gap-2">
-            <Select value={selectedQuoteTemplate} onValueChange={setSelectedQuoteTemplate}>
+            <Select value={selectedQuoteTemplate || undefined} onValueChange={setSelectedQuoteTemplate}>
               <SelectTrigger className="flex-1">
                 <SelectValue placeholder="Sélectionner un modèle de devis" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Aucun modèle</SelectItem>
                 {quoteTemplates.map((template) => (
                   <SelectItem key={template.id} value={template.id}>
                     {template.name}
@@ -93,6 +92,11 @@ export const ArtistTemplatesManager: React.FC<ArtistTemplatesManagerProps> = ({
                 ))}
               </SelectContent>
             </Select>
+            {selectedQuoteTemplate && (
+              <Button variant="outline" onClick={() => setSelectedQuoteTemplate('')}>
+                Retirer
+              </Button>
+            )}
             <Button onClick={handleSaveQuoteTemplate}>Enregistrer</Button>
           </div>
           <p className="text-sm text-muted-foreground mt-2">
@@ -110,12 +114,11 @@ export const ArtistTemplatesManager: React.FC<ArtistTemplatesManagerProps> = ({
         </CardHeader>
         <CardContent>
           <div className="flex gap-2">
-            <Select value={selectedEmailTemplate} onValueChange={setSelectedEmailTemplate}>
+            <Select value={selectedEmailTemplate || undefined} onValueChange={setSelectedEmailTemplate}>
               <SelectTrigger className="flex-1">
                 <SelectValue placeholder="Sélectionner un modèle d'email" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Aucun modèle</SelectItem>
                 {emailTemplates.map((template) => (
                   <SelectItem key={template.id} value={template.id}>
                     {template.name}
@@ -123,6 +126,11 @@ export const ArtistTemplatesManager: React.FC<ArtistTemplatesManagerProps> = ({
                 ))}
               </SelectContent>
             </Select>
+            {selectedEmailTemplate && (
+              <Button variant="outline" onClick={() => setSelectedEmailTemplate('')}>
+                Retirer
+              </Button>
+            )}
             <Button onClick={handleSaveEmailTemplate}>Enregistrer</Button>
           </div>
           <p className="text-sm text-muted-foreground mt-2">
