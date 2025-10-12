@@ -31,6 +31,20 @@ export const EmailInbox: React.FC = () => {
   const [emails, setEmails] = useState<InboundEmail[]>([]);
   const [selectedEmail, setSelectedEmail] = useState<InboundEmail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  // Utils
+  const normalizeAddress = (value: string) => {
+    if (!value) return '';
+    const match = value.match(/<([^>]+)>/);
+    const email = match ? match[1] : value;
+    return email.replace(/(^"|"$)/g, '').trim().toLowerCase();
+  };
+
+  const decodeHtmlEntities = (str: string) => {
+    if (!str) return '';
+    const textarea = document.createElement('textarea');
+    textarea.innerHTML = str;
+    return textarea.value || textarea.textContent || str;
+  };
 
   useEffect(() => {
     if (user) {
@@ -56,11 +70,8 @@ export const EmailInbox: React.FC = () => {
         user.email || ''
       ].filter(Boolean))).map((e: string) => e.toLowerCase());
 
-      // Construire la clause IN pour PostgREST si on a des emails
-      const inList = myEmails.length > 0 ? `(${myEmails.map(e => `"${e}"`).join(',')})` : '';
-
       // 2) Charger uniquement les emails reçus et exclure au maximum côté serveur
-      let query = supabase
+      const { data, error } = await supabase
         .from('inbound_emails')
         .select('*')
         .eq('user_id', user.id)
@@ -70,12 +81,6 @@ export const EmailInbox: React.FC = () => {
         .order('received_at', { ascending: false })
         .limit(100);
 
-      if (inList) {
-        // Exclure les messages dont l'expéditeur est l'un de vos comptes
-        query = query.not('from_email', 'in', inList);
-      }
-
-      const { data, error } = await query;
       if (error) throw error;
 
       // 3) Filtre additionnel côté client si besoin
@@ -84,7 +89,7 @@ export const EmailInbox: React.FC = () => {
       ]);
 
       const filtered = (data || []).filter((e: InboundEmail) => {
-        const from = (e.from_email || '').toLowerCase();
+        const from = normalizeAddress(e.from_email);
         const hasSentLabel = (e.labels || []).some(l => sentLabelSet.has((l || '').toLowerCase()));
         return !myEmails.includes(from) && !hasSentLabel;
       });
@@ -152,22 +157,31 @@ export const EmailInbox: React.FC = () => {
 
   // Convertit le HTML (ou texte) en extrait lisible
   const getEmailPreview = (email: InboundEmail, maxLen = 140) => {
-    const source = email.html_content || email.content || '';
-    if (!source) return '(Aucun contenu)';
+    const raw = email.html_content || email.content || '';
+    if (!raw) return '(Aucun contenu)';
     try {
-      // Utiliser DOMParser et ignorer le <head> pour éviter les meta/doctype
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(source, 'text/html');
-      const text = (doc.body?.innerText || doc.textContent || '')
-        .replace(/\s+/g, ' ')
-        .trim();
-      if (!text) return '(Aucun contenu)';
-      return text.length > maxLen ? `${text.slice(0, maxLen)}…` : text;
+      let source = raw;
+      // Décoder les entités HTML si nécessaire (&lt;html ...)
+      if (/&lt;|&gt;|&amp;|&#/i.test(source)) {
+        source = decodeHtmlEntities(source);
+      }
+      // Si on détecte de l'HTML, parser et extraire uniquement le texte du <body>
+      if (/<[a-z!/]/i.test(source)) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(source, 'text/html');
+        const text = (doc.body?.innerText || doc.textContent || '')
+          .replace(/\s+/g, ' ')
+          .trim();
+        if (text) return text.length > maxLen ? `${text.slice(0, maxLen)}…` : text;
+      }
+      // Sinon, nettoyer en supprimant les balises éventuelles
+      const plain = source.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+      return plain.length > maxLen ? `${plain.slice(0, maxLen)}…` : (plain || '(Aucun contenu)');
     } catch (e) {
-      // Fallback: enlever les balises HTML au pire
-      const fallback = source.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+      const fallback = raw.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
       return fallback.length > maxLen ? `${fallback.slice(0, maxLen)}…` : (fallback || '(Aucun contenu)');
     }
+  };
   };
 
   const unreadCount = emails.filter(email => !email.read_at).length;
