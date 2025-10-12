@@ -50,6 +50,51 @@ export const EventCreationDialog: React.FC<EventCreationDialogProps> = ({
 
     setLoading(true);
     try {
+      const attendeesArray = formData.attendees.split(',').map(a => a.trim()).filter(Boolean);
+
+      // Check if user has Nylas integration
+      const { data: integration } = await supabase
+        .from('integrations')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('service', 'google_calendar')
+        .eq('is_active', true)
+        .single();
+
+      const settings = integration?.settings as any;
+      
+      if (settings?.grant_id) {
+        // Create event in Google Calendar via Nylas
+        try {
+          const { data, error } = await supabase.functions.invoke('nylas-calendar-sync', {
+            body: {
+              action: 'create_event',
+              user_id: user.id,
+              grant_id: settings.grant_id,
+              event: {
+                title: formData.title,
+                description: formData.description,
+                when: {
+                  start_time: new Date(formData.start_time).toISOString(),
+                  end_time: new Date(formData.end_time || formData.start_time).toISOString(),
+                },
+                location: formData.location,
+                participants: attendeesArray.map(email => ({ email })),
+              },
+            },
+          });
+
+          if (error) {
+            console.error('Nylas calendar error:', error);
+            toast.error('Erreur lors de la synchronisation avec Google Agenda');
+          } else {
+            toast.success('Événement créé dans Google Agenda');
+          }
+        } catch (nylasError) {
+          console.error('Nylas error:', nylasError);
+        }
+      }
+
       // Create event in local database
       const { error: eventError } = await supabase.from('calendar_events').insert({
         user_id: user.id,
@@ -58,10 +103,10 @@ export const EventCreationDialog: React.FC<EventCreationDialogProps> = ({
         start_time: formData.start_time,
         end_time: formData.end_time || formData.start_time,
         location: formData.location,
-        calendar_id: 'local',
-        provider: 'local',
+        calendar_id: settings?.calendar_id || 'local',
+        provider: integration ? 'nylas' : 'local',
         external_id: `local-${Date.now()}`,
-        attendees: formData.attendees.split(',').map(a => a.trim()).filter(Boolean),
+        attendees: attendeesArray,
       });
 
       if (eventError) throw eventError;
@@ -78,6 +123,19 @@ export const EventCreationDialog: React.FC<EventCreationDialogProps> = ({
       });
 
       if (centralError) console.error('Error creating centralized event:', centralError);
+
+      // Send notifications to attendees
+      if (attendeesArray.length > 0) {
+        for (const email of attendeesArray) {
+          await supabase.from('notifications').insert({
+            user_id: user.id,
+            type: 'event_invitation',
+            title: 'Nouvelle invitation',
+            message: `Vous êtes invité à l'événement: ${formData.title}`,
+            data: { event_title: formData.title, start_time: formData.start_time, location: formData.location },
+          });
+        }
+      }
 
       toast.success('Événement créé avec succès');
       onOpenChange(false);

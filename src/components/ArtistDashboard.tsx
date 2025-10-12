@@ -41,12 +41,16 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
 
   const fetchDashboardData = async () => {
     try {
-      // Fetch artist-related contacts
-      const { data: contactsData } = await supabase
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Fetch artist-related contacts through contact_id in opportunities/events
+      const { data: contactsData, error: contactsError } = await supabase
         .from('contacts')
         .select('*')
-        .or(`notes.ilike.%${artist.name}%,tags.cs.{${artist.name}}`)
-        .limit(5);
+        .eq('user_id', user.id);
+
+      console.log('Contacts fetched:', contactsData?.length);
 
       // Fetch artist opportunities through junction table
       const { data: artistOpportunitiesData } = await supabase
@@ -56,53 +60,76 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
 
       const opportunityIds = artistOpportunitiesData?.map(ao => ao.opportunity_id) || [];
       
-      const { data: opportunitiesData } = await supabase
-        .from('opportunities')
-        .select('*')
-        .in('id', opportunityIds.length > 0 ? opportunityIds : ['00000000-0000-0000-0000-000000000000'])
-        .limit(5);
+      let opportunitiesData = [];
+      if (opportunityIds.length > 0) {
+        const { data } = await supabase
+          .from('opportunities')
+          .select('*')
+          .in('id', opportunityIds);
+        opportunitiesData = data || [];
+      }
 
-      // Fetch artist events
-      const { data: eventsData } = await supabase
-        .from('events')
-        .select('*')
-        .contains('title', artist.name)
-        .limit(5);
+      console.log('Opportunities fetched:', opportunitiesData.length);
 
-      // Fetch artist tasks linked via metadata
+      // Fetch artist events through junction table
+      const { data: artistEventsData } = await supabase
+        .from('artist_events')
+        .select('event_id')
+        .eq('artist_id', artist.id);
+
+      const eventIds = artistEventsData?.map(ae => ae.event_id) || [];
+      
+      let eventsData = [];
+      if (eventIds.length > 0) {
+        const { data } = await supabase
+          .from('events')
+          .select('*')
+          .in('id', eventIds);
+        eventsData = data || [];
+      }
+
+      console.log('Events fetched:', eventsData.length);
+
+      // Fetch artist tasks - check both metadata.artist_id and artist_id field
       const { data: tasksData } = await supabase
         .from('tasks')
         .select('*')
-        .contains('metadata', { artist_id: artist.id })
-        .limit(5);
+        .eq('user_id', user.id)
+        .or(`artist_id.eq.${artist.id},metadata->>artist_id.eq.${artist.id}`);
+
+      console.log('Tasks fetched:', tasksData?.length);
 
       // Fetch artist publications
       const { data: publicationsData } = await supabase
         .from('publications')
         .select('*')
-        .or(`title.ilike.%${artist.name}%,content.ilike.%${artist.name}%`)
-        .limit(5);
+        .eq('user_id', user.id)
+        .ilike('title', `%${artist.name}%`);
+
+      console.log('Publications fetched:', publicationsData?.length);
 
       // Fetch artist quotes
       const { data: quotesData } = await supabase
         .from('quotes')
         .select('*')
-        .or(`title.ilike.%${artist.name}%,notes.ilike.%${artist.name}%`)
-        .limit(5);
+        .eq('user_id', user.id)
+        .ilike('title', `%${artist.name}%`);
 
-      setContacts(contactsData || []);
-      setOpportunities(opportunitiesData || []);
-      setEvents(eventsData || []);
-      setTasks(tasksData || []);
-      setPublications(publicationsData || []);
-      setQuotes(quotesData || []);
+      console.log('Quotes fetched:', quotesData?.length);
+
+      setContacts(contactsData?.slice(0, 5) || []);
+      setOpportunities(opportunitiesData.slice(0, 5));
+      setEvents(eventsData.slice(0, 5));
+      setTasks(tasksData?.slice(0, 5) || []);
+      setPublications(publicationsData?.slice(0, 5) || []);
+      setQuotes(quotesData?.slice(0, 5) || []);
 
       setStats({
         contacts: contactsData?.length || 0,
         quotes: quotesData?.length || 0,
-        opportunities: opportunitiesData?.length || 0,
+        opportunities: opportunitiesData.length,
         tasks: tasksData?.length || 0,
-        events: eventsData?.length || 0,
+        events: eventsData.length,
         publications: publicationsData?.length || 0
       });
     } catch (error) {

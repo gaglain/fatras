@@ -58,9 +58,51 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    const { action, user_id, grant_id } = await req.json()
+    const { action, user_id, grant_id, event } = await req.json()
 
     console.log(`🗓️ Nylas Calendar action: ${action} for user: ${user_id}`)
+
+    // Action: create_event
+    if (action === 'create_event' && grant_id && event) {
+      console.log('Creating event in Nylas:', event)
+
+      const response = await fetch(`https://api.us.nylas.com/v3/grants/${grant_id}/events`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${nylasApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: event.title,
+          description: event.description || '',
+          when: {
+            start_time: Math.floor(new Date(event.when.start_time).getTime() / 1000),
+            end_time: Math.floor(new Date(event.when.end_time).getTime() / 1000),
+          },
+          location: event.location || '',
+          participants: event.participants || [],
+          busy: true,
+          conferencing: {
+            provider: 'Google Meet',
+            autocreate: {},
+          },
+        }),
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Nylas API error:', errorText)
+        throw new Error(`Failed to create event: ${response.status}`)
+      }
+
+      const createdEvent = await response.json()
+
+      return new Response(
+        JSON.stringify({ success: true, event: createdEvent }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      )
+    }
 
     if (action === 'sync_calendars' && grant_id) {
       // Récupérer les calendriers depuis Nylas
