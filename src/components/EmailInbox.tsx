@@ -182,7 +182,6 @@ export const EmailInbox: React.FC = () => {
       return fallback.length > maxLen ? `${fallback.slice(0, maxLen)}…` : (fallback || '(Aucun contenu)');
     }
   };
-  };
 
   const unreadCount = emails.filter(email => !email.read_at).length;
 
