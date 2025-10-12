@@ -43,20 +43,8 @@ export const EmailInbox: React.FC = () => {
 
     try {
       setIsLoading(true);
-      // Charger uniquement les emails reçus (direction='received')
-      const { data, error } = await supabase
-        .from('inbound_emails')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('direction', 'received')
-        // Exclure les dossiers d'envoi les plus courants
-        .not('labels', 'cs', '{"Sent","Envoyés","INBOX.Sent","Sent Items","[Gmail]/Sent Mail","Sent Messages","[Gmail]/Messages envoyés"}')
-        .order('received_at', { ascending: false })
-        .limit(100);
-
-      if (error) throw error;
-
-      // Récupérer les adresses de vos comptes pour filtrer les messages envoyés mal classés
+      
+      // 1) Récupérer d'abord les adresses de vos comptes pour pouvoir exclure côté serveur
       const { data: accounts } = await supabase
         .from('email_accounts')
         .select('email')
@@ -68,14 +56,36 @@ export const EmailInbox: React.FC = () => {
         user.email || ''
       ].filter(Boolean))).map((e: string) => e.toLowerCase());
 
+      // Construire la clause IN pour PostgREST si on a des emails
+      const inList = myEmails.length > 0 ? `(${myEmails.map(e => `"${e}"`).join(',')})` : '';
+
+      // 2) Charger uniquement les emails reçus et exclure au maximum côté serveur
+      let query = supabase
+        .from('inbound_emails')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('direction', 'received')
+        // Exclure les dossiers d'envoi les plus courants (chevauchement de labels)
+        .not('labels', 'ov', '{"Sent","Envoyés","INBOX.Sent","Sent Items","[Gmail]/Sent Mail","Sent Messages","[Gmail]/Messages envoyés"}')
+        .order('received_at', { ascending: false })
+        .limit(100);
+
+      if (inList) {
+        // Exclure les messages dont l'expéditeur est l'un de vos comptes
+        query = query.not('from_email', 'in', inList);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      // 3) Filtre additionnel côté client si besoin
       const sentLabelSet = new Set([
-        'sent','envoyés','inbox.sent','sent items','[gmail]/sent mail','sent messages','[gmail]/messages envoyés'
+        'sent','envoyés','inbox.sent','sent items','[gmail]/sent mail','sent messages','[gmail]/messages envoyés','outbox'
       ]);
 
       const filtered = (data || []).filter((e: InboundEmail) => {
         const from = (e.from_email || '').toLowerCase();
         const hasSentLabel = (e.labels || []).some(l => sentLabelSet.has((l || '').toLowerCase()));
-        // On retire tout email dont l'expéditeur est l'un de vos comptes ou portant un label d'envoi
         return !myEmails.includes(from) && !hasSentLabel;
       });
 
