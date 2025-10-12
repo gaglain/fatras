@@ -49,6 +49,8 @@ export const EmailInbox: React.FC = () => {
         .select('*')
         .eq('user_id', user.id)
         .eq('direction', 'received')
+        // Exclude messages labeled as Sent to avoid showing sent items in inbox
+        .not('labels', 'cs', '{"Sent","Envoyés","INBOX.Sent","Sent Items","[Gmail]/Sent Mail","Sent Messages"}')
         .order('received_at', { ascending: false })
         .limit(50);
 
@@ -112,6 +114,25 @@ export const EmailInbox: React.FC = () => {
       return date.toLocaleDateString('fr-FR', { weekday: 'short' });
     } else {
       return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+    }
+  };
+
+  // Convertit le HTML (ou texte) en extrait lisible
+  const getEmailPreview = (email: InboundEmail, maxLen = 140) => {
+    const source = email.html_content || email.content || '';
+    if (!source) return '(Aucun contenu)';
+    try {
+      const el = document.createElement('div');
+      el.innerHTML = source;
+      const text = (el.textContent || el.innerText || '')
+        .replace(/\s+/g, ' ')
+        .trim();
+      if (!text) return '(Aucun contenu)';
+      return text.length > maxLen ? `${text.slice(0, maxLen)}…` : text;
+    } catch (e) {
+      // Fallback: supprimer les balises brutes au pire
+      const fallback = source.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+      return fallback.length > maxLen ? `${fallback.slice(0, maxLen)}…` : (fallback || '(Aucun contenu)');
     }
   };
 
@@ -239,7 +260,7 @@ export const EmailInbox: React.FC = () => {
                         {email.subject || '(Aucun sujet)'}
                       </h4>
                       <p className="text-xs text-muted-foreground truncate">
-                        {email.content ? email.content.replace(/<[^>]*>/g, '').substring(0, 100) : '(Aucun contenu)'}...
+                        {getEmailPreview(email)}
                       </p>
                     </div>
                     <div className="text-xs text-muted-foreground whitespace-nowrap">
