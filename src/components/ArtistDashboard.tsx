@@ -48,11 +48,18 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
         .or(`notes.ilike.%${artist.name}%,tags.cs.{${artist.name}}`)
         .limit(5);
 
-      // Fetch artist opportunities
+      // Fetch artist opportunities through junction table
+      const { data: artistOpportunitiesData } = await supabase
+        .from('artist_opportunities')
+        .select('opportunity_id')
+        .eq('artist_id', artist.id);
+
+      const opportunityIds = artistOpportunitiesData?.map(ao => ao.opportunity_id) || [];
+      
       const { data: opportunitiesData } = await supabase
         .from('opportunities')
         .select('*')
-        .eq('artist_id', artist.id)
+        .in('id', opportunityIds.length > 0 ? opportunityIds : ['00000000-0000-0000-0000-000000000000'])
         .limit(5);
 
       // Fetch artist events
@@ -62,11 +69,11 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
         .contains('title', artist.name)
         .limit(5);
 
-      // Fetch artist tasks
+      // Fetch artist tasks linked via metadata
       const { data: tasksData } = await supabase
         .from('tasks')
         .select('*')
-        .or(`title.ilike.%${artist.name}%,description.ilike.%${artist.name}%`)
+        .contains('metadata', { artist_id: artist.id })
         .limit(5);
 
       // Fetch artist publications

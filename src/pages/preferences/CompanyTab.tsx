@@ -141,12 +141,26 @@ export const CompanyTab: React.FC = () => {
         .from('app-assets')
         .getPublicUrl(filePath);
 
+      // Update state immediately
       setCompanySettings(prev => ({
         ...prev,
         [type]: publicUrl
       }));
 
-      toast.success(`${type === "logo" ? "Logo" : "Icône"} chargé avec succès`);
+      // Also save to database immediately
+      const { error: dbError } = await supabase
+        .from('app_settings')
+        .upsert({
+          user_id: user.id,
+          setting_key: type === "logo" ? 'company_logo' : 'company_favicon',
+          setting_value: publicUrl
+        }, {
+          onConflict: 'user_id,setting_key'
+        });
+
+      if (dbError) throw dbError;
+
+      toast.success(`${type === "logo" ? "Logo" : "Icône"} chargé et enregistré avec succès`);
     } catch (error) {
       console.error('Erreur lors du chargement du fichier:', error);
       toast.error("Erreur lors du chargement du fichier");

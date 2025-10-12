@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 import { MenuManager } from '@/components/website/MenuManager';
 import { PageManager } from '@/components/website/PageManager';
 import { SEOManager } from '@/components/website/SEOManager';
@@ -9,19 +10,31 @@ import { FaviconManager } from '@/components/website/FaviconManager';
 import { LegalManager } from '@/components/website/LegalManager';
 import { SiteSettings } from '@/components/website/SiteSettings';
 import { WebsiteWithSidebar } from '@/components/website/WebsiteWithSidebar';
-import { Menu, FileText, Search, BarChart3, Star, Scale, Cog } from 'lucide-react';
+import { Menu, FileText, Search, BarChart3, Star, Scale, Cog, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export const WebsiteBackoffice: React.FC = () => {
   const [activeTab, setActiveTab] = useState('menu');
+  const navigate = useNavigate();
 
   return (
     <WebsiteWithSidebar>
       <div className="p-6 space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Gestion avancée du site</h1>
-          <p className="text-muted-foreground mt-2">
-            Gérez le contenu, les menus et les paramètres de votre site web
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Gestion avancée du site</h1>
+            <p className="text-muted-foreground mt-2">
+              Gérez le contenu, les menus et les paramètres de votre site web
+            </p>
+          </div>
+          <Button
+            onClick={() => navigate('/dashboard')}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Retour au Dashboard
+          </Button>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">

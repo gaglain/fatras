@@ -13,6 +13,7 @@ import { AgendaCSVImporter } from '@/components/agenda/AgendaCSVImporter';
 import { AgendaCSVExporter } from '@/components/agenda/AgendaCSVExporter';
 import { GoogleCalendarDisplay } from '@/components/integrations/GoogleCalendarDisplay';
 import { CalendarViewContainer } from '@/components/calendar/CalendarViewContainer';
+import { EventCreationDialog } from '@/components/calendar/EventCreationDialog';
 import { useEvents } from '@/hooks/useEvents';
 import { useUser } from '@/contexts/UserContext';
 import { useAuth } from '@/hooks/useAuth';
@@ -164,6 +165,7 @@ export const Agenda: React.FC = () => {
   const { currentUser, users } = useUser();
   const { events, addEvent, updateEvent, deleteEvent } = useEvents();
   const [showEventForm, setShowEventForm] = useState(false);
+  const [showCreationDialog, setShowCreationDialog] = useState(false);
   const [editingEvent, setEditingEvent] = useState<AgendaEvent | null>(null);
   const [csvImportOpen, setCsvImportOpen] = useState(false);
   const [visibleUsers, setVisibleUsers] = useState<string[]>(users.map(u => u.id));
@@ -230,7 +232,12 @@ export const Agenda: React.FC = () => {
 
   const handleCreateNew = () => {
     setEditingEvent(null);
-    setShowEventForm(true);
+    setShowCreationDialog(true);
+  };
+
+  const handleEventCreated = () => {
+    // Reload events after creation
+    window.location.reload();
   };
 
   const handleImportComplete = (importedEvents: AgendaEvent[]) => {
@@ -308,6 +315,11 @@ export const Agenda: React.FC = () => {
         </TabsList>
         
         <TabsContent value="calendar" className="space-y-6">
+          <EventCreationDialog 
+            open={showCreationDialog} 
+            onOpenChange={setShowCreationDialog}
+            onEventCreated={handleEventCreated}
+          />
           <CalendarViewContainer />
         </TabsContent>
         

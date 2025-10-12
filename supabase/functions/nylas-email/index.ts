@@ -408,6 +408,10 @@ async function syncEmails(baseUrl: string, apiKey: string, supabase: any, userId
     let syncedCount = 0;
 
     for (const email of emails) {
+      // Determine if email is read based on Nylas unread flag
+      const isRead = email.unread === false;
+      const readAt = isRead ? new Date(email.date * 1000).toISOString() : null;
+
       // Check if email already exists
       const { data: existingEmail } = await supabase
         .from('inbound_emails')
@@ -430,6 +434,7 @@ async function syncEmails(baseUrl: string, apiKey: string, supabase: any, userId
             html_content: email.body,
             provider: 'nylas',
             received_at: new Date(email.date * 1000).toISOString(),
+            read_at: readAt,
             thread_id: email.thread_id,
             labels: email.folders || [],
             direction: 'received'
@@ -450,6 +455,7 @@ async function syncEmails(baseUrl: string, apiKey: string, supabase: any, userId
             html_content: email.body,
             provider: 'nylas',
             received_at: new Date(email.date * 1000).toISOString(),
+            read_at: readAt,
             thread_id: email.thread_id,
             labels: email.folders || [],
             status: 'delivered'
@@ -460,6 +466,17 @@ async function syncEmails(baseUrl: string, apiKey: string, supabase: any, userId
         } else {
           console.error('Error inserting email:', { inboundError, unifiedError });
         }
+      } else {
+        // Update read status if changed
+        await supabase
+          .from('inbound_emails')
+          .update({ read_at: readAt })
+          .eq('message_id', email.id);
+        
+        await supabase
+          .from('emails')
+          .update({ read_at: readAt })
+          .eq('message_id', email.id);
       }
     }
 
