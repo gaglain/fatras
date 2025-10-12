@@ -49,14 +49,37 @@ export const EmailInbox: React.FC = () => {
         .select('*')
         .eq('user_id', user.id)
         .eq('direction', 'received')
-        // Exclude messages labeled as Sent to avoid showing sent items in inbox
-        .not('labels', 'cs', '{"Sent","Envoyés","INBOX.Sent","Sent Items","[Gmail]/Sent Mail","Sent Messages"}')
+        // Exclure les dossiers d'envoi les plus courants
+        .not('labels', 'cs', '{"Sent","Envoyés","INBOX.Sent","Sent Items","[Gmail]/Sent Mail","Sent Messages","[Gmail]/Messages envoyés"}')
         .order('received_at', { ascending: false })
-        .limit(50);
+        .limit(100);
 
       if (error) throw error;
-      
-      setEmails(data || []);
+
+      // Récupérer les adresses de vos comptes pour filtrer les messages envoyés mal classés
+      const { data: accounts } = await supabase
+        .from('email_accounts')
+        .select('email')
+        .eq('user_id', user.id)
+        .eq('is_active', true);
+
+      const myEmails = Array.from(new Set([
+        ...(accounts?.map((a: any) => a.email) || []),
+        user.email || ''
+      ].filter(Boolean))).map((e: string) => e.toLowerCase());
+
+      const sentLabelSet = new Set([
+        'sent','envoyés','inbox.sent','sent items','[gmail]/sent mail','sent messages','[gmail]/messages envoyés'
+      ]);
+
+      const filtered = (data || []).filter((e: InboundEmail) => {
+        const from = (e.from_email || '').toLowerCase();
+        const hasSentLabel = (e.labels || []).some(l => sentLabelSet.has((l || '').toLowerCase()));
+        // On retire tout email dont l'expéditeur est l'un de vos comptes ou portant un label d'envoi
+        return !myEmails.includes(from) && !hasSentLabel;
+      });
+
+      setEmails(filtered);
     } catch (error) {
       console.error('Erreur lors du chargement des emails:', error);
       toast.error('Erreur lors du chargement des emails');
@@ -122,15 +145,16 @@ export const EmailInbox: React.FC = () => {
     const source = email.html_content || email.content || '';
     if (!source) return '(Aucun contenu)';
     try {
-      const el = document.createElement('div');
-      el.innerHTML = source;
-      const text = (el.textContent || el.innerText || '')
+      // Utiliser DOMParser et ignorer le <head> pour éviter les meta/doctype
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(source, 'text/html');
+      const text = (doc.body?.innerText || doc.textContent || '')
         .replace(/\s+/g, ' ')
         .trim();
       if (!text) return '(Aucun contenu)';
       return text.length > maxLen ? `${text.slice(0, maxLen)}…` : text;
     } catch (e) {
-      // Fallback: supprimer les balises brutes au pire
+      // Fallback: enlever les balises HTML au pire
       const fallback = source.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
       return fallback.length > maxLen ? `${fallback.slice(0, maxLen)}…` : (fallback || '(Aucun contenu)');
     }

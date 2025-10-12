@@ -63,6 +63,7 @@ export const UnifiedEmailInterface: React.FC = () => {
   const [selectedProvider, setSelectedProvider] = useState<string>('');
   const [inboundEmails, setInboundEmails] = useState<InboundEmail[]>([]);
   const [loading, setLoading] = useState(false);
+  const [accountEmails, setAccountEmails] = useState<string[]>([]);
 
   // État du brouillon d'email
   const [draft, setDraft] = useState<EmailDraft>({
@@ -90,21 +91,69 @@ export const UnifiedEmailInterface: React.FC = () => {
     }
   }, [user]);
 
+  // Convertit le HTML (ou texte) en extrait lisible
+  const getEmailPreview = (email: InboundEmail, maxLen = 150) => {
+    const source = email.html_content || email.content || '';
+    if (!source) return 'Aucun aperçu disponible';
+    try {
+      // Utilise DOMParser pour récupérer uniquement le texte du <body>
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(source, 'text/html');
+      const text = (doc.body?.innerText || doc.textContent || '')
+        .replace(/\s+/g, ' ')
+        .trim();
+      if (!text) return 'Aucun aperçu disponible';
+      return text.length > maxLen ? `${text.slice(0, maxLen)}…` : text;
+    } catch (e) {
+      // Fallback regex au cas où
+      const fallback = source.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+      return fallback.length > maxLen ? `${fallback.slice(0, maxLen)}…` : (fallback || 'Aucun aperçu disponible');
+    }
+  };
+
   // Charger les emails entrants
   const loadInboundEmails = async () => {
     if (!user) return;
 
     setLoading(true);
     try {
-      const { data: emails, error } = await supabase
+      // Récupère les adresses des comptes email actifs de l'utilisateur
+      const { data: accounts } = await supabase
+        .from('email_accounts')
+        .select('email')
+        .eq('user_id', user.id)
+        .eq('is_active', true);
+
+      const myEmails = Array.from(new Set([
+        ...(accounts?.map((a: any) => a.email) || []),
+        user.email || ''
+      ].filter(Boolean))).map((e: string) => e.toLowerCase());
+      setAccountEmails(myEmails);
+
+      // Charge les emails "reçus" et exclut côté serveur les dossiers d'envoi courants
+      const { data, error } = await supabase
         .from('inbound_emails')
         .select('*')
         .eq('user_id', user.id)
+        .eq('direction', 'received')
+        .not('labels', 'cs', '{"Sent","Envoyés","INBOX.Sent","Sent Items","[Gmail]/Sent Mail","Sent Messages","[Gmail]/Messages envoyés"}')
         .order('received_at', { ascending: false })
-        .limit(50);
+        .limit(100);
 
       if (error) throw error;
-      setInboundEmails(emails || []);
+
+      const sentLabelSet = new Set([
+        'sent','envoyés','inbox.sent','sent items','[gmail]/sent mail','sent messages','[gmail]/messages envoyés'
+      ]);
+
+      // Filtre côté client si nécessaire
+      const filtered = (data || []).filter((e: InboundEmail) => {
+        const from = (e.from_email || '').toLowerCase();
+        const hasSentLabel = (e.labels || []).some(l => sentLabelSet.has((l || '').toLowerCase()));
+        return !myEmails.includes(from) && !hasSentLabel;
+      });
+
+      setInboundEmails(filtered);
     } catch (error) {
       console.error('Erreur chargement emails:', error);
       toast.error('Erreur lors du chargement des emails');
@@ -465,7 +514,7 @@ export const UnifiedEmailInterface: React.FC = () => {
                       </div>
                       <div className="font-medium mb-1">{email.subject}</div>
                       <div className="text-sm text-muted-foreground line-clamp-2">
-                        {email.content ? email.content.replace(/<[^>]*>/g, '').substring(0, 150) : 'Aucun aperçu disponible'}
+                        {getEmailPreview(email)}
                       </div>
                     </div>
                   ))}
