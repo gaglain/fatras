@@ -37,7 +37,7 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar className="border-r bg-sidebar text-sidebar-foreground">
+    <Sidebar className="border-r bg-sidebar text-sidebar-foreground [&_*]:text-sidebar-foreground">
       <SidebarContent>
         <div className="p-4">
           <SidebarTrigger />

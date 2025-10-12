@@ -43,10 +43,12 @@ export const EmailInbox: React.FC = () => {
 
     try {
       setIsLoading(true);
+      // Charger uniquement les emails reçus (direction='received')
       const { data, error } = await supabase
         .from('inbound_emails')
         .select('*')
         .eq('user_id', user.id)
+        .eq('direction', 'received')
         .order('received_at', { ascending: false })
         .limit(50);
 
@@ -152,9 +154,11 @@ export const EmailInbox: React.FC = () => {
             
             <div className="prose prose-sm max-w-none">
               {selectedEmail.html_content ? (
-                <div dangerouslySetInnerHTML={{ __html: selectedEmail.html_content }} />
+                <div className="bg-white p-4 rounded border">
+                  <div dangerouslySetInnerHTML={{ __html: selectedEmail.html_content }} />
+                </div>
               ) : (
-                <div className="whitespace-pre-wrap">{selectedEmail.content}</div>
+                <div className="whitespace-pre-wrap bg-muted/30 p-4 rounded">{selectedEmail.content}</div>
               )}
             </div>
           </div>
@@ -235,7 +239,7 @@ export const EmailInbox: React.FC = () => {
                         {email.subject || '(Aucun sujet)'}
                       </h4>
                       <p className="text-xs text-muted-foreground truncate">
-                        {email.content.substring(0, 100)}...
+                        {email.content ? email.content.replace(/<[^>]*>/g, '').substring(0, 100) : '(Aucun contenu)'}...
                       </p>
                     </div>
                     <div className="text-xs text-muted-foreground whitespace-nowrap">

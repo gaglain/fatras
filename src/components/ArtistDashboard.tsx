@@ -44,11 +44,49 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Fetch artist-related contacts through contact_id in opportunities/events
-      const { data: contactsData, error: contactsError } = await supabase
-        .from('contacts')
-        .select('*')
-        .eq('user_id', user.id);
+      // Fetch artist-related contacts (liés via opportunités ou événements)
+      const { data: artistOpps } = await supabase
+        .from('artist_opportunities')
+        .select('opportunity_id')
+        .eq('artist_id', artist.id);
+
+      const oppIds = artistOpps?.map(o => o.opportunity_id) || [];
+
+      const { data: artistEvts } = await supabase
+        .from('artist_events')
+        .select('event_id')
+        .eq('artist_id', artist.id);
+
+      const evtIds = artistEvts?.map(e => e.event_id) || [];
+
+      // Get contact IDs from opportunities and events
+      let contactIds: string[] = [];
+      if (oppIds.length > 0) {
+        const { data: oppContacts } = await supabase
+          .from('contact_opportunities')
+          .select('contact_id')
+          .in('opportunity_id', oppIds);
+        contactIds = [...contactIds, ...(oppContacts?.map(c => c.contact_id) || [])];
+      }
+      if (evtIds.length > 0) {
+        const { data: evtContacts } = await supabase
+          .from('contact_events')
+          .select('contact_id')
+          .in('event_id', evtIds);
+        contactIds = [...contactIds, ...(evtContacts?.map(c => c.contact_id) || [])];
+      }
+
+      // Remove duplicates
+      contactIds = [...new Set(contactIds)];
+
+      let contactsData = [];
+      if (contactIds.length > 0) {
+        const { data } = await supabase
+          .from('contacts')
+          .select('*')
+          .in('id', contactIds);
+        contactsData = data || [];
+      }
 
       console.log('Contacts fetched:', contactsData?.length);
 

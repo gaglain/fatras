@@ -10,9 +10,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+
+interface EventEditDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  eventId: string;
+  onEventUpdated?: () => void;
+}
 
 interface AppUser {
   user_id: string;
@@ -21,16 +29,11 @@ interface AppUser {
   last_name?: string;
 }
 
-interface EventCreationDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onEventCreated?: () => void;
-}
-
-export const EventCreationDialog: React.FC<EventCreationDialogProps> = ({
+export const EventEditDialog: React.FC<EventEditDialogProps> = ({
   open,
   onOpenChange,
-  onEventCreated,
+  eventId,
+  onEventUpdated,
 }) => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -45,10 +48,11 @@ export const EventCreationDialog: React.FC<EventCreationDialogProps> = ({
   });
 
   useEffect(() => {
-    if (open) {
+    if (open && eventId) {
+      loadEvent();
       loadAppUsers();
     }
-  }, [open]);
+  }, [open, eventId]);
 
   const loadAppUsers = async () => {
     try {
@@ -61,6 +65,32 @@ export const EventCreationDialog: React.FC<EventCreationDialogProps> = ({
       setAppUsers(data || []);
     } catch (error) {
       console.error('Erreur lors du chargement des utilisateurs:', error);
+    }
+  };
+
+  const loadEvent = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('calendar_events')
+        .select('*')
+        .eq('id', eventId)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setFormData({
+          title: data.title || '',
+          description: data.description || '',
+          start_time: data.start_time ? new Date(data.start_time).toISOString().slice(0, 16) : '',
+          end_time: data.end_time ? new Date(data.end_time).toISOString().slice(0, 16) : '',
+          location: data.location || '',
+          attendees: data.attendees || [],
+        });
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement de l\'événement:', error);
+      toast.error('Erreur lors du chargement de l\'événement');
     }
   };
 
@@ -78,9 +108,45 @@ export const EventCreationDialog: React.FC<EventCreationDialogProps> = ({
 
     setLoading(true);
     try {
-      const attendeesArray = formData.attendees;
+      // Update in calendar_events
+      const { error: calError } = await supabase
+        .from('calendar_events')
+        .update({
+          title: formData.title,
+          description: formData.description,
+          start_time: new Date(formData.start_time).toISOString(),
+          end_time: new Date(formData.end_time || formData.start_time).toISOString(),
+          location: formData.location,
+          attendees: formData.attendees,
+        })
+        .eq('id', eventId);
 
-      // Check if user has Nylas integration
+      if (calError) throw calError;
+
+      // Update in centralized_events if exists
+      const { error: centError } = await supabase
+        .from('centralized_events')
+        .update({
+          title: formData.title,
+          description: formData.description,
+          start_date: new Date(formData.start_time).toISOString(),
+          end_date: new Date(formData.end_time || formData.start_time).toISOString(),
+          venue: formData.location,
+        })
+        .eq('id', eventId);
+
+      // Envoyer notifications aux participants (seulement nouveaux)
+      for (const userId of formData.attendees) {
+        await supabase.from('notifications').insert({
+          user_id: userId,
+          type: 'event_update',
+          title: 'Événement modifié',
+          message: `L'événement "${formData.title}" a été modifié`,
+          data: { event_id: eventId, event_title: formData.title },
+        });
+      }
+
+      // Mise à jour Google Agenda via Nylas si intégration active
       const { data: integration } = await supabase
         .from('integrations')
         .select('*')
@@ -90,15 +156,14 @@ export const EventCreationDialog: React.FC<EventCreationDialogProps> = ({
         .single();
 
       const settings = integration?.settings as any;
-      
       if (settings?.grant_id) {
-        // Create event in Google Calendar via Nylas
         try {
-          const { data, error } = await supabase.functions.invoke('nylas-calendar-sync', {
+          await supabase.functions.invoke('nylas-calendar-sync', {
             body: {
-              action: 'create_event',
+              action: 'update_event',
               user_id: user.id,
               grant_id: settings.grant_id,
+              event_id: eventId,
               event: {
                 title: formData.title,
                 description: formData.description,
@@ -107,72 +172,22 @@ export const EventCreationDialog: React.FC<EventCreationDialogProps> = ({
                   end_time: new Date(formData.end_time || formData.start_time).toISOString(),
                 },
                 location: formData.location,
-                participants: attendeesArray.map(userId => {
+                participants: formData.attendees.map(userId => {
                   const u = appUsers.find(au => au.user_id === userId);
                   return { email: u?.email || '' };
                 }).filter(p => p.email),
               },
             },
           });
-
-          if (error) {
-            console.error('Nylas calendar error:', error);
-            toast.error('Erreur lors de la synchronisation avec Google Agenda');
-          } else {
-            toast.success('Événement créé dans Google Agenda');
-          }
         } catch (nylasError) {
-          console.error('Nylas error:', nylasError);
+          console.error('Erreur Nylas update:', nylasError);
         }
       }
 
-      // Create event in local database
-      const { error: eventError } = await supabase.from('calendar_events').insert({
-        user_id: user.id,
-        title: formData.title,
-        description: formData.description,
-        start_time: formData.start_time,
-        end_time: formData.end_time || formData.start_time,
-        location: formData.location,
-        calendar_id: settings?.calendar_id || 'local',
-        provider: integration ? 'nylas' : 'local',
-        external_id: `local-${Date.now()}`,
-        attendees: attendeesArray,
-      });
-
-      if (eventError) throw eventError;
-
-      // Create event in centralized events table
-      const { error: centralError } = await supabase.from('centralized_events').insert({
-        user_id: user.id,
-        title: formData.title,
-        description: formData.description,
-        start_date: formData.start_time,
-        end_date: formData.end_time || formData.start_time,
-        venue: formData.location,
-        status: 'confirmed',
-      });
-
-      if (centralError) console.error('Error creating centralized event:', centralError);
-
-      // Send notifications to attendees (user IDs)
-      if (attendeesArray.length > 0) {
-        for (const userId of attendeesArray) {
-          await supabase.from('notifications').insert({
-            user_id: userId,
-            type: 'event_invitation',
-            title: 'Nouvelle invitation',
-            message: `Vous êtes invité à l'événement: ${formData.title}`,
-            data: { event_title: formData.title, start_time: formData.start_time, location: formData.location },
-          });
-        }
-      }
-
-      toast.success('Événement créé avec succès');
+      toast.success('Événement modifié avec succès');
       onOpenChange(false);
-      onEventCreated?.();
+      onEventUpdated?.();
       
-      // Reset form
       setFormData({
         title: '',
         description: '',
@@ -182,24 +197,33 @@ export const EventCreationDialog: React.FC<EventCreationDialogProps> = ({
         attendees: [],
       });
     } catch (error: any) {
-      console.error('Erreur lors de la création:', error);
+      console.error('Erreur lors de la modification:', error);
       toast.error(`Erreur: ${error.message}`);
     } finally {
       setLoading(false);
     }
   };
 
+  const toggleAttendee = (userId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      attendees: prev.attendees.includes(userId)
+        ? prev.attendees.filter(id => id !== userId)
+        : [...prev.attendees, userId],
+    }));
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Créer un nouvel événement</DialogTitle>
+          <DialogTitle>Modifier l'événement</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="title">Titre *</Label>
+            <Label htmlFor="edit-title">Titre *</Label>
             <Input
-              id="title"
+              id="edit-title"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               placeholder="Nom de l'événement"
@@ -208,9 +232,9 @@ export const EventCreationDialog: React.FC<EventCreationDialogProps> = ({
           </div>
           
           <div>
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="edit-description">Description</Label>
             <Textarea
-              id="description"
+              id="edit-description"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="Description de l'événement"
@@ -220,9 +244,9 @@ export const EventCreationDialog: React.FC<EventCreationDialogProps> = ({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="start_time">Début *</Label>
+              <Label htmlFor="edit-start_time">Début *</Label>
               <Input
-                id="start_time"
+                id="edit-start_time"
                 type="datetime-local"
                 value={formData.start_time}
                 onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
@@ -230,9 +254,9 @@ export const EventCreationDialog: React.FC<EventCreationDialogProps> = ({
               />
             </div>
             <div>
-              <Label htmlFor="end_time">Fin</Label>
+              <Label htmlFor="edit-end_time">Fin</Label>
               <Input
-                id="end_time"
+                id="edit-end_time"
                 type="datetime-local"
                 value={formData.end_time}
                 onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
@@ -241,9 +265,9 @@ export const EventCreationDialog: React.FC<EventCreationDialogProps> = ({
           </div>
 
           <div>
-            <Label htmlFor="location">Lieu</Label>
+            <Label htmlFor="edit-location">Lieu</Label>
             <Input
-              id="location"
+              id="edit-location"
               value={formData.location}
               onChange={(e) => setFormData({ ...formData, location: e.target.value })}
               placeholder="Adresse ou nom du lieu"
@@ -260,19 +284,12 @@ export const EventCreationDialog: React.FC<EventCreationDialogProps> = ({
                   <div key={u.user_id} className="flex items-center space-x-2">
                     <input
                       type="checkbox"
-                      id={`attendee-${u.user_id}`}
+                      id={`edit-attendee-${u.user_id}`}
                       checked={formData.attendees.includes(u.user_id)}
-                      onChange={() => {
-                        setFormData(prev => ({
-                          ...prev,
-                          attendees: prev.attendees.includes(u.user_id)
-                            ? prev.attendees.filter(id => id !== u.user_id)
-                            : [...prev.attendees, u.user_id],
-                        }));
-                      }}
+                      onChange={() => toggleAttendee(u.user_id)}
                       className="h-4 w-4"
                     />
-                    <label htmlFor={`attendee-${u.user_id}`} className="text-sm cursor-pointer">
+                    <label htmlFor={`edit-attendee-${u.user_id}`} className="text-sm cursor-pointer">
                       {u.first_name} {u.last_name} ({u.email})
                     </label>
                   </div>
@@ -286,7 +303,7 @@ export const EventCreationDialog: React.FC<EventCreationDialogProps> = ({
               Annuler
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? 'Création...' : 'Créer l\'événement'}
+              {loading ? 'Modification...' : 'Modifier l\'événement'}
             </Button>
           </DialogFooter>
         </form>

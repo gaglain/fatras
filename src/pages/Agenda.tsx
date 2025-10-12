@@ -14,6 +14,7 @@ import { AgendaCSVExporter } from '@/components/agenda/AgendaCSVExporter';
 import { GoogleCalendarDisplay } from '@/components/integrations/GoogleCalendarDisplay';
 import { CalendarViewContainer } from '@/components/calendar/CalendarViewContainer';
 import { EventCreationDialog } from '@/components/calendar/EventCreationDialog';
+import { EventEditDialog } from '@/components/calendar/EventEditDialog';
 import { useEvents } from '@/hooks/useEvents';
 import { useUser } from '@/contexts/UserContext';
 import { useAuth } from '@/hooks/useAuth';
@@ -166,6 +167,8 @@ export const Agenda: React.FC = () => {
   const { events, addEvent, updateEvent, deleteEvent } = useEvents();
   const [showEventForm, setShowEventForm] = useState(false);
   const [showCreationDialog, setShowCreationDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [editingEvent, setEditingEvent] = useState<AgendaEvent | null>(null);
   const [csvImportOpen, setCsvImportOpen] = useState(false);
   const [visibleUsers, setVisibleUsers] = useState<string[]>(users.map(u => u.id));
@@ -219,8 +222,8 @@ export const Agenda: React.FC = () => {
   };
 
   const handleEditEvent = (event: AgendaEvent) => {
-    setEditingEvent(event);
-    setShowEventForm(true);
+    setEditingEventId(event.id);
+    setShowEditDialog(true);
   };
 
   const handleDeleteEvent = async (eventId: string) => {
@@ -320,6 +323,14 @@ export const Agenda: React.FC = () => {
             onOpenChange={setShowCreationDialog}
             onEventCreated={handleEventCreated}
           />
+          {editingEventId && (
+            <EventEditDialog
+              open={showEditDialog}
+              onOpenChange={setShowEditDialog}
+              eventId={editingEventId}
+              onEventUpdated={handleEventCreated}
+            />
+          )}
           <CalendarViewContainer />
         </TabsContent>
         
