@@ -323,3 +323,5 @@ export const EmailInbox: React.FC = () => {
     </Card>
   );
 };
+
+export default EmailInbox;
