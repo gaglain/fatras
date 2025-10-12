@@ -53,7 +53,7 @@ export const useUnifiedEmails = () => {
 
     try {
       setIsLoading(true);
-      const [unifiedRes, inboundRes] = await Promise.all([
+      const [unifiedRes, inboundRes, accountsRes] = await Promise.all([
         supabase
           .from('emails')
           .select(`
@@ -75,23 +75,48 @@ export const useUnifiedEmails = () => {
           .eq('user_id', user.id)
           .order('received_at', { ascending: false })
           .limit(100),
+        supabase
+          .from('email_accounts')
+          .select('email')
+          .eq('user_id', user.id)
+          .eq('is_active', true)
       ]);
 
       if (unifiedRes.error) throw unifiedRes.error;
       if (inboundRes.error) throw inboundRes.error;
+      if (accountsRes.error) throw accountsRes.error;
+
+      // Utilitaires
+      const normalizeAddress = (value: string) => {
+        if (!value) return '';
+        const match = value.match(/<([^>]+)>/);
+        const email = match ? match[1] : value;
+        return email.replace(/(^"|"$)/g, '').trim().toLowerCase();
+      };
+
+      const myEmailsSet = new Set(
+        [
+          ...(accountsRes.data?.map((a: any) => a.email) || []),
+          user.email || ''
+        ]
+          .filter(Boolean)
+          .map((e: string) => normalizeAddress(e))
+      );
 
       const unified = (unifiedRes.data as UnifiedEmail[]) ?? [];
+      const sentLabelSet = new Set([
+        'sent','envoyés','inbox.sent','sent items','[gmail]/sent mail','sent messages','[gmail]/messages envoyés','outbox'
+      ]);
+
       const inboundMapped: UnifiedEmail[] = ((inboundRes.data as any[]) ?? []).map((ie) => {
-        // Déterminer la direction basée sur l'email de l'expéditeur
-        const userEmails = ['booking@fatras.net', 'fatrasplanning@gmail.com']; // Ajouter les emails de l'utilisateur
-        const isFromUser = userEmails.some(email => 
-          ie.from_email?.toLowerCase().includes(email.toLowerCase())
-        );
-        
+        const from = normalizeAddress(ie.from_email || '');
+        const hasSentLabel = (ie.labels || []).some((l: string) => sentLabelSet.has((l || '').toLowerCase()));
+        const isFromUser = myEmailsSet.has(from);
+
         return {
           id: ie.id,
           message_id: ie.message_id,
-          direction: isFromUser ? 'sent' : 'received',
+          direction: (isFromUser || hasSentLabel) ? 'sent' : 'received',
           from_email: ie.from_email,
           from_name: ie.from_name || ie.sender_name,
           to_email: ie.to_email,
