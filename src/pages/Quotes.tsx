@@ -33,7 +33,7 @@ export const Quotes: React.FC = () => {
   const { quotes, loading, addQuote, updateQuote, deleteQuote, generateQuoteNumber } = useQuotes();
   const { contacts } = useContacts();
   const { events } = useEvents();
-  const { artists } = useCentralizedData();
+  const { artists, events: cEvents } = useCentralizedData();
   const { user } = useAuth();
 
   const [formData, setFormData] = useState({
@@ -48,6 +48,34 @@ export const Quotes: React.FC = () => {
     notes: ''
   });
 
+  const resetForm = () => {
+    setFormData({
+      title: '',
+      description: '',
+      contact_id: 'none',
+      event_id: 'none',
+      artist_id: 'none',
+      status: 'draft',
+      valid_until: '',
+      terms: '',
+      notes: ''
+    });
+  };
+
+  const fillFormFromQuote = (q: Quote) => {
+    setFormData({
+      title: q.title,
+      description: q.description || '',
+      contact_id: q.contact_id ?? 'none',
+      event_id: q.event_id ?? 'none',
+      artist_id: q.artist_id ?? 'none',
+      status: q.status,
+      valid_until: q.valid_until || '',
+      terms: q.terms || '',
+      notes: q.notes || ''
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -60,8 +88,29 @@ export const Quotes: React.FC = () => {
       toast.error('Utilisateur non connecté');
       return;
     }
-
+    
     try {
+      if (selectedQuote) {
+        const updates = {
+          title: formData.title,
+          description: formData.description,
+          contact_id: formData.contact_id !== 'none' ? formData.contact_id : null,
+          event_id: formData.event_id !== 'none' ? formData.event_id : null,
+          artist_id: formData.artist_id !== 'none' ? formData.artist_id : null,
+          status: formData.status,
+          valid_until: formData.valid_until || null,
+          terms: formData.terms,
+          notes: formData.notes,
+        };
+
+        const updated = await updateQuote(selectedQuote.id, updates);
+        toast.success('Devis mis à jour');
+        setSelectedQuote(updated || selectedQuote);
+        setDialogOpen(false);
+        setCalculation(null);
+        return;
+      }
+
       const quoteData = {
         user_id: user.id,
         quote_number: generateQuoteNumber(),
@@ -82,17 +131,7 @@ export const Quotes: React.FC = () => {
       toast.success('Devis créé avec succès');
       
       // Reset form
-      setFormData({
-        title: '',
-        description: '',
-        contact_id: 'none',
-        event_id: 'none',
-        artist_id: 'none',
-        status: 'draft',
-        valid_until: '',
-        terms: '',
-        notes: ''
-      });
+      resetForm();
       setCalculation(null);
       setDialogOpen(false);
       
@@ -101,8 +140,8 @@ export const Quotes: React.FC = () => {
         setSelectedQuote(newQuote);
       }
     } catch (error) {
-      console.error('Erreur lors de la création du devis:', error);
-      toast.error('Erreur lors de la création du devis');
+      console.error('Erreur lors de la sauvegarde du devis:', error);
+      toast.error('Erreur lors de la sauvegarde du devis');
     }
   };
 
@@ -192,16 +231,16 @@ export const Quotes: React.FC = () => {
             Calculateur Simple
           </Button>
           
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="flex items-center gap-2">
-                <Plus className="h-4 w-4" />
-                Nouveau Devis
-              </Button>
-            </DialogTrigger>
+            <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) { setSelectedQuote(null); } }}>
+              <DialogTrigger asChild>
+                <Button className="flex items-center gap-2" onClick={() => { setSelectedQuote(null); resetForm(); setCalculation(null); }}>
+                  <Plus className="h-4 w-4" />
+                  Nouveau Devis
+                </Button>
+              </DialogTrigger>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Créer un nouveau devis</DialogTitle>
+                <DialogTitle>{selectedQuote ? 'Modifier le devis' : 'Créer un nouveau devis'}</DialogTitle>
               </DialogHeader>
               
               <Tabs defaultValue="info" className="space-y-4">
@@ -333,7 +372,7 @@ export const Quotes: React.FC = () => {
                         Annuler
                       </Button>
                       <Button type="submit">
-                        Créer le devis
+                        {selectedQuote ? 'Mettre à jour le devis' : 'Créer le devis'}
                       </Button>
                     </div>
                   </form>
@@ -435,8 +474,10 @@ export const Quotes: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         {quote.contact_id ? (
-                          contacts.find(c => c.id === quote.contact_id)?.first_name + ' ' +
-                          contacts.find(c => c.id === quote.contact_id)?.last_name
+                          (() => {
+                            const c = contacts.find(c => c.id === quote.contact_id);
+                            return c ? `${c.first_name} ${c.last_name}` : '-';
+                          })()
                         ) : '-'}
                       </TableCell>
                       <TableCell>
@@ -445,9 +486,10 @@ export const Quotes: React.FC = () => {
                         ) : '-'}
                       </TableCell>
                       <TableCell>
-                        {quote.artist_id ? (
-                          artists.find(a => a.id === quote.artist_id)?.name || '-'
-                        ) : '-'}
+                        {(() => {
+                          const artistId = quote.artist_id || events.find(e => e.id === quote.event_id)?.artist_id;
+                          return artistId ? (artists.find(a => a.id === artistId)?.name || '-') : '-';
+                        })()}
                       </TableCell>
                       <TableCell>
                         {getStatusBadge(quote.status)}
@@ -463,7 +505,16 @@ export const Quotes: React.FC = () => {
                           <Button variant="ghost" size="sm">
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => { 
+                              setSelectedQuote(quote); 
+                              fillFormFromQuote(quote); 
+                              setCalculation(null);
+                              setDialogOpen(true);
+                            }}
+                          >
                             <Edit className="h-4 w-4" />
                           </Button>
                           <Button variant="ghost" size="sm">
