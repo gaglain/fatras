@@ -160,11 +160,27 @@ export const useNylasEmail = () => {
     try {
       console.log('📤 Sending email...');
 
+      // Charger la signature de l'utilisateur
+      const { data: profileData } = await supabase
+        .from('user_profiles')
+        .select('email_signature')
+        .eq('user_id', user.id)
+        .single();
+
+      const signature = profileData?.email_signature || '';
+      const emailWithSignature = email.html 
+        ? `${email.html}\n\n${signature.replace(/\n/g, '<br>')}`
+        : `${email.content}\n\n${signature}`;
+
       const { data, error } = await supabase.functions.invoke('nylas-email', {
         body: {
           action: 'send',
           accountId,
-          email
+          email: {
+            ...email,
+            content: signature ? `${email.content}\n\n${signature}` : email.content,
+            html: email.html ? emailWithSignature : undefined
+          }
         }
       });
 
@@ -189,7 +205,20 @@ export const useNylasEmail = () => {
         try {
           console.warn('⚠️ Nylas grant settings missing. Falling back to Resend.');
           toast.message('Nylas indisponible, tentative via Resend…');
-          const html = email.html ?? `<div>${email.content}</div>`;
+          
+          // Charger la signature de l'utilisateur
+          const { data: profileData } = await supabase
+            .from('user_profiles')
+            .select('email_signature')
+            .eq('user_id', user.id)
+            .single();
+
+          const signature = profileData?.email_signature || '';
+          const contentWithSignature = signature ? `${email.content}\n\n${signature}` : email.content;
+          const html = email.html 
+            ? `${email.html}\n\n${signature.replace(/\n/g, '<br>')}`
+            : `<div>${contentWithSignature.replace(/\n/g, '<br>')}</div>`;
+
           const { data: resendData, error: resendError } = await supabase.functions.invoke('send-email-resend', {
             body: {
               to: [email.to],
