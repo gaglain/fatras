@@ -50,9 +50,9 @@ export const ContactSearchCombobox: React.FC<ContactSearchComboboxProps> = ({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent onOpenAutoFocus={(e) => e.preventDefault()} className="w-[400px] p-0 z-[9999]" align="start">
+      <PopoverContent className="w-[400px] p-0 z-[9999]" align="start">
         <Command shouldFilter={true}>
-          <CommandInput placeholder="Rechercher un contact..." className="h-9" />
+          <CommandInput autoFocus placeholder="Rechercher un contact..." className="h-9" />
           <CommandList>
             <CommandEmpty>Aucun contact trouvé.</CommandEmpty>
             <CommandGroup className="max-h-64 overflow-auto">
