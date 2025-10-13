@@ -220,9 +220,12 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         onInput={handleInput}
         dangerouslySetInnerHTML={{ __html: value }}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' && !e.shiftKey) {
+          if (e.key === 'Enter') {
             e.preventDefault();
-            document.execCommand('insertLineBreak');
+            document.execCommand('insertHTML', false, '<br><br>');
+            if (editorRef.current) {
+              onChange(editorRef.current.innerHTML);
+            }
           }
         }}
         className={cn(

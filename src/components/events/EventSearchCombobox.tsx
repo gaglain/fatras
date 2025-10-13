@@ -39,15 +39,16 @@ export const EventSearchCombobox: React.FC<EventSearchComboboxProps> = ({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between"
+          className="w-full justify-between text-left"
+          type="button"
         >
           {selectedEvent ? selectedEvent.title : placeholder}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0">
-        <Command>
-          <CommandInput placeholder="Rechercher un événement..." />
+      <PopoverContent className="w-[400px] p-0" align="start">
+        <Command shouldFilter={true}>
+          <CommandInput placeholder="Rechercher un événement..." className="h-9" />
           <CommandList>
             <CommandEmpty>Aucun événement trouvé.</CommandEmpty>
             <CommandGroup className="max-h-64 overflow-auto">

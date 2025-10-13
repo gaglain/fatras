@@ -39,17 +39,16 @@ export const ContactSearchCombobox: React.FC<ContactSearchComboboxProps> = ({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between"
+          className="w-full justify-between text-left"
+          type="button"
         >
-          {selectedContact
-            ? `${selectedContact.first_name} ${selectedContact.last_name}`
-            : placeholder}
+          {selectedContact ? `${selectedContact.first_name} ${selectedContact.last_name}` : placeholder}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0">
-        <Command>
-          <CommandInput placeholder="Rechercher un contact..." />
+      <PopoverContent className="w-[400px] p-0" align="start">
+        <Command shouldFilter={true}>
+          <CommandInput placeholder="Rechercher un contact..." className="h-9" />
           <CommandList>
             <CommandEmpty>Aucun contact trouvé.</CommandEmpty>
             <CommandGroup className="max-h-64 overflow-auto">
@@ -68,10 +67,10 @@ export const ContactSearchCombobox: React.FC<ContactSearchComboboxProps> = ({
                 />
                 Aucun contact
               </CommandItem>
-              {contactsList.map((contact) => (
+              {contacts.map((contact) => (
                 <CommandItem
                   key={contact.id}
-                  value={`${contact.first_name} ${contact.last_name} ${contact.email ?? ''}`}
+                  value={`${contact.first_name} ${contact.last_name} ${contact.email || ''}`}
                   onSelect={() => {
                     onValueChange(contact.id);
                     setOpen(false);
