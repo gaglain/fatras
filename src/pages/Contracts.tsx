@@ -119,7 +119,8 @@ export const Contracts: React.FC = () => {
       return;
     }
 
-    if (formData.items.length === 0 || !formData.items[0].name.trim()) {
+    // Valider les items seulement en mode création (pas en édition où ils sont gérés par QuoteItemManager)
+    if (!editingQuote && (formData.items.length === 0 || !formData.items[0].name.trim())) {
       toast.error('Au moins un élément est requis');
       return;
     }
