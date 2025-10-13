@@ -13,6 +13,7 @@ import { useQuotes } from '@/hooks/useQuotes';
 import { useContacts } from '@/hooks/useContacts';
 import { useEvents } from '@/hooks/useEvents';
 import { useUser } from '@/contexts/UserContext';
+import { useCentralizedData } from '@/hooks/useCentralizedData';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ContractCalculator, type CalculationValues } from '@/components/contracts/ContractCalculator';
 import { QuoteItemManager } from '@/components/quotes/QuoteItemManager';
@@ -42,6 +43,7 @@ export const Contracts: React.FC = () => {
   const { quotes, loading, addQuote, updateQuote, deleteQuote, generateQuoteNumber } = useQuotes();
   const { contacts } = useContacts();
   const { events } = useEvents();
+  const { artists } = useCentralizedData();
   
   const [showForm, setShowForm] = useState(false);
   const [showCalculator, setShowCalculator] = useState(false);
@@ -589,6 +591,12 @@ export const Contracts: React.FC = () => {
                   <span className="font-medium">Événement: </span>
                   {quote.event_id ? (
                     events.find(e => e.id === quote.event_id)?.title || '-'
+                  ) : '-'}
+                </div>
+                <div>
+                  <span className="font-medium">Spectacle: </span>
+                  {quote.artist_id ? (
+                    artists.find(a => a.id === quote.artist_id)?.name || '-'
                   ) : '-'}
                 </div>
               </div>
