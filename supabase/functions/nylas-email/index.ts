@@ -516,6 +516,49 @@ async function sendEmail(baseUrl: string, apiKey: string, supabase: any, userId:
       throw new Error('Account not found');
     }
 
+    // For IMAP providers, ensure the Nylas grant has full SMTP/IMAP settings before sending
+    if (account.provider === 'imap' && account.access_token && account.imap_config) {
+      try {
+        const cfg = account.imap_config as any;
+        const imap_host = cfg.imap_host ?? cfg.host;
+        const imap_port = Number(cfg.imap_port ?? cfg.port ?? 993);
+        const smtp_host = cfg.smtp_host ?? cfg.host;
+        const smtp_port = Number(cfg.smtp_port ?? 587);
+        const username = cfg.email ?? account.email;
+        const password = cfg.password; // do not log
+
+        const settings: Record<string, any> = {
+          imap_host,
+          imap_port,
+          imap_username: username,
+          imap_password: password,
+          smtp_host,
+          smtp_port,
+          smtp_username: username,
+          smtp_password: password,
+        };
+
+        console.log('🛠 Ensuring IMAP grant settings (no secrets logged)', { imap_host, imap_port, smtp_host, smtp_port });
+        const ensureResp = await fetch(`${baseUrl}/grants/${account.access_token}`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ settings }),
+        });
+
+        if (!ensureResp.ok) {
+          const txt = await ensureResp.text();
+          console.warn('⚠️ Failed to ensure IMAP grant settings (continuing anyway):', txt);
+        } else {
+          console.log('✅ IMAP grant settings ensured.');
+        }
+      } catch (e) {
+        console.warn('⚠️ Error while ensuring IMAP grant settings (continuing):', e);
+      }
+    }
+
     // Send email via Nylas
     const sendResponse = await fetch(`${baseUrl}/grants/${account.access_token}/messages/send`, {
       method: 'POST',
