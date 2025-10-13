@@ -1,15 +1,19 @@
 import { useState } from 'react';
-import { Search, User, Calendar, X } from 'lucide-react';
+import { Search, User, Calendar, CheckSquare, Sparkles, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { useContacts } from '@/hooks/useContacts';
 import { useEvents } from '@/hooks/useEvents';
+import { useTasks } from '@/hooks/useTasks';
+import { useCentralizedData } from '@/hooks/useCentralizedData';
 
-interface SearchItem {
+export type UniversalType = 'contact' | 'event' | 'task' | 'artist';
+
+export interface SearchItem {
   id: string;
-  type: 'contact' | 'event';
+  type: UniversalType;
   title: string;
   subtitle: string;
   external_id?: string;
@@ -23,16 +27,16 @@ interface UniversalSearchProps {
   selectedItems?: SearchItem[];
   onSelectionChange?: (items: SearchItem[]) => void;
   triggerText?: string;
-  filterTypes?: ('contact' | 'event')[];
+  filterTypes?: UniversalType[];
 }
 
 export const UniversalSearch = ({
   onSelect,
-  placeholder = "Rechercher contacts ou événements...",
+  placeholder = 'Rechercher contacts, événements, tâches ou spectacles...',
   allowMultiple = false,
   selectedItems = [],
   onSelectionChange,
-  triggerText = "Rechercher",
+  triggerText = 'Rechercher',
   filterTypes = ['contact', 'event']
 }: UniversalSearchProps) => {
   const [open, setOpen] = useState(false);
@@ -41,31 +45,57 @@ export const UniversalSearch = ({
 
   const { contacts } = useContacts();
   const { events } = useEvents();
+  const { tasks } = useTasks();
+  const { artists } = useCentralizedData();
 
-  // Préparer les éléments de recherche
+  // Construire les éléments recherchables selon les types demandés
   const searchItems: SearchItem[] = [
     // Contacts
-    ...(filterTypes.includes('contact') ? contacts.map(contact => ({
-      id: contact.id,
-      type: 'contact' as const,
-      title: `${contact.first_name} ${contact.last_name}`,
-      subtitle: contact.email || contact.position || 'Contact',
-      external_id: contact.external_id,
-      data: contact
-    })) : []),
+    ...(filterTypes.includes('contact')
+      ? contacts.map((contact) => ({
+          id: contact.id,
+          type: 'contact' as const,
+          title: `${contact.first_name} ${contact.last_name}`.trim(),
+          subtitle: contact.email || contact.position || 'Contact',
+          external_id: (contact as any).external_id,
+          data: contact,
+        }))
+      : []),
     // Événements
-    ...(filterTypes.includes('event') ? events.map(event => ({
-      id: event.id,
-      type: 'event' as const,
-      title: event.title,
-      subtitle: event.venue || event.city || 'Événement',
-      external_id: event.external_id,
-      data: event
-    })) : [])
+    ...(filterTypes.includes('event')
+      ? events.map((event) => ({
+          id: event.id,
+          type: 'event' as const,
+          title: event.title,
+          subtitle: event.venue || (event as any).city || 'Événement',
+          external_id: (event as any).external_id,
+          data: event,
+        }))
+      : []),
+    // Tâches
+    ...(filterTypes.includes('task')
+      ? (Array.isArray(tasks) ? tasks : []).map((task: any) => ({
+          id: task.id,
+          type: 'task' as const,
+          title: task.title,
+          subtitle: task.description || 'Tâche',
+          data: task,
+        }))
+      : []),
+    // Spectacles (artistes)
+    ...(filterTypes.includes('artist')
+      ? (Array.isArray(artists) ? artists : []).map((artist: any) => ({
+          id: artist.id,
+          type: 'artist' as const,
+          title: artist.name,
+          subtitle: artist.genre || 'Spectacle',
+          data: artist,
+        }))
+      : []),
   ];
 
   // Filtrer par terme de recherche
-  const filteredItems = searchItems.filter(item => {
+  const filteredItems = searchItems.filter((item) => {
     const searchLower = searchTerm.toLowerCase();
     return (
       item.title.toLowerCase().includes(searchLower) ||
@@ -76,10 +106,10 @@ export const UniversalSearch = ({
 
   const handleSelect = (item: SearchItem) => {
     if (allowMultiple) {
-      const newSelection = internalSelection.find(s => s.id === item.id)
-        ? internalSelection.filter(s => s.id !== item.id)
+      const newSelection = internalSelection.find((s) => s.id === item.id)
+        ? internalSelection.filter((s) => s.id !== item.id)
         : [...internalSelection, item];
-      
+
       setInternalSelection(newSelection);
       onSelectionChange?.(newSelection);
     } else {
@@ -89,17 +119,54 @@ export const UniversalSearch = ({
   };
 
   const removeSelected = (itemId: string) => {
-    const newSelection = internalSelection.filter(item => item.id !== itemId);
+    const newSelection = internalSelection.filter((item) => item.id !== itemId);
     setInternalSelection(newSelection);
     onSelectionChange?.(newSelection);
   };
 
-  const getIcon = (type: 'contact' | 'event') => {
-    return type === 'contact' ? <User className="h-4 w-4" /> : <Calendar className="h-4 w-4" />;
+  const getIcon = (type: UniversalType) => {
+    switch (type) {
+      case 'contact':
+        return <User className="h-4 w-4" />;
+      case 'event':
+        return <Calendar className="h-4 w-4" />;
+      case 'task':
+        return <CheckSquare className="h-4 w-4" />;
+      case 'artist':
+        return <Sparkles className="h-4 w-4" />;
+      default:
+        return null;
+    }
   };
 
-  const getTypeColor = (type: 'contact' | 'event') => {
-    return type === 'contact' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800';
+  const getTypeColor = (type: UniversalType) => {
+    switch (type) {
+      case 'contact':
+        return 'bg-blue-100 text-blue-800';
+      case 'event':
+        return 'bg-green-100 text-green-800';
+      case 'task':
+        return 'bg-amber-100 text-amber-800';
+      case 'artist':
+        return 'bg-purple-100 text-purple-800';
+      default:
+        return 'bg-muted text-foreground';
+    }
+  };
+
+  const getTypeLabel = (type: UniversalType) => {
+    switch (type) {
+      case 'contact':
+        return 'Contact';
+      case 'event':
+        return 'Événement';
+      case 'task':
+        return 'Tâche';
+      case 'artist':
+        return 'Spectacle';
+      default:
+        return '';
+    }
   };
 
   return (
@@ -107,12 +174,8 @@ export const UniversalSearch = ({
       {/* Éléments sélectionnés */}
       {allowMultiple && internalSelection.length > 0 && (
         <div className="flex flex-wrap gap-2">
-          {internalSelection.map(item => (
-            <Badge
-              key={item.id}
-              variant="secondary"
-              className="flex items-center gap-1 pr-1"
-            >
+          {internalSelection.map((item) => (
+            <Badge key={item.id} variant="secondary" className="flex items-center gap-1 pr-1">
               {getIcon(item.type)}
               <span>{item.external_id && `${item.external_id} - `}{item.title}</span>
               <Button
@@ -129,14 +192,14 @@ export const UniversalSearch = ({
       )}
 
       {/* Déclencheur de recherche */}
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={setOpen} modal={false}>
         <DialogTrigger asChild>
           <Button variant="outline" className="w-full justify-start text-muted-foreground">
             <Search className="mr-2 h-4 w-4" />
             {triggerText}
           </Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[640px]">
           <DialogHeader>
             <DialogTitle>Recherche universelle</DialogTitle>
           </DialogHeader>
@@ -161,11 +224,11 @@ export const UniversalSearch = ({
                   {searchTerm ? 'Aucun résultat trouvé' : 'Tapez pour rechercher'}
                 </div>
               ) : (
-                filteredItems.map(item => (
+                filteredItems.map((item) => (
                   <div
                     key={item.id}
                     className={`p-3 rounded-lg border cursor-pointer hover:bg-accent transition-colors ${
-                      allowMultiple && internalSelection.find(s => s.id === item.id)
+                      allowMultiple && internalSelection.find((s) => s.id === item.id)
                         ? 'bg-accent border-primary'
                         : 'border-border'
                     }`}
@@ -179,20 +242,16 @@ export const UniversalSearch = ({
                         <div>
                           <div className="font-medium">
                             {item.external_id && (
-                              <span className="text-sm text-muted-foreground mr-2">
-                                {item.external_id}
-                              </span>
+                              <span className="text-sm text-muted-foreground mr-2">{item.external_id}</span>
                             )}
                             {item.title}
                           </div>
-                          <div className="text-sm text-muted-foreground">
-                            {item.subtitle}
-                          </div>
+                          <div className="text-sm text-muted-foreground">{item.subtitle}</div>
                         </div>
                       </div>
-                      
+
                       <Badge variant="secondary" className="capitalize">
-                        {item.type === 'contact' ? 'Contact' : 'Événement'}
+                        {getTypeLabel(item.type)}
                       </Badge>
                     </div>
                   </div>
