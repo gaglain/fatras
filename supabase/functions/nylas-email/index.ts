@@ -576,8 +576,91 @@ async function sendEmail(baseUrl: string, apiKey: string, supabase: any, userId:
     });
 
     if (!sendResponse.ok) {
-      const errorData = await sendResponse.text();
-      throw new Error(`Failed to send email: ${errorData}`);
+      const errorText = await sendResponse.text();
+      const lower = errorText.toLowerCase();
+      const missingGrant = /missing imap username|smtphost|smtpport/.test(lower);
+
+      if (missingGrant && account.provider === 'imap' && account.imap_config) {
+        console.warn('⚠️ Provider error indicates missing grant settings. Retrying with explicit IMAP/SMTP security flags...');
+        try {
+          const cfg = account.imap_config as any;
+          const imap_host = cfg.imap_host ?? cfg.host;
+          const imap_port = Number(cfg.imap_port ?? cfg.port ?? 993);
+          const smtp_host = cfg.smtp_host ?? cfg.host;
+          const smtp_port = Number(cfg.smtp_port ?? 587);
+          const username = cfg.email ?? account.email;
+          const password = cfg.password;
+          const imap_security = (imap_port === 993 || cfg.ssl) ? 'ssl' : 'starttls';
+          const smtp_security = (smtp_port === 465 || cfg.ssl) ? 'ssl' : 'starttls';
+
+          const settings: Record<string, any> = {
+            imap_host,
+            imap_port,
+            imap_username: username,
+            imap_password: password,
+            imap_security,
+            smtp_host,
+            smtp_port,
+            smtp_username: username,
+            smtp_password: password,
+            smtp_security,
+          };
+
+          const ensureResp2 = await fetch(`${baseUrl}/grants/${account.access_token}`, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ settings }),
+          });
+          if (!ensureResp2.ok) {
+            const txt = await ensureResp2.text();
+            console.warn('⚠️ Second ensure of grant settings failed:', txt);
+          } else {
+            console.log('✅ Grant settings updated with security flags, retrying send...');
+          }
+
+          const retryResp = await fetch(`${baseUrl}/grants/${account.access_token}/messages/send`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              to: [{ email: email.to }],
+              subject: email.subject,
+              body: email.html || email.content,
+              from: [{ email: account.email, name: account.email.split('@')[0] }],
+              reply_to: [{ email: account.email }],
+            }),
+          });
+
+          if (!retryResp.ok) {
+            const retryErr = await retryResp.text();
+            throw new Error(`Failed to send after grant update: ${retryErr}`);
+          }
+
+          const retryData = await retryResp.json();
+          await supabase.from('emails').insert({
+            user_id: userId,
+            message_id: retryData.data?.id,
+            direction: 'sent',
+            from_email: account.email,
+            from_name: account.email.split('@')[0],
+            to_email: email.to,
+            subject: email.subject,
+            content: email.content,
+            html_content: email.html,
+            status: 'delivered',
+            provider: 'nylas',
+            sent_at: new Date().toISOString()
+          });
+
+          return new Response(
+            JSON.stringify({ success: true, messageId: retryData.data?.id, message: 'Email sent successfully' }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        } catch (e: any) {
+          throw new Error(`Failed to send email after ensuring grant: ${e.message}`);
+        }
+      }
+
+      throw new Error(`Failed to send email: ${errorText}`);
     }
 
     const sendData = await sendResponse.json();
