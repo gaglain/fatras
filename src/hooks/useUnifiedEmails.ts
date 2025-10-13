@@ -97,7 +97,10 @@ export const useUnifiedEmails = () => {
       const myEmailsSet = new Set(
         [
           ...(accountsRes.data?.map((a: any) => a.email) || []),
-          user.email || ''
+          user.email || '',
+          // Hard guarantee: these accounts are always considered as "mine"
+          'booking@fatras.net',
+          'fatrasplanning@gmail.com'
         ]
           .filter(Boolean)
           .map((e: string) => normalizeAddress(e))
@@ -135,7 +138,9 @@ export const useUnifiedEmails = () => {
         const isToMe = myEmailsSet.has(to);
         const fromDomain = (from.split('@')[1] || '').toLowerCase();
         const isFromMyDomain = fromDomain && myDomainsSet.has(fromDomain);
-        const direction: 'sent' | 'received' = (isFromUser || hasSentLabel || (!isToMe && isFromMyDomain)) ? 'sent' : 'received';
+          let direction: 'sent' | 'received' = (isFromUser || hasSentLabel || (!isToMe && isFromMyDomain)) ? 'sent' : 'received';
+          const hardSentEmails = new Set(['booking@fatras.net','fatrasplanning@gmail.com']);
+          if (hardSentEmails.has(from)) direction = 'sent';
 
         return {
           id: ie.id,
@@ -277,7 +282,9 @@ export const useUnifiedEmails = () => {
           const hasSentLabel = (ie.labels || []).some((l: string) => isSentLabelCheck(l));
           const isFromMyDomain = myDomain && from.endsWith(`@${myDomain}`);
           const isToMe = to === myAddr;
-          const direction: 'sent' | 'received' = (from === myAddr || hasSentLabel || (!isToMe && isFromMyDomain)) ? 'sent' : 'received';
+          let direction: 'sent' | 'received' = (from === myAddr || hasSentLabel || (!isToMe && isFromMyDomain)) ? 'sent' : 'received';
+          const hardSentEmails = new Set(['booking@fatras.net','fatrasplanning@gmail.com']);
+          if (hardSentEmails.has(from)) direction = 'sent';
 
           const mapped: UnifiedEmail = {
             id: ie.id,
@@ -373,7 +380,10 @@ export const useUnifiedEmails = () => {
             const hasSentLabel = (ie.labels || []).some((l: string) => isSentLabelCheck(l));
             const isFromMyDomain = myDomain && from.endsWith(`@${myDomain}`);
             const isToMe = to === myAddr;
-            const direction: 'sent' | 'received' = (from === myAddr || hasSentLabel || (!isToMe && isFromMyDomain)) ? 'sent' : 'received';
+             let direction: 'sent' | 'received' = (from === myAddr || hasSentLabel || (!isToMe && isFromMyDomain)) ? 'sent' : 'received';
+
+             const hardSentEmails = new Set(['booking@fatras.net','fatrasplanning@gmail.com']);
+             if (hardSentEmails.has(from)) direction = 'sent';
 
             return {
               ...e,
