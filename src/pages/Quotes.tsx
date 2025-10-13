@@ -409,8 +409,8 @@ export const Quotes: React.FC = () => {
         </CardHeader>
         <CardContent>
           {filteredQuotes.length > 0 ? (
-            <div className="border rounded-lg">
-              <Table>
+            <div className="overflow-x-auto border rounded-lg">
+              <Table className="min-w-[1000px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Numéro</TableHead>
