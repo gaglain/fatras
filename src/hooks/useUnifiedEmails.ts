@@ -103,6 +103,13 @@ export const useUnifiedEmails = () => {
           .map((e: string) => normalizeAddress(e))
       );
 
+      // Domains derived from user's email accounts (to catch aliases)
+      const myDomainsSet = new Set(
+        Array.from(myEmailsSet)
+          .map((e: string) => e.split('@')[1])
+          .filter(Boolean)
+      );
+
       const unified = (unifiedRes.data as UnifiedEmail[]) ?? [];
       const sentLabelSet = new Set([
         'sent','envoyés','inbox.sent','sent items','[gmail]/sent mail','sent messages','[gmail]/messages envoyés','outbox'
@@ -110,13 +117,18 @@ export const useUnifiedEmails = () => {
 
       const inboundMapped: UnifiedEmail[] = ((inboundRes.data as any[]) ?? []).map((ie) => {
         const from = normalizeAddress(ie.from_email || '');
+        const to = normalizeAddress(ie.to_email || '');
         const hasSentLabel = (ie.labels || []).some((l: string) => sentLabelSet.has((l || '').toLowerCase()));
         const isFromUser = myEmailsSet.has(from);
+        const isToMe = myEmailsSet.has(to);
+        const fromDomain = (from.split('@')[1] || '').toLowerCase();
+        const isFromMyDomain = fromDomain && myDomainsSet.has(fromDomain);
+        const direction: 'sent' | 'received' = (isFromUser || hasSentLabel || (!isToMe && isFromMyDomain)) ? 'sent' : 'received';
 
         return {
           id: ie.id,
           message_id: ie.message_id,
-          direction: (isFromUser || hasSentLabel) ? 'sent' : 'received',
+          direction,
           from_email: ie.from_email,
           from_name: ie.from_name || ie.sender_name,
           to_email: ie.to_email,
@@ -224,10 +236,29 @@ export const useUnifiedEmails = () => {
         },
         (payload) => {
           const ie = payload.new as any;
+          // Classify direction heuristically using current user's email
+          const normalize = (v: string) => {
+            if (!v) return '';
+            const m = v.match(/<([^>]+)>/);
+            const email = m ? m[1] : v;
+            return email.replace(/(^"|"$)/g, '').trim().toLowerCase();
+          };
+          const myAddr = normalize(user.email || '');
+          const from = normalize(ie.from_email || '');
+          const to = normalize(ie.to_email || '');
+          const myDomain = (myAddr.split('@')[1] || '').toLowerCase();
+          const sentLabelSet = new Set([
+            'sent','envoyés','inbox.sent','sent items','[gmail]/sent mail','sent messages','[gmail]/messages envoyés','outbox'
+          ]);
+          const hasSentLabel = (ie.labels || []).some((l: string) => sentLabelSet.has((l || '').toLowerCase()));
+          const isFromMyDomain = myDomain && from.endsWith(`@${myDomain}`);
+          const isToMe = to === myAddr;
+          const direction: 'sent' | 'received' = (from === myAddr || hasSentLabel || (!isToMe && isFromMyDomain)) ? 'sent' : 'received';
+
           const mapped: UnifiedEmail = {
             id: ie.id,
             message_id: ie.message_id,
-            direction: (ie.direction as 'received' | 'sent') || 'received',
+            direction,
             from_email: ie.from_email,
             from_name: ie.from_name || ie.sender_name,
             to_email: ie.to_email,
@@ -288,28 +319,49 @@ export const useUnifiedEmails = () => {
         },
         (payload) => {
           const ie = payload.new as any;
-          setEmails(prev => prev.map(e => e.id === ie.id ? {
-            ...e,
-            message_id: ie.message_id,
-            direction: (ie.direction as 'received' | 'sent') || 'received',
-            from_email: ie.from_email,
-            from_name: ie.from_name || ie.sender_name,
-            to_email: ie.to_email,
-            to_name: ie.to_name,
-            subject: ie.subject,
-            content: ie.content,
-            html_content: ie.html_content,
-            provider: ie.provider || e.provider,
-            thread_id: ie.thread_id,
-            labels: ie.labels,
-            attachments: ie.attachments,
-            contact_id: ie.contact_id,
-            sent_at: ie.sent_at ?? e.sent_at,
-            received_at: ie.received_at ?? e.received_at,
-            read_at: ie.read_at ?? e.read_at,
-            updated_at: ie.updated_at ?? e.updated_at,
-            status: e.status || 'delivered',
-          } : e));
+          setEmails(prev => prev.map(e => {
+            if (e.id !== ie.id) return e;
+            const normalize = (v: string) => {
+              if (!v) return '';
+              const m = v.match(/<([^>]+)>/);
+              const email = m ? m[1] : v;
+              return email.replace(/(^"|"$)/g, '').trim().toLowerCase();
+            };
+            const myAddr = normalize(user.email || '');
+            const from = normalize(ie.from_email || '');
+            const to = normalize(ie.to_email || '');
+            const myDomain = (myAddr.split('@')[1] || '').toLowerCase();
+            const sentLabelSet = new Set([
+              'sent','envoyés','inbox.sent','sent items','[gmail]/sent mail','sent messages','[gmail]/messages envoyés','outbox'
+            ]);
+            const hasSentLabel = (ie.labels || []).some((l: string) => sentLabelSet.has((l || '').toLowerCase()));
+            const isFromMyDomain = myDomain && from.endsWith(`@${myDomain}`);
+            const isToMe = to === myAddr;
+            const direction: 'sent' | 'received' = (from === myAddr || hasSentLabel || (!isToMe && isFromMyDomain)) ? 'sent' : 'received';
+
+            return {
+              ...e,
+              message_id: ie.message_id,
+              direction,
+              from_email: ie.from_email,
+              from_name: ie.from_name || ie.sender_name,
+              to_email: ie.to_email,
+              to_name: ie.to_name,
+              subject: ie.subject,
+              content: ie.content,
+              html_content: ie.html_content,
+              provider: ie.provider || e.provider,
+              thread_id: ie.thread_id,
+              labels: ie.labels,
+              attachments: ie.attachments,
+              contact_id: ie.contact_id,
+              sent_at: ie.sent_at ?? e.sent_at,
+              received_at: ie.received_at ?? e.received_at,
+              read_at: ie.read_at ?? e.read_at,
+              updated_at: ie.updated_at ?? e.updated_at,
+              status: e.status || 'delivered',
+            };
+          }));
         }
       )
       .subscribe();

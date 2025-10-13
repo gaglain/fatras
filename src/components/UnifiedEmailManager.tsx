@@ -27,6 +27,30 @@ export const UnifiedEmailManager: React.FC = () => {
   const [selectedEmail, setSelectedEmail] = useState<UnifiedEmail | null>(null);
   const [activeTab, setActiveTab] = useState('inbox');
 
+  // Utils: clean preview from HTML
+  const decodeHtmlEntities = (str: string) => {
+    if (!str) return '';
+    const textarea = document.createElement('textarea');
+    textarea.innerHTML = str;
+    return textarea.value || textarea.textContent || str;
+  };
+  const getEmailPreview = (email: UnifiedEmail, maxLen = 140) => {
+    let raw = email.html_content || email.content || '';
+    if (!raw) return '(Aucun contenu)';
+    try {
+      if (/&lt;|&gt;|&amp;|&#/i.test(raw)) raw = decodeHtmlEntities(raw);
+      const plain = raw.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
+        .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '')
+        .replace(/<[^>]*>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      return plain.length > maxLen ? `${plain.slice(0, maxLen)}…` : (plain || '(Aucun contenu)');
+    } catch {
+      const fallback = (email.content || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+      return fallback.length > maxLen ? `${fallback.slice(0, maxLen)}…` : (fallback || '(Aucun contenu)');
+    }
+  };
+
   const handleEmailClick = (email: UnifiedEmail) => {
     setSelectedEmail(email);
     if (email.direction === 'received' && !email.read_at) {
@@ -126,7 +150,7 @@ export const UnifiedEmailManager: React.FC = () => {
                       {email.subject || '(Aucun sujet)'}
                     </h4>
                     <p className="text-xs text-muted-foreground truncate">
-                      {email.content?.substring(0, 100)}...
+                      {getEmailPreview(email)}
                     </p>
                   </div>
                   <div className="text-xs text-muted-foreground whitespace-nowrap">
