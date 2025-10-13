@@ -416,6 +416,7 @@ export const Quotes: React.FC = () => {
                     <TableHead>Numéro</TableHead>
                     <TableHead>Titre</TableHead>
                     <TableHead>Contact</TableHead>
+                    <TableHead>Événement</TableHead>
                     <TableHead>Spectacle</TableHead>
                     <TableHead>Statut</TableHead>
                     <TableHead className="text-right">Montant</TableHead>
@@ -436,6 +437,11 @@ export const Quotes: React.FC = () => {
                         {quote.contact_id ? (
                           contacts.find(c => c.id === quote.contact_id)?.first_name + ' ' +
                           contacts.find(c => c.id === quote.contact_id)?.last_name
+                        ) : '-'}
+                      </TableCell>
+                      <TableCell>
+                        {quote.event_id ? (
+                          events.find(e => e.id === quote.event_id)?.title || '-'
                         ) : '-'}
                       </TableCell>
                       <TableCell>

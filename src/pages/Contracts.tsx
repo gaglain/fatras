@@ -578,6 +578,21 @@ export const Contracts: React.FC = () => {
                 </div>
               </div>
 
+              <div className="space-y-1 text-sm text-muted-foreground mb-4">
+                <div>
+                  <span className="font-medium">Contact: </span>
+                  {quote.contact_id ? (
+                    (contacts.find(c => c.id === quote.contact_id)?.first_name || '') + ' ' + (contacts.find(c => c.id === quote.contact_id)?.last_name || '')
+                  ) : '-'}
+                </div>
+                <div>
+                  <span className="font-medium">Événement: </span>
+                  {quote.event_id ? (
+                    events.find(e => e.id === quote.event_id)?.title || '-'
+                  ) : '-'}
+                </div>
+              </div>
+
               <div className="flex space-x-2">
                 <Button variant="outline" size="sm" onClick={() => handleEdit(quote)} className="flex-1">
                   <Edit className="h-3 w-3 mr-1" />
