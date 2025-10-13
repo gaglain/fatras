@@ -224,10 +224,10 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
             e.preventDefault();
             if (e.shiftKey) {
               // Shift+Enter = simple line break
-              document.execCommand('insertHTML', false, '<br>');
+              document.execCommand('insertLineBreak');
             } else {
               // Enter = new paragraph
-              document.execCommand('insertHTML', false, '<br><br>');
+              document.execCommand('insertParagraph');
             }
             if (editorRef.current) {
               onChange(editorRef.current.innerHTML);
