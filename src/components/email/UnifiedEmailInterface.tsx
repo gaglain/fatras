@@ -91,6 +91,14 @@ export const UnifiedEmailInterface: React.FC = () => {
     }
   }, [user]);
 
+  // Normalise une adresse email vers sa forme pure
+  const normalizeAddress = (value: string) => {
+    if (!value) return '';
+    const match = value.match(/<([^>]+)>/);
+    const email = match ? match[1] : value;
+    return email.replace(/(^"|"$)/g, '').trim().toLowerCase();
+  };
+
   // Convertit le HTML (ou texte) en extrait lisible
   const getEmailPreview = (email: InboundEmail, maxLen = 150) => {
     const source = email.html_content || email.content || '';
@@ -126,7 +134,9 @@ export const UnifiedEmailInterface: React.FC = () => {
 
       const myEmails = Array.from(new Set([
         ...(accounts?.map((a: any) => a.email) || []),
-        user.email || ''
+        user.email || '',
+        'booking@fatras.net',
+        'fatrasplanning@gmail.com'
       ].filter(Boolean))).map((e: string) => e.toLowerCase());
       setAccountEmails(myEmails);
 
@@ -136,7 +146,7 @@ export const UnifiedEmailInterface: React.FC = () => {
         .select('*')
         .eq('user_id', user.id)
         .eq('direction', 'received')
-        .not('labels', 'cs', '{"Sent","Envoyés","INBOX.Sent","Sent Items","[Gmail]/Sent Mail","Sent Messages","[Gmail]/Messages envoyés"}')
+        .not('labels', 'ov', '{"Sent","Envoyés","INBOX.Sent","Sent Items","[Gmail]/Sent Mail","Sent Messages","[Gmail]/Messages envoyés"}')
         .order('received_at', { ascending: false })
         .limit(100);
 
@@ -148,7 +158,7 @@ export const UnifiedEmailInterface: React.FC = () => {
 
       // Filtre côté client si nécessaire
       const filtered = (data || []).filter((e: InboundEmail) => {
-        const from = (e.from_email || '').toLowerCase();
+        const from = normalizeAddress(e.from_email || '');
         const hasSentLabel = (e.labels || []).some(l => sentLabelSet.has((l || '').toLowerCase()));
         return !myEmails.includes(from) && !hasSentLabel;
       });
