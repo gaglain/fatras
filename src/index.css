@@ -124,3 +124,21 @@ html {
 .animate-slide-in {
   animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+/* Rich text editor content link styles */
+.richtext-content a {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+}
+.richtext-content a:hover {
+  color: hsl(var(--ring));
+  text-decoration: underline;
+}
+.richtext-content a:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px hsl(var(--ring) / 0.6);
+  border-radius: 2px;
+}
+.richtext-content a:active {
+  opacity: 0.9;
+}

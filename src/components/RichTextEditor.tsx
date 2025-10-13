@@ -171,6 +171,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           "min-h-[200px] p-4 outline-none text-sm leading-relaxed",
           "prose prose-sm max-w-none",
           "focus:bg-accent/5 transition-colors",
+          "richtext-content",
           !value && "empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground"
         )}
         data-placeholder={placeholder}

@@ -74,8 +74,14 @@ export const useNotifications = () => {
             )
           );
         }
-      )
-      .subscribe();
+      );
+
+    // Protéger contre les doubles abonnements (retour d'onglet, focus, etc.)
+    try {
+      (channel as any).subscribe();
+    } catch (e) {
+      console.warn('⚠️ Realtime subscribe already called, ignoring.');
+    }
 
     return () => {
       supabase.removeChannel(channel);
