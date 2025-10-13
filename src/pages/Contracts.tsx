@@ -125,6 +125,7 @@ export const Contracts: React.FC = () => {
       return;
     }
 
+    // Calcul des montants (utilisés uniquement à la création; en édition, les lignes gèrent les totaux)
     const subtotal = calculateTotal();
     const tax = calculateTax(subtotal);
     const total = subtotal + tax;
@@ -138,8 +139,6 @@ export const Contracts: React.FC = () => {
           event_id: formData.event_id || undefined,
           artist_id: formData.artist_id || undefined,
           status: formData.status,
-          total_amount: total,
-          tax_amount: tax,
           valid_until: formData.valid_until || undefined,
           terms: formData.terms,
           notes: formData.notes
