@@ -169,8 +169,8 @@ export const useNylasEmail = () => {
 
       const signature = profileData?.email_signature || '';
       const emailWithSignature = email.html 
-        ? `${email.html}\n\n${signature.replace(/\n/g, '<br>')}`
-        : `${email.content}\n\n${signature}`;
+        ? `${email.html}<br><br>${signature}`
+        : `<div>${email.content.replace(/\n/g, '<br>')}<br><br>${signature}</div>`;
 
       const { data, error } = await supabase.functions.invoke('nylas-email', {
         body: {
@@ -214,10 +214,10 @@ export const useNylasEmail = () => {
             .single();
 
           const signature = profileData?.email_signature || '';
-          const contentWithSignature = signature ? `${email.content}\n\n${signature}` : email.content;
+          const contentWithSignature = email.content.replace(/\n/g, '<br>');
           const html = email.html 
-            ? `${email.html}\n\n${signature.replace(/\n/g, '<br>')}`
-            : `<div>${contentWithSignature.replace(/\n/g, '<br>')}</div>`;
+            ? `${email.html}<br><br>${signature}`
+            : `<div>${contentWithSignature}<br><br>${signature}</div>`;
 
           const { data: resendData, error: resendError } = await supabase.functions.invoke('send-email-resend', {
             body: {

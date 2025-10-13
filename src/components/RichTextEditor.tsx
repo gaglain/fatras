@@ -41,11 +41,57 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     }
   }, [onChange]);
 
+  const makeImagesResizable = useCallback(() => {
+    if (!editorRef.current) return;
+    
+    const images = editorRef.current.querySelectorAll('img');
+    images.forEach((img) => {
+      if (!img.hasAttribute('data-resizable')) {
+        img.setAttribute('data-resizable', 'true');
+        img.style.cursor = 'nwse-resize';
+        img.style.maxWidth = '100%';
+        img.style.height = 'auto';
+        
+        let isResizing = false;
+        let startX = 0;
+        let startWidth = 0;
+
+        const onMouseDown = (e: MouseEvent) => {
+          e.preventDefault();
+          isResizing = true;
+          startX = e.clientX;
+          startWidth = img.offsetWidth;
+          document.addEventListener('mousemove', onMouseMove);
+          document.addEventListener('mouseup', onMouseUp);
+        };
+
+        const onMouseMove = (e: MouseEvent) => {
+          if (!isResizing) return;
+          const diff = e.clientX - startX;
+          const newWidth = Math.max(50, Math.min(startWidth + diff, editorRef.current?.offsetWidth || 800));
+          img.style.width = `${newWidth}px`;
+        };
+
+        const onMouseUp = () => {
+          isResizing = false;
+          document.removeEventListener('mousemove', onMouseMove);
+          document.removeEventListener('mouseup', onMouseUp);
+          if (editorRef.current) {
+            onChange(editorRef.current.innerHTML);
+          }
+        };
+
+        img.addEventListener('mousedown', onMouseDown);
+      }
+    });
+  }, [onChange]);
+
   const handleInput = useCallback(() => {
     if (editorRef.current) {
       onChange(editorRef.current.innerHTML);
+      makeImagesResizable();
     }
-  }, [onChange]);
+  }, [onChange, makeImagesResizable]);
 
   const handleImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -66,13 +112,14 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       
       if (editorRef.current) {
         onChange(editorRef.current.innerHTML);
+        makeImagesResizable();
       }
     } catch (error) {
       console.error('Image upload error:', error);
     } finally {
       setImageUploading(false);
     }
-  }, [uploadImage, onChange]);
+  }, [uploadImage, onChange, makeImagesResizable]);
 
   const formatButtons = [
     { icon: Bold, command: 'bold', tooltip: 'Gras' },
@@ -86,6 +133,11 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   ];
 
   const fontSizes = ['12px', '14px', '16px', '18px', '20px', '24px'];
+
+  // Initialize resizable images on mount and when value changes
+  React.useEffect(() => {
+    makeImagesResizable();
+  }, [value, makeImagesResizable]);
 
   return (
     <div className={cn("border border-border rounded-lg overflow-hidden bg-background", className)}>
@@ -167,6 +219,12 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         suppressContentEditableWarning
         onInput={handleInput}
         dangerouslySetInnerHTML={{ __html: value }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            document.execCommand('insertLineBreak');
+          }
+        }}
         className={cn(
           "min-h-[200px] p-4 outline-none text-sm leading-relaxed",
           "prose prose-sm max-w-none",

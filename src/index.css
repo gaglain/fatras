@@ -142,3 +142,29 @@ html {
 .richtext-content a:active {
   opacity: 0.9;
 }
+
+/* Rich text editor image styles */
+.richtext-content img {
+  max-width: 100%;
+  height: auto;
+  cursor: nwse-resize;
+  border: 2px solid transparent;
+  transition: border-color 0.2s;
+}
+.richtext-content img:hover {
+  border-color: hsl(var(--primary) / 0.3);
+}
+.richtext-content img:focus {
+  outline: none;
+  border-color: hsl(var(--primary));
+}
+
+/* Preserve line breaks */
+.richtext-content br {
+  display: block;
+  content: "";
+  margin: 0.5em 0;
+}
+.richtext-content p {
+  margin: 0.5em 0;
+}
