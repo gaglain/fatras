@@ -222,7 +222,13 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         onKeyDown={(e) => {
           if (e.key === 'Enter') {
             e.preventDefault();
-            document.execCommand('insertHTML', false, '<br><br>');
+            if (e.shiftKey) {
+              // Shift+Enter = simple line break
+              document.execCommand('insertHTML', false, '<br>');
+            } else {
+              // Enter = new paragraph
+              document.execCommand('insertHTML', false, '<br><br>');
+            }
             if (editorRef.current) {
               onChange(editorRef.current.innerHTML);
             }

@@ -33,7 +33,7 @@ export const ContactSearchCombobox: React.FC<ContactSearchComboboxProps> = ({
   }
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={setOpen} modal={false}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
@@ -46,7 +46,7 @@ export const ContactSearchCombobox: React.FC<ContactSearchComboboxProps> = ({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[400px] p-0" align="start">
+      <PopoverContent className="w-[400px] p-0 z-[9999]" align="start">
         <Command shouldFilter={true}>
           <CommandInput placeholder="Rechercher un contact..." className="h-9" />
           <CommandList>
