@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Save, Mail, Eye } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { RichTextEditor } from '@/components/RichTextEditor';
 
 interface EmailSignatureManagerProps {
   isOpen: boolean;
@@ -75,17 +75,13 @@ export const EmailSignatureManager: React.FC<EmailSignatureManagerProps> = ({
     }
   };
 
-  const defaultSignature = `
---
-[Votre Nom]
-[Votre Titre]
-Fatras Booking
-[Votre Email]
-[Votre Téléphone]
-
-Visitez notre site: [URL]
-Suivez-nous: [Réseaux sociaux]
-  `.trim();
+  const defaultSignature = `<p>--</p>
+<p><strong>[Votre Nom]</strong><br>
+[Votre Titre]<br>
+Fatras Booking<br>
+📧 [Votre Email]<br>
+📞 [Votre Téléphone]</p>
+<p>🌐 Visitez notre site: <a href="[URL]">[URL]</a></p>`;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -129,16 +125,14 @@ Suivez-nous: [Réseaux sociaux]
             <CardContent className="space-y-4">
               <div>
                 <Label htmlFor="signature">Votre signature</Label>
-                <Textarea
-                  id="signature"
-                  value={signature}
-                  onChange={(e) => setSignature(e.target.value)}
-                  placeholder={defaultSignature}
-                  rows={8}
-                  className="font-mono text-sm"
+                <RichTextEditor
+                  value={signature || defaultSignature}
+                  onChange={setSignature}
+                  placeholder="Votre signature..."
+                  className="min-h-[200px]"
                 />
                 <p className="text-xs text-muted-foreground mt-2">
-                  Utilisez du texte brut. Vous pouvez inclure des liens et du formatage basique.
+                  Formatez votre signature avec du texte riche, liens, couleurs, etc.
                 </p>
               </div>
 
@@ -163,9 +157,7 @@ Suivez-nous: [Réseaux sociaux]
                   <CardContent className="pt-4">
                     <h4 className="font-medium mb-2">Aperçu de la signature:</h4>
                     <div className="bg-background p-3 rounded border">
-                      <pre className="whitespace-pre-wrap text-sm">
-                        {signature || defaultSignature}
-                      </pre>
+                      <div dangerouslySetInnerHTML={{ __html: signature || defaultSignature }} />
                     </div>
                   </CardContent>
                 </Card>

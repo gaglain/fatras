@@ -80,11 +80,22 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
 
     try {
       setSending(true);
-      const signature = generateEmailSignature(currentUser);
+      
+      // Charger la signature depuis la base de données
+      const { data: profileData } = await supabase
+        .from('user_profiles')
+        .select('email_signature')
+        .eq('user_id', currentUser?.id)
+        .single();
+
+      const signature = profileData?.email_signature || '';
       const htmlContent = `
         <div style="font-family: Arial, sans-serif; line-height: 1.6;">
           ${content}
-          ${signature}
+          <br><br>
+          <div style="border-top: 1px solid #e5e7eb; margin-top: 20px; padding-top: 20px;">
+            ${signature}
+          </div>
         </div>
       `;
 
