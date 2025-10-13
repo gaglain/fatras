@@ -163,13 +163,12 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
 
       console.log('Publications fetched:', publicationsData?.length);
 
-      // Fetch artist quotes
+      // Fetch quotes linked via artist_id
       const { data: quotesData } = await supabase
         .from('quotes')
         .select('*')
         .eq('user_id', user.id)
-        .ilike('title', `%${artist.name}%`);
-
+        .eq('artist_id', artist.id);
       console.log('Quotes fetched:', quotesData?.length);
 
       setContacts(contactsData?.slice(0, 5) || []);

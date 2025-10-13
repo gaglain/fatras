@@ -7,6 +7,7 @@ export interface Quote {
   user_id: string;
   contact_id?: string;
   event_id?: string;
+  artist_id?: string;
   quote_number: string;
   title: string;
   description?: string;
@@ -54,6 +55,7 @@ export const useQuotes = () => {
           user_id: quote.user_id,
           contact_id: quote.contact_id || undefined,
           event_id: quote.event_id || undefined,
+          artist_id: quote.artist_id || undefined,
           quote_number: quote.quote_number,
           title: quote.title,
           description: quote.description || '',
@@ -83,6 +85,7 @@ export const useQuotes = () => {
           user_id: quoteData.user_id,
           contact_id: quoteData.contact_id,
           event_id: quoteData.event_id,
+          artist_id: quoteData.artist_id,
           quote_number: quoteData.quote_number,
           title: quoteData.title,
           description: quoteData.description,
@@ -104,6 +107,7 @@ export const useQuotes = () => {
         user_id: data.user_id,
         contact_id: data.contact_id || undefined,
         event_id: data.event_id || undefined,
+        artist_id: data.artist_id || undefined,
         quote_number: data.quote_number,
         title: data.title,
         description: data.description || '',
@@ -132,6 +136,7 @@ export const useQuotes = () => {
         .update({
           contact_id: updates.contact_id,
           event_id: updates.event_id,
+          artist_id: updates.artist_id,
           title: updates.title,
           description: updates.description,
           status: updates.status,
@@ -154,6 +159,7 @@ export const useQuotes = () => {
           user_id: data.user_id,
           contact_id: data.contact_id || undefined,
           event_id: data.event_id || undefined,
+          artist_id: data.artist_id || undefined,
           quote_number: data.quote_number,
           title: data.title,
           description: data.description || '',

@@ -2363,6 +2363,7 @@ export type Database = {
       }
       quotes: {
         Row: {
+          artist_id: string | null
           contact_id: string | null
           created_at: string | null
           description: string | null
@@ -2381,6 +2382,7 @@ export type Database = {
           valid_until: string | null
         }
         Insert: {
+          artist_id?: string | null
           contact_id?: string | null
           created_at?: string | null
           description?: string | null
@@ -2399,6 +2401,7 @@ export type Database = {
           valid_until?: string | null
         }
         Update: {
+          artist_id?: string | null
           contact_id?: string | null
           created_at?: string | null
           description?: string | null
@@ -2417,6 +2420,13 @@ export type Database = {
           valid_until?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "quotes_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "centralized_artists"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "quotes_contact_id_fkey"
             columns: ["contact_id"]
@@ -2930,8 +2940,8 @@ export type Database = {
             foreignKeyName: "tasks_artist_id_fkey"
             columns: ["artist_id"]
             isOneToOne: false
-            referencedRelation: "user_profiles"
-            referencedColumns: ["user_id"]
+            referencedRelation: "centralized_artists"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "tasks_assigned_to_fkey"

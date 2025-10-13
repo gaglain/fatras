@@ -14,6 +14,7 @@ import { useQuotes, Quote } from '@/hooks/useQuotes';
 import { useContacts } from '@/hooks/useContacts';
 import { useEvents } from '@/hooks/useEvents';
 import { useAuth } from '@/hooks/useAuth';
+import { useCentralizedData } from '@/hooks/useCentralizedData';
 import { QuoteCalculator, QuoteCalculation } from '@/components/quotes/QuoteCalculator';
 import { QuoteItemManager } from '@/components/quotes/QuoteItemManager';
 import { SimpleQuoteCalculator, QuoteFormData } from '@/components/quotes/SimpleQuoteCalculator';
@@ -31,6 +32,7 @@ export const Quotes: React.FC = () => {
   const { quotes, loading, addQuote, updateQuote, deleteQuote, generateQuoteNumber } = useQuotes();
   const { contacts } = useContacts();
   const { events } = useEvents();
+  const { artists } = useCentralizedData();
   const { user } = useAuth();
 
   const [formData, setFormData] = useState({
@@ -38,6 +40,7 @@ export const Quotes: React.FC = () => {
     description: '',
     contact_id: 'none',
     event_id: 'none',
+    artist_id: 'none',
     status: 'draft' as Quote['status'],
     valid_until: '',
     terms: '',
@@ -65,6 +68,7 @@ export const Quotes: React.FC = () => {
         description: formData.description,
         contact_id: formData.contact_id !== 'none' ? formData.contact_id : undefined,
         event_id: formData.event_id !== 'none' ? formData.event_id : undefined,
+        artist_id: formData.artist_id !== 'none' ? formData.artist_id : undefined,
         status: formData.status,
         total_amount: calculation?.finalPrice || 0,
         tax_amount: calculation?.vatAmount || 0,
@@ -82,6 +86,7 @@ export const Quotes: React.FC = () => {
         description: '',
         contact_id: 'none',
         event_id: 'none',
+        artist_id: 'none',
         status: 'draft',
         valid_until: '',
         terms: '',
@@ -271,6 +276,26 @@ export const Quotes: React.FC = () => {
                             {events.slice(0, 50).map((event) => (
                               <SelectItem key={event.id} value={event.id}>
                                 {event.title}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="artist">Spectacle</Label>
+                        <Select 
+                          value={formData.artist_id} 
+                          onValueChange={(value) => setFormData({ ...formData, artist_id: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionner un spectacle" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">Aucun spectacle</SelectItem>
+                            {artists.slice(0, 50).map((artist) => (
+                              <SelectItem key={artist.id} value={artist.id}>
+                                {artist.name}
                               </SelectItem>
                             ))}
                           </SelectContent>
