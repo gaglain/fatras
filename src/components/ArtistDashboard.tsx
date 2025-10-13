@@ -44,89 +44,89 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Fetch artist-related contacts (liés via opportunités ou événements)
-      const { data: artistOpps } = await supabase
+      // Build artist data by combining direct links and junction tables
+      // 1) Opportunities: union of direct opportunities (artist_id) and artist_opportunities mapping
+      const { data: mapOpps } = await supabase
         .from('artist_opportunities')
         .select('opportunity_id')
         .eq('artist_id', artist.id);
+      const mappedOppIds = mapOpps?.map(o => o.opportunity_id) || [];
 
-      const oppIds = artistOpps?.map(o => o.opportunity_id) || [];
+      const { data: directOppIdsData } = await supabase
+        .from('opportunities')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('artist_id', artist.id);
+      const directOppIds = directOppIdsData?.map(o => o.id) || [];
 
-      const { data: artistEvts } = await supabase
+      const allOppIds = Array.from(new Set([...mappedOppIds, ...directOppIds]));
+
+      let opportunitiesData: any[] = [];
+      if (allOppIds.length > 0) {
+        const { data } = await supabase
+          .from('opportunities')
+          .select('*')
+          .in('id', allOppIds)
+          .eq('user_id', user.id);
+        opportunitiesData = data || [];
+      }
+      console.log('Opportunities fetched:', opportunitiesData.length);
+
+      // 2) Events: union of mapping (artist_events) and events linked via opportunities.event_id
+      const { data: mapEvents } = await supabase
         .from('artist_events')
         .select('event_id')
         .eq('artist_id', artist.id);
+      const mappedEventIds = mapEvents?.map(e => e.event_id) || [];
+      const oppEventIds = opportunitiesData.map(o => o.event_id).filter(Boolean);
+      const allEventIds = Array.from(new Set([...
+        mappedEventIds,
+        ...oppEventIds as string[]
+      ]));
 
-      const evtIds = artistEvts?.map(e => e.event_id) || [];
+      let eventsData: any[] = [];
+      if (allEventIds.length > 0) {
+        const { data } = await supabase
+          .from('events')
+          .select('*')
+          .in('id', allEventIds)
+          .eq('user_id', user.id);
+        eventsData = data || [];
+      }
+      console.log('Events fetched:', eventsData.length);
 
-      // Get contact IDs from opportunities and events
+      // 3) Contacts: from junctions + direct fields on opportunities/events
       let contactIds: string[] = [];
-      if (oppIds.length > 0) {
+      if (allOppIds.length > 0) {
         const { data: oppContacts } = await supabase
           .from('contact_opportunities')
           .select('contact_id')
-          .in('opportunity_id', oppIds);
-        contactIds = [...contactIds, ...(oppContacts?.map(c => c.contact_id) || [])];
+          .in('opportunity_id', allOppIds);
+        contactIds.push(...(oppContacts?.map(c => c.contact_id) || []));
       }
-      if (evtIds.length > 0) {
+      if (allEventIds.length > 0) {
         const { data: evtContacts } = await supabase
           .from('contact_events')
           .select('contact_id')
-          .in('event_id', evtIds);
-        contactIds = [...contactIds, ...(evtContacts?.map(c => c.contact_id) || [])];
+          .in('event_id', allEventIds);
+        contactIds.push(...(evtContacts?.map(c => c.contact_id) || []));
       }
+      // add direct references
+      contactIds.push(...opportunitiesData.map(o => o.contact_id).filter(Boolean));
+      contactIds.push(...eventsData.map(e => e.contact_id).filter(Boolean));
+      contactIds = Array.from(new Set(contactIds));
 
-      // Remove duplicates
-      contactIds = [...new Set(contactIds)];
-
-      let contactsData = [];
+      let contactsData: any[] = [];
       if (contactIds.length > 0) {
         const { data } = await supabase
           .from('contacts')
           .select('*')
-          .in('id', contactIds);
+          .in('id', contactIds)
+          .eq('user_id', user.id);
         contactsData = data || [];
       }
+      console.log('Contacts fetched:', contactsData.length);
 
-      console.log('Contacts fetched:', contactsData?.length);
-
-      // Fetch artist opportunities through junction table
-      const { data: artistOpportunitiesData } = await supabase
-        .from('artist_opportunities')
-        .select('opportunity_id')
-        .eq('artist_id', artist.id);
-
-      const opportunityIds = artistOpportunitiesData?.map(ao => ao.opportunity_id) || [];
-      
-      let opportunitiesData = [];
-      if (opportunityIds.length > 0) {
-        const { data } = await supabase
-          .from('opportunities')
-          .select('*')
-          .in('id', opportunityIds);
-        opportunitiesData = data || [];
-      }
-
-      console.log('Opportunities fetched:', opportunitiesData.length);
-
-      // Fetch artist events through junction table
-      const { data: artistEventsData } = await supabase
-        .from('artist_events')
-        .select('event_id')
-        .eq('artist_id', artist.id);
-
-      const eventIds = artistEventsData?.map(ae => ae.event_id) || [];
-      
-      let eventsData = [];
-      if (eventIds.length > 0) {
-        const { data } = await supabase
-          .from('events')
-          .select('*')
-          .in('id', eventIds);
-        eventsData = data || [];
-      }
-
-      console.log('Events fetched:', eventsData.length);
 
       // Fetch artist tasks safely (avoid non-existent JSON path)
       let tasksData: any[] = [];
