@@ -180,8 +180,9 @@ export const useSyncTasks = () => {
   useEffect(() => {
     if (!user) return;
 
+    const channelName = `sync-notifications-${user.id}-${Date.now()}`;
     const channel = supabase
-      .channel('sync-notifications')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {

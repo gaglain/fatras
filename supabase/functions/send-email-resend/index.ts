@@ -12,6 +12,7 @@ interface EmailRequest {
   subject: string;
   html: string;
   fromName?: string;
+  from?: string; // optional full from header or email, e.g., "Your App <onboarding@resend.dev>"
   userId?: string;
 }
 
@@ -21,7 +22,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { to, subject, html, fromName = 'Application', userId }: EmailRequest = await req.json();
+    const { to, subject, html, fromName = 'Application', from, userId }: EmailRequest = await req.json();
 
     console.log('🔄 Tentative d\'envoi email pour userId:', userId);
 
@@ -70,15 +71,18 @@ const handler = async (req: Request): Promise<Response> => {
     // Initialiser Resend
     const resend = new Resend(resendApiKey);
 
+    // Déterminer l'adresse d'expéditeur finale
+    const finalFrom = (from && from.includes('@')) ? from : `${fromName} <${fromEmail}>`;
+
     console.log('📤 Envoi email via Resend:', {
-      from: `${fromName} <${fromEmail}>`,
+      from: finalFrom,
       to: to,
       subject: subject
     });
 
     // Envoyer l'email
     const emailResponse = await resend.emails.send({
-      from: `${fromName} <${fromEmail}>`,
+      from: finalFrom,
       to: to,
       subject: subject,
       html: html,

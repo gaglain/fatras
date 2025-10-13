@@ -195,6 +195,7 @@ export const useNylasEmail = () => {
               to: [email.to],
               subject: email.subject,
               html,
+              from: 'Fatras <onboarding@resend.dev>',
               userId: user.id,
             }
           });
