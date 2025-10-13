@@ -25,10 +25,14 @@ export const EventSearchCombobox: React.FC<EventSearchComboboxProps> = ({
 
   if (loading) {
     return (
-      <Button variant="outline" disabled className="w-full justify-between">
-        Chargement...
-        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-      </Button>
+      <Popover open={open} onOpenChange={setOpen} modal={false}>
+        <PopoverTrigger asChild>
+          <Button variant="outline" className="w-full justify-between" type="button">
+            Chargement...
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+      </Popover>
     );
   }
 

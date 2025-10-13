@@ -128,14 +128,31 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
 
       console.log('Events fetched:', eventsData.length);
 
-      // Fetch artist tasks - check both metadata.artist_id and artist_id field
-      const { data: tasksData } = await supabase
-        .from('tasks')
-        .select('*')
-        .eq('user_id', user.id)
-        .or(`artist_id.eq.${artist.id},metadata->>artist_id.eq.${artist.id}`);
-
-      console.log('Tasks fetched:', tasksData?.length);
+      // Fetch artist tasks safely (avoid non-existent JSON path)
+      let tasksData: any[] = [];
+      try {
+        const { data } = await supabase
+          .from('tasks')
+          .select('*')
+          .eq('user_id', user.id)
+          .or(`artist_id.eq.${artist.id}`);
+        tasksData = data || [];
+        console.log('Tasks fetched:', tasksData.length);
+      } catch (e) {
+        console.warn('Tasks fetch failed (no metadata column). Falling back to title search...', e);
+        try {
+          const { data } = await supabase
+            .from('tasks')
+            .select('*')
+            .eq('user_id', user.id)
+            .ilike('title', `%${artist.name}%`);
+          tasksData = data || [];
+          console.log('Tasks fetched (fallback):', tasksData.length);
+        } catch (e2) {
+          console.error('Tasks fetch error:', e2);
+          tasksData = [];
+        }
+      }
 
       // Fetch artist publications
       const { data: publicationsData } = await supabase
