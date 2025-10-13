@@ -113,8 +113,6 @@ export const useUnifiedEmails = () => {
           .filter(Boolean)
       );
 
-      const unified = (unifiedRes.data as UnifiedEmail[]) ?? [];
-      
       // Fonction pour vérifier si un label indique un email envoyé
       const isSentLabel = (label: string): boolean => {
         if (!label) return false;
@@ -129,6 +127,51 @@ export const useUnifiedEmails = () => {
           lowerLabel === '[gmail]/messages envoyés'
         );
       };
+
+      const unifiedRaw = (unifiedRes.data as any[]) ?? [];
+      
+      // Reclassify direction for unified emails to ensure "from" accounts are always sent
+      const unified: UnifiedEmail[] = unifiedRaw.map((ue) => {
+        const from = normalizeAddress(ue.from_email || '');
+        const to = normalizeAddress(ue.to_email || '');
+        const hasSentLabel = (ue.labels || []).some((l: string) => isSentLabel(l));
+        let direction: 'sent' | 'received' = ue.direction as 'sent' | 'received';
+
+        // Hard rule: any email originating from my accounts must be marked as sent
+        if (myEmailsSet.has(from)) {
+          direction = 'sent';
+        } else if (hasSentLabel && !myEmailsSet.has(to)) {
+          // If it carries a sent label and is not explicitly to me, consider it sent
+          direction = 'sent';
+        }
+        
+        const hardSentEmails = new Set(['booking@fatras.net','fatrasplanning@gmail.com']);
+        if (hardSentEmails.has(from)) direction = 'sent';
+
+        return {
+          id: ue.id,
+          message_id: ue.message_id,
+          direction,
+          from_email: ue.from_email,
+          from_name: ue.from_name,
+          to_email: ue.to_email,
+          to_name: ue.to_name,
+          subject: ue.subject,
+          content: ue.content,
+          html_content: ue.html_content,
+          status: ue.status,
+          provider: ue.provider,
+          thread_id: ue.thread_id,
+          labels: ue.labels,
+          attachments: ue.attachments,
+          contact_id: ue.contact_id,
+          sent_at: ue.sent_at,
+          received_at: ue.received_at,
+          read_at: ue.read_at,
+          created_at: ue.created_at,
+          updated_at: ue.updated_at,
+        } as UnifiedEmail;
+      });
 
       const inboundMapped: UnifiedEmail[] = ((inboundRes.data as any[]) ?? []).map((ie) => {
         const from = normalizeAddress(ie.from_email || '');
