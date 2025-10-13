@@ -182,14 +182,42 @@ export const useNylasEmail = () => {
         throw new Error(data.error || 'Failed to send email');
       }
     } catch (error: any) {
+      // If Nylas fails due to missing IMAP/SMTP grant settings, fallback to Resend
+      const msg = String(error?.message || '');
+      const needsGrantSettings = /grant is missing imap username|smtphost|smtpport/i.test(msg);
+      if (needsGrantSettings) {
+        try {
+          console.warn('⚠️ Nylas grant settings missing. Falling back to Resend.');
+          toast.message('Nylas indisponible, tentative via Resend…');
+          const html = email.html ?? `<div>${email.content}</div>`;
+          const { data: resendData, error: resendError } = await supabase.functions.invoke('send-email-resend', {
+            body: {
+              to: [email.to],
+              subject: email.subject,
+              html,
+              userId: user.id,
+            }
+          });
+          if (resendError) throw resendError;
+          if (resendData?.success) {
+            toast.success('Email envoyé via Resend');
+            return { ...resendData, provider: 'resend' };
+          }
+          throw new Error(resendData?.error || 'Resend fallback failed');
+        } catch (fallbackErr: any) {
+          console.error('❌ Resend fallback failed:', fallbackErr);
+          toast.error(`Send failed (Resend): ${fallbackErr?.message || 'Unknown error'}`);
+          throw fallbackErr;
+        }
+      }
+
       console.error('❌ Error sending email:', error);
-      toast.error(`Send failed: ${error.message}`);
+      toast.error(`Send failed: ${msg}`);
       throw error;
     } finally {
       setIsLoading(false);
     }
   };
-
   const testConnection = async (accountId: string) => {
     if (!user) {
       throw new Error('User must be authenticated');
