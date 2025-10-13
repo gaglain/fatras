@@ -24,6 +24,7 @@ interface QuoteFormData {
   description: string;
   contact_id: string;
   event_id: string;
+  artist_id: string;
   status: 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired';
   valid_until: string;
   terms: string;
@@ -56,6 +57,7 @@ export const Contracts: React.FC = () => {
     description: '',
     contact_id: '',
     event_id: '',
+    artist_id: '',
     status: 'draft',
     valid_until: '',
     terms: 'Paiement à 30 jours. Acompte de 30% à la signature.',
@@ -133,6 +135,7 @@ export const Contracts: React.FC = () => {
           description: formData.description,
           contact_id: formData.contact_id || undefined,
           event_id: formData.event_id || undefined,
+          artist_id: formData.artist_id || undefined,
           status: formData.status,
           total_amount: total,
           tax_amount: tax,
@@ -149,6 +152,7 @@ export const Contracts: React.FC = () => {
           description: formData.description,
           contact_id: formData.contact_id || undefined,
           event_id: formData.event_id || undefined,
+          artist_id: formData.artist_id || undefined,
           status: formData.status,
           total_amount: total,
           tax_amount: tax,
@@ -188,6 +192,7 @@ export const Contracts: React.FC = () => {
       description: template.description || '',
       contact_id: '',
       event_id: '',
+      artist_id: '',
       status: 'draft',
       valid_until: '',
       terms: template.default_terms || 'Paiement à 30 jours. Acompte de 30% à la signature.',
@@ -205,6 +210,7 @@ export const Contracts: React.FC = () => {
       description: '',
       contact_id: '',
       event_id: '',
+      artist_id: '',
       status: 'draft',
       valid_until: '',
       terms: 'Paiement à 30 jours. Acompte de 30% à la signature.',
@@ -222,6 +228,7 @@ export const Contracts: React.FC = () => {
       description: quote.description || '',
       contact_id: quote.contact_id || '',
       event_id: quote.event_id || '',
+      artist_id: quote.artist_id || '',
       status: quote.status,
       valid_until: quote.valid_until || '',
       terms: quote.terms || 'Paiement à 30 jours. Acompte de 30% à la signature.',
@@ -382,6 +389,22 @@ export const Contracts: React.FC = () => {
                     {events.map(event => (
                       <SelectItem key={event.id} value={event.id}>
                         {event.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="artist">Spectacle associé</Label>
+                <Select value={formData.artist_id} onValueChange={(value) => setFormData(prev => ({ ...prev, artist_id: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un spectacle" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {artists.map(artist => (
+                      <SelectItem key={artist.id} value={artist.id}>
+                        {artist.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
