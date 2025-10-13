@@ -111,14 +111,26 @@ export const useUnifiedEmails = () => {
       );
 
       const unified = (unifiedRes.data as UnifiedEmail[]) ?? [];
-      const sentLabelSet = new Set([
-        'sent','envoyés','inbox.sent','sent items','[gmail]/sent mail','sent messages','[gmail]/messages envoyés','outbox'
-      ]);
+      
+      // Fonction pour vérifier si un label indique un email envoyé
+      const isSentLabel = (label: string): boolean => {
+        if (!label) return false;
+        const lowerLabel = label.toLowerCase();
+        return (
+          lowerLabel.includes('sent') ||
+          lowerLabel.includes('envoyé') ||
+          lowerLabel.includes('outbox') ||
+          lowerLabel === 'inbox.sent' ||
+          lowerLabel === 'sent items' ||
+          lowerLabel === '[gmail]/sent mail' ||
+          lowerLabel === '[gmail]/messages envoyés'
+        );
+      };
 
       const inboundMapped: UnifiedEmail[] = ((inboundRes.data as any[]) ?? []).map((ie) => {
         const from = normalizeAddress(ie.from_email || '');
         const to = normalizeAddress(ie.to_email || '');
-        const hasSentLabel = (ie.labels || []).some((l: string) => sentLabelSet.has((l || '').toLowerCase()));
+        const hasSentLabel = (ie.labels || []).some((l: string) => isSentLabel(l));
         const isFromUser = myEmailsSet.has(from);
         const isToMe = myEmailsSet.has(to);
         const fromDomain = (from.split('@')[1] || '').toLowerCase();
@@ -247,10 +259,22 @@ export const useUnifiedEmails = () => {
           const from = normalize(ie.from_email || '');
           const to = normalize(ie.to_email || '');
           const myDomain = (myAddr.split('@')[1] || '').toLowerCase();
-          const sentLabelSet = new Set([
-            'sent','envoyés','inbox.sent','sent items','[gmail]/sent mail','sent messages','[gmail]/messages envoyés','outbox'
-          ]);
-          const hasSentLabel = (ie.labels || []).some((l: string) => sentLabelSet.has((l || '').toLowerCase()));
+          
+          const isSentLabelCheck = (label: string): boolean => {
+            if (!label) return false;
+            const lowerLabel = label.toLowerCase();
+            return (
+              lowerLabel.includes('sent') ||
+              lowerLabel.includes('envoyé') ||
+              lowerLabel.includes('outbox') ||
+              lowerLabel === 'inbox.sent' ||
+              lowerLabel === 'sent items' ||
+              lowerLabel === '[gmail]/sent mail' ||
+              lowerLabel === '[gmail]/messages envoyés'
+            );
+          };
+          
+          const hasSentLabel = (ie.labels || []).some((l: string) => isSentLabelCheck(l));
           const isFromMyDomain = myDomain && from.endsWith(`@${myDomain}`);
           const isToMe = to === myAddr;
           const direction: 'sent' | 'received' = (from === myAddr || hasSentLabel || (!isToMe && isFromMyDomain)) ? 'sent' : 'received';
@@ -331,10 +355,22 @@ export const useUnifiedEmails = () => {
             const from = normalize(ie.from_email || '');
             const to = normalize(ie.to_email || '');
             const myDomain = (myAddr.split('@')[1] || '').toLowerCase();
-            const sentLabelSet = new Set([
-              'sent','envoyés','inbox.sent','sent items','[gmail]/sent mail','sent messages','[gmail]/messages envoyés','outbox'
-            ]);
-            const hasSentLabel = (ie.labels || []).some((l: string) => sentLabelSet.has((l || '').toLowerCase()));
+            
+            const isSentLabelCheck = (label: string): boolean => {
+              if (!label) return false;
+              const lowerLabel = label.toLowerCase();
+              return (
+                lowerLabel.includes('sent') ||
+                lowerLabel.includes('envoyé') ||
+                lowerLabel.includes('outbox') ||
+                lowerLabel === 'inbox.sent' ||
+                lowerLabel === 'sent items' ||
+                lowerLabel === '[gmail]/sent mail' ||
+                lowerLabel === '[gmail]/messages envoyés'
+              );
+            };
+            
+            const hasSentLabel = (ie.labels || []).some((l: string) => isSentLabelCheck(l));
             const isFromMyDomain = myDomain && from.endsWith(`@${myDomain}`);
             const isToMe = to === myAddr;
             const direction: 'sent' | 'received' = (from === myAddr || hasSentLabel || (!isToMe && isFromMyDomain)) ? 'sent' : 'received';
