@@ -1258,6 +1258,7 @@ export type Database = {
       events: {
         Row: {
           address: string | null
+          artist_id: string | null
           attendees_count: number | null
           budget_max: number | null
           budget_min: number | null
@@ -1282,6 +1283,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          artist_id?: string | null
           attendees_count?: number | null
           budget_max?: number | null
           budget_min?: number | null
@@ -1306,6 +1308,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          artist_id?: string | null
           attendees_count?: number | null
           budget_max?: number | null
           budget_min?: number | null
@@ -1329,6 +1332,13 @@ export type Database = {
           venue?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "events_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "centralized_artists"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "events_contact_id_fkey"
             columns: ["contact_id"]

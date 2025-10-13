@@ -54,7 +54,8 @@ export const EventDialog: React.FC<EventDialogProps> = ({
     attendees_count: '',
     requirements: '',
     notes: '',
-    contact_id: ''
+    contact_id: '',
+    artist_id: ''
   });
   const [loading, setLoading] = useState(false);
   const { clearDraft } = useEventDraft(event?.id);
@@ -88,7 +89,8 @@ export const EventDialog: React.FC<EventDialogProps> = ({
           attendees_count: event.attendees_count ? event.attendees_count.toString() : '',
           requirements: event.requirements || '',
           notes: event.notes || '',
-          contact_id: event.contact_id || ''
+          contact_id: event.contact_id || '',
+          artist_id: (event as any).artist_id || ''
         });
       } else {
         // Mode création - réinitialiser le formulaire
@@ -109,7 +111,8 @@ export const EventDialog: React.FC<EventDialogProps> = ({
           attendees_count: '',
           requirements: '',
           notes: '',
-          contact_id: ''
+          contact_id: '',
+          artist_id: ''
         });
       }
     }
@@ -189,7 +192,8 @@ export const EventDialog: React.FC<EventDialogProps> = ({
         attendees_count: formData.attendees_count ? parseInt(formData.attendees_count) : null,
         requirements: formData.requirements || '',
         notes: formData.notes || '',
-        contact_id: formData.contact_id && formData.contact_id !== 'none' && formData.contact_id !== '' ? formData.contact_id : null
+        contact_id: formData.contact_id && formData.contact_id !== 'none' && formData.contact_id !== '' ? formData.contact_id : null,
+        artist_id: formData.artist_id && formData.artist_id !== 'none' && formData.artist_id !== '' ? formData.artist_id : null
       };
 
       console.log('Saving event with data:', eventData);
@@ -346,6 +350,22 @@ export const EventDialog: React.FC<EventDialogProps> = ({
                 </SelectContent>
               </Select>
             </div>
+            <div>
+              <Label htmlFor="artist_id">Spectacle associé</Label>
+              <Select value={formData.artist_id || 'none'} onValueChange={(value) => setFormData(prev => ({ ...prev, artist_id: value === 'none' ? '' : value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un spectacle" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Aucun spectacle</SelectItem>
+                  {artists.map((artist) => (
+                    <SelectItem key={artist.id} value={artist.id}>
+                      {artist.name} {artist.genre ? `(${artist.genre})` : ''}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div>
@@ -366,7 +386,7 @@ export const EventDialog: React.FC<EventDialogProps> = ({
             />
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="city">Ville</Label>
               <Input

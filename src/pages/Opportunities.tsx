@@ -500,7 +500,7 @@ setNewOpportunity({
       </div>
 
       {(showAddForm || editingOpportunity) && (
-<Dialog open={showAddForm || !!editingOpportunity} onOpenChange={(open) => {
+<Dialog open={showAddForm || !!editingOpportunity} modal={false} onOpenChange={(open) => {
   if (!open) {
     setShowAddForm(false);
     setEditingOpportunity(null);

@@ -7,6 +7,7 @@ export interface Event {
   user_id: string;
   external_id?: string;
   contact_id?: string;
+  artist_id?: string;
   title: string;
   description?: string;
   event_type?: string;
@@ -48,6 +49,7 @@ export const useEvents = () => {
           user_id: event.user_id,
           external_id: event.external_id || '',
           contact_id: event.contact_id || undefined,
+          artist_id: event.artist_id || undefined,
           title: event.title,
           description: event.description || '',
           event_type: event.event_type || '',
@@ -82,6 +84,7 @@ export const useEvents = () => {
         .insert({
           user_id: eventData.user_id,
           contact_id: eventData.contact_id,
+          artist_id: eventData.artist_id,
           title: eventData.title,
           description: eventData.description,
           event_type: eventData.event_type,
@@ -147,6 +150,7 @@ export const useEvents = () => {
       .from('events')
       .update({
         contact_id: updates.contact_id,
+        artist_id: updates.artist_id,
         title: updates.title,
         description: updates.description,
         event_type: updates.event_type,

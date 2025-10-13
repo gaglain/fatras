@@ -1,8 +1,8 @@
-
 export interface Event {
   id?: string;
   user_id?: string;
   contact_id?: string;
+  artist_id?: string;
   title: string;
   description?: string;
   event_type?: string;

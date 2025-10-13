@@ -19,6 +19,7 @@ interface EventFormData {
   requirements: string;
   notes: string;
   contact_id: string;
+  artist_id: string;
 }
 
 interface EventDraftManagerProps {
