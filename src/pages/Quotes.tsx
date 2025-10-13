@@ -19,6 +19,7 @@ import { QuoteCalculator, QuoteCalculation } from '@/components/quotes/QuoteCalc
 import { QuoteItemManager } from '@/components/quotes/QuoteItemManager';
 import { SimpleQuoteCalculator, QuoteFormData } from '@/components/quotes/SimpleQuoteCalculator';
 import { toast } from 'sonner';
+import { UniversalSearch } from '@/components/UniversalSearch';
 
 export const Quotes: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -244,62 +245,41 @@ export const Quotes: React.FC = () => {
 
                       <div className="space-y-2">
                         <Label htmlFor="contact">Contact</Label>
-                        <Select 
-                          value={formData.contact_id} 
-                          onValueChange={(value) => setFormData({ ...formData, contact_id: value })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Sélectionner un contact" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">Aucun contact</SelectItem>
-                            {contacts.slice(0, 50).map((contact) => (
-                              <SelectItem key={contact.id} value={contact.id}>
-                                {contact.first_name} {contact.last_name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <UniversalSearch
+                          filterTypes={['contact']}
+                          triggerText={(() => {
+                            const c = contacts.find((ct) => ct.id === (formData.contact_id !== 'none' ? formData.contact_id : ''));
+                            return c ? `${c.first_name} ${c.last_name}` : 'Sélectionner un contact';
+                          })()}
+                          onSelect={(item) => setFormData({ ...formData, contact_id: item.id })}
+                          placeholder="Rechercher un contact..."
+                        />
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="event">Événement</Label>
-                        <Select 
-                          value={formData.event_id} 
-                          onValueChange={(value) => setFormData({ ...formData, event_id: value })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Sélectionner un événement" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">Aucun événement</SelectItem>
-                            {events.slice(0, 50).map((event) => (
-                              <SelectItem key={event.id} value={event.id}>
-                                {event.title}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <UniversalSearch
+                          filterTypes={['event']}
+                          triggerText={(() => {
+                            const ev = events.find((e) => e.id === (formData.event_id !== 'none' ? formData.event_id : ''));
+                            return ev ? ev.title : 'Sélectionner un événement';
+                          })()}
+                          onSelect={(item) => setFormData({ ...formData, event_id: item.id })}
+                          placeholder="Rechercher un événement..."
+                        />
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="artist">Spectacle</Label>
-                        <Select 
-                          value={formData.artist_id} 
-                          onValueChange={(value) => setFormData({ ...formData, artist_id: value })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Sélectionner un spectacle" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">Aucun spectacle</SelectItem>
-                            {artists.slice(0, 50).map((artist) => (
-                              <SelectItem key={artist.id} value={artist.id}>
-                                {artist.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <UniversalSearch
+                          filterTypes={['artist']}
+                          triggerText={(() => {
+                            const a = artists.find((ar) => ar.id === (formData.artist_id !== 'none' ? formData.artist_id : ''));
+                            return a ? a.name : 'Sélectionner un spectacle';
+                          })()}
+                          onSelect={(item) => setFormData({ ...formData, artist_id: item.id })}
+                          placeholder="Rechercher un spectacle..."
+                        />
                       </div>
 
                       <div className="space-y-2">

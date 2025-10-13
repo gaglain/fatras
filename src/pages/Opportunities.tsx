@@ -13,11 +13,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useContacts } from '@/hooks/useContacts';
 import { useEvents } from '@/hooks/useEvents';
-import { ContactSearchCombobox } from '@/components/contacts/ContactSearchCombobox';
-import { EventSearchCombobox } from '@/components/events/EventSearchCombobox';
 import { useTasks } from '@/hooks/useTasks';
 import { useCentralizedData } from '@/hooks/useCentralizedData';
-import { TaskSearchCombobox } from '@/components/tasks/TaskSearchCombobox';
+import { UniversalSearch } from '@/components/UniversalSearch';
 
 interface Opportunity {
   id: string;
@@ -658,66 +656,63 @@ setNewOpportunity({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-1">Contact associé</label>
-                    <ContactSearchCombobox
-                      value={newOpportunity.contact_id}
-                      onValueChange={(value) => setNewOpportunity({ ...newOpportunity, contact_id: value })}
+                    <UniversalSearch
+                      filterTypes={['contact']}
+                      triggerText={(
+                        (() => {
+                          const c = contacts.find((ct) => ct.id === newOpportunity.contact_id);
+                          return c ? `${c.first_name} ${c.last_name}` : 'Rechercher un contact...';
+                        })()
+                      )}
+                      onSelect={(item) => setNewOpportunity({ ...newOpportunity, contact_id: item.id })}
                       placeholder="Rechercher un contact..."
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium mb-1">Événement associé</label>
-                    <EventSearchCombobox
-                      value={newOpportunity.event_id}
-                      onValueChange={(value) => setNewOpportunity({ ...newOpportunity, event_id: value })}
+                    <UniversalSearch
+                      filterTypes={['event']}
+                      triggerText={(
+                        (() => {
+                          const ev = events.find((e) => e.id === newOpportunity.event_id);
+                          return ev ? ev.title : 'Rechercher un événement...';
+                        })()
+                      )}
+                      onSelect={(item) => setNewOpportunity({ ...newOpportunity, event_id: item.id })}
                       placeholder="Rechercher un événement..."
                     />
                   </div>
 
-                   <div>
-                     <label className="block text-sm font-medium mb-1">Spectacle associé</label>
-                     <Select
-                       value={newOpportunity.artist_id || "none"}
-                       onValueChange={(value) => {
-                         setNewOpportunity(prev => ({ 
-                           ...prev, 
-                           artist_id: value === "none" ? "" : value 
-                         }));
-                         
-                         // Auto-fill email if spectacle has contact email
-                         if (value !== "none") {
-                           const selectedSpectacle = artists.find(a => a.id === value);
-                           if (selectedSpectacle?.contact_email) {
-                             setNewOpportunity(prev => ({ 
-                               ...prev, 
-                               contact: selectedSpectacle.contact_email 
-                             }));
-                           }
-                         }
-                       }}
-                     >
-                       <SelectTrigger>
-                         <SelectValue placeholder="Sélectionner un spectacle" />
-                       </SelectTrigger>
-                       <SelectContent>
-                         <SelectItem value="none">Aucun spectacle</SelectItem>
-                          {artists.map((artist) => (
-                            <SelectItem key={artist.id} value={artist.id}>
-                              {artist.name} ({artist.genre})
-                            </SelectItem>
-                          ))}
-                       </SelectContent>
-                     </Select>
-                   </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Spectacle associé</label>
+                    <UniversalSearch
+                      filterTypes={['artist']}
+                      triggerText={(
+                        (() => {
+                          const a = artists.find((ar: any) => ar.id === newOpportunity.artist_id);
+                          return a ? a.name : 'Rechercher un spectacle...';
+                        })()
+                      )}
+                      onSelect={(item) => setNewOpportunity({ ...newOpportunity, artist_id: item.id })}
+                      placeholder="Rechercher un spectacle..."
+                    />
+                  </div>
 
-                   <div>
-                     <label className="block text-sm font-medium mb-1">Tâche associée</label>
-                     <TaskSearchCombobox
-                       value={newOpportunity.task_id}
-                       onValueChange={(value) => setNewOpportunity({ ...newOpportunity, task_id: value })}
-                       placeholder="Rechercher une tâche..."
-                     />
-                   </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Tâche associée</label>
+                    <UniversalSearch
+                      filterTypes={['task']}
+                      triggerText={(
+                        (() => {
+                          const t = (Array.isArray(tasks) ? tasks : []).find((tk: any) => tk.id === newOpportunity.task_id);
+                          return t ? t.title : 'Rechercher une tâche...';
+                        })()
+                      )}
+                      onSelect={(item) => setNewOpportunity({ ...newOpportunity, task_id: item.id })}
+                      placeholder="Rechercher une tâche..."
+                    />
+                  </div>
                 </div>
               </div>
             </div>
