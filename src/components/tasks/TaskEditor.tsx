@@ -12,6 +12,7 @@ import { useEvents } from '@/hooks/useEvents';
 import { useTasks, Task } from '@/hooks/useTasks';
 import { toast } from 'sonner';
 import { UniversalSearch } from '@/components/UniversalSearch';
+import { useCentralizedData } from '@/hooks/useCentralizedData';
 
 interface TaskEditorProps {
   task: Task;
@@ -30,6 +31,7 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
   const { users } = useUser();
   const { contacts } = useContacts();
   const { events } = useEvents();
+  const { artists } = useCentralizedData();
   const { updateTask } = useTasks();
   
   const [formData, setFormData] = useState({
@@ -38,6 +40,7 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
     assigned_to: task.assigned_to || '',
     contact_id: task.contact_id || 'none',
     event_id: task.event_id || 'none',
+    artist_id: task.artist_id || 'none',
     due_date: task.due_date ? new Date(task.due_date).toISOString().slice(0, 16) : '',
     priority: task.priority,
     status: task.status,
@@ -59,6 +62,7 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
       assigned_to: task.assigned_to || '',
       contact_id: task.contact_id || 'none',
       event_id: task.event_id || 'none',
+      artist_id: task.artist_id || 'none',
       due_date: task.due_date ? new Date(task.due_date).toISOString().slice(0, 16) : '',
       priority: task.priority,
       status: task.status,
@@ -86,6 +90,7 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
         assigned_to: formData.assigned_to && formData.assigned_to !== 'none' ? formData.assigned_to : null,
         contact_id: selectedContact ? selectedContact.id : null,
         event_id: selectedEvent ? selectedEvent.id : null,
+        artist_id: formData.artist_id && formData.artist_id !== 'none' ? formData.artist_id : null,
         priority: formData.priority,
         status: formData.status,
         due_date: formData.due_date || null,
@@ -247,6 +252,26 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
                 </Button>
               </div>
             )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="artistId">Spectacle lié</Label>
+            <Select 
+              value={formData.artist_id || 'none'} 
+              onValueChange={(value) => setFormData({ ...formData, artist_id: value === 'none' ? 'none' : value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner un spectacle" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Aucun spectacle</SelectItem>
+                {artists.slice(0, 50).map((artist) => (
+                  <SelectItem key={artist.id} value={artist.id}>
+                    {artist.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">

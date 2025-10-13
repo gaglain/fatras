@@ -17,6 +17,7 @@ import { ContactSearchCombobox } from '@/components/contacts/ContactSearchCombob
 import { EventSearchCombobox } from '@/components/events/EventSearchCombobox';
 import { useTasks } from '@/hooks/useTasks';
 import { useCentralizedData } from '@/hooks/useCentralizedData';
+import { TaskSearchCombobox } from '@/components/tasks/TaskSearchCombobox';
 
 interface Opportunity {
   id: string;
@@ -711,22 +712,11 @@ setNewOpportunity({
 
                    <div>
                      <label className="block text-sm font-medium mb-1">Tâche associée</label>
-                     <Select
+                     <TaskSearchCombobox
                        value={newOpportunity.task_id}
-                       onValueChange={(value) => setNewOpportunity({ ...newOpportunity, task_id: value === "none" ? "" : value })}
-                     >
-                       <SelectTrigger>
-                         <SelectValue placeholder="Sélectionner une tâche" />
-                       </SelectTrigger>
-                       <SelectContent>
-                         <SelectItem value="none">Aucune tâche</SelectItem>
-                         {tasks.map((task) => (
-                           <SelectItem key={task.id} value={task.id}>
-                             {task.title}
-                           </SelectItem>
-                         ))}
-                       </SelectContent>
-                     </Select>
+                       onValueChange={(value) => setNewOpportunity({ ...newOpportunity, task_id: value })}
+                       placeholder="Rechercher une tâche..."
+                     />
                    </div>
                 </div>
               </div>

@@ -74,6 +74,7 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
         assigned_to: formData.assignedTo && formData.assignedTo !== 'none' ? formData.assignedTo : null,
         contact_id: selectedContact ? selectedContact.id : null,
         event_id: selectedEvent ? selectedEvent.id : null,
+        artist_id: formData.artistId && formData.artistId !== 'none' ? formData.artistId : null,
         title: formData.title,
         description: formData.description,
         priority: formData.priority,

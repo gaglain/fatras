@@ -9,6 +9,7 @@ import { useContacts } from '@/hooks/useContacts';
 import { TaskEditor } from './TaskEditor';
 import { TaskExecuteButton } from './TaskExecuteButton';
 import { Task } from '@/hooks/useTasks';
+import { useCentralizedData } from '@/hooks/useCentralizedData';
 
 interface TaskDisplayData {
   id: string;
@@ -43,6 +44,7 @@ export const TaskList: React.FC<TaskListProps> = ({
   sortOrder = 'asc'
 }) => {
   const { contacts } = useContacts();
+  const { artists } = useCentralizedData();
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -131,7 +133,7 @@ export const TaskList: React.FC<TaskListProps> = ({
                 </div>
                 <p className="text-gray-600 mb-3">{task.description}</p>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600 mb-4">
                   {task.assignedToName && (
                     <div className="flex items-center space-x-2">
                       <User className="h-4 w-4" />
@@ -144,6 +146,15 @@ export const TaskList: React.FC<TaskListProps> = ({
                       <span>Échéance: {new Date(task.dueDate).toLocaleDateString('fr-FR')}</span>
                     </div>
                   )}
+                  {(() => {
+                    const rawTask = rawTasks?.find(t => t.id === task.id);
+                    const artistName = rawTask?.artist_id ? artists.find(a => a.id === rawTask.artist_id)?.name : undefined;
+                    return artistName ? (
+                      <div className="flex items-center space-x-2">
+                        <span>🎭 Spectacle: {artistName}</span>
+                      </div>
+                    ) : null;
+                  })()}
                 </div>
 
                 <div className="flex flex-wrap gap-2">
