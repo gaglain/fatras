@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
@@ -19,12 +20,16 @@ import {
   RefreshCw,
   Settings,
   Eye,
-  Clock
+  Clock,
+  Reply,
+  Forward,
+  MoreVertical
 } from 'lucide-react';
 import { useEmailSystem } from '@/hooks/useEmailSystem';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { EmailComposer } from '@/components/email/EmailComposer';
 
 interface EmailDraft {
   to: string;
@@ -38,6 +43,7 @@ interface EmailDraft {
 
 interface InboundEmail {
   id: string;
+  message_id?: string;
   from_email: string;
   to_email: string;
   subject: string;
@@ -63,7 +69,10 @@ export const UnifiedEmailInterface: React.FC = () => {
   const [selectedProvider, setSelectedProvider] = useState<string>('');
   const [inboundEmails, setInboundEmails] = useState<InboundEmail[]>([]);
   const [loading, setLoading] = useState(false);
-  const [accountEmails, setAccountEmails] = useState<string[]>([]);
+const [accountEmails, setAccountEmails] = useState<string[]>([]);
+  const [showComposer, setShowComposer] = useState(false);
+  const [composerMode, setComposerMode] = useState<'reply' | 'forward' | null>(null);
+  const [composerSourceEmail, setComposerSourceEmail] = useState<InboundEmail | null>(null);
 
   // État du brouillon d'email
   const [draft, setDraft] = useState<EmailDraft>({
@@ -263,26 +272,74 @@ export const UnifiedEmailInterface: React.FC = () => {
     }
   };
 
-  // Marquer un email comme lu
-  const markAsRead = async (emailId: string) => {
+// Marquer un email comme lu et synchroniser avec le fournisseur
+  const markAsRead = async (email: InboundEmail) => {
     try {
       const { error } = await supabase
         .from('inbound_emails')
         .update({ read_at: new Date().toISOString() })
-        .eq('id', emailId)
+        .eq('id', email.id)
         .eq('user_id', user?.id);
 
       if (error) throw error;
 
       setInboundEmails(prev => 
-        prev.map(email => 
-          email.id === emailId 
-            ? { ...email, read_at: new Date().toISOString() }
-            : email
+        prev.map(e => 
+          e.id === email.id 
+            ? { ...e, read_at: new Date().toISOString() }
+            : e
         )
       );
+
+      await syncReadStatusWithProvider(email);
     } catch (error) {
       console.error('Erreur marquage lu:', error);
+    }
+  };
+
+  // Synchroniser le statut "lu" côté boîte d'origine (Nylas)
+  const syncReadStatusWithProvider = async (email: InboundEmail) => {
+    if (!email.message_id) return;
+    try {
+      await supabase.functions.invoke('nylas-email', {
+        body: {
+          action: 'mark_as_read',
+          messageId: email.message_id,
+        }
+      });
+    } catch (error) {
+      console.log('Sync read status failed (non-critical):', error);
+    }
+  };
+
+  const handleReply = (email: InboundEmail) => {
+    setComposerSourceEmail(email);
+    setComposerMode('reply');
+    setShowComposer(true);
+  };
+
+  const handleForward = (email: InboundEmail) => {
+    setComposerSourceEmail(email);
+    setComposerMode('forward');
+    setShowComposer(true);
+  };
+
+  const handleDelete = async (email: InboundEmail) => {
+    if (!confirm('Voulez-vous vraiment supprimer cet email ?')) return;
+    try {
+      const { error } = await supabase
+        .from('inbound_emails')
+        .delete()
+        .eq('id', email.id)
+        .eq('user_id', user?.id);
+
+      if (error) throw error;
+
+      setInboundEmails(prev => prev.filter(e => e.id !== email.id));
+      toast.success('Email supprimé');
+    } catch (error) {
+      console.error('Erreur suppression email:', error);
+      toast.error('Erreur lors de la suppression');
     }
   };
 
@@ -493,38 +550,66 @@ export const UnifiedEmailInterface: React.FC = () => {
                   Aucun email dans la boîte de réception
                 </div>
               ) : (
-                <div className="space-y-2">
+<div className="space-y-2">
                   {inboundEmails.map(email => (
                     <div
                       key={email.id}
-                      className={`p-4 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
+                      className={`group p-4 border rounded-lg hover:bg-muted/50 transition-colors ${
                         !email.read_at ? 'border-primary bg-primary/5' : ''
                       }`}
-                      onClick={() => markAsRead(email.id)}
                     >
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{email.from_email}</span>
-                          {!email.read_at && (
-                            <Badge variant="secondary" className="text-xs">Nouveau</Badge>
-                          )}
-                          <Badge variant="outline" className="text-xs">
-                            {email.provider}
-                          </Badge>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0 cursor-pointer" onClick={() => markAsRead(email)}>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-medium truncate">{email.from_email}</span>
+                            {!email.read_at && (
+                              <Badge variant="secondary" className="text-xs">Nouveau</Badge>
+                            )}
+                            <Badge variant="outline" className="text-xs">{email.provider}</Badge>
+                          </div>
+                          <div className="font-medium mb-1 truncate">{email.subject}</div>
+                          <div className="text-sm text-muted-foreground truncate">{getEmailPreview(email)}</div>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Clock className="h-3 w-3" />
-                          {new Date(email.received_at).toLocaleDateString('fr-FR', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <div className="text-xs text-muted-foreground whitespace-nowrap flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {new Date(email.received_at).toLocaleDateString('fr-FR', {
+                              day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+                            })}
+                          </div>
+                          <div className="hidden md:flex items-center gap-1">
+                            <Button variant="ghost" size="icon" className="h-8 w-8" title="Répondre"
+                              onClick={(e) => { e.stopPropagation(); handleReply(email); }}>
+                              <Reply className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" title="Transférer"
+                              onClick={(e) => { e.stopPropagation(); handleForward(email); }}>
+                              <Forward className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" title="Supprimer"
+                              onClick={(e) => { e.stopPropagation(); handleDelete(email); }}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild className="md:hidden">
+                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => e.stopPropagation()}>
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleReply(email); }}>
+                                <Reply className="h-4 w-4 mr-2" /> Répondre
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleForward(email); }}>
+                                <Forward className="h-4 w-4 mr-2" /> Transférer
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDelete(email); }} className="text-destructive">
+                                <Trash2 className="h-4 w-4 mr-2" /> Supprimer
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
-                      </div>
-                      <div className="font-medium mb-1">{email.subject}</div>
-                      <div className="text-sm text-muted-foreground line-clamp-2">
-                        {getEmailPreview(email)}
                       </div>
                     </div>
                   ))}
@@ -575,6 +660,31 @@ export const UnifiedEmailInterface: React.FC = () => {
           </Card>
         </TabsContent>
       </Tabs>
+      {showComposer && (
+        <EmailComposer
+          isOpen={showComposer}
+          onClose={() => {
+            setShowComposer(false);
+            setComposerMode(null);
+            setComposerSourceEmail(null);
+          }}
+          toEmail={composerMode === 'reply' ? (composerSourceEmail?.from_email ?? '') : ''}
+          subject={
+            composerMode === 'reply'
+              ? `Re: ${composerSourceEmail?.subject ?? ''}`
+              : composerMode === 'forward'
+              ? `Fwd: ${composerSourceEmail?.subject ?? ''}`
+              : ''
+          }
+          preText={
+            composerMode === 'forward'
+              ? `\n\n---------- Message transféré ----------\nDe: ${composerSourceEmail?.from_email ?? ''}\nDate: ${composerSourceEmail ? new Date(composerSourceEmail.received_at).toLocaleString('fr-FR') : ''}\nObjet: ${composerSourceEmail?.subject ?? ''}\n\n${composerSourceEmail?.content ?? ''}`
+              : composerMode === 'reply'
+              ? `\n\n---------- Message original ----------\nDe: ${composerSourceEmail?.from_email ?? ''}\nDate: ${composerSourceEmail ? new Date(composerSourceEmail.received_at).toLocaleString('fr-FR') : ''}\n\n${composerSourceEmail?.content ?? ''}`
+              : ''
+          }
+        />
+      )}
     </div>
   );
 };
