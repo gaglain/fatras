@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Calendar, FileText, Target, Briefcase, CheckSquare, Map, Eye, Plus } from 'lucide-react';
 import { Contact } from '@/types/contact.types';
 import { useEntityConnections } from '@/hooks/useEntityConnections';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 
 interface ContactRelatedEntitiesProps {
   contact: Contact;
@@ -19,25 +21,25 @@ export const ContactRelatedEntities: React.FC<ContactRelatedEntitiesProps> = ({ 
     tasks: [],
     roadshow_stops: []
   });
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
   useEffect(() => {
     let isSubscribed = true;
-    
+
     const loadData = async () => {
-      if (contact.id && isSubscribed) {
+      if (contact.id && user?.id && isSubscribed) {
         const data = await getContactConnections(contact.id);
-        if (isSubscribed) {
-          setConnections(data);
-        }
+        if (isSubscribed) setConnections(data);
       }
     };
-    
+
     loadData();
-    
+
     return () => {
       isSubscribed = false;
     };
-  }, [contact.id]);
+  }, [contact.id, user?.id]);
 
   const loadConnections = async () => {
     if (!contact.id) return;
@@ -109,9 +111,9 @@ export const ContactRelatedEntities: React.FC<ContactRelatedEntitiesProps> = ({ 
       quote: '/quotes',
       task: '/tasks',
       roadshow_stop: '/roadshow'
-    };
-    
-    window.location.href = routes[entity.type as keyof typeof routes] || '/';
+    } as const;
+
+    navigate(routes[entity.type as keyof typeof routes] || '/');
   };
 
   const allEntities = getAllEntities();

@@ -69,8 +69,7 @@ export const useEntityConnections = () => {
         supabase
           .from('tasks')
           .select('id, title, status, due_date')
-          .eq('contact_id', contactId)
-          .eq('user_id', user.id),
+          .eq('contact_id', contactId),
         
         // Tâches via task_entities
         supabase
