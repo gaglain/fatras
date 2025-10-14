@@ -97,10 +97,10 @@ export const CalendarViewContainer: React.FC = () => {
   const allEvents: CalendarEvent[] = useMemo(() => {
     const events: CalendarEvent[] = [];
 
-    // Événements Nylas
+    // Événements Nylas - préfixe pour éviter les doublons d'ID
     nylasEvents.forEach(event => {
       events.push({
-        id: event.id,
+        id: `nylas-${event.id}`,
         title: event.title,
         description: event.description,
         start_time: event.start_time,
@@ -112,20 +112,22 @@ export const CalendarViewContainer: React.FC = () => {
       });
     });
 
-    // Événements locaux
-    localEvents.forEach(event => {
-      events.push({
-        id: event.id,
-        title: event.title,
-        description: event.description || '',
-        start_time: event.start_date || new Date().toISOString(),
-        end_time: event.end_date || new Date().toISOString(),
-        location: `${event.venue || ''} ${event.city || ''}`.trim(),
-        calendar_id: 'local',
-        provider: 'local',
-        attendees: []
+    // Événements locaux - filtrer ceux sans date et préfixer l'ID
+    localEvents
+      .filter(event => event.start_date && event.end_date) // Ignorer les événements sans dates
+      .forEach(event => {
+        events.push({
+          id: `local-${event.id}`,
+          title: event.title,
+          description: event.description || '',
+          start_time: event.start_date,
+          end_time: event.end_date,
+          location: `${event.venue || ''} ${event.city || ''}`.trim(),
+          calendar_id: 'local',
+          provider: 'local',
+          attendees: []
+        });
       });
-    });
 
     return events;
   }, [nylasEvents, localEvents]);
