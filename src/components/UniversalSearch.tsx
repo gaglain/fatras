@@ -28,6 +28,7 @@ interface UniversalSearchProps {
   onSelectionChange?: (items: SearchItem[]) => void;
   triggerText?: string;
   filterTypes?: UniversalType[];
+  selectedId?: string;
 }
 
 export const UniversalSearch = ({
@@ -37,7 +38,8 @@ export const UniversalSearch = ({
   selectedItems = [],
   onSelectionChange,
   triggerText = 'Rechercher',
-  filterTypes = ['contact', 'event']
+  filterTypes = ['contact', 'event'],
+  selectedId
 }: UniversalSearchProps) => {
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -169,6 +171,9 @@ export const UniversalSearch = ({
     }
   };
 
+  // Trouver l'élément sélectionné pour l'afficher dans le bouton
+  const selectedItem = selectedId ? searchItems.find(item => item.id === selectedId) : null;
+
   return (
     <div className="space-y-2">
       {/* Éléments sélectionnés */}
@@ -194,9 +199,18 @@ export const UniversalSearch = ({
       {/* Déclencheur de recherche */}
       <Dialog open={open} onOpenChange={setOpen} modal={false}>
         <DialogTrigger asChild>
-          <Button variant="outline" className="w-full justify-start text-muted-foreground">
-            <Search className="mr-2 h-4 w-4" />
-            {triggerText}
+          <Button variant="outline" className="w-full justify-start text-left">
+            <Search className="mr-2 h-4 w-4 flex-shrink-0" />
+            <span className={selectedItem ? 'text-foreground' : 'text-muted-foreground'}>
+              {selectedItem ? (
+                <>
+                  {selectedItem.external_id && <span className="text-muted-foreground mr-1">{selectedItem.external_id}</span>}
+                  {selectedItem.title}
+                </>
+              ) : (
+                triggerText
+              )}
+            </span>
           </Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-[640px]">

@@ -370,13 +370,9 @@ export const Contracts: React.FC = () => {
                 <UniversalSearch
                   placeholder="Rechercher un contact..."
                   filterTypes={['contact']}
+                  selectedId={formData.contact_id}
                   onSelect={(item) => setFormData(prev => ({ ...prev, contact_id: item.id }))}
                 />
-                {formData.contact_id && (
-                  <div className="mt-2 text-sm text-muted-foreground">
-                    Contact sélectionné: {contacts.find(c => c.id === formData.contact_id)?.first_name} {contacts.find(c => c.id === formData.contact_id)?.last_name}
-                  </div>
-                )}
               </div>
 
               <div>
@@ -384,13 +380,9 @@ export const Contracts: React.FC = () => {
                 <UniversalSearch
                   placeholder="Rechercher un événement..."
                   filterTypes={['event']}
+                  selectedId={formData.event_id}
                   onSelect={(item) => setFormData(prev => ({ ...prev, event_id: item.id }))}
                 />
-                {formData.event_id && (
-                  <div className="mt-2 text-sm text-muted-foreground">
-                    Événement sélectionné: {events.find(e => e.id === formData.event_id)?.title}
-                  </div>
-                )}
               </div>
 
               <div>
@@ -398,13 +390,9 @@ export const Contracts: React.FC = () => {
                 <UniversalSearch
                   placeholder="Rechercher un spectacle..."
                   filterTypes={['artist']}
+                  selectedId={formData.artist_id}
                   onSelect={(item) => setFormData(prev => ({ ...prev, artist_id: item.id }))}
                 />
-                {formData.artist_id && (
-                  <div className="mt-2 text-sm text-muted-foreground">
-                    Spectacle sélectionné: {artists.find(a => a.id === formData.artist_id)?.name}
-                  </div>
-                )}
               </div>
 
               <div>
