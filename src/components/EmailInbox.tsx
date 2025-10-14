@@ -5,7 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Mail, RefreshCw, Clock, User, ArrowLeft, Reply, Forward, Trash2, AlertOctagon } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Mail, RefreshCw, Clock, User, ArrowLeft, Reply, Forward, Trash2, AlertOctagon, MoreVertical } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useEmailSync } from '@/hooks/useEmailSync';
@@ -398,13 +399,12 @@ export const EmailInbox: React.FC = () => {
               {displayedEmails.map((email) => (
                 <div
                   key={email.id}
-                  className={`group p-4 cursor-pointer hover:bg-muted/50 transition-colors ${
+                  className={`group p-4 hover:bg-muted/50 transition-colors ${
                     !email.read_at ? 'bg-blue-50 dark:bg-blue-950/20 border-l-4 border-l-blue-500' : ''
                   }`}
-                  onClick={() => handleEmailClick(email)}
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 cursor-pointer" onClick={() => handleEmailClick(email)}>
                       <div className="flex items-center gap-2 mb-1">
                         <span className={`font-medium truncate ${!email.read_at ? 'font-semibold' : ''}`}>
                           {email.from_name || email.from_email}
@@ -422,24 +422,45 @@ export const EmailInbox: React.FC = () => {
                         {getEmailPreview(email)}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-shrink-0">
                       <div className="text-xs text-muted-foreground whitespace-nowrap">
                         {formatDate(email.received_at)}
                       </div>
-                      <div className="hidden sm:flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button variant="ghost" size="icon" aria-label="Répondre"
+                      <div className="hidden md:flex items-center gap-1">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" title="Répondre"
                           onClick={(e) => { e.stopPropagation(); handleReply(email); }}>
                           <Reply className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" aria-label="Transférer"
+                        <Button variant="ghost" size="icon" className="h-8 w-8" title="Transférer"
                           onClick={(e) => { e.stopPropagation(); handleForward(email); }}>
                           <Forward className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" aria-label="Supprimer"
+                        <Button variant="ghost" size="icon" className="h-8 w-8" title="Supprimer"
                           onClick={(e) => { e.stopPropagation(); handleDelete(email); }}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild className="md:hidden">
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => e.stopPropagation()}>
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleReply(email); }}>
+                            <Reply className="h-4 w-4 mr-2" />
+                            Répondre
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleForward(email); }}>
+                            <Forward className="h-4 w-4 mr-2" />
+                            Transférer
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDelete(email); }} className="text-destructive">
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Supprimer
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
                 </div>
