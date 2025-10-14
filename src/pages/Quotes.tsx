@@ -90,18 +90,26 @@ export const Quotes: React.FC = () => {
       // Créer le canal de messagerie privé
       if (roadshow) {
         console.log('📍 Création du canal de messagerie...');
+        
+        // Créer les membres du canal (utilisateur actuel + contact si présent)
+        const memberIds: string[] = [];
+        if (contact?.user_id) {
+          memberIds.push(contact.user_id);
+        }
+        
         const { data: channel, error: channelError } = await supabase
           .rpc('create_messaging_channel', {
             channel_name: `🎭 ${quoteData.title}`,
             channel_description: `Organisation du spectacle - ${event.venue || 'Lieu à définir'}`,
             channel_type: 'private',
-            member_user_ids: [],
+            member_user_ids: memberIds,
             roadshow_ref_id: roadshow.id
           });
 
         if (channelError) {
           console.error('❌ Erreur création canal:', channelError);
-          toast.error('Feuille de route créée mais erreur lors de la création du canal de messagerie');
+          console.error('❌ Détails erreur:', JSON.stringify(channelError, null, 2));
+          toast.error('Feuille de route créée mais erreur lors de la création du canal de messagerie: ' + channelError.message);
         } else {
           console.log('✅ Canal créé:', channel);
           toast.success('Feuille de route et canal de messagerie créés avec succès !');
