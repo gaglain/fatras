@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { Contact } from '@/types/contact.types';
 import { ContactRelatedEntities } from './ContactRelatedEntities';
 import { ContactCreationSuite } from './ContactCreationSuite';
+import { UniversalSearch, SearchItem } from '@/components/UniversalSearch';
 
 interface Spectacle {
   id: string;
@@ -343,19 +344,13 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="artist_id">Spectacle associé</Label>
-              <Select value={selectedArtistId || 'none'} onValueChange={(value) => setSelectedArtistId(value === 'none' ? '' : value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un spectacle" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Aucun spectacle</SelectItem>
-                  {spectacles.map((spectacle) => (
-                    <SelectItem key={spectacle.id} value={spectacle.id}>
-                      {spectacle.name} {spectacle.genre ? `(${spectacle.genre})` : ''}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <UniversalSearch
+                filterTypes={['artist']}
+                selectedId={selectedArtistId}
+                onSelect={(item: SearchItem) => setSelectedArtistId(item.id)}
+                triggerText="Rechercher un spectacle"
+                placeholder="Rechercher spectacle par nom, genre..."
+              />
             </div>
             <div>
               <Label htmlFor="source">Source</Label>
