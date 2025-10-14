@@ -22,6 +22,7 @@ export const ChatWidget: React.FC = () => {
   const { user } = useAuth();
   const { createNotification } = useNotifications();
   const isMobile = useIsMobile();
+  const messagesEndRef = React.useRef<HTMLDivElement>(null);
 
   const { 
     channels, 
@@ -67,12 +68,20 @@ export const ChatWidget: React.FC = () => {
     }
   }, [selectedChannel, isOpen, ensureMembership, fetchMessages, markChannelAsRead]);
 
+  const currentChannel = channels.find(c => c.id === selectedChannel);
+  const currentMessages = messages[selectedChannel] || [];
+
   // Mark channel as read when widget is opened
   useEffect(() => {
     if (isOpen && selectedChannel) {
       markChannelAsRead(selectedChannel);
     }
   }, [isOpen, selectedChannel, markChannelAsRead]);
+
+  // Scroll automatique vers le dernier message
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [currentMessages]);
 
   const handleSendMessage = async () => {
     if (!inputValue.trim() || !selectedChannel) return;
@@ -90,9 +99,6 @@ export const ChatWidget: React.FC = () => {
       handleSendMessage();
     }
   };
-
-  const currentChannel = channels.find(c => c.id === selectedChannel);
-  const currentMessages = messages[selectedChannel] || [];
 
   const getChannelDisplayName = (channel: any) => {
     if (channel.type === 'direct') {
@@ -204,7 +210,7 @@ export const ChatWidget: React.FC = () => {
             <div className="space-y-3">
               {loading ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  <MessageSquare className="h-8 w-8 mx-auto mb-3" />
+                  <MessageSquare className="h-8 w-8 mx-auto mb-3 animate-pulse" />
                   <p className="text-sm">Chargement...</p>
                 </div>
               ) : currentMessages.length === 0 ? (
@@ -223,14 +229,17 @@ export const ChatWidget: React.FC = () => {
                   const displayName = message.user_profile?.first_name || 'Utilisateur';
                   
                   return (
-                    <div key={message.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                    <div 
+                      key={message.id} 
+                      className={`flex ${isMe ? 'justify-end' : 'justify-start'} animate-fade-in`}
+                    >
                       <div className={`flex items-start space-x-2 max-w-[80%] ${isMe ? 'flex-row-reverse space-x-reverse' : ''}`}>
                         <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs text-white ${
                           isMe ? 'bg-primary' : 'bg-muted-foreground'
                         }`}>
                           <User className="h-3 w-3" />
                         </div>
-                        <div className={`px-3 py-2 rounded-lg text-sm ${
+                        <div className={`px-3 py-2 rounded-lg text-sm transition-all duration-200 hover:shadow-md ${
                           isMe 
                             ? 'bg-primary text-primary-foreground' 
                             : 'bg-muted text-muted-foreground border'
@@ -251,6 +260,7 @@ export const ChatWidget: React.FC = () => {
                   );
                 })
               )}
+              <div ref={messagesEndRef} />
             </div>
           </ScrollArea>
 
@@ -299,11 +309,14 @@ export const ChatWidget: React.FC = () => {
       
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative w-14 h-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group bg-primary text-primary-foreground hover:bg-primary/90"
+        className={cn(
+          "relative w-14 h-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group bg-primary text-primary-foreground hover:bg-primary/90",
+          isOpen && isMobile && "hidden"
+        )}
       >
         <MessageSquare className="h-6 w-6 group-hover:scale-110 transition-transform duration-200" />
         {totalUnreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+          <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center animate-pulse">
             {totalUnreadCount > 9 ? '9+' : totalUnreadCount}
           </span>
         )}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -12,6 +12,8 @@ export interface Notification {
   read: boolean;
   created_at: string;
 }
+
+const NOTIFICATIONS_LIMIT = 100; // Limiter à 100 notifications max
 
 export const useNotifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -27,12 +29,10 @@ export const useNotifications = () => {
         .from('notifications')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(NOTIFICATIONS_LIMIT); // Limiter le nombre
 
       if (data && !error) {
-        console.log('📬 Notifications récupérées:', data);
-        console.log('📊 Nombre total:', data.length);
-        console.log('🔴 Non lues:', data.filter(n => !n.read).length);
         setNotifications(data);
       } else if (error) {
         console.error('❌ Erreur lors de la récupération des notifications:', error);
@@ -54,8 +54,12 @@ export const useNotifications = () => {
           filter: `user_id=eq.${user.id}`
         },
         (payload) => {
-          console.log('Nouvelle notification reçue:', payload.new);
-          setNotifications(prev => [payload.new as Notification, ...prev]);
+          setNotifications(prev => {
+            // Éviter les doublons et limiter à NOTIFICATIONS_LIMIT
+            const exists = prev.some(n => n.id === payload.new.id);
+            if (exists) return prev;
+            return [payload.new as Notification, ...prev].slice(0, NOTIFICATIONS_LIMIT);
+          });
         }
       )
       .on(
@@ -67,28 +71,21 @@ export const useNotifications = () => {
           filter: `user_id=eq.${user.id}`
         },
         (payload) => {
-          console.log('Notification mise à jour:', payload.new);
           setNotifications(prev => 
             prev.map(notif => 
               notif.id === payload.new.id ? payload.new as Notification : notif
             )
           );
         }
-      );
-
-    // Protéger contre les doubles abonnements (retour d'onglet, focus, etc.)
-    try {
-      (channel as any).subscribe();
-    } catch (e) {
-      console.warn('⚠️ Realtime subscribe already called, ignoring.');
-    }
+      )
+      .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
   }, [user]);
 
-  const markAsRead = async (id: string) => {
+  const markAsRead = useCallback(async (id: string) => {
     try {
       const { error } = await supabase
         .from('notifications')
@@ -106,9 +103,9 @@ export const useNotifications = () => {
     } catch (error) {
       console.error('Erreur lors de la mise à jour de la notification:', error);
     }
-  };
+  }, [user]);
 
-  const markAllAsRead = async () => {
+  const markAllAsRead = useCallback(async () => {
     try {
       const { error } = await supabase
         .from('notifications')
@@ -124,9 +121,9 @@ export const useNotifications = () => {
     } catch (error) {
       console.error('Erreur lors de la mise à jour des notifications:', error);
     }
-  };
+  }, [user]);
 
-  const createNotification = async (notificationData: Omit<Notification, 'id' | 'created_at'>) => {
+  const createNotification = useCallback(async (notificationData: Omit<Notification, 'id' | 'created_at'>) => {
     try {
       const { data, error } = await supabase
         .from('notifications')
@@ -142,17 +139,17 @@ export const useNotifications = () => {
         .single();
 
       if (error) throw error;
-      
-      console.log('✅ Notification créée:', data);
       return data;
     } catch (error) {
       console.error('Erreur lors de la création de la notification:', error);
       throw error;
     }
-  };
+  }, []);
 
-  const unreadCount = notifications.filter(n => !n.read).length;
-  console.log('🔔 Badge notifications - Total:', notifications.length, 'Non lues:', unreadCount);
+  const unreadCount = useMemo(
+    () => notifications.filter(n => !n.read).length,
+    [notifications]
+  );
 
   return {
     notifications,

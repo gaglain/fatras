@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 export const PublicChatWidget: React.FC = () => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
-  console.log('👤 PublicChatWidget - Current user:', user?.id);
+  const messagesEndRef = React.useRef<HTMLDivElement>(null);
   
   const {
     channels, 
@@ -55,12 +55,19 @@ export const PublicChatWidget: React.FC = () => {
     }
   }, [activeChannel, ensureMembership, fetchMessages, markChannelAsRead]);
 
+  const activeChannelData = channels.find(c => c.id === activeChannel);
+  const channelMessages = activeChannel ? messages[activeChannel] || [] : [];
+
+  // Scroll automatique
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [channelMessages]);
+
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !activeChannel) return;
 
     const res = await sendMessage(activeChannel, newMessage.trim());
     if (!res) {
-      console.error('Erreur envoi message: sendMessage a retourné null');
       toast.error("L'envoi du message a échoué. Vérifiez vos droits et réessayez.");
       return;
     }
@@ -126,9 +133,6 @@ export const PublicChatWidget: React.FC = () => {
       toast.error('Erreur lors de l\'adhésion au canal');
     }
   };
-
-  const activeChannelData = channels.find(c => c.id === activeChannel);
-  const channelMessages = activeChannel ? messages[activeChannel] || [] : [];
 
   if (!user) return null;
 
@@ -327,10 +331,10 @@ export const PublicChatWidget: React.FC = () => {
                     return (
                       <div
                         key={message.id}
-                        className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
+                        className={`flex ${isMe ? 'justify-end' : 'justify-start'} animate-fade-in`}
                       >
                         <div
-                          className={`max-w-[80%] p-2 rounded-lg ${
+                          className={`max-w-[80%] p-2 rounded-lg transition-all duration-200 hover:shadow-md ${
                             isMe
                               ? 'bg-primary text-primary-foreground'
                               : 'bg-muted'
@@ -345,6 +349,7 @@ export const PublicChatWidget: React.FC = () => {
                       </div>
                     );
                   })}
+                  <div ref={messagesEndRef} />
                 </div>
               ) : (
                 <div className="text-center text-muted-foreground">
