@@ -92,10 +92,27 @@ export const useMessaging = () => {
 
       if (membersErr) throw membersErr;
 
-      // 4) Transformer
+      // 4) Récupérer les profils utilisateurs pour tous les membres
+      const allUserIds = [...new Set((allMembers || []).map((m: any) => m.user_id))];
+      const { data: profiles, error: profilesErr } = await supabase
+        .from('user_profiles')
+        .select('user_id, first_name, last_name, username, email')
+        .in('user_id', allUserIds);
+
+      if (profilesErr) console.warn('Error fetching profiles:', profilesErr);
+
+      const profilesByUserId: Record<string, any> = {};
+      (profiles || []).forEach((p: any) => {
+        profilesByUserId[p.user_id] = p;
+      });
+
+      // 5) Transformer
       const membersByChannel: Record<string, any[]> = {};
       (allMembers || []).forEach((m: any) => {
-        (membersByChannel[m.channel_id] ||= []).push(m);
+        (membersByChannel[m.channel_id] ||= []).push({
+          ...m,
+          user_profile: profilesByUserId[m.user_id]
+        });
       });
 
       const transformedChannels: Channel[] = (channelRows || []).map((ch: any) => ({
@@ -115,6 +132,7 @@ export const useMessaging = () => {
           role: member.role as 'admin' | 'member',
           joined_at: member.joined_at,
           last_read_at: member.last_read_at,
+          user_profile: member.user_profile
         })),
       }));
 
@@ -166,16 +184,30 @@ export const useMessaging = () => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
+      const { data: msgRows, error: msgErr } = await supabase
         .from('messaging_messages')
         .select('*')
         .eq('channel_id', channelId)
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
+      if (msgErr) throw msgErr;
+
+      // Récupérer les profils des auteurs
+      const userIds = [...new Set((msgRows || []).map((m: any) => m.user_id))];
+      const { data: profiles, error: profilesErr } = await supabase
+        .from('user_profiles')
+        .select('user_id, first_name, last_name, username')
+        .in('user_id', userIds);
+
+      if (profilesErr) console.warn('Error fetching message author profiles:', profilesErr);
+
+      const profilesByUserId: Record<string, any> = {};
+      (profiles || []).forEach((p: any) => {
+        profilesByUserId[p.user_id] = p;
+      });
 
       // Transform data to match our Message interface
-      const transformedMessages: Message[] = (data || []).map(msg => ({
+      const transformedMessages: Message[] = (msgRows || []).map(msg => ({
         id: msg.id,
         channel_id: msg.channel_id,
         user_id: msg.user_id,
@@ -184,7 +216,8 @@ export const useMessaging = () => {
         created_at: msg.created_at,
         edited_at: msg.edited_at,
         reply_to_id: msg.reply_to_id,
-        metadata: msg.metadata
+        metadata: msg.metadata,
+        user_profile: profilesByUserId[msg.user_id]
       }));
 
       setMessages(prev => ({
