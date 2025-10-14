@@ -7,13 +7,15 @@ import { RichTextEditor } from '@/components/RichTextEditor';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Mail, Send, FileText, X, Paperclip } from 'lucide-react';
+import { Mail, Send, FileText, X, Paperclip, Signature } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useEmailSender } from '@/hooks/useEmailSender';
 import { useNylasEmail } from '@/hooks/useNylasEmail';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { useEmailTemplates } from '@/hooks/useEmailTemplates';
+import { generateEmailSignature } from '@/utils/emailSignature';
+import { useUser } from '@/contexts/UserContext';
 
 interface EmailTemplate {
   id: string;
@@ -22,6 +24,7 @@ interface EmailTemplate {
   content: string;
   category: string;
   variables: string[];
+  attachments?: Array<{ name: string; url: string; size: number }>;
 }
 
 // Templates are now loaded from database via useEmailTemplates hook
@@ -36,6 +39,7 @@ export const EmailTemplateComposer: React.FC<EmailTemplateComposerProps> = ({
   defaultSubject = '' 
 }) => {
   const { user } = useAuth();
+  const { currentUser } = useUser();
   const { sendEmail, sending } = useEmailSender();
   const { accounts, loadAccounts, sendEmail: sendViaNylas } = useNylasEmail();
   const { templates } = useEmailTemplates();
@@ -49,6 +53,7 @@ export const EmailTemplateComposer: React.FC<EmailTemplateComposerProps> = ({
   const [showTemplates, setShowTemplates] = useState(false);
   const [attachments, setAttachments] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [includeSignature, setIncludeSignature] = useState(true);
 
   React.useEffect(() => {
     loadAccounts();
@@ -66,12 +71,29 @@ export const EmailTemplateComposer: React.FC<EmailTemplateComposerProps> = ({
     if (defaultSubject) setSubject(defaultSubject);
   }, [defaultRecipient, defaultSubject]);
 
-  const applyTemplate = (template: EmailTemplate) => {
+  const applyTemplate = async (template: EmailTemplate) => {
     setSelectedTemplate(template);
     setSubject(template.subject);
     setContent(template.content);
+    
+    // Charger les pièces jointes du modèle
+    if (template.attachments && template.attachments.length > 0) {
+      const templateFiles: File[] = [];
+      for (const att of template.attachments) {
+        try {
+          const response = await fetch(att.url);
+          const blob = await response.blob();
+          const file = new File([blob], att.name, { type: blob.type });
+          templateFiles.push(file);
+        } catch (error) {
+          console.error(`Erreur lors du chargement de ${att.name}:`, error);
+        }
+      }
+      setAttachments(templateFiles);
+    }
+    
     setShowTemplates(false);
-    toast.success(`Modèle "${template.name}" appliqué`);
+    toast.success(`Modèle "${template.name}" appliqué avec ${template.attachments?.length || 0} pièce(s) jointe(s)`);
   };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -93,9 +115,14 @@ export const EmailTemplateComposer: React.FC<EmailTemplateComposerProps> = ({
 
     try {
       setUploading(true);
+      
+      // Ajouter la signature si demandée
+      const signature = includeSignature && currentUser ? generateEmailSignature(currentUser) : '';
+      const finalContent = signature ? `${content}\n\n${signature}` : content;
+      
       const htmlContent = `
         <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-          ${content.replace(/\n/g, '<br>')}
+          ${finalContent.replace(/\n/g, '<br>')}
         </div>
       `;
 
@@ -342,6 +369,33 @@ export const EmailTemplateComposer: React.FC<EmailTemplateComposerProps> = ({
             )}
           </div>
         </div>
+
+        {/* Signature */}
+        <div className="flex items-center space-x-2">
+          <input
+            type="checkbox"
+            id="includeSignature"
+            checked={includeSignature}
+            onChange={(e) => setIncludeSignature(e.target.checked)}
+            className="h-4 w-4"
+          />
+          <Label htmlFor="includeSignature" className="text-sm cursor-pointer">
+            Inclure ma signature email
+          </Label>
+        </div>
+
+        {includeSignature && currentUser && (
+          <div className="p-3 bg-muted/50 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <Signature className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium">Aperçu de la signature</span>
+            </div>
+            <div 
+              className="text-xs border-l-2 border-primary pl-3"
+              dangerouslySetInnerHTML={{ __html: generateEmailSignature(currentUser) }}
+            />
+          </div>
+        )}
 
         {/* Bouton d'envoi */}
         <div className="flex justify-end">
