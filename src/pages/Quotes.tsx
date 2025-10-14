@@ -63,6 +63,7 @@ export const Quotes: React.FC = () => {
         .from('roadshow_stops')
         .insert({
           user_id: user.id,
+          quote_id: quoteId,
           city: event.city || 'Ville à définir',
           venue: event.venue || 'Lieu à définir',
           address: event.address || '',
