@@ -59,8 +59,8 @@ const isDark = theme === "dark";
                       <span>Menu</span>
                     </Button>
                   </SheetTrigger>
-                  <SheetContent side="left" className="p-0 w-80 bg-sidebar">
-                    <AppSidebar />
+                  <SheetContent side="left" className="p-0 w-80 bg-sidebar text-sidebar-foreground">
+                    <AppSidebar collapsible="none" className="h-full" />
                   </SheetContent>
                 </Sheet>
               </div>

@@ -3,6 +3,7 @@ import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useTheme } from 'next-themes';
 import { ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 import {
   Sidebar,
@@ -21,7 +22,7 @@ import {
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useNavigation } from "@/hooks/useNavigation";
 
-export function AppSidebar() {
+export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const location = useLocation();
   const { theme } = useTheme();
   const { navigation, openSections, toggleSection } = useNavigation();
@@ -36,8 +37,10 @@ export function AppSidebar() {
     return children.some(child => isActive(child.href));
   };
 
+  const { className, ...sidebarProps } = props ?? ({} as React.ComponentProps<typeof Sidebar>);
+
   return (
-    <Sidebar className="border-r bg-sidebar text-sidebar-foreground [&_*]:text-sidebar-foreground">
+    <Sidebar {...sidebarProps} className={cn("border-r bg-sidebar text-sidebar-foreground [&_*]:text-sidebar-foreground", className)}>
       <SidebarContent>
         <div className="p-4">
           <SidebarTrigger />
