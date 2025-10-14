@@ -12,6 +12,8 @@ import { ChannelManager } from '@/components/messaging/ChannelManager';
 import { DirectMessageManager } from '@/components/messaging/DirectMessageManager';
 import { ChannelBrowser } from '@/components/messaging/ChannelBrowser';
 import { toast } from 'sonner';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
 
 export const ChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -19,6 +21,7 @@ export const ChatWidget: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
   const { user } = useAuth();
   const { createNotification } = useNotifications();
+  const isMobile = useIsMobile();
 
   const { 
     channels, 
@@ -124,13 +127,23 @@ export const ChatWidget: React.FC = () => {
   }, 0);
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className={cn(
+      "fixed z-50",
+      isMobile && isOpen 
+        ? "inset-0" 
+        : "bottom-6 right-6"
+    )}>
       {isOpen && (
         <div 
-          className="mb-4 shadow-2xl rounded-xl overflow-hidden border bg-card text-card-foreground flex flex-col"
-          style={{ width: '420px', height: '600px' }}
+          className={cn(
+            "shadow-2xl overflow-hidden border bg-card text-card-foreground flex flex-col",
+            isMobile 
+              ? "h-full w-full rounded-none" 
+              : "mb-4 rounded-xl"
+          )}
+          style={!isMobile ? { width: '420px', height: '600px' } : undefined}
         >
-          <div className="p-4 border-b bg-primary text-primary-foreground">
+          <div className={cn("border-b bg-primary text-primary-foreground", isMobile ? "p-3" : "p-4")}>
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center space-x-2">
                   <MessageSquare className="h-5 w-5" />
@@ -142,7 +155,7 @@ export const ChatWidget: React.FC = () => {
                   onClick={() => setIsOpen(false)} 
                   className="text-primary-foreground hover:bg-primary-foreground/20"
                 >
-                  <X className="h-4 w-4" />
+                  {isMobile ? "Masquer" : <X className="h-4 w-4" />}
                 </Button>
               </div>
             

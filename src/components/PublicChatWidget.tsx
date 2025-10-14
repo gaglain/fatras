@@ -8,9 +8,12 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useMessaging } from '@/hooks/useMessaging';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
 
 export const PublicChatWidget: React.FC = () => {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   console.log('👤 PublicChatWidget - Current user:', user?.id);
   
   const {
@@ -132,41 +135,55 @@ export const PublicChatWidget: React.FC = () => {
   return (
     <>
       {/* Widget Button */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <Button
-          onClick={() => setIsOpen(!isOpen)}
-          className="rounded-full w-14 h-14 shadow-lg"
-          size="icon"
-        >
-          {isOpen ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
-        </Button>
-      </div>
+      {!isOpen && (
+        <div className="fixed bottom-6 right-6 z-50">
+          <Button
+            onClick={() => setIsOpen(true)}
+            className="rounded-full w-14 h-14 shadow-lg"
+            size="icon"
+          >
+            <MessageCircle className="h-6 w-6" />
+          </Button>
+        </div>
+      )}
 
       {/* Chat Window */}
       {isOpen && (
-        <Card className="fixed bottom-24 right-6 w-96 h-[500px] shadow-xl z-40 flex flex-col">
-          <CardHeader className="pb-3">
+        <Card className={cn(
+          "shadow-xl z-50 flex flex-col",
+          isMobile 
+            ? "fixed inset-0 rounded-none h-full w-full" 
+            : "fixed bottom-24 right-6 w-96 h-[500px] z-40"
+        )}>
+          <CardHeader className={cn(isMobile ? "pb-2" : "pb-3")}>
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg">Messages</CardTitle>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowChannelCreator(!showChannelCreator)}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setShowChannelBrowser(!showChannelBrowser);
-                    if (!showChannelBrowser) loadAvailableChannels();
-                  }}
-                >
-                  Parcourir
-                </Button>
-              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsOpen(false)}
+              >
+                {isMobile ? "Masquer" : <X className="h-4 w-4" />}
+              </Button>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowChannelCreator(!showChannelCreator)}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setShowChannelBrowser(!showChannelBrowser);
+                  if (!showChannelBrowser) loadAvailableChannels();
+                }}
+              >
+                Parcourir
+              </Button>
             </div>
             
             {/* Channel Creation */}
