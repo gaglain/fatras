@@ -83,11 +83,12 @@ export const Tasks: React.FC = () => {
     });
   };
 
+  // Filtrer d'abord les tâches selon les critères
   const filteredTasks = tasks.filter(task => {
     const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (task.description || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesUser = selectedUser === 'all' || task.assigned_to === selectedUser;
-    const matchesCategory = selectedCategory === 'all' || true; // Remove category filter for now
+    const matchesCategory = selectedCategory === 'all' || true;
     
     // Filtrage par date d'échéance
     const matchesDate = selectedDate === 'all' || (() => {
@@ -95,6 +96,7 @@ export const Tasks: React.FC = () => {
       
       const dueDate = new Date(task.due_date);
       const today = new Date();
+      today.setHours(0, 0, 0, 0);
       const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
       const nextWeek = new Date(today);
@@ -119,6 +121,7 @@ export const Tasks: React.FC = () => {
     return matchesSearch && matchesUser && matchesCategory && matchesDate;
   });
 
+  // Séparer les tâches par statut APRÈS le filtrage
   const todoTasks = filteredTasks.filter(task => task.status === 'todo');
   const inProgressTasks = filteredTasks.filter(task => task.status === 'in_progress');
   const completedTasks = filteredTasks.filter(task => task.status === 'completed');

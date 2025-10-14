@@ -11,6 +11,8 @@ import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useNylasEmail } from '@/hooks/useNylasEmail';
 import { supabase } from '@/integrations/supabase/client';
+import { useIndividualEmailTracking } from '@/hooks/useIndividualEmailTracking';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface EmailComposerProps {
   isOpen: boolean;
@@ -29,6 +31,7 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
 }) => {
   const { currentUser } = useUser();
   const { accounts, loadAccounts, sendEmail: sendViaNylas } = useNylasEmail();
+  const { injectEmailTracking } = useIndividualEmailTracking();
   const [to, setTo] = useState(toEmail);
   const [emailSubject, setEmailSubject] = useState(subject);
   const [content, setContent] = useState(preText);
@@ -36,6 +39,8 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
   const [attachments, setAttachments] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [showMediaPicker, setShowMediaPicker] = useState(false);
+  const [mediaFiles, setMediaFiles] = useState<Array<{name: string; url: string}>>([]);
 
   React.useEffect(() => {
     setTo(toEmail);
@@ -54,6 +59,31 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
       setSelectedAccountId(accounts[0].id);
     }
   }, [accounts, selectedAccountId]);
+
+  // Charger les fichiers de la banque de médias
+  React.useEffect(() => {
+    const loadMediaFiles = async () => {
+      if (!currentUser?.id) return;
+      
+      const { data: files } = await supabase.storage
+        .from('email-attachments')
+        .list(undefined, { limit: 100 });
+      
+      if (files) {
+        const filesWithUrls = files.map(file => {
+          const { data: { publicUrl } } = supabase.storage
+            .from('email-attachments')
+            .getPublicUrl(file.name);
+          return { name: file.name, url: publicUrl };
+        });
+        setMediaFiles(filesWithUrls);
+      }
+    };
+    
+    if (showMediaPicker) {
+      loadMediaFiles();
+    }
+  }, [showMediaPicker, currentUser]);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -81,6 +111,24 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
     try {
       setSending(true);
       
+      // Créer d'abord l'enregistrement email pour obtenir l'ID
+      const { data: emailRecord, error: emailError } = await supabase
+        .from('emails')
+        .insert({
+          user_id: currentUser?.id,
+          to_email: to,
+          subject: emailSubject,
+          content,
+          direction: 'sent',
+          status: 'sending'
+        })
+        .select()
+        .single();
+
+      if (emailError || !emailRecord) {
+        throw new Error('Erreur lors de la création de l\'enregistrement email');
+      }
+
       // Charger la signature depuis la base de données
       const { data: profileData } = await supabase
         .from('user_profiles')
@@ -89,7 +137,7 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
         .single();
 
       const signature = profileData?.email_signature || '';
-      const htmlContent = `
+      let htmlContent = `
         <div style="font-family: Arial, sans-serif; line-height: 1.6;">
           ${content}
           <br><br>
@@ -98,6 +146,9 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
           </div>
         </div>
       `;
+
+      // Injecter le pixel de tracking et les liens trackés
+      htmlContent = injectEmailTracking(emailRecord.id, htmlContent);
 
       // Upload attachments to Supabase Storage if any
       const attachmentUrls: Array<{name: string; url: string}> = [];
@@ -128,7 +179,13 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
         attachments: attachmentUrls,
       });
 
-      toast.success('Email envoyé avec succès');
+      // Mettre à jour le statut de l'email
+      await supabase
+        .from('emails')
+        .update({ status: 'sent', sent_at: new Date().toISOString() })
+        .eq('id', emailRecord.id);
+
+      toast.success('Email envoyé avec succès (tracking activé)');
       onClose();
       setTo('');
       setEmailSubject('');
@@ -144,8 +201,9 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Mail className="h-5 w-5" />
@@ -221,15 +279,24 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
                 onChange={handleFileSelect}
                 className="hidden"
               />
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => document.getElementById('attachments')?.click()}
-                className="w-full"
-              >
-                <Paperclip className="h-4 w-4 mr-2" />
-                Ajouter des pièces jointes
-              </Button>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => document.getElementById('attachments')?.click()}
+                >
+                  <Paperclip className="h-4 w-4 mr-2" />
+                  Depuis l'ordinateur
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowMediaPicker(true)}
+                >
+                  <Paperclip className="h-4 w-4 mr-2" />
+                  Depuis la banque de médias
+                </Button>
+              </div>
               
               {attachments.length > 0 && (
                 <div className="space-y-1">
@@ -251,8 +318,9 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
             </div>
           </div>
 
-          <div className="text-sm text-muted-foreground">
-            <p>Une signature sera automatiquement ajoutée à votre email.</p>
+          <div className="text-sm text-muted-foreground space-y-1">
+            <p>• Une signature sera automatiquement ajoutée à votre email.</p>
+            <p>• Le tracking des ouvertures et clics est activé automatiquement.</p>
           </div>
 
           <div className="flex justify-end space-x-2">
@@ -267,7 +335,50 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
             </Button>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog pour sélectionner depuis la banque de médias */}
+      <Dialog open={showMediaPicker} onOpenChange={setShowMediaPicker}>
+        <DialogContent className="max-w-3xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>Sélectionner depuis la banque de médias</DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="h-[60vh]">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-4">
+              {mediaFiles.map((file, index) => (
+                <div 
+                  key={index}
+                  className="border rounded-lg p-3 hover:bg-accent cursor-pointer transition-colors"
+                  onClick={async () => {
+                    try {
+                      // Télécharger le fichier depuis l'URL
+                      const response = await fetch(file.url);
+                      const blob = await response.blob();
+                      const fileObj = new File([blob], file.name, { type: blob.type });
+                      setAttachments(prev => [...prev, fileObj]);
+                      setShowMediaPicker(false);
+                      toast.success('Fichier ajouté depuis la banque de médias');
+                    } catch (error) {
+                      toast.error('Erreur lors de l\'ajout du fichier');
+                    }
+                  }}
+                >
+                  <div className="flex items-center gap-2">
+                    <Paperclip className="h-4 w-4 flex-shrink-0" />
+                    <span className="text-sm truncate">{file.name}</span>
+                  </div>
+                </div>
+              ))}
+              {mediaFiles.length === 0 && (
+                <div className="col-span-full text-center text-muted-foreground py-8">
+                  Aucun fichier dans la banque de médias
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
