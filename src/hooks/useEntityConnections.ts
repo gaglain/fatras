@@ -69,7 +69,8 @@ export const useEntityConnections = () => {
         supabase
           .from('tasks')
           .select('id, title, status, due_date')
-          .eq('contact_id', contactId),
+          .eq('contact_id', contactId)
+          .eq('user_id', user.id),
         
         // Tâches via task_entities
         supabase
@@ -231,6 +232,7 @@ export const useEntityConnections = () => {
 
       // Traiter les tâches directes
       if (tasksRes.data) {
+        console.log('📋 Tâches directes trouvées:', tasksRes.data);
         tasksRes.data.forEach(task => {
           taskMap.set(task.id, {
             id: task.id,
@@ -245,6 +247,7 @@ export const useEntityConnections = () => {
 
       // Traiter les tâches via task_entities
       if (taskEntitiesRes.data) {
+        console.log('📋 Tâches via task_entities trouvées:', taskEntitiesRes.data);
         taskEntitiesRes.data.forEach(item => {
           if (item.tasks && !taskMap.has(item.tasks.id)) {
             taskMap.set(item.tasks.id, {
@@ -258,6 +261,8 @@ export const useEntityConnections = () => {
           }
         });
       }
+      
+      console.log('📊 Total tâches dans taskMap:', taskMap.size);
 
       // Traiter les roadshow stops
       if (roadshowRes.data) {
@@ -281,6 +286,14 @@ export const useEntityConnections = () => {
       connections.opportunities = Array.from(opportunityMap.values());
       connections.quotes = Array.from(quoteMap.values());
       connections.tasks = Array.from(taskMap.values());
+
+      console.log('✅ Connexions finales pour le contact:', {
+        events: connections.events.length,
+        opportunities: connections.opportunities.length,
+        quotes: connections.quotes.length,
+        tasks: connections.tasks.length,
+        roadshow_stops: connections.roadshow_stops.length
+      });
 
       return connections;
     } catch (error) {
