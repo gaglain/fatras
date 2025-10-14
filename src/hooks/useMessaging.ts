@@ -60,31 +60,45 @@ export const useMessaging = () => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
+      // 1) Récupérer les IDs des canaux dont l'utilisateur est membre
+      const { data: memberRows, error: memberErr } = await supabase
+        .from('messaging_channel_members')
+        .select('channel_id')
+        .eq('user_id', user.id);
+
+      if (memberErr) throw memberErr;
+      const channelIds = (memberRows || []).map((r: any) => r.channel_id);
+
+      if (channelIds.length === 0) {
+        setChannels([]);
+        return;
+      }
+
+      // 2) Charger les canaux
+      const { data: channelRows, error: channelsErr } = await supabase
         .from('messaging_channels')
-        .select(`
-          *,
-          messaging_channel_members!inner(
-            id,
-            user_id,
-            role,
-            joined_at,
-            last_read_at,
-            user_profiles:user_id (
-              first_name,
-              last_name,
-              username
-            )
-          )
-        `)
-        .eq('messaging_channel_members.user_id', user.id)
+        .select('*')
+        .in('id', channelIds)
         .eq('is_active', true)
         .order('updated_at', { ascending: false });
 
-      if (error) throw error;
+      if (channelsErr) throw channelsErr;
 
-      // Transform data to match our Channel interface
-      const transformedChannels: Channel[] = (data || []).map(ch => ({
+      // 3) Charger tous les membres de ces canaux
+      const { data: allMembers, error: membersErr } = await supabase
+        .from('messaging_channel_members')
+        .select('id, channel_id, user_id, role, joined_at, last_read_at')
+        .in('channel_id', channelIds);
+
+      if (membersErr) throw membersErr;
+
+      // 4) Transformer
+      const membersByChannel: Record<string, any[]> = {};
+      (allMembers || []).forEach((m: any) => {
+        (membersByChannel[m.channel_id] ||= []).push(m);
+      });
+
+      const transformedChannels: Channel[] = (channelRows || []).map((ch: any) => ({
         id: ch.id,
         name: ch.name,
         description: ch.description,
@@ -94,15 +108,14 @@ export const useMessaging = () => {
         created_at: ch.created_at,
         updated_at: ch.updated_at,
         is_active: ch.is_active,
-        members: ch.messaging_channel_members.map((member: any) => ({
+        members: (membersByChannel[ch.id] || []).map((member: any) => ({
           id: member.id,
           channel_id: ch.id,
           user_id: member.user_id,
           role: member.role as 'admin' | 'member',
           joined_at: member.joined_at,
           last_read_at: member.last_read_at,
-          user_profile: member.user_profiles
-        }))
+        })),
       }));
 
       setChannels(transformedChannels);
@@ -116,22 +129,31 @@ export const useMessaging = () => {
     if (!user) return [];
 
     try {
-      const { data, error } = await supabase
+      const { data: publicChannels, error: pubErr } = await supabase
         .from('messaging_channels')
-        .select(`
-          *,
-          messaging_channel_members(user_id)
-        `)
+        .select('*')
         .eq('type', 'public')
         .eq('is_active', true)
         .order('name');
 
-      if (error) throw error;
+      if (pubErr) throw pubErr;
 
-      return (data || []).map(ch => ({
+      const ids = (publicChannels || []).map((c: any) => c.id);
+      let membershipById: Record<string, boolean> = {};
+
+      if (ids.length > 0) {
+        const { data: myMemberships } = await supabase
+          .from('messaging_channel_members')
+          .select('channel_id')
+          .eq('user_id', user.id)
+          .in('channel_id', ids);
+        (myMemberships || []).forEach((m: any) => { membershipById[m.channel_id] = true; });
+      }
+
+      return (publicChannels || []).map((ch: any) => ({
         ...ch,
-        is_member: ch.messaging_channel_members?.some((m: any) => m.user_id === user.id) || false,
-        member_count: ch.messaging_channel_members?.length || 0
+        is_member: !!membershipById[ch.id],
+        member_count: undefined
       }));
     } catch (error) {
       console.error('Error fetching available channels:', error);
