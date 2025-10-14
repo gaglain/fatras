@@ -2548,6 +2548,8 @@ export type Database = {
           local_contact: string | null
           local_contact_phone: string | null
           notes: string | null
+          opportunity_id: string | null
+          quote_id: string | null
           status: string
           tickets_available: number | null
           transport: string | null
@@ -2574,6 +2576,8 @@ export type Database = {
           local_contact?: string | null
           local_contact_phone?: string | null
           notes?: string | null
+          opportunity_id?: string | null
+          quote_id?: string | null
           status?: string
           tickets_available?: number | null
           transport?: string | null
@@ -2600,6 +2604,8 @@ export type Database = {
           local_contact?: string | null
           local_contact_phone?: string | null
           notes?: string | null
+          opportunity_id?: string | null
+          quote_id?: string | null
           status?: string
           tickets_available?: number | null
           transport?: string | null
@@ -2607,7 +2613,22 @@ export type Database = {
           user_id?: string
           venue?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "roadshow_stops_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roadshow_stops_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       role_permissions: {
         Row: {

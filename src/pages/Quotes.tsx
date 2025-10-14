@@ -20,6 +20,7 @@ import { QuoteItemManager } from '@/components/quotes/QuoteItemManager';
 import { SimpleQuoteCalculator, QuoteFormData } from '@/components/quotes/SimpleQuoteCalculator';
 import { toast } from 'sonner';
 import { UniversalSearch } from '@/components/UniversalSearch';
+import { supabase } from '@/integrations/supabase/client';
 
 export const Quotes: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -35,6 +36,66 @@ export const Quotes: React.FC = () => {
   const { events } = useEvents();
   const { artists, events: cEvents } = useCentralizedData();
   const { user } = useAuth();
+
+  const createRoadshowFromQuote = async (quoteId: string, quoteData: typeof formData) => {
+    if (!user) return;
+
+    try {
+      const event = events.find(e => e.id === (quoteData.event_id !== 'none' ? quoteData.event_id : ''));
+      const contact = contacts.find(c => c.id === (quoteData.contact_id !== 'none' ? quoteData.contact_id : ''));
+      const artist = artists.find(a => a.id === (quoteData.artist_id !== 'none' ? quoteData.artist_id : ''));
+
+      if (!event) {
+        toast.error('Un événement doit être associé au devis pour créer une feuille de route');
+        return;
+      }
+
+      // Créer la feuille de route
+      const { data: roadshow, error: roadshowError } = await supabase
+        .from('roadshow_stops')
+        .insert({
+          user_id: user.id,
+          quote_id: quoteId,
+          city: event.city || '',
+          venue: event.venue || '',
+          address: event.address || '',
+          event_date: event.start_date || '',
+          status: 'confirmed',
+          capacity: event.attendees_count || 0,
+          tickets_available: event.attendees_count || 0,
+          crew: [],
+          equipment: [],
+          artists: artist ? [artist.id] : [],
+          artist_lineup: [],
+          notes: `Créé automatiquement à partir du devis ${quoteData.title}`
+        })
+        .select()
+        .single();
+
+      if (roadshowError) throw roadshowError;
+
+      // Créer le canal de messagerie privé
+      if (roadshow) {
+        const { data: channel, error: channelError } = await supabase
+          .rpc('create_messaging_channel', {
+            channel_name: `🎭 ${quoteData.title}`,
+            channel_description: `Organisation du spectacle - ${event.venue || 'Lieu à définir'}`,
+            channel_type: 'private',
+            member_user_ids: [],
+            roadshow_ref_id: roadshow.id
+          });
+
+        if (channelError) {
+          console.error('Erreur lors de la création du canal:', channelError);
+        } else {
+          toast.success('Feuille de route et canal de messagerie créés avec succès !');
+        }
+      }
+    } catch (error) {
+      console.error('Erreur lors de la création de la feuille de route:', error);
+      toast.error('Erreur lors de la création de la feuille de route');
+    }
+  };
 
   const [formData, setFormData] = useState({
     title: '',
@@ -104,6 +165,12 @@ export const Quotes: React.FC = () => {
         };
 
         const updated = await updateQuote(selectedQuote.id, updates);
+        
+        // Si le statut passe à "accepted", créer automatiquement une feuille de route
+        if (formData.status === 'accepted' && selectedQuote.status !== 'accepted') {
+          await createRoadshowFromQuote(selectedQuote.id, formData);
+        }
+        
         toast.success('Devis mis à jour');
         setSelectedQuote(updated || selectedQuote);
         setDialogOpen(false);

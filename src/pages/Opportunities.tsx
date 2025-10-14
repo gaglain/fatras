@@ -48,6 +48,60 @@ export const Opportunities: React.FC = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingOpportunity, setEditingOpportunity] = useState<Opportunity | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const createRoadshowFromOpportunity = async (opportunityId: string, oppData: typeof newOpportunity) => {
+    if (!user) return;
+
+    try {
+      const event = events.find(e => e.id === oppData.event_id);
+      const contact = contacts.find(c => c.id === oppData.contact_id);
+      const artist = artists.find(a => a.id === oppData.artist_id);
+
+      // Créer la feuille de route
+      const { data: roadshow, error: roadshowError } = await supabase
+        .from('roadshow_stops')
+        .insert({
+          user_id: user.id,
+          opportunity_id: opportunityId,
+          city: oppData.location || '',
+          venue: oppData.venue || '',
+          event_date: oppData.date || '',
+          status: 'confirmed',
+          capacity: 0,
+          tickets_available: 0,
+          crew: [],
+          equipment: [],
+          artists: artist ? [artist.id] : [],
+          artist_lineup: [],
+          notes: `Créé automatiquement à partir de l'opportunité ${oppData.title}`
+        })
+        .select()
+        .single();
+
+      if (roadshowError) throw roadshowError;
+
+      // Créer le canal de messagerie privé
+      if (roadshow) {
+        const { data: channel, error: channelError } = await supabase
+          .rpc('create_messaging_channel', {
+            channel_name: `🎭 ${oppData.title}`,
+            channel_description: `Organisation du spectacle - ${oppData.venue || 'Lieu à définir'}`,
+            channel_type: 'private',
+            member_user_ids: [],
+            roadshow_ref_id: roadshow.id
+          });
+
+        if (channelError) {
+          console.error('Erreur lors de la création du canal:', channelError);
+        } else {
+          toast.success('Feuille de route et canal de messagerie créés avec succès !');
+        }
+      }
+    } catch (error) {
+      console.error('Erreur lors de la création de la feuille de route:', error);
+      toast.error('Erreur lors de la création de la feuille de route');
+    }
+  };
 const [newOpportunity, setNewOpportunity] = useState({
   title: '',
   description: '',
@@ -218,6 +272,8 @@ setNewOpportunity({
     if (!editingOpportunity || !user) return;
 
     try {
+      const previousStatus = editingOpportunity.status;
+      
 const { error } = await supabase
   .from('opportunities')
   .update({
@@ -241,6 +297,11 @@ const { error } = await supabase
   .eq('user_id', user.id);
 
       if (error) throw error;
+
+      // Si l'opportunité passe à "won", créer une feuille de route
+      if (newOpportunity.status === 'won' && previousStatus !== 'won') {
+        await createRoadshowFromOpportunity(editingOpportunity.id, newOpportunity);
+      }
 
       setOpportunities(prev => prev.map(opp => 
         opp.id === editingOpportunity.id 
