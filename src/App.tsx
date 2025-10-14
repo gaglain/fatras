@@ -65,15 +65,57 @@ const App = () => {
   
   return (
     <ErrorBoundary
-      fallback={
-        <div style={{ padding: '20px', textAlign: 'center', color: 'red' }}>
-          <h1>Application Error</h1>
+      fallbackRender={({ error, resetErrorBoundary }) => (
+        <div style={{ padding: '24px', textAlign: 'center' }}>
+          <h1 style={{ marginBottom: 8, color: 'var(--destructive, #ef4444)' }}>Application Error</h1>
           <p>Something went wrong loading the application.</p>
           <p>Please refresh the page or contact support.</p>
+
+          <div style={{ marginTop: 16, display: 'flex', gap: 8, justifyContent: 'center' }}>
+            <button
+              onClick={() => window.location.reload()}
+              style={{ padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: 6, background: 'white', cursor: 'pointer' }}
+            >
+              Rafraîchir
+            </button>
+            <button
+              onClick={() => {
+                try {
+                  // Conserver l'auth Supabase et le thème, nettoyer le reste
+                  const preserved: Record<string, string> = {};
+                  for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i)!;
+                    if (key.startsWith('sb-') || key === 'lovable-theme') {
+                      preserved[key] = localStorage.getItem(key) || '';
+                    }
+                  }
+                  localStorage.clear();
+                  Object.entries(preserved).forEach(([k, v]) => localStorage.setItem(k, v));
+                  sessionStorage.clear();
+                } catch (e) {
+                  console.warn('Cache reset failed:', e);
+                }
+                resetErrorBoundary();
+                window.location.reload();
+              }}
+              style={{ padding: '8px 12px', border: '1px solid #ef4444', color: '#ef4444', borderRadius: 6, background: 'white', cursor: 'pointer' }}
+            >
+              Réinitialiser l'application
+            </button>
+          </div>
+
+          {import.meta.env.MODE !== 'production' && (
+            <pre style={{ marginTop: 16, fontSize: 12, color: '#6b7280', whiteSpace: 'pre-wrap' }}>
+              {String(error?.message || '')}
+            </pre>
+          )}
         </div>
-      }
+      )}
       onError={(error) => {
         console.error('💥 React Error Boundary caught error:', error);
+        try {
+          localStorage.setItem('last_app_error', JSON.stringify({ message: String(error?.message || error), time: new Date().toISOString() }));
+        } catch {}
       }}
     >
       <QueryClientProvider client={queryClient}>
