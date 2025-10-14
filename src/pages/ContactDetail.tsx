@@ -224,10 +224,10 @@ export const ContactDetail: React.FC = () => {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <Mail className="h-4 w-4 text-muted-foreground" />
-              <div className="text-sm">
+              <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
+              <div className="text-sm min-w-0 flex-1">
                 <p className="font-medium">Email</p>
-                <p className="text-muted-foreground">{contact.email || 'Non renseigné'}</p>
+                <p className="text-muted-foreground truncate">{contact.email || 'Non renseigné'}</p>
               </div>
             </div>
           </CardContent>
@@ -236,10 +236,10 @@ export const ContactDetail: React.FC = () => {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <Phone className="h-4 w-4 text-muted-foreground" />
-              <div className="text-sm">
+              <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
+              <div className="text-sm min-w-0 flex-1">
                 <p className="font-medium">Téléphone</p>
-                <p className="text-muted-foreground">{contact.phone || 'Non renseigné'}</p>
+                <p className="text-muted-foreground truncate">{contact.phone || 'Non renseigné'}</p>
               </div>
             </div>
           </CardContent>
@@ -248,10 +248,10 @@ export const ContactDetail: React.FC = () => {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <Building className="h-4 w-4 text-muted-foreground" />
-              <div className="text-sm">
+              <Building className="h-4 w-4 text-muted-foreground shrink-0" />
+              <div className="text-sm min-w-0 flex-1">
                 <p className="font-medium">Entreprise</p>
-                <p className="text-muted-foreground">{contact.company || 'Non renseigné'}</p>
+                <p className="text-muted-foreground truncate">{contact.company || 'Non renseigné'}</p>
               </div>
             </div>
           </CardContent>
