@@ -38,9 +38,9 @@ export const useUnifiedEmails = () => {
     loadEmails();
     const cleanup = setupRealtimeSubscription();
 
-    // Auto-sync Nylas accounts once on mount, then every 3 minutes
+    // Auto-sync Nylas accounts once on mount, then every 2 minutes
     syncAllAccounts();
-    const interval = setInterval(syncAllAccounts, 180000);
+    const interval = setInterval(syncAllAccounts, 120000);
 
     return () => {
       cleanup?.();
@@ -210,7 +210,16 @@ export const useUnifiedEmails = () => {
         };
       });
 
-      const combined: UnifiedEmail[] = [...unified, ...inboundMapped].sort((a, b) => {
+      // Déduplication par message_id
+      const emailMap = new Map<string, UnifiedEmail>();
+      [...unified, ...inboundMapped].forEach(email => {
+        const key = email.message_id || email.id;
+        if (!emailMap.has(key)) {
+          emailMap.set(key, email);
+        }
+      });
+
+      const combined: UnifiedEmail[] = Array.from(emailMap.values()).sort((a, b) => {
         const da = new Date(a.received_at || a.sent_at || a.created_at).getTime();
         const db = new Date(b.received_at || b.sent_at || b.created_at).getTime();
         return db - da;

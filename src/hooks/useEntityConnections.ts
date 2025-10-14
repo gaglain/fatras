@@ -38,8 +38,10 @@ export const useEntityConnections = () => {
         opportunitiesRes,
         quotesRes,
         tasksRes,
+        taskEntitiesRes,
         roadshowRes,
         eventsMapRes,
+        opportunitiesMapRes,
         quotesMapRes
       ] = await Promise.all([
         // Événements liés directement
@@ -70,6 +72,13 @@ export const useEntityConnections = () => {
           .eq('contact_id', contactId)
           .eq('user_id', user.id),
         
+        // Tâches via task_entities
+        supabase
+          .from('task_entities')
+          .select('task_id, tasks(id, title, status, due_date)')
+          .eq('entity_type', 'contact')
+          .eq('entity_id', contactId),
+        
         // Roadshow stops liés via roadshow_contacts
         supabase
           .from('roadshow_contacts')
@@ -79,7 +88,16 @@ export const useEntityConnections = () => {
         // Événements via table de liaison contact_events
         supabase
           .from('contact_events')
-          .select('event_id, role, events(id, title, status, start_date)')
+          .select(`
+            event_id,
+            events!inner(id, title, status, start_date)
+          `)
+          .eq('contact_id', contactId),
+
+        // Opportunités via table de liaison contact_opportunities
+        supabase
+          .from('contact_opportunities')
+          .select('opportunity_id, role, opportunities(id, title, status, date)')
           .eq('contact_id', contactId),
 
         // Devis via table de liaison contact_quotes
@@ -99,10 +117,16 @@ export const useEntityConnections = () => {
         roadshow_stops: []
       };
 
-      // Traiter les événements
+      // Map pour éviter les doublons
+      const eventMap = new Map();
+      const opportunityMap = new Map();
+      const quoteMap = new Map();
+      const taskMap = new Map();
+
+      // Traiter les événements directs
       if (eventsRes.data) {
         eventsRes.data.forEach(event => {
-          connections.events.push({
+          eventMap.set(event.id, {
             id: event.id,
             entity_type: 'event',
             entity_id: event.id,
@@ -113,10 +137,41 @@ export const useEntityConnections = () => {
         });
       }
 
-      // Traiter les opportunités
+      // Traiter les événements via liaison
+      if (eventsMapRes.data && !eventsMapRes.error) {
+        eventsMapRes.data.forEach((item: any) => {
+          if (item.events && Array.isArray(item.events) && item.events.length > 0) {
+            const event = item.events[0];
+            if (event && !eventMap.has(event.id)) {
+              eventMap.set(event.id, {
+                id: event.id,
+                entity_type: 'event',
+                entity_id: event.id,
+                title: event.title,
+                status: event.status,
+                date: event.start_date
+              });
+            }
+          } else if (item.events && typeof item.events === 'object') {
+            const event = item.events;
+            if (!eventMap.has(event.id)) {
+              eventMap.set(event.id, {
+                id: event.id,
+                entity_type: 'event',
+                entity_id: event.id,
+                title: event.title,
+                status: event.status,
+                date: event.start_date
+              });
+            }
+          }
+        });
+      }
+
+      // Traiter les opportunités directes
       if (opportunitiesRes.data) {
         opportunitiesRes.data.forEach(opp => {
-          connections.opportunities.push({
+          opportunityMap.set(opp.id, {
             id: opp.id,
             entity_type: 'opportunity',
             entity_id: opp.id,
@@ -127,10 +182,27 @@ export const useEntityConnections = () => {
         });
       }
 
-      // Traiter les devis
+      // Traiter les opportunités via liaison
+      if (opportunitiesMapRes.data) {
+        opportunitiesMapRes.data.forEach(item => {
+          if (item.opportunities && !opportunityMap.has(item.opportunities.id)) {
+            opportunityMap.set(item.opportunities.id, {
+              id: item.opportunities.id,
+              entity_type: 'opportunity',
+              entity_id: item.opportunities.id,
+              title: item.opportunities.title,
+              status: item.opportunities.status,
+              date: item.opportunities.date,
+              role: item.role
+            });
+          }
+        });
+      }
+
+      // Traiter les devis directs
       if (quotesRes.data) {
         quotesRes.data.forEach(quote => {
-          connections.quotes.push({
+          quoteMap.set(quote.id, {
             id: quote.id,
             entity_type: 'quote',
             entity_id: quote.id,
@@ -141,10 +213,27 @@ export const useEntityConnections = () => {
         });
       }
 
-      // Traiter les tâches
+      // Traiter les devis via liaison
+      if (quotesMapRes.data) {
+        quotesMapRes.data.forEach(item => {
+          if (item.quotes && !quoteMap.has(item.quotes.id)) {
+            quoteMap.set(item.quotes.id, {
+              id: item.quotes.id,
+              entity_type: 'quote',
+              entity_id: item.quotes.id,
+              title: item.quotes.title,
+              status: item.quotes.status,
+              date: item.quotes.created_at,
+              role: item.role
+            });
+          }
+        });
+      }
+
+      // Traiter les tâches directes
       if (tasksRes.data) {
         tasksRes.data.forEach(task => {
-          connections.tasks.push({
+          taskMap.set(task.id, {
             id: task.id,
             entity_type: 'task',
             entity_id: task.id,
@@ -152,6 +241,22 @@ export const useEntityConnections = () => {
             status: task.status,
             date: task.due_date
           });
+        });
+      }
+
+      // Traiter les tâches via task_entities
+      if (taskEntitiesRes.data) {
+        taskEntitiesRes.data.forEach(item => {
+          if (item.tasks && !taskMap.has(item.tasks.id)) {
+            taskMap.set(item.tasks.id, {
+              id: item.tasks.id,
+              entity_type: 'task',
+              entity_id: item.tasks.id,
+              title: item.tasks.title,
+              status: item.tasks.status,
+              date: item.tasks.due_date
+            });
+          }
         });
       }
 
@@ -171,6 +276,12 @@ export const useEntityConnections = () => {
           }
         });
       }
+
+      // Convertir les maps en arrays
+      connections.events = Array.from(eventMap.values());
+      connections.opportunities = Array.from(opportunityMap.values());
+      connections.quotes = Array.from(quoteMap.values());
+      connections.tasks = Array.from(taskMap.values());
 
       return connections;
     } catch (error) {

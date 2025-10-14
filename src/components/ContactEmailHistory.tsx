@@ -3,10 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Mail, Send, Inbox, Clock, User, RefreshCw } from 'lucide-react';
+import { Mail, Send, Inbox, Clock, User, RefreshCw, Reply } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUnifiedEmails } from '@/hooks/useUnifiedEmails';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { EmailComposer } from '@/components/email/EmailComposer';
 
 interface ContactEmailHistoryProps {
   contactId: string;
@@ -19,6 +20,7 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
 }) => {
   const { emails, isLoading, loadEmails, markAsRead, syncNow } = useUnifiedEmails();
   const [selectedEmail, setSelectedEmail] = React.useState<any | null>(null);
+  const [showReply, setShowReply] = React.useState(false);
   const [isSyncing, setIsSyncing] = React.useState(false);
 
   const stripTags = (s: string) => s ? s.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '').replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim() : '';
@@ -92,59 +94,80 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
   const renderEmailItem = (email: any) => (
     <div
       key={email.id}
-      className={`p-3 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors ${
+      className={`p-3 rounded-lg border transition-colors ${
         email.direction === 'received' && !email.read_at 
           ? 'bg-blue-50 dark:bg-blue-950/20 border-blue-200' 
           : 'border-border'
       }`}
-      onClick={() => handleEmailClick(email)}
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            {email.direction === 'received' ? (
-              <Inbox className="h-3 w-3 text-green-600" />
-            ) : (
-              <Send className="h-3 w-3 text-blue-600" />
-            )}
-            <Badge 
-              variant={email.direction === 'received' ? 'default' : 'secondary'}
-              className="text-xs"
-            >
-              {email.direction === 'received' ? 'Reçu' : 'Envoyé'}
-            </Badge>
-            {email.direction === 'received' && !email.read_at && (
-              <Badge variant="outline" className="text-xs">
-                Nouveau
+      <div 
+        className="cursor-pointer hover:bg-muted/50 -m-3 p-3 rounded-lg"
+        onClick={() => handleEmailClick(email)}
+      >
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              {email.direction === 'received' ? (
+                <Inbox className="h-3 w-3 text-green-600" />
+              ) : (
+                <Send className="h-3 w-3 text-blue-600" />
+              )}
+              <Badge 
+                variant={email.direction === 'received' ? 'default' : 'secondary'}
+                className="text-xs"
+              >
+                {email.direction === 'received' ? 'Reçu' : 'Envoyé'}
               </Badge>
-            )}
-          </div>
-          
-          <h4 className={`text-sm font-medium truncate mb-1 ${
-            email.direction === 'received' && !email.read_at ? 'font-semibold' : ''
-          }`}>
-            {email.subject || '(Aucun sujet)'}
-          </h4>
-          
-          <p className="text-xs text-muted-foreground truncate mb-2">
-            {getPreviewText(email)}...
-          </p>
-          
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Clock className="h-3 w-3" />
-            <span>
-              {formatDate(email.received_at || email.sent_at || email.created_at)}
-            </span>
-            <User className="h-3 w-3 ml-2" />
-            <span>
-              {email.direction === 'received' 
-                ? (email.from_name || email.from_email)
-                : (email.to_name || email.to_email)
-              }
-            </span>
+              {email.direction === 'received' && !email.read_at && (
+                <Badge variant="outline" className="text-xs">
+                  Nouveau
+                </Badge>
+              )}
+            </div>
+            
+            <h4 className={`text-sm font-medium truncate mb-1 ${
+              email.direction === 'received' && !email.read_at ? 'font-semibold' : ''
+            }`}>
+              {email.subject || '(Aucun sujet)'}
+            </h4>
+            
+            <p className="text-xs text-muted-foreground truncate mb-2">
+              {getPreviewText(email)}...
+            </p>
+            
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Clock className="h-3 w-3" />
+              <span>
+                {formatDate(email.received_at || email.sent_at || email.created_at)}
+              </span>
+              <User className="h-3 w-3 ml-2" />
+              <span>
+                {email.direction === 'received' 
+                  ? (email.from_name || email.from_email)
+                  : (email.to_name || email.to_email)
+                }
+              </span>
+            </div>
           </div>
         </div>
       </div>
+      
+      {email.direction === 'received' && (
+        <div className="mt-2 pt-2 border-t">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedEmail(email);
+              setShowReply(true);
+            }}
+          >
+            <Reply className="h-3 w-3 mr-2" />
+            Répondre
+          </Button>
+        </div>
+      )}
     </div>
   );
 
@@ -275,6 +298,18 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
           </ScrollArea>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog de réponse */}
+      <EmailComposer 
+        isOpen={showReply}
+        onClose={() => {
+          setShowReply(false);
+          setSelectedEmail(null);
+        }}
+        toEmail={selectedEmail?.from_email || ''}
+        subject={`Re: ${selectedEmail?.subject || ''}`}
+        preText={`\n\n---\nDe: ${selectedEmail?.from_name || selectedEmail?.from_email}\nDate: ${selectedEmail && formatDate(selectedEmail.received_at || selectedEmail.sent_at || selectedEmail.created_at)}\n\n${stripTags(selectedEmail?.html_content || selectedEmail?.content || '')}`}
+      />
     </>
   );
 };
