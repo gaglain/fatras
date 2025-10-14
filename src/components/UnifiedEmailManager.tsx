@@ -14,11 +14,18 @@ import {
   ArrowLeft, 
   RefreshCw,
   Bell,
-  BellOff
+  BellOff,
+  Reply,
+  Forward,
+  Trash2,
+  MoreVertical
 } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { EmailComposer } from '@/components/email/EmailComposer';
 import { useUnifiedEmails, UnifiedEmail } from '@/hooks/useUnifiedEmails';
 import { useEmailNotifications } from '@/hooks/useEmailNotifications';
 import { useNylasEmail } from '@/hooks/useNylasEmail';
+import { supabase } from '@/integrations/supabase/client';
 
 export const UnifiedEmailManager: React.FC = () => {
   const { emails, isLoading, loadEmails, markAsRead, getEmailsByDirection, getUnreadCount } = useUnifiedEmails();
@@ -26,6 +33,10 @@ export const UnifiedEmailManager: React.FC = () => {
   const { syncEmails, accounts, isLoading: isSyncing } = useNylasEmail();
   const [selectedEmail, setSelectedEmail] = useState<UnifiedEmail | null>(null);
   const [activeTab, setActiveTab] = useState('inbox');
+  const [filter, setFilter] = useState<'all' | 'spam'>('all');
+  const [showComposer, setShowComposer] = useState(false);
+  const [composerMode, setComposerMode] = useState<'reply' | 'forward' | null>(null);
+  const [composerSourceEmail, setComposerSourceEmail] = useState<UnifiedEmail | null>(null);
 
   // Utils: clean preview from HTML
   const decodeHtmlEntities = (str: string) => {
@@ -84,86 +95,165 @@ export const UnifiedEmailManager: React.FC = () => {
     }
   };
 
-  const renderEmailList = (emailList: UnifiedEmail[], title: string, icon: React.ReactNode) => (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          {icon}
-          <h3 className="font-semibold">{title}</h3>
-          <Badge variant="secondary">{emailList.length}</Badge>
-        </div>
-        <Button
-          onClick={handleSyncEmails}
-          disabled={isSyncing}
-          variant="outline"
-          size="sm"
-        >
-          <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
-          Sync
-        </Button>
-      </div>
-      
-      <ScrollArea className="h-[500px]">
-        {emailList.length === 0 ? (
-          <div className="p-6 text-center text-muted-foreground">
-            <Mail className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Aucun email trouvé</p>
+  // Actions rapides
+  const handleReply = (email: UnifiedEmail) => {
+    setComposerSourceEmail(email);
+    setComposerMode('reply');
+    setShowComposer(true);
+  };
+
+  const handleForward = (email: UnifiedEmail) => {
+    setComposerSourceEmail(email);
+    setComposerMode('forward');
+    setShowComposer(true);
+  };
+
+  const handleDelete = async (email: UnifiedEmail) => {
+    if (!confirm('Voulez-vous vraiment supprimer cet email ?')) return;
+    try {
+      if (email.direction === 'received') {
+        await supabase.from('inbound_emails').delete().eq('id', email.id);
+      } else {
+        await supabase.from('emails').delete().eq('id', email.id);
+      }
+      await loadEmails();
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+    }
+  };
+
+  const renderEmailList = (emailList: UnifiedEmail[], title: string, icon: React.ReactNode) => {
+    const spamEmails = emailList.filter(e => (e.labels || []).some(l => /spam|junk/i.test(l || '')));
+    const displayed = filter === 'spam'
+      ? spamEmails
+      : emailList.filter(e => !(e.labels || []).some(l => /spam|junk/i.test(l || '')));
+
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {icon}
+            <h3 className="font-semibold">{title}</h3>
+            <Badge variant="secondary">{displayed.length}</Badge>
           </div>
-        ) : (
-          <div className="divide-y">
-            {emailList.map((email) => (
-              <div
-                key={email.id}
-                className={`p-4 cursor-pointer hover:bg-muted/50 transition-colors ${
-                  email.direction === 'received' && !email.read_at 
-                    ? 'bg-blue-50 dark:bg-blue-950/20 border-l-4 border-l-blue-500' 
-                    : ''
-                }`}
-                onClick={() => handleEmailClick(email)}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className={`font-medium truncate ${
+          <div className="flex items-center gap-2">
+            <div className="hidden sm:flex items-center gap-2">
+              <Button size="sm" variant={filter === 'all' ? 'secondary' : 'outline'} onClick={() => setFilter('all')}>
+                Tous ({emailList.length - spamEmails.length})
+              </Button>
+              <Button size="sm" variant={filter === 'spam' ? 'destructive' : 'outline'} onClick={() => setFilter('spam')}>
+                Spam ({spamEmails.length})
+              </Button>
+            </div>
+            <Button
+              onClick={handleSyncEmails}
+              disabled={isSyncing}
+              variant="outline"
+              size="sm"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+              Sync
+            </Button>
+          </div>
+        </div>
+        <ScrollArea className="h-[500px]">
+          {displayed.length === 0 ? (
+            <div className="p-6 text-center text-muted-foreground">
+              <Mail className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>Aucun email trouvé</p>
+            </div>
+          ) : (
+            <div className="divide-y">
+              {displayed.map((email) => (
+                <div
+                  key={email.id}
+                  className={`group p-4 hover:bg-muted/50 transition-colors ${
+                    email.direction === 'received' && !email.read_at 
+                      ? 'bg-blue-50 dark:bg-blue-950/20 border-l-4 border-l-blue-500' 
+                      : ''
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0 cursor-pointer" onClick={() => handleEmailClick(email)}>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className={`font-medium truncate ${
+                          email.direction === 'received' && !email.read_at ? 'font-semibold' : ''
+                        }`}>
+                          {email.direction === 'received' 
+                            ? (email.from_name || email.from_email)
+                            : (email.to_name || email.to_email)
+                          }
+                        </span>
+                        <Badge 
+                          variant={email.direction === 'received' ? 'default' : 'secondary'}
+                          className="text-xs"
+                        >
+                          {email.direction === 'received' ? 'Reçu' : 'Envoyé'}
+                        </Badge>
+                        {email.direction === 'received' && !email.read_at && (
+                          <Badge variant="outline" className="text-xs">
+                            Nouveau
+                          </Badge>
+                        )}
+                      </div>
+                      <h4 className={`text-sm truncate mb-1 ${
                         email.direction === 'received' && !email.read_at ? 'font-semibold' : ''
                       }`}>
-                        {email.direction === 'received' 
-                          ? (email.from_name || email.from_email)
-                          : (email.to_name || email.to_email)
-                        }
-                      </span>
-                      <Badge 
-                        variant={email.direction === 'received' ? 'default' : 'secondary'}
-                        className="text-xs"
-                      >
-                        {email.direction === 'received' ? 'Reçu' : 'Envoyé'}
-                      </Badge>
-                      {email.direction === 'received' && !email.read_at && (
-                        <Badge variant="outline" className="text-xs">
-                          Nouveau
-                        </Badge>
-                      )}
+                        {email.subject || '(Aucun sujet)'}
+                      </h4>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {getEmailPreview(email)}
+                      </p>
                     </div>
-                    <h4 className={`text-sm truncate mb-1 ${
-                      email.direction === 'received' && !email.read_at ? 'font-semibold' : ''
-                    }`}>
-                      {email.subject || '(Aucun sujet)'}
-                    </h4>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {getEmailPreview(email)}
-                    </p>
-                  </div>
-                  <div className="text-xs text-muted-foreground whitespace-nowrap">
-                    {formatDate(email.received_at || email.sent_at || email.created_at)}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <div className="text-xs text-muted-foreground whitespace-nowrap">
+                        {formatDate(email.received_at || email.sent_at || email.created_at)}
+                      </div>
+                      <div className="hidden md:flex items-center gap-1">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" title="Répondre"
+                          onClick={(e) => { e.stopPropagation(); handleReply(email); }}>
+                          <Reply className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" title="Transférer"
+                          onClick={(e) => { e.stopPropagation(); handleForward(email); }}>
+                          <Forward className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" title="Supprimer"
+                          onClick={(e) => { e.stopPropagation(); handleDelete(email); }}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild className="md:hidden">
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => e.stopPropagation()}>
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="z-50 bg-popover border">
+                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleReply(email); }}>
+                            <Reply className="h-4 w-4 mr-2" />
+                            Répondre
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleForward(email); }}>
+                            <Forward className="h-4 w-4 mr-2" />
+                            Transférer
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDelete(email); }} className="text-destructive">
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Supprimer
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </ScrollArea>
-    </div>
-  );
+              ))}
+            </div>
+          )}
+        </ScrollArea>
+      </div>
+    );
+  };
 
   if (selectedEmail) {
     return (
