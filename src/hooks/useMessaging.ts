@@ -664,8 +664,11 @@ export const useMessaging = () => {
     
     // Keep existing channels; avoid removing other components' subscriptions
 
-    // Create a unique channel name based on timestamp to avoid conflicts
-    const channelName = `messaging-realtime-${Date.now()}`;
+    // Create a truly unique channel name to avoid conflicts across multiple mounts
+    const uniqueSuffix = (typeof crypto !== 'undefined' && (crypto as any).randomUUID)
+      ? (crypto as any).randomUUID()
+      : Math.random().toString(36).slice(2);
+    const channelName = `messaging-realtime-${user.id}-${Date.now()}-${uniqueSuffix}`;
     
     const channel = supabase
       .channel(channelName)
@@ -727,10 +730,15 @@ export const useMessaging = () => {
           console.log('👤 You were added to a channel, refreshing channels');
           fetchChannels();
         }
-      )
-      .subscribe((status) => {
+      );
+
+    try {
+      channel.subscribe((status) => {
         console.log('📡 Messaging subscription status:', status);
       });
+    } catch (err) {
+      console.error('❌ Messaging realtime subscribe error:', err);
+    }
 
     return () => {
       console.log('🧹 Cleaning up messaging subscription');
