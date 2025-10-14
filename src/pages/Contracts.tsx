@@ -19,6 +19,7 @@ import { ContractCalculator, type CalculationValues } from '@/components/contrac
 import { QuoteItemManager } from '@/components/quotes/QuoteItemManager';
 import { QuoteTemplateManager } from '@/components/quotes/QuoteTemplateManager';
 import { UniversalSearch } from '@/components/UniversalSearch';
+import { supabase } from '@/integrations/supabase/client';
 
 interface QuoteFormData {
   title: string;
@@ -112,6 +113,81 @@ export const Contracts: React.FC = () => {
 
   const { addQuoteItem } = useQuotes();
 
+  const createRoadshowFromQuote = async (quoteId: string, quoteData: QuoteFormData) => {
+    if (!currentUser) return;
+
+    try {
+      console.log('📍 Début création feuille de route depuis devis', quoteId);
+      
+      const event = events.find(e => e.id === quoteData.event_id);
+      const contact = contacts.find(c => c.id === quoteData.contact_id);
+      const artist = artists.find(a => a.id === quoteData.artist_id);
+
+      console.log('📍 Event trouvé:', event);
+      console.log('📍 Contact trouvé:', contact);
+      console.log('📍 Artist trouvé:', artist);
+
+      if (!event) {
+        toast.error('Un événement doit être associé au devis pour créer une feuille de route');
+        return;
+      }
+
+      // Créer la feuille de route
+      console.log('📍 Création de la feuille de route...');
+      const { data: roadshow, error: roadshowError } = await supabase
+        .from('roadshow_stops')
+        .insert({
+          user_id: currentUser.id,
+          quote_id: quoteId,
+          city: event.city || 'Ville à définir',
+          venue: event.venue || 'Lieu à définir',
+          address: event.address || '',
+          event_date: event.start_date || null,
+          status: 'confirmed',
+          capacity: event.attendees_count || 0,
+          tickets_available: event.attendees_count || 0,
+          crew: [],
+          equipment: [],
+          artists: artist ? [artist.id] : [],
+          artist_lineup: [],
+          notes: `Créé automatiquement à partir du devis ${quoteData.title}`
+        })
+        .select()
+        .single();
+
+      if (roadshowError) {
+        console.error('❌ Erreur création roadshow:', roadshowError);
+        throw roadshowError;
+      }
+
+      console.log('✅ Feuille de route créée:', roadshow);
+
+      // Créer le canal de messagerie privé
+      if (roadshow) {
+        console.log('📍 Création du canal de messagerie...');
+        const { data: channel, error: channelError } = await supabase
+          .rpc('create_messaging_channel', {
+            channel_name: `🎭 ${quoteData.title}`,
+            channel_description: `Organisation du spectacle - ${event.venue || 'Lieu à définir'}`,
+            channel_type: 'private',
+            member_user_ids: [],
+            roadshow_ref_id: roadshow.id
+          });
+
+        if (channelError) {
+          console.error('❌ Erreur création canal:', channelError);
+          toast.error('Feuille de route créée mais erreur lors de la création du canal de messagerie');
+        } else {
+          console.log('✅ Canal créé:', channel);
+          toast.success('Feuille de route et canal de messagerie créés avec succès !');
+        }
+      }
+    } catch (error) {
+      console.error('❌ Erreur lors de la création de la feuille de route:', error);
+      toast.error('Erreur lors de la création de la feuille de route');
+    }
+  };
+
   const handleSaveQuote = async () => {
     if (!currentUser) return;
 
@@ -133,6 +209,8 @@ export const Contracts: React.FC = () => {
 
     try {
       if (editingQuote) {
+        const previousStatus = editingQuote.status;
+        
         await updateQuote(editingQuote.id, {
           title: formData.title,
           description: formData.description,
@@ -144,6 +222,13 @@ export const Contracts: React.FC = () => {
           terms: formData.terms,
           notes: formData.notes
         });
+
+        // Si le statut passe à "accepted", créer automatiquement une feuille de route
+        if (formData.status === 'accepted' && previousStatus !== 'accepted') {
+          console.log('✅ Déclenchement de la création de feuille de route pour le devis accepté');
+          await createRoadshowFromQuote(editingQuote.id, formData);
+        }
+
         toast.success('Devis modifié avec succès');
       } else {
         const createdQuote = await addQuote({
