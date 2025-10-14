@@ -269,21 +269,32 @@ export const PublicChatWidget: React.FC = () => {
             <div className="border-b p-3">
               <ScrollArea className="max-h-20">
                 <div className="flex flex-wrap gap-1">
-                  {channels.map((channel) => (
-                    <Badge
-                      key={channel.id}
-                      variant={activeChannel === channel.id ? "default" : "outline"}
-                      className="cursor-pointer"
-                      onClick={() => setActiveChannel(channel.id)}
-                    >
-                      {channel.type === 'direct' ? (
-                        <Users className="h-3 w-3 mr-1" />
-                      ) : null}
-                      {channel.name.length > 15 
-                        ? `${channel.name.substring(0, 15)}...` 
-                        : channel.name}
-                    </Badge>
-                  ))}
+                  {channels.map((channel) => {
+                    let displayName = channel.name;
+                    if (channel.type === 'direct') {
+                      const otherMember = channel.members?.find((m: any) => m.user_id !== user?.id);
+                      if (otherMember?.user_profile) {
+                        const { first_name, last_name, username } = otherMember.user_profile;
+                        displayName = first_name && last_name ? `${first_name} ${last_name}` : username || 'Utilisateur';
+                      }
+                    }
+                    
+                    return (
+                      <Badge
+                        key={channel.id}
+                        variant={activeChannel === channel.id ? "default" : "outline"}
+                        className="cursor-pointer"
+                        onClick={() => setActiveChannel(channel.id)}
+                      >
+                        {channel.type === 'direct' ? (
+                          <Users className="h-3 w-3 mr-1" />
+                        ) : null}
+                        {displayName.length > 15 
+                          ? `${displayName.substring(0, 15)}...` 
+                          : displayName}
+                      </Badge>
+                    );
+                  })}
                 </div>
               </ScrollArea>
             </div>
@@ -292,27 +303,31 @@ export const PublicChatWidget: React.FC = () => {
             <ScrollArea className="flex-1 p-3">
               {activeChannelData ? (
                 <div className="space-y-3">
-                  {channelMessages.map((message) => (
-                    <div
-                      key={message.id}
-                      className={`flex ${
-                        message.user_id === user?.id ? 'justify-end' : 'justify-start'
-                      }`}
-                    >
+                  {channelMessages.map((message) => {
+                    const isMe = message.user_id === user?.id;
+                    const displayName = message.user_profile?.first_name || 'Utilisateur';
+                    
+                    return (
                       <div
-                        className={`max-w-[80%] p-2 rounded-lg ${
-                          message.user_id === user?.id
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted'
-                        }`}
+                        key={message.id}
+                        className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
                       >
-                        <p className="text-sm">{message.content}</p>
-                        <p className="text-xs opacity-70 mt-1">
-                          {new Date(message.created_at).toLocaleTimeString()}
-                        </p>
+                        <div
+                          className={`max-w-[80%] p-2 rounded-lg ${
+                            isMe
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-muted'
+                          }`}
+                        >
+                          <p className="text-xs font-medium mb-1">{isMe ? 'Moi' : displayName}</p>
+                          <p className="text-sm">{message.content}</p>
+                          <p className="text-xs opacity-70 mt-1">
+                            {new Date(message.created_at).toLocaleTimeString()}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="text-center text-muted-foreground">
