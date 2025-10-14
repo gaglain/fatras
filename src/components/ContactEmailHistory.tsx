@@ -104,13 +104,13 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
         className="cursor-pointer hover:bg-muted/50 -m-3 p-3 rounded-lg"
         onClick={() => handleEmailClick(email)}
       >
-        <div className="flex items-start justify-between gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex flex-wrap items-center gap-2 mb-1">
               {email.direction === 'received' ? (
-                <Inbox className="h-3 w-3 text-green-600" />
+                <Inbox className="h-3 w-3 text-green-600 shrink-0" />
               ) : (
-                <Send className="h-3 w-3 text-blue-600" />
+                <Send className="h-3 w-3 text-blue-600 shrink-0" />
               )}
               <Badge 
                 variant={email.direction === 'received' ? 'default' : 'secondary'}
@@ -125,28 +125,32 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
               )}
             </div>
             
-            <h4 className={`text-sm font-medium truncate mb-1 ${
+            <h4 className={`text-sm font-medium line-clamp-2 mb-1 ${
               email.direction === 'received' && !email.read_at ? 'font-semibold' : ''
             }`}>
               {email.subject || '(Aucun sujet)'}
             </h4>
             
-            <p className="text-xs text-muted-foreground truncate mb-2">
+            <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
               {getPreviewText(email)}...
             </p>
             
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Clock className="h-3 w-3" />
-              <span>
-                {formatDate(email.received_at || email.sent_at || email.created_at)}
-              </span>
-              <User className="h-3 w-3 ml-2" />
-              <span>
-                {email.direction === 'received' 
-                  ? (email.from_name || email.from_email)
-                  : (email.to_name || email.to_email)
-                }
-              </span>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <Clock className="h-3 w-3 shrink-0" />
+                <span className="truncate">
+                  {formatDate(email.received_at || email.sent_at || email.created_at)}
+                </span>
+              </div>
+              <div className="flex items-center gap-1">
+                <User className="h-3 w-3 shrink-0" />
+                <span className="truncate">
+                  {email.direction === 'received' 
+                    ? (email.from_name || email.from_email)
+                    : (email.to_name || email.to_email)
+                  }
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -204,32 +208,32 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
             </div>
           ) : (
             <Tabs defaultValue="all" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="all" className="flex items-center gap-2">
-                  <Mail className="h-3 w-3" />
-                  Tous ({contactEmails.length})
+              <TabsList className="grid w-full grid-cols-3 h-auto">
+                <TabsTrigger value="all" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2">
+                  <Mail className="h-3 w-3 shrink-0" />
+                  <span className="text-xs sm:text-sm">Tous ({contactEmails.length})</span>
                 </TabsTrigger>
-                <TabsTrigger value="received" className="flex items-center gap-2">
-                  <Inbox className="h-3 w-3" />
-                  Reçus ({receivedEmails.length})
+                <TabsTrigger value="received" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2">
+                  <Inbox className="h-3 w-3 shrink-0" />
+                  <span className="text-xs sm:text-sm">Reçus ({receivedEmails.length})</span>
                 </TabsTrigger>
-                <TabsTrigger value="sent" className="flex items-center gap-2">
-                  <Send className="h-3 w-3" />
-                  Envoyés ({sentEmails.length})
+                <TabsTrigger value="sent" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2">
+                  <Send className="h-3 w-3 shrink-0" />
+                  <span className="text-xs sm:text-sm">Envoyés ({sentEmails.length})</span>
                 </TabsTrigger>
               </TabsList>
               
               <TabsContent value="all" className="mt-4">
-                <ScrollArea className="h-[400px]">
-                  <div className="space-y-3">
+                <ScrollArea className="h-[400px] w-full">
+                  <div className="space-y-3 pr-4">
                     {contactEmails.map(renderEmailItem)}
                   </div>
                 </ScrollArea>
               </TabsContent>
               
               <TabsContent value="received" className="mt-4">
-                <ScrollArea className="h-[400px]">
-                  <div className="space-y-3">
+                <ScrollArea className="h-[400px] w-full">
+                  <div className="space-y-3 pr-4">
                     {receivedEmails.length === 0 ? (
                       <div className="text-center text-muted-foreground py-8">
                         <Inbox className="h-8 w-8 mx-auto mb-2 opacity-50" />
@@ -243,7 +247,7 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
               </TabsContent>
               
               <TabsContent value="sent" className="mt-4">
-                <ScrollArea className="h-[400px]">
+                <ScrollArea className="h-[400px] w-full">
                   <div className="space-y-3">
                     {sentEmails.length === 0 ? (
                       <div className="text-center text-muted-foreground py-8">

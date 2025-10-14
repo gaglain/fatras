@@ -21,9 +21,22 @@ export const ContactRelatedEntities: React.FC<ContactRelatedEntitiesProps> = ({ 
   });
 
   useEffect(() => {
-    if (contact.id) {
-      loadConnections();
-    }
+    let isSubscribed = true;
+    
+    const loadData = async () => {
+      if (contact.id && isSubscribed) {
+        const data = await getContactConnections(contact.id);
+        if (isSubscribed) {
+          setConnections(data);
+        }
+      }
+    };
+    
+    loadData();
+    
+    return () => {
+      isSubscribed = false;
+    };
   }, [contact.id]);
 
   const loadConnections = async () => {

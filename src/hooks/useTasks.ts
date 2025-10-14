@@ -27,7 +27,7 @@ export const useTasks = () => {
   const { user } = useAuth();
 
   useEffect(() => {
-    if (!user) return;
+    if (!user?.id) return;
 
     const fetchTasks = async () => {
       setLoading(true);
@@ -61,7 +61,69 @@ export const useTasks = () => {
     };
 
     fetchTasks();
-  }, [user]);
+    
+    // Real-time sync pour éviter les problèmes de données obsolètes
+    const channel = supabase
+      .channel(`tasks-${user.id}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'tasks',
+        filter: `user_id=eq.${user.id}`
+      }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          const newTask = payload.new;
+          setTasks(prev => {
+            if (prev.find(t => t.id === newTask.id)) return prev;
+            return [...prev, {
+              id: newTask.id,
+              user_id: newTask.user_id,
+              assigned_to: newTask.assigned_to || undefined,
+              contact_id: newTask.contact_id || undefined,
+              event_id: newTask.event_id || undefined,
+              artist_id: newTask.artist_id || undefined,
+              title: newTask.title,
+              description: newTask.description || '',
+              priority: newTask.priority,
+              status: newTask.status,
+              task_type: newTask.task_type,
+              due_date: newTask.due_date || undefined,
+              completed_at: newTask.completed_at || undefined,
+              tags: newTask.tags || [],
+              created_at: newTask.created_at,
+              updated_at: newTask.updated_at
+            }];
+          });
+        } else if (payload.eventType === 'UPDATE') {
+          const updated = payload.new;
+          setTasks(prev => prev.map(t => t.id === updated.id ? {
+            id: updated.id,
+            user_id: updated.user_id,
+            assigned_to: updated.assigned_to || undefined,
+            contact_id: updated.contact_id || undefined,
+            event_id: updated.event_id || undefined,
+            artist_id: updated.artist_id || undefined,
+            title: updated.title,
+            description: updated.description || '',
+            priority: updated.priority,
+            status: updated.status,
+            task_type: updated.task_type,
+            due_date: updated.due_date || undefined,
+            completed_at: updated.completed_at || undefined,
+            tags: updated.tags || [],
+            created_at: updated.created_at,
+            updated_at: updated.updated_at
+          } : t));
+        } else if (payload.eventType === 'DELETE') {
+          setTasks(prev => prev.filter(t => t.id !== payload.old.id));
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
 
   // Configuration des mises à jour en temps réel désactivée temporairement
   // useEffect(() => {

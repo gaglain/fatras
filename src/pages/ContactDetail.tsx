@@ -52,11 +52,11 @@ export const ContactDetail: React.FC = () => {
   const [defaultActiveTab, setDefaultActiveTab] = useState('overview');
 
   useEffect(() => {
-    if (id && user) {
+    if (id && user?.id) {
       loadContact();
       loadConnections();
     }
-  }, [id, user]);
+  }, [id, user?.id]);
 
   // Handle URL params for composing emails from tasks
   useEffect(() => {
