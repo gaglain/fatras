@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useIndividualEmailTracking } from './useIndividualEmailTracking';
 
 export interface EmailData {
   to: string[];
@@ -12,6 +13,7 @@ export interface EmailData {
 
 export const useEmailSender = () => {
   const [sending, setSending] = useState(false);
+  const { injectEmailTracking } = useIndividualEmailTracking();
 
   const sendEmail = async (emailData: EmailData) => {
     setSending(true);
@@ -22,12 +24,33 @@ export const useEmailSender = () => {
         throw new Error('Utilisateur non connecté');
       }
 
+      // Créer un enregistrement email pour obtenir l'ID de tracking
+      const { data: emailRecord, error: emailError } = await supabase
+        .from('emails')
+        .insert({
+          user_id: user.id,
+          to_email: emailData.to[0],
+          subject: emailData.subject,
+          content: emailData.html,
+          direction: 'sent',
+          status: 'sending'
+        })
+        .select()
+        .single();
+
+      if (emailError || !emailRecord) {
+        throw new Error('Erreur lors de la création de l\'enregistrement email');
+      }
+
+      // Injecter le pixel de tracking et les liens trackés
+      const trackedHtml = injectEmailTracking(emailRecord.id, emailData.html);
+
       // Utiliser Resend pour l'envoi d'emails
       const { data, error } = await supabase.functions.invoke('send-email-resend', {
         body: {
           to: emailData.to,
           subject: emailData.subject,
-          html: emailData.html,
+          html: trackedHtml,
           from: emailData.from,
           userId: user.id,
           attachments: emailData.attachments,
@@ -37,6 +60,12 @@ export const useEmailSender = () => {
       if (error) {
         throw new Error(error.message);
       }
+
+      // Mettre à jour le statut de l'email
+      await supabase
+        .from('emails')
+        .update({ status: 'sent', sent_at: new Date().toISOString() })
+        .eq('id', emailRecord.id);
 
       return data;
     } catch (error) {

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { toast } from 'sonner';
+import { useIndividualEmailTracking } from './useIndividualEmailTracking';
 
 interface EmailAccount {
   id: string;
@@ -23,6 +24,7 @@ export const useNylasEmail = () => {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [accounts, setAccounts] = useState<EmailAccount[]>([]);
+  const { injectEmailTracking } = useIndividualEmailTracking();
 
   // Charger les comptes automatiquement quand l'utilisateur change
   useEffect(() => {
@@ -161,6 +163,24 @@ const sendEmail = async (accountId: string, email: {
     try {
       console.log('📤 Sending email...');
 
+      // Créer un enregistrement email pour obtenir l'ID de tracking
+      const { data: emailRecord, error: emailError } = await supabase
+        .from('emails')
+        .insert({
+          user_id: user.id,
+          to_email: email.to,
+          subject: email.subject,
+          content: email.content,
+          direction: 'sent',
+          status: 'sending'
+        })
+        .select()
+        .single();
+
+      if (emailError || !emailRecord) {
+        console.error('Erreur création enregistrement email:', emailError);
+      }
+
       // Charger la signature de l'utilisateur
       const { data: profileData } = await supabase
         .from('user_profiles')
@@ -169,9 +189,14 @@ const sendEmail = async (accountId: string, email: {
         .single();
 
       const signature = profileData?.email_signature || '';
-      const emailWithSignature = email.html 
+      let emailWithSignature = email.html 
         ? `${email.html}<br><br>${signature}`
         : `<div>${email.content.replace(/\n/g, '<br>')}<br><br>${signature}</div>`;
+
+      // Injecter le pixel de tracking et les liens trackés si on a un enregistrement
+      if (emailRecord) {
+        emailWithSignature = injectEmailTracking(emailRecord.id, emailWithSignature);
+      }
 
       const { data, error } = await supabase.functions.invoke('nylas-email', {
         body: {
@@ -193,6 +218,13 @@ const sendEmail = async (accountId: string, email: {
       console.log('✅ Send result:', data);
 
       if (data.success) {
+        // Mettre à jour le statut de l'email si on a un enregistrement
+        if (emailRecord) {
+          await supabase
+            .from('emails')
+            .update({ status: 'sent', sent_at: new Date().toISOString() })
+            .eq('id', emailRecord.id);
+        }
         toast.success('Email sent successfully!');
         return data;
       } else {
