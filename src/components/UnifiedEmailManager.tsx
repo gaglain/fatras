@@ -389,6 +389,31 @@ export const UnifiedEmailManager: React.FC = () => {
           </TabsContent>
         </Tabs>
       </CardContent>
+      {showComposer && (
+        <EmailComposer
+          isOpen={showComposer}
+          onClose={() => {
+            setShowComposer(false);
+            setComposerMode(null);
+            setComposerSourceEmail(null);
+          }}
+          toEmail={composerMode === 'reply' ? (composerSourceEmail?.from_email ?? '') : ''}
+          subject={
+            composerMode === 'reply'
+              ? `Re: ${composerSourceEmail?.subject ?? ''}`
+              : composerMode === 'forward'
+              ? `Fwd: ${composerSourceEmail?.subject ?? ''}`
+              : ''
+          }
+          preText={
+            composerMode === 'forward'
+              ? `\n\n---------- Message transféré ----------\nDe: ${composerSourceEmail?.from_email ?? ''}\nDate: ${composerSourceEmail ? new Date(composerSourceEmail.received_at || composerSourceEmail.sent_at || composerSourceEmail.created_at).toLocaleString('fr-FR') : ''}\nObjet: ${composerSourceEmail?.subject ?? ''}\n\n${composerSourceEmail?.content ?? ''}`
+              : composerMode === 'reply'
+              ? `\n\n---------- Message original ----------\nDe: ${composerSourceEmail?.from_email ?? ''}\nDate: ${composerSourceEmail ? new Date(composerSourceEmail.received_at || composerSourceEmail.sent_at || composerSourceEmail.created_at).toLocaleString('fr-FR') : ''}\n\n${composerSourceEmail?.content ?? ''}`
+              : ''
+          }
+        />
+      )}
     </Card>
   );
 };
