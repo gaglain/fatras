@@ -65,7 +65,7 @@ export const Opportunities: React.FC = () => {
           opportunity_id: opportunityId,
           city: oppData.location || '',
           venue: oppData.venue || '',
-          event_date: oppData.date || '',
+          event_date: oppData.date || null,
           status: 'confirmed',
           capacity: 0,
           tickets_available: 0,
@@ -99,7 +99,7 @@ export const Opportunities: React.FC = () => {
       }
     } catch (error) {
       console.error('Erreur lors de la création de la feuille de route:', error);
-      toast.error('Erreur lors de la création de la feuille de route');
+      toast.error(`Erreur lors de la création de la feuille de route: ${error?.message || ''}`);
     }
   };
 const [newOpportunity, setNewOpportunity] = useState({
