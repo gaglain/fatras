@@ -4,11 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Mail, RefreshCw, Clock, User, ArrowLeft } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Mail, RefreshCw, Clock, User, ArrowLeft, Reply, Forward, Trash2, AlertOctagon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useEmailSync } from '@/hooks/useEmailSync';
 import { toast } from 'sonner';
+import { EmailComposer } from '@/components/email/EmailComposer';
 
 interface InboundEmail {
   id: string;
@@ -31,6 +33,9 @@ export const EmailInbox: React.FC = () => {
   const [emails, setEmails] = useState<InboundEmail[]>([]);
   const [selectedEmail, setSelectedEmail] = useState<InboundEmail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [filter, setFilter] = useState<'all' | 'spam'>('all');
+  const [showComposer, setShowComposer] = useState(false);
+  const [composerMode, setComposerMode] = useState<'reply' | 'forward' | null>(null);
   // Utils
   const normalizeAddress = (value: string) => {
     if (!value) return '';
@@ -114,6 +119,9 @@ export const EmailInbox: React.FC = () => {
 
       if (error) throw error;
 
+      // Synchroniser avec Nylas si disponible
+      await syncReadStatusWithProvider(email);
+
       // Mettre à jour l'état local
       setEmails(prev => prev.map(e => 
         e.id === email.id ? { ...e, read_at: new Date().toISOString() } : e
@@ -121,6 +129,50 @@ export const EmailInbox: React.FC = () => {
     } catch (error) {
       console.error('Erreur lors du marquage comme lu:', error);
     }
+  };
+
+  const syncReadStatusWithProvider = async (email: InboundEmail) => {
+    try {
+      // Appeler Nylas pour marquer comme lu dans la boîte originelle
+      await supabase.functions.invoke('nylas-email', {
+        body: {
+          action: 'mark_as_read',
+          messageId: email.message_id,
+        }
+      });
+    } catch (error) {
+      console.log('Sync read status failed (non-critical):', error);
+    }
+  };
+
+  const handleDelete = async (email: InboundEmail) => {
+    if (!confirm('Voulez-vous vraiment supprimer cet email ?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('inbound_emails')
+        .delete()
+        .eq('id', email.id);
+
+      if (error) throw error;
+
+      toast.success('Email supprimé');
+      setEmails(prev => prev.filter(e => e.id !== email.id));
+      setSelectedEmail(null);
+    } catch (error) {
+      console.error('Erreur suppression:', error);
+      toast.error('Erreur lors de la suppression');
+    }
+  };
+
+  const handleReply = (email: InboundEmail) => {
+    setComposerMode('reply');
+    setShowComposer(true);
+  };
+
+  const handleForward = (email: InboundEmail) => {
+    setComposerMode('forward');
+    setShowComposer(true);
   };
 
   const handleEmailClick = (email: InboundEmail) => {
@@ -184,30 +236,44 @@ export const EmailInbox: React.FC = () => {
   };
 
   const unreadCount = emails.filter(email => !email.read_at).length;
+  const spamEmails = emails.filter(e => (e.labels || []).some(l => /spam|junk/i.test(l)));
+  const displayedEmails = filter === 'spam' ? spamEmails : emails.filter(e => !spamEmails.includes(e));
 
   if (selectedEmail) {
     return (
-      <Card className="h-full">
-        <CardHeader className="pb-3">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSelectedEmail(null)}
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div className="flex-1">
-              <h3 className="font-semibold truncate">{selectedEmail.subject}</h3>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <User className="h-3 w-3" />
-                <span>{selectedEmail.from_name || selectedEmail.from_email}</span>
-                <Clock className="h-3 w-3 ml-2" />
-                <span>{new Date(selectedEmail.received_at).toLocaleString('fr-FR')}</span>
+      <>
+        <Card className="h-full">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedEmail(null)}
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <div className="flex-1">
+                <h3 className="font-semibold truncate">{selectedEmail.subject}</h3>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <User className="h-3 w-3" />
+                  <span>{selectedEmail.from_name || selectedEmail.from_email}</span>
+                  <Clock className="h-3 w-3 ml-2" />
+                  <span>{new Date(selectedEmail.received_at).toLocaleString('fr-FR')}</span>
+                </div>
+              </div>
+              <div className="flex gap-1">
+                <Button variant="ghost" size="sm" onClick={() => handleReply(selectedEmail)}>
+                  <Reply className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => handleForward(selectedEmail)}>
+                  <Forward className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => handleDelete(selectedEmail)}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
               </div>
             </div>
-          </div>
-        </CardHeader>
+          </CardHeader>
         <Separator />
         <CardContent className="p-6">
           <div className="space-y-4">
@@ -232,6 +298,31 @@ export const EmailInbox: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+      {showComposer && (
+        <EmailComposer
+          isOpen={showComposer}
+          onClose={() => {
+            setShowComposer(false);
+            setComposerMode(null);
+          }}
+          toEmail={composerMode === 'reply' ? selectedEmail.from_email : ''}
+          subject={
+            composerMode === 'reply'
+              ? `Re: ${selectedEmail.subject}`
+              : composerMode === 'forward'
+              ? `Fwd: ${selectedEmail.subject}`
+              : ''
+          }
+          preText={
+            composerMode === 'forward'
+              ? `\n\n---------- Message transféré ----------\nDe: ${selectedEmail.from_email}\nDate: ${new Date(selectedEmail.received_at).toLocaleString('fr-FR')}\nObjet: ${selectedEmail.subject}\n\n${selectedEmail.content}`
+              : composerMode === 'reply'
+              ? `\n\n---------- Message original ----------\nDe: ${selectedEmail.from_email}\nDate: ${new Date(selectedEmail.received_at).toLocaleString('fr-FR')}\n\n${selectedEmail.content}`
+              : ''
+          }
+        />
+      )}
+    </>
     );
   }
 
@@ -248,15 +339,28 @@ export const EmailInbox: React.FC = () => {
               </Badge>
             )}
           </CardTitle>
-          <Button
-            onClick={handleSyncEmails}
-            disabled={isSyncing}
-            variant="outline"
-            size="sm"
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
-            {isSyncing ? 'Sync...' : 'Synchroniser'}
-          </Button>
+          <div className="flex gap-2">
+            <Tabs value={filter} onValueChange={(v) => setFilter(v as 'all' | 'spam')} className="w-auto">
+              <TabsList className="grid grid-cols-2 w-[240px]">
+                <TabsTrigger value="all">
+                  Tous ({emails.length - spamEmails.length})
+                </TabsTrigger>
+                <TabsTrigger value="spam" className="gap-1">
+                  <AlertOctagon className="h-3 w-3" />
+                  Spam ({spamEmails.length})
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+            <Button
+              onClick={handleSyncEmails}
+              disabled={isSyncing}
+              variant="outline"
+              size="sm"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+              {isSyncing ? 'Sync...' : 'Synchroniser'}
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <Separator />
@@ -266,24 +370,28 @@ export const EmailInbox: React.FC = () => {
             <div className="p-6 text-center text-muted-foreground">
               Chargement des emails...
             </div>
-          ) : emails.length === 0 ? (
+          ) : displayedEmails.length === 0 ? (
             <div className="p-6 text-center text-muted-foreground">
               <Mail className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p className="font-medium">Aucun email trouvé</p>
-              <p className="text-sm mb-4">
-                Pour recevoir vos emails, configurez d'abord votre compte IMAP dans les Préférences → Email
-              </p>
-              <div className="space-y-2 text-xs text-left bg-muted/50 p-3 rounded">
-                <p><strong>Étapes de configuration :</strong></p>
-                <p>1. Allez dans Préférences → Email</p>
-                <p>2. Configurez votre serveur IMAP (ex: pro1.mail.ovh.net:993)</p>
-                <p>3. Testez la connexion</p>
-                <p>4. Revenez ici et cliquez sur "Synchroniser"</p>
-              </div>
+              <p className="font-medium">{filter === 'spam' ? 'Aucun spam' : 'Aucun email trouvé'}</p>
+              {filter === 'all' && (
+                <>
+                  <p className="text-sm mb-4">
+                    Pour recevoir vos emails, configurez d'abord votre compte IMAP dans les Préférences → Email
+                  </p>
+                  <div className="space-y-2 text-xs text-left bg-muted/50 p-3 rounded">
+                    <p><strong>Étapes de configuration :</strong></p>
+                    <p>1. Allez dans Préférences → Email</p>
+                    <p>2. Configurez votre serveur IMAP (ex: pro1.mail.ovh.net:993)</p>
+                    <p>3. Testez la connexion</p>
+                    <p>4. Revenez ici et cliquez sur "Synchroniser"</p>
+                  </div>
+                </>
+              )}
             </div>
           ) : (
             <div className="divide-y">
-              {emails.map((email) => (
+              {displayedEmails.map((email) => (
                 <div
                   key={email.id}
                   className={`p-4 cursor-pointer hover:bg-muted/50 transition-colors ${
