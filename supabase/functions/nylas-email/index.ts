@@ -516,6 +516,47 @@ async function sendEmail(baseUrl: string, apiKey: string, supabase: any, userId:
       throw new Error('Account not found');
     }
 
+    // CRITICAL: For IMAP accounts, ensure grant has SMTP credentials BEFORE sending
+    if (account.provider === 'imap' && account.imap_config) {
+      console.log('🔧 Ensuring IMAP grant has complete SMTP settings before sending...');
+      const config = account.imap_config;
+      
+      const imap_host = config.imap_host || config.host;
+      const imap_port = config.imap_port || config.port || 993;
+      const smtp_host = config.smtp_host || config.host;
+      const smtp_port = config.smtp_port || 587;
+      const username = config.email || account.email;
+      const password = config.password;
+
+      if (password) {
+        const grantSettings = {
+          imap_host,
+          imap_port: Number(imap_port),
+          imap_username: username,
+          imap_password: password,
+          smtp_host,
+          smtp_port: Number(smtp_port),
+          smtp_username: username,
+          smtp_password: password,
+        };
+
+        console.log('📝 Updating grant with SMTP credentials:', { smtp_host, smtp_port, smtp_username: username });
+
+        const updateGrantResp = await fetch(`${baseUrl}/grants/${account.access_token}`, {
+          method: 'PATCH',
+          headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ settings: grantSettings }),
+        });
+
+        if (!updateGrantResp.ok) {
+          const errText = await updateGrantResp.text();
+          console.warn('⚠️ Grant update warning:', errText);
+        } else {
+          console.log('✅ Grant SMTP credentials updated successfully');
+        }
+      }
+    }
+
     // For IMAP providers, ensure the Nylas grant has full SMTP/IMAP settings before sending
     if (account.provider === 'imap' && account.access_token && account.imap_config) {
       try {
