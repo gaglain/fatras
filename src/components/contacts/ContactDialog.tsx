@@ -35,6 +35,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
 }) => {
   const { user } = useAuth();
   const [spectacles, setSpectacles] = useState<Spectacle[]>([]);
+  const [selectedArtistId, setSelectedArtistId] = useState<string>('');
   const [formData, setFormData] = useState<Contact>({
     first_name: '',
     last_name: '',
@@ -77,6 +78,10 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
   useEffect(() => {
     if (contact) {
       setFormData(contact);
+      // Charger l'artiste lié s'il existe
+      if (contact.id) {
+        loadContactArtist(contact.id);
+      }
     } else {
       setFormData({
         first_name: '',
@@ -95,9 +100,23 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
         tags: [],
         role: 'contact'
       });
+      setSelectedArtistId('');
     }
     fetchSpectacles();
   }, [contact, isOpen]);
+
+  const loadContactArtist = async (contactId: string) => {
+    try {
+      const { data } = await supabase
+        .from('contact_artists')
+        .select('artist_id')
+        .eq('contact_id', contactId)
+        .single();
+      if (data) setSelectedArtistId(data.artist_id);
+    } catch (error) {
+      console.log('No artist linked to this contact');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -140,6 +159,11 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
         }
         console.log('Contact updated successfully:', data);
         toast.success('Contact mis à jour avec succès');
+        
+        // Mettre à jour le lien avec l'artiste
+        if (contact.id) {
+          await updateContactArtistLink(contact.id);
+        }
       } else {
         const { data, error } = await supabase
           .from('contacts')
@@ -152,6 +176,11 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
         }
         console.log('Contact created successfully:', data);
         toast.success('Contact créé avec succès');
+        
+        // Lier au spectacle si sélectionné
+        if (data && data[0] && selectedArtistId) {
+          await updateContactArtistLink(data[0].id);
+        }
         
         // Proposer la suite de création
         if (data && data[0]) {
@@ -185,6 +214,25 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
       ...prev,
       tags: prev.tags?.filter(tag => tag !== tagToRemove) || []
     }));
+  };
+
+  const updateContactArtistLink = async (contactId: string) => {
+    try {
+      // Supprimer les liens existants
+      await supabase
+        .from('contact_artists')
+        .delete()
+        .eq('contact_id', contactId);
+
+      // Ajouter le nouveau lien si un artiste est sélectionné
+      if (selectedArtistId && selectedArtistId !== 'none') {
+        await supabase
+          .from('contact_artists')
+          .insert([{ contact_id: contactId, artist_id: selectedArtistId }]);
+      }
+    } catch (error) {
+      console.error('Error updating contact-artist link:', error);
+    }
   };
 
   return (
@@ -259,7 +307,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="status">Statut</Label>
               <Select value={formData.status} onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}>
@@ -287,6 +335,25 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
                   <SelectItem value="organisateur">Organisateur</SelectItem>
                   <SelectItem value="media">Média</SelectItem>
                   <SelectItem value="contact">Contact général</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="artist_id">Spectacle associé</Label>
+              <Select value={selectedArtistId || 'none'} onValueChange={(value) => setSelectedArtistId(value === 'none' ? '' : value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un spectacle" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Aucun spectacle</SelectItem>
+                  {spectacles.map((spectacle) => (
+                    <SelectItem key={spectacle.id} value={spectacle.id}>
+                      {spectacle.name} {spectacle.genre ? `(${spectacle.genre})` : ''}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

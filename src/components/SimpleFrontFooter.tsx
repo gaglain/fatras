@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useWebsiteConfig } from '@/contexts/WebsiteConfigContext';
 import { useSimpleWebsiteSync } from '@/hooks/useSimpleWebsiteSync';
 import { Facebook, Instagram, Twitter, Youtube, Linkedin } from 'lucide-react';
@@ -93,10 +94,10 @@ export const SimpleFrontFooter: React.FC = () => {
           </div>
           <div>
             <h3 className="font-semibold mb-4 text-lg">Informations légales</h3>
-            <div className="space-y-2 text-sm">
-              <a href="/mentions-legales" style={{ color: config.linkColor }}>Mentions légales</a>
-              <a href="/cgv" style={{ color: config.linkColor }}>CGV</a>
-              <a href="/politique-confidentialite" style={{ color: config.linkColor }}>Politique de confidentialité</a>
+            <div className="flex flex-col space-y-2 text-sm">
+              <Link to="/mentions-legales" style={{ color: config.linkColor }} className="hover:opacity-80">Mentions légales</Link>
+              <Link to="/cgv" style={{ color: config.linkColor }} className="hover:opacity-80">CGV</Link>
+              <Link to="/politique-confidentialite" style={{ color: config.linkColor }} className="hover:opacity-80">Politique de confidentialité</Link>
             </div>
           </div>
         </div>

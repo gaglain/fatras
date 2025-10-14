@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useWebsiteConfig } from '@/contexts/WebsiteConfigContext';
 import { useSimpleWebsiteSync } from '@/hooks/useSimpleWebsiteSync';
 
@@ -38,22 +39,36 @@ export const SimpleFrontHeader: React.FC = () => {
           <nav className="flex space-x-6">
             {config.menuItems?.filter(item => item.visible)
               .sort((a, b) => a.order - b.order)
-              .map((item) => (
-                <a 
-                  key={item.id}
-                  href={item.path} 
-                  className="hover:opacity-80 transition-opacity"
-                  style={{ color: config.linkColor }}
-                >
-                  {item.label}
-                </a>
-              )) || (
+              .map((item) => {
+                const isExternal = item.path.startsWith('http') || item.path.startsWith('//');
+                return isExternal ? (
+                  <a 
+                    key={item.id}
+                    href={item.path} 
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:opacity-80 transition-opacity"
+                    style={{ color: config.linkColor }}
+                  >
+                    {item.label}
+                  </a>
+                ) : (
+                  <Link
+                    key={item.id}
+                    to={item.path}
+                    className="hover:opacity-80 transition-opacity"
+                    style={{ color: config.linkColor }}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              }) || (
                 // Menu par défaut si pas de menuItems
                 <>
-                  <a href="/front" className="hover:opacity-80 transition-opacity" style={{ color: config.linkColor }}>Accueil</a>
-                  <a href="/front/artistes" className="hover:opacity-80 transition-opacity" style={{ color: config.linkColor }}>Artistes</a>
-                  <a href="/front/events" className="hover:opacity-80 transition-opacity" style={{ color: config.linkColor }}>Événements</a>
-                  <a href="/front/contact" className="hover:opacity-80 transition-opacity" style={{ color: config.linkColor }}>Contact</a>
+                  <Link to="/front" className="hover:opacity-80 transition-opacity" style={{ color: config.linkColor }}>Accueil</Link>
+                  <Link to="/front/artistes" className="hover:opacity-80 transition-opacity" style={{ color: config.linkColor }}>Artistes</Link>
+                  <Link to="/front/events" className="hover:opacity-80 transition-opacity" style={{ color: config.linkColor }}>Événements</Link>
+                  <Link to="/front/contact" className="hover:opacity-80 transition-opacity" style={{ color: config.linkColor }}>Contact</Link>
                 </>
               )}
           </nav>

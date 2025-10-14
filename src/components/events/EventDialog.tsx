@@ -13,6 +13,7 @@ import { Event } from '@/types/event.types';
 import { Contact } from '@/types/contact.types';
 import { Info } from 'lucide-react';
 import { EventDraftManager, useEventDraft } from './EventDraftManager';
+import { UniversalSearch, SearchItem } from '@/components/UniversalSearch';
 
 interface EventType {
   id: string;
@@ -336,35 +337,23 @@ export const EventDialog: React.FC<EventDialogProps> = ({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="contact_id">Contact associé</Label>
-              <Select value={formData.contact_id || 'none'} onValueChange={(value) => setFormData(prev => ({ ...prev, contact_id: value === 'none' ? '' : value }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un contact" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Aucun contact</SelectItem>
-                  {contacts.map((contact) => (
-                    <SelectItem key={contact.id} value={contact.id!}>
-                      {contact.first_name} {contact.last_name} - {contact.role}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <UniversalSearch
+                filterTypes={['contact']}
+                selectedId={formData.contact_id}
+                onSelect={(item: SearchItem) => setFormData(prev => ({ ...prev, contact_id: item.id }))}
+                triggerText="Rechercher un contact"
+                placeholder="Rechercher contact par nom, email, ID..."
+              />
             </div>
             <div>
               <Label htmlFor="artist_id">Spectacle associé</Label>
-              <Select value={formData.artist_id || 'none'} onValueChange={(value) => setFormData(prev => ({ ...prev, artist_id: value === 'none' ? '' : value }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un spectacle" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Aucun spectacle</SelectItem>
-                  {artists.map((artist) => (
-                    <SelectItem key={artist.id} value={artist.id}>
-                      {artist.name} {artist.genre ? `(${artist.genre})` : ''}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <UniversalSearch
+                filterTypes={['artist']}
+                selectedId={formData.artist_id}
+                onSelect={(item: SearchItem) => setFormData(prev => ({ ...prev, artist_id: item.id }))}
+                triggerText="Rechercher un spectacle"
+                placeholder="Rechercher spectacle par nom, genre..."
+              />
             </div>
           </div>
 

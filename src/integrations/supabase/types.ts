@@ -557,6 +557,30 @@ export type Database = {
         }
         Relationships: []
       }
+      contact_artists: {
+        Row: {
+          artist_id: string
+          contact_id: string
+          created_at: string
+          id: string
+          role: string | null
+        }
+        Insert: {
+          artist_id: string
+          contact_id: string
+          created_at?: string
+          id?: string
+          role?: string | null
+        }
+        Update: {
+          artist_id?: string
+          contact_id?: string
+          created_at?: string
+          id?: string
+          role?: string | null
+        }
+        Relationships: []
+      }
       contact_events: {
         Row: {
           contact_id: string
