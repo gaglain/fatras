@@ -46,8 +46,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         <div className="flex-1 flex flex-col overflow-hidden">
           <BackOfficeHeader />
           
-          <main className="flex-1 overflow-auto p-4 lg:p-6">
-            <TaskNotificationBanner className="mb-4" />
+          <main className="flex-1 overflow-auto p-2 sm:p-4 lg:p-6">
+            <TaskNotificationBanner className="mb-2 sm:mb-4" />
             {children}
           </main>
         </div>

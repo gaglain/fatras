@@ -10,11 +10,11 @@ import { Link } from 'react-router-dom';
 
 export const DashboardHome: React.FC = () => {
   return (
-    <div className="space-y-4 md:space-y-6 min-h-screen p-4 md:p-6" style={{
+    <div className="space-y-3 sm:space-y-4 md:space-y-6 min-h-screen" style={{
       background: 'var(--custom-background, #ffffff)',
       color: 'var(--custom-text, #18181b)'
     }}>
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div className="min-w-0">
           <h1 className="text-2xl lg:text-3xl font-bold truncate" style={{
             color: 'var(--custom-text, #18181b)'
@@ -42,7 +42,7 @@ export const DashboardHome: React.FC = () => {
       <DashboardStats />
 
       {/* Opportunity Stats */}
-      <div className="grid gap-4 md:gap-6 grid-cols-1 lg:grid-cols-3">
+      <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-1 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <DashboardCharts />
         </div>
@@ -52,7 +52,7 @@ export const DashboardHome: React.FC = () => {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid gap-4 md:gap-6 grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-2 lg:grid-cols-4">
         <Card className="hover:shadow-md hover:scale-105 transition-all cursor-pointer" style={{
           background: 'var(--custom-cardBg, #ffffff)',
           color: 'var(--custom-cardText, #18181b)',
@@ -151,7 +151,7 @@ export const DashboardHome: React.FC = () => {
       </div>
 
       {/* Recent Activity */}
-      <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2">
+      <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-1 md:grid-cols-2">
         <Card style={{
           background: 'var(--custom-cardBg, #ffffff)',
           color: 'var(--custom-cardText, #18181b)',

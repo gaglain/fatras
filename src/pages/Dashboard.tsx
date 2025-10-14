@@ -8,7 +8,7 @@ const Dashboard = () => {
   console.log('📊 Dashboard - Rendering Dashboard page...');
   
   return (
-    <div className="min-h-screen bg-background space-y-6 p-6">
+    <div className="min-h-screen bg-background space-y-2 sm:space-y-4 lg:space-y-6">
       <DashboardHome />
       {/* Zone de test désactivée pour stabilité */}
       {/*
