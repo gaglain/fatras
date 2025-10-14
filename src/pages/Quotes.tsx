@@ -41,9 +41,16 @@ export const Quotes: React.FC = () => {
     if (!user) return;
 
     try {
+      console.log('📍 Début création feuille de route depuis devis', quoteId);
+      console.log('📍 Données du devis:', quoteData);
+      
       const event = events.find(e => e.id === (quoteData.event_id !== 'none' ? quoteData.event_id : ''));
       const contact = contacts.find(c => c.id === (quoteData.contact_id !== 'none' ? quoteData.contact_id : ''));
       const artist = artists.find(a => a.id === (quoteData.artist_id !== 'none' ? quoteData.artist_id : ''));
+
+      console.log('📍 Event trouvé:', event);
+      console.log('📍 Contact trouvé:', contact);
+      console.log('📍 Artist trouvé:', artist);
 
       if (!event) {
         toast.error('Un événement doit être associé au devis pour créer une feuille de route');
@@ -51,6 +58,7 @@ export const Quotes: React.FC = () => {
       }
 
       // Créer la feuille de route
+      console.log('📍 Création de la feuille de route...');
       const { data: roadshow, error: roadshowError } = await supabase
         .from('roadshow_stops')
         .insert({
@@ -72,10 +80,16 @@ export const Quotes: React.FC = () => {
         .select()
         .single();
 
-      if (roadshowError) throw roadshowError;
+      if (roadshowError) {
+        console.error('❌ Erreur création roadshow:', roadshowError);
+        throw roadshowError;
+      }
+
+      console.log('✅ Feuille de route créée:', roadshow);
 
       // Créer le canal de messagerie privé
       if (roadshow) {
+        console.log('📍 Création du canal de messagerie...');
         const { data: channel, error: channelError } = await supabase
           .rpc('create_messaging_channel', {
             channel_name: `🎭 ${quoteData.title}`,
@@ -86,13 +100,15 @@ export const Quotes: React.FC = () => {
           });
 
         if (channelError) {
-          console.error('Erreur lors de la création du canal:', channelError);
+          console.error('❌ Erreur création canal:', channelError);
+          toast.error('Feuille de route créée mais erreur lors de la création du canal de messagerie');
         } else {
+          console.log('✅ Canal créé:', channel);
           toast.success('Feuille de route et canal de messagerie créés avec succès !');
         }
       }
     } catch (error) {
-      console.error('Erreur lors de la création de la feuille de route:', error);
+      console.error('❌ Erreur lors de la création de la feuille de route:', error);
       toast.error('Erreur lors de la création de la feuille de route');
     }
   };
@@ -152,6 +168,8 @@ export const Quotes: React.FC = () => {
     
     try {
       if (selectedQuote) {
+        console.log('🔍 Mise à jour du devis, ancien statut:', selectedQuote.status, 'nouveau statut:', formData.status);
+        
         const updates = {
           title: formData.title,
           description: formData.description,
@@ -168,7 +186,13 @@ export const Quotes: React.FC = () => {
         
         // Si le statut passe à "accepted", créer automatiquement une feuille de route
         if (formData.status === 'accepted' && selectedQuote.status !== 'accepted') {
+          console.log('✅ Déclenchement de la création de feuille de route pour le devis accepté');
           await createRoadshowFromQuote(selectedQuote.id, formData);
+        } else {
+          console.log('❌ Condition non remplie pour créer feuille de route:', {
+            nouveauStatut: formData.status,
+            ancienStatut: selectedQuote.status
+          });
         }
         
         toast.success('Devis mis à jour');
