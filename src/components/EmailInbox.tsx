@@ -36,6 +36,7 @@ export const EmailInbox: React.FC = () => {
   const [filter, setFilter] = useState<'all' | 'spam'>('all');
   const [showComposer, setShowComposer] = useState(false);
   const [composerMode, setComposerMode] = useState<'reply' | 'forward' | null>(null);
+  const [composerSourceEmail, setComposerSourceEmail] = useState<InboundEmail | null>(null);
   // Utils
   const normalizeAddress = (value: string) => {
     if (!value) return '';
@@ -166,11 +167,13 @@ export const EmailInbox: React.FC = () => {
   };
 
   const handleReply = (email: InboundEmail) => {
+    setComposerSourceEmail(email);
     setComposerMode('reply');
     setShowComposer(true);
   };
-
+  
   const handleForward = (email: InboundEmail) => {
+    setComposerSourceEmail(email);
     setComposerMode('forward');
     setShowComposer(true);
   };
@@ -304,20 +307,21 @@ export const EmailInbox: React.FC = () => {
           onClose={() => {
             setShowComposer(false);
             setComposerMode(null);
+            setComposerSourceEmail(null);
           }}
-          toEmail={composerMode === 'reply' ? selectedEmail.from_email : ''}
+          toEmail={composerMode === 'reply' ? (composerSourceEmail?.from_email ?? '') : ''}
           subject={
             composerMode === 'reply'
-              ? `Re: ${selectedEmail.subject}`
+              ? `Re: ${composerSourceEmail?.subject ?? ''}`
               : composerMode === 'forward'
-              ? `Fwd: ${selectedEmail.subject}`
+              ? `Fwd: ${composerSourceEmail?.subject ?? ''}`
               : ''
           }
           preText={
             composerMode === 'forward'
-              ? `\n\n---------- Message transféré ----------\nDe: ${selectedEmail.from_email}\nDate: ${new Date(selectedEmail.received_at).toLocaleString('fr-FR')}\nObjet: ${selectedEmail.subject}\n\n${selectedEmail.content}`
+              ? `\n\n---------- Message transféré ----------\nDe: ${composerSourceEmail?.from_email ?? ''}\nDate: ${composerSourceEmail ? new Date(composerSourceEmail.received_at).toLocaleString('fr-FR') : ''}\nObjet: ${composerSourceEmail?.subject ?? ''}\n\n${composerSourceEmail?.content ?? ''}`
               : composerMode === 'reply'
-              ? `\n\n---------- Message original ----------\nDe: ${selectedEmail.from_email}\nDate: ${new Date(selectedEmail.received_at).toLocaleString('fr-FR')}\n\n${selectedEmail.content}`
+              ? `\n\n---------- Message original ----------\nDe: ${composerSourceEmail?.from_email ?? ''}\nDate: ${composerSourceEmail ? new Date(composerSourceEmail.received_at).toLocaleString('fr-FR') : ''}\n\n${composerSourceEmail?.content ?? ''}`
               : ''
           }
         />
@@ -394,7 +398,7 @@ export const EmailInbox: React.FC = () => {
               {displayedEmails.map((email) => (
                 <div
                   key={email.id}
-                  className={`p-4 cursor-pointer hover:bg-muted/50 transition-colors ${
+                  className={`group p-4 cursor-pointer hover:bg-muted/50 transition-colors ${
                     !email.read_at ? 'bg-blue-50 dark:bg-blue-950/20 border-l-4 border-l-blue-500' : ''
                   }`}
                   onClick={() => handleEmailClick(email)}
@@ -418,8 +422,24 @@ export const EmailInbox: React.FC = () => {
                         {getEmailPreview(email)}
                       </p>
                     </div>
-                    <div className="text-xs text-muted-foreground whitespace-nowrap">
-                      {formatDate(email.received_at)}
+                    <div className="flex items-center gap-2">
+                      <div className="text-xs text-muted-foreground whitespace-nowrap">
+                        {formatDate(email.received_at)}
+                      </div>
+                      <div className="hidden sm:flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button variant="ghost" size="icon" aria-label="Répondre"
+                          onClick={(e) => { e.stopPropagation(); handleReply(email); }}>
+                          <Reply className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" aria-label="Transférer"
+                          onClick={(e) => { e.stopPropagation(); handleForward(email); }}>
+                          <Forward className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" aria-label="Supprimer"
+                          onClick={(e) => { e.stopPropagation(); handleDelete(email); }}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
