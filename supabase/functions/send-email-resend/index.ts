@@ -14,6 +14,13 @@ interface EmailRequest {
   fromName?: string;
   from?: string; // optional full from header or email, e.g., "Your App <onboarding@resend.dev>"
   userId?: string;
+  attachments?: Array<{
+    filename?: string;
+    name?: string;
+    content?: string; // base64 or raw string
+    url?: string;     // public URL to fetch
+    contentType?: string;
+  }>;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -22,7 +29,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { to, subject, html, fromName = 'Application', from, userId }: EmailRequest = await req.json();
+    const { to, subject, html, fromName = 'Application', from, userId, attachments }: EmailRequest = await req.json();
 
     console.log('🔄 Tentative d\'envoi email pour userId:', userId);
 
@@ -80,12 +87,37 @@ const handler = async (req: Request): Promise<Response> => {
       subject: subject
     });
 
+    // Préparer les pièces jointes si fournies
+    let resendAttachments: Array<{ filename: string; content: Uint8Array | string; contentType?: string }> | undefined;
+    if (attachments && attachments.length > 0) {
+      console.log(`📎 Préparation de ${attachments.length} pièce(s) jointe(s)`);
+      resendAttachments = [];
+      for (const att of attachments) {
+        const filename = att.filename || att.name || 'attachment';
+        if (att.content) {
+          // Supporte base64 (data URL) ou contenu brut
+          let content: string | Uint8Array = att.content;
+          if (att.content.startsWith('data:')) {
+            const base64 = att.content.split(',')[1] || '';
+            content = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+          }
+          resendAttachments.push({ filename, content, contentType: att.contentType });
+        } else if (att.url) {
+          const res = await fetch(att.url);
+          const buf = new Uint8Array(await res.arrayBuffer());
+          const contentType = att.contentType || res.headers.get('content-type') || undefined;
+          resendAttachments.push({ filename, content: buf, contentType });
+        }
+      }
+    }
+
     // Envoyer l'email
     const emailResponse = await resend.emails.send({
       from: finalFrom,
       to: to,
       subject: subject,
       html: html,
+      attachments: resendAttachments,
     });
 
     console.log('✅ Email envoyé avec succès:', emailResponse);

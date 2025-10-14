@@ -146,12 +146,13 @@ export const useNylasEmail = () => {
     }
   };
 
-  const sendEmail = async (accountId: string, email: {
-    to: string;
-    subject: string;
-    content: string;
-    html?: string;
-  }) => {
+const sendEmail = async (accountId: string, email: {
+  to: string;
+  subject: string;
+  content: string;
+  html?: string;
+  attachments?: Array<{ name: string; url: string }>; // public URLs, used for fallback
+}) => {
     if (!user) {
       throw new Error('User must be authenticated');
     }
@@ -226,6 +227,7 @@ export const useNylasEmail = () => {
               html,
               fromName: 'Fatras',
               userId: user.id,
+              attachments: email.attachments,
             }
           });
           if (resendError) throw resendError;

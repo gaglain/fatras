@@ -151,13 +151,15 @@ export const EmailTemplateComposer: React.FC<EmailTemplateComposerProps> = ({
           subject,
           content,
           html: htmlContent,
+          attachments: attachmentUrls,
         });
       } else {
         await sendEmail({
           to: [to],
           subject,
           html: htmlContent,
-          from: fromName || 'Application'
+          from: fromName || 'Application',
+          attachments: attachmentUrls,
         });
       }
 

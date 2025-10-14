@@ -7,6 +7,7 @@ export interface EmailData {
   html: string;
   from?: string;
   replyTo?: string;
+  attachments?: Array<{ name: string; url: string }>; // public URLs in storage
 }
 
 export const useEmailSender = () => {
@@ -28,7 +29,8 @@ export const useEmailSender = () => {
           subject: emailData.subject,
           html: emailData.html,
           from: emailData.from,
-          userId: user.id
+          userId: user.id,
+          attachments: emailData.attachments,
         }
       });
 

@@ -125,6 +125,7 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
         subject: emailSubject,
         content,
         html: htmlContent,
+        attachments: attachmentUrls,
       });
 
       toast.success('Email envoyé avec succès');
