@@ -223,6 +223,7 @@ export const Contracts: React.FC = () => {
   };
 
   const handleEdit = (quote: any) => {
+    console.info('[Contracts] Edit clicked for quote', quote?.id);
     setEditingQuote(quote);
     setFormData({
       title: quote.title,
@@ -584,7 +585,7 @@ export const Contracts: React.FC = () => {
 
               <div className="space-y-2 mb-4">
                 <div className="text-2xl font-bold text-blue-600">
-                  {quote.total_amount.toFixed(2)} € TTC
+                  {Number(quote.total_amount ?? 0).toFixed(2)} € TTC
                 </div>
                 
                 {quote.valid_until && (
