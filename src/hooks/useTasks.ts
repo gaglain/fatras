@@ -63,8 +63,10 @@ export const useTasks = () => {
     fetchTasks();
     
     // Real-time sync pour éviter les problèmes de données obsolètes
+    // Use unique channel name to avoid duplicate subscribe errors in StrictMode
+    const channelName = `tasks-${user.id}-${Date.now()}`;
     const channel = supabase
-      .channel(`tasks-${user.id}`)
+      .channel(channelName)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
