@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,7 @@ import { useEvents } from '@/hooks/useEvents';
 import { useOpportunities } from '@/hooks/useOpportunities';
 import { useTasks } from '@/hooks/useTasks';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ContactCreationSuiteProps {
   isOpen: boolean;
@@ -39,18 +40,26 @@ export const ContactCreationSuite: React.FC<ContactCreationSuiteProps> = ({
   
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [artists, setArtists] = useState<Array<{ id: string; name: string }>>([]);
   const [createdIds, setCreatedIds] = useState<{
     eventId?: string;
     opportunityId?: string;
     taskId?: string;
   }>({});
 
+  // Données communes partagées
+  const [commonData, setCommonData] = useState({
+    address: '',
+    postal_code: '',
+    city: '',
+    artist_id: ''
+  });
+
   const [eventData, setEventData] = useState({
     title: '',
     description: '',
     event_type: 'concert',
     venue: '',
-    city: '',
     start_date: '',
     budget_min: 0,
     budget_max: 0
@@ -60,7 +69,6 @@ export const ContactCreationSuite: React.FC<ContactCreationSuiteProps> = ({
     title: '',
     description: '',
     venue: '',
-    location: '',
     budget: 0,
     probability_percentage: 50,
     deadline: '',
@@ -75,6 +83,21 @@ export const ContactCreationSuite: React.FC<ContactCreationSuiteProps> = ({
     due_date: ''
   });
 
+  // Charger les artistes
+  useEffect(() => {
+    const fetchArtists = async () => {
+      if (!user) return;
+      const { data } = await supabase
+        .from('centralized_artists')
+        .select('id, name')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .order('name');
+      if (data) setArtists(data);
+    };
+    fetchArtists();
+  }, [user]);
+
   const handleCreateEvent = async () => {
     if (!user) return;
 
@@ -83,11 +106,14 @@ export const ContactCreationSuite: React.FC<ContactCreationSuiteProps> = ({
       const event = await addEvent({
         user_id: user.id,
         contact_id: contactId,
+        artist_id: commonData.artist_id || undefined,
         title: eventData.title,
         description: eventData.description,
         event_type: eventData.event_type,
         venue: eventData.venue,
-        city: eventData.city,
+        address: commonData.address,
+        city: commonData.city,
+        postal_code: commonData.postal_code,
         start_date: eventData.start_date,
         budget_min: eventData.budget_min,
         budget_max: eventData.budget_max,
@@ -115,10 +141,11 @@ export const ContactCreationSuite: React.FC<ContactCreationSuiteProps> = ({
         user_id: user.id,
         contact_id: contactId,
         event_id: createdIds.eventId,
+        artist_id: commonData.artist_id || undefined,
         title: opportunityData.title,
         description: opportunityData.description,
         venue: opportunityData.venue,
-        location: opportunityData.location,
+        location: `${commonData.city}${commonData.postal_code ? ' (' + commonData.postal_code + ')' : ''}`,
         budget: opportunityData.budget,
         probability_percentage: opportunityData.probability_percentage,
         deadline: opportunityData.deadline,
@@ -149,6 +176,7 @@ export const ContactCreationSuite: React.FC<ContactCreationSuiteProps> = ({
         user_id: user.id,
         contact_id: contactId,
         event_id: createdIds.eventId,
+        artist_id: commonData.artist_id || undefined,
         title: taskData.title,
         description: taskData.description,
         task_type: taskData.task_type,
@@ -175,6 +203,55 @@ export const ContactCreationSuite: React.FC<ContactCreationSuiteProps> = ({
       case 1:
         return (
           <div className="space-y-4">
+            <div className="p-4 bg-muted rounded-lg space-y-3">
+              <h3 className="font-semibold text-sm">Informations communes</h3>
+              
+              <div>
+                <Label htmlFor="artist">Spectacle/Artiste</Label>
+                <Select value={commonData.artist_id} onValueChange={(value) => setCommonData(prev => ({ ...prev, artist_id: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un spectacle" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {artists.map(artist => (
+                      <SelectItem key={artist.id} value={artist.id}>{artist.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="common-address">Adresse</Label>
+                <Input
+                  id="common-address"
+                  value={commonData.address}
+                  onChange={(e) => setCommonData(prev => ({ ...prev, address: e.target.value }))}
+                  placeholder="Adresse complète"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="common-postal">Code postal</Label>
+                  <Input
+                    id="common-postal"
+                    value={commonData.postal_code}
+                    onChange={(e) => setCommonData(prev => ({ ...prev, postal_code: e.target.value }))}
+                    placeholder="75001"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="common-city">Ville</Label>
+                  <Input
+                    id="common-city"
+                    value={commonData.city}
+                    onChange={(e) => setCommonData(prev => ({ ...prev, city: e.target.value }))}
+                    placeholder="Paris"
+                  />
+                </div>
+              </div>
+            </div>
+
             <div>
               <Label htmlFor="event-title">Titre de l'événement *</Label>
               <Input
@@ -202,25 +279,14 @@ export const ContactCreationSuite: React.FC<ContactCreationSuiteProps> = ({
               </Select>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="venue">Lieu</Label>
-                <Input
-                  id="venue"
-                  value={eventData.venue}
-                  onChange={(e) => setEventData(prev => ({ ...prev, venue: e.target.value }))}
-                  placeholder="Nom de la salle/lieu"
-                />
-              </div>
-              <div>
-                <Label htmlFor="city">Ville</Label>
-                <Input
-                  id="city"
-                  value={eventData.city}
-                  onChange={(e) => setEventData(prev => ({ ...prev, city: e.target.value }))}
-                  placeholder="Ville"
-                />
-              </div>
+            <div>
+              <Label htmlFor="venue">Lieu</Label>
+              <Input
+                id="venue"
+                value={eventData.venue}
+                onChange={(e) => setEventData(prev => ({ ...prev, venue: e.target.value }))}
+                placeholder="Nom de la salle/lieu"
+              />
             </div>
 
             <div>
@@ -278,6 +344,11 @@ export const ContactCreationSuite: React.FC<ContactCreationSuiteProps> = ({
       case 2:
         return (
           <div className="space-y-4">
+            <div className="p-3 bg-muted/50 rounded text-sm">
+              <strong>Adresse:</strong> {commonData.address || 'Non renseignée'} - {commonData.postal_code} {commonData.city}
+              {commonData.artist_id && <div><strong>Spectacle:</strong> {artists.find(a => a.id === commonData.artist_id)?.name}</div>}
+            </div>
+
             <div>
               <Label htmlFor="opp-title">Titre de l'opportunité *</Label>
               <Input
@@ -289,25 +360,14 @@ export const ContactCreationSuite: React.FC<ContactCreationSuiteProps> = ({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="opp-venue">Lieu</Label>
-                <Input
-                  id="opp-venue"
-                  value={opportunityData.venue}
-                  onChange={(e) => setOpportunityData(prev => ({ ...prev, venue: e.target.value }))}
-                  placeholder="Nom du lieu"
-                />
-              </div>
-              <div>
-                <Label htmlFor="opp-location">Localisation</Label>
-                <Input
-                  id="opp-location"
-                  value={opportunityData.location}
-                  onChange={(e) => setOpportunityData(prev => ({ ...prev, location: e.target.value }))}
-                  placeholder="Ville, région..."
-                />
-              </div>
+            <div>
+              <Label htmlFor="opp-venue">Lieu</Label>
+              <Input
+                id="opp-venue"
+                value={opportunityData.venue}
+                onChange={(e) => setOpportunityData(prev => ({ ...prev, venue: e.target.value }))}
+                placeholder="Nom du lieu"
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -382,6 +442,11 @@ export const ContactCreationSuite: React.FC<ContactCreationSuiteProps> = ({
       case 3:
         return (
           <div className="space-y-4">
+            <div className="p-3 bg-muted/50 rounded text-sm">
+              <strong>Adresse:</strong> {commonData.address || 'Non renseignée'} - {commonData.postal_code} {commonData.city}
+              {commonData.artist_id && <div><strong>Spectacle:</strong> {artists.find(a => a.id === commonData.artist_id)?.name}</div>}
+            </div>
+
             <div>
               <Label htmlFor="task-title">Titre de la tâche *</Label>
               <Input
