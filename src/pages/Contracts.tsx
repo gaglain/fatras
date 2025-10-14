@@ -18,6 +18,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { ContractCalculator, type CalculationValues } from '@/components/contracts/ContractCalculator';
 import { QuoteItemManager } from '@/components/quotes/QuoteItemManager';
 import { QuoteTemplateManager } from '@/components/quotes/QuoteTemplateManager';
+import { UniversalSearch } from '@/components/UniversalSearch';
 
 interface QuoteFormData {
   title: string;
@@ -365,50 +366,44 @@ export const Contracts: React.FC = () => {
 
               <div>
                 <Label htmlFor="contact">Client</Label>
-                <Select value={formData.contact_id} onValueChange={(value) => setFormData(prev => ({ ...prev, contact_id: value }))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un contact" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {contacts.map(contact => (
-                      <SelectItem key={contact.id} value={contact.id}>
-                        {contact.first_name} {contact.last_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <UniversalSearch
+                  placeholder="Rechercher un contact..."
+                  filterTypes={['contact']}
+                  onSelect={(item) => setFormData(prev => ({ ...prev, contact_id: item.id }))}
+                />
+                {formData.contact_id && (
+                  <div className="mt-2 text-sm text-muted-foreground">
+                    Contact sélectionné: {contacts.find(c => c.id === formData.contact_id)?.first_name} {contacts.find(c => c.id === formData.contact_id)?.last_name}
+                  </div>
+                )}
               </div>
 
               <div>
                 <Label htmlFor="event">Événement associé</Label>
-                <Select value={formData.event_id} onValueChange={(value) => setFormData(prev => ({ ...prev, event_id: value }))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un événement" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {events.map(event => (
-                      <SelectItem key={event.id} value={event.id}>
-                        {event.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <UniversalSearch
+                  placeholder="Rechercher un événement..."
+                  filterTypes={['event']}
+                  onSelect={(item) => setFormData(prev => ({ ...prev, event_id: item.id }))}
+                />
+                {formData.event_id && (
+                  <div className="mt-2 text-sm text-muted-foreground">
+                    Événement sélectionné: {events.find(e => e.id === formData.event_id)?.title}
+                  </div>
+                )}
               </div>
 
               <div>
                 <Label htmlFor="artist">Spectacle associé</Label>
-                <Select value={formData.artist_id} onValueChange={(value) => setFormData(prev => ({ ...prev, artist_id: value }))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un spectacle" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {artists.map(artist => (
-                      <SelectItem key={artist.id} value={artist.id}>
-                        {artist.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <UniversalSearch
+                  placeholder="Rechercher un spectacle..."
+                  filterTypes={['artist']}
+                  onSelect={(item) => setFormData(prev => ({ ...prev, artist_id: item.id }))}
+                />
+                {formData.artist_id && (
+                  <div className="mt-2 text-sm text-muted-foreground">
+                    Spectacle sélectionné: {artists.find(a => a.id === formData.artist_id)?.name}
+                  </div>
+                )}
               </div>
 
               <div>
