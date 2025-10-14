@@ -41,15 +41,11 @@ export const DashboardHome: React.FC = () => {
       {/* Stats Cards */}
       <DashboardStats />
 
+      {/* Charts Section */}
+      <DashboardCharts />
+      
       {/* Opportunity Stats */}
-      <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-1 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <DashboardCharts />
-        </div>
-        <div>
-          <OpportunityStatsCard />
-        </div>
-      </div>
+      <OpportunityStatsCard />
 
       {/* Quick Actions */}
       <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-2 lg:grid-cols-4">

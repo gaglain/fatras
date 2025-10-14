@@ -145,7 +145,7 @@ export const DashboardStatsCards: React.FC = () => {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 sm:gap-3 md:gap-4">
       {stats.map((stat) => {
         const Icon = stat.icon;
         return (
@@ -159,27 +159,27 @@ export const DashboardStatsCards: React.FC = () => {
             }}
             onClick={() => handleCardClick(stat.route)}
           >
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <p className="text-xs font-medium mb-1" style={{
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                <div className="flex-1 min-w-0 w-full">
+                  <p className="text-[10px] sm:text-xs font-medium mb-1 truncate" style={{
                     color: `rgba(var(--custom-text), 0.7)`
                   }}>
                     {stat.name}
                   </p>
-                  <p className="text-lg font-bold" style={{
+                  <p className="text-base sm:text-lg md:text-xl font-bold truncate" style={{
                     color: `rgb(var(--custom-cardText))`
                   }}>
                     {stat.value}
                   </p>
-                  <p className={`text-xs ${stat.changeType === 'positive' ? 'text-green-600' : 'text-red-600'}`}>
+                  <p className={`text-[10px] sm:text-xs ${stat.changeType === 'positive' ? 'text-green-600' : 'text-red-600'}`}>
                     {stat.change}
                   </p>
                 </div>
-                <div className="p-2 rounded-lg" style={{
+                <div className="p-1.5 sm:p-2 rounded-lg flex-shrink-0" style={{
                   background: `rgba(var(--custom-buttonBg), 0.1)`
                 }}>
-                  <Icon className="h-4 w-4" style={{
+                  <Icon className="h-3 w-3 sm:h-4 sm:w-4" style={{
                     color: `rgb(var(--custom-buttonBg))`
                   }} />
                 </div>

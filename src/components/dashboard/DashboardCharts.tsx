@@ -120,125 +120,65 @@ export const DashboardCharts: React.FC = () => {
   });
 
   return (
-    <div className="grid gap-4 md:gap-6 grid-cols-1 xl:grid-cols-2">
+    <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-1">
       {/* Revenus mensuels */}
       <Card>
-        <CardHeader className="pb-3 md:pb-6">
-          <CardTitle className="text-base md:text-lg">Revenus Mensuels</CardTitle>
+        <CardHeader className="p-3 sm:p-4 md:p-6">
+          <CardTitle className="text-sm sm:text-base md:text-lg">Revenus Mensuels</CardTitle>
         </CardHeader>
-        <CardContent className="px-3 md:px-6">
-          <ChartContainer config={chartConfig} className="h-[250px] md:h-[300px]">
-            <AreaChart data={monthlyRevenue}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="month" 
-                tick={{ fontSize: 12 }}
-                interval="preserveStartEnd"
-              />
-              <YAxis tick={{ fontSize: 12 }} />
-              <ChartTooltip 
-                content={<ChartTooltipContent />}
-                formatter={(value) => [`€${Number(value).toLocaleString('fr-FR')}`, 'Revenus']}
-                contentStyle={{ fontSize: '12px' }}
-              />
-              <Area 
-                type="monotone" 
-                dataKey="revenue" 
-                stroke="hsl(var(--primary))" 
-                fill="hsl(var(--primary)/0.2)"
-                strokeWidth={2}
-              />
-            </AreaChart>
+        <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
+          <ChartContainer config={chartConfig} className="h-[200px] sm:h-[250px] md:h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={monthlyRevenue} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="month" 
+                  tick={{ fontSize: 10 }}
+                  interval="preserveStartEnd"
+                />
+                <YAxis tick={{ fontSize: 10 }} />
+                <ChartTooltip 
+                  content={<ChartTooltipContent />}
+                  formatter={(value) => [`€${Number(value).toLocaleString('fr-FR')}`, 'Revenus']}
+                  contentStyle={{ fontSize: '12px' }}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="revenue" 
+                  stroke="hsl(var(--primary))" 
+                  fill="hsl(var(--primary)/0.2)"
+                  strokeWidth={2}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
           </ChartContainer>
         </CardContent>
       </Card>
 
       {/* Activité hebdomadaire */}
       <Card>
-        <CardHeader className="pb-3 md:pb-6">
-          <CardTitle className="text-base md:text-lg">Activité Hebdomadaire</CardTitle>
+        <CardHeader className="p-3 sm:p-4 md:p-6">
+          <CardTitle className="text-sm sm:text-base md:text-lg">Activité Hebdomadaire</CardTitle>
         </CardHeader>
-        <CardContent className="px-3 md:px-6">
-          <ChartContainer config={chartConfig} className="h-[250px] md:h-[300px]">
-            <BarChart data={weeklyActivity}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="day" 
-                tick={{ fontSize: 12 }}
-                interval="preserveStartEnd"
-              />
-              <YAxis tick={{ fontSize: 12 }} />
-              <ChartTooltip 
-                content={<ChartTooltipContent />} 
-                contentStyle={{ fontSize: '12px' }}
-              />
-              <Bar dataKey="events" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="contacts" fill="hsl(var(--secondary))" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ChartContainer>
-        </CardContent>
-      </Card>
-
-      {/* Statuts des événements */}
-      <Card>
-        <CardHeader className="pb-3 md:pb-6">
-          <CardTitle className="text-base md:text-lg">Statuts des Événements</CardTitle>
-        </CardHeader>
-        <CardContent className="px-3 md:px-6">
-          <ChartContainer config={chartConfig} className="h-[250px] md:h-[300px]">
-            <PieChart>
-              <Pie
-                data={eventStatus}
-                cx="50%"
-                cy="50%"
-                innerRadius={window.innerWidth < 768 ? 40 : 60}
-                outerRadius={window.innerWidth < 768 ? 80 : 100}
-                paddingAngle={5}
-                dataKey="count"
-              >
-                {eventStatus.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.fill} />
-                ))}
-              </Pie>
-              <ChartTooltip 
-                content={<ChartTooltipContent />}
-                formatter={(value, name) => [value, name]}
-                contentStyle={{ fontSize: '12px' }}
-              />
-            </PieChart>
-          </ChartContainer>
-        </CardContent>
-      </Card>
-
-      {/* Performance mensuelle détaillée */}
-      <Card className="xl:col-span-2">
-        <CardHeader className="pb-3 md:pb-6">
-          <CardTitle className="text-base md:text-lg">Performance Mensuelle</CardTitle>
-        </CardHeader>
-        <CardContent className="px-3 md:px-6">
-          <ChartContainer config={chartConfig} className="h-[250px] md:h-[300px]">
-            <LineChart data={monthlyRevenue}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="month" 
-                tick={{ fontSize: 12 }}
-                interval="preserveStartEnd"
-              />
-              <YAxis tick={{ fontSize: 12 }} />
-              <ChartTooltip 
-                content={<ChartTooltipContent />}
-                formatter={(value) => [`€${Number(value).toLocaleString('fr-FR')}`, 'Revenus']}
-                contentStyle={{ fontSize: '12px' }}
-              />
-              <Line 
-                type="monotone" 
-                dataKey="revenue" 
-                stroke="hsl(var(--primary))" 
-                strokeWidth={window.innerWidth < 768 ? 2 : 3}
-                dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: window.innerWidth < 768 ? 3 : 4 }}
-                activeDot={{ r: window.innerWidth < 768 ? 4 : 6, stroke: 'hsl(var(--primary))', strokeWidth: 2 }}
-              />
-            </LineChart>
+        <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
+          <ChartContainer config={chartConfig} className="h-[200px] sm:h-[250px] md:h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={weeklyActivity} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="day" 
+                  tick={{ fontSize: 10 }}
+                  interval="preserveStartEnd"
+                />
+                <YAxis tick={{ fontSize: 10 }} />
+                <ChartTooltip 
+                  content={<ChartTooltipContent />} 
+                  contentStyle={{ fontSize: '12px' }}
+                />
+                <Bar dataKey="events" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="contacts" fill="hsl(var(--secondary))" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </ChartContainer>
         </CardContent>
       </Card>
