@@ -15,34 +15,9 @@ export const Website: React.FC = () => {
   const navigate = useNavigate();
   // This line ensures that we're actually within the context before using WebsiteConfigManager
   const { config } = useWebsiteConfig();
-  const lastBumpRef = useRef(0);
+  // Désactivation de l'auto-refresh pour éviter les boucles de rafraîchissement dans l'onglet Aperçu
   useEffect(() => {
-    const bump = () => {
-      const now = Date.now();
-      // Throttle to avoid infinite reload loops (e.g., events from iframe)
-      if (now - lastBumpRef.current < 2000) return;
-      lastBumpRef.current = now;
-      setPreviewVersion((v) => v + 1);
-    };
-
-    const events = [
-      'websiteSettingsUpdated',
-      'siteSettingsUpdated',
-      'websiteDesignUpdated',
-      'websiteSettingsSaved',
-      'websiteConfigChanged',
-      'websitePagesSaved',
-      'menuUpdated',
-      'websiteMenuSaved',
-      'frontDataRefresh'
-    ];
-    events.forEach((evt) => window.addEventListener(evt as any, bump));
-
-    // Important: Do NOT listen to 'storage' here to avoid feedback loops with the preview iframe
-
-    return () => {
-      events.forEach((evt) => window.removeEventListener(evt as any, bump));
-    };
+    // Intentionnellement vide: mise à jour du preview désormais manuelle (boutons)
   }, []);
 
   const handleOpenEditor = () => {
@@ -238,12 +213,16 @@ export const Website: React.FC = () => {
                   title={`Aperçu du site v${previewVersion}`}
                 />
               </div>
-              <div className="mt-4 text-center">
+              <div className="mt-4 flex items-center justify-center gap-2">
+                <Button onClick={() => setPreviewVersion((v) => v + 1)} variant="outline">
+                  Rafraîchir l'aperçu
+                </Button>
                 <Button onClick={handlePreviewSite} variant="outline">
                   <ExternalLink className="h-4 w-4 mr-2" />
                   Ouvrir dans un nouvel onglet
                 </Button>
               </div>
+
             </CardContent>
           </Card>
         </TabsContent>
