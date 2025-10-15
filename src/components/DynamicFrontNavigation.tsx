@@ -25,10 +25,16 @@ export const DynamicFrontNavigation: React.FC = () => {
 
   const logoSrc = React.useMemo(() => {
     if (!logo) return '';
+    // Ne pas ajouter de query aux Data URLs (base64)
+    if (logo.startsWith('data:')) return logo;
     try {
-      const v = btoa(encodeURIComponent(logo)).slice(0, 8);
-      const sep = logo.includes('?') ? '&' : '?';
-      return `${logo}${sep}v=${v}`;
+      // Ajout de version uniquement pour fichiers/URLs afin d'éviter le cache
+      if (/^(https?:)?\//.test(logo) || logo.startsWith('http')) {
+        const v = Math.random().toString(36).slice(2, 10);
+        const sep = logo.includes('?') ? '&' : '?';
+        return `${logo}${sep}v=${v}`;
+      }
+      return logo;
     } catch {
       return logo;
     }

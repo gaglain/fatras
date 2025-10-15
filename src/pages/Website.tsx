@@ -25,7 +25,8 @@ export const Website: React.FC = () => {
   };
 
   const handlePreviewSite = () => {
-    window.open('/front?preview=' + Date.now(), '_blank');
+    // Ouvrir le front dans la même application (sandbox) pour voir les changements immédiats
+    navigate('/front?preview=' + Date.now());
   };
 
   const handleForceSync = () => {
