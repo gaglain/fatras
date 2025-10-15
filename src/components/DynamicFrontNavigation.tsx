@@ -90,6 +90,24 @@ export const DynamicFrontNavigation: React.FC = () => {
           console.log('🎨 Navigation - Site name from design:', design.siteName);
         }
       }
+
+      // Charger la configuration unifiée (websiteConfig)
+      const savedWebsiteConfig = localStorage.getItem('websiteConfig');
+      if (savedWebsiteConfig) {
+        try {
+          const config = JSON.parse(savedWebsiteConfig);
+          if (config.logo) {
+            setLogo(config.logo);
+            console.log('🧩 Navigation - Logo from websiteConfig');
+          }
+          if (config.siteName) {
+            setSiteName(config.siteName);
+            console.log('🧩 Navigation - Site name from websiteConfig:', config.siteName);
+          }
+        } catch (e) {
+          console.warn('⚠️ Navigation - Failed to parse websiteConfig');
+        }
+      }
     } catch (error) {
       console.error('❌ Navigation - Error loading data:', error);
     } finally {
