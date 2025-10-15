@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PageManager } from '@/components/website/PageManager';
 import { MenuManager } from '@/components/website/MenuManager';
@@ -23,9 +24,11 @@ import { Button } from '@/components/ui/button';
 
 export const WebsiteManager: React.FC = () => {
   const [activeTab, setActiveTab] = useState('layout');
+  const navigate = useNavigate();
 
   const handlePreviewSite = () => {
-    window.open('/front', '_blank');
+    // Navigue dans l'appli pour que l'aperçu s'affiche dans le panneau de droite
+    navigate('/front');
   };
 
   return (

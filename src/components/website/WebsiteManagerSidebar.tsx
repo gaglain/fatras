@@ -53,9 +53,9 @@ export const WebsiteManagerSidebar: React.FC = () => {
     return location.pathname === path;
   };
 
-  const handlePreviewSite = () => {
-    window.open('/front', '_blank');
-  };
+const handlePreviewSite = () => {
+  navigate('/front');
+};
 
   return (
     <div className="w-64 h-full bg-card border-r flex flex-col">
