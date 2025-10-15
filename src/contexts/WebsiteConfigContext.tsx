@@ -114,33 +114,30 @@ export const WebsiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       console.log('🔄 Loading website config...');
       
-      // Charger la config depuis localStorage
-      const savedConfig = localStorage.getItem('websiteConfig');
-      let mergedConfig = { ...defaultConfig };
-      
-      if (savedConfig) {
+      // Helper de parse sécurisé
+      const safeParse = (key: string, fallback: any = null) => {
         try {
-          const parsed = JSON.parse(savedConfig);
-          mergedConfig = { ...defaultConfig, ...parsed };
-          console.log('✅ Config loaded:', mergedConfig.siteName);
-        } catch (e) {
-          console.warn('⚠️ Failed to parse saved config');
+          const raw = localStorage.getItem(key);
+          if (!raw) return fallback;
+          return JSON.parse(raw);
+        } catch (err) {
+          console.error(`❌ WebsiteConfig - Parse error for ${key}, auto-clearing:`, err);
+          localStorage.removeItem(key);
+          return fallback;
         }
+      };
+
+      // Charger la config avec parse sécurisé
+      const parsed = safeParse('websiteConfig');
+      let mergedConfig = { ...defaultConfig, ...parsed };
+      
+      if (parsed) {
+        console.log('✅ Config loaded:', mergedConfig.siteName);
       }
 
-      // Charger et fusionner le menu depuis localStorage
-      const savedMenu = localStorage.getItem('websiteMenu');
-      if (savedMenu) {
-        try {
-          const parsedMenu = JSON.parse(savedMenu);
-          mergedConfig.menuItems = parsedMenu;
-        } catch (e) {
-          console.warn('⚠️ Failed to parse saved menu');
-          mergedConfig.menuItems = defaultMenuItems;
-        }
-      } else {
-        mergedConfig.menuItems = defaultMenuItems;
-      }
+      // Charger le menu avec parse sécurisé
+      const parsedMenu = safeParse('websiteMenu', defaultMenuItems);
+      mergedConfig.menuItems = parsedMenu;
       
       setConfig(mergedConfig);
       

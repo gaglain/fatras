@@ -20,103 +20,94 @@ export const DynamicFrontNavigation: React.FC = () => {
   // Utiliser le hook de synchronisation front
   const { forceSync } = useFrontSync();
 
+  // Helper de parse sécurisé avec auto-réparation
+  const safeParse = (key: string, fallback: any = null) => {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return fallback;
+      return JSON.parse(raw);
+    } catch (err) {
+      console.error(`❌ Navigation - Parse error for ${key}, auto-clearing:`, err);
+      localStorage.removeItem(key);
+      return fallback;
+    }
+  };
+
   // Fonction de chargement des données
   const loadAllData = React.useCallback(() => {
     console.log('📄 Navigation - Loading data...');
     setIsLoading(true);
     
-    try {
-      const rawMenu = localStorage.getItem('websiteMenu') || localStorage.getItem('website_menu');
-      if (rawMenu) {
-        try {
-          const parsed = JSON.parse(rawMenu);
-          const baseArr = Array.isArray(parsed)
-            ? parsed
-            : Array.isArray((parsed as any)?.data)
-              ? (parsed as any).data
-              : Array.isArray((parsed as any)?.menu)
-                ? (parsed as any).menu
-                : [];
+    // Charger le menu avec parse sécurisé
+    const rawMenu = safeParse('websiteMenu') || safeParse('website_menu', []);
+    if (rawMenu) {
+      const baseArr = Array.isArray(rawMenu)
+        ? rawMenu
+        : Array.isArray((rawMenu as any)?.data)
+          ? (rawMenu as any).data
+          : Array.isArray((rawMenu as any)?.menu)
+            ? (rawMenu as any).menu
+            : [];
 
-          const clean = (s: any) => {
-            if (typeof s !== 'string') return s;
-            if (s.startsWith('/http://') || s.startsWith('/https://') || s.startsWith('///')) {
-              return s.slice(1);
-            }
-            return s;
-          };
+      const clean = (s: any) => {
+        if (typeof s !== 'string') return s;
+        if (s.startsWith('/http://') || s.startsWith('/https://') || s.startsWith('///')) {
+          return s.slice(1);
+        }
+        return s;
+      };
 
-          const normalized = baseArr.map((item: any) => {
-            const rawPath = item.path || item.url || '/';
-            const path = clean(rawPath);
-            const visible = item.visible ?? item.is_visible ?? true;
-            const order = item.order ?? item.menu_order ?? 0;
-            return { ...item, path, visible, order } as MenuItem;
-          });
+      const normalized = baseArr.map((item: any) => {
+        const rawPath = item.path || item.url || '/';
+        const path = clean(rawPath);
+        const visible = item.visible ?? item.is_visible ?? true;
+        const order = item.order ?? item.menu_order ?? 0;
+        return { ...item, path, visible, order } as MenuItem;
+      });
 
-          const visibleItems = normalized
-            .filter((item: any) => item.visible)
-            .sort((a: any, b: any) => a.order - b.order);
-          setMenuItems(visibleItems);
-          console.log('✅ Navigation - Menu loaded:', visibleItems.length, 'items');
-        } catch (e) {
-          console.error('❌ Navigation - Error parsing menu:', e);
-          setMenuItems([]);
-        }
-      } else {
-        setMenuItems([]);
-      }
-
-      // Charger les paramètres (compat: websiteSettings | site_settings)
-      const savedSettings = localStorage.getItem('websiteSettings') || localStorage.getItem('site_settings');
-      if (savedSettings) {
-        const settings = JSON.parse(savedSettings);
-        if (settings.siteName) {
-          setSiteName(settings.siteName);
-          console.log('⚙️ Navigation - Site name from settings:', settings.siteName);
-        }
-        if (settings.logo) {
-          setLogo(settings.logo);
-          console.log('⚙️ Navigation - Logo from settings');
-        }
-      }
-      
-      // Charger le design
-      const savedDesign = localStorage.getItem('websiteDesign');
-      if (savedDesign) {
-        const design = JSON.parse(savedDesign);
-        if (design.logo) {
-          setLogo(design.logo);
-          console.log('🎨 Navigation - Logo loaded');
-        }
-        if (design.siteName) {
-          setSiteName(design.siteName);
-          console.log('🎨 Navigation - Site name from design:', design.siteName);
-        }
-      }
-
-      // Charger la configuration unifiée (websiteConfig)
-      const savedWebsiteConfig = localStorage.getItem('websiteConfig');
-      if (savedWebsiteConfig) {
-        try {
-          const config = JSON.parse(savedWebsiteConfig);
-          if (config.logo) {
-            setLogo(config.logo);
-            console.log('🧩 Navigation - Logo from websiteConfig');
-          }
-          if (config.siteName) {
-            setSiteName(config.siteName);
-            console.log('🧩 Navigation - Site name from websiteConfig:', config.siteName);
-          }
-        } catch (e) {
-          console.warn('⚠️ Navigation - Failed to parse websiteConfig');
-        }
-      }
-    } catch (error) {
-      console.error('❌ Navigation - Error loading data:', error);
-    } finally {
-      setIsLoading(false);
+      const visibleItems = normalized
+        .filter((item: any) => item.visible)
+        .sort((a: any, b: any) => a.order - b.order);
+      setMenuItems(visibleItems);
+      console.log('✅ Navigation - Menu loaded:', visibleItems.length, 'items');
+    } else {
+      setMenuItems([]);
     }
+
+    // Charger les paramètres avec parse sécurisé
+    const settings = safeParse('websiteSettings') || safeParse('site_settings');
+    if (settings?.siteName) {
+      setSiteName(settings.siteName);
+      console.log('⚙️ Navigation - Site name from settings:', settings.siteName);
+    }
+    if (settings?.logo) {
+      setLogo(settings.logo);
+      console.log('⚙️ Navigation - Logo from settings');
+    }
+    
+    // Charger le design avec parse sécurisé
+    const design = safeParse('websiteDesign');
+    if (design?.logo) {
+      setLogo(design.logo);
+      console.log('🎨 Navigation - Logo loaded');
+    }
+    if (design?.siteName) {
+      setSiteName(design.siteName);
+      console.log('🎨 Navigation - Site name from design:', design.siteName);
+    }
+
+    // Charger la configuration unifiée avec parse sécurisé
+    const config = safeParse('websiteConfig');
+    if (config?.logo) {
+      setLogo(config.logo);
+      console.log('🧩 Navigation - Logo from websiteConfig');
+    }
+    if (config?.siteName) {
+      setSiteName(config.siteName);
+      console.log('🧩 Navigation - Site name from websiteConfig:', config.siteName);
+    }
+    
+    setIsLoading(false);
   }, []);
 
   // Charger les données initiales

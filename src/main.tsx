@@ -37,7 +37,9 @@ if (typeof window !== 'undefined') {
       // Emit a secondary normalized event for consumers
       window.dispatchEvent(new CustomEvent('menuUpdated', { detail: normalized }));
     } catch (err) {
-      console.error('❌ Global menu normalization failed:', err);
+      console.error('❌ Global menu normalization failed, clearing corrupted data:', err);
+      localStorage.removeItem('websiteMenu');
+      localStorage.removeItem('website_menu');
     }
   });
 }

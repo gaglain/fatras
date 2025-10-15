@@ -2,62 +2,53 @@
 import { useEffect, useCallback } from 'react';
 
 export const useFrontSync = () => {
+  // Helper de parse sécurisé avec auto-réparation
+  const safeParse = (key: string, fallback: any = null) => {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return fallback;
+      return JSON.parse(raw);
+    } catch (err) {
+      console.error(`❌ useFrontSync - Parse error for ${key}, auto-clearing:`, err);
+      localStorage.removeItem(key);
+      return fallback;
+    }
+  };
+
   const syncAll = useCallback(() => {
     console.log('🔄 Front sync - Loading all data');
     
-    try {
-      // Synchroniser les paramètres
-      const savedSettings = localStorage.getItem('websiteSettings');
-      if (savedSettings) {
-        const settings = JSON.parse(savedSettings);
-        console.log('⚙️ Front sync - Settings loaded:', settings.siteName);
-        
-        if (settings.siteName && document.title !== settings.siteName) {
-          document.title = settings.siteName;
-        }
-        
-        // Déclencher l'événement
-        window.dispatchEvent(new CustomEvent('websiteSettingsUpdated', { detail: settings }));
+    // Synchroniser les paramètres avec parse sécurisé
+    const settings = safeParse('websiteSettings');
+    if (settings) {
+      console.log('⚙️ Front sync - Settings loaded:', settings.siteName);
+      
+      if (settings.siteName && document.title !== settings.siteName) {
+        document.title = settings.siteName;
       }
       
-      // Synchroniser le design
-      const savedDesign = localStorage.getItem('websiteDesign');
-      if (savedDesign) {
-        const design = JSON.parse(savedDesign);
-        console.log('🎨 Front sync - Design loaded:', design.siteName);
-        
-        // Déclencher l'événement
-        window.dispatchEvent(new CustomEvent('websiteDesignUpdated', { detail: design }));
-      }
-      
-      // Synchroniser le menu
-      const savedMenu = localStorage.getItem('websiteMenu') || localStorage.getItem('website_menu');
-      if (savedMenu) {
-        try {
-          const parsed = JSON.parse(savedMenu);
-          const arr = Array.isArray(parsed)
-            ? parsed
-            : Array.isArray((parsed as any)?.data)
-              ? (parsed as any).data
-              : Array.isArray((parsed as any)?.menu)
-                ? (parsed as any).menu
-                : [];
-
-          console.log('🔗 Front sync - Menu loaded:', arr.length, 'items');
-          // Déclencher l'événement avec un tableau garanti
-          window.dispatchEvent(new CustomEvent('websiteMenuUpdated', { detail: arr }));
-        } catch (e) {
-          console.error('❌ Front sync - Failed to parse menu:', e);
-          window.dispatchEvent(new CustomEvent('websiteMenuUpdated', { detail: [] }));
-        }
-      } else {
-        // Aucun menu => envoyer un tableau vide pour éviter les erreurs
-        window.dispatchEvent(new CustomEvent('websiteMenuUpdated', { detail: [] }));
-      }
-      
-    } catch (error) {
-      console.error('❌ Front sync error:', error);
+      window.dispatchEvent(new CustomEvent('websiteSettingsUpdated', { detail: settings }));
     }
+    
+    // Synchroniser le design avec parse sécurisé
+    const design = safeParse('websiteDesign');
+    if (design) {
+      console.log('🎨 Front sync - Design loaded:', design.siteName);
+      window.dispatchEvent(new CustomEvent('websiteDesignUpdated', { detail: design }));
+    }
+    
+    // Synchroniser le menu avec parse sécurisé
+    const parsed = safeParse('websiteMenu') || safeParse('website_menu', []);
+    const arr = Array.isArray(parsed)
+      ? parsed
+      : Array.isArray((parsed as any)?.data)
+        ? (parsed as any).data
+        : Array.isArray((parsed as any)?.menu)
+          ? (parsed as any).menu
+          : [];
+
+    console.log('🔗 Front sync - Menu loaded:', arr.length, 'items');
+    window.dispatchEvent(new CustomEvent('websiteMenuUpdated', { detail: arr }));
   }, []);
 
   useEffect(() => {
