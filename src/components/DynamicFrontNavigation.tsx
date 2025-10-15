@@ -125,43 +125,40 @@ export const DynamicFrontNavigation: React.FC = () => {
 
   // Écouter les événements de synchronisation
   useEffect(() => {
-    const handleMenuUpdate = (event: CustomEvent) => {
+    const reload = () => {
+      console.log('🔁 Navigation - Reloading data after update');
+      setTimeout(loadAllData, 100);
+    };
+
+    const handleMenuUpdate = () => {
       console.log('🔄 Navigation - Menu update received');
-      if (event.detail && Array.isArray(event.detail)) {
-        const normalized = event.detail.map((item: any) => ({
-          ...item,
-          path: item.path || item.url || '/',
-          visible: item.visible ?? item.is_visible ?? true,
-          order: item.order ?? item.menu_order ?? 0,
-        }));
-        const visibleItems = normalized
-          .filter((item: any) => item.visible)
-          .sort((a: any, b: any) => a.order - b.order);
-        setMenuItems(visibleItems);
-      }
+      reload();
     };
 
-    const handleSettingsUpdate = (event: CustomEvent) => {
+    const handleSettingsUpdate = () => {
       console.log('⚙️ Navigation - Settings update received');
-      const settings = event.detail;
-      if (settings?.siteName) {
-        setSiteName(settings.siteName);
-      }
+      reload();
     };
 
-    const handleDesignUpdate = (event: CustomEvent) => {
+    const handleDesignUpdate = () => {
       console.log('🎨 Navigation - Design update received');
-      const design = event.detail;
-      if (design?.logo) {
-        setLogo(design.logo);
-      }
-      if (design?.siteName) {
-        setSiteName(design.siteName);
-      }
+      reload();
+    };
+
+    const handleWebsiteConfigChanged = () => {
+      console.log('🧩 Navigation - websiteConfig change detected');
+      reload();
     };
 
     const handleStorageChange = (event: StorageEvent) => {
-      if (['websiteMenu', 'website_menu', 'websiteSettings', 'site_settings', 'websiteDesign'].includes(event.key || '')) {
+      if ([
+        'websiteMenu',
+        'website_menu',
+        'websiteSettings',
+        'site_settings',
+        'websiteDesign',
+        'websiteConfig'
+      ].includes(event.key || '')) {
         console.log('💾 Navigation - Storage change detected:', event.key);
         setTimeout(loadAllData, 200);
       }
@@ -173,12 +170,16 @@ export const DynamicFrontNavigation: React.FC = () => {
     window.addEventListener('websiteSettingsUpdated', handleSettingsUpdate as EventListener);
     window.addEventListener('siteSettingsUpdated', handleSettingsUpdate as EventListener);
     window.addEventListener('websiteDesignUpdated', handleDesignUpdate as EventListener);
+    window.addEventListener('websiteConfigChanged', handleWebsiteConfigChanged as EventListener);
     window.addEventListener('storage', handleStorageChange);
 
     return () => {
       window.removeEventListener('websiteMenuUpdated', handleMenuUpdate as EventListener);
+      window.removeEventListener('menuUpdated', handleMenuUpdate as EventListener);
       window.removeEventListener('websiteSettingsUpdated', handleSettingsUpdate as EventListener);
+      window.removeEventListener('siteSettingsUpdated', handleSettingsUpdate as EventListener);
       window.removeEventListener('websiteDesignUpdated', handleDesignUpdate as EventListener);
+      window.removeEventListener('websiteConfigChanged', handleWebsiteConfigChanged as EventListener);
       window.removeEventListener('storage', handleStorageChange);
     };
   }, [loadAllData]);
