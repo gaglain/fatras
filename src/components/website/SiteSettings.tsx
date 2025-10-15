@@ -89,19 +89,69 @@ export const SiteSettings: React.FC = () => {
   const [activeSection, setActiveSection] = useState<'general' | 'design' | 'features' | 'maintenance'>('general');
 
   useEffect(() => {
+    // Essayer de charger depuis site_settings d'abord
     const savedSettings = localStorage.getItem('site_settings');
     if (savedSettings) {
       try {
         const parsed = JSON.parse(savedSettings);
         setSettings({ ...defaultSettings, ...parsed });
+        return;
       } catch (error) {
-        console.error('Erreur chargement paramètres:', error);
+        console.error('Erreur chargement paramètres site_settings:', error);
+      }
+    }
+    
+    // Sinon essayer de charger depuis websiteConfig
+    const websiteConfig = localStorage.getItem('websiteConfig');
+    if (websiteConfig) {
+      try {
+        const config = JSON.parse(websiteConfig);
+        setSettings({
+          ...defaultSettings,
+          siteName: config.siteName || defaultSettings.siteName,
+          siteDescription: config.siteDescription || defaultSettings.siteDescription,
+          logo: config.logo || defaultSettings.logo,
+          favicon: config.favicon || defaultSettings.favicon,
+          contactEmail: config.contactEmail || defaultSettings.contactEmail,
+          contactPhone: config.contactPhone || defaultSettings.contactPhone,
+          address: config.address || defaultSettings.address,
+          socialLinks: config.socialLinks || defaultSettings.socialLinks,
+          theme: {
+            primaryColor: config.primaryColor || defaultSettings.theme.primaryColor,
+            secondaryColor: config.secondaryColor || defaultSettings.theme.secondaryColor,
+            backgroundColor: config.headerBg || defaultSettings.theme.backgroundColor,
+            textColor: config.textColor || defaultSettings.theme.textColor
+          }
+        });
+      } catch (error) {
+        console.error('Erreur chargement websiteConfig:', error);
       }
     }
   }, []);
 
   const saveSettings = () => {
+    // Sauvegarder dans site_settings (ancien système)
     localStorage.setItem('site_settings', JSON.stringify(settings));
+    
+    // Sauvegarder dans websiteConfig (nouveau système utilisé par le frontend)
+    const websiteConfig = {
+      siteName: settings.siteName,
+      siteDescription: settings.siteDescription,
+      logo: settings.logo,
+      favicon: settings.favicon,
+      primaryColor: settings.theme.primaryColor,
+      secondaryColor: settings.theme.secondaryColor,
+      headerBg: settings.theme.backgroundColor,
+      footerBg: '#1a1a1a',
+      textColor: settings.theme.textColor,
+      linkColor: settings.theme.primaryColor,
+      contactEmail: settings.contactEmail,
+      contactPhone: settings.contactPhone,
+      address: settings.address,
+      socialLinks: settings.socialLinks,
+      menuItems: []
+    };
+    localStorage.setItem('websiteConfig', JSON.stringify(websiteConfig));
     
     // Appliquer les changements immédiatement
     document.title = settings.siteName;
@@ -113,8 +163,10 @@ export const SiteSettings: React.FC = () => {
     root.style.setProperty('--background-color', settings.theme.backgroundColor);
     root.style.setProperty('--text-color', settings.theme.textColor);
     
-    // Déclencher la synchronisation
+    // Déclencher les événements de synchronisation
     window.dispatchEvent(new CustomEvent('siteSettingsUpdated', { detail: settings }));
+    window.dispatchEvent(new Event('websiteConfigChanged'));
+    window.dispatchEvent(new Event('storage'));
     
     toast.success('Paramètres sauvegardés avec succès');
   };
