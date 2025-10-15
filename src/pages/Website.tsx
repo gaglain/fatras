@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,9 +11,38 @@ import { WebsiteWithSidebar } from '@/components/website/WebsiteWithSidebar';
 
 export const Website: React.FC = () => {
   const [activeTab, setActiveTab] = useState('config');
+  const [previewVersion, setPreviewVersion] = useState(0);
   const navigate = useNavigate();
   // This line ensures that we're actually within the context before using WebsiteConfigManager
   const { config } = useWebsiteConfig();
+
+  useEffect(() => {
+    const bump = () => setPreviewVersion((v) => v + 1);
+    const events = [
+      'websiteSettingsUpdated',
+      'siteSettingsUpdated',
+      'websiteDesignUpdated',
+      'websiteSettingsSaved',
+      'websiteConfigChanged',
+      'websitePagesSaved',
+      'menuUpdated',
+      'websiteMenuSaved',
+      'frontDataRefresh'
+    ];
+    events.forEach((evt) => window.addEventListener(evt as any, bump));
+
+    const onStorage = (e: StorageEvent) => {
+      if (!e.key || ['websiteSettings','websiteDesign','site_settings','websiteConfig','websitePages','websiteMenu'].includes(e.key)) {
+        bump();
+      }
+    };
+    window.addEventListener('storage', onStorage);
+
+    return () => {
+      events.forEach((evt) => window.removeEventListener(evt as any, bump));
+      window.removeEventListener('storage', onStorage);
+    };
+  }, []);
 
   const handleOpenEditor = () => {
     navigate('/website-editor');
@@ -22,7 +51,6 @@ export const Website: React.FC = () => {
   const handlePreviewSite = () => {
     window.open('/front', '_blank');
   };
-
   return (
     <WebsiteWithSidebar>
       <div className="space-y-6 p-4 lg:p-6">
@@ -163,9 +191,10 @@ export const Website: React.FC = () => {
             <CardContent>
               <div className="h-96 border rounded-lg overflow-hidden">
                 <iframe
-                  src="/front"
+                  key={previewVersion}
+                  src={`/front?preview=${previewVersion}`}
                   className="w-full h-full"
-                  title="Aperçu du site"
+                  title={`Aperçu du site v${previewVersion}`}
                 />
               </div>
               <div className="mt-4 text-center">
