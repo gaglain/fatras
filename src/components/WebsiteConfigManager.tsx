@@ -15,20 +15,36 @@ export const WebsiteConfigManager: React.FC = () => {
   const { config, updateConfig } = useWebsiteConfig();
   const [localConfig, setLocalConfig] = useState(config);
 
-  // Sync avec le contexte global
+  // Sync avec le contexte global, mais prioriser un brouillon local non sauvegardé
   useEffect(() => {
+    try {
+      const draftRaw = localStorage.getItem('websiteConfigDraft');
+      if (draftRaw) {
+        const draft = JSON.parse(draftRaw);
+        setLocalConfig(draft);
+        return;
+      }
+    } catch {}
     setLocalConfig(config);
   }, [config]);
 
   const handleInputChange = (field: string, value: string | boolean) => {
-    setLocalConfig(prev => ({ ...prev, [field]: value }));
+    setLocalConfig(prev => {
+      const next = { ...prev, [field]: value } as typeof prev;
+      try { localStorage.setItem('websiteConfigDraft', JSON.stringify(next)); } catch {}
+      return next;
+    });
   };
 
   const handleSocialLinkChange = (platform: string, value: string) => {
-    setLocalConfig(prev => ({
-      ...prev,
-      socialLinks: { ...prev.socialLinks, [platform]: value }
-    }));
+    setLocalConfig(prev => {
+      const next = {
+        ...prev,
+        socialLinks: { ...prev.socialLinks, [platform]: value }
+      } as typeof prev;
+      try { localStorage.setItem('websiteConfigDraft', JSON.stringify(next)); } catch {}
+      return next;
+    });
   };
 
   const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,7 +53,11 @@ export const WebsiteConfigManager: React.FC = () => {
       const reader = new FileReader();
       reader.onload = (e) => {
         const result = e.target?.result as string;
-        setLocalConfig(prev => ({ ...prev, logo: result }));
+        setLocalConfig(prev => {
+          const next = { ...prev, logo: result } as typeof prev;
+          try { localStorage.setItem('websiteConfigDraft', JSON.stringify(next)); } catch {}
+          return next;
+        });
         toast.success('Logo chargé avec succès');
       };
       reader.readAsDataURL(file);
@@ -50,7 +70,11 @@ export const WebsiteConfigManager: React.FC = () => {
       const reader = new FileReader();
       reader.onload = (e) => {
         const result = e.target?.result as string;
-        setLocalConfig(prev => ({ ...prev, favicon: result }));
+        setLocalConfig(prev => {
+          const next = { ...prev, favicon: result } as typeof prev;
+          try { localStorage.setItem('websiteConfigDraft', JSON.stringify(next)); } catch {}
+          return next;
+        });
         
         // Mettre à jour le favicon immédiatement
         let link = document.querySelector("link[rel*='icon']") as HTMLLinkElement;
@@ -72,6 +96,8 @@ export const WebsiteConfigManager: React.FC = () => {
     
     // Sauvegarder dans le contexte principal
     updateConfig(localConfig);
+    // Nettoyer le brouillon local après sauvegarde
+    try { localStorage.removeItem('websiteConfigDraft'); } catch {}
     
     // Synchroniser avec les anciens systèmes pour compatibilité
     const legacyDesign = {
@@ -102,7 +128,7 @@ export const WebsiteConfigManager: React.FC = () => {
     document.title = localConfig.siteName;
     
     // Déclencher tous les événements de synchronisation
-    window.dispatchEvent(new CustomEvent('websiteConfigChanged', { detail: localConfig }));
+     window.dispatchEvent(new CustomEvent('websiteConfigChanged', { detail: localConfig }));
     window.dispatchEvent(new CustomEvent('siteConfigChanged', { detail: legacyDesign }));
     
     console.log('🚀 Events dispatched for:', localConfig.siteName);
