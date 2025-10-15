@@ -10,10 +10,12 @@ import { Badge } from '@/components/ui/badge';
 import { Save, Globe, Palette, Settings, Phone, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useWebsiteConfig } from '@/contexts/WebsiteConfigContext';
+import { useFileUpload } from '@/hooks/useFileUpload';
 
 export const WebsiteConfigManager: React.FC = () => {
   const { config, updateConfig } = useWebsiteConfig();
   const [localConfig, setLocalConfig] = useState(config);
+  const { uploadFile } = useFileUpload();
 
   // Sync avec le contexte global, mais prioriser un brouillon local non sauvegardé
   useEffect(() => {
@@ -47,47 +49,45 @@ export const WebsiteConfigManager: React.FC = () => {
     });
   };
 
-  const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        setLocalConfig(prev => {
-          const next = { ...prev, logo: result } as typeof prev;
-          try { localStorage.setItem('websiteConfigDraft', JSON.stringify(next)); } catch {}
-          return next;
-        });
-        toast.success('Logo chargé avec succès');
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+    try {
+      const result = await uploadFile(file, 'app-assets', 'branding');
+      setLocalConfig(prev => {
+        const next = { ...prev, logo: result.url } as typeof prev;
+        try { localStorage.setItem('websiteConfigDraft', JSON.stringify(next)); } catch {}
+        return next;
+      });
+      toast.success('Logo uploadé et enregistré');
+    } catch (err: any) {
+      toast.error(`Erreur upload logo: ${err.message || err}`);
     }
   };
 
-  const handleFaviconUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFaviconUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        setLocalConfig(prev => {
-          const next = { ...prev, favicon: result } as typeof prev;
-          try { localStorage.setItem('websiteConfigDraft', JSON.stringify(next)); } catch {}
-          return next;
-        });
-        
-        // Mettre à jour le favicon immédiatement
-        let link = document.querySelector("link[rel*='icon']") as HTMLLinkElement;
-        if (!link) {
-          link = document.createElement('link');
-          link.rel = 'shortcut icon';
-          document.head.appendChild(link);
-        }
-        link.href = result;
-        
-        toast.success('Favicon chargé avec succès');
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+    try {
+      const result = await uploadFile(file, 'app-assets', 'favicons');
+      setLocalConfig(prev => {
+        const next = { ...prev, favicon: result.url } as typeof prev;
+        try { localStorage.setItem('websiteConfigDraft', JSON.stringify(next)); } catch {}
+        return next;
+      });
+
+      // Mettre à jour le favicon immédiatement
+      let link = document.querySelector("link[rel*='icon']") as HTMLLinkElement;
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = 'shortcut icon';
+        document.head.appendChild(link);
+      }
+      link.href = result.url;
+
+      toast.success('Favicon uploadé et enregistré');
+    } catch (err: any) {
+      toast.error(`Erreur upload favicon: ${err.message || err}`);
     }
   };
 
