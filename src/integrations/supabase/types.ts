@@ -3234,6 +3234,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "website_menu_parent_fk"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "website_menu"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "website_menu_parent_id_fkey"
             columns: ["parent_id"]
             isOneToOne: false
