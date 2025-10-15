@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -15,9 +15,16 @@ export const Website: React.FC = () => {
   const navigate = useNavigate();
   // This line ensures that we're actually within the context before using WebsiteConfigManager
   const { config } = useWebsiteConfig();
-
+  const lastBumpRef = useRef(0);
   useEffect(() => {
-    const bump = () => setPreviewVersion((v) => v + 1);
+    const bump = () => {
+      const now = Date.now();
+      // Throttle to avoid infinite reload loops (e.g., events from iframe)
+      if (now - lastBumpRef.current < 2000) return;
+      lastBumpRef.current = now;
+      setPreviewVersion((v) => v + 1);
+    };
+
     const events = [
       'websiteSettingsUpdated',
       'siteSettingsUpdated',
@@ -31,16 +38,10 @@ export const Website: React.FC = () => {
     ];
     events.forEach((evt) => window.addEventListener(evt as any, bump));
 
-    const onStorage = (e: StorageEvent) => {
-      if (!e.key || ['websiteSettings','websiteDesign','site_settings','websiteConfig','websitePages','websiteMenu'].includes(e.key)) {
-        bump();
-      }
-    };
-    window.addEventListener('storage', onStorage);
+    // Important: Do NOT listen to 'storage' here to avoid feedback loops with the preview iframe
 
     return () => {
       events.forEach((evt) => window.removeEventListener(evt as any, bump));
-      window.removeEventListener('storage', onStorage);
     };
   }, []);
 
