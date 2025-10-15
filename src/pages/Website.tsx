@@ -49,7 +49,33 @@ export const Website: React.FC = () => {
   };
 
   const handlePreviewSite = () => {
-    window.open('/front', '_blank');
+    window.open('/front?preview=' + Date.now(), '_blank');
+  };
+
+  const handleForceSync = () => {
+    // Déclenche une mise à jour de l'iframe et informe le front
+    setPreviewVersion((v) => v + 1);
+    window.dispatchEvent(new CustomEvent('frontDataRefresh'));
+    // Compat: certains écrans écoutent ces événements
+    window.dispatchEvent(new CustomEvent('websiteSettingsUpdated'));
+    window.dispatchEvent(new CustomEvent('websiteDesignUpdated'));
+  };
+
+  const handleClearCache = async () => {
+    try {
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((k) => caches.delete(k)));
+      }
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map((r) => r.unregister()));
+      }
+    } catch (e) {
+      console.warn('Cache clear error:', e);
+    } finally {
+      setPreviewVersion((v) => v + 1);
+    }
   };
   return (
     <WebsiteWithSidebar>
@@ -78,6 +104,20 @@ export const Website: React.FC = () => {
               <Edit className="h-4 w-4" />
               <span className="hidden sm:inline">Éditeur de pages</span>
               <span className="sm:hidden">Éditeur</span>
+            </Button>
+            <Button 
+              onClick={handleForceSync}
+              variant="outline"
+              className="flex items-center justify-center"
+            >
+              Forcer la synchro
+            </Button>
+            <Button 
+              onClick={handleClearCache}
+              variant="outline"
+              className="flex items-center justify-center"
+            >
+              Vider le cache
             </Button>
           </div>
         </div>

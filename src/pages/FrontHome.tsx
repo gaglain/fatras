@@ -36,6 +36,9 @@ export const FrontHome: React.FC = () => {
     window.addEventListener('websiteDesignUpdated', handleStorageChange);
     window.addEventListener('websitePagesSaved', handleStorageChange);
     window.addEventListener('frontDataRefresh', handleFrontDataRefresh);
+    // Ajouter compatibilité avec les nouveaux événements émis par le manager
+    window.addEventListener('websiteConfigChanged', handleStorageChange);
+    window.addEventListener('siteConfigChanged', handleStorageChange);
     
     return () => {
       window.removeEventListener('storage', handleStorageChange);
@@ -44,6 +47,8 @@ export const FrontHome: React.FC = () => {
       window.removeEventListener('websiteDesignUpdated', handleStorageChange);
       window.removeEventListener('websitePagesSaved', handleStorageChange);
       window.removeEventListener('frontDataRefresh', handleFrontDataRefresh);
+      window.removeEventListener('websiteConfigChanged', handleStorageChange);
+      window.removeEventListener('siteConfigChanged', handleStorageChange);
     };
   }, []);
 
