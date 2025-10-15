@@ -75,6 +75,10 @@ export const DynamicFrontNavigation: React.FC = () => {
           setSiteName(settings.siteName);
           console.log('⚙️ Navigation - Site name from settings:', settings.siteName);
         }
+        if (settings.logo) {
+          setLogo(settings.logo);
+          console.log('⚙️ Navigation - Logo from settings');
+        }
       }
       
       // Charger le design

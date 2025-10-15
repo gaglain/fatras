@@ -133,7 +133,30 @@ export const SiteSettings: React.FC = () => {
     // Sauvegarder dans site_settings (ancien système)
     localStorage.setItem('site_settings', JSON.stringify(settings));
     
-    // Sauvegarder dans websiteConfig (nouveau système utilisé par le frontend)
+    // Sauvegarder dans websiteSettings (clé largement utilisée par le front)
+    const websiteSettings = {
+      siteName: settings.siteName,
+      siteDescription: settings.siteDescription,
+      contactEmail: settings.contactEmail,
+      contactPhone: settings.contactPhone,
+      address: settings.address,
+      socialLinks: settings.socialLinks
+    };
+    localStorage.setItem('websiteSettings', JSON.stringify(websiteSettings));
+    
+    // Sauvegarder un design minimal pour les composants qui lisent websiteDesign
+    const websiteDesign = {
+      siteName: settings.siteName,
+      logo: settings.logo,
+      primaryColor: settings.theme.primaryColor,
+      secondaryColor: settings.theme.secondaryColor,
+      headerBg: settings.theme.backgroundColor,
+      textColor: settings.theme.textColor,
+      linkColor: settings.theme.primaryColor
+    };
+    localStorage.setItem('websiteDesign', JSON.stringify(websiteDesign));
+    
+    // Sauvegarder dans websiteConfig (configuration unifiée utilisée par plusieurs composants)
     const websiteConfig = {
       siteName: settings.siteName,
       siteDescription: settings.siteDescription,
@@ -162,10 +185,18 @@ export const SiteSettings: React.FC = () => {
     root.style.setProperty('--secondary-color', settings.theme.secondaryColor);
     root.style.setProperty('--background-color', settings.theme.backgroundColor);
     root.style.setProperty('--text-color', settings.theme.textColor);
+    // Variables utilisées par le front
+    root.style.setProperty('--site-header-bg', settings.theme.backgroundColor);
+    root.style.setProperty('--site-footer-bg', '#1a1a1a');
+    root.style.setProperty('--site-text-color', settings.theme.textColor);
+    root.style.setProperty('--site-link-color', settings.theme.primaryColor);
     
     // Déclencher les événements de synchronisation
     window.dispatchEvent(new CustomEvent('siteSettingsUpdated', { detail: settings }));
-    window.dispatchEvent(new Event('websiteConfigChanged'));
+    window.dispatchEvent(new CustomEvent('websiteSettingsUpdated', { detail: websiteSettings }));
+    window.dispatchEvent(new CustomEvent('websiteDesignUpdated', { detail: websiteDesign }));
+    window.dispatchEvent(new CustomEvent('websiteConfigChanged', { detail: websiteConfig }));
+    window.dispatchEvent(new Event('websiteSettingsSaved'));
     window.dispatchEvent(new Event('storage'));
     
     toast.success('Paramètres sauvegardés avec succès');
