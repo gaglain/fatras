@@ -18,6 +18,22 @@ export const DynamicFrontNavigation: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [logoError, setLogoError] = useState(false);
   
+  // Reset l'état d'erreur quand le logo change et préparer un src avec version pour bust le cache
+  useEffect(() => {
+    if (logo) setLogoError(false);
+  }, [logo]);
+
+  const logoSrc = React.useMemo(() => {
+    if (!logo) return '';
+    try {
+      const v = btoa(encodeURIComponent(logo)).slice(0, 8);
+      const sep = logo.includes('?') ? '&' : '?';
+      return `${logo}${sep}v=${v}`;
+    } catch {
+      return logo;
+    }
+  }, [logo]);
+  
   // Utiliser le hook de synchronisation front
   const { forceSync } = useFrontSync();
 
@@ -234,19 +250,22 @@ export const DynamicFrontNavigation: React.FC = () => {
         <div className="flex h-16 items-center justify-between">
           {/* Logo et nom du site */}
           <Link to="/front" className="flex items-center space-x-2">
-            {logo ? (
+            {logo && !logoError ? (
               <img 
-                src={logo} 
-                alt={siteName}
+                key={logoSrc}
+                src={logoSrc}
+                alt={`${siteName} logo`}
                 className="site-logo h-8 w-auto"
                 style={{ maxHeight: '32px' }}
-                onError={(e) => {
+                loading="lazy"
+                decoding="async"
+                onError={() => {
                   console.log('❌ Navigation - Logo loading error');
-                  (e.currentTarget as HTMLImageElement).style.display = 'none';
+                  setLogoError(true);
                 }}
               />
             ) : (
-              <div className="h-8 w-8 rounded bg-blue-600 flex items-center justify-center">
+              <div className="h-8 w-8 rounded bg-blue-600 flex items-center justify-center" aria-label={`${siteName} logo fallback`}>
                 <span className="text-white font-bold text-sm">
                   {siteName.charAt(0).toUpperCase()}
                 </span>
