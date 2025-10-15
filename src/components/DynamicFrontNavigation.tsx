@@ -16,6 +16,7 @@ export const DynamicFrontNavigation: React.FC = () => {
   const [siteName, setSiteName] = useState('MusiConnect');
   const [logo, setLogo] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [logoError, setLogoError] = useState(false);
   
   // Utiliser le hook de synchronisation front
   const { forceSync } = useFrontSync();
