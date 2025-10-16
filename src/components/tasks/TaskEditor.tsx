@@ -44,7 +44,7 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
     due_date: task.due_date ? new Date(task.due_date).toISOString().slice(0, 16) : '',
     priority: task.priority,
     status: task.status,
-    category: task.category || 'general',
+    task_type: task.task_type || 'Autre',
     tags: task.tags || []
   });
 
@@ -67,7 +67,7 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
       due_date: task.due_date ? new Date(task.due_date).toISOString().slice(0, 16) : '',
       priority: task.priority,
       status: task.status,
-      category: task.category || 'general',
+      task_type: task.task_type || 'Autre',
       tags: task.tags || []
     });
     
@@ -95,7 +95,7 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
         artist_id: formData.artist_id && formData.artist_id !== 'none' ? formData.artist_id : null,
         priority: formData.priority,
         status: formData.status,
-        category: formData.category,
+        task_type: formData.task_type,
         due_date: formData.due_date || null,
         tags: formData.tags
       };
@@ -213,21 +213,19 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="category">Type de tâche</Label>
+              <Label htmlFor="taskType">Type de tâche</Label>
               <Select 
-                value={formData.category} 
-                onValueChange={(value) => setFormData({ ...formData, category: value })}
+                value={formData.task_type} 
+                onValueChange={(value) => setFormData({ ...formData, task_type: value as any })}
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="general">Général</SelectItem>
-                  <SelectItem value="booking">Booking</SelectItem>
-                  <SelectItem value="production">Production</SelectItem>
-                  <SelectItem value="communication">Communication</SelectItem>
-                  <SelectItem value="finance">Finance</SelectItem>
-                  <SelectItem value="admin">Administration</SelectItem>
+                  <SelectItem value="Autre">Autre</SelectItem>
+                  <SelectItem value="Email">Email</SelectItem>
+                  <SelectItem value="Telephone">Téléphone</SelectItem>
+                  <SelectItem value="RDV">Rendez-vous</SelectItem>
                 </SelectContent>
               </Select>
             </div>

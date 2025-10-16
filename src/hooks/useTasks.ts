@@ -14,7 +14,6 @@ export interface Task {
   priority: 'low' | 'medium' | 'high' | 'urgent';
   status: 'todo' | 'in_progress' | 'completed' | 'cancelled';
   task_type: 'Email' | 'Telephone' | 'RDV' | 'Autre';
-  category?: string;
   due_date?: string;
   completed_at?: string;
   tags?: string[];
