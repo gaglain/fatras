@@ -93,7 +93,9 @@ export const ContactDetail: React.FC = () => {
   const loadConnections = async () => {
     if (!id) return;
     
+    console.log('🔍 Chargement des connexions pour le contact:', id);
     const data = await getContactConnections(id);
+    console.log('📊 Données de connexions reçues:', data);
     setConnections(data);
   };
 
@@ -143,13 +145,23 @@ export const ContactDetail: React.FC = () => {
   };
 
   const getAllConnections = () => {
-    return [
+    const allConns = [
       ...connections.events?.map((e: any) => ({ ...e, type: 'event' })) || [],
       ...connections.opportunities?.map((o: any) => ({ ...o, type: 'opportunity' })) || [],
       ...connections.quotes?.map((q: any) => ({ ...q, type: 'quote' })) || [],
       ...connections.tasks?.map((t: any) => ({ ...t, type: 'task' })) || [],
       ...connections.roadshow_stops?.map((r: any) => ({ ...r, type: 'roadshow_stop' })) || []
     ].sort((a, b) => new Date(b.date || b.created_at).getTime() - new Date(a.date || a.created_at).getTime());
+    
+    console.log('🎯 getAllConnections - Total connexions:', allConns.length, {
+      events: connections.events?.length || 0,
+      opportunities: connections.opportunities?.length || 0,
+      quotes: connections.quotes?.length || 0,
+      tasks: connections.tasks?.length || 0,
+      roadshow_stops: connections.roadshow_stops?.length || 0
+    });
+    
+    return allConns;
   };
 
   const navigateToEntity = (entity: any) => {
