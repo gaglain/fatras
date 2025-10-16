@@ -33,6 +33,8 @@ export const useEntityConnections = () => {
 
     setLoading(true);
     try {
+      console.log('🔍 Recherche des connexions pour contact:', contactId, 'user:', user.id);
+      
       const [
         eventsRes,
         opportunitiesRes,
@@ -106,6 +108,14 @@ export const useEntityConnections = () => {
           .select('quote_id, role, quotes(id, title, status, created_at)')
           .eq('contact_id', contactId)
       ]);
+
+      console.log('📦 Résultats bruts des requêtes:', {
+        eventsRes: { data: eventsRes.data, error: eventsRes.error },
+        opportunitiesRes: { data: opportunitiesRes.data, error: opportunitiesRes.error },
+        quotesRes: { data: quotesRes.data, error: quotesRes.error },
+        tasksRes: { data: tasksRes.data, error: tasksRes.error },
+        taskEntitiesRes: { data: taskEntitiesRes.data, error: taskEntitiesRes.error }
+      });
 
       const connections: ConnectedEntities = {
         contacts: [],
