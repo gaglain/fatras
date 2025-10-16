@@ -3506,6 +3506,10 @@ export type Database = {
         Args: { campaign_id: string; event_type: string }
         Returns: undefined
       }
+      update_email_contact_links: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       update_user_profile_data: {
         Args: { profile_data: Json; profile_user_id: string }
         Returns: Json
