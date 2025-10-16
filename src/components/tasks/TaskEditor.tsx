@@ -44,6 +44,7 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
     due_date: task.due_date ? new Date(task.due_date).toISOString().slice(0, 16) : '',
     priority: task.priority,
     status: task.status,
+    category: task.category || 'general',
     tags: task.tags || []
   });
 
@@ -66,6 +67,7 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
       due_date: task.due_date ? new Date(task.due_date).toISOString().slice(0, 16) : '',
       priority: task.priority,
       status: task.status,
+      category: task.category || 'general',
       tags: task.tags || []
     });
     
@@ -93,6 +95,7 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
         artist_id: formData.artist_id && formData.artist_id !== 'none' ? formData.artist_id : null,
         priority: formData.priority,
         status: formData.status,
+        category: formData.category,
         due_date: formData.due_date || null,
         tags: formData.tags
       };
@@ -190,22 +193,44 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="status">Statut</Label>
-            <Select 
-              value={formData.status} 
-              onValueChange={(value) => setFormData({ ...formData, status: value as any })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todo">À faire</SelectItem>
-                <SelectItem value="in_progress">En cours</SelectItem>
-                <SelectItem value="completed">Terminée</SelectItem>
-                <SelectItem value="cancelled">Annulée</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="status">Statut</Label>
+              <Select 
+                value={formData.status} 
+                onValueChange={(value) => setFormData({ ...formData, status: value as any })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todo">À faire</SelectItem>
+                  <SelectItem value="in_progress">En cours</SelectItem>
+                  <SelectItem value="completed">Terminée</SelectItem>
+                  <SelectItem value="cancelled">Annulée</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="category">Type de tâche</Label>
+              <Select 
+                value={formData.category} 
+                onValueChange={(value) => setFormData({ ...formData, category: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="general">Général</SelectItem>
+                  <SelectItem value="booking">Booking</SelectItem>
+                  <SelectItem value="production">Production</SelectItem>
+                  <SelectItem value="communication">Communication</SelectItem>
+                  <SelectItem value="finance">Finance</SelectItem>
+                  <SelectItem value="admin">Administration</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="space-y-2">
