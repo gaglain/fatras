@@ -50,29 +50,25 @@ export const useEntityConnections = () => {
         supabase
           .from('events')
           .select('id, title, status, start_date')
-          .eq('contact_id', contactId)
-          .eq('user_id', user.id),
+          .eq('contact_id', contactId),
         
         // Opportunités liées directement
         supabase
           .from('opportunities')
           .select('id, title, status, date')
-          .eq('contact_id', contactId)
-          .eq('user_id', user.id),
+          .eq('contact_id', contactId),
         
         // Devis liés directement
         supabase
           .from('quotes')
           .select('id, title, status, created_at')
-          .eq('contact_id', contactId)
-          .eq('user_id', user.id),
+          .eq('contact_id', contactId),
         
         // Tâches liées directement
         supabase
           .from('tasks')
           .select('id, title, status, due_date')
-          .eq('contact_id', contactId)
-          .eq('user_id', user.id),
+          .eq('contact_id', contactId),
         
         // Tâches via task_entities
         supabase
