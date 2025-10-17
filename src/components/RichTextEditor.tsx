@@ -90,8 +90,13 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const handleInput = useCallback(() => {
     if (isComposing) return;
     if (editorRef.current) {
-      onChange(editorRef.current.innerHTML);
-      makeImagesResizable();
+      // Petit délai pour permettre au DOM de se mettre à jour
+      requestAnimationFrame(() => {
+        if (editorRef.current) {
+          onChange(editorRef.current.innerHTML);
+          makeImagesResizable();
+        }
+      });
     }
   }, [onChange, makeImagesResizable, isComposing]);
 

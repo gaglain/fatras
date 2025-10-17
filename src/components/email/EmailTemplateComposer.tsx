@@ -17,6 +17,8 @@ import { toast } from 'sonner';
 import { useEmailTemplates } from '@/hooks/useEmailTemplates';
 import { generateEmailSignature } from '@/utils/emailSignature';
 import { useUser } from '@/contexts/UserContext';
+import { VariableInserter } from './VariableInserter';
+import { replaceEmailVariables } from '@/utils/emailVariables';
 
 interface EmailTemplate {
   id: string;
@@ -33,11 +35,17 @@ interface EmailTemplate {
 interface EmailTemplateComposerProps {
   defaultRecipient?: string;
   defaultSubject?: string;
+  contactData?: any;
+  eventData?: any;
+  quoteData?: any;
 }
 
 export const EmailTemplateComposer: React.FC<EmailTemplateComposerProps> = ({ 
   defaultRecipient = '', 
-  defaultSubject = '' 
+  defaultSubject = '',
+  contactData,
+  eventData,
+  quoteData
 }) => {
   const { user } = useAuth();
   const { currentUser } = useUser();
@@ -144,9 +152,21 @@ export const EmailTemplateComposer: React.FC<EmailTemplateComposerProps> = ({
     try {
       setUploading(true);
       
+      // Remplacer les variables par les valeurs réelles
+      let processedContent = replaceEmailVariables(content, {
+        contact: contactData,
+        event: eventData,
+        quote: quoteData
+      });
+      let processedSubject = replaceEmailVariables(subject, {
+        contact: contactData,
+        event: eventData,
+        quote: quoteData
+      });
+      
       // Ajouter la signature si demandée
       const signature = includeSignature && currentUser ? generateEmailSignature(currentUser) : '';
-      const finalContent = signature ? `${content}\n\n${signature}` : content;
+      const finalContent = signature ? `${processedContent}\n\n${signature}` : processedContent;
       
       const htmlContent = `
         <div style="font-family: Arial, sans-serif; line-height: 1.6;">
@@ -176,15 +196,15 @@ export const EmailTemplateComposer: React.FC<EmailTemplateComposerProps> = ({
       if (selectedAccount) {
         await sendViaNylas(selectedAccount, {
           to,
-          subject,
-          content,
+          subject: processedSubject,
+          content: finalContent,
           html: htmlContent,
           attachments: attachmentUrls,
         });
       } else {
         await sendEmail({
           to: [to],
-          subject,
+          subject: processedSubject,
           html: htmlContent,
           from: fromName || 'Application',
           attachments: attachmentUrls,
@@ -334,7 +354,10 @@ export const EmailTemplateComposer: React.FC<EmailTemplateComposerProps> = ({
 
         {/* Contenu */}
         <div>
-          <Label htmlFor="content">Message *</Label>
+          <div className="flex items-center justify-between mb-2">
+            <Label htmlFor="content">Message *</Label>
+            <VariableInserter onInsert={(variable) => setContent(prev => prev + variable)} />
+          </div>
           <RichTextEditor
             value={content}
             onChange={setContent}
