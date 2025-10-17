@@ -33,6 +33,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const editorRef = useRef<HTMLDivElement>(null);
   const { uploadImage, isUploading } = useFileUpload();
   const [imageUploading, setImageUploading] = useState(false);
+  const [isComposing, setIsComposing] = useState(false);
 
   const execCommand = useCallback((command: string, value?: string) => {
     document.execCommand(command, false, value);
@@ -87,11 +88,12 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   }, [onChange]);
 
   const handleInput = useCallback(() => {
+    if (isComposing) return;
     if (editorRef.current) {
       onChange(editorRef.current.innerHTML);
       makeImagesResizable();
     }
-  }, [onChange, makeImagesResizable]);
+  }, [onChange, makeImagesResizable, isComposing]);
 
   const handleImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -220,13 +222,13 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         onInput={handleInput}
         dangerouslySetInnerHTML={{ __html: value }}
         onKeyDown={(e) => {
+          const anyEvent: any = e as any;
+          if (anyEvent.isComposing || (e.nativeEvent as any).isComposing || isComposing) return;
           if (e.key === 'Enter') {
             e.preventDefault();
             if (e.shiftKey) {
-              // Shift+Enter = simple line break
               document.execCommand('insertLineBreak');
             } else {
-              // Enter = new paragraph
               document.execCommand('insertParagraph');
             }
             if (editorRef.current) {
@@ -242,6 +244,11 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           !value && "empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground"
         )}
         data-placeholder={placeholder}
+        onCompositionStart={() => setIsComposing(true)}
+        onCompositionEnd={() => {
+          setIsComposing(false);
+          if (editorRef.current) onChange(editorRef.current.innerHTML);
+        }}
         style={{
           wordBreak: 'break-word',
           whiteSpace: 'pre-wrap'

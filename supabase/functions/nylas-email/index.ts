@@ -671,10 +671,71 @@ async function sendEmail(baseUrl: string, apiKey: string, supabase: any, userId:
             }),
           });
 
-          if (!retryResp.ok) {
-            const retryErr = await retryResp.text();
-            throw new Error(`Failed to send after grant update: ${retryErr}`);
+      if (!retryResp.ok) {
+        const retryErr = await retryResp.text();
+        // Final OVH fallback: switch to ssl0.ovh.net:465 and retry once
+        if (/ovh/i.test(String(smtp_host)) && !/ssl0\.ovh\.net/i.test(String(smtp_host))) {
+          try {
+            const cfg2 = account.imap_config as any;
+            const imap_host2 = /ovh/i.test(String(imap_host)) ? 'ssl0.ovh.net' : String(imap_host);
+            const smtp_host2 = 'ssl0.ovh.net';
+            const smtp_port2 = 465;
+            const username2 = cfg2.email ?? account.email;
+            const password2 = cfg2.password;
+            const settings2 = {
+              imap_host: imap_host2,
+              imap_port: imap_port,
+              imap_username: username2,
+              imap_password: password2,
+              smtp_host: smtp_host2,
+              smtp_port: smtp_port2,
+              smtp_username: username2,
+              smtp_password: password2,
+              smtp_security: 'ssl',
+            };
+            await fetch(`${baseUrl}/grants/${account.access_token}`, {
+              method: 'PUT',
+              headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ settings: settings2 }),
+            });
+            const finalResp = await fetch(`${baseUrl}/grants/${account.access_token}/messages/send`, {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                to: [{ email: email.to }],
+                subject: email.subject,
+                body: email.html || email.content,
+                from: [{ email: account.email, name: account.email.split('@')[0] }],
+                reply_to: [{ email: account.email }],
+              }),
+            });
+            if (finalResp.ok) {
+              const finalData = await finalResp.json();
+              await supabase.from('emails').insert({
+                user_id: userId,
+                message_id: finalData.data?.id,
+                direction: 'sent',
+                from_email: account.email,
+                from_name: account.email.split('@')[0],
+                to_email: email.to,
+                subject: email.subject,
+                content: email.content,
+                html_content: email.html,
+                status: 'delivered',
+                provider: 'nylas',
+                sent_at: new Date().toISOString()
+              });
+              return new Response(
+                JSON.stringify({ success: true, messageId: finalData.data?.id, message: 'Email sent successfully' }),
+                { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+              );
+            }
+          } catch (_) {
+            // fall through to error
           }
+        }
+        throw new Error(`Failed to send after grant update: ${retryErr}`);
+      }
 
           const retryData = await retryResp.json();
           await supabase.from('emails').insert({

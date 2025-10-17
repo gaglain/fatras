@@ -53,11 +53,11 @@ export const ContactDetail: React.FC = () => {
   const [defaultActiveTab, setDefaultActiveTab] = useState('overview');
 
   useEffect(() => {
-    if (id && user?.id) {
+    if (id) {
       loadContact();
       loadConnections();
     }
-  }, [id, user?.id]);
+  }, [id]);
 
   // Handle URL params for composing emails from tasks
   useEffect(() => {
@@ -69,15 +69,14 @@ export const ContactDetail: React.FC = () => {
   }, [searchParams]);
 
   const loadContact = async () => {
-    if (!id || !user) return;
+    if (!id) return;
     
     try {
       const { data, error } = await supabase
         .from('contacts')
         .select('*')
         .eq('id', id)
-        .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       setContact(data);
