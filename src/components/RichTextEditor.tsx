@@ -141,10 +141,14 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
   const fontSizes = ['12px', '14px', '16px', '18px', '20px', '24px'];
 
-  // Initialize resizable images on mount and when value changes
+  // Initialize editor content and resizable images on mount and when value changes
   React.useEffect(() => {
+    if (!editorRef.current) return;
+    if (!isComposing && editorRef.current.innerHTML !== (value || '')) {
+      editorRef.current.innerHTML = value || '';
+    }
     makeImagesResizable();
-  }, [value, makeImagesResizable]);
+  }, [value, makeImagesResizable, isComposing]);
 
   return (
     <div className={cn("border border-border rounded-lg overflow-hidden bg-background", className)}>
@@ -225,7 +229,6 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         contentEditable
         suppressContentEditableWarning
         onInput={handleInput}
-        dangerouslySetInnerHTML={{ __html: value }}
         onKeyDown={(e) => {
           const anyEvent: any = e as any;
           if (anyEvent.isComposing || (e.nativeEvent as any).isComposing || isComposing) return;

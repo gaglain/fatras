@@ -29,7 +29,17 @@ export const useEntityConnections = () => {
 
   // Obtenir toutes les entités liées à un contact
   const getContactConnections = async (contactId: string): Promise<ConnectedEntities> => {
-    if (!user) return {} as ConnectedEntities;
+    if (!user) {
+      return {
+        contacts: [],
+        events: [],
+        opportunities: [],
+        quotes: [],
+        tasks: [],
+        artists: [],
+        roadshow_stops: []
+      } as ConnectedEntities;
+    }
 
     setLoading(true);
     try {
