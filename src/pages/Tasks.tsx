@@ -5,14 +5,16 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CheckSquare, Search, Plus, Trash, Upload } from 'lucide-react';
+import { CheckSquare, Search, Plus, Trash, Upload, LayoutGrid, List } from 'lucide-react';
 import { toast } from 'sonner';
 import { TaskCreator } from '@/components/tasks/TaskCreator';
 import { TaskCSVImporter } from '@/components/tasks/TaskCSVImporter';
 import { TaskList } from '@/components/tasks/TaskList';
+import { CompactTaskView } from '@/components/tasks/CompactTaskView';
 import { useUser } from '@/contexts/UserContext';
-import { useTasks } from '@/hooks/useTasks';
+import { useTasks, Task as TaskType } from '@/hooks/useTasks';
 import { EmailComposer } from '@/components/email/EmailComposer';
+import { TaskEditor } from '@/components/tasks/TaskEditor';
 import { NotificationTest } from '@/components/NotificationTest';
 
 interface Task {
@@ -36,6 +38,8 @@ export const Tasks: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'dueDate' | 'priority' | 'status' | 'createdAt'>('dueDate');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [viewMode, setViewMode] = useState<'list' | 'compact'>('compact');
+  const [selectedTask, setSelectedTask] = useState<TaskType | null>(null);
   const [emailComposer, setEmailComposer] = useState<{
     isOpen: boolean;
     to: string;
@@ -51,8 +55,6 @@ export const Tasks: React.FC = () => {
   const { tasks, loading, updateTask, deleteTask } = useTasks();
 
   const handleTaskCreated = async () => {
-    // Recharger les tâches après création
-    window.location.reload();
     toast.success('Tâche créée avec succès');
   };
 
@@ -135,9 +137,29 @@ export const Tasks: React.FC = () => {
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold">Gestion des Tâches</h1>
-          <p className="text-muted-foreground mt-1 text-sm lg:text-base">Organisez et suivez toutes vos tâches</p>
+          <p className="text-muted-foreground mt-1 text-sm lg:text-base">
+            {todoTasks.length} à faire • {inProgressTasks.length} en cours • {completedTasks.length} terminées
+          </p>
         </div>
-        <TaskCreator onTaskCreated={handleTaskCreated} />
+        <div className="flex gap-2">
+          <Button
+            variant={viewMode === 'compact' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setViewMode('compact')}
+          >
+            <LayoutGrid className="h-4 w-4 mr-2" />
+            Compact
+          </Button>
+          <Button
+            variant={viewMode === 'list' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setViewMode('list')}
+          >
+            <List className="h-4 w-4 mr-2" />
+            Liste
+          </Button>
+          <TaskCreator onTaskCreated={handleTaskCreated} />
+        </div>
       </div>
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
@@ -213,19 +235,26 @@ export const Tasks: React.FC = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="all" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="all">Toutes ({filteredTasks.length})</TabsTrigger>
-          <TabsTrigger value="todo">À faire ({todoTasks.length})</TabsTrigger>
-          <TabsTrigger value="in_progress">En cours ({inProgressTasks.length})</TabsTrigger>
-          <TabsTrigger value="completed">Terminées ({completedTasks.length})</TabsTrigger>
-          <TabsTrigger value="import" className="flex items-center gap-1">
-            <Upload className="h-3 w-3" />
-            Import CSV
-          </TabsTrigger>
-        </TabsList>
+      {viewMode === 'compact' ? (
+        <CompactTaskView
+          tasks={filteredTasks}
+          onUpdateStatus={updateTaskStatus}
+          onTaskClick={(task) => setSelectedTask(task)}
+        />
+      ) : (
+        <Tabs defaultValue="all" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="all">Toutes ({filteredTasks.length})</TabsTrigger>
+            <TabsTrigger value="todo">À faire ({todoTasks.length})</TabsTrigger>
+            <TabsTrigger value="in_progress">En cours ({inProgressTasks.length})</TabsTrigger>
+            <TabsTrigger value="completed">Terminées ({completedTasks.length})</TabsTrigger>
+            <TabsTrigger value="import" className="flex items-center gap-1">
+              <Upload className="h-3 w-3" />
+              Import CSV
+            </TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="all">
+          <TabsContent value="all">
           <TaskList 
             tasks={filteredTasks.map(task => ({
               ...task,
@@ -309,10 +338,20 @@ export const Tasks: React.FC = () => {
           />
         </TabsContent>
         
-        <TabsContent value="import">
-          <TaskCSVImporter />
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="import">
+            <TaskCSVImporter />
+          </TabsContent>
+        </Tabs>
+      )}
+
+      {selectedTask && (
+        <TaskEditor
+          task={selectedTask}
+          isOpen={!!selectedTask}
+          onClose={() => setSelectedTask(null)}
+          onTaskUpdated={() => setSelectedTask(null)}
+        />
+      )}
 
       <EmailComposer
         isOpen={emailComposer.isOpen}
