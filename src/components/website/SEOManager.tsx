@@ -264,11 +264,43 @@ export const SEOManager: React.FC = () => {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium mb-2">Image Open Graph</label>
-                  <Input
-                    value={seoSettings.ogImage}
-                    onChange={(e) => setSeoSettings(prev => ({ ...prev, ogImage: e.target.value }))}
-                    placeholder="URL de l'image pour les réseaux sociaux"
-                  />
+                  <div className="space-y-2">
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          try {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              setSeoSettings(prev => ({ ...prev, ogImage: reader.result as string }));
+                            };
+                            reader.readAsDataURL(file);
+                          } catch (error) {
+                            console.error('Erreur upload image:', error);
+                          }
+                        }
+                      }}
+                    />
+                    {seoSettings.ogImage && (
+                      <div className="relative w-full max-w-md">
+                        <img 
+                          src={seoSettings.ogImage} 
+                          alt="Open Graph preview" 
+                          className="w-full h-auto rounded border"
+                        />
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => setSeoSettings(prev => ({ ...prev, ogImage: '' }))}
+                          className="absolute top-2 right-2"
+                        >
+                          Supprimer
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                   <p className="text-xs text-gray-500 mt-1">Format recommandé: 1200x630px</p>
                 </div>
                 

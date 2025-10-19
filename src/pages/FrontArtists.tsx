@@ -16,37 +16,29 @@ export const FrontArtists: React.FC = () => {
   const loadArtists = async () => {
     setLoading(true);
     try {
-      // Charger depuis localStorage d'abord
-      const savedArtists = localStorage.getItem('backoffice_artists');
-      if (savedArtists) {
-        const parsedArtists = JSON.parse(savedArtists);
-        setArtists(parsedArtists || []);
-      } else {
-        // Données d'exemple si rien dans localStorage
-        setArtists([
-          { 
-            id: '1', 
-            name: 'Spectacle Jazz Fusion', 
-            genre: 'Jazz', 
-            bio: 'Un spectacle unique mêlant jazz moderne et fusion électronique.',
-            photo_url: '/placeholder.svg'
-          },
-          { 
-            id: '2', 
-            name: 'Concert Classique', 
-            genre: 'Classique', 
-            bio: 'Soirée de musique classique avec orchestre symphonique.',
-            photo_url: '/placeholder.svg'
-          },
-          { 
-            id: '3', 
-            name: 'Show Rock Énergie', 
-            genre: 'Rock', 
-            bio: 'Concert rock avec une énergie débordante et des guitares électriques.',
-            photo_url: '/placeholder.svg'
-          }
-        ]);
-      }
+      // Charger depuis Supabase (centralized_artists)
+      const { data, error } = await supabase
+        .from('centralized_artists')
+        .select('*')
+        .eq('status', 'active')
+        .order('name');
+
+      if (error) throw error;
+      
+      // Mapper les données pour correspondre au format attendu
+      const mappedArtists = (data || []).map(artist => ({
+        id: artist.id,
+        name: artist.name,
+        genre: artist.genre,
+        bio: artist.bio || artist.short_description,
+        photo_url: artist.image || artist.logo_url || '/placeholder.svg',
+        website: artist.website,
+        contact_email: artist.contact_email,
+        contact_phone: artist.contact_phone
+      }));
+      
+      setArtists(mappedArtists);
+      console.log('✅ Artists loaded from Supabase:', mappedArtists.length);
     } catch (error) {
       console.error('❌ Error loading artists:', error);
       setArtists([]);

@@ -45,12 +45,12 @@ export const CompactTaskView: React.FC<CompactTaskViewProps> = ({
     return (
       <div
         key={task.id}
-        className={`inline-flex items-center justify-between py-1.5 px-2.5 hover:bg-muted/50 rounded cursor-pointer transition-colors ${
+        className={`flex items-center justify-between py-2 px-3 hover:bg-muted/50 rounded cursor-pointer transition-colors border-b last:border-b-0 ${
           isOverdue ? 'bg-red-50/50' : ''
         }`}
         onClick={() => onTaskClick(task)}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -60,30 +60,46 @@ export const CompactTaskView: React.FC<CompactTaskViewProps> = ({
             className="shrink-0"
           >
             {task.status === 'completed' ? (
-              <CheckCircle2 className="h-5 w-5 text-green-600" />
+              <CheckCircle2 className="h-4 w-4 text-green-600" />
             ) : (
-              <Circle className="h-5 w-5 text-muted-foreground hover:text-primary" />
+              <Circle className="h-4 w-4 text-muted-foreground hover:text-primary" />
             )}
           </button>
           
-          <div className="min-w-0">
+          <div className="flex-1 min-w-0">
             <p className={`text-sm font-medium truncate ${task.status === 'completed' ? 'line-through text-muted-foreground' : ''}`}>
               {task.title}
             </p>
-            {task.due_date && (
-              <p className="text-xs text-muted-foreground flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                {new Date(task.due_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
-              </p>
-            )}
           </div>
+        </div>
+        
+        <div className="flex items-center gap-2 shrink-0">
+          <span className={`text-xs px-2 py-0.5 rounded ${
+            task.status === 'todo' ? 'bg-gray-100 text-gray-800' :
+            task.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+            task.status === 'completed' ? 'bg-green-100 text-green-800' :
+            'bg-red-100 text-red-800'
+          }`}>
+            {task.status === 'todo' ? 'À faire' :
+             task.status === 'in_progress' ? 'En cours' :
+             task.status === 'completed' ? 'Terminée' : 'Annulée'}
+          </span>
           
-          <div className="flex items-center gap-2 shrink-0">
-            {isOverdue && (
-              <AlertCircle className="h-4 w-4 text-red-500" />
-            )}
-            <span className={`text-xl ${getPriorityColor(task.priority)}`}>•</span>
-          </div>
+          {task.task_type && (
+            <span className="text-xs text-muted-foreground">{task.task_type}</span>
+          )}
+          
+          {task.due_date && (
+            <span className="text-xs text-muted-foreground">
+              {new Date(task.due_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+            </span>
+          )}
+          
+          {isOverdue && (
+            <AlertCircle className="h-4 w-4 text-red-500" />
+          )}
+          
+          <span className={`text-xl ${getPriorityColor(task.priority)}`}>•</span>
         </div>
       </div>
     );
@@ -104,11 +120,13 @@ export const CompactTaskView: React.FC<CompactTaskViewProps> = ({
             </p>
           )}
         </CardHeader>
-        <CardContent className="flex flex-wrap gap-2 max-h-96 overflow-y-auto">
+        <CardContent className="p-0 max-h-96 overflow-y-auto">
           {todoTasks.length === 0 ? (
-            <p className="text-xs text-muted-foreground py-4 text-center w-full">Aucune tâche</p>
+            <p className="text-xs text-muted-foreground py-4 text-center">Aucune tâche</p>
           ) : (
-            todoTasks.map(renderTaskRow)
+            <div className="divide-y">
+              {todoTasks.map(renderTaskRow)}
+            </div>
           )}
         </CardContent>
       </Card>
@@ -120,11 +138,13 @@ export const CompactTaskView: React.FC<CompactTaskViewProps> = ({
             <Badge variant="secondary" className="ml-2">{inProgressTasks.length}</Badge>
           </CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-wrap gap-2 max-h-96 overflow-y-auto">
+        <CardContent className="p-0 max-h-96 overflow-y-auto">
           {inProgressTasks.length === 0 ? (
-            <p className="text-xs text-muted-foreground py-4 text-center w-full">Aucune tâche</p>
+            <p className="text-xs text-muted-foreground py-4 text-center">Aucune tâche</p>
           ) : (
-            inProgressTasks.map(renderTaskRow)
+            <div className="divide-y">
+              {inProgressTasks.map(renderTaskRow)}
+            </div>
           )}
         </CardContent>
       </Card>
@@ -136,11 +156,13 @@ export const CompactTaskView: React.FC<CompactTaskViewProps> = ({
             <Badge variant="secondary" className="ml-2">{completedToday.length}</Badge>
           </CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-wrap gap-2 max-h-96 overflow-y-auto">
+        <CardContent className="p-0 max-h-96 overflow-y-auto">
           {completedToday.length === 0 ? (
-            <p className="text-xs text-muted-foreground py-4 text-center w-full">Aucune tâche</p>
+            <p className="text-xs text-muted-foreground py-4 text-center">Aucune tâche</p>
           ) : (
-            completedToday.map(renderTaskRow)
+            <div className="divide-y">
+              {completedToday.map(renderTaskRow)}
+            </div>
           )}
         </CardContent>
       </Card>

@@ -40,6 +40,31 @@ export const useWebsiteSEO = () => {
       const user = await supabase.auth.getUser();
       if (!user.data.user) throw new Error('Non authentifié');
 
+      // Upload image to storage if it's a base64
+      let ogImageUrl = settings.og_image;
+      if (ogImageUrl && ogImageUrl.startsWith('data:image')) {
+        const base64Data = ogImageUrl.split(',')[1];
+        const buffer = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+        const fileName = `og-image-${Date.now()}.png`;
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('website-images')
+          .upload(fileName, buffer, {
+            contentType: 'image/png',
+            upsert: true
+          });
+
+        if (uploadError) throw uploadError;
+        
+        const { data: { publicUrl } } = supabase.storage
+          .from('website-images')
+          .getPublicUrl(fileName);
+        
+        ogImageUrl = publicUrl;
+      }
+
+      const settingsToSave = { ...settings, og_image: ogImageUrl };
+
       const { data: existing } = await supabase
         .from('website_seo')
         .select('id')
@@ -49,14 +74,14 @@ export const useWebsiteSEO = () => {
       if (existing) {
         result = await supabase
           .from('website_seo')
-          .update(settings)
+          .update(settingsToSave)
           .eq('id', existing.id)
           .select()
           .single();
       } else {
         result = await supabase
           .from('website_seo')
-          .insert([{ ...settings, user_id: user.data.user.id }])
+          .insert([{ ...settingsToSave, user_id: user.data.user.id }])
           .select()
           .single();
       }
