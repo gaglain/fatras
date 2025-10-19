@@ -56,25 +56,25 @@ export const useEntityConnections = () => {
         opportunitiesMapRes,
         quotesMapRes
       ] = await Promise.all([
-        // Événements liés directement
+        // Événements liés directement (sans filtre user_id)
         supabase
           .from('events')
           .select('id, title, status, start_date')
           .eq('contact_id', contactId),
         
-        // Opportunités liées directement
+        // Opportunités liées directement (sans filtre user_id)
         supabase
           .from('opportunities')
           .select('id, title, status, date')
           .eq('contact_id', contactId),
         
-        // Devis liés directement
+        // Devis liés directement (sans filtre user_id)
         supabase
           .from('quotes')
           .select('id, title, status, created_at')
           .eq('contact_id', contactId),
         
-        // Tâches liées directement
+        // Tâches liées directement (sans filtre user_id)
         supabase
           .from('tasks')
           .select('id, title, status, due_date')
