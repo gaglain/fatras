@@ -43,6 +43,7 @@ import { Application } from "./pages/Application";
 import { Quotes } from "./pages/Quotes";
 import { RolePermissions } from "./pages/RolePermissions";
 import { Layout } from "./components/Layout";
+import { FontManager } from "./components/website/FontManager";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { UserProvider } from "./contexts/UserContext";
 import { FrontLayout } from "./components/FrontLayout";
@@ -169,9 +170,10 @@ const App = () => {
 <Route path="/agenda" element={<ProtectedRoute><Layout><Agenda /></Layout></ProtectedRoute>} />
 <Route path="/merchandise" element={<ProtectedRoute><Layout><Merchandise /></Layout></ProtectedRoute>} />
 <Route path="/merchandise-backoffice" element={<ProtectedRoute><Layout><MerchandiseBackoffice /></Layout></ProtectedRoute>} />
-<Route path="/website" element={<ProtectedRoute><Website /></ProtectedRoute>} />
-<Route path="/website-manager" element={<ProtectedRoute><WebsiteManager /></ProtectedRoute>} />
-<Route path="/website-backoffice" element={<ProtectedRoute><WebsiteBackoffice /></ProtectedRoute>} />
+                <Route path="/website" element={<ProtectedRoute><Website /></ProtectedRoute>} />
+                <Route path="/website-manager" element={<ProtectedRoute><WebsiteManager /></ProtectedRoute>} />
+                <Route path="/website-backoffice" element={<ProtectedRoute><WebsiteBackoffice /></ProtectedRoute>} />
+                <Route path="/website/fonts" element={<ProtectedRoute><Layout><FontManager /></Layout></ProtectedRoute>} />
 <Route path="/application" element={<ProtectedRoute><Layout><Application /></Layout></ProtectedRoute>} />
 <Route path="/quotes" element={<ProtectedRoute><Layout><Quotes /></Layout></ProtectedRoute>} />
                 <Route path="/preferences" element={<ProtectedRoute><Layout><Preferences /></Layout></ProtectedRoute>} />

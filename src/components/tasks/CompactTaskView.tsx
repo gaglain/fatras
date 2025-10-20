@@ -85,7 +85,9 @@ export const CompactTaskView: React.FC<CompactTaskViewProps> = ({
                 </Badge>
                 
                 {task.task_type && (
-                  <TaskExecuteButton task={task} />
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <TaskExecuteButton task={task} />
+                  </div>
                 )}
                 
                 {task.due_date && (

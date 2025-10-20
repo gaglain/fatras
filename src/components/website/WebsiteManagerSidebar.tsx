@@ -42,6 +42,12 @@ export const WebsiteManagerSidebar: React.FC = () => {
       path: '/website'
     },
     {
+      id: 'fonts',
+      label: 'Typographie',
+      icon: Settings,
+      path: '/website/fonts'
+    },
+    {
       id: 'settings',
       label: 'Paramètres',
       icon: Settings,
