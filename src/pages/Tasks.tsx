@@ -123,10 +123,38 @@ export const Tasks: React.FC = () => {
     return matchesSearch && matchesUser && matchesCategory && matchesDate;
   });
 
-  // Séparer les tâches par statut APRÈS le filtrage
-  const todoTasks = filteredTasks.filter(task => task.status === 'todo');
-  const inProgressTasks = filteredTasks.filter(task => task.status === 'in_progress');
-  const completedTasks = filteredTasks.filter(task => task.status === 'completed');
+  // Appliquer le tri aux tâches filtrées
+  const sortedTasks = [...filteredTasks].sort((a, b) => {
+    let compareValue = 0;
+    
+    switch (sortBy) {
+      case 'dueDate':
+        const dateA = a.due_date ? new Date(a.due_date).getTime() : Infinity;
+        const dateB = b.due_date ? new Date(b.due_date).getTime() : Infinity;
+        compareValue = dateA - dateB;
+        break;
+      case 'priority':
+        const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3 };
+        compareValue = priorityOrder[a.priority] - priorityOrder[b.priority];
+        break;
+      case 'status':
+        const statusOrder = { todo: 0, in_progress: 1, completed: 2, cancelled: 3 };
+        compareValue = statusOrder[a.status] - statusOrder[b.status];
+        break;
+      case 'createdAt':
+        const createdA = new Date(a.created_at).getTime();
+        const createdB = new Date(b.created_at).getTime();
+        compareValue = createdA - createdB;
+        break;
+    }
+    
+    return sortOrder === 'asc' ? compareValue : -compareValue;
+  });
+
+  // Séparer les tâches par statut APRÈS le filtrage et tri
+  const todoTasks = sortedTasks.filter(task => task.status === 'todo');
+  const inProgressTasks = sortedTasks.filter(task => task.status === 'in_progress');
+  const completedTasks = sortedTasks.filter(task => task.status === 'completed');
 
   if (loading) {
     return <div className="flex justify-center items-center h-64">Chargement...</div>;
@@ -237,9 +265,10 @@ export const Tasks: React.FC = () => {
 
       {viewMode === 'compact' ? (
         <CompactTaskView
-          tasks={filteredTasks}
+          tasks={sortedTasks}
           onUpdateStatus={updateTaskStatus}
           onTaskClick={(task) => setSelectedTask(task)}
+          onDeleteTask={handleDeleteTask}
         />
       ) : (
         <Tabs defaultValue="all" className="space-y-6">

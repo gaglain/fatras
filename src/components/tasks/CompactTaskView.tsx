@@ -1,19 +1,22 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Circle } from 'lucide-react';
+import { CheckCircle2, Circle, Trash } from 'lucide-react';
 import { Task } from '@/hooks/useTasks';
+import { TaskExecuteButton } from './TaskExecuteButton';
 
 interface CompactTaskViewProps {
   tasks: Task[];
   onUpdateStatus: (taskId: string, status: Task['status']) => void;
   onTaskClick: (task: Task) => void;
+  onDeleteTask?: (taskId: string) => void;
 }
 
 export const CompactTaskView: React.FC<CompactTaskViewProps> = ({
   tasks,
   onUpdateStatus,
-  onTaskClick
+  onTaskClick,
+  onDeleteTask
 }) => {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -82,7 +85,7 @@ export const CompactTaskView: React.FC<CompactTaskViewProps> = ({
                 </Badge>
                 
                 {task.task_type && (
-                  <span className="text-xs text-muted-foreground">{task.task_type}</span>
+                  <TaskExecuteButton task={task} />
                 )}
                 
                 {task.due_date && (
@@ -100,6 +103,20 @@ export const CompactTaskView: React.FC<CompactTaskViewProps> = ({
                   className="h-7 px-2"
                 >
                   Modifier
+                </Button>
+                
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (window.confirm('Voulez-vous vraiment supprimer cette tâche ?')) {
+                      onDeleteTask?.(task.id);
+                    }
+                  }}
+                  className="h-7 px-2 text-destructive hover:text-destructive"
+                >
+                  <Trash className="h-4 w-4" />
                 </Button>
               </div>
             </div>

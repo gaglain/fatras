@@ -18,6 +18,9 @@ export const EmailNotificationCenter: React.FC = () => {
 
   const unreadCount = getUnreadCount();
 
+  // Les notifications sont déjà affichées en temps réel via le hook useEmailNotifications
+  // qui utilise un subscription Supabase Realtime et affiche un toast pour chaque nouveau email
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
