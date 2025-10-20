@@ -6,7 +6,7 @@ import { AppSidebar } from '@/components/AppSidebar';
 import { BackOfficeHeader } from '@/components/BackOfficeHeader';
 import { ChatWidget } from '@/components/ChatWidget';
 import { TaskNotificationBanner } from '@/components/TaskNotificationBanner';
-import { EmailNotificationCenter } from '@/components/EmailNotificationCenter';
+import { UnifiedNotificationCenter } from '@/components/UnifiedNotificationCenter';
 
 const adminRoutes = [
   '/admin', '/dashboard', '/artists', '/events', '/agenda', '/contacts',
@@ -45,9 +45,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
 
         <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-2 border-b">
+          <div className="border-b">
             <BackOfficeHeader />
-            <EmailNotificationCenter />
           </div>
           
           <main className="flex-1 overflow-auto p-2 sm:p-4 lg:p-6">

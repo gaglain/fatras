@@ -10,10 +10,9 @@ import { useCompanySettings } from '@/hooks/useCompanySettings';
 import { useUser } from '@/contexts/UserContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { UserProfile } from './UserProfile';
-import { NotificationCenter } from './NotificationCenter';
+import { UnifiedNotificationCenter } from './UnifiedNotificationCenter';
 import { AppSidebar } from '@/components/AppSidebar';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { useNotifications } from '@/hooks/useNotifications';
 
 export const BackOfficeHeader: React.FC = () => {
   const { theme } = useTheme();
@@ -30,15 +29,9 @@ export const BackOfficeHeader: React.FC = () => {
   }
   
 const [showUserProfile, setShowUserProfile] = useState(false);
-const [showNotifications, setShowNotifications] = useState(false);
 const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-const { unreadCount } = useNotifications();
 
 const isDark = theme === "dark";
-
-  const handleNotificationClick = () => {
-    setShowNotifications(prev => !prev);
-  };
 
   return (
     <>
@@ -105,27 +98,7 @@ const isDark = theme === "dark";
                 </Button>
               </div>
               
-              <div className="relative">
-                <Button 
-                  onClick={handleNotificationClick}
-                  variant="ghost"
-                  size="icon"
-                  className="relative hover:opacity-80 transition-all duration-300 text-foreground"
-                >
-                  <Bell className="h-5 w-5" />
-                  {unreadCount > 0 && (
-                    <div className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white flex items-center justify-center text-xs rounded-full font-semibold">
-                      {unreadCount}
-                    </div>
-                  )}
-                </Button>
-                
-                {showNotifications && (
-                  <div className="absolute top-full right-0 mt-2 z-50">
-                    <NotificationCenter onClose={() => setShowNotifications(false)} />
-                  </div>
-                )}
-              </div>
+              <UnifiedNotificationCenter />
               
               <ThemeToggle />
               
