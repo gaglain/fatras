@@ -54,17 +54,26 @@ export const Contracts: React.FC = () => {
   const [editingQuote, setEditingQuote] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [formData, setFormData] = useState<QuoteFormData>({
-    title: '',
-    description: '',
-    contact_id: '',
-    event_id: '',
-    artist_id: '',
-    status: 'draft',
-    valid_until: '',
-    terms: 'Paiement à 30 jours. Acompte de 30% à la signature.',
-    notes: '',
-    items: [{ name: '', description: '', quantity: 1, unit_price: 0 }]
+  const [formData, setFormData] = useState<QuoteFormData>(() => {
+    try {
+      const saved = localStorage.getItem('contractsQuoteDraft');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error('Erreur parse brouillon devis (contracts):', e);
+      localStorage.removeItem('contractsQuoteDraft');
+    }
+    return {
+      title: '',
+      description: '',
+      contact_id: '',
+      event_id: '',
+      artist_id: '',
+      status: 'draft',
+      valid_until: '',
+      terms: 'Paiement à 30 jours. Acompte de 30% à la signature.',
+      notes: '',
+      items: [{ name: '', description: '', quantity: 1, unit_price: 0 }]
+    };
   });
 
   const addItem = () => {
@@ -89,6 +98,31 @@ export const Contracts: React.FC = () => {
       )
     }));
   };
+
+  // Autosave du brouillon (création uniquement)
+  React.useEffect(() => {
+    try {
+      if (!editingQuote && (formData.title || formData.description || formData.items?.some(i => i.name || i.unit_price))) {
+        localStorage.setItem('contractsQuoteDraft', JSON.stringify(formData));
+      }
+    } catch (e) {
+      console.error('Erreur sauvegarde brouillon devis (contracts):', e);
+    }
+  }, [formData, editingQuote]);
+
+  // Restauration du brouillon à l'ouverture du formulaire si pas en édition
+  React.useEffect(() => {
+    if (showForm && !editingQuote) {
+      try {
+        const saved = localStorage.getItem('contractsQuoteDraft');
+        if (saved) {
+          setFormData(JSON.parse(saved));
+        }
+      } catch (e) {
+        console.error('Erreur restauration brouillon devis (contracts):', e);
+      }
+    }
+  }, [showForm, editingQuote]);
 
   const calculateTotal = () => {
     return formData.items.reduce((total, item) => total + (item.quantity * item.unit_price), 0);
