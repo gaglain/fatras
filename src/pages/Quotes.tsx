@@ -121,7 +121,20 @@ export const Quotes: React.FC = () => {
     }
   };
 
-  const [formData, setFormData] = useState({
+  // Load draft from localStorage on mount
+  const loadDraft = () => {
+    const saved = localStorage.getItem('quoteDraft');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  };
+
+  const [formData, setFormData] = useState(loadDraft() || {
     title: '',
     description: '',
     contact_id: 'none',
@@ -132,6 +145,13 @@ export const Quotes: React.FC = () => {
     terms: '',
     notes: ''
   });
+
+  // Auto-save draft to localStorage
+  useEffect(() => {
+    if (dialogOpen && !selectedQuote && (formData.title || formData.description)) {
+      localStorage.setItem('quoteDraft', JSON.stringify(formData));
+    }
+  }, [formData, dialogOpen, selectedQuote]);
 
   const resetForm = () => {
     setFormData({
@@ -145,6 +165,7 @@ export const Quotes: React.FC = () => {
       terms: '',
       notes: ''
     });
+    localStorage.removeItem('quoteDraft');
   };
 
   const fillFormFromQuote = (q: Quote) => {

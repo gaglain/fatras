@@ -186,12 +186,25 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({
   const handleTemplateSelect = (templateId: string) => {
     const template = templates.find(t => t.id === templateId);
     if (template) {
-      setCampaignData(prev => ({
-        ...prev,
-        templateId,
-        content: JSON.parse(template.content || '[]'),
-        subject: prev.subject || template.subject
-      }));
+      try {
+        // Parse content if it's a string, otherwise use as-is
+        let parsedContent;
+        if (typeof template.content === 'string') {
+          parsedContent = JSON.parse(template.content || '[]');
+        } else {
+          parsedContent = template.content || [];
+        }
+        
+        setCampaignData(prev => ({
+          ...prev,
+          templateId,
+          content: parsedContent,
+          subject: prev.subject || template.subject
+        }));
+      } catch (error) {
+        console.error('Error parsing template content:', error);
+        toast.error('Erreur lors du chargement du template');
+      }
     }
   };
 

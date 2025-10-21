@@ -110,42 +110,88 @@ const handler = async (req: Request): Promise<Response> => {
     // Convert blocks to HTML
     const htmlContent = convertBlocksToHtml(campaign.content || []);
 
-    // Send emails with tracking
-    const emailPromises = uniqueContacts.map(async (contact) => {
+    // Split contacts into batches of 100 (Resend batch API limit)
+    const BATCH_SIZE = 100;
+    const batches: typeof uniqueContacts[] = [];
+    for (let i = 0; i < uniqueContacts.length; i += BATCH_SIZE) {
+      batches.push(uniqueContacts.slice(i, i + BATCH_SIZE));
+    }
+
+    console.log(`Split into ${batches.length} batches of max ${BATCH_SIZE} contacts`);
+
+    let allResults: any[] = [];
+
+    // Send emails batch by batch using Resend batch API
+    for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+      const batch = batches[batchIndex];
+      console.log(`Sending batch ${batchIndex + 1}/${batches.length} with ${batch.length} contacts`);
+
       try {
-        // Add tracking to the HTML
-        const trackedHtml = addEmailTracking(htmlContent, campaign.id, contact.id);
-        const personalizedHtml = trackedHtml.replace(/{{first_name}}/g, contact.first_name || 'there');
-        
-        const result = await resend.emails.send({
-          from: "Campaign <onboarding@resend.dev>",
-          to: [contact.email],
-          subject: campaign.subject || "Newsletter",
-          html: personalizedHtml,
+        // Prepare batch emails
+        const batchEmails = batch.map((contact) => {
+          const trackedHtml = addEmailTracking(htmlContent, campaign.id, contact.id);
+          const personalizedHtml = trackedHtml.replace(/{{first_name}}/g, contact.first_name || 'there');
+          
+          return {
+            from: "Campaign <onboarding@resend.dev>",
+            to: [contact.email],
+            subject: campaign.subject || "Newsletter",
+            html: personalizedHtml,
+          };
         });
 
-        // Log email analytics
-        if (result.data?.id) {
-          await supabase.from('email_analytics').insert({
-            user_id: campaign.user_id,
-            campaign_id: campaign.id,
-            contact_id: contact.id,
-            event_type: 'sent',
-            event_data: { email_id: result.data.id }
-          });
+        // Send batch using Resend batch API
+        const batchResult = await resend.batch.send(batchEmails);
+
+        // Process batch results
+        if (batchResult.data) {
+          const batchResultsProcessed = await Promise.all(
+            batch.map(async (contact, index) => {
+              const emailResult = batchResult.data?.[index];
+              
+              if (emailResult && !emailResult.error) {
+                // Log email analytics
+                try {
+                  await supabase.from('email_analytics').insert({
+                    user_id: campaign.user_id,
+                    campaign_id: campaign.id,
+                    contact_id: contact.id,
+                    event_type: 'sent',
+                    event_data: { email_id: emailResult.id }
+                  });
+                } catch (analyticsError) {
+                  console.error(`Failed to log analytics for ${contact.email}:`, analyticsError);
+                }
+
+                console.log(`Email sent to ${contact.email}:`, emailResult);
+                return { success: true, email: contact.email, result: emailResult };
+              } else {
+                console.error(`Failed to send email to ${contact.email}:`, emailResult?.error);
+                return { success: false, email: contact.email, error: emailResult?.error };
+              }
+            })
+          );
+          allResults = [...allResults, ...batchResultsProcessed];
         }
 
-        console.log(`Email sent to ${contact.email}:`, result);
-        return { success: true, email: contact.email, result };
-      } catch (error) {
-        console.error(`Failed to send email to ${contact.email}:`, error);
-        return { success: false, email: contact.email, error: error.message };
+        // Add small delay between batches to avoid rate limiting
+        if (batchIndex < batches.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      } catch (batchError) {
+        console.error(`Error sending batch ${batchIndex + 1}:`, batchError);
+        // Mark all contacts in this batch as failed
+        const failedResults = batch.map(contact => ({
+          success: false,
+          email: contact.email,
+          error: batchError.message
+        }));
+        allResults = [...allResults, ...failedResults];
       }
-    });
+    }
 
-    const results = await Promise.all(emailPromises);
-    const successCount = results.filter(r => r.success).length;
-    const failCount = results.filter(r => !r.success).length;
+    const successCount = allResults.filter(r => r.success).length;
+    const failCount = allResults.filter(r => !r.success).length;
 
     // Update campaign status and stats
     await supabase
@@ -165,7 +211,9 @@ const handler = async (req: Request): Promise<Response> => {
       success: true,
       totalSent: successCount,
       totalFailed: failCount,
-      results
+      totalContacts: uniqueContacts.length,
+      batchesProcessed: batches.length,
+      results: allResults
     }), {
       status: 200,
       headers: {
