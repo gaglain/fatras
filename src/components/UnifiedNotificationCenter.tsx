@@ -9,7 +9,7 @@ import { Bell, BellOff, Check, Mail, Clock, CheckSquare, Calendar, User, Message
 import { useEmailNotifications } from '@/hooks/useEmailNotifications';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useTaskNotifications } from '@/hooks/useTaskNotifications';
-import { useNavigate } from 'react-router-dom';
+
 
 interface UnifiedNotification {
   id: string;
@@ -23,7 +23,12 @@ interface UnifiedNotification {
 }
 
 export const UnifiedNotificationCenter: React.FC = () => {
-  const navigate = useNavigate();
+  const navigateTo = (path: string) => {
+    if (typeof window !== 'undefined') {
+      window.history.pushState({}, '', path);
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    }
+  };
   const { 
     notifications: emailNotifications, 
     isLoading: emailLoading, 
@@ -122,19 +127,19 @@ export const UnifiedNotificationCenter: React.FC = () => {
     // Navigation basée sur le type
     switch (notification.type) {
       case 'email':
-        navigate('/email');
+        navigateTo('/email');
         break;
       case 'task':
-        navigate('/tasks');
+        navigateTo('/tasks');
         break;
       case 'event':
-        navigate('/events');
+        navigateTo('/events');
         break;
       case 'contact':
-        navigate('/contacts');
+        navigateTo('/contacts');
         break;
       case 'message':
-        navigate('/messagerie');
+        navigateTo('/messagerie');
         break;
       default:
         break;

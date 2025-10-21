@@ -148,10 +148,22 @@ export const Quotes: React.FC = () => {
 
   // Auto-save draft to localStorage
   useEffect(() => {
-    if (dialogOpen && !selectedQuote && (formData.title || formData.description)) {
-      localStorage.setItem('quoteDraft', JSON.stringify(formData));
+    if (!selectedQuote && (formData.title || formData.description)) {
+      try {
+        localStorage.setItem('quoteDraft', JSON.stringify(formData));
+      } catch (e) {
+        console.error('Erreur sauvegarde brouillon devis:', e);
+      }
     }
-  }, [formData, dialogOpen, selectedQuote]);
+  }, [formData, selectedQuote]);
+
+  // Charger le brouillon à l'ouverture du dialogue si on crée un nouveau devis
+  useEffect(() => {
+    if (dialogOpen && !selectedQuote) {
+      const saved = loadDraft();
+      if (saved) setFormData(saved);
+    }
+  }, [dialogOpen, selectedQuote]);
 
   const resetForm = () => {
     setFormData({
@@ -353,7 +365,7 @@ export const Quotes: React.FC = () => {
           
             <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) { setSelectedQuote(null); } }}>
               <DialogTrigger asChild>
-                <Button className="flex items-center gap-2" onClick={() => { setSelectedQuote(null); resetForm(); setCalculation(null); }}>
+                <Button className="flex items-center gap-2" onClick={() => { setSelectedQuote(null); setCalculation(null); const saved = loadDraft(); if (saved) { setFormData(saved); } else { resetForm(); } }}>
                   <Plus className="h-4 w-4" />
                   Nouveau Devis
                 </Button>
