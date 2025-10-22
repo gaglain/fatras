@@ -238,7 +238,7 @@ export const useUnifiedEmails = () => {
     if (!user) return;
 
     const channel = supabase
-      .channel(`emails_changes_${user.id}_${Date.now()}`)
+      .channel(`emails_changes_${user.id}_${Date.now()}_${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         {

@@ -50,7 +50,7 @@ export const useContactsRealtime = ({
     console.log('🔄 Setting up contacts real-time sync');
 
     const channel = supabase
-      .channel('contacts-rt-' + Date.now())
+      .channel(`contacts-rt-${Date.now()}-${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',

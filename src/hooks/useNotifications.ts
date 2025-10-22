@@ -44,7 +44,7 @@ export const useNotifications = () => {
 
     // Écouter les nouvelles notifications en temps réel
     const channel = supabase
-      .channel(`notifs-changes-${user.id}-${Date.now()}`)
+      .channel(`notifs-changes-${user.id}-${Date.now()}-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         {

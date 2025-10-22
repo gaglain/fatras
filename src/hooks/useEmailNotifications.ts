@@ -55,7 +55,7 @@ export const useEmailNotifications = () => {
     if (!user) return;
 
     const channel = supabase
-      .channel(`email-notifs-${user.id}-${Date.now()}`)
+      .channel(`email-notifs-${user.id}-${Date.now()}-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         {

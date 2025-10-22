@@ -41,7 +41,7 @@ export const useRealtimeUpdates = (configs: RealtimeConfig[]) => {
     cleanup().then(() => {
       // Créer de nouveaux canaux après nettoyage
       configs.forEach((config, index) => {
-        const channelName = `realtime-${config.table}-${Date.now()}-${index}`;
+        const channelName = `realtime-${config.table}-${Date.now()}-${index}-${Math.random().toString(36).slice(2)}`;
         
         try {
           const channel = supabase

@@ -180,7 +180,7 @@ export const useSyncTasks = () => {
   useEffect(() => {
     if (!user) return;
 
-    const channelName = `sync-notifications-${user.id}-${Date.now()}`;
+    const channelName = `sync-notifications-${user.id}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const channel = supabase
       .channel(channelName)
       .on(
