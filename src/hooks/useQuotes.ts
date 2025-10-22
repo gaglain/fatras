@@ -14,6 +14,7 @@ export interface Quote {
   status: 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired';
   total_amount: number;
   tax_amount?: number;
+  vat_rate?: number;
   discount_amount?: number;
   valid_until?: string;
   terms?: string;
@@ -62,6 +63,7 @@ export const useQuotes = () => {
           status: quote.status as 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired',
           total_amount: quote.total_amount,
           tax_amount: quote.tax_amount || 0,
+          vat_rate: (quote as any).vat_rate ?? 0,
           discount_amount: quote.discount_amount || 0,
           valid_until: quote.valid_until || '',
           terms: quote.terms || '',
@@ -92,6 +94,7 @@ export const useQuotes = () => {
           status: quoteData.status,
           total_amount: quoteData.total_amount,
           tax_amount: quoteData.tax_amount,
+          vat_rate: (quoteData as any).vat_rate ?? 0,
           discount_amount: quoteData.discount_amount,
           valid_until: quoteData.valid_until,
           terms: quoteData.terms,
@@ -114,6 +117,7 @@ export const useQuotes = () => {
         status: data.status as 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired',
         total_amount: data.total_amount,
         tax_amount: data.tax_amount || 0,
+        vat_rate: data.vat_rate ?? 0,
         discount_amount: data.discount_amount || 0,
         valid_until: data.valid_until || '',
         terms: data.terms || '',
@@ -142,6 +146,7 @@ export const useQuotes = () => {
           status: updates.status,
           total_amount: updates.total_amount,
           tax_amount: updates.tax_amount,
+          vat_rate: (updates as any).vat_rate,
           discount_amount: updates.discount_amount,
           valid_until: updates.valid_until,
           terms: updates.terms,
@@ -166,6 +171,7 @@ export const useQuotes = () => {
           status: data.status as 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired',
           total_amount: data.total_amount,
           tax_amount: data.tax_amount || 0,
+          vat_rate: data.vat_rate ?? 0,
           discount_amount: data.discount_amount || 0,
           valid_until: data.valid_until || '',
           terms: data.terms || '',

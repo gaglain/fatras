@@ -143,7 +143,8 @@ export const Quotes: React.FC = () => {
     status: 'draft' as Quote['status'],
     valid_until: '',
     terms: '',
-    notes: ''
+    notes: '',
+    vat_rate: 20
   });
 
   // Auto-save draft to localStorage
@@ -175,7 +176,8 @@ export const Quotes: React.FC = () => {
       status: 'draft',
       valid_until: '',
       terms: '',
-      notes: ''
+      notes: '',
+      vat_rate: 20
     });
     localStorage.removeItem('quoteDraft');
   };
@@ -190,7 +192,8 @@ export const Quotes: React.FC = () => {
       status: q.status,
       valid_until: q.valid_until || '',
       terms: q.terms || '',
-      notes: q.notes || ''
+      notes: q.notes || '',
+      vat_rate: (q as any).vat_rate ?? 0
     });
   };
 
@@ -221,6 +224,7 @@ export const Quotes: React.FC = () => {
           valid_until: formData.valid_until || null,
           terms: formData.terms,
           notes: formData.notes,
+          vat_rate: (formData as any).vat_rate ?? 0,
         };
 
         const updated = await updateQuote(selectedQuote.id, updates);
@@ -254,6 +258,7 @@ export const Quotes: React.FC = () => {
         status: formData.status,
         total_amount: calculation?.finalPrice || 0,
         tax_amount: calculation?.vatAmount || 0,
+        vat_rate: (formData as any).vat_rate ?? 0,
         valid_until: formData.valid_until || undefined,
         terms: formData.terms,
         notes: formData.notes
@@ -289,11 +294,19 @@ export const Quotes: React.FC = () => {
   };
 
   const handleSaveTemplate = (templateData: QuoteFormData) => {
-    const templates = JSON.parse(localStorage.getItem('quoteTemplates') || '[]');
+    let templates: any[] = [];
+    try {
+      const raw = localStorage.getItem('quoteTemplates');
+      templates = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(templates)) templates = [];
+    } catch (e) {
+      console.error('Erreur lecture modèles devis:', e);
+      templates = [];
+    }
     const newTemplate = {
       ...templateData,
       id: Date.now().toString(),
-      name: templateData.artistName || 'Modèle sans nom',
+      name: (templateData as any).artistName || 'Modèle sans nom',
       createdAt: new Date().toISOString()
     };
     templates.push(newTemplate);
@@ -303,8 +316,14 @@ export const Quotes: React.FC = () => {
   };
 
   useEffect(() => {
-    const templates = JSON.parse(localStorage.getItem('quoteTemplates') || '[]');
-    setQuoteTemplates(templates);
+    try {
+      const raw = localStorage.getItem('quoteTemplates');
+      const templates = raw ? JSON.parse(raw) : [];
+      setQuoteTemplates(Array.isArray(templates) ? templates : []);
+    } catch (e) {
+      console.error('Erreur parse des modèles devis depuis localStorage:', e);
+      setQuoteTemplates([]);
+    }
   }, []);
 
   const getStatusBadge = (status: Quote['status']) => {
@@ -410,6 +429,24 @@ export const Quotes: React.FC = () => {
                             <SelectItem value="sent">Envoyé</SelectItem>
                             <SelectItem value="accepted">Accepté</SelectItem>
                             <SelectItem value="rejected">Refusé</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="vat_rate">TVA</Label>
+                        <Select 
+                          value={String((formData as any).vat_rate ?? 20)}
+                          onValueChange={(value) => setFormData({ ...formData, vat_rate: parseFloat(value) })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Choisir le taux de TVA" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="0">0%</SelectItem>
+                            <SelectItem value="5.5">5,5%</SelectItem>
+                            <SelectItem value="10">10%</SelectItem>
+                            <SelectItem value="20">20%</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
