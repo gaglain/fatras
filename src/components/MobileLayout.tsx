@@ -85,9 +85,19 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({ children, className 
             >
               <PanelLeft className="h-5 w-5" />
             </Button>
-            <h1 className="font-semibold text-sm truncate">
-              Fatras Booking
-            </h1>
+            <div className="flex items-center gap-2">
+              <img 
+                src="/logo.svg" 
+                alt="Fatras Booking" 
+                className="h-6 w-6"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+              <h1 className="font-semibold text-sm truncate">
+                Fatras Booking
+              </h1>
+            </div>
           </div>
           
           {/* Actions rapides */}
