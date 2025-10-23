@@ -82,9 +82,13 @@ export const useRealtimeUpdates = (configs: RealtimeConfig[]) => {
       channelsRef.current.clear();
       
       channels.forEach(channel => {
-        supabase.removeChannel(channel).catch(err => {
-          console.warn('Erreur lors du nettoyage du canal:', err);
-        });
+        setTimeout(() => {
+          try {
+            supabase.removeChannel(channel);
+          } catch (err) {
+            console.warn('⚠️ Warning during realtime cleanup:', err);
+          }
+        }, 100);
       });
     };
   }, [configs.map(c => c.table).join(',')]);

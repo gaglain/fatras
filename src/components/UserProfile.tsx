@@ -49,6 +49,9 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
           birth_place: formData.birthPlace,
           nationality: formData.nationality,
           social_security_number: formData.socialSecurityNumber,
+          guso_id: formData.gusoId,
+          entertainment_leave_number: formData.entertainmentLeaveNumber,
+          tax_reduction: formData.taxReduction,
           bank_details: formData.bankDetails,
           contracts_fees: formData.contractsFees,
           availability: formData.availability,
@@ -200,6 +203,8 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
               birthPlace: (currentUser as any)?.birth_place || '',
               nationality: (currentUser as any)?.nationality || 'FR',
               socialSecurityNumber: (currentUser as any)?.social_security_number || '',
+              gusoId: (currentUser as any)?.guso_id || '',
+              entertainmentLeaveNumber: (currentUser as any)?.entertainment_leave_number || '',
               bankDetails: (currentUser as any)?.bank_details || {
                 iban: '',
                 bic: '',

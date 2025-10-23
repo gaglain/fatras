@@ -215,7 +215,13 @@ export const useSyncTasks = () => {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      setTimeout(() => {
+        try {
+          supabase.removeChannel(channel);
+        } catch (err) {
+          console.warn('⚠️ Warning during sync tasks cleanup:', err);
+        }
+      }, 100);
     };
   }, [user]);
 

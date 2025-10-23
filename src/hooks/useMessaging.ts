@@ -742,7 +742,13 @@ export const useMessaging = () => {
 
     return () => {
       console.log('🧹 Cleaning up messaging subscription');
-      supabase.removeChannel(channel);
+      setTimeout(() => {
+        try {
+          supabase.removeChannel(channel);
+        } catch (err) {
+          console.warn('⚠️ Warning during messaging cleanup:', err);
+        }
+      }, 100);
     };
   }, [user?.id]);
 

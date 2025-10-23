@@ -36,15 +36,26 @@ export const useContactsRealtime = ({
   enabled = true
 }: UseContactsRealtimeProps) => {
   const channelRef = useRef<any>(null);
+  const cleanupTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   useEffect(() => {
     if (!enabled) return;
 
-    // Nettoyer l'ancien canal s'il existe
+    // Nettoyer l'ancien canal s'il existe avec délai
     if (channelRef.current) {
       console.log('🔌 Cleaning up previous contacts channel');
-      supabase.removeChannel(channelRef.current);
+      try {
+        supabase.removeChannel(channelRef.current);
+      } catch (err) {
+        console.warn('⚠️ Warning during channel cleanup:', err);
+      }
       channelRef.current = null;
+    }
+
+    // Clear any pending cleanup
+    if (cleanupTimeoutRef.current) {
+      clearTimeout(cleanupTimeoutRef.current);
+      cleanupTimeoutRef.current = null;
     }
 
     console.log('🔄 Setting up contacts real-time sync');
@@ -104,10 +115,18 @@ export const useContactsRealtime = ({
 
     return () => {
       console.log('🔌 Cleaning up contacts real-time sync');
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
-      }
+      
+      // Use timeout to avoid immediate cleanup during strict mode
+      cleanupTimeoutRef.current = setTimeout(() => {
+        if (channelRef.current) {
+          try {
+            supabase.removeChannel(channelRef.current);
+          } catch (err) {
+            console.warn('⚠️ Warning during cleanup:', err);
+          }
+          channelRef.current = null;
+        }
+      }, 100);
     };
   }, [enabled, onContactAdded, onContactUpdated, onContactDeleted]);
 };

@@ -54,6 +54,8 @@ export const useEmailNotifications = () => {
   const setupRealtimeSubscription = () => {
     if (!user) return;
 
+    let cleanupTimeout: NodeJS.Timeout | null = null;
+
     const channel = supabase
       .channel(`email-notifs-${user.id}-${Date.now()}-${Math.random().toString(36).slice(2)}`)
       .on(
@@ -77,7 +79,13 @@ export const useEmailNotifications = () => {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      cleanupTimeout = setTimeout(() => {
+        try {
+          supabase.removeChannel(channel);
+        } catch (err) {
+          console.warn('⚠️ Warning during email notifications cleanup:', err);
+        }
+      }, 100);
     };
   };
 

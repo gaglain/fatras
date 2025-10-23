@@ -465,7 +465,13 @@ export const useUnifiedEmails = () => {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      setTimeout(() => {
+        try {
+          supabase.removeChannel(channel);
+        } catch (err) {
+          console.warn('⚠️ Warning during unified emails cleanup:', err);
+        }
+      }, 100);
     };
   };
 

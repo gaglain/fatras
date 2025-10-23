@@ -43,6 +43,8 @@ export const useNotifications = () => {
     fetchNotifications();
 
     // Écouter les nouvelles notifications en temps réel
+    let cleanupTimeout: NodeJS.Timeout | null = null;
+    
     const channel = supabase
       .channel(`notifs-changes-${user.id}-${Date.now()}-${Math.random().toString(36).slice(2)}`)
       .on(
@@ -81,7 +83,13 @@ export const useNotifications = () => {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      cleanupTimeout = setTimeout(() => {
+        try {
+          supabase.removeChannel(channel);
+        } catch (err) {
+          console.warn('⚠️ Warning during notifications cleanup:', err);
+        }
+      }, 100);
     };
   }, [user]);
 
