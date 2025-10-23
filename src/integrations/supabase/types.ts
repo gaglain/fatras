@@ -2414,6 +2414,7 @@ export type Database = {
           updated_at: string | null
           user_id: string
           valid_until: string | null
+          vat_rate: number
         }
         Insert: {
           artist_id?: string | null
@@ -2433,6 +2434,7 @@ export type Database = {
           updated_at?: string | null
           user_id: string
           valid_until?: string | null
+          vat_rate?: number
         }
         Update: {
           artist_id?: string | null
@@ -2452,6 +2454,7 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
           valid_until?: string | null
+          vat_rate?: number
         }
         Relationships: [
           {
@@ -3384,7 +3387,7 @@ export type Database = {
         Returns: Json
       }
       get_active_users_basic: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           avatar_url: string
           email: string
@@ -3422,7 +3425,7 @@ export type Database = {
         }[]
       }
       get_my_shop_stats: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           average_order_value: number
           completed_orders: number
@@ -3431,7 +3434,7 @@ export type Database = {
         }[]
       }
       get_user_profiles: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           address: string
           associated_artists: string[]
@@ -3474,14 +3477,8 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_admin_user: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_channel_owner: {
-        Args: { channel_id_param: string }
-        Returns: boolean
-      }
+      is_admin_user: { Args: never; Returns: boolean }
+      is_channel_owner: { Args: { channel_id_param: string }; Returns: boolean }
       is_member_of_channel: {
         Args: { _channel_id: string; _user_id: string }
         Returns: boolean
@@ -3494,22 +3491,13 @@ export type Database = {
         Args: { _channel_id: string }
         Returns: boolean
       }
-      refresh_shop_stats: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      send_password_reset_email: {
-        Args: { user_email: string }
-        Returns: Json
-      }
+      refresh_shop_stats: { Args: never; Returns: undefined }
+      send_password_reset_email: { Args: { user_email: string }; Returns: Json }
       update_campaign_stats: {
         Args: { campaign_id: string; event_type: string }
         Returns: undefined
       }
-      update_email_contact_links: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      update_email_contact_links: { Args: never; Returns: undefined }
       update_user_profile_data: {
         Args: { profile_data: Json; profile_user_id: string }
         Returns: Json
