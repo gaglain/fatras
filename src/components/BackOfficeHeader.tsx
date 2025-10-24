@@ -60,11 +60,15 @@ const isDark = theme === "dark";
 
               <Link to="/dashboard" className="flex items-center space-x-2 group">
                 <img
-                  src={logo || "/logo.svg"}
-                  alt={name}
+                  src={logo || "/placeholder.svg"}
+                  alt={name || 'Logo'}
                   className="h-8 w-8 lg:h-9 lg:w-9 object-contain"
                   style={{ filter: "drop-shadow(0 2px 7px #1632f4)" }}
-                  onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                  onError={(e) => {
+                    const img = e.currentTarget as HTMLImageElement;
+                    if (img.src.endsWith('/placeholder.svg')) return;
+                    img.src = '/placeholder.svg';
+                  }}
                 />
                 <span className="text-base lg:text-lg font-bold tracking-tight transition-colors duration-300 text-foreground">
                   <span className="hidden sm:inline">{name || "Fatras Booking"}</span>

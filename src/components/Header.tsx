@@ -86,7 +86,10 @@ export const Header: React.FC = () => {
                 alt="Logo entreprise" 
                 className="h-6 w-auto max-w-[80px] lg:h-8 lg:max-w-[120px] object-contain hidden sm:block"
                 onError={(e) => {
-                  e.currentTarget.style.display = 'none';
+                  const img = e.currentTarget as HTMLImageElement;
+                  if (img.src.endsWith('/placeholder.svg')) return;
+                  img.src = '/placeholder.svg';
+                  img.style.display = 'block';
                 }}
               />
             ) : (

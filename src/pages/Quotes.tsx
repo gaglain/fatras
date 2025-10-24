@@ -563,14 +563,16 @@ export const Quotes: React.FC = () => {
                         console.log('Items mis à jour:', items);
                         // Recalculer et mettre à jour le total du devis
                         const total = items.reduce((sum, item) => sum + item.total_price, 0);
-                        const taxRate = 0.20; // 20% de TVA
+                        const vatRatePercent = (formData as any)?.vat_rate ?? (selectedQuote as any)?.vat_rate ?? 0;
+                        const taxRate = Number(vatRatePercent) / 100;
                         const taxAmount = total * taxRate;
                         const totalWithTax = total + taxAmount;
                         
                         updateQuote(selectedQuote.id, {
                           ...selectedQuote,
                           total_amount: totalWithTax,
-                          tax_amount: taxAmount
+                          tax_amount: taxAmount,
+                          vat_rate: Number(vatRatePercent)
                         });
                       }}
                     />
