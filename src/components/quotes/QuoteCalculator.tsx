@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 
 export interface QuoteCalculation {
@@ -186,14 +187,21 @@ export const QuoteCalculator: React.FC<QuoteCalculatorProps> = ({
         {/* TVA et marge */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="vatRate">TVA (%)</Label>
-            <Input
-              id="vatRate"
-              type="number"
-              step="0.01"
-              value={values.vatRate}
-              onChange={(e) => handleInputChange('vatRate', e.target.value)}
-            />
+            <Label htmlFor="vatRate">Taux de TVA</Label>
+            <Select 
+              value={values.vatRate.toString()} 
+              onValueChange={(value) => handleInputChange('vatRate', value)}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="0">0% - Exonération</SelectItem>
+                <SelectItem value="5.5">5,5% - Taux réduit</SelectItem>
+                <SelectItem value="10">10% - Taux intermédiaire</SelectItem>
+                <SelectItem value="20">20% - Taux normal</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">

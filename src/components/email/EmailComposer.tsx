@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useNylasEmail } from '@/hooks/useNylasEmail';
 import { supabase } from '@/integrations/supabase/client';
 import { useIndividualEmailTracking } from '@/hooks/useIndividualEmailTracking';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ImageGalleryPicker } from '@/components/website/ImageGalleryPicker';
 
 interface EmailComposerProps {
   isOpen: boolean;
@@ -39,8 +39,6 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
   const [attachments, setAttachments] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const [sending, setSending] = useState(false);
-  const [showMediaPicker, setShowMediaPicker] = useState(false);
-  const [mediaFiles, setMediaFiles] = useState<Array<{name: string; url: string}>>([]);
 
   React.useEffect(() => {
     setTo(toEmail);
@@ -60,30 +58,6 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
     }
   }, [accounts, selectedAccountId]);
 
-  // Charger les fichiers de la banque de médias
-  React.useEffect(() => {
-    const loadMediaFiles = async () => {
-      if (!currentUser?.id) return;
-      
-      const { data: files } = await supabase.storage
-        .from('email-attachments')
-        .list(undefined, { limit: 100 });
-      
-      if (files) {
-        const filesWithUrls = files.map(file => {
-          const { data: { publicUrl } } = supabase.storage
-            .from('email-attachments')
-            .getPublicUrl(file.name);
-          return { name: file.name, url: publicUrl };
-        });
-        setMediaFiles(filesWithUrls);
-      }
-    };
-    
-    if (showMediaPicker) {
-      loadMediaFiles();
-    }
-  }, [showMediaPicker, currentUser]);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -288,14 +262,23 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
                   <Paperclip className="h-4 w-4 mr-2" />
                   Depuis l'ordinateur
                 </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setShowMediaPicker(true)}
-                >
-                  <Paperclip className="h-4 w-4 mr-2" />
-                  Depuis la banque de médias
-                </Button>
+                <ImageGalleryPicker
+                  onSelect={async (url, type) => {
+                    try {
+                      // Télécharger le fichier depuis l'URL
+                      const response = await fetch(url);
+                      const blob = await response.blob();
+                      const fileName = url.split('/').pop() || 'attachment';
+                      const fileObj = new File([blob], fileName, { type: blob.type });
+                      setAttachments(prev => [...prev, fileObj]);
+                      toast.success('Fichier ajouté depuis la banque de médias');
+                    } catch (error) {
+                      toast.error('Erreur lors de l\'ajout du fichier');
+                    }
+                  }}
+                  buttonText="Depuis la banque de médias"
+                  acceptedTypes={['image', 'pdf', 'audio', 'video', 'text', 'other']}
+                />
               </div>
               
               {attachments.length > 0 && (
@@ -335,48 +318,6 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
             </Button>
           </div>
         </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Dialog pour sélectionner depuis la banque de médias */}
-      <Dialog open={showMediaPicker} onOpenChange={setShowMediaPicker}>
-        <DialogContent className="max-w-3xl max-h-[80vh]">
-          <DialogHeader>
-            <DialogTitle>Sélectionner depuis la banque de médias</DialogTitle>
-          </DialogHeader>
-          <ScrollArea className="h-[60vh]">
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-4">
-              {mediaFiles.map((file, index) => (
-                <div 
-                  key={index}
-                  className="border rounded-lg p-3 hover:bg-accent cursor-pointer transition-colors"
-                  onClick={async () => {
-                    try {
-                      // Télécharger le fichier depuis l'URL
-                      const response = await fetch(file.url);
-                      const blob = await response.blob();
-                      const fileObj = new File([blob], file.name, { type: blob.type });
-                      setAttachments(prev => [...prev, fileObj]);
-                      setShowMediaPicker(false);
-                      toast.success('Fichier ajouté depuis la banque de médias');
-                    } catch (error) {
-                      toast.error('Erreur lors de l\'ajout du fichier');
-                    }
-                  }}
-                >
-                  <div className="flex items-center gap-2">
-                    <Paperclip className="h-4 w-4 flex-shrink-0" />
-                    <span className="text-sm truncate">{file.name}</span>
-                  </div>
-                </div>
-              ))}
-              {mediaFiles.length === 0 && (
-                <div className="col-span-full text-center text-muted-foreground py-8">
-                  Aucun fichier dans la banque de médias
-                </div>
-              )}
-            </div>
-          </ScrollArea>
         </DialogContent>
       </Dialog>
     </>

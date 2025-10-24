@@ -342,14 +342,21 @@ export const SimpleQuoteCalculator: React.FC<SimpleQuoteCalculatorProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="vatRate">TVA (%)</Label>
-            <Input
-              id="vatRate"
-              type="number"
-              step="0.01"
-              value={values.vatRate}
-              onChange={(e) => handleInputChange('vatRate', parseFloat(e.target.value) || 20)}
-            />
+            <Label htmlFor="vatRate">Taux de TVA</Label>
+            <Select 
+              value={values.vatRate.toString()} 
+              onValueChange={(value) => handleInputChange('vatRate', parseFloat(value))}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="0">0% - Exonération</SelectItem>
+                <SelectItem value="5.5">5,5% - Taux réduit</SelectItem>
+                <SelectItem value="10">10% - Taux intermédiaire</SelectItem>
+                <SelectItem value="20">20% - Taux normal</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
