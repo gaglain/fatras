@@ -150,18 +150,29 @@ export const generateQuotePDF = (quote: Quote, items: QuoteItem[], companyInfo?:
   doc.setFont('helvetica', 'bold');
   const totalX = pageWidth - margin - 60;
 
+  // Calculs sécurisés
+  const computedSubtotal = items.reduce((sum, it) => sum + (it.total_price || 0), 0);
+  const vatRate = (quote as any)?.vat_rate != null ? Number((quote as any).vat_rate) : 0;
+  const computedTax = quote.tax_amount != null ? quote.tax_amount : (computedSubtotal * vatRate) / 100;
+  const computedTotal = quote.total_amount != null ? quote.total_amount : (computedSubtotal + computedTax);
+
+  // Remise
   if (quote.discount_amount && quote.discount_amount > 0) {
     doc.text(`Remise: -${quote.discount_amount.toFixed(2)} €`, totalX, yPosition);
     yPosition += 6;
   }
 
-  if (quote.tax_amount && quote.tax_amount > 0) {
-    doc.text(`TVA: ${quote.tax_amount.toFixed(2)} €`, totalX, yPosition);
-    yPosition += 6;
-  }
+  // Total HT
+  doc.text(`Total HT: ${computedSubtotal.toFixed(2)} €`, totalX, yPosition);
+  yPosition += 6;
 
+  // TVA avec taux
+  doc.text(`TVA (${vatRate}%): ${computedTax.toFixed(2)} €`, totalX, yPosition);
+  yPosition += 6;
+
+  // Total TTC
   doc.setFontSize(12);
-  doc.text(`TOTAL: ${quote.total_amount.toFixed(2)} €`, totalX, yPosition);
+  doc.text(`TOTAL TTC: ${computedTotal.toFixed(2)} €`, totalX, yPosition);
   yPosition += 15;
 
   // Conditions

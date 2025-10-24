@@ -67,8 +67,8 @@ const isDark = theme === "dark";
                   onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                 />
                 <span className="text-base lg:text-lg font-bold tracking-tight transition-colors duration-300 text-foreground">
-                  <span className="hidden sm:inline">{name || "MusiConnect"}</span>
-                  <span className="sm:hidden">{(name || "MusiConnect").split(' ')[0]}</span>
+                  <span className="hidden sm:inline">{name || "Fatras Booking"}</span>
+                  <span className="sm:hidden">{(name || "Fatras Booking").split(' ')[0]}</span>
                 </span>
               </Link>
             </div>

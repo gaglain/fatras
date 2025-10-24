@@ -103,8 +103,8 @@ export const QuoteItemManager: React.FC<QuoteItemManagerProps> = ({
     
     // Calculer le nouveau total basé sur les items actuels
     const subtotal = items.reduce((sum, item) => sum + (item.total_price || 0), 0);
-    const taxRate = 0.20; // 20% TVA
-    const taxAmount = subtotal * taxRate;
+    const vatRate = (quote as any)?.vat_rate != null ? Number((quote as any).vat_rate) / 100 : 0.20; // défaut 20%
+    const taxAmount = subtotal * vatRate;
     const totalAmount = subtotal + taxAmount;
     
     try {

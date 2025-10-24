@@ -67,60 +67,57 @@ export const useTasks = () => {
     const channelName = `tasks-${user.id}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const channel = supabase
       .channel(channelName)
+      // Écouter les tâches créées par l'utilisateur
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
         table: 'tasks',
         filter: `user_id=eq.${user.id}`
-      }, (payload) => {
-        if (payload.eventType === 'INSERT') {
-          const newTask = payload.new;
-          setTasks(prev => {
-            if (prev.find(t => t.id === newTask.id)) return prev;
-            return [...prev, {
-              id: newTask.id,
-              user_id: newTask.user_id,
-              assigned_to: newTask.assigned_to || undefined,
-              contact_id: newTask.contact_id || undefined,
-              event_id: newTask.event_id || undefined,
-              artist_id: newTask.artist_id || undefined,
-              title: newTask.title,
-              description: newTask.description || '',
-              priority: newTask.priority,
-              status: newTask.status,
-              task_type: newTask.task_type,
-              due_date: newTask.due_date || undefined,
-              completed_at: newTask.completed_at || undefined,
-              tags: newTask.tags || [],
-              created_at: newTask.created_at,
-              updated_at: newTask.updated_at
-            }];
-          });
-        } else if (payload.eventType === 'UPDATE') {
-          const updated = payload.new;
-          setTasks(prev => prev.map(t => t.id === updated.id ? {
-            id: updated.id,
-            user_id: updated.user_id,
-            assigned_to: updated.assigned_to || undefined,
-            contact_id: updated.contact_id || undefined,
-            event_id: updated.event_id || undefined,
-            artist_id: updated.artist_id || undefined,
-            title: updated.title,
-            description: updated.description || '',
-            priority: updated.priority,
-            status: updated.status,
-            task_type: updated.task_type,
-            due_date: updated.due_date || undefined,
-            completed_at: updated.completed_at || undefined,
-            tags: updated.tags || [],
-            created_at: updated.created_at,
-            updated_at: updated.updated_at
-          } : t));
-        } else if (payload.eventType === 'DELETE') {
-          setTasks(prev => prev.filter(t => t.id !== payload.old.id));
-        }
-      })
+      }, handleTaskRealtime)
+      // Écouter aussi les tâches qui lui sont assignées
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'tasks',
+        filter: `assigned_to=eq.${user.id}`
+      }, handleTaskRealtime)
       .subscribe();
+
+    function handleTaskRealtime(payload: any) {
+      if (payload.eventType === 'INSERT') {
+        const newTask = payload.new;
+        setTasks(prev => {
+          if (prev.find(t => t.id === newTask.id)) return prev;
+          return [...prev, mapRowToTask(newTask)];
+        });
+      } else if (payload.eventType === 'UPDATE') {
+        const updated = payload.new;
+        setTasks(prev => prev.map(t => t.id === updated.id ? mapRowToTask(updated) : t));
+      } else if (payload.eventType === 'DELETE') {
+        setTasks(prev => prev.filter(t => t.id !== payload.old.id));
+      }
+    }
+
+    function mapRowToTask(row: any) {
+      return {
+        id: row.id,
+        user_id: row.user_id,
+        assigned_to: row.assigned_to || undefined,
+        contact_id: row.contact_id || undefined,
+        event_id: row.event_id || undefined,
+        artist_id: row.artist_id || undefined,
+        title: row.title,
+        description: row.description || '',
+        priority: row.priority,
+        status: row.status,
+        task_type: row.task_type,
+        due_date: row.due_date || undefined,
+        completed_at: row.completed_at || undefined,
+        tags: row.tags || [],
+        created_at: row.created_at,
+        updated_at: row.updated_at
+      } as Task;
+    }
 
     return () => {
       setTimeout(() => {
