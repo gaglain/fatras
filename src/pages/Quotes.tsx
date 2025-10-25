@@ -557,46 +557,53 @@ export const Quotes: React.FC = () => {
                 <TabsContent value="items">
                   {selectedQuote && (
                     <>
-                      <div className="mb-4 p-4 bg-muted/50 rounded-lg grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="space-y-2">
-                          <Label>TVA du devis</Label>
-                          <Select
-                            value={String((formData as any).vat_rate ?? (selectedQuote as any)?.vat_rate ?? 20)}
-                            onValueChange={async (value) => {
-                              const rate = parseFloat(value) || 0;
-                              setFormData({ ...formData, vat_rate: rate });
-                              if (selectedQuote) {
-                                const subtotal = currentItems.reduce((sum, i) => sum + (i.total_price || 0), 0);
-                                const taxAmount = subtotal * (rate / 100);
-                                const totalWithTax = subtotal + taxAmount;
-                                try {
-                                  const updated = await updateQuote(selectedQuote.id, {
-                                    ...selectedQuote,
-                                    vat_rate: rate,
-                                    tax_amount: taxAmount,
-                                    total_amount: totalWithTax,
-                                  } as any);
-                                  setSelectedQuote(updated || { ...selectedQuote, vat_rate: rate, tax_amount: taxAmount, total_amount: totalWithTax });
-                                  toast.success('TVA mise à jour');
-                                } catch (e) {
-                                  console.error('Erreur mise à jour TVA:', e);
-                                  toast.error('Erreur lors de la mise à jour de la TVA');
-                                }
-                              }
-                            }}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Choisir le taux de TVA" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="0">0%</SelectItem>
-                              <SelectItem value="5.5">5,5%</SelectItem>
-                              <SelectItem value="10">10%</SelectItem>
-                              <SelectItem value="20">20%</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
+                      <Card className="mb-6 border-2 border-primary/20">
+                        <CardContent className="pt-6">
+                          <div className="flex items-center gap-4">
+                            <div className="flex-1">
+                              <Label className="text-base font-semibold">Taux de TVA</Label>
+                              <p className="text-sm text-muted-foreground">Choisissez le taux de TVA applicable à ce devis</p>
+                            </div>
+                            <div className="w-48">
+                              <Select
+                                value={String((formData as any).vat_rate ?? (selectedQuote as any)?.vat_rate ?? 20)}
+                                onValueChange={async (value) => {
+                                  const rate = parseFloat(value) || 0;
+                                  setFormData({ ...formData, vat_rate: rate });
+                                  if (selectedQuote) {
+                                    const subtotal = currentItems.reduce((sum, i) => sum + (i.total_price || 0), 0);
+                                    const taxAmount = subtotal * (rate / 100);
+                                    const totalWithTax = subtotal + taxAmount;
+                                    try {
+                                      const updated = await updateQuote(selectedQuote.id, {
+                                        ...selectedQuote,
+                                        vat_rate: rate,
+                                        tax_amount: taxAmount,
+                                        total_amount: totalWithTax,
+                                      } as any);
+                                      setSelectedQuote(updated || { ...selectedQuote, vat_rate: rate, tax_amount: taxAmount, total_amount: totalWithTax });
+                                      toast.success('TVA mise à jour');
+                                    } catch (e) {
+                                      console.error('Erreur mise à jour TVA:', e);
+                                      toast.error('Erreur lors de la mise à jour de la TVA');
+                                    }
+                                  }
+                                }}
+                              >
+                                <SelectTrigger className="h-12 text-base font-semibold">
+                                  <SelectValue placeholder="Choisir le taux de TVA" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="0" className="text-base">0%</SelectItem>
+                                  <SelectItem value="5.5" className="text-base">5,5%</SelectItem>
+                                  <SelectItem value="10" className="text-base">10%</SelectItem>
+                                  <SelectItem value="20" className="text-base">20%</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
 
                       <QuoteItemManager 
                         quoteId={selectedQuote.id}
