@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { FileText, Plus, Search, Eye, Edit, Trash2, Download, Calculator } from 'lucide-react';
-import { useQuotes, Quote } from '@/hooks/useQuotes';
+import { useQuotes, Quote, QuoteItem } from '@/hooks/useQuotes';
 import { useContacts } from '@/hooks/useContacts';
 import { useEvents } from '@/hooks/useEvents';
 import { useAuth } from '@/hooks/useAuth';
@@ -30,7 +30,7 @@ export const Quotes: React.FC = () => {
   const [calculation, setCalculation] = useState<QuoteCalculation | null>(null);
   const [showSimpleCalculator, setShowSimpleCalculator] = useState(false);
   const [quoteTemplates, setQuoteTemplates] = useState<QuoteFormData[]>([]);
-  
+  const [currentItems, setCurrentItems] = useState<QuoteItem[]>([]);
   const { quotes, loading, addQuote, updateQuote, deleteQuote, generateQuoteNumber } = useQuotes();
   const { contacts } = useContacts();
   const { events } = useEvents();
@@ -556,26 +556,77 @@ export const Quotes: React.FC = () => {
                 
                 <TabsContent value="items">
                   {selectedQuote && (
-                    <QuoteItemManager 
-                      quoteId={selectedQuote.id}
-                      quote={selectedQuote}
-                      onItemsChange={(items) => {
-                        console.log('Items mis à jour:', items);
-                        // Recalculer et mettre à jour le total du devis
-                        const total = items.reduce((sum, item) => sum + item.total_price, 0);
-                        const vatRatePercent = (formData as any)?.vat_rate ?? (selectedQuote as any)?.vat_rate ?? 0;
-                        const taxRate = Number(vatRatePercent) / 100;
-                        const taxAmount = total * taxRate;
-                        const totalWithTax = total + taxAmount;
-                        
-                        updateQuote(selectedQuote.id, {
-                          ...selectedQuote,
-                          total_amount: totalWithTax,
-                          tax_amount: taxAmount,
-                          vat_rate: Number(vatRatePercent)
-                        });
-                      }}
-                    />
+                    <>
+                      <div className="mb-4 p-4 bg-muted/50 rounded-lg grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                          <Label>TVA du devis</Label>
+                          <Select
+                            value={String((formData as any).vat_rate ?? (selectedQuote as any)?.vat_rate ?? 20)}
+                            onValueChange={async (value) => {
+                              const rate = parseFloat(value) || 0;
+                              setFormData({ ...formData, vat_rate: rate });
+                              if (selectedQuote) {
+                                const subtotal = currentItems.reduce((sum, i) => sum + (i.total_price || 0), 0);
+                                const taxAmount = subtotal * (rate / 100);
+                                const totalWithTax = subtotal + taxAmount;
+                                try {
+                                  const updated = await updateQuote(selectedQuote.id, {
+                                    ...selectedQuote,
+                                    vat_rate: rate,
+                                    tax_amount: taxAmount,
+                                    total_amount: totalWithTax,
+                                  } as any);
+                                  setSelectedQuote(updated || { ...selectedQuote, vat_rate: rate, tax_amount: taxAmount, total_amount: totalWithTax });
+                                  toast.success('TVA mise à jour');
+                                } catch (e) {
+                                  console.error('Erreur mise à jour TVA:', e);
+                                  toast.error('Erreur lors de la mise à jour de la TVA');
+                                }
+                              }
+                            }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Choisir le taux de TVA" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="0">0%</SelectItem>
+                              <SelectItem value="5.5">5,5%</SelectItem>
+                              <SelectItem value="10">10%</SelectItem>
+                              <SelectItem value="20">20%</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <QuoteItemManager 
+                        quoteId={selectedQuote.id}
+                        quote={selectedQuote}
+                        onItemsChange={(items) => {
+                          setCurrentItems(items);
+                          console.log('Items mis à jour:', items);
+                          // Recalculer et mettre à jour le total du devis
+                          const total = items.reduce((sum, item) => sum + item.total_price, 0);
+                          const vatRatePercent = (formData as any)?.vat_rate ?? (selectedQuote as any)?.vat_rate ?? 0;
+                          const taxRate = Number(vatRatePercent) / 100;
+                          const taxAmount = total * taxRate;
+                          const totalWithTax = total + taxAmount;
+                          
+                          updateQuote(selectedQuote.id, {
+                            ...selectedQuote,
+                            total_amount: totalWithTax,
+                            tax_amount: taxAmount,
+                            vat_rate: Number(vatRatePercent)
+                          });
+
+                          setSelectedQuote(prev => prev ? {
+                            ...prev,
+                            total_amount: totalWithTax,
+                            tax_amount: taxAmount,
+                            vat_rate: Number(vatRatePercent)
+                          } : prev);
+                        }}
+                      />
+                    </>
                   )}
                 </TabsContent>
               </Tabs>
