@@ -32,6 +32,7 @@ interface QuoteFormData {
   terms: string;
   notes: string;
   items: QuoteItemForm[];
+  vat_rate: number;
 }
 
 interface QuoteItemForm {
@@ -72,7 +73,8 @@ export const Contracts: React.FC = () => {
       valid_until: '',
       terms: 'Paiement à 30 jours. Acompte de 30% à la signature.',
       notes: '',
-      items: [{ name: '', description: '', quantity: 1, unit_price: 0 }]
+      items: [{ name: '', description: '', quantity: 1, unit_price: 0 }],
+      vat_rate: 20
     };
   });
 
@@ -129,7 +131,7 @@ export const Contracts: React.FC = () => {
   };
 
   const calculateTax = (subtotal: number) => {
-    return subtotal * 0.20; // 20% TVA
+    return subtotal * (formData.vat_rate / 100);
   };
 
   const handleCalculatorChange = (values: CalculationValues) => {
@@ -262,7 +264,8 @@ export const Contracts: React.FC = () => {
           status: formData.status,
           valid_until: formData.valid_until || undefined,
           terms: formData.terms,
-          notes: formData.notes
+          notes: formData.notes,
+          vat_rate: formData.vat_rate
         });
 
         // Si le statut passe à "accepted", créer automatiquement une feuille de route
@@ -284,6 +287,7 @@ export const Contracts: React.FC = () => {
           status: formData.status,
           total_amount: total,
           tax_amount: tax,
+          vat_rate: formData.vat_rate,
           valid_until: formData.valid_until || undefined,
           terms: formData.terms,
           notes: formData.notes
@@ -325,7 +329,8 @@ export const Contracts: React.FC = () => {
       valid_until: '',
       terms: template.default_terms || 'Paiement à 30 jours. Acompte de 30% à la signature.',
       notes: '',
-      items: template.default_items.length > 0 ? template.default_items : [{ name: '', description: '', quantity: 1, unit_price: 0 }]
+      items: template.default_items.length > 0 ? template.default_items : [{ name: '', description: '', quantity: 1, unit_price: 0 }],
+      vat_rate: 20
     });
     setShowTemplates(false);
     setShowForm(true);
@@ -343,10 +348,12 @@ export const Contracts: React.FC = () => {
       valid_until: '',
       terms: 'Paiement à 30 jours. Acompte de 30% à la signature.',
       notes: '',
-      items: [{ name: '', description: '', quantity: 1, unit_price: 0 }]
+      items: [{ name: '', description: '', quantity: 1, unit_price: 0 }],
+      vat_rate: 20
     });
     setShowForm(false);
     setEditingQuote(null);
+    localStorage.removeItem('contractsQuoteDraft');
   };
 
   const handleEdit = (quote: any) => {
@@ -362,7 +369,8 @@ export const Contracts: React.FC = () => {
       valid_until: quote.valid_until || '',
       terms: quote.terms || 'Paiement à 30 jours. Acompte de 30% à la signature.',
       notes: quote.notes || '',
-      items: []  // On laisse vide, les items seront gérés par QuoteItemManager
+      items: [],  // On laisse vide, les items seront gérés par QuoteItemManager
+      vat_rate: quote.vat_rate ?? 20
     });
     setShowForm(true);
   };
@@ -531,6 +539,24 @@ export const Contracts: React.FC = () => {
                   onChange={(e) => setFormData(prev => ({ ...prev, valid_until: e.target.value }))}
                 />
               </div>
+
+              <div>
+                <Label htmlFor="vat_rate">TVA</Label>
+                <Select 
+                  value={String(formData.vat_rate)}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, vat_rate: parseFloat(value) }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choisir le taux de TVA" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">0%</SelectItem>
+                    <SelectItem value="5.5">5,5%</SelectItem>
+                    <SelectItem value="10">10%</SelectItem>
+                    <SelectItem value="20">20%</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div>
@@ -622,7 +648,7 @@ export const Contracts: React.FC = () => {
                       <span>{calculateTotal().toFixed(2)} €</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>TVA (20%):</span>
+                      <span>TVA ({formData.vat_rate}%):</span>
                       <span>{calculateTax(calculateTotal()).toFixed(2)} €</span>
                     </div>
                     <div className="flex justify-between text-lg font-bold border-t pt-2">
@@ -633,6 +659,52 @@ export const Contracts: React.FC = () => {
                 </div>
               )}
             </div>
+
+            {/* Sélecteur TVA pour l'édition */}
+            {editingQuote && (
+              <Card className="border-2 border-primary/20">
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-4">
+                    <div className="flex-1">
+                      <Label className="text-base font-semibold">Taux de TVA</Label>
+                      <p className="text-sm text-muted-foreground">Choisissez le taux de TVA applicable à ce devis</p>
+                    </div>
+                    <div className="w-48">
+                      <Select
+                        value={String(formData.vat_rate)}
+                        onValueChange={async (value) => {
+                          const rate = parseFloat(value) || 0;
+                          setFormData(prev => ({ ...prev, vat_rate: rate }));
+                          if (editingQuote) {
+                            try {
+                              await updateQuote(editingQuote.id, {
+                                ...editingQuote,
+                                vat_rate: rate
+                              } as any);
+                              setEditingQuote((prev: any) => ({ ...prev, vat_rate: rate }));
+                              toast.success('TVA mise à jour');
+                            } catch (e) {
+                              console.error('Erreur mise à jour TVA:', e);
+                              toast.error('Erreur lors de la mise à jour de la TVA');
+                            }
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="h-12 text-base font-semibold">
+                          <SelectValue placeholder="Choisir le taux de TVA" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0" className="text-base">0%</SelectItem>
+                          <SelectItem value="5.5" className="text-base">5,5%</SelectItem>
+                          <SelectItem value="10" className="text-base">10%</SelectItem>
+                          <SelectItem value="20" className="text-base">20%</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* QuoteItemManager - visible seulement lors de l'édition pour gérer les lignes */}
             {editingQuote && (
