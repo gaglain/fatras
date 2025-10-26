@@ -853,7 +853,8 @@ export const Contracts: React.FC = () => {
             onItemsChange={(items) => {
               // Recalculer le total automatiquement
               const subtotal = items.reduce((sum, item) => sum + item.total_price, 0);
-              const tax = subtotal * 0.20; // 20% TVA
+              const ratePct = (typeof editingQuote?.vat_rate === 'number' ? editingQuote.vat_rate : Number(editingQuote?.vat_rate)) || 20;
+              const tax = subtotal * (ratePct / 100);
               const total = subtotal + tax;
               
               updateQuote(editingQuote.id, {
