@@ -125,11 +125,12 @@ export const Events: React.FC = () => {
 
   const getEventStats = () => {
     const pending = filteredEvents.filter(e => e.status === 'pending').length;
+    const option = filteredEvents.filter(e => e.status === 'option').length;
     const confirmed = filteredEvents.filter(e => e.status === 'confirmed').length;
     const completed = filteredEvents.filter(e => e.status === 'completed').length;
     const cancelled = filteredEvents.filter(e => e.status === 'cancelled').length;
 
-    return { total: filteredEvents.length, pending, confirmed, completed, cancelled };
+    return { total: filteredEvents.length, pending, option, confirmed, completed, cancelled };
   };
 
   // Effects
@@ -178,7 +179,7 @@ export const Events: React.FC = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
         <div className="bg-card p-4 rounded-lg border">
           <div className="flex items-center justify-between">
             <div>
@@ -195,6 +196,15 @@ export const Events: React.FC = () => {
               <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
             </div>
             <Clock className="h-8 w-8 text-yellow-600" />
+          </div>
+        </div>
+        <div className="bg-card p-4 rounded-lg border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Option</p>
+              <p className="text-2xl font-bold text-orange-600">{stats.option}</p>
+            </div>
+            <Clock className="h-8 w-8 text-orange-600" />
           </div>
         </div>
         <div className="bg-card p-4 rounded-lg border">
@@ -245,6 +255,7 @@ export const Events: React.FC = () => {
           <SelectContent>
             <SelectItem value="all">Tous les statuts</SelectItem>
             <SelectItem value="pending">En attente</SelectItem>
+            <SelectItem value="option">Option</SelectItem>
             <SelectItem value="confirmed">Confirmé</SelectItem>
             <SelectItem value="cancelled">Annulé</SelectItem>
             <SelectItem value="completed">Terminé</SelectItem>

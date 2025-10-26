@@ -21,7 +21,7 @@ export const FrontEvents: React.FC = () => {
       const { data: eventsData, error } = await supabase
         .from('events')
         .select('*')
-        .eq('status', 'confirmed')
+        .in('status', ['confirmed', 'option'])
         .order('start_date', { ascending: true });
 
       if (error) {
@@ -56,8 +56,10 @@ export const FrontEvents: React.FC = () => {
     switch (status) {
       case 'confirmed':
         return 'bg-green-100 text-green-800';
-      case 'pending':
+      case 'option':
         return 'bg-orange-100 text-orange-800';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
       case 'cancelled':
         return 'bg-red-100 text-red-800';
       default:
@@ -144,6 +146,7 @@ export const FrontEvents: React.FC = () => {
                             <h3 className="text-2xl font-bold text-gray-900">{event.title}</h3>
                             <Badge className={getStatusColor(event.status)}>
                               {event.status === 'confirmed' ? 'Confirmé' : 
+                               event.status === 'option' ? 'Option' :
                                event.status === 'pending' ? 'En attente' : 
                                event.status === 'cancelled' ? 'Annulé' : event.status}
                             </Badge>
@@ -192,10 +195,10 @@ export const FrontEvents: React.FC = () => {
                         </div>
                         <Button 
                           className="bg-purple-600 hover:bg-purple-700"
-                          disabled={event.status !== 'confirmed'}
+                          disabled={event.status !== 'confirmed' && event.status !== 'option'}
                         >
                           <Ticket className="h-4 w-4 mr-2" />
-                          {event.status === 'confirmed' ? 'Réserver' : 'Indisponible'}
+                          {event.status === 'confirmed' || event.status === 'option' ? 'Réserver' : 'Indisponible'}
                         </Button>
                       </div>
                     </div>

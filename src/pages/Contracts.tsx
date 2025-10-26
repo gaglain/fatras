@@ -677,11 +677,29 @@ export const Contracts: React.FC = () => {
                           setFormData(prev => ({ ...prev, vat_rate: rate }));
                           if (editingQuote) {
                             try {
+                              // Récupérer les items pour recalculer le total
+                              const { data: items } = await supabase
+                                .from('quote_items')
+                                .select('*')
+                                .eq('quote_id', editingQuote.id);
+                              
+                              const subtotal = items?.reduce((sum, item) => sum + (item.total_price || 0), 0) || 0;
+                              const taxAmount = subtotal * (rate / 100);
+                              const totalAmount = subtotal + taxAmount;
+                              
                               await updateQuote(editingQuote.id, {
-                                ...editingQuote,
-                                vat_rate: rate
+                                vat_rate: rate,
+                                tax_amount: taxAmount,
+                                total_amount: totalAmount
                               } as any);
-                              setEditingQuote((prev: any) => ({ ...prev, vat_rate: rate }));
+                              
+                              setEditingQuote((prev: any) => ({ 
+                                ...prev, 
+                                vat_rate: rate,
+                                tax_amount: taxAmount,
+                                total_amount: totalAmount
+                              }));
+                              
                               toast.success('TVA mise à jour');
                             } catch (e) {
                               console.error('Erreur mise à jour TVA:', e);
