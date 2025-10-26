@@ -53,6 +53,28 @@ export const CompanyTab: React.FC = () => {
 
       if (settings) {
         setCompanySettings(settings);
+        try {
+          localStorage.setItem('companySettings', JSON.stringify(settings));
+        } catch {}
+        // Apply favicon and title immediately
+        try {
+          if (settings.favicon) {
+            let link = document.querySelector("link[rel*='icon']") as HTMLLinkElement;
+            if (!link) {
+              link = document.createElement('link');
+              link.rel = 'shortcut icon';
+              document.head.appendChild(link);
+            }
+            link.type = 'image/x-icon';
+            link.href = settings.favicon;
+            try { localStorage.setItem('customFavicon', settings.favicon); } catch {}
+          }
+          if (settings.name) {
+            document.title = settings.name;
+          }
+        } catch {}
+        // Notify other components
+        window.dispatchEvent(new CustomEvent('companySettingsChanged', { detail: settings }));
       }
     } catch (error) {
       console.error('Erreur lors du chargement des paramètres:', error);
@@ -97,6 +119,7 @@ export const CompanyTab: React.FC = () => {
         }
         link.type = 'image/x-icon';
         link.href = companySettings.favicon;
+        try { localStorage.setItem('customFavicon', companySettings.favicon); } catch {}
       }
       
       // Mettre à jour le titre
@@ -104,9 +127,11 @@ export const CompanyTab: React.FC = () => {
         document.title = companySettings.name;
       }
 
+      // Persister pour le header et autres composants
+      try { localStorage.setItem('companySettings', JSON.stringify(companySettings)); } catch {}
+
       // Déclencher l'événement pour les autres composants
       window.dispatchEvent(new CustomEvent('companySettingsChanged', { detail: companySettings }));
-      
       toast.success("Paramètres de l'entreprise sauvegardés");
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
@@ -141,12 +166,24 @@ export const CompanyTab: React.FC = () => {
         .from('app-assets')
         .getPublicUrl(filePath);
 
-      // Update state immediately
-      setCompanySettings(prev => ({
-        ...prev,
-        [type]: publicUrl
-      }));
-
+      // Mettre à jour immédiatement l'état + localStorage + notifier
+      const next = { ...companySettings, [type]: publicUrl } as typeof companySettings;
+      setCompanySettings(next);
+      try { localStorage.setItem('companySettings', JSON.stringify(next)); } catch {}
+      if (type === 'favicon') {
+        try {
+          let link = document.querySelector("link[rel*='icon']") as HTMLLinkElement;
+          if (!link) {
+            link = document.createElement('link');
+            link.rel = 'shortcut icon';
+            document.getElementsByTagName('head')[0].appendChild(link);
+          }
+          link.type = 'image/x-icon';
+          link.href = publicUrl;
+          try { localStorage.setItem('customFavicon', publicUrl); } catch {}
+        } catch {}
+      }
+      window.dispatchEvent(new CustomEvent('companySettingsChanged', { detail: next }));
       // Also save to database immediately
       const { error: dbError } = await supabase
         .from('app_settings')
