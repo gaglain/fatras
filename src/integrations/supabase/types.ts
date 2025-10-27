@@ -359,6 +359,7 @@ export type Database = {
       }
       centralized_artists: {
         Row: {
+          audio_files: Json | null
           audio_url: string | null
           bio: string | null
           booking_contact_id: string | null
@@ -393,6 +394,7 @@ export type Database = {
           website: string | null
         }
         Insert: {
+          audio_files?: Json | null
           audio_url?: string | null
           bio?: string | null
           booking_contact_id?: string | null
@@ -427,6 +429,7 @@ export type Database = {
           website?: string | null
         }
         Update: {
+          audio_files?: Json | null
           audio_url?: string | null
           bio?: string | null
           booking_contact_id?: string | null

@@ -7,7 +7,9 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import { FrontHome } from "./pages/FrontHome";
 import { FrontArtists } from "./pages/FrontArtists";
+import { FrontArtistDetail } from "./pages/FrontArtistDetail";
 import { FrontEvents } from "./pages/FrontEvents";
+import { FrontTour } from "./pages/FrontTour";
 import { FrontContact } from "./pages/FrontContact";
 import { FrontShop } from "./pages/FrontShop";
 import Dashboard from "./pages/Dashboard";
@@ -142,6 +144,12 @@ const App = () => {
                 <Route path="/front/events" element={<FrontLayout><FrontEvents /></FrontLayout>} />
                 <Route path="/front/contact" element={<FrontLayout><FrontContact /></FrontLayout>} />
                 <Route path="/front/shop" element={<FrontLayout><FrontShop /></FrontLayout>} />
+                
+                {/* Routes publiques pour les artistes et tournées */}
+                <Route path="/artistes" element={<FrontLayout><FrontArtists /></FrontLayout>} />
+                <Route path="/artistes/:id" element={<FrontLayout><FrontArtistDetail /></FrontLayout>} />
+                <Route path="/tournee" element={<FrontLayout><FrontTour /></FrontLayout>} />
+                <Route path="/spectacles" element={<FrontLayout><FrontArtists /></FrontLayout>} />
                 
                 <Route path="/artist-showcase" element={<FrontArtistShowcase />} />
                 <Route path="/auth" element={<Auth />} />

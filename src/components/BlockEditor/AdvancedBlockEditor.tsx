@@ -27,6 +27,7 @@ import { AdvancedTextBlock } from './blocks/AdvancedTextBlock';
 import { AdvancedImageBlock } from './blocks/AdvancedImageBlock';
 import { AdvancedHeroBlock } from './blocks/AdvancedHeroBlock';
 import { ArtistGridBlock } from './blocks/ArtistGridBlock';
+import { BackgroundImageBlock } from './blocks/BackgroundImageBlock';
 
 interface AdvancedBlockEditorProps {
   initialBlocks: Block[];
@@ -79,7 +80,8 @@ export const AdvancedBlockEditor: React.FC<AdvancedBlockEditorProps> = ({
     { value: 'text', label: 'Texte', icon: Type },
     { value: 'image', label: 'Image', icon: Image },
     { value: 'hero', label: 'Section Hero', icon: Layout },
-    { value: 'artist-grid', label: 'Grille d\'artistes', icon: Users }
+    { value: 'artist-grid', label: 'Grille d\'artistes', icon: Users },
+    { value: 'background-image', label: 'Image de fond', icon: Palette }
   ];
 
   const addBlock = (type: BlockType) => {
@@ -162,6 +164,15 @@ export const AdvancedBlockEditor: React.FC<AdvancedBlockEditorProps> = ({
             isEditing={isSelected && !previewMode}
           />
         );
+      case 'background-image':
+        return (
+          <BackgroundImageBlock
+            content={block.content}
+            onChange={(content) => updateBlock(block.id, content)}
+            isSelected={isSelected}
+            previewMode={previewMode}
+          />
+        );
       default:
         return <div>Type de bloc non supporté: {block.type}</div>;
     }
@@ -218,6 +229,18 @@ export const AdvancedBlockEditor: React.FC<AdvancedBlockEditorProps> = ({
           showRating: false,
           showStats: true,
           columns: 3
+        };
+      case 'background-image':
+        return {
+          backgroundImage: '',
+          backgroundColor: '#000000',
+          overlayOpacity: 50,
+          overlayColor: 'black',
+          content: 'Contenu avec image de fond',
+          height: 'h-96',
+          padding: 'p-8',
+          textColor: 'text-white',
+          textAlign: 'center'
         };
       default:
         return {};

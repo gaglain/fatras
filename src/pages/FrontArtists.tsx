@@ -76,11 +76,11 @@ export const FrontArtists: React.FC = () => {
               <Card key={artist.id} className="hover:shadow-lg transition-shadow">
                 <CardContent className="p-6">
                   {artist.photo_url && (
-                    <div className="mb-4">
+                    <div className="mb-4 bg-muted rounded-lg overflow-hidden">
                       <img 
                         src={artist.photo_url} 
                         alt={artist.name}
-                        className="w-full h-48 object-cover rounded-lg"
+                        className="w-full h-48 object-contain"
                       />
                     </div>
                   )}
@@ -92,16 +92,12 @@ export const FrontArtists: React.FC = () => {
                     {artist.bio && (
                       <p className="text-muted-foreground text-sm mb-4">{artist.bio}</p>
                     )}
-                    {artist.website && (
-                      <a 
-                        href={artist.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
-                      >
-                        Découvrir
-                      </a>
-                    )}
+                    <a 
+                      href={`/artistes/${artist.id}`}
+                      className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+                    >
+                      Découvrir
+                    </a>
                   </div>
                 </CardContent>
               </Card>

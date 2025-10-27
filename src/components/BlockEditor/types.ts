@@ -1,5 +1,5 @@
 
-export type BlockType = 'text' | 'image' | 'hero' | 'artist-grid' | 'contact-form' | 'gallery';
+export type BlockType = 'text' | 'image' | 'hero' | 'artist-grid' | 'contact-form' | 'gallery' | 'background-image';
 
 export interface Block {
   id: string;

@@ -19,6 +19,7 @@ interface ArtistMediaManagerProps {
     presentation_pdf_url?: string;
     tech_sheet_pdf_url?: string;
     video_url?: string;
+    audio_files?: { name: string; url: string }[];
   };
   onUpdate: (updates: Partial<CentralizedArtist>) => void;
 }
@@ -229,6 +230,84 @@ export const ArtistMediaManager: React.FC<ArtistMediaManagerProps> = ({ artist, 
             <Button onClick={() => handleSaveText('video_url', videoUrl)}>
               Enregistrer
             </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Audio */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Upload className="h-5 w-5" />
+            Fichiers Audio
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="space-y-3">
+              {(artist.audio_files || []).map((audio: any, index: number) => (
+                <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                  <div className="flex-1">
+                    <p className="font-medium text-sm">{audio.name}</p>
+                    <audio controls className="w-full mt-2">
+                      <source src={audio.url} type="audio/mpeg" />
+                    </audio>
+                  </div>
+                  <Button
+                    size="icon"
+                    variant="destructive"
+                    onClick={() => {
+                      const updatedAudio = (artist.audio_files || []).filter((_: any, i: number) => i !== index);
+                      onUpdate({ audio_files: updatedAudio } as any);
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+            <div>
+              <Label htmlFor="audio-upload">Ajouter des fichiers audio</Label>
+              <Input
+                id="audio-upload"
+                type="file"
+                accept="audio/*"
+                multiple
+                onChange={async (e) => {
+                  const files = Array.from(e.target.files || []);
+                  for (const file of files) {
+                    setUploading(true);
+                    try {
+                      const fileExt = file.name.split('.').pop();
+                      const fileName = `${artist.id}/audio-${Date.now()}.${fileExt}`;
+                      
+                      const { error: uploadError } = await supabase.storage
+                        .from('artist-audio')
+                        .upload(fileName, file);
+
+                      if (uploadError) throw uploadError;
+
+                      const { data: { publicUrl } } = supabase.storage
+                        .from('artist-audio')
+                        .getPublicUrl(fileName);
+
+                      const currentAudio = artist.audio_files || [];
+                      onUpdate({ 
+                        audio_files: [...currentAudio, { name: file.name, url: publicUrl }] 
+                      } as any);
+
+                      toast.success('Fichier audio uploadé avec succès');
+                    } catch (error) {
+                      console.error('Error uploading audio:', error);
+                      toast.error('Erreur lors de l\'upload du fichier audio');
+                    } finally {
+                      setUploading(false);
+                    }
+                  }
+                }}
+                disabled={uploading}
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
