@@ -3466,6 +3466,13 @@ export type Database = {
           username: string
         }[]
       }
+      has_any_role: {
+        Args: {
+          _roles: Database["public"]["Enums"]["app_role"][]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_permission: {
         Args: { _action: string; _resource: string; _user_id: string }
         Returns: boolean
