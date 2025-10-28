@@ -252,11 +252,29 @@ export const FrontArtistDetail: React.FC = () => {
                       <Video className="h-5 w-5 mr-2" />
                       Vidéo
                     </h3>
-                    <div className="aspect-video rounded-lg overflow-hidden">
+                    <div className="aspect-video rounded-lg overflow-hidden bg-muted">
                       <iframe
-                        src={artist.video_url.replace('watch?v=', 'embed/')}
+                        src={(() => {
+                          const url = artist.video_url;
+                          if (url.includes('youtube.com') || url.includes('youtu.be')) {
+                            const videoId = url.includes('youtu.be') 
+                              ? url.split('youtu.be/')[1]?.split('?')[0]
+                              : url.split('v=')[1]?.split('&')[0];
+                            return `https://www.youtube.com/embed/${videoId}`;
+                          }
+                          if (url.includes('vimeo.com')) {
+                            const videoId = url.split('vimeo.com/')[1]?.split('?')[0];
+                            return `https://player.vimeo.com/video/${videoId}`;
+                          }
+                          if (url.includes('dailymotion.com')) {
+                            const videoId = url.split('video/')[1]?.split('?')[0];
+                            return `https://www.dailymotion.com/embed/video/${videoId}`;
+                          }
+                          return url;
+                        })()}
                         className="w-full h-full"
                         allowFullScreen
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       />
                     </div>
                   </CardContent>
@@ -273,13 +291,20 @@ export const FrontArtistDetail: React.FC = () => {
                     </h3>
                     <div className="space-y-4">
                       {artist.audio_files.map((audio: any, index: number) => (
-                        <div key={index} className="flex items-center justify-between p-4 bg-muted rounded-lg">
-                          <div className="flex-1">
-                            <p className="font-medium">{audio.name || `Audio ${index + 1}`}</p>
-                            <audio controls className="w-full mt-2">
+                        <div key={index} className="p-4 bg-muted rounded-lg">
+                          <p className="font-medium mb-2">{audio.name || `Audio ${index + 1}`}</p>
+                          {audio.type === 'link' ? (
+                            <Button asChild className="w-full">
+                              <a href={audio.url} target="_blank" rel="noopener noreferrer">
+                                <Music className="h-4 w-4 mr-2" />
+                                Écouter sur {audio.name}
+                              </a>
+                            </Button>
+                          ) : (
+                            <audio controls className="w-full">
                               <source src={audio.url} type="audio/mpeg" />
                             </audio>
-                          </div>
+                          )}
                         </div>
                       ))}
                     </div>

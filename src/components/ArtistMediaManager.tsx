@@ -29,6 +29,8 @@ export const ArtistMediaManager: React.FC<ArtistMediaManagerProps> = ({ artist, 
   const [shortDescription, setShortDescription] = useState(artist.short_description || '');
   const [presentationText, setPresentationText] = useState(artist.presentation_text || '');
   const [videoUrl, setVideoUrl] = useState(artist.video_url || '');
+  const [audioLink, setAudioLink] = useState('');
+  const [audioLinkName, setAudioLinkName] = useState('');
 
   const handleFileUpload = async (
     file: File,
@@ -75,6 +77,49 @@ export const ArtistMediaManager: React.FC<ArtistMediaManagerProps> = ({ artist, 
   const handleSaveText = (field: string, value: string) => {
     onUpdate({ [field]: value } as any);
     toast.success('Texte enregistré');
+  };
+
+  const handleAddAudioLink = () => {
+    if (!audioLink.trim()) {
+      toast.error('Veuillez entrer une URL');
+      return;
+    }
+    const currentAudio = artist.audio_files || [];
+    const newAudio = {
+      type: 'link',
+      name: audioLinkName.trim() || 'Lien audio',
+      url: audioLink.trim()
+    };
+    onUpdate({ audio_files: [...currentAudio, newAudio] } as any);
+    setAudioLink('');
+    setAudioLinkName('');
+    toast.success('Lien audio ajouté');
+  };
+
+  const getEmbedUrl = (url: string) => {
+    if (!url) return '';
+    
+    // YouTube
+    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+      const videoId = url.includes('youtu.be') 
+        ? url.split('youtu.be/')[1]?.split('?')[0]
+        : url.split('v=')[1]?.split('&')[0];
+      return `https://www.youtube.com/embed/${videoId}`;
+    }
+    
+    // Vimeo
+    if (url.includes('vimeo.com')) {
+      const videoId = url.split('vimeo.com/')[1]?.split('?')[0];
+      return `https://player.vimeo.com/video/${videoId}`;
+    }
+    
+    // Dailymotion
+    if (url.includes('dailymotion.com')) {
+      const videoId = url.split('video/')[1]?.split('?')[0];
+      return `https://www.dailymotion.com/embed/video/${videoId}`;
+    }
+    
+    return url;
   };
 
   return (
@@ -219,11 +264,12 @@ export const ArtistMediaManager: React.FC<ArtistMediaManagerProps> = ({ artist, 
               />
             </div>
             {videoUrl && (
-              <div className="aspect-video">
+              <div className="aspect-video bg-muted rounded-lg overflow-hidden">
                 <iframe
-                  src={videoUrl.replace('watch?v=', 'embed/')}
-                  className="w-full h-full rounded-lg"
+                  src={getEmbedUrl(videoUrl)}
+                  className="w-full h-full"
                   allowFullScreen
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 />
               </div>
             )}
@@ -249,9 +295,20 @@ export const ArtistMediaManager: React.FC<ArtistMediaManagerProps> = ({ artist, 
                 <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg">
                   <div className="flex-1">
                     <p className="font-medium text-sm">{audio.name}</p>
-                    <audio controls className="w-full mt-2">
-                      <source src={audio.url} type="audio/mpeg" />
-                    </audio>
+                    {audio.type === 'link' ? (
+                      <a 
+                        href={audio.url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-sm text-primary hover:underline mt-1 block"
+                      >
+                        Écouter →
+                      </a>
+                    ) : (
+                      <audio controls className="w-full mt-2">
+                        <source src={audio.url} type="audio/mpeg" />
+                      </audio>
+                    )}
                   </div>
                   <Button
                     size="icon"
@@ -293,7 +350,7 @@ export const ArtistMediaManager: React.FC<ArtistMediaManagerProps> = ({ artist, 
 
                       const currentAudio = artist.audio_files || [];
                       onUpdate({ 
-                        audio_files: [...currentAudio, { name: file.name, url: publicUrl }] 
+                        audio_files: [...currentAudio, { type: 'file', name: file.name, url: publicUrl }] 
                       } as any);
 
                       toast.success('Fichier audio uploadé avec succès');
@@ -307,6 +364,33 @@ export const ArtistMediaManager: React.FC<ArtistMediaManagerProps> = ({ artist, 
                 }}
                 disabled={uploading}
               />
+            </div>
+            
+            <div className="border-t pt-4">
+              <Label className="text-base font-semibold mb-3 block">Ou ajouter un lien audio</Label>
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="audio-link-name">Nom du lien (ex: Spotify, SoundCloud)</Label>
+                  <Input
+                    id="audio-link-name"
+                    value={audioLinkName}
+                    onChange={(e) => setAudioLinkName(e.target.value)}
+                    placeholder="Spotify"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="audio-link">URL</Label>
+                  <Input
+                    id="audio-link"
+                    value={audioLink}
+                    onChange={(e) => setAudioLink(e.target.value)}
+                    placeholder="https://open.spotify.com/..."
+                  />
+                </div>
+                <Button onClick={handleAddAudioLink} disabled={!audioLink.trim()}>
+                  Ajouter le lien
+                </Button>
+              </div>
             </div>
           </div>
         </CardContent>
