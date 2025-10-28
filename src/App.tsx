@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import { HelmetProvider } from "react-helmet-async";
 import { FrontHome } from "./pages/FrontHome";
 import { FrontArtists } from "./pages/FrontArtists";
 import { FrontArtistDetail } from "./pages/FrontArtistDetail";
@@ -122,6 +123,7 @@ const App = () => {
       }}
     >
       <QueryClientProvider client={queryClient}>
+      <HelmetProvider>
       <ThemeProvider 
         attribute="class"
         defaultTheme="light"
@@ -195,6 +197,7 @@ const App = () => {
           </BrowserRouter>
         </TooltipProvider>
       </ThemeProvider>
+      </HelmetProvider>
     </QueryClientProvider>
   </ErrorBoundary>
   );

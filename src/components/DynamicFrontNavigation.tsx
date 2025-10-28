@@ -91,8 +91,22 @@ export const DynamicFrontNavigation: React.FC = () => {
       const visibleItems = normalized
         .filter((item: any) => item.visible)
         .sort((a: any, b: any) => a.order - b.order);
-      setMenuItems(visibleItems);
-      console.log('✅ Navigation - Menu loaded:', visibleItems.length, 'items');
+
+      // Deduplicate by label+normalized path to avoid double menu entries
+      const seen = new Set<string>();
+      const deduped = visibleItems.filter((item: any) => {
+        const label = String(item.label || '').trim().toLowerCase();
+        const path = String(item.path || '')
+          .replace(/\/$/, '') // remove trailing slash
+          .replace(/^\/http(s)?:\/\//, 'http$1://'); // fix accidental leading slash before http
+        const key = `${label}|${path}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+
+      setMenuItems(deduped);
+      console.log('✅ Navigation - Menu loaded:', deduped.length, 'items');
     } else {
       setMenuItems([]);
     }
