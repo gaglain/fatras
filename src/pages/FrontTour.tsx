@@ -18,15 +18,30 @@ export const FrontTour: React.FC = () => {
     try {
       const { data, error } = await supabase
         .from('roadshow_stops')
-        .select(`
-          *,
-          centralized_artists!roadshow_stops_artist_lineup (name, image)
-        `)
+        .select('*')
         .eq('status', 'confirmed')
         .order('date', { ascending: true });
 
       if (error) throw error;
-      setTourStops(data || []);
+      
+      // Charger les artistes associés
+      const stopsWithArtists = await Promise.all((data || []).map(async (stop) => {
+        if (stop.artist_lineup && Array.isArray(stop.artist_lineup)) {
+          const artistIds = stop.artist_lineup.map((a: any) => typeof a === 'string' ? a : a.id).filter(Boolean);
+          
+          if (artistIds.length > 0) {
+            const { data: artists } = await supabase
+              .from('centralized_artists')
+              .select('id, name, image')
+              .in('id', artistIds);
+            
+            return { ...stop, artists: artists || [] };
+          }
+        }
+        return { ...stop, artists: [] };
+      }));
+      
+      setTourStops(stopsWithArtists);
     } catch (error) {
       console.error('Error loading tour stops:', error);
       setTourStops([]);
@@ -123,6 +138,19 @@ export const FrontTour: React.FC = () => {
                             {stop.address}
                           </div>
                         </div>
+
+                        {stop.artists && stop.artists.length > 0 && (
+                          <div className="mt-4">
+                            <p className="text-sm font-semibold text-gray-700 mb-2">Spectacles :</p>
+                            <div className="flex flex-wrap gap-2">
+                              {stop.artists.map((artist: any) => (
+                                <Badge key={artist.id} variant="outline" className="bg-purple-50">
+                                  {artist.name}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
 
                         {stop.capacity && (
                           <div className="flex items-center text-sm text-gray-500">
