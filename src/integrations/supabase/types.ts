@@ -761,12 +761,43 @@ export type Database = {
           },
         ]
       }
+      contact_types: {
+        Row: {
+          color: string | null
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       contacts: {
         Row: {
           accepts_marketing_emails: boolean | null
           address: string | null
           city: string | null
           company: string | null
+          contact_type_id: string | null
           country: string | null
           created_at: string | null
           email: string | null
@@ -793,6 +824,7 @@ export type Database = {
           address?: string | null
           city?: string | null
           company?: string | null
+          contact_type_id?: string | null
           country?: string | null
           created_at?: string | null
           email?: string | null
@@ -819,6 +851,7 @@ export type Database = {
           address?: string | null
           city?: string | null
           company?: string | null
+          contact_type_id?: string | null
           country?: string | null
           created_at?: string | null
           email?: string | null
@@ -841,6 +874,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "contacts_contact_type_id_fkey"
+            columns: ["contact_type_id"]
+            isOneToOne: false
+            referencedRelation: "contact_types"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "contacts_event_id_fkey"
             columns: ["event_id"]
