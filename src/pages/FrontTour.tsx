@@ -26,15 +26,36 @@ export const FrontTour: React.FC = () => {
       
       // Charger les artistes associés
       const stopsWithArtists = await Promise.all((data || []).map(async (stop) => {
-        if (stop.artist_lineup && Array.isArray(stop.artist_lineup)) {
-          const artistIds = stop.artist_lineup.map((a: any) => typeof a === 'string' ? a : a.id).filter(Boolean);
+        console.log('Processing stop:', stop.id, 'artist_lineup:', stop.artist_lineup);
+        
+        if (stop.artist_lineup) {
+          let artistIds: string[] = [];
+          
+          // Gérer différents formats de artist_lineup
+          if (Array.isArray(stop.artist_lineup)) {
+            artistIds = stop.artist_lineup
+              .map((a: any) => {
+                if (typeof a === 'string') return a;
+                if (a?.id) return a.id;
+                if (a?.artistId) return a.artistId;
+                return null;
+              })
+              .filter(Boolean);
+          }
+          
+          console.log('Extracted artistIds:', artistIds);
           
           if (artistIds.length > 0) {
-            const { data: artists } = await supabase
+            const { data: artists, error: artistError } = await supabase
               .from('centralized_artists')
               .select('id, name, image')
               .in('id', artistIds);
             
+            if (artistError) {
+              console.error('Error loading artists:', artistError);
+            }
+            
+            console.log('Loaded artists:', artists);
             return { ...stop, artists: artists || [] };
           }
         }

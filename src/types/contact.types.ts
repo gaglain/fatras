@@ -16,6 +16,7 @@ export interface Contact {
   notes?: string;
   tags?: string[];
   role: string;
+  contact_type_id?: string;
   created_at?: string;
   updated_at?: string;
 }

@@ -45,6 +45,7 @@ import { WebsiteBackoffice } from "./pages/WebsiteBackoffice";
 import { Application } from "./pages/Application";
 import { Quotes } from "./pages/Quotes";
 import { RolePermissions } from "./pages/RolePermissions";
+import ContactTypes from "./pages/ContactTypes";
 import { Layout } from "./components/Layout";
 import { FontManager } from "./components/website/FontManager";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -161,9 +162,10 @@ const App = () => {
                 <Route path="/artists" element={<ProtectedRoute><Layout><Artists /></Layout></ProtectedRoute>} />
                 <Route path="/artists/:id" element={<ProtectedRoute><Layout><ArtistDetailPage /></Layout></ProtectedRoute>} />
                 <Route path="/events" element={<ProtectedRoute><Layout><Events /></Layout></ProtectedRoute>} />
-                <Route path="/contacts" element={<ProtectedRoute><Layout><Contacts /></Layout></ProtectedRoute>} />
-                <Route path="/contacts/:id" element={<ProtectedRoute><Layout><ContactDetail /></Layout></ProtectedRoute>} />
-                <Route path="/tasks" element={<ProtectedRoute><Layout><Tasks /></Layout></ProtectedRoute>} />
+<Route path="/contacts" element={<ProtectedRoute><Layout><Contacts /></Layout></ProtectedRoute>} />
+<Route path="/contacts/:id" element={<ProtectedRoute><Layout><ContactDetail /></Layout></ProtectedRoute>} />
+<Route path="/contact-types" element={<ProtectedRoute><Layout><ContactTypes /></Layout></ProtectedRoute>} />
+<Route path="/tasks" element={<ProtectedRoute><Layout><Tasks /></Layout></ProtectedRoute>} />
                 <Route path="/roadshow" element={<ProtectedRoute><Layout><RoadShow /></Layout></ProtectedRoute>} />
                 <Route path="/messagerie" element={<ProtectedRoute><Layout><Messagerie /></Layout></ProtectedRoute>} />
 <Route path="/show-bible" element={<ProtectedRoute><Layout><ShowBible /></Layout></ProtectedRoute>} />

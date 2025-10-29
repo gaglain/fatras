@@ -43,7 +43,8 @@ export const navigationData: MenuItem[] = [
     visible: true,
     children: [
       { name: 'Contacts', href: '/contacts', icon: Users, visible: true },
-      { name: 'Listes de contacts', href: '/contact-lists', icon: UserPlus, visible: true }
+      { name: 'Listes de contacts', href: '/contact-lists', icon: UserPlus, visible: true },
+      { name: 'Types de contacts', href: '/contact-types', icon: Users, visible: true }
     ]
   },
   { 

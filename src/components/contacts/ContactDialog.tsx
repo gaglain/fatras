@@ -36,6 +36,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
 }) => {
   const { user } = useAuth();
   const [spectacles, setSpectacles] = useState<Spectacle[]>([]);
+  const [contactTypes, setContactTypes] = useState<Array<{ id: string; name: string; color: string }>>([]);
   const [selectedArtistId, setSelectedArtistId] = useState<string>('');
   const [formData, setFormData] = useState<Contact>({
     first_name: '',
@@ -76,6 +77,22 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
     }
   };
 
+  const fetchContactTypes = async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase
+        .from('contact_types')
+        .select('id, name, color')
+        .eq('user_id', user.id)
+        .order('name');
+
+      if (error) throw error;
+      setContactTypes(data || []);
+    } catch (error: any) {
+      console.error('Erreur lors du chargement des types de contact:', error);
+    }
+  };
+
   useEffect(() => {
     if (contact) {
       setFormData(contact);
@@ -104,6 +121,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
       setSelectedArtistId('');
     }
     fetchSpectacles();
+    fetchContactTypes();
   }, [contact, isOpen]);
 
   const loadContactArtist = async (contactId: string) => {
@@ -324,18 +342,27 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
               </Select>
             </div>
             <div>
-              <Label htmlFor="role">Type de contact</Label>
-              <Select value={formData.role} onValueChange={(value) => setFormData(prev => ({ ...prev, role: value }))}>
+              <Label htmlFor="contact_type">Type de contact</Label>
+              <Select 
+                value={formData.contact_type_id || ''} 
+                onValueChange={(value) => setFormData(prev => ({ ...prev, contact_type_id: value }))}
+              >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Sélectionner un type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="artiste">Artiste</SelectItem>
-                  <SelectItem value="manager">Manager</SelectItem>
-                  <SelectItem value="venue">Salle/Venue</SelectItem>
-                  <SelectItem value="organisateur">Organisateur</SelectItem>
-                  <SelectItem value="media">Média</SelectItem>
-                  <SelectItem value="contact">Contact général</SelectItem>
+                  <SelectItem value="">Aucun type</SelectItem>
+                  {contactTypes.map(type => (
+                    <SelectItem key={type.id} value={type.id}>
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: type.color }}
+                        />
+                        {type.name}
+                      </div>
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

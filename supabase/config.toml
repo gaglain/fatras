@@ -10,6 +10,9 @@ max_rows = 1000
 [functions.resend-webhook]
 verify_jwt = false
 
+[functions.resend-email-events]
+verify_jwt = false
+
 [functions.send-email-ovh]
 verify_jwt = false
 
