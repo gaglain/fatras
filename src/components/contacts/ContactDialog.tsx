@@ -160,7 +160,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
         notes: formData.notes || '',
         tags: formData.tags || [],
         role: formData.role || 'contact',
-        contact_type_id: formData.contact_type_id || null,
+        contact_type_id: formData.contact_type_id && formData.contact_type_id !== 'none' ? formData.contact_type_id : null,
         accepts_marketing_emails: true
       };
 
@@ -345,14 +345,14 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
             <div>
               <Label htmlFor="contact_type">Type de contact</Label>
               <Select 
-                value={formData.contact_type_id || ''} 
-                onValueChange={(value) => setFormData(prev => ({ ...prev, contact_type_id: value }))}
+                value={formData.contact_type_id ?? 'none'} 
+                onValueChange={(value) => setFormData(prev => ({ ...prev, contact_type_id: value === 'none' ? null : value }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Aucun type</SelectItem>
+                  <SelectItem value="none">Aucun type</SelectItem>
                   {contactTypes.map(type => (
                     <SelectItem key={type.id} value={type.id}>
                       <div className="flex items-center gap-2">
