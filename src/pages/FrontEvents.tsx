@@ -20,7 +20,10 @@ export const FrontEvents: React.FC = () => {
     try {
       const { data: eventsData, error } = await supabase
         .from('events')
-        .select('*')
+        .select(`
+          *,
+          artist:centralized_artists(id, name, image)
+        `)
         .in('status', ['confirmed', 'option'])
         .order('start_date', { ascending: true });
 
@@ -141,7 +144,7 @@ export const FrontEvents: React.FC = () => {
                       )}
                       
                       <div className="flex-1 space-y-4">
-                        <div>
+                          <div>
                           <div className="flex items-start justify-between mb-2">
                             <h3 className="text-2xl font-bold text-gray-900">{event.title}</h3>
                             <Badge className={getStatusColor(event.status)}>
@@ -151,8 +154,10 @@ export const FrontEvents: React.FC = () => {
                                event.status === 'cancelled' ? 'Annulé' : event.status}
                             </Badge>
                           </div>
-                          {event.artist_id && (
-                            <p className="text-lg text-purple-600 font-medium">{event.artist_id}</p>
+                          {event.artist && (
+                            <p className="text-lg text-purple-600 font-medium mb-2">
+                              Spectacle : {event.artist.name}
+                            </p>
                           )}
                           {event.description && (
                             <p className="text-gray-600 mt-2">{event.description}</p>
