@@ -160,6 +160,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
         notes: formData.notes || '',
         tags: formData.tags || [],
         role: formData.role || 'contact',
+        contact_type_id: formData.contact_type_id || null,
         accepts_marketing_emails: true
       };
 
