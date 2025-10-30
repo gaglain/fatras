@@ -109,12 +109,12 @@ export const Events: React.FC = () => {
   };
 
   const handleDialogClose = () => {
-    setDialogOpen(false);
     setEditingEvent(null);
+    setDialogOpen(false);
   };
 
-  const handleSaveEvent = () => {
-    fetchEvents();
+  const handleSaveEvent = async () => {
+    await fetchEvents();
     handleDialogClose();
   };
 
