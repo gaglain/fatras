@@ -240,7 +240,7 @@ export const EventDialog: React.FC<EventDialogProps> = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
@@ -305,6 +305,7 @@ export const EventDialog: React.FC<EventDialogProps> = ({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="pending">En attente</SelectItem>
+                  <SelectItem value="option">Option</SelectItem>
                   <SelectItem value="confirmed">Confirmé</SelectItem>
                   <SelectItem value="cancelled">Annulé</SelectItem>
                   <SelectItem value="completed">Terminé</SelectItem>
