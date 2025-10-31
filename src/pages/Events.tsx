@@ -113,6 +113,13 @@ export const Events: React.FC = () => {
     setDialogOpen(false);
   };
 
+  const handleDialogOpenChange = (open: boolean) => {
+    setDialogOpen(open);
+    if (!open) {
+      setEditingEvent(null);
+    }
+  };
+
   const handleSaveEvent = async () => {
     await fetchEvents();
     handleDialogClose();
@@ -322,7 +329,7 @@ export const Events: React.FC = () => {
       {/* Dialogs */}
       <EventDialog
         open={dialogOpen}
-        onOpenChange={handleDialogClose}
+        onOpenChange={handleDialogOpenChange}
         event={editingEvent}
         onSave={handleSaveEvent}
       />
