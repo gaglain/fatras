@@ -151,6 +151,27 @@ export const Events: React.FC = () => {
     filterEvents();
   }, [events, searchTerm, statusFilter, typeFilter]);
 
+  // Release any residual scroll/inert locks after the dialog closes
+  useEffect(() => {
+    if (!dialogOpen) {
+      try {
+        document.body.style.overflow = '';
+        document.documentElement.style.overflow = '';
+        document
+          .querySelectorAll('[data-scroll-locked]')
+          .forEach((el) => el.removeAttribute('data-scroll-locked'));
+        document
+          .querySelectorAll('[inert]')
+          .forEach((el) => el.removeAttribute('inert'));
+        document
+          .querySelectorAll('body > *[aria-hidden="true"]')
+          .forEach((el) => el.removeAttribute('aria-hidden'));
+      } catch (e) {
+        console.warn('Scroll lock cleanup error', e);
+      }
+    }
+  }, [dialogOpen]);
+
   if (loading) {
     return <div className="flex justify-center p-8">Chargement des événements...</div>;
   }
