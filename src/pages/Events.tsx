@@ -121,8 +121,8 @@ export const Events: React.FC = () => {
   };
 
   const handleSaveEvent = async () => {
-    await fetchEvents();
     handleDialogClose();
+    await fetchEvents();
   };
 
   const handleImportComplete = () => {
@@ -155,21 +155,59 @@ export const Events: React.FC = () => {
   useEffect(() => {
     if (!dialogOpen) {
       try {
-        document.body.style.overflow = '';
-        document.documentElement.style.overflow = '';
-        document
-          .querySelectorAll('[data-scroll-locked]')
-          .forEach((el) => el.removeAttribute('data-scroll-locked'));
-        document
-          .querySelectorAll('[inert]')
-          .forEach((el) => el.removeAttribute('inert'));
-        document
-          .querySelectorAll('body > *[aria-hidden="true"]')
-          .forEach((el) => el.removeAttribute('aria-hidden'));
+        const unlock = () => {
+          document.body.style.overflow = '';
+          document.documentElement.style.overflow = '';
+          document.body.style.pointerEvents = '';
+          document.documentElement.style.pointerEvents = '';
+
+          // Remove any lingering Radix overlays that might block clicks
+          document
+            .querySelectorAll('[data-radix-dialog-overlay]')
+            .forEach((el) => el.parentElement?.removeChild(el));
+
+          // Remove inert everywhere
+          document
+            .querySelectorAll('[inert]')
+            .forEach((el) => el.removeAttribute('inert'));
+
+          // Remove any aria-hidden flags left behind
+          document
+            .querySelectorAll('[aria-hidden]')
+            .forEach((el) => el.removeAttribute('aria-hidden'));
+
+          // Remove any custom scroll locks
+          document
+            .querySelectorAll('[data-scroll-locked]')
+            .forEach((el) => el.removeAttribute('data-scroll-locked'));
+        };
+
+        // Run immediately and on next tick (in case unmount happens after a frame)
+        unlock();
+        setTimeout(unlock, 0);
       } catch (e) {
         console.warn('Scroll lock cleanup error', e);
       }
     }
+
+    return () => {
+      // Ensure cleanup on unmount as well
+      try {
+        document
+          .querySelectorAll('[data-radix-dialog-overlay]')
+          .forEach((el) => el.parentElement?.removeChild(el));
+        document
+          .querySelectorAll('[aria-hidden]')
+          .forEach((el) => el.removeAttribute('aria-hidden'));
+        document
+          .querySelectorAll('[inert]')
+          .forEach((el) => el.removeAttribute('inert'));
+        document.body.style.overflow = '';
+        document.documentElement.style.overflow = '';
+        document.body.style.pointerEvents = '';
+        document.documentElement.style.pointerEvents = '';
+      } catch {}
+    };
   }, [dialogOpen]);
 
   if (loading) {

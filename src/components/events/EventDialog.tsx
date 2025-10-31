@@ -230,7 +230,6 @@ export const EventDialog: React.FC<EventDialogProps> = ({
       clearDraft();
       
       onSave();
-      onOpenChange(false);
     } catch (error: any) {
       console.error('Erreur:', error);
       toast.error('Erreur lors de la sauvegarde de l\'événement');
