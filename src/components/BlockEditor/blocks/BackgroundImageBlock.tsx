@@ -4,7 +4,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Upload } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Slider } from '@/components/ui/slider';
+import { BackgroundImageManager } from '@/components/BackgroundImageManager';
 
 interface BackgroundImageBlockContent {
   backgroundImage?: string;
@@ -15,7 +18,9 @@ interface BackgroundImageBlockContent {
   height?: string;
   padding?: string;
   textColor?: string;
-  textAlign?: string;
+  textAlign?: 'left' | 'center' | 'right';
+  textFont?: 'sans' | 'serif' | 'playfair' | 'roboto' | 'opensans';
+  textSize?: string;
 }
 
 interface BackgroundImageBlockProps {
@@ -25,182 +30,218 @@ interface BackgroundImageBlockProps {
   previewMode?: boolean;
 }
 
+const GOOGLE_FONTS = [
+  { value: 'sans', label: 'Inter (Sans-serif)' },
+  { value: 'serif', label: 'Playfair Display (Serif)' },
+  { value: 'playfair', label: 'Playfair Display' },
+  { value: 'roboto', label: 'Roboto' },
+  { value: 'opensans', label: 'Open Sans' }
+];
+
 export const BackgroundImageBlock: React.FC<BackgroundImageBlockProps> = ({
   content,
   onChange,
   isSelected,
   previewMode
 }) => {
-  const [isEditingImage, setIsEditingImage] = useState(false);
-
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        onChange({ ...content, backgroundImage: e.target?.result as string });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const overlayStyle = {
-    backgroundColor: `${content.overlayColor || 'black'}`,
-    opacity: (content.overlayOpacity || 50) / 100
-  };
+  const [showImageManager, setShowImageManager] = useState(false);
 
   if (!previewMode && isSelected) {
     return (
-      <div className="border-2 border-primary rounded-lg p-6 bg-card space-y-4">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold">Bloc avec Image de Fond</h3>
-        </div>
+      <Card className="p-6 space-y-6">
+        <Tabs defaultValue="content" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="content">Contenu</TabsTrigger>
+            <TabsTrigger value="background">Fond</TabsTrigger>
+            <TabsTrigger value="typography">Typographie</TabsTrigger>
+          </TabsList>
 
-        <div className="space-y-4">
-          <div>
-            <Label>Image de fond</Label>
-            <div className="flex gap-2">
-              <Input
-                type="text"
-                value={content.backgroundImage || ''}
-                onChange={(e) => onChange({ ...content, backgroundImage: e.target.value })}
-                placeholder="URL de l'image"
-              />
-              <Button variant="outline" onClick={() => document.getElementById('bg-image-upload')?.click()}>
-                <Upload className="h-4 w-4" />
-              </Button>
-              <input
-                id="bg-image-upload"
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleImageUpload}
+          <TabsContent value="content" className="space-y-4">
+            <div>
+              <Label>Contenu</Label>
+              <Textarea
+                value={content.content || ''}
+                onChange={(e) => onChange({ ...content, content: e.target.value })}
+                placeholder="Texte à afficher sur l'image..."
+                rows={6}
               />
             </div>
-          </div>
 
-          <div>
-            <Label>Couleur de fond (si pas d'image)</Label>
-            <Input
-              type="color"
-              value={content.backgroundColor || '#000000'}
-              onChange={(e) => onChange({ ...content, backgroundColor: e.target.value })}
-            />
-          </div>
+            <div>
+              <Label>Alignement du texte</Label>
+              <Select
+                value={content.textAlign || 'center'}
+                onValueChange={(value) => onChange({ ...content, textAlign: value as any })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="left">Gauche</SelectItem>
+                  <SelectItem value="center">Centre</SelectItem>
+                  <SelectItem value="right">Droite</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </TabsContent>
 
-          <div>
-            <Label>Opacité du calque ({content.overlayOpacity || 50}%)</Label>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={content.overlayOpacity || 50}
-              onChange={(e) => onChange({ ...content, overlayOpacity: parseInt(e.target.value) })}
-              className="w-full"
-            />
-          </div>
+          <TabsContent value="background" className="space-y-4">
+            <div>
+              <Label>Image de fond</Label>
+              <Button
+                variant="outline"
+                className="w-full mt-2"
+                onClick={() => setShowImageManager(!showImageManager)}
+              >
+                {content.backgroundImage ? 'Changer l\'image' : 'Sélectionner une image'}
+              </Button>
+              {showImageManager && (
+                <div className="mt-4">
+                  <BackgroundImageManager
+                    selectedImageUrl={content.backgroundImage}
+                    onSelectImage={(url) => {
+                      onChange({ ...content, backgroundImage: url });
+                      setShowImageManager(false);
+                    }}
+                  />
+                </div>
+              )}
+            </div>
 
-          <div>
-            <Label>Couleur du calque</Label>
-            <Select
-              value={content.overlayColor || 'black'}
-              onValueChange={(value) => onChange({ ...content, overlayColor: value })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="black">Noir</SelectItem>
-                <SelectItem value="white">Blanc</SelectItem>
-                <SelectItem value="hsl(var(--primary))">Primaire</SelectItem>
-                <SelectItem value="hsl(var(--secondary))">Secondaire</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+            <div>
+              <Label>Couleur de fond (si pas d'image)</Label>
+              <Input
+                type="color"
+                value={content.backgroundColor || '#000000'}
+                onChange={(e) => onChange({ ...content, backgroundColor: e.target.value })}
+              />
+            </div>
 
-          <div>
-            <Label>Hauteur</Label>
-            <Select
-              value={content.height || 'h-96'}
-              onValueChange={(value) => onChange({ ...content, height: value })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="h-48">Petite (12rem)</SelectItem>
-                <SelectItem value="h-64">Moyenne (16rem)</SelectItem>
-                <SelectItem value="h-96">Grande (24rem)</SelectItem>
-                <SelectItem value="h-screen">Plein écran</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+            <div>
+              <Label>Opacité du calque ({Math.round((content.overlayOpacity || 0.5) * 100)}%)</Label>
+              <Slider
+                value={[(content.overlayOpacity || 0.5) * 100]}
+                onValueChange={([value]) => onChange({ ...content, overlayOpacity: value / 100 })}
+                max={100}
+                step={5}
+                className="mt-2"
+              />
+            </div>
 
-          <div>
-            <Label>Contenu</Label>
-            <Textarea
-              value={content.content || ''}
-              onChange={(e) => onChange({ ...content, content: e.target.value })}
-              placeholder="Texte à afficher sur l'image..."
-              rows={4}
-            />
-          </div>
+            <div>
+              <Label>Couleur du calque</Label>
+              <Input
+                type="color"
+                value={content.overlayColor || '#000000'}
+                onChange={(e) => onChange({ ...content, overlayColor: e.target.value })}
+              />
+            </div>
 
-          <div>
-            <Label>Couleur du texte</Label>
-            <Select
-              value={content.textColor || 'text-white'}
-              onValueChange={(value) => onChange({ ...content, textColor: value })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="text-white">Blanc</SelectItem>
-                <SelectItem value="text-black">Noir</SelectItem>
-                <SelectItem value="text-primary">Primaire</SelectItem>
-                <SelectItem value="text-secondary">Secondaire</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+            <div>
+              <Label>Hauteur</Label>
+              <Input
+                value={content.height || '400px'}
+                onChange={(e) => onChange({ ...content, height: e.target.value })}
+                placeholder="400px, 100vh, etc."
+              />
+            </div>
 
-          <div>
-            <Label>Alignement du texte</Label>
-            <Select
-              value={content.textAlign || 'center'}
-              onValueChange={(value) => onChange({ ...content, textAlign: value })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="left">Gauche</SelectItem>
-                <SelectItem value="center">Centre</SelectItem>
-                <SelectItem value="right">Droite</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
+            <div>
+              <Label>Espacement intérieur</Label>
+              <Input
+                value={content.padding || '2rem'}
+                onChange={(e) => onChange({ ...content, padding: e.target.value })}
+                placeholder="2rem, 32px, etc."
+              />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="typography" className="space-y-4">
+            <div>
+              <Label>Police du texte</Label>
+              <Select
+                value={content.textFont || 'sans'}
+                onValueChange={(value) => onChange({ ...content, textFont: value as any })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {GOOGLE_FONTS.map((font) => (
+                    <SelectItem key={font.value} value={font.value}>
+                      {font.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label>Taille du texte</Label>
+              <Input
+                value={content.textSize || '1.125rem'}
+                onChange={(e) => onChange({ ...content, textSize: e.target.value })}
+                placeholder="1.125rem, 18px, etc."
+              />
+            </div>
+
+            <div>
+              <Label>Couleur du texte</Label>
+              <Input
+                type="color"
+                value={content.textColor || '#ffffff'}
+                onChange={(e) => onChange({ ...content, textColor: e.target.value })}
+              />
+            </div>
+          </TabsContent>
+        </Tabs>
+      </Card>
     );
   }
 
+  const overlayStyle: React.CSSProperties = {
+    backgroundColor: content.overlayColor || '#000000',
+    opacity: content.overlayOpacity || 0.5
+  };
+
+  const getFontClass = (font?: string) => {
+    const fontMap: Record<string, string> = {
+      sans: 'font-sans',
+      serif: 'font-serif',
+      playfair: 'font-playfair',
+      roboto: 'font-roboto',
+      opensans: 'font-opensans'
+    };
+    return fontMap[font || 'sans'] || 'font-sans';
+  };
+
+  const containerStyle: React.CSSProperties = {
+    backgroundImage: content.backgroundImage ? `url(${content.backgroundImage})` : 'none',
+    backgroundColor: content.backgroundColor || 'hsl(var(--muted))',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    minHeight: content.height || '400px',
+    padding: content.padding || '2rem',
+    position: 'relative'
+  };
+
+  const textStyle: React.CSSProperties = {
+    color: content.textColor || '#ffffff',
+    fontSize: content.textSize || '1.125rem'
+  };
+
   return (
-    <div 
-      className={`relative ${content.height || 'h-96'} ${content.padding || 'p-8'} overflow-hidden`}
-      style={{
-        backgroundImage: content.backgroundImage ? `url(${content.backgroundImage})` : 'none',
-        backgroundColor: content.backgroundColor || '#000000',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center'
-      }}
-    >
+    <div style={containerStyle} className="relative overflow-hidden">
       <div className="absolute inset-0" style={overlayStyle}></div>
-      <div className={`relative z-10 h-full flex items-center justify-${content.textAlign || 'center'}`}>
-        <div className={`w-full text-${content.textAlign || 'center'} ${content.textColor || 'text-white'}`}>
-          <div className="prose prose-lg max-w-none" style={{ color: 'inherit' }}>
-            {content.content || 'Cliquez pour modifier le contenu...'}
-          </div>
+      <div 
+        className={`relative z-10 h-full flex items-center`}
+        style={{ justifyContent: content.textAlign || 'center' }}
+      >
+        <div 
+          className={`w-full text-${content.textAlign || 'center'} ${getFontClass(content.textFont)}`}
+          style={textStyle}
+        >
+          {content.content || 'Cliquez pour ajouter du contenu...'}
         </div>
       </div>
     </div>

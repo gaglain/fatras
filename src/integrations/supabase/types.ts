@@ -204,6 +204,45 @@ export type Database = {
           },
         ]
       }
+      background_images: {
+        Row: {
+          created_at: string | null
+          file_size: number | null
+          height: number | null
+          id: string
+          name: string
+          thumbnail_url: string | null
+          updated_at: string | null
+          url: string
+          user_id: string
+          width: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          file_size?: number | null
+          height?: number | null
+          id?: string
+          name: string
+          thumbnail_url?: string | null
+          updated_at?: string | null
+          url: string
+          user_id: string
+          width?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          file_size?: number | null
+          height?: number | null
+          id?: string
+          name?: string
+          thumbnail_url?: string | null
+          updated_at?: string | null
+          url?: string
+          user_id?: string
+          width?: number | null
+        }
+        Relationships: []
+      }
       calendar_events: {
         Row: {
           attendees: string[] | null
