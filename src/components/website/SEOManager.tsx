@@ -17,6 +17,7 @@ import {
   Info
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useWebsiteSEO } from '@/hooks/useWebsiteSEO';
 
 interface SEOSettings {
   siteName: string;
@@ -57,19 +58,26 @@ Sitemap: ${window.location.origin}/sitemap.xml`
 };
 
 export const SEOManager: React.FC = () => {
+  const { seoSettings: dbSettings, loading, saveSEOSettings: saveToDb } = useWebsiteSEO();
   const [seoSettings, setSeoSettings] = useState<SEOSettings>(defaultSEOSettings);
   const [pagesSEO, setPagesSEO] = useState<PageSEO[]>([]);
   const [activeTab, setActiveTab] = useState<'general' | 'pages' | 'tools'>('general');
 
   useEffect(() => {
-    // Charger les paramètres SEO
-    const savedSEO = localStorage.getItem('website_seo');
-    if (savedSEO) {
-      try {
-        setSeoSettings(JSON.parse(savedSEO));
-      } catch (error) {
-        console.error('Erreur chargement SEO:', error);
-      }
+    // Charger depuis la base de données
+    if (dbSettings && Object.keys(dbSettings).length > 0) {
+      setSeoSettings({
+        siteName: dbSettings.site_title || '',
+        siteDescription: dbSettings.site_description || '',
+        keywords: dbSettings.site_keywords || '',
+        ogImage: dbSettings.og_image || '',
+        twitterCard: (dbSettings.twitter_card_type as any) || 'summary_large_image',
+        googleAnalyticsId: dbSettings.google_analytics_id || '',
+        googleSearchConsoleId: dbSettings.google_search_console_id || '',
+        enableSitemap: true,
+        enableRobots: true,
+        robotsContent: dbSettings.robots_txt || defaultSEOSettings.robotsContent
+      });
     }
 
     // Analyser les pages existantes
@@ -83,7 +91,7 @@ export const SEOManager: React.FC = () => {
         console.error('Erreur analyse pages:', error);
       }
     }
-  }, []);
+  }, [dbSettings]);
 
   const analyzePage = (page: any): PageSEO => {
     const issues: string[] = [];
@@ -135,42 +143,27 @@ export const SEOManager: React.FC = () => {
     };
   };
 
-  const saveSEOSettings = () => {
-    localStorage.setItem('website_seo', JSON.stringify(seoSettings));
-    
-    // Mettre à jour les meta tags
-    document.title = seoSettings.siteName;
-    
-    // Description
-    let metaDescription = document.querySelector('meta[name="description"]');
-    if (!metaDescription) {
-      metaDescription = document.createElement('meta');
-      metaDescription.setAttribute('name', 'description');
-      document.head.appendChild(metaDescription);
+  const saveSEOSettings = async () => {
+    try {
+      await saveToDb({
+        site_title: seoSettings.siteName,
+        site_description: seoSettings.siteDescription,
+        site_keywords: seoSettings.keywords,
+        og_image: seoSettings.ogImage,
+        twitter_card_type: seoSettings.twitterCard,
+        google_analytics_id: seoSettings.googleAnalyticsId,
+        google_search_console_id: seoSettings.googleSearchConsoleId,
+        robots_txt: seoSettings.robotsContent
+      });
+      
+      // Aussi sauver dans localStorage pour compatibilité
+      localStorage.setItem('website_seo', JSON.stringify(seoSettings));
+      
+      toast.success('Paramètres SEO sauvegardés');
+    } catch (error) {
+      console.error('Erreur sauvegarde SEO:', error);
+      toast.error('Erreur lors de la sauvegarde');
     }
-    metaDescription.setAttribute('content', seoSettings.siteDescription);
-
-    // Keywords
-    let metaKeywords = document.querySelector('meta[name="keywords"]');
-    if (!metaKeywords) {
-      metaKeywords = document.createElement('meta');
-      metaKeywords.setAttribute('name', 'keywords');
-      document.head.appendChild(metaKeywords);
-    }
-    metaKeywords.setAttribute('content', seoSettings.keywords);
-
-    // Open Graph
-    if (seoSettings.ogImage) {
-      let ogImageMeta = document.querySelector('meta[property="og:image"]');
-      if (!ogImageMeta) {
-        ogImageMeta = document.createElement('meta');
-        ogImageMeta.setAttribute('property', 'og:image');
-        document.head.appendChild(ogImageMeta);
-      }
-      ogImageMeta.setAttribute('content', seoSettings.ogImage);
-    }
-
-    toast.success('Paramètres SEO sauvegardés');
   };
 
   const getScoreColor = (score: number) => {
