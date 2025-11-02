@@ -9,6 +9,7 @@ import { Mail, Settings, Server, TestTube, ExternalLink, RefreshCw, Inbox, Zap }
 import { EmailSignatureManager } from '@/components/email/EmailSignatureManager';
 import { EmailSmtpConfig } from '@/components/EmailSmtpConfig';
 import { NylasEmailManager } from '@/components/email/NylasEmailManager';
+import { NylasEmailTest } from '@/components/email/NylasEmailTest';
 import { useEmailSender } from '@/hooks/useEmailSender';
 import { useEmailSync } from '@/hooks/useEmailSync';
 import { toast } from 'sonner';
@@ -235,8 +236,9 @@ export const EmailTab: React.FC = () => {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="nylas">
+        <TabsContent value="nylas" className="space-y-4">
           <NylasEmailManager />
+          <NylasEmailTest />
         </TabsContent>
 
         <TabsContent value="legacy" className="space-y-6">
