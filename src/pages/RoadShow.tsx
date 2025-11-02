@@ -26,6 +26,7 @@ export const RoadShow: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterArtist, setFilterArtist] = useState<string>('all');
   const [filterUser, setFilterUser] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<string>('date-asc');
   
   const {
     formData,
@@ -43,15 +44,39 @@ export const RoadShow: React.FC = () => {
     handleDeleteStop
   } = useRoadshowForm(currentUser?.id, { createStop, updateStop, deleteStop, convertFromTourStop });
 
-  const filteredStops = tourStops.filter(stop => {
-    const matchesSearch = stop.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      stop.venue.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesArtist = filterArtist === 'all' || stop.artists.includes(filterArtist);
-    const matchesUser = filterUser === 'all' || stop.createdBy === filterUser;
-    
-    return matchesSearch && matchesArtist && matchesUser;
-  });
+  const filteredAndSortedStops = React.useMemo(() => {
+    // Filtrage
+    const filtered = tourStops.filter(stop => {
+      const matchesSearch = stop.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        stop.venue.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesArtist = filterArtist === 'all' || stop.artists.includes(filterArtist);
+      const matchesUser = filterUser === 'all' || stop.createdBy === filterUser;
+      
+      return matchesSearch && matchesArtist && matchesUser;
+    });
+
+    // Tri
+    const sorted = [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case 'date-asc':
+          return new Date(a.date || '').getTime() - new Date(b.date || '').getTime();
+        case 'date-desc':
+          return new Date(b.date || '').getTime() - new Date(a.date || '').getTime();
+        case 'artist': {
+          const artistA = artists.find(art => a.artists.includes(art.id))?.name || '';
+          const artistB = artists.find(art => b.artists.includes(art.id))?.name || '';
+          return artistA.localeCompare(artistB);
+        }
+        case 'city':
+          return a.city.localeCompare(b.city);
+        default:
+          return 0;
+      }
+    });
+
+    return sorted;
+  }, [tourStops, searchTerm, filterArtist, filterUser, sortBy, artists]);
 
   return (
     <div className="space-y-6 p-4 lg:p-0">
@@ -102,6 +127,8 @@ export const RoadShow: React.FC = () => {
         setFilterArtist={setFilterArtist}
         filterUser={filterUser}
         setFilterUser={setFilterUser}
+        sortBy={sortBy}
+        setSortBy={setSortBy}
         artists={artists}
         users={users}
       />
@@ -113,13 +140,13 @@ export const RoadShow: React.FC = () => {
         </div>
       ) : (
         <div className="grid gap-6">
-          {filteredStops.length === 0 ? (
+          {filteredAndSortedStops.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <p>Aucune étape de tournée trouvée.</p>
               <p className="text-sm">Créez votre première étape pour commencer !</p>
             </div>
           ) : (
-            filteredStops.map((stop) => (
+            filteredAndSortedStops.map((stop) => (
               <TourStopCard
                 key={stop.id}
                 stop={stop}
