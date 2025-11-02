@@ -308,6 +308,12 @@ export const Contracts: React.FC = () => {
           }
         }
         
+        // Si le devis est créé directement avec le statut "accepted", créer la feuille de route
+        if (createdQuote && formData.status === 'accepted') {
+          console.log('✅ Déclenchement de la création de feuille de route pour le nouveau devis accepté');
+          await createRoadshowFromQuote(createdQuote.id, formData);
+        }
+        
         toast.success('Devis créé avec succès');
       }
       resetForm();
