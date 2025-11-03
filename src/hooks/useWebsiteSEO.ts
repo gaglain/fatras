@@ -37,12 +37,17 @@ export const useWebsiteSEO = () => {
 
   const saveSEOSettings = async (settings: SEOSettings) => {
     try {
+      console.log('🔍 Sauvegarde SEO - Paramètres reçus:', settings);
+      
       const user = await supabase.auth.getUser();
       if (!user.data.user) throw new Error('Non authentifié');
+
+      console.log('✅ Utilisateur authentifié:', user.data.user.id);
 
       // Upload image to storage if it's a base64
       let ogImageUrl = settings.og_image;
       if (ogImageUrl && ogImageUrl.startsWith('data:image')) {
+        console.log('📤 Upload image OG en cours...');
         const base64Data = ogImageUrl.split(',')[1];
         const buffer = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
         const fileName = `og-image-${Date.now()}.png`;
@@ -54,24 +59,37 @@ export const useWebsiteSEO = () => {
             upsert: true
           });
 
-        if (uploadError) throw uploadError;
+        if (uploadError) {
+          console.error('❌ Erreur upload image:', uploadError);
+          throw uploadError;
+        }
         
         const { data: { publicUrl } } = supabase.storage
           .from('website-images')
           .getPublicUrl(fileName);
         
         ogImageUrl = publicUrl;
+        console.log('✅ Image OG uploadée:', ogImageUrl);
       }
 
       const settingsToSave = { ...settings, og_image: ogImageUrl };
+      console.log('💾 Paramètres à sauvegarder:', settingsToSave);
 
-      const { data: existing } = await supabase
+      const { data: existing, error: existingError } = await supabase
         .from('website_seo')
         .select('id')
-        .single();
+        .maybeSingle();
+
+      if (existingError) {
+        console.error('❌ Erreur vérification existant:', existingError);
+        throw existingError;
+      }
+
+      console.log('🔍 Enregistrement existant:', existing ? 'Oui (id: ' + existing.id + ')' : 'Non');
 
       let result;
       if (existing) {
+        console.log('♻️ Mise à jour de l\'enregistrement existant...');
         result = await supabase
           .from('website_seo')
           .update(settingsToSave)
@@ -79,6 +97,7 @@ export const useWebsiteSEO = () => {
           .select()
           .single();
       } else {
+        console.log('✨ Création d\'un nouvel enregistrement...');
         result = await supabase
           .from('website_seo')
           .insert([{ ...settingsToSave, user_id: user.data.user.id }])
@@ -86,7 +105,12 @@ export const useWebsiteSEO = () => {
           .single();
       }
 
-      if (result.error) throw result.error;
+      if (result.error) {
+        console.error('❌ Erreur sauvegarde:', result.error);
+        throw result.error;
+      }
+
+      console.log('✅ SEO sauvegardé avec succès:', result.data);
       
       setSeoSettings(result.data);
       
