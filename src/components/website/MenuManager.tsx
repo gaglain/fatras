@@ -93,39 +93,64 @@ export const MenuManager: React.FC = () => {
 
     // 2) Persistance Supabase (reset + insert pour éviter doublons)
     try {
-      const { data: authData } = await supabase.auth.getUser();
-      const currentUserId = authData?.user?.id;
-      if (currentUserId) {
-        // Supprimer l'ancien menu de l'utilisateur
-        await supabase.from('website_menu').delete().eq('user_id', currentUserId);
-
-        // Insérer le nouveau menu
-        const payload = normalized.map((it, idx) => ({
-          user_id: currentUserId,
-          label: it.label,
-          url: it.url,
-          target: it.target,
-          parent_id: null,
-          menu_order: typeof it.order === 'number' ? it.order : (idx + 1),
-          is_visible: it.visible ?? true,
-          updated_at: new Date().toISOString(),
-        }));
-
-        const { error: insertError } = await supabase.from('website_menu').insert(payload);
-        if (insertError) {
-          console.error('❌ Erreur insertion menu Supabase:', insertError);
-          toast.error("Erreur lors de l'enregistrement en base");
-        } else {
-          toast.success('Menu sauvegardé (base + front)');
-        }
+      console.log('💾 Sauvegarde du menu dans Supabase...');
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      
+      if (authError || !authData?.user?.id) {
+        console.error('❌ Utilisateur non authentifié:', authError);
+        toast.error("Vous devez être connecté pour sauvegarder le menu");
+        return;
       }
-    } catch (err) {
+
+      const currentUserId = authData.user.id;
+      console.log('✅ Utilisateur connecté:', currentUserId);
+
+      // Supprimer l'ancien menu de l'utilisateur
+      const { error: deleteError } = await supabase
+        .from('website_menu')
+        .delete()
+        .eq('user_id', currentUserId);
+
+      if (deleteError) {
+        console.error('❌ Erreur suppression menu:', deleteError);
+        toast.error("Erreur lors de la suppression de l'ancien menu");
+        return;
+      }
+
+      console.log('✅ Ancien menu supprimé');
+
+      // Insérer le nouveau menu
+      const payload = normalized.map((it, idx) => ({
+        user_id: currentUserId,
+        label: it.label,
+        url: it.url,
+        target: it.target,
+        parent_id: null,
+        menu_order: typeof it.order === 'number' ? it.order : (idx + 1),
+        is_visible: it.visible ?? true,
+        updated_at: new Date().toISOString(),
+      }));
+
+      console.log('📤 Insertion de', payload.length, 'éléments de menu');
+
+      const { error: insertError, data: insertedData } = await supabase
+        .from('website_menu')
+        .insert(payload)
+        .select();
+
+      if (insertError) {
+        console.error('❌ Erreur insertion menu Supabase:', insertError);
+        toast.error(`Erreur lors de l'enregistrement en base: ${insertError.message}`);
+        return;
+      }
+
+      console.log('✅ Menu sauvegardé dans Supabase:', insertedData);
+      toast.success('Menu sauvegardé avec succès');
+    } catch (err: any) {
       console.error('❌ Erreur Supabase:', err);
+      toast.error(`Erreur: ${err.message || 'Erreur inconnue'}`);
     }
   };
-  useEffect(() => {
-    saveMenu();
-  }, [menuItems]);
 
   const handleDragEnd = (result: any) => {
     if (!result.destination) return;
