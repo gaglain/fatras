@@ -82,14 +82,27 @@ export const SEOManager: React.FC = () => {
 
     // Analyser les pages existantes
     const savedPages = localStorage.getItem('website_pages');
+    console.log('🔍 [SEO] Pages brutes depuis localStorage:', savedPages);
+    
     if (savedPages) {
       try {
         const pages = JSON.parse(savedPages);
-        const analyzedPages = pages.map((page: any) => analyzePage(page));
+        console.log('🔍 [SEO] Pages parsées:', pages);
+        console.log('🔍 [SEO] Nombre de pages:', pages.length);
+        
+        const analyzedPages = pages.map((page: any) => {
+          console.log('🔍 [SEO] Analyse de la page:', page.title);
+          console.log('🔍 [SEO] Structure SEO de la page:', page.seo);
+          return analyzePage(page);
+        });
+        
+        console.log('✅ [SEO] Pages analysées:', analyzedPages);
         setPagesSEO(analyzedPages);
       } catch (error) {
-        console.error('Erreur analyse pages:', error);
+        console.error('❌ [SEO] Erreur analyse pages:', error);
       }
+    } else {
+      console.log('⚠️ [SEO] Aucune page trouvée dans localStorage');
     }
   }, [dbSettings]);
 
@@ -97,50 +110,68 @@ export const SEOManager: React.FC = () => {
     const issues: string[] = [];
     let score = 100;
 
+    console.log('📊 [SEO] Analyse détaillée de:', page.title);
+    console.log('📊 [SEO] page.seo:', page.seo);
+
     // Analyse du titre
-    if (!page.seo?.title || page.seo.title.length === 0) {
+    const seoTitle = page.seo?.title || page.title || '';
+    console.log('📊 [SEO] Titre trouvé:', seoTitle, 'Longueur:', seoTitle.length);
+    
+    if (!seoTitle || seoTitle.length === 0) {
       issues.push('Titre SEO manquant');
       score -= 20;
-    } else if (page.seo.title.length < 30) {
+    } else if (seoTitle.length < 30) {
       issues.push('Titre SEO trop court (< 30 caractères)');
       score -= 10;
-    } else if (page.seo.title.length > 60) {
+    } else if (seoTitle.length > 60) {
       issues.push('Titre SEO trop long (> 60 caractères)');
       score -= 10;
     }
 
     // Analyse de la description
-    if (!page.seo?.description || page.seo.description.length === 0) {
+    const seoDescription = page.seo?.description || '';
+    console.log('📊 [SEO] Description trouvée:', seoDescription, 'Longueur:', seoDescription.length);
+    
+    if (!seoDescription || seoDescription.length === 0) {
       issues.push('Description SEO manquante');
       score -= 20;
-    } else if (page.seo.description.length < 120) {
+    } else if (seoDescription.length < 120) {
       issues.push('Description SEO trop courte (< 120 caractères)');
       score -= 10;
-    } else if (page.seo.description.length > 160) {
+    } else if (seoDescription.length > 160) {
       issues.push('Description SEO trop longue (> 160 caractères)');
       score -= 10;
     }
 
     // Analyse des mots-clés
-    if (!page.seo?.keywords || page.seo.keywords.length === 0) {
+    const seoKeywords = page.seo?.keywords || '';
+    console.log('📊 [SEO] Mots-clés trouvés:', seoKeywords);
+    
+    if (!seoKeywords || seoKeywords.length === 0) {
       issues.push('Mots-clés manquants');
       score -= 15;
     }
 
     // Analyse du contenu
-    if (!page.blocks || page.blocks.length === 0) {
+    const hasContent = page.blocks && page.blocks.length > 0;
+    console.log('📊 [SEO] Contenu présent:', hasContent, 'Blocs:', page.blocks?.length);
+    
+    if (!hasContent) {
       issues.push('Contenu de page vide');
       score -= 25;
     }
 
-    return {
+    const result = {
       pageId: page.id,
       title: page.title,
-      description: page.seo?.description || '',
-      keywords: page.seo?.keywords || '',
+      description: seoDescription,
+      keywords: seoKeywords,
       score: Math.max(0, score),
       issues
     };
+
+    console.log('📊 [SEO] Résultat analyse:', result);
+    return result;
   };
 
   const saveSEOSettings = async () => {
@@ -351,12 +382,19 @@ export const SEOManager: React.FC = () => {
             </p>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {pagesSEO.map((page) => {
-                const ScoreIcon = getScoreIcon(page.score);
-                return (
-                  <Card key={page.pageId} className="border">
-                    <CardContent className="p-4">
+            {pagesSEO.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <Info className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                <p>Aucune page à analyser</p>
+                <p className="text-sm mt-2">Créez des pages dans le gestionnaire de site web pour voir leur analyse SEO</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {pagesSEO.map((page) => {
+                  const ScoreIcon = getScoreIcon(page.score);
+                  return (
+                    <Card key={page.pageId} className="border">
+                      <CardContent className="p-4">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center space-x-3 mb-2">
@@ -398,10 +436,11 @@ export const SEOManager: React.FC = () => {
                         </Button>
                       </div>
                     </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
