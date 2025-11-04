@@ -168,13 +168,14 @@ export const RoadShow: React.FC = () => {
             <DialogTitle>Modifier l'étape de tournée</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <RoadShowForm
-              formData={formData}
-              setFormData={setFormData}
-              selectedTab={selectedTab}
-              setSelectedTab={setSelectedTab}
-              users={users}
-            />
+              <RoadShowForm
+                formData={formData}
+                setFormData={setFormData}
+                selectedTab={selectedTab}
+                setSelectedTab={setSelectedTab}
+                users={users}
+                roadshowStopId={selectedStop?.id}
+              />
 
             <div className="flex justify-end space-x-2 pt-4 mt-4 border-t">
               <Button variant="outline" onClick={() => setShowEditDialog(false)}>

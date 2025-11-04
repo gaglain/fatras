@@ -3,9 +3,11 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { MapPin, Calendar, Clock, Users, Eye, Edit, Trash2, Download } from 'lucide-react';
 import { TourStop, Artist } from '@/types/roadshow.types';
 import { TourStopPreview } from './TourStopPreview';
+import { RoadshowEntityLinks } from './RoadshowEntityLinks';
 import { generateTourStopPDF } from '@/utils/pdfGenerator';
 import { toast } from 'sonner';
 
@@ -129,6 +131,12 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
               <p className="text-sm">{stop.notes}</p>
             </div>
           )}
+
+          <Separator className="my-4" />
+
+          <div className="mb-4">
+            <RoadshowEntityLinks roadshowStopId={stop.id} />
+          </div>
 
           <div className="flex items-center justify-between pt-4 border-t">
             <div className="text-sm text-muted-foreground">

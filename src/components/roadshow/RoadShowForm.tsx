@@ -6,6 +6,7 @@ import { GeneralForm } from './GeneralForm';
 import { LogisticsForm } from './LogisticsForm';
 import { ContactsForm } from './ContactsForm';
 import { LineupForm } from './LineupForm';
+import { EntityLinksForm } from './EntityLinksForm';
 
 interface RoadShowFormProps {
   formData: FormData;
@@ -13,18 +14,20 @@ interface RoadShowFormProps {
   selectedTab: string;
   setSelectedTab: React.Dispatch<React.SetStateAction<string>>;
   users: { id: string; name: string; isActive?: boolean }[];
+  roadshowStopId?: string;
 }
 
 export const RoadShowForm: React.FC<RoadShowFormProps> = ({ 
-  formData, setFormData, selectedTab, setSelectedTab, users 
+  formData, setFormData, selectedTab, setSelectedTab, users, roadshowStopId 
 }) => {
   return (
     <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-      <TabsList className="grid grid-cols-4 mb-4">
+      <TabsList className="grid grid-cols-5 mb-4">
         <TabsTrigger value="general">Général</TabsTrigger>
         <TabsTrigger value="logistics">Logistique</TabsTrigger>
         <TabsTrigger value="contacts">Contacts</TabsTrigger>
         <TabsTrigger value="lineup">Casting</TabsTrigger>
+        <TabsTrigger value="entities">Entités</TabsTrigger>
       </TabsList>
 
       <TabsContent value="general">
@@ -50,6 +53,10 @@ export const RoadShowForm: React.FC<RoadShowFormProps> = ({
           {/* CastingSelector sera intégré ici */}
           <LineupForm formData={formData} setFormData={setFormData} users={users} />
         </div>
+      </TabsContent>
+
+      <TabsContent value="entities">
+        <EntityLinksForm roadshowStopId={roadshowStopId} />
       </TabsContent>
     </Tabs>
   );

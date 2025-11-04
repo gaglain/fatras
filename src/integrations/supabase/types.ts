@@ -2637,6 +2637,146 @@ export type Database = {
           },
         ]
       }
+      roadshow_stop_contacts: {
+        Row: {
+          contact_id: string
+          created_at: string | null
+          id: string
+          roadshow_stop_id: string
+          role: string | null
+        }
+        Insert: {
+          contact_id: string
+          created_at?: string | null
+          id?: string
+          roadshow_stop_id: string
+          role?: string | null
+        }
+        Update: {
+          contact_id?: string
+          created_at?: string | null
+          id?: string
+          roadshow_stop_id?: string
+          role?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roadshow_stop_contacts_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roadshow_stop_contacts_roadshow_stop_id_fkey"
+            columns: ["roadshow_stop_id"]
+            isOneToOne: false
+            referencedRelation: "roadshow_stops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roadshow_stop_contracts: {
+        Row: {
+          contract_id: string
+          created_at: string | null
+          id: string
+          roadshow_stop_id: string
+        }
+        Insert: {
+          contract_id: string
+          created_at?: string | null
+          id?: string
+          roadshow_stop_id: string
+        }
+        Update: {
+          contract_id?: string
+          created_at?: string | null
+          id?: string
+          roadshow_stop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roadshow_stop_contracts_roadshow_stop_id_fkey"
+            columns: ["roadshow_stop_id"]
+            isOneToOne: false
+            referencedRelation: "roadshow_stops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roadshow_stop_events: {
+        Row: {
+          created_at: string | null
+          event_id: string
+          id: string
+          roadshow_stop_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          event_id: string
+          id?: string
+          roadshow_stop_id: string
+        }
+        Update: {
+          created_at?: string | null
+          event_id?: string
+          id?: string
+          roadshow_stop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roadshow_stop_events_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roadshow_stop_events_roadshow_stop_id_fkey"
+            columns: ["roadshow_stop_id"]
+            isOneToOne: false
+            referencedRelation: "roadshow_stops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roadshow_stop_quotes: {
+        Row: {
+          created_at: string | null
+          id: string
+          quote_id: string
+          roadshow_stop_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          quote_id: string
+          roadshow_stop_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          quote_id?: string
+          roadshow_stop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roadshow_stop_quotes_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roadshow_stop_quotes_roadshow_stop_id_fkey"
+            columns: ["roadshow_stop_id"]
+            isOneToOne: false
+            referencedRelation: "roadshow_stops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       roadshow_stops: {
         Row: {
           accommodation: string | null
