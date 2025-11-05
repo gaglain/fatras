@@ -2601,6 +2601,53 @@ export type Database = {
           },
         ]
       }
+      roadshow_expenses: {
+        Row: {
+          amount: number | null
+          created_at: string
+          description: string | null
+          file_type: string
+          file_url: string
+          id: string
+          roadshow_stop_id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          description?: string | null
+          file_type: string
+          file_url: string
+          id?: string
+          roadshow_stop_id: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          description?: string | null
+          file_type?: string
+          file_url?: string
+          id?: string
+          roadshow_stop_id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roadshow_expenses_roadshow_stop_id_fkey"
+            columns: ["roadshow_stop_id"]
+            isOneToOne: false
+            referencedRelation: "roadshow_stops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       roadshow_opportunities: {
         Row: {
           created_at: string

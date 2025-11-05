@@ -7,6 +7,7 @@ import { LogisticsForm } from './LogisticsForm';
 import { ContactsForm } from './ContactsForm';
 import { LineupForm } from './LineupForm';
 import { EntityLinksForm } from './EntityLinksForm';
+import { ExpensesForm } from './ExpensesForm';
 
 interface RoadShowFormProps {
   formData: FormData;
@@ -22,12 +23,13 @@ export const RoadShowForm: React.FC<RoadShowFormProps> = ({
 }) => {
   return (
     <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-      <TabsList className="grid grid-cols-5 mb-4">
+      <TabsList className="grid grid-cols-6 mb-4">
         <TabsTrigger value="general">Général</TabsTrigger>
         <TabsTrigger value="logistics">Logistique</TabsTrigger>
         <TabsTrigger value="contacts">Contacts</TabsTrigger>
         <TabsTrigger value="lineup">Casting</TabsTrigger>
         <TabsTrigger value="entities">Entités</TabsTrigger>
+        <TabsTrigger value="expenses">Note de frais</TabsTrigger>
       </TabsList>
 
       <TabsContent value="general">
@@ -57,6 +59,10 @@ export const RoadShowForm: React.FC<RoadShowFormProps> = ({
 
       <TabsContent value="entities">
         <EntityLinksForm roadshowStopId={roadshowStopId} />
+      </TabsContent>
+
+      <TabsContent value="expenses">
+        <ExpensesForm roadshowStopId={roadshowStopId} />
       </TabsContent>
     </Tabs>
   );

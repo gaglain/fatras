@@ -214,6 +214,43 @@ export const useRoadshowEntityConnections = () => {
     }
   };
 
+  // Link entities from an opportunity to a roadshow stop
+  const linkOpportunityEntities = async (roadshowStopId: string, opportunityId: string) => {
+    if (!user) return false;
+
+    try {
+      // Get all entities linked to the opportunity
+      const { data: opportunityContacts } = await supabase
+        .from('contact_opportunities')
+        .select('contact_id, role')
+        .eq('opportunity_id', opportunityId);
+
+      const { data: opportunityEvents } = await supabase
+        .from('opportunity_events')
+        .select('event_id')
+        .eq('opportunity_id', opportunityId);
+
+      // Link all contacts
+      if (opportunityContacts && opportunityContacts.length > 0) {
+        for (const contact of opportunityContacts) {
+          await linkContact(roadshowStopId, contact.contact_id, contact.role || undefined);
+        }
+      }
+
+      // Link all events
+      if (opportunityEvents && opportunityEvents.length > 0) {
+        for (const event of opportunityEvents) {
+          await linkEvent(roadshowStopId, event.event_id);
+        }
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error linking opportunity entities:', error);
+      return false;
+    }
+  };
+
   return {
     loading,
     getRoadshowConnections,
@@ -221,6 +258,7 @@ export const useRoadshowEntityConnections = () => {
     linkEvent,
     linkQuote,
     linkContract,
-    unlinkEntity
+    unlinkEntity,
+    linkOpportunityEntities
   };
 };
