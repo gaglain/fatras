@@ -56,13 +56,24 @@ const loadOpportunityEntities = async () => {
   if (!roadshowStopId) return;
   setLoadingOpportunity(true);
   try {
-    const roadshowResponse: any = await supabase
+    // Resolve opportunity_id from roadshow_stop or via roadshow_opportunities fallback
+    const rsResp: any = await supabase
       .from('roadshow_stops')
       .select('opportunity_id')
       .eq('id', roadshowStopId)
       .maybeSingle();
 
-    const opportunityId = roadshowResponse?.data?.opportunity_id;
+    let opportunityId = rsResp?.data?.opportunity_id as string | null;
+
+    if (!opportunityId) {
+      const roResp: any = await supabase
+        .from('roadshow_opportunities')
+        .select('opportunity_id')
+        .eq('roadshow_stop_id', roadshowStopId)
+        .maybeSingle();
+      opportunityId = roResp?.data?.opportunity_id || null;
+    }
+
     if (!opportunityId) {
       setOpportunityEntities(null);
       return;
@@ -93,21 +104,41 @@ const loadOpportunityEntities = async () => {
       .eq('opportunity_id', opportunityId);
     const eventsData = eventsResponse.data || [];
 
-    // Quotes via events (quotes don't have opportunity_id)
+    // Quotes: first via quote_opportunities, then fallback via events
     let quotesData: any[] = [];
     try {
-      const eventIds = (eventsData || [])
-        .map((item: any) => item.events?.id)
-        .filter((id: string) => !!id);
-      if (eventIds.length > 0) {
-        const quotesResp: any = await (supabase
-          .from('quotes')
-          .select('id, quote_number, total_amount, event_id') as any)
-          .in('event_id', eventIds);
-        quotesData = quotesResp.data || [];
-      }
+      const qoResp: any = await supabase
+        .from('quote_opportunities')
+        .select(`
+          quotes (
+            id,
+            quote_number,
+            total_amount
+          )
+        `)
+        .eq('opportunity_id', opportunityId);
+      quotesData = (qoResp?.data || [])
+        .map((row: any) => row.quotes)
+        .filter(Boolean);
     } catch (qErr) {
-      console.warn('Quotes fetch skipped (no opportunity_id on quotes):', qErr);
+      console.warn('quote_opportunities fetch error:', qErr);
+    }
+
+    if (quotesData.length === 0) {
+      try {
+        const eventIds = (eventsData || [])
+          .map((item: any) => item.events?.id)
+          .filter((id: string) => !!id);
+        if (eventIds.length > 0) {
+          const quotesResp: any = await (supabase
+            .from('quotes')
+            .select('id, quote_number, total_amount, event_id') as any)
+            .in('event_id', eventIds);
+          quotesData = quotesResp.data || [];
+        }
+      } catch (qErr) {
+        console.warn('Quotes fetch via events failed:', qErr);
+      }
     }
 
     setOpportunityEntities({

@@ -33,18 +33,28 @@ export const EntityLinksForm: React.FC<EntityLinksFormProps> = ({ roadshowStopId
     setLoading(true);
     try {
       // Get the opportunity_id from the roadshow stop
-      const roadshowResponse: any = await supabase
+      // Resolve opportunity_id from roadshow_stop or via roadshow_opportunities fallback
+      const rsResp: any = await supabase
         .from('roadshow_stops')
         .select('opportunity_id')
         .eq('id', roadshowStopId)
-        .single();
+        .maybeSingle();
 
-      if (roadshowResponse.error || !roadshowResponse.data?.opportunity_id) {
+      let opportunityId = rsResp?.data?.opportunity_id as string | null;
+
+      if (!opportunityId) {
+        const roResp: any = await supabase
+          .from('roadshow_opportunities')
+          .select('opportunity_id')
+          .eq('roadshow_stop_id', roadshowStopId)
+          .maybeSingle();
+        opportunityId = roResp?.data?.opportunity_id || null;
+      }
+
+      if (!opportunityId) {
         setOpportunityEntities(null);
         return;
       }
-
-      const opportunityId = roadshowResponse.data.opportunity_id;
 
       // Get contacts linked to the opportunity
       const contactsResponse: any = await supabase
@@ -73,21 +83,41 @@ export const EntityLinksForm: React.FC<EntityLinksFormProps> = ({ roadshowStopId
         .eq('opportunity_id', opportunityId);
       const eventsData = eventsResponse.data;
 
-      // Get quotes via events linked to the opportunity (quotes don't have opportunity_id)
+      // Get quotes linked via quote_opportunities; fallback to quotes via events
       let quotesData: any[] = [];
       try {
-        const eventIds = (eventsData || [])
-          .map((item: any) => item.events?.id)
-          .filter((id: string) => !!id);
-        if (eventIds.length > 0) {
-          const quotesResp: any = await (supabase
-            .from('quotes')
-            .select('id, quote_number, total_amount, event_id') as any)
-            .in('event_id', eventIds);
-          quotesData = quotesResp.data || [];
-        }
+        const qoResp: any = await supabase
+          .from('quote_opportunities')
+          .select(`
+            quotes (
+              id,
+              quote_number,
+              total_amount
+            )
+          `)
+          .eq('opportunity_id', opportunityId);
+        quotesData = (qoResp?.data || [])
+          .map((row: any) => row.quotes)
+          .filter(Boolean);
       } catch (qErr) {
-        console.warn('Quotes fetch skipped (no opportunity_id on quotes):', qErr);
+        console.warn('quote_opportunities fetch error:', qErr);
+      }
+
+      if (quotesData.length === 0) {
+        try {
+          const eventIds = (eventsData || [])
+            .map((item: any) => item.events?.id)
+            .filter((id: string) => !!id);
+          if (eventIds.length > 0) {
+            const quotesResp: any = await (supabase
+              .from('quotes')
+              .select('id, quote_number, total_amount, event_id') as any)
+              .in('event_id', eventIds);
+            quotesData = quotesResp.data || [];
+          }
+        } catch (qErr) {
+          console.warn('Quotes fetch via events failed:', qErr);
+        }
       }
 
       setOpportunityEntities({
