@@ -9,9 +9,17 @@ import { useContacts } from '@/hooks/useContacts';
 import { useEvents } from '@/hooks/useEvents';
 import { useQuotes } from '@/hooks/useQuotes';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { Separator } from '@/components/ui/separator';
 
 interface RoadshowEntityLinksProps {
   roadshowStopId: string;
+}
+
+interface OpportunityEntities {
+  contacts: Array<{ id: string; name: string; role?: string }>;
+  events: Array<{ id: string; title: string }>;
+  quotes: Array<{ id: string; quote_number: string; total_amount?: number }>;
 }
 
 export const RoadshowEntityLinks: React.FC<RoadshowEntityLinksProps> = ({ roadshowStopId }) => {
@@ -31,21 +39,98 @@ export const RoadshowEntityLinks: React.FC<RoadshowEntityLinksProps> = ({ roadsh
   const [showEventDialog, setShowEventDialog] = useState(false);
   const [showQuoteDialog, setShowQuoteDialog] = useState(false);
 
-  const [selectedContact, setSelectedContact] = useState('');
-  const [selectedEvent, setSelectedEvent] = useState('');
-  const [selectedQuote, setSelectedQuote] = useState('');
-  const [contactRole, setContactRole] = useState('');
+const [selectedContact, setSelectedContact] = useState('');
+const [selectedEvent, setSelectedEvent] = useState('');
+const [selectedQuote, setSelectedQuote] = useState('');
+const [contactRole, setContactRole] = useState('');
 
-  const loadConnections = async () => {
-    const data = await getRoadshowConnections(roadshowStopId);
-    setConnections(data);
-  };
+const [opportunityEntities, setOpportunityEntities] = useState<OpportunityEntities | null>(null);
+const [loadingOpportunity, setLoadingOpportunity] = useState(false);
 
-  useEffect(() => {
-    if (roadshowStopId) {
-      loadConnections();
+const loadConnections = async () => {
+  const data = await getRoadshowConnections(roadshowStopId);
+  setConnections(data);
+};
+
+const loadOpportunityEntities = async () => {
+  if (!roadshowStopId) return;
+  setLoadingOpportunity(true);
+  try {
+    const roadshowResponse: any = await supabase
+      .from('roadshow_stops')
+      .select('opportunity_id')
+      .eq('id', roadshowStopId)
+      .maybeSingle();
+
+    const opportunityId = roadshowResponse?.data?.opportunity_id;
+    if (!opportunityId) {
+      setOpportunityEntities(null);
+      return;
     }
-  }, [roadshowStopId]);
+
+    const contactsResponse: any = await supabase
+      .from('contact_opportunities')
+      .select(`
+        role,
+        contacts (
+          id,
+          first_name,
+          last_name,
+          company
+        )
+      `)
+      .eq('opportunity_id', opportunityId);
+    const contactsData = contactsResponse.data || [];
+
+    const eventsResponse: any = await supabase
+      .from('opportunity_events')
+      .select(`
+        events (
+          id,
+          title
+        )
+      `)
+      .eq('opportunity_id', opportunityId);
+    const eventsData = eventsResponse.data || [];
+
+    const quotesResponse: any = await (supabase
+      .from('quotes')
+      .select('id, quote_number, total_amount') as any)
+      .eq('opportunity_id', opportunityId);
+    const quotesData = quotesResponse.data || [];
+
+    setOpportunityEntities({
+      contacts: contactsData.map((item: any) => ({
+        id: item.contacts?.id || '',
+        name: item.contacts
+          ? `${item.contacts.first_name} ${item.contacts.last_name}${item.contacts.company ? ` (${item.contacts.company})` : ''}`
+          : 'Contact inconnu',
+        role: item.role,
+      })),
+      events: eventsData.map((item: any) => ({
+        id: item.events?.id || '',
+        title: item.events?.title || 'Événement inconnu',
+      })),
+      quotes: quotesData.map((quote: any) => ({
+        id: quote.id || '',
+        quote_number: quote.quote_number || 'N/A',
+        total_amount: quote.total_amount,
+      })),
+    });
+  } catch (e) {
+    console.error('Erreur chargement entités opportunité:', e);
+    setOpportunityEntities(null);
+  } finally {
+    setLoadingOpportunity(false);
+  }
+};
+
+useEffect(() => {
+  if (roadshowStopId) {
+    loadConnections();
+    loadOpportunityEntities();
+  }
+}, [roadshowStopId]);
 
   const handleLinkContact = async () => {
     if (!selectedContact) return;
@@ -114,6 +199,50 @@ export const RoadshowEntityLinks: React.FC<RoadshowEntityLinksProps> = ({ roadsh
 
   return (
     <div className="space-y-4">
+      {opportunityEntities && (
+        <>
+          <div className="space-y-3">
+            <div>
+              <h4 className="font-semibold">Entités de l'opportunité</h4>
+              <p className="text-sm text-muted-foreground">Liées automatiquement depuis l'opportunité.</p>
+            </div>
+            {opportunityEntities.contacts.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm font-medium"><Users className="h-4 w-4" /><span>Contacts</span></div>
+                <div className="flex flex-wrap gap-2">
+                  {opportunityEntities.contacts.map(c => (
+                    <Badge key={c.id} variant="secondary">{c.name}{c.role && <span className="ml-1 text-xs opacity-70">({c.role})</span>}</Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+            {opportunityEntities.events.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm font-medium"><Calendar className="h-4 w-4" /><span>Événements</span></div>
+                <div className="flex flex-wrap gap-2">
+                  {opportunityEntities.events.map(e => (
+                    <Badge key={e.id} variant="secondary">{e.title}</Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+            {opportunityEntities.quotes.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm font-medium"><FileText className="h-4 w-4" /><span>Devis</span></div>
+                <div className="flex flex-wrap gap-2">
+                  {opportunityEntities.quotes.map(q => (
+                    <Badge key={q.id} variant="secondary">Devis {q.quote_number}{q.total_amount && <span className="ml-1">- {q.total_amount}€</span>}</Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+            {opportunityEntities.contacts.length === 0 && opportunityEntities.events.length === 0 && opportunityEntities.quotes.length === 0 && (
+              <p className="text-sm text-muted-foreground">Aucune entité liée à l'opportunité.</p>
+            )}
+          </div>
+          <Separator />
+        </>
+      )}
       {/* Contacts */}
       <div>
         <div className="flex items-center justify-between mb-2">
