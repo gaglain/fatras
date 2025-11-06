@@ -73,12 +73,22 @@ export const EntityLinksForm: React.FC<EntityLinksFormProps> = ({ roadshowStopId
         .eq('opportunity_id', opportunityId);
       const eventsData = eventsResponse.data;
 
-      // Get quotes linked to the opportunity (using type assertion to avoid deep type instantiation error)
-      const quotesResponse: any = await (supabase
-        .from('quotes')
-        .select('id, quote_number, total_amount') as any)
-        .eq('opportunity_id', opportunityId);
-      const quotesData = quotesResponse.data;
+      // Get quotes via events linked to the opportunity (quotes don't have opportunity_id)
+      let quotesData: any[] = [];
+      try {
+        const eventIds = (eventsData || [])
+          .map((item: any) => item.events?.id)
+          .filter((id: string) => !!id);
+        if (eventIds.length > 0) {
+          const quotesResp: any = await (supabase
+            .from('quotes')
+            .select('id, quote_number, total_amount, event_id') as any)
+            .in('event_id', eventIds);
+          quotesData = quotesResp.data || [];
+        }
+      } catch (qErr) {
+        console.warn('Quotes fetch skipped (no opportunity_id on quotes):', qErr);
+      }
 
       setOpportunityEntities({
         contacts: (contactsData || []).map((item: any) => ({

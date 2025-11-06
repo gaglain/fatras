@@ -93,11 +93,22 @@ const loadOpportunityEntities = async () => {
       .eq('opportunity_id', opportunityId);
     const eventsData = eventsResponse.data || [];
 
-    const quotesResponse: any = await (supabase
-      .from('quotes')
-      .select('id, quote_number, total_amount') as any)
-      .eq('opportunity_id', opportunityId);
-    const quotesData = quotesResponse.data || [];
+    // Quotes via events (quotes don't have opportunity_id)
+    let quotesData: any[] = [];
+    try {
+      const eventIds = (eventsData || [])
+        .map((item: any) => item.events?.id)
+        .filter((id: string) => !!id);
+      if (eventIds.length > 0) {
+        const quotesResp: any = await (supabase
+          .from('quotes')
+          .select('id, quote_number, total_amount, event_id') as any)
+          .in('event_id', eventIds);
+        quotesData = quotesResp.data || [];
+      }
+    } catch (qErr) {
+      console.warn('Quotes fetch skipped (no opportunity_id on quotes):', qErr);
+    }
 
     setOpportunityEntities({
       contacts: contactsData.map((item: any) => ({
