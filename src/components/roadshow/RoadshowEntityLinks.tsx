@@ -93,6 +93,14 @@ const loadOpportunityEntities = async () => {
       .eq('opportunity_id', opportunityId);
     const contactsData = contactsResponse.data || [];
 
+    // Also fetch direct contact/event from the opportunity itself
+    const oppResp: any = await supabase
+      .from('opportunities')
+      .select('contact_id, event_id')
+      .eq('id', opportunityId)
+      .maybeSingle();
+    const oppData = oppResp?.data || {};
+
     const eventsResponse: any = await supabase
       .from('opportunity_events')
       .select(`
@@ -104,7 +112,58 @@ const loadOpportunityEntities = async () => {
       .eq('opportunity_id', opportunityId);
     const eventsData = eventsResponse.data || [];
 
-    // Quotes: first via quote_opportunities, then fallback via events
+    // Build combined contacts (junction + direct contact_id)
+    let directContact: any = null;
+    if (oppData.contact_id) {
+      const directContactResp: any = await supabase
+        .from('contacts')
+        .select('id, first_name, last_name, company')
+        .eq('id', oppData.contact_id)
+        .maybeSingle();
+      directContact = directContactResp?.data || null;
+    }
+
+    const contactItems = [
+      ...contactsData.map((item: any) => ({
+        id: item.contacts?.id || '',
+        name: item.contacts
+          ? `${item.contacts.first_name} ${item.contacts.last_name}${item.contacts.company ? ` (${item.contacts.company})` : ''}`
+          : 'Contact inconnu',
+        role: item.role as string | undefined,
+      })),
+      ...(directContact
+        ? [{
+            id: directContact.id,
+            name: `${directContact.first_name} ${directContact.last_name}${directContact.company ? ` (${directContact.company})` : ''}`,
+          }]
+        : []),
+    ];
+    const contactsCombined = Array.from(
+      new Map(contactItems.filter(c => c.id).map(c => [c.id, c])).values()
+    );
+
+    // Build combined events (junction + direct event_id)
+    const eventItems = [
+      ...eventsData.map((item: any) => ({
+        id: item.events?.id || '',
+        title: item.events?.title || 'Événement inconnu',
+      })),
+    ];
+    if (oppData.event_id) {
+      const directEventResp: any = await supabase
+        .from('events')
+        .select('id, title')
+        .eq('id', oppData.event_id)
+        .maybeSingle();
+      if (directEventResp?.data) {
+        eventItems.push({ id: directEventResp.data.id, title: directEventResp.data.title || 'Événement' });
+      }
+    }
+    const eventsCombined = Array.from(
+      new Map(eventItems.filter(e => e.id).map(e => [e.id, e])).values()
+    );
+
+    // Quotes: first via quote_opportunities, then fallback via all collected event ids
     let quotesData: any[] = [];
     try {
       const qoResp: any = await supabase
@@ -126,9 +185,7 @@ const loadOpportunityEntities = async () => {
 
     if (quotesData.length === 0) {
       try {
-        const eventIds = (eventsData || [])
-          .map((item: any) => item.events?.id)
-          .filter((id: string) => !!id);
+        const eventIds = eventsCombined.map((e: any) => e.id).filter((id: string) => !!id);
         if (eventIds.length > 0) {
           const quotesResp: any = await (supabase
             .from('quotes')
@@ -141,18 +198,15 @@ const loadOpportunityEntities = async () => {
       }
     }
 
+    console.debug('[RoadshowEntityLinks] opportunityId', opportunityId, {
+      contacts: contactsCombined.length,
+      events: eventsCombined.length,
+      quotes: quotesData.length,
+    });
+
     setOpportunityEntities({
-      contacts: contactsData.map((item: any) => ({
-        id: item.contacts?.id || '',
-        name: item.contacts
-          ? `${item.contacts.first_name} ${item.contacts.last_name}${item.contacts.company ? ` (${item.contacts.company})` : ''}`
-          : 'Contact inconnu',
-        role: item.role,
-      })),
-      events: eventsData.map((item: any) => ({
-        id: item.events?.id || '',
-        title: item.events?.title || 'Événement inconnu',
-      })),
+      contacts: contactsCombined,
+      events: eventsCombined,
       quotes: quotesData.map((quote: any) => ({
         id: quote.id || '',
         quote_number: quote.quote_number || 'N/A',

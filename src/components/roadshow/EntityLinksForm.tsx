@@ -56,7 +56,7 @@ export const EntityLinksForm: React.FC<EntityLinksFormProps> = ({ roadshowStopId
         return;
       }
 
-      // Get contacts linked to the opportunity
+      // Get contacts linked to the opportunity (junction table)
       const contactsResponse: any = await supabase
         .from('contact_opportunities')
         .select(`
@@ -69,9 +69,17 @@ export const EntityLinksForm: React.FC<EntityLinksFormProps> = ({ roadshowStopId
           )
         `)
         .eq('opportunity_id', opportunityId);
-      const contactsData = contactsResponse.data;
+      const contactsData = contactsResponse.data || [];
 
-      // Get events linked to the opportunity
+      // Also fetch direct contact/event from the opportunity record itself
+      const oppResp: any = await supabase
+        .from('opportunities')
+        .select('contact_id, event_id')
+        .eq('id', opportunityId)
+        .maybeSingle();
+      const oppData = oppResp?.data || {};
+
+      // Get events linked to the opportunity (junction table)
       const eventsResponse: any = await supabase
         .from('opportunity_events')
         .select(`
@@ -81,9 +89,61 @@ export const EntityLinksForm: React.FC<EntityLinksFormProps> = ({ roadshowStopId
           )
         `)
         .eq('opportunity_id', opportunityId);
-      const eventsData = eventsResponse.data;
+      const eventsData = eventsResponse.data || [];
 
-      // Get quotes linked via quote_opportunities; fallback to quotes via events
+      // Build combined contacts (junction + direct contact_id)
+      let directContact: any = null;
+      if (oppData.contact_id) {
+        const directContactResp: any = await supabase
+          .from('contacts')
+          .select('id, first_name, last_name, company')
+          .eq('id', oppData.contact_id)
+          .maybeSingle();
+        directContact = directContactResp?.data || null;
+      }
+
+      const contactItems = [
+        ...contactsData.map((item: any) => ({
+          id: item.contacts?.id || '',
+          name: item.contacts
+            ? `${item.contacts.first_name} ${item.contacts.last_name}${item.contacts.company ? ` (${item.contacts.company})` : ''}`
+            : 'Contact inconnu',
+          role: item.role as string | undefined,
+        })),
+        ...(directContact
+          ? [{
+              id: directContact.id,
+              name: `${directContact.first_name} ${directContact.last_name}${directContact.company ? ` (${directContact.company})` : ''}`,
+            }]
+          : []),
+      ];
+      // Deduplicate contacts by id
+      const contactsCombined = Array.from(
+        new Map(contactItems.filter(c => c.id).map(c => [c.id, c])).values()
+      );
+
+      // Build combined events (junction + direct event_id)
+      const eventItems = [
+        ...eventsData.map((item: any) => ({
+          id: item.events?.id || '',
+          title: item.events?.title || 'Événement inconnu',
+        })),
+      ];
+      if (oppData.event_id) {
+        const directEventResp: any = await supabase
+          .from('events')
+          .select('id, title')
+          .eq('id', oppData.event_id)
+          .maybeSingle();
+        if (directEventResp?.data) {
+          eventItems.push({ id: directEventResp.data.id, title: directEventResp.data.title || 'Événement' });
+        }
+      }
+      const eventsCombined = Array.from(
+        new Map(eventItems.filter(e => e.id).map(e => [e.id, e])).values()
+      );
+
+      // Get quotes linked via quote_opportunities; fallback to quotes via all collected event ids
       let quotesData: any[] = [];
       try {
         const qoResp: any = await supabase
@@ -105,9 +165,7 @@ export const EntityLinksForm: React.FC<EntityLinksFormProps> = ({ roadshowStopId
 
       if (quotesData.length === 0) {
         try {
-          const eventIds = (eventsData || [])
-            .map((item: any) => item.events?.id)
-            .filter((id: string) => !!id);
+          const eventIds = eventsCombined.map((e: any) => e.id).filter((id: string) => !!id);
           if (eventIds.length > 0) {
             const quotesResp: any = await (supabase
               .from('quotes')
@@ -120,23 +178,21 @@ export const EntityLinksForm: React.FC<EntityLinksFormProps> = ({ roadshowStopId
         }
       }
 
+      // Debug info
+      console.debug('[EntityLinksForm] opportunityId', opportunityId, {
+        contacts: contactsCombined.length,
+        events: eventsCombined.length,
+        quotes: quotesData.length,
+      });
+
       setOpportunityEntities({
-        contacts: (contactsData || []).map((item: any) => ({
-          id: item.contacts?.id || '',
-          name: item.contacts ? 
-            `${item.contacts.first_name} ${item.contacts.last_name}${item.contacts.company ? ` (${item.contacts.company})` : ''}` 
-            : 'Contact inconnu',
-          role: item.role
-        })),
-        events: (eventsData || []).map((item: any) => ({
-          id: item.events?.id || '',
-          title: item.events?.title || 'Événement inconnu'
-        })),
+        contacts: contactsCombined,
+        events: eventsCombined,
         quotes: (quotesData || []).map((quote: any) => ({
           id: quote.id || '',
           quote_number: quote.quote_number || 'N/A',
-          total_amount: quote.total_amount
-        }))
+          total_amount: quote.total_amount,
+        })),
       });
     } catch (error) {
       console.error('Error loading opportunity entities:', error);
