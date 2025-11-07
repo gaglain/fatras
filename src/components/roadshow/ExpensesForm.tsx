@@ -47,8 +47,13 @@ export const ExpensesForm: React.FC<ExpensesFormProps> = ({ roadshowStopId }) =>
     }
   };
 
-  const handleSubmit = async () => {
-    if (!roadshowStopId || !selectedFile || !title) return;
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    
+    if (!roadshowStopId || !selectedFile || !title) {
+      console.log('Validation échouée:', { roadshowStopId, selectedFile: !!selectedFile, title });
+      return;
+    }
 
     const success = await createExpense(
       roadshowStopId,
@@ -158,7 +163,7 @@ export const ExpensesForm: React.FC<ExpensesFormProps> = ({ roadshowStopId }) =>
           <DialogHeader>
             <DialogTitle>Ajouter une note de frais</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <Label htmlFor="title">Titre *</Label>
               <Input
@@ -166,6 +171,7 @@ export const ExpensesForm: React.FC<ExpensesFormProps> = ({ roadshowStopId }) =>
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Ex: Repas équipe"
+                required
               />
             </div>
             <div>
@@ -195,25 +201,31 @@ export const ExpensesForm: React.FC<ExpensesFormProps> = ({ roadshowStopId }) =>
                 type="file"
                 accept="image/*,.pdf"
                 onChange={handleFileSelect}
+                required
               />
               {selectedFile && (
                 <p className="text-sm text-muted-foreground mt-1">
-                  {selectedFile.name}
+                  ✓ {selectedFile.name}
                 </p>
               )}
             </div>
             <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={() => setShowDialog(false)}>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setShowDialog(false)}
+                disabled={loading}
+              >
                 Annuler
               </Button>
               <Button 
-                onClick={handleSubmit}
+                type="submit"
                 disabled={!title || !selectedFile || loading}
               >
-                Ajouter
+                {loading ? 'Ajout...' : 'Ajouter'}
               </Button>
             </div>
-          </div>
+          </form>
         </DialogContent>
       </Dialog>
     </div>

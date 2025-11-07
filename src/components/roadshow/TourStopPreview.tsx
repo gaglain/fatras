@@ -1,9 +1,12 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { TourStop } from '@/types/roadshow.types';
-import { MapPin, Calendar, Clock, Users, Download, Printer } from 'lucide-react';
+import { MapPin, Calendar, Clock, Users, Download, Printer, FileText, DollarSign, Contact, CalendarDays } from 'lucide-react';
+import { useRoadshowExpenses, RoadshowExpense } from '@/hooks/useRoadshowExpenses';
+import { useRoadshowEntityConnections, RoadshowEntityConnection } from '@/hooks/useRoadshowEntityConnections';
+import { Badge } from '@/components/ui/badge';
 
 interface TourStopPreviewProps {
   stop: TourStop | null;
@@ -18,6 +21,33 @@ export const TourStopPreview: React.FC<TourStopPreviewProps> = ({
   onClose,
   getUserById
 }) => {
+  const { getExpenses } = useRoadshowExpenses();
+  const { getRoadshowConnections } = useRoadshowEntityConnections();
+  
+  const [expenses, setExpenses] = useState<RoadshowExpense[]>([]);
+  const [connections, setConnections] = useState<{
+    contacts: RoadshowEntityConnection[];
+    events: RoadshowEntityConnection[];
+    quotes: RoadshowEntityConnection[];
+    contracts: RoadshowEntityConnection[];
+  }>({ contacts: [], events: [], quotes: [], contracts: [] });
+
+  useEffect(() => {
+    if (stop && isOpen) {
+      loadData();
+    }
+  }, [stop?.id, isOpen]);
+
+  const loadData = async () => {
+    if (!stop) return;
+    
+    const expensesData = await getExpenses(stop.id);
+    setExpenses(expensesData);
+    
+    const connectionsData = await getRoadshowConnections(stop.id);
+    setConnections(connectionsData);
+  };
+
   if (!stop) return null;
 
   const handleDownloadPDF = () => {
@@ -308,6 +338,141 @@ Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleT
             <div>
               <h3 className="font-semibold text-gray-900 mb-2">📝 Notes Importantes</h3>
               <p className="text-gray-700 bg-yellow-50 p-3 rounded">{stop.notes}</p>
+            </div>
+          )}
+
+          {/* Équipe technique */}
+          {stop.crew && stop.crew.length > 0 && (
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-3">🎵 Équipe Technique</h3>
+              <div className="grid md:grid-cols-2 gap-2">
+                {stop.crew.map((crewId) => {
+                  const user = getUserById(crewId);
+                  return (
+                    <div key={crewId} className="p-2 bg-gray-50 rounded">
+                      <span className="text-gray-700">{user?.name || 'Équipe inconnue'}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Notes de frais */}
+          {expenses.length > 0 && (
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
+                <FileText className="h-4 w-4 mr-2 text-purple-600" />
+                Notes de Frais ({expenses.length})
+              </h3>
+              <div className="grid md:grid-cols-2 gap-2">
+                {expenses.map((expense) => (
+                  <div key={expense.id} className="p-3 bg-gray-50 rounded">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-900">{expense.title}</p>
+                        {expense.description && (
+                          <p className="text-sm text-gray-600 mt-1">{expense.description}</p>
+                        )}
+                        {expense.amount && (
+                          <p className="text-sm font-semibold text-purple-600 mt-1">
+                            {expense.amount}€
+                          </p>
+                        )}
+                      </div>
+                      <a 
+                        href={expense.file_url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-purple-600 hover:text-purple-700"
+                      >
+                        <FileText className="h-4 w-4" />
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Entités liées */}
+          {(connections.contacts.length > 0 || connections.events.length > 0 || 
+            connections.quotes.length > 0 || connections.contracts.length > 0) && (
+            <div className="space-y-4 border-t pt-4">
+              <h3 className="font-semibold text-gray-900 mb-3">🔗 Entités Liées</h3>
+              
+              {connections.contacts.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                    <Contact className="h-3 w-3 mr-1" />
+                    Contacts ({connections.contacts.length})
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {connections.contacts.map((contact) => (
+                      <Badge key={contact.id} variant="outline">
+                        {contact.title}
+                        {contact.role && <span className="ml-1 text-xs">({contact.role})</span>}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {connections.events.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                    <CalendarDays className="h-3 w-3 mr-1" />
+                    Événements ({connections.events.length})
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {connections.events.map((event) => (
+                      <Badge key={event.id} variant="outline">
+                        {event.title}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {connections.quotes.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                    <DollarSign className="h-3 w-3 mr-1" />
+                    Devis ({connections.quotes.length})
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {connections.quotes.map((quote) => (
+                      <a
+                        key={quote.id}
+                        href={`/quotes`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block"
+                      >
+                        <Badge variant="outline" className="cursor-pointer hover:bg-purple-50">
+                          {quote.title}
+                        </Badge>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {connections.contracts.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                    <FileText className="h-3 w-3 mr-1" />
+                    Contrats ({connections.contracts.length})
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {connections.contracts.map((contract) => (
+                      <Badge key={contract.id} variant="outline">
+                        {contract.title}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
