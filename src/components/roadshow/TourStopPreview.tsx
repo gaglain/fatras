@@ -442,17 +442,13 @@ Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleT
                   </h4>
                   <div className="flex flex-wrap gap-2">
                     {connections.quotes.map((quote) => (
-                      <a
-                        key={quote.id}
-                        href={`/quotes`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-block"
+                      <Badge 
+                        key={quote.id} 
+                        variant="outline"
+                        className="cursor-default"
                       >
-                        <Badge variant="outline" className="cursor-pointer hover:bg-purple-50">
-                          {quote.title}
-                        </Badge>
-                      </a>
+                        {quote.title}
+                      </Badge>
                     ))}
                   </div>
                 </div>

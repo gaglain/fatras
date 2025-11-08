@@ -21,6 +21,7 @@ import { useUser, UserRole } from '@/contexts/UserContext';
 import { useEmailSender } from '@/hooks/useEmailSender';
 import { useUserManagement } from '@/hooks/useUserManagement';
 import { ExtendedUserForm } from '@/components/users/ExtendedUserForm';
+import { supabase } from '@/integrations/supabase/client';
 
 
 export const UserManagement: React.FC = () => {
@@ -162,6 +163,29 @@ export const UserManagement: React.FC = () => {
     setIsFormOpen(true);
   };
 
+  const handleResetPassword = async (email: string) => {
+    if (!email) return;
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('send-password-reset', {
+        body: { email }
+      });
+
+      if (error) throw error;
+
+      if (data?.resetLink) {
+        // Copier le lien dans le presse-papiers
+        await navigator.clipboard.writeText(data.resetLink);
+        toast.success('Lien de réinitialisation copié dans le presse-papiers !');
+      } else {
+        toast.success('Email de réinitialisation envoyé !');
+      }
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      toast.error('Erreur lors de la réinitialisation du mot de passe');
+    }
+  };
+
   const handleDelete = async (userId: string) => {
     if (userId === currentUser?.id) {
       toast.error('Vous ne pouvez pas supprimer votre propre compte');
@@ -269,6 +293,14 @@ export const UserManagement: React.FC = () => {
                   <Edit className="h-3 w-3 mr-1" />
                   <span className="hidden sm:inline">Modifier</span>
                   <span className="sm:hidden">Edit</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => handleResetPassword(user.email)}
+                  title="Réinitialiser le mot de passe"
+                >
+                  <Save className="h-3 w-3" />
                 </Button>
                 {user.user_id !== currentUser?.id && (
                   <Button 
