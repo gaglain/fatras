@@ -84,8 +84,8 @@ export const useRoadshowEntityConnections = () => {
 
       if (contractError) throw contractError;
 
-      // Transform to standardized format
-      const contacts: RoadshowEntityConnection[] = (contactLinks || []).map((link: any) => ({
+      // Start building result arrays from direct roadshow_stop_* tables
+      let contacts: RoadshowEntityConnection[] = (contactLinks || []).map((link: any) => ({
         id: link.id,
         entityId: link.contact_id,
         entityType: 'contact' as const,
@@ -95,14 +95,14 @@ export const useRoadshowEntityConnections = () => {
         role: link.role
       }));
 
-      const events: RoadshowEntityConnection[] = (eventLinks || []).map((link: any) => ({
+      let events: RoadshowEntityConnection[] = (eventLinks || []).map((link: any) => ({
         id: link.id,
         entityId: link.event_id,
         entityType: 'event' as const,
         title: link.events?.title || 'Événement inconnu'
       }));
 
-      const quotes: RoadshowEntityConnection[] = (quoteLinks || []).map((link: any) => ({
+      let quotes: RoadshowEntityConnection[] = (quoteLinks || []).map((link: any) => ({
         id: link.id,
         entityId: link.quote_id,
         entityType: 'quote' as const,
@@ -117,6 +117,126 @@ export const useRoadshowEntityConnections = () => {
         entityType: 'contract' as const,
         title: `Contrat ${link.contract_id.substring(0, 8)}`
       }));
+
+      // Augment with implicit links on the roadshow stop itself (quote_id, opportunity_id)
+      const { data: stopRow } = await supabase
+        .from('roadshow_stops')
+        .select('id, quote_id, opportunity_id')
+        .eq('id', roadshowStopId)
+        .maybeSingle();
+
+      // If the stop has a direct quote_id, include it
+      if (stopRow?.quote_id) {
+        const { data: directQuote } = await supabase
+          .from('quotes')
+          .select('id, quote_number, total_amount')
+          .eq('id', stopRow.quote_id)
+          .maybeSingle();
+        if (directQuote) {
+          quotes.push({
+            id: `rsq_${directQuote.id}`,
+            entityId: directQuote.id,
+            entityType: 'quote',
+            title: `Devis ${directQuote.quote_number} - ${directQuote.total_amount}€`
+          });
+        }
+      }
+
+      // Resolve opportunity id: direct column or via mapping table
+      let opportunityId: string | null = stopRow?.opportunity_id || null;
+      if (!opportunityId) {
+        const { data: roMap } = await supabase
+          .from('roadshow_opportunities')
+          .select('opportunity_id')
+          .eq('roadshow_stop_id', roadshowStopId)
+          .maybeSingle();
+        opportunityId = roMap?.opportunity_id || null;
+      }
+
+      if (opportunityId) {
+        // Contacts from opportunity
+        const { data: oppContacts } = await supabase
+          .from('contact_opportunities')
+          .select(`role, contacts (id, first_name, last_name, company)`) 
+          .eq('opportunity_id', opportunityId);
+        if (oppContacts) {
+          contacts.push(
+            ...oppContacts
+              .filter((c: any) => c.contacts)
+              .map((c: any) => ({
+                id: `opc_${c.contacts.id}`,
+                entityId: c.contacts.id,
+                entityType: 'contact' as const,
+                title: `${c.contacts.first_name} ${c.contacts.last_name}${c.contacts.company ? ` (${c.contacts.company})` : ''}`,
+                role: c.role || undefined,
+              }))
+          );
+        }
+
+        // Events from opportunity
+        const { data: oppEvents } = await supabase
+          .from('opportunity_events')
+          .select(`events (id, title)`) 
+          .eq('opportunity_id', opportunityId);
+        const oppEventIds = (oppEvents || [])
+          .map((e: any) => e.events?.id)
+          .filter(Boolean);
+        if (oppEvents) {
+          events.push(
+            ...oppEvents
+              .filter((e: any) => e.events)
+              .map((e: any) => ({
+                id: `ope_${e.events.id}`,
+                entityId: e.events.id,
+                entityType: 'event' as const,
+                title: e.events.title || 'Événement'
+              }))
+          );
+        }
+
+        // Quotes via quote_opportunities
+        const { data: oppQuotes } = await supabase
+          .from('quote_opportunities')
+          .select(`quotes (id, quote_number, total_amount)`) 
+          .eq('opportunity_id', opportunityId);
+        if (oppQuotes && oppQuotes.length > 0) {
+          quotes.push(
+            ...oppQuotes
+              .map((q: any) => q.quotes)
+              .filter(Boolean)
+              .map((q: any) => ({
+                id: `opq_${q.id}`,
+                entityId: q.id,
+                entityType: 'quote' as const,
+                title: `Devis ${q.quote_number} - ${q.total_amount}€`
+              }))
+          );
+        } else if (oppEventIds.length > 0) {
+          // Fallback: quotes linked to collected event ids
+          const { data: evQuotes } = await (supabase
+            .from('quotes')
+            .select('id, quote_number, total_amount, event_id') as any)
+            .in('event_id', oppEventIds);
+          if (evQuotes) {
+            quotes.push(
+              ...evQuotes.map((q: any) => ({
+                id: `evq_${q.id}`,
+                entityId: q.id,
+                entityType: 'quote' as const,
+                title: `Devis ${q.quote_number} - ${q.total_amount}€`
+              }))
+            );
+          }
+        }
+      }
+
+      // Deduplicate by entityId for each type
+      const uniqBy = <T extends RoadshowEntityConnection>(arr: T[]) =>
+        Array.from(new Map(arr.map((i) => [i.entityId, i])).values());
+
+      contacts = uniqBy(contacts);
+      events = uniqBy(events);
+      quotes = uniqBy(quotes);
 
       return { contacts, events, quotes, contracts };
     } catch (error) {
