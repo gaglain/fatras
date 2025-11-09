@@ -20,8 +20,8 @@ export const useRoadshowEntityConnections = () => {
 
     setLoading(true);
     try {
-      // Fetch connected contacts
-      const { data: contactLinks, error: contactError } = await supabase
+      // Fetch connected contacts (non-bloquant)
+      const { data: contactLinksRaw, error: contactError } = await supabase
         .from('roadshow_stop_contacts')
         .select(`
           id,
@@ -37,10 +37,13 @@ export const useRoadshowEntityConnections = () => {
         `)
         .eq('roadshow_stop_id', roadshowStopId);
 
-      if (contactError) throw contactError;
+      const contactLinks = contactLinksRaw || [];
+      if (contactError) {
+        console.warn('roadshow_stop_contacts select error:', contactError.message || contactError);
+      }
 
-      // Fetch connected events
-      const { data: eventLinks, error: eventError } = await supabase
+      // Fetch connected events (non-bloquant)
+      const { data: eventLinksRaw, error: eventError } = await supabase
         .from('roadshow_stop_events')
         .select(`
           id,
@@ -54,10 +57,13 @@ export const useRoadshowEntityConnections = () => {
         `)
         .eq('roadshow_stop_id', roadshowStopId);
 
-      if (eventError) throw eventError;
+      const eventLinks = eventLinksRaw || [];
+      if (eventError) {
+        console.warn('roadshow_stop_events select error:', eventError.message || eventError);
+      }
 
-      // Fetch connected quotes
-      const { data: quoteLinks, error: quoteError } = await supabase
+      // Fetch connected quotes (non-bloquant)
+      const { data: quoteLinksRaw, error: quoteError } = await supabase
         .from('roadshow_stop_quotes')
         .select(`
           id,
@@ -71,10 +77,13 @@ export const useRoadshowEntityConnections = () => {
         `)
         .eq('roadshow_stop_id', roadshowStopId);
 
-      if (quoteError) throw quoteError;
+      const quoteLinks = quoteLinksRaw || [];
+      if (quoteError) {
+        console.warn('roadshow_stop_quotes select error:', quoteError.message || quoteError);
+      }
 
-      // Fetch connected contracts
-      const { data: contractLinks, error: contractError } = await supabase
+      // Fetch connected contracts (non-bloquant)
+      const { data: contractLinksRaw, error: contractError } = await supabase
         .from('roadshow_stop_contracts')
         .select(`
           id,
@@ -82,7 +91,10 @@ export const useRoadshowEntityConnections = () => {
         `)
         .eq('roadshow_stop_id', roadshowStopId);
 
-      if (contractError) throw contractError;
+      const contractLinks = contractLinksRaw || [];
+      if (contractError) {
+        console.warn('roadshow_stop_contracts select error:', contractError.message || contractError);
+      }
 
       // Start building result arrays from direct roadshow_stop_* tables
       let contacts: RoadshowEntityConnection[] = (contactLinks || []).map((link: any) => ({
