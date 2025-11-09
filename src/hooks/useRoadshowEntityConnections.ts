@@ -127,7 +127,7 @@ export const useRoadshowEntityConnections = () => {
 
       // If the stop has a direct quote_id, include it
       if (stopRow?.quote_id) {
-        const { data: directQuote } = await supabase
+        const { data: directQuote, error: directQuoteError } = await supabase
           .from('quotes')
           .select('id, quote_number, total_amount')
           .eq('id', stopRow.quote_id)
@@ -138,6 +138,14 @@ export const useRoadshowEntityConnections = () => {
             entityId: directQuote.id,
             entityType: 'quote',
             title: `Devis ${directQuote.quote_number} - ${directQuote.total_amount}€`
+          });
+        } else {
+          // Fallback: afficher un indicateur même si le devis n'est pas lisible (RLS) ou manquant
+          quotes.push({
+            id: `rsq_${stopRow.quote_id}`,
+            entityId: stopRow.quote_id,
+            entityType: 'quote',
+            title: `Devis lié (${String(stopRow.quote_id).slice(0, 8)}…)`
           });
         }
       }
@@ -238,6 +246,7 @@ export const useRoadshowEntityConnections = () => {
       events = uniqBy(events);
       quotes = uniqBy(quotes);
 
+      console.debug('Roadshow connections for stop', roadshowStopId, { contacts: contacts.length, events: events.length, quotes: quotes.length, contracts: contracts.length });
       return { contacts, events, quotes, contracts };
     } catch (error) {
       console.error('Error fetching roadshow connections:', error);
