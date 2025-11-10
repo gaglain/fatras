@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useNylasEmail } from './useNylasEmail';
-
+import { useEmailSender } from './useEmailSender';
 export interface ExtendedUserProfile {
   id: string;
   user_id: string;
@@ -142,32 +142,38 @@ export const useUserManagement = () => {
 
       console.log('✅ Profil utilisateur créé dans la base:', result);
 
-      // Créer l'utilisateur via l'Edge Function admin (email déjà confirmé)
-      const { data: createData, error: createError } = await supabase.functions.invoke('admin-create-user', {
-        body: {
-          action: 'create',
-          email: userData.email,
-          password: userData.password,
-          metadata: {
-            first_name: userData.first_name,
-            last_name: userData.last_name,
-            username: userData.username || userData.email.split('@')[0],
-            role: userData.role || 'utilisateur'
-          }
-        }
-      });
+      // Si la RPC a déjà créé l'utilisateur Auth, on évite l'appel Edge Function
+      let authUserId: string | undefined = result?.user_id as string | undefined;
 
-      if (createError || !createData?.success) {
-        console.error('❌ Erreur création utilisateur (admin):', createError || createData?.error);
-        toast.error(`Erreur création auth: ${createError?.message || createData?.error || 'inconnue'}`);
+      if (!authUserId) {
+        // Création via l'Edge Function admin (email confirmé)
+        const { data: createData, error: createError } = await supabase.functions.invoke('admin-create-user', {
+          body: {
+            action: 'create',
+            email: userData.email,
+            password: userData.password,
+            metadata: {
+              first_name: userData.first_name,
+              last_name: userData.last_name,
+              username: userData.username || userData.email.split('@')[0],
+              role: userData.role || 'utilisateur'
+            }
+          }
+        });
+
+        if (createError || !createData?.success) {
+          console.error('❌ Erreur création utilisateur (admin):', createError || createData?.error);
+          toast.error(`Erreur création auth: ${createError?.message || createData?.error || 'inconnue'}`);
+        }
+
+        authUserId = createData?.user?.id as string | undefined;
       }
 
-      const newUserId = createData?.user?.id as string | undefined;
-      if (newUserId) {
-        console.log('🔄 Mise à jour du profil avec user_id auth:', newUserId);
+      if (authUserId) {
+        console.log('🔄 Mise à jour du profil avec user_id auth:', authUserId);
         const { error: updateError } = await supabase
           .from('user_profiles')
-          .update({ user_id: newUserId })
+          .update({ user_id: authUserId })
           .eq('email', userData.email);
         if (updateError) {
           console.error('❌ Erreur mise à jour user_id:', updateError);
