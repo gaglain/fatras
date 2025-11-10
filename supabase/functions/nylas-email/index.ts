@@ -711,6 +711,15 @@ async function sendEmail(baseUrl: string, apiKey: string, supabase: any, userId:
             });
             if (finalResp.ok) {
               const finalData = await finalResp.json();
+              
+              // Trouver le contact correspondant pour lier l'email
+              const { data: contactData } = await supabase
+                .from('contacts')
+                .select('id')
+                .eq('user_id', userId)
+                .eq('email', email.to)
+                .single();
+              
               await supabase.from('emails').insert({
                 user_id: userId,
                 message_id: finalData.data?.id,
@@ -723,7 +732,8 @@ async function sendEmail(baseUrl: string, apiKey: string, supabase: any, userId:
                 html_content: email.html,
                 status: 'delivered',
                 provider: 'nylas',
-                sent_at: new Date().toISOString()
+                sent_at: new Date().toISOString(),
+                contact_id: contactData?.id || null // Lier au contact si trouvé
               });
               return new Response(
                 JSON.stringify({ success: true, messageId: finalData.data?.id, message: 'Email sent successfully' }),
@@ -738,6 +748,15 @@ async function sendEmail(baseUrl: string, apiKey: string, supabase: any, userId:
       }
 
           const retryData = await retryResp.json();
+          
+          // Trouver le contact correspondant pour lier l'email
+          const { data: contactData } = await supabase
+            .from('contacts')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('email', email.to)
+            .single();
+          
           await supabase.from('emails').insert({
             user_id: userId,
             message_id: retryData.data?.id,
@@ -750,7 +769,8 @@ async function sendEmail(baseUrl: string, apiKey: string, supabase: any, userId:
             html_content: email.html,
             status: 'delivered',
             provider: 'nylas',
-            sent_at: new Date().toISOString()
+            sent_at: new Date().toISOString(),
+            contact_id: contactData?.id || null // Lier au contact si trouvé
           });
 
           return new Response(
@@ -767,6 +787,14 @@ async function sendEmail(baseUrl: string, apiKey: string, supabase: any, userId:
 
     const sendData = await sendResponse.json();
 
+    // Trouver le contact correspondant pour lier l'email
+    const { data: contactData } = await supabase
+      .from('contacts')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('email', email.to)
+      .single();
+
     // Save sent email to database in unified emails table
     await supabase
       .from('emails')
@@ -782,7 +810,8 @@ async function sendEmail(baseUrl: string, apiKey: string, supabase: any, userId:
         html_content: email.html,
         status: 'delivered',
         provider: 'nylas',
-        sent_at: new Date().toISOString()
+        sent_at: new Date().toISOString(),
+        contact_id: contactData?.id || null // Lier au contact si trouvé
       });
 
     return new Response(

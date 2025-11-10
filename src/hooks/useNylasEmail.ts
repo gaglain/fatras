@@ -163,6 +163,14 @@ const sendEmail = async (accountId: string, email: {
     try {
       console.log('📤 Sending email...');
 
+      // Trouver le contact correspondant à l'email destinataire
+      const { data: contact } = await supabase
+        .from('contacts')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('email', email.to)
+        .single();
+
       // Créer un enregistrement email pour obtenir l'ID de tracking
       const { data: emailRecord, error: emailError } = await supabase
         .from('emails')
@@ -171,8 +179,10 @@ const sendEmail = async (accountId: string, email: {
           to_email: email.to,
           subject: email.subject,
           content: email.content,
+          html_content: email.html || email.content,
           direction: 'sent',
-          status: 'sending'
+          status: 'sending',
+          contact_id: contact?.id || null // Lier au contact si trouvé
         })
         .select()
         .single();

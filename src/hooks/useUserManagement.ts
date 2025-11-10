@@ -38,6 +38,7 @@ export const useUserManagement = () => {
   const [users, setUsers] = useState<ExtendedUserProfile[]>([]);
   const [loading, setLoading] = useState(false);
   const { accounts, sendEmail: sendEmailViaNylas } = useNylasEmail();
+  const { sendUserWelcomeEmail } = useEmailSender();
 
   const fetchUsers = async () => {
     try {
@@ -182,15 +183,18 @@ export const useUserManagement = () => {
         }
       }
 
-      // Envoyer l'email de bienvenue via Nylas
+      // Envoyer l'email de bienvenue via Nylas ou Resend (fallback)
       try {
+        let emailSent = false;
+        
         if (accounts.length > 0) {
-          const activeAccount = accounts.find(acc => acc.is_active) || accounts[0];
-          
-          await sendEmailViaNylas(activeAccount.id, {
-            to: userData.email,
-            subject: 'Bienvenue - Votre accès a été créé',
-            content: `Bonjour ${userData.first_name} ${userData.last_name},
+          try {
+            const activeAccount = accounts.find(acc => acc.is_active) || accounts[0];
+            
+            await sendEmailViaNylas(activeAccount.id, {
+              to: userData.email,
+              subject: 'Bienvenue - Votre accès a été créé',
+              content: `Bonjour ${userData.first_name} ${userData.last_name},
 
 Votre compte a été créé avec succès !
 
@@ -202,25 +206,36 @@ Veuillez vous connecter et changer votre mot de passe lors de votre première co
 
 Cordialement,
 L'équipe`,
-            html: `
-              <h2>Bienvenue ${userData.first_name} ${userData.last_name} !</h2>
-              <p>Votre compte a été créé avec succès.</p>
-              <h3>Informations de connexion :</h3>
-              <ul>
-                <li><strong>Email :</strong> ${userData.email}</li>
-                <li><strong>Mot de passe temporaire :</strong> <code>${userData.password}</code></li>
-              </ul>
-              <p>Veuillez vous connecter et changer votre mot de passe lors de votre première connexion.</p>
-              <p>Cordialement,<br>L'équipe</p>
-            `
-          });
-          console.log('✅ Email de bienvenue envoyé via Nylas');
-        } else {
-          console.warn('⚠️ Aucun compte Nylas configuré pour l\'envoi d\'emails');
-          toast.error('Utilisateur créé mais aucun compte email configuré');
+              html: `
+                <h2>Bienvenue ${userData.first_name} ${userData.last_name} !</h2>
+                <p>Votre compte a été créé avec succès.</p>
+                <h3>Informations de connexion :</h3>
+                <ul>
+                  <li><strong>Email :</strong> ${userData.email}</li>
+                  <li><strong>Mot de passe temporaire :</strong> <code>${userData.password}</code></li>
+                </ul>
+                <p>Veuillez vous connecter et changer votre mot de passe lors de votre première connexion.</p>
+                <p>Cordialement,<br>L'équipe</p>
+              `
+            });
+            console.log('✅ Email de bienvenue envoyé via Nylas');
+            emailSent = true;
+          } catch (nylasError) {
+            console.warn('⚠️ Échec envoi via Nylas, tentative via Resend...', nylasError);
+          }
+        }
+        
+        // Fallback Resend si Nylas indisponible ou échoué
+        if (!emailSent) {
+          await sendUserWelcomeEmail(
+            userData.email,
+            `${userData.first_name} ${userData.last_name}`,
+            userData.password
+          );
+          console.log('✅ Email de bienvenue envoyé via Resend (fallback)');
         }
       } catch (emailError) {
-        console.error('❌ Erreur envoi email via Nylas:', emailError);
+        console.error('❌ Erreur envoi email (tous canaux):', emailError);
         toast.error('Utilisateur créé mais erreur envoi email');
       }
 

@@ -23,6 +23,13 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
   const [showReply, setShowReply] = React.useState(false);
   const [isSyncing, setIsSyncing] = React.useState(false);
 
+  // Recharger les emails quand le composant est monté et quand contactId change
+  React.useEffect(() => {
+    if (contactId || contactEmail) {
+      loadEmails();
+    }
+  }, [contactId, contactEmail]);
+
   const stripTags = (s: string) => s ? s.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '').replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim() : '';
   const getPreviewText = (email: any) => {
     const base = email?.html_content || email?.content || '';

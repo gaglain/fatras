@@ -24,6 +24,14 @@ export const useEmailSender = () => {
         throw new Error('Utilisateur non connecté');
       }
 
+      // Trouver le contact correspondant à l'email destinataire
+      const { data: contact } = await supabase
+        .from('contacts')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('email', emailData.to[0])
+        .single();
+
       // Créer un enregistrement email pour obtenir l'ID de tracking
       const { data: emailRecord, error: emailError } = await supabase
         .from('emails')
@@ -32,8 +40,10 @@ export const useEmailSender = () => {
           to_email: emailData.to[0],
           subject: emailData.subject,
           content: emailData.html,
+          html_content: emailData.html,
           direction: 'sent',
-          status: 'sending'
+          status: 'sending',
+          contact_id: contact?.id || null // Lier au contact si trouvé
         })
         .select()
         .single();
@@ -64,7 +74,11 @@ export const useEmailSender = () => {
       // Mettre à jour le statut de l'email
       await supabase
         .from('emails')
-        .update({ status: 'sent', sent_at: new Date().toISOString() })
+        .update({ 
+          status: 'sent', 
+          sent_at: new Date().toISOString(),
+          provider: 'resend'
+        })
         .eq('id', emailRecord.id);
 
       return data;
@@ -92,11 +106,17 @@ export const useEmailSender = () => {
       </div>
     `;
 
-    return sendEmail({
-      to: [userEmail],
-      subject: 'Bienvenue sur Fatras - Vos informations de connexion',
-      html
-    });
+    try {
+      await sendEmail({
+        to: [userEmail],
+        subject: 'Bienvenue sur Fatras - Vos informations de connexion',
+        html
+      });
+      console.log('✅ Email de bienvenue envoyé et enregistré');
+    } catch (error) {
+      console.error('❌ Erreur envoi email de bienvenue:', error);
+      throw error;
+    }
   };
 
   const sendTaskAssignmentEmail = async (
