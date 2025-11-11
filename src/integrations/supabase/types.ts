@@ -944,6 +944,7 @@ export type Database = {
           id: string
           imap_config: Json | null
           is_active: boolean | null
+          is_organization_shared: boolean | null
           last_sync_at: string | null
           provider: string
           refresh_token: string | null
@@ -958,6 +959,7 @@ export type Database = {
           id?: string
           imap_config?: Json | null
           is_active?: boolean | null
+          is_organization_shared?: boolean | null
           last_sync_at?: string | null
           provider: string
           refresh_token?: string | null
@@ -972,6 +974,7 @@ export type Database = {
           id?: string
           imap_config?: Json | null
           is_active?: boolean | null
+          is_organization_shared?: boolean | null
           last_sync_at?: string | null
           provider?: string
           refresh_token?: string | null

@@ -106,11 +106,31 @@ const handler = async (req: Request): Promise<Response> => {
 
 async function listEmailAccounts(baseUrl: string, apiKey: string, supabase: any, userId: string) {
   try {
-    const { data: accounts, error } = await supabase
+    // Vérifier si l'utilisateur est super_admin, admin ou manager
+    const { data: userRoles } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId);
+    
+    const roles = userRoles?.map((r: any) => r.role) || [];
+    const canAccessSharedAccounts = roles.some((r: string) => 
+      ['super_admin', 'admin', 'manager'].includes(r)
+    );
+
+    let query = supabase
       .from('email_accounts')
       .select('*')
-      .eq('user_id', userId)
       .eq('is_active', true);
+
+    if (canAccessSharedAccounts) {
+      // Les admins/managers ont accès à leurs comptes + comptes partagés de l'organisation
+      query = query.or(`user_id.eq.${userId},is_organization_shared.eq.true`);
+    } else {
+      // Les utilisateurs normaux ne voient que leurs propres comptes
+      query = query.eq('user_id', userId);
+    }
+
+    const { data: accounts, error } = await query;
 
     if (error) throw error;
 
@@ -504,13 +524,32 @@ async function sendEmail(baseUrl: string, apiKey: string, supabase: any, userId:
   try {
     console.log(`📤 Sending email from account: ${accountId}`);
 
-    // Get account details
-    const { data: account, error: accountError } = await supabase
+    // Vérifier si l'utilisateur est super_admin, admin ou manager
+    const { data: userRoles } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId);
+    
+    const roles = userRoles?.map((r: any) => r.role) || [];
+    const canUseSharedAccounts = roles.some((r: string) => 
+      ['super_admin', 'admin', 'manager'].includes(r)
+    );
+
+    // Récupérer le compte - soit celui de l'utilisateur, soit un compte partagé si autorisé
+    let accountQuery = supabase
       .from('email_accounts')
       .select('*')
-      .eq('id', accountId)
-      .eq('user_id', userId)
-      .single();
+      .eq('id', accountId);
+
+    if (canUseSharedAccounts) {
+      // Les admins/managers peuvent utiliser leurs comptes + comptes partagés
+      accountQuery = accountQuery.or(`user_id.eq.${userId},is_organization_shared.eq.true`);
+    } else {
+      // Les utilisateurs normaux ne peuvent utiliser que leurs propres comptes
+      accountQuery = accountQuery.eq('user_id', userId);
+    }
+
+    const { data: account, error: accountError } = await accountQuery.single();
 
     if (accountError || !account) {
       throw new Error('Account not found');
