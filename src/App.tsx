@@ -46,6 +46,7 @@ import { Application } from "./pages/Application";
 import { Quotes } from "./pages/Quotes";
 import { RolePermissions } from "./pages/RolePermissions";
 import ContactTypes from "./pages/ContactTypes";
+import Assignments from "./pages/Assignments";
 import { Layout } from "./components/Layout";
 import { FontManager } from "./components/website/FontManager";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -159,6 +160,7 @@ const App = () => {
                 
                 {/* Routes du back-office - PROTÉGÉES */}
                 <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
+                <Route path="/assignments" element={<ProtectedRoute><Layout><Assignments /></Layout></ProtectedRoute>} />
                 <Route path="/artists" element={<ProtectedRoute><Layout><Artists /></Layout></ProtectedRoute>} />
                 <Route path="/artists/:id" element={<ProtectedRoute><Layout><ArtistDetailPage /></Layout></ProtectedRoute>} />
                 <Route path="/events" element={<ProtectedRoute><Layout><Events /></Layout></ProtectedRoute>} />

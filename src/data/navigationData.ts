@@ -18,7 +18,8 @@ import {
   Settings,
   UserCog,
   Briefcase,
-  CalendarCheck
+  CalendarCheck,
+  ClipboardList
 } from 'lucide-react';
 
 export interface MenuItem {
@@ -34,6 +35,12 @@ export const navigationData: MenuItem[] = [
     name: 'Dashboard', 
     href: '/dashboard', 
     icon: LayoutDashboard, 
+    visible: true 
+  },
+  { 
+    name: 'Assignations', 
+    href: '/assignments', 
+    icon: ClipboardList, 
     visible: true 
   },
   { 
