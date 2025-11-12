@@ -44,7 +44,6 @@ export const useRoadshowStops = () => {
       const { data, error } = await supabase
         .from('roadshow_stops')
         .select('*')
-        .eq('user_id', user.id)
         .order('event_date', { ascending: true });
 
       if (error) throw error;
@@ -196,7 +195,6 @@ export const useRoadshowStops = () => {
           artist_lineup: stopData.artist_lineup
         })
         .eq('id', stopId)
-        .eq('user_id', user.id)
         .select()
         .single();
 
@@ -251,8 +249,7 @@ export const useRoadshowStops = () => {
       const { error } = await supabase
         .from('roadshow_stops')
         .delete()
-        .eq('id', stopId)
-        .eq('user_id', user.id);
+        .eq('id', stopId);
 
       if (error) throw error;
 

@@ -20,6 +20,7 @@ import { toast } from 'sonner';
 import { useUser, UserRole } from '@/contexts/UserContext';
 import { useEmailSender } from '@/hooks/useEmailSender';
 import { useUserManagement } from '@/hooks/useUserManagement';
+import { usePermissions } from '@/hooks/usePermissions';
 import { ExtendedUserForm } from '@/components/users/ExtendedUserForm';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -39,6 +40,7 @@ export const UserManagement: React.FC = () => {
   
   const { sendUserWelcomeEmail, sending } = useEmailSender();
   const { users, loading, fetchUsers, createUser, updateUserProfile, deactivateUser } = useUserManagement();
+  const { hasPermission, loading: permissionsLoading } = usePermissions();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -222,10 +224,12 @@ export const UserManagement: React.FC = () => {
             Gérez les utilisateurs et leurs permissions
           </p>
         </div>
-        <Button onClick={() => setIsFormOpen(true)} className="w-full sm:w-auto">
-          <Plus className="h-4 w-4 mr-2" />
-          <span className="hidden sm:inline">Nouvel </span>Utilisateur
-        </Button>
+        {hasPermission('users', 'create') && (
+          <Button onClick={() => setIsFormOpen(true)} className="w-full sm:w-auto">
+            <Plus className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Nouvel </span>Utilisateur
+          </Button>
+        )}
       </div>
 
       {/* Barre de recherche */}

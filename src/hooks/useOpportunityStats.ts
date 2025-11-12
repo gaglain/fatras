@@ -39,8 +39,7 @@ export const useOpportunityStats = () => {
       try {
         const { data: opportunities, error } = await supabase
           .from('opportunities')
-          .select('budget, probability_percentage, status')
-          .eq('user_id', user.id);
+          .select('budget, probability_percentage, status');
 
         if (error) throw error;
 

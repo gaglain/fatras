@@ -52,7 +52,6 @@ export const useShowBible = () => {
       const { data, error } = await supabase
         .from('show_bible_documents')
         .select('*')
-        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -123,8 +122,7 @@ export const useShowBible = () => {
       const { error: dbError } = await supabase
         .from('show_bible_documents')
         .delete()
-        .eq('id', documentId)
-        .eq('user_id', user.id);
+        .eq('id', documentId);
 
       if (dbError) {
         console.error('Erreur lors de la suppression du document:', dbError);

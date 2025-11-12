@@ -66,19 +66,16 @@ export const useUnifiedEmails = () => {
               company
             )
           `)
-          .eq('user_id', user.id)
           .order('created_at', { ascending: false })
           .limit(100),
         supabase
           .from('inbound_emails')
           .select('*')
-          .eq('user_id', user.id)
           .order('received_at', { ascending: false })
           .limit(100),
         supabase
           .from('email_accounts')
           .select('email')
-          .eq('user_id', user.id)
           .eq('is_active', true)
       ]);
 
