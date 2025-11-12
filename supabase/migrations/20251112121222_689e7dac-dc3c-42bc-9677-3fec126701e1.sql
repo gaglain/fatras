@@ -1,0 +1,15 @@
+-- Activer Realtime pour la table notifications
+ALTER TABLE notifications REPLICA IDENTITY FULL;
+
+-- Ajouter la table à la publication realtime si pas déjà fait
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables 
+    WHERE pubname = 'supabase_realtime' 
+    AND schemaname = 'public' 
+    AND tablename = 'notifications'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
+  END IF;
+END $$;

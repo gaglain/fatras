@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { notifyTaskAssignment } from '@/utils/notificationHelpers';
 
 export interface Task {
   id: string;
@@ -268,6 +269,16 @@ export const useTasks = () => {
       };
       setTasks(prev => [...prev, newTask]);
       
+      // Notifier l'utilisateur assigné s'il y en a un et qu'il est différent du créateur
+      if (newTask.assigned_to && newTask.assigned_to !== user?.id && user?.email) {
+        await notifyTaskAssignment({
+          assignedToUserId: newTask.assigned_to,
+          taskTitle: newTask.title,
+          assignedByUserEmail: user.email,
+          taskId: newTask.id
+        });
+      }
+      
       // Créer une notification si la tâche a une échéance
       if (newTask.due_date) {
         await createTaskNotification(newTask);
@@ -286,6 +297,9 @@ export const useTasks = () => {
   const updateTask = async (id: string, updates: Partial<Task>) => {
     try {
       console.log('🔄 Updating task:', id, updates);
+      
+      // Récupérer la tâche actuelle pour comparer assigned_to
+      const currentTask = tasks.find(t => t.id === id);
       
       // Préparer les données pour la mise à jour en filtrant les valeurs undefined
       const updateData: any = {};
@@ -343,6 +357,19 @@ export const useTasks = () => {
         setTasks(prev => prev.map(task => 
           task.id === id ? updatedTask : task
         ));
+        
+        // Notifier si assigned_to a changé et est différent du créateur
+        if (updates.assigned_to && 
+            currentTask?.assigned_to !== updates.assigned_to && 
+            updates.assigned_to !== user?.id && 
+            user?.email) {
+          await notifyTaskAssignment({
+            assignedToUserId: updates.assigned_to,
+            taskTitle: updatedTask.title,
+            assignedByUserEmail: user.email,
+            taskId: updatedTask.id
+          });
+        }
         
         return updatedTask;
       }
