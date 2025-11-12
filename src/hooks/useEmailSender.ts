@@ -28,7 +28,6 @@ export const useEmailSender = () => {
       const { data: contact } = await supabase
         .from('contacts')
         .select('id')
-        .eq('user_id', user.id)
         .eq('email', emailData.to[0])
         .single();
 
