@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { notifyOpportunityAssignment, notifyQuoteAssignment } from '@/utils/notificationHelpers';
 
 export interface EntityConnection {
   id: string;
@@ -374,6 +375,62 @@ export const useEntityConnections = () => {
         .insert(insertData);
 
       if (error) throw error;
+
+      // Envoyer une notification selon le type d'entité
+      if (entityType === 'opportunity' || entityType === 'quote') {
+        // Récupérer les informations du contact
+        const { data: contactData } = await supabase
+          .from('contacts')
+          .select('user_id, first_name, last_name')
+          .eq('id', contactId)
+          .single();
+
+        // Récupérer l'email de l'utilisateur qui fait l'assignation
+        const { data: assignerData } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('id', user.id)
+          .single();
+
+        if (contactData?.user_id && assignerData?.email) {
+          const contactName = `${contactData.first_name} ${contactData.last_name}`.trim();
+
+          if (entityType === 'opportunity') {
+            // Récupérer le titre de l'opportunité
+            const { data: opportunityData } = await supabase
+              .from('opportunities')
+              .select('title')
+              .eq('id', entityId)
+              .single();
+
+            if (opportunityData) {
+              await notifyOpportunityAssignment({
+                assignedToUserId: contactData.user_id,
+                opportunityTitle: opportunityData.title,
+                assignedByUserEmail: assignerData.email,
+                opportunityId: entityId
+              });
+            }
+          } else if (entityType === 'quote') {
+            // Récupérer le titre du devis
+            const { data: quoteData } = await supabase
+              .from('quotes')
+              .select('quote_number, title')
+              .eq('id', entityId)
+              .single();
+
+            if (quoteData) {
+              await notifyQuoteAssignment({
+                assignedToUserId: contactData.user_id,
+                quoteReference: quoteData.quote_number || quoteData.title,
+                assignedByUserEmail: assignerData.email,
+                quoteId: entityId
+              });
+            }
+          }
+        }
+      }
+
       toast.success('Liaison créée avec succès');
       return true;
     } catch (error) {

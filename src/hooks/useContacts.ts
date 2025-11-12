@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { notifyContactAssignment } from '@/utils/notificationHelpers';
 
 export interface Contact {
   id: string;
@@ -131,12 +132,36 @@ export const useContacts = () => {
         updated_at: data.updated_at
       };
       setContacts(prev => [...prev, newContact]);
+
+      // Si un user_id est assigné, envoyer une notification
+      if (contactData.user_id && user && contactData.user_id !== user.id) {
+        const contactName = `${contactData.first_name} ${contactData.last_name}`.trim();
+        
+        const { data: assignerData } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('id', user.id)
+          .single();
+
+        if (assignerData?.email) {
+          await notifyContactAssignment({
+            assignedToUserId: contactData.user_id,
+            contactName,
+            assignedByUserEmail: assignerData.email,
+            contactId: data.id
+          });
+        }
+      }
+
       return newContact;
     }
     return null;
   };
 
   const updateContact = async (id: string, updates: Partial<Contact>) => {
+    // Récupérer l'ancien contact pour comparer user_id
+    const oldContact = contacts.find(c => c.id === id);
+    
     const { data, error } = await supabase
       .from('contacts')
       .update({
@@ -157,7 +182,8 @@ export const useContacts = () => {
         event_id: updates.event_id,
         event_type_id: updates.event_type_id,
         accepts_marketing_emails: updates.accepts_marketing_emails,
-        lead_score: updates.lead_score
+        lead_score: updates.lead_score,
+        user_id: updates.user_id
       })
       .eq('id', id)
       .select()
@@ -167,6 +193,26 @@ export const useContacts = () => {
       setContacts(prev => prev.map(contact => 
         contact.id === id ? { ...contact, ...updates } : contact
       ));
+
+      // Si user_id a changé, envoyer une notification
+      if (updates.user_id && oldContact?.user_id !== updates.user_id && user) {
+        const contactName = `${updates.first_name || oldContact?.first_name} ${updates.last_name || oldContact?.last_name}`.trim();
+        
+        const { data: assignerData } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('id', user.id)
+          .single();
+
+        if (assignerData?.email) {
+          await notifyContactAssignment({
+            assignedToUserId: updates.user_id,
+            contactName,
+            assignedByUserEmail: assignerData.email,
+            contactId: id
+          });
+        }
+      }
     }
   };
 
