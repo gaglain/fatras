@@ -85,7 +85,6 @@ export const useNylasCalendarSync = () => {
       const { data, error } = await supabase
         .from('calendar_events')
         .select('*')
-        .eq('user_id', user.id)
         .order('start_time', { ascending: true });
 
       if (error) throw error;
