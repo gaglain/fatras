@@ -45,18 +45,31 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewType, setViewType] = useState<ViewType>('month');
 
-  // Robust date parser to handle Postgres 'YYYY-MM-DD HH:mm:ss+00' and ISO strings
+  // Robust date parser to handle Postgres and ISO strings (+HH, +HHMM, +HH:MM)
   const parseDate = (value: string) => {
     if (!value) return new Date(NaN);
     let s = value.trim();
+    // Replace space with T
     if (s.includes(' ') && !s.includes('T')) s = s.replace(' ', 'T');
-    // Convert '+00' or '+00:00' to 'Z' for UTC, or add missing colon in +HH
-    if (/\+00(?::?00)?$/.test(s)) s = s.replace(/\+00(?::?00)?$/, 'Z');
-    s = s.replace(/\+(\d{2})$/, '+$1:00');
-    // If no timezone provided, assume UTC
+
+    // Normalize timezone formats
+    // 1) +00 or +0000 or +00:00 -> Z
+    if (/\+00(?::?00)?$/.test(s) || /\+0000$/.test(s)) {
+      s = s.replace(/\+00(?::?00)?$/, 'Z').replace(/\+0000$/, 'Z');
+    }
+    // 2) +HHMM => +HH:MM
+    else if (/[+-]\d{4}$/.test(s)) {
+      s = s.replace(/([+-]\d{2})(\d{2})$/, '$1:$2');
+    }
+    // 3) +HH => +HH:00
+    else if (/[+-]\d{2}$/.test(s)) {
+      s = s + ':00';
+    }
+
+    // If no timezone, assume UTC to avoid Safari shifts
     if (!/[zZ]|[+-]\d{2}:?\d{2}$/.test(s)) s += 'Z';
-    const d = new Date(s);
-    return d;
+
+    return new Date(s);
   };
 
   const visibleCalendarIds = useMemo(() => 
