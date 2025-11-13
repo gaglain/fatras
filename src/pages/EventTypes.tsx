@@ -43,7 +43,6 @@ export const EventTypes: React.FC = () => {
       const { data, error } = await supabase
         .from('event_types')
         .select('*')
-        .eq('user_id', user.id)
         .order('created_at', { ascending: true });
 
       if (data && !error) {
