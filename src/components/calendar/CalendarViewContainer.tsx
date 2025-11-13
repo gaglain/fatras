@@ -48,14 +48,16 @@ export const CalendarViewContainer: React.FC = () => {
       }
     ];
 
-    // Récupérer les calendriers Nylas avec leurs vrais noms
     try {
       const { data: calendarData, error } = await supabase
         .from('calendar_events')
         .select('calendar_id, provider');
 
       if (!error && calendarData) {
-        // Utiliser les données des logs pour mapper les noms de calendriers
+        // Éviter les doublons, en particulier l'ID "local" qui est déjà ajouté
+        const addedIds = new Set<string>(sources.map(s => s.id));
+
+        // Map des noms amicaux connus
         const calendarNames: { [key: string]: string } = {
           'edouard.lermite@gmail.com': 'Edouard Lermite',
           'legolom@gmail.com': 'Legolom',
@@ -69,8 +71,12 @@ export const CalendarViewContainer: React.FC = () => {
           'awakeirishtrance@gmail.com': 'Awake Irish Trance'
         };
 
-        const uniqueCalendars = [...new Set(calendarData.map(e => e.calendar_id))];
+        // Conserver un ordre stable et éviter "local"
+        const uniqueCalendars = [...new Set(calendarData.map(e => e.calendar_id))]
+          .filter((calId): calId is string => !!calId && calId !== 'local');
+
         uniqueCalendars.forEach((calId, index) => {
+          if (addedIds.has(calId)) return; // dédoublonnage
           const displayName = calendarNames[calId] || calId.replace('@gmail.com', '').replace('@free.fr', '') || `Calendrier ${index + 1}`;
           sources.push({
             id: calId,
@@ -79,6 +85,7 @@ export const CalendarViewContainer: React.FC = () => {
             visible: true,
             provider: 'nylas'
           });
+          addedIds.add(calId);
         });
       }
     } catch (error) {
