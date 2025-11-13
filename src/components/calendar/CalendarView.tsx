@@ -45,6 +45,20 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewType, setViewType] = useState<ViewType>('month');
 
+  // Robust date parser to handle Postgres 'YYYY-MM-DD HH:mm:ss+00' and ISO strings
+  const parseDate = (value: string) => {
+    if (!value) return new Date(NaN);
+    let s = value.trim();
+    if (s.includes(' ') && !s.includes('T')) s = s.replace(' ', 'T');
+    // Convert '+00' or '+00:00' to 'Z' for UTC, or add missing colon in +HH
+    if (/\+00(?::?00)?$/.test(s)) s = s.replace(/\+00(?::?00)?$/, 'Z');
+    s = s.replace(/\+(\d{2})$/, '+$1:00');
+    // If no timezone provided, assume UTC
+    if (!/[zZ]|[+-]\d{2}:?\d{2}$/.test(s)) s += 'Z';
+    const d = new Date(s);
+    return d;
+  };
+
   const visibleCalendarIds = useMemo(() => 
     calendars.filter(cal => cal.visible).map(cal => cal.id),
     [calendars]
@@ -101,14 +115,14 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 
   const getEventsForDate = (date: Date) => {
     return filteredEvents.filter(event => {
-      const eventDate = new Date(event.start_time);
+      const eventDate = parseDate(event.start_time);
       return isSameDay(eventDate, date);
     });
   };
 
   const formatEventTime = (startTime: string, endTime: string) => {
-    const start = new Date(startTime);
-    const end = new Date(endTime);
+    const start = parseDate(startTime);
+    const end = parseDate(endTime);
     return `${format(start, 'HH:mm', { locale: fr })} - ${format(end, 'HH:mm', { locale: fr })}`;
   };
 
@@ -208,7 +222,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                     >
                       <div className="font-medium truncate text-foreground">{event.title}</div>
                       <div className="text-xs text-muted-foreground">
-                        {format(new Date(event.start_time), 'HH:mm')}
+                        {format(parseDate(event.start_time), 'HH:mm')}
                       </div>
                       {event.location && (
                         <div className="text-xs text-muted-foreground truncate">
