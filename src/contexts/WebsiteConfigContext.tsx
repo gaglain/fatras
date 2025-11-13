@@ -137,7 +137,7 @@ export const WebsiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({
         const { data, error } = await supabase
           .from('app_settings')
           .select('setting_key, setting_value')
-          .in('setting_key', ['websiteConfig', 'websiteSettings', 'websiteDesign']);
+          .in('setting_key', ['websiteConfig', 'websiteSettings', 'websiteDesign', 'company_name', 'company_logo', 'favicon']);
 
         if (error) {
           console.warn('⚠️ Chargement Supabase (website config) échoué, fallback localStorage:', error.message);
@@ -149,16 +149,24 @@ export const WebsiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({
           // Préférence à websiteConfig s'il existe
           let dbConfig: Partial<WebsiteConfig> | null = null;
           if (map.websiteConfig) {
-            try { dbConfig = JSON.parse(map.websiteConfig); } catch { dbConfig = null; }
+            try { 
+              dbConfig = JSON.parse(map.websiteConfig);
+              // Override avec company_name, company_logo, favicon s'ils existent
+              if (map.company_name) dbConfig.siteName = map.company_name;
+              if (map.company_logo) dbConfig.logo = map.company_logo;
+              if (map.favicon) dbConfig.favicon = map.favicon;
+            } catch { 
+              dbConfig = null; 
+            }
           } else {
             // Construire une config minimale à partir des anciens formats si présent
             try {
               const ws = map.websiteSettings ? JSON.parse(map.websiteSettings) : null;
               const wd = map.websiteDesign ? JSON.parse(map.websiteDesign) : null;
-              if (ws || wd) {
+              if (ws || wd || map.company_name || map.company_logo || map.favicon) {
                 dbConfig = {
-                  siteName: ws?.siteName ?? wd?.siteName ?? mergedConfig.siteName,
-                  logo: ws?.logo ?? wd?.logo ?? mergedConfig.logo,
+                  siteName: map.company_name ?? ws?.siteName ?? wd?.siteName ?? mergedConfig.siteName,
+                  logo: map.company_logo ?? ws?.logo ?? wd?.logo ?? mergedConfig.logo,
                   primaryColor: wd?.primaryColor ?? mergedConfig.primaryColor,
                   secondaryColor: wd?.secondaryColor ?? mergedConfig.secondaryColor,
                   accentColor: wd?.accentColor ?? mergedConfig.accentColor,
@@ -168,7 +176,7 @@ export const WebsiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({
                   linkColor: wd?.linkColor ?? mergedConfig.linkColor,
                   siteDescription: mergedConfig.siteDescription,
                   metaKeywords: mergedConfig.metaKeywords,
-                  favicon: mergedConfig.favicon,
+                  favicon: map.favicon ?? mergedConfig.favicon,
                   contactEmail: mergedConfig.contactEmail,
                   contactPhone: mergedConfig.contactPhone,
                   address: mergedConfig.address,
@@ -218,6 +226,12 @@ export const WebsiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({
 
       setConfig(mergedConfig);
       document.title = mergedConfig.siteName;
+      
+      // Appliquer le favicon
+      const faviconLink = document.querySelector("link[rel*='icon']") as HTMLLinkElement;
+      if (faviconLink && mergedConfig.favicon) {
+        faviconLink.href = mergedConfig.favicon;
+      }
 
     } catch (error) {
       console.error('❌ Error loading config:', error);
