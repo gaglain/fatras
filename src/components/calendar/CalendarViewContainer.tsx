@@ -176,6 +176,19 @@ export const CalendarViewContainer: React.FC = () => {
     });
   };
 
+  const handleToggleAll = () => {
+    setCalendars(prev => {
+      const allVisible = prev.every(cal => cal.visible);
+      const updated = prev.map(cal => ({ ...cal, visible: !allVisible }));
+      
+      // Sauvegarder les calendriers visibles dans app_settings
+      const visibleIds = updated.filter(cal => cal.visible).map(cal => cal.id);
+      setSetting('visible_calendars', JSON.stringify(visibleIds));
+      
+      return updated;
+    });
+  };
+
   const handleEventClick = (event: CalendarEvent) => {
     toast.info(`Événement: ${event.title}`, {
       description: `${event.start_time} - ${event.location || 'Pas de lieu'}`
@@ -187,6 +200,7 @@ export const CalendarViewContainer: React.FC = () => {
       events={allEvents}
       calendars={calendars}
       onCalendarToggle={handleCalendarToggle}
+      onToggleAll={handleToggleAll}
       onEventClick={handleEventClick}
     />
   );
