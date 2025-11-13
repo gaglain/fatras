@@ -4,10 +4,12 @@ import { useAuth } from '@/hooks/useAuth';
 import { useNylasCalendarSync } from '@/hooks/useNylasCalendarSync';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useAppSettings } from '@/hooks/useAppSettings';
 
 export const CalendarViewContainer: React.FC = () => {
   const { user } = useAuth();
   const { events: nylasEvents, loadEvents } = useNylasCalendarSync();
+  const { getSetting, setSetting } = useAppSettings();
   const [localEvents, setLocalEvents] = useState<any[]>([]);
   const [calendars, setCalendars] = useState<CalendarSource[]>([]);
   const [fallbackNylas, setFallbackNylas] = useState<any[]>([]);
@@ -54,12 +56,16 @@ export const CalendarViewContainer: React.FC = () => {
   const loadCalendarSources = async () => {
     if (!user) return;
 
+    // Charger les calendriers visibles depuis app_settings
+    const savedVisibleCalendars = getSetting('visible_calendars', '');
+    const visibleCalendarIds = savedVisibleCalendars ? JSON.parse(savedVisibleCalendars) : [];
+
     const sources: CalendarSource[] = [
       {
         id: 'local',
         name: 'Mes événements',
         color: '#3B82F6',
-        visible: true,
+        visible: visibleCalendarIds.length === 0 || visibleCalendarIds.includes('local'),
         provider: 'local'
       }
     ];
@@ -98,7 +104,7 @@ export const CalendarViewContainer: React.FC = () => {
             id: calId,
             name: displayName,
             color: `hsl(${(index * 137.5) % 360}, 70%, 50%)`,
-            visible: true,
+            visible: visibleCalendarIds.length === 0 || visibleCalendarIds.includes(calId),
             provider: 'nylas'
           });
           addedIds.add(calId);
@@ -155,13 +161,19 @@ export const CalendarViewContainer: React.FC = () => {
   }, [nylasEvents, localEvents]);
 
   const handleCalendarToggle = (calendarId: string) => {
-    setCalendars(prev => 
-      prev.map(cal => 
+    setCalendars(prev => {
+      const updated = prev.map(cal => 
         cal.id === calendarId 
           ? { ...cal, visible: !cal.visible }
           : cal
-      )
-    );
+      );
+      
+      // Sauvegarder les calendriers visibles dans app_settings
+      const visibleIds = updated.filter(cal => cal.visible).map(cal => cal.id);
+      setSetting('visible_calendars', JSON.stringify(visibleIds));
+      
+      return updated;
+    });
   };
 
   const handleEventClick = (event: CalendarEvent) => {
