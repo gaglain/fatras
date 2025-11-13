@@ -55,7 +55,6 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
       const { data: directOppIdsData } = await supabase
         .from('opportunities')
         .select('id')
-        .eq('user_id', user.id)
         .eq('artist_id', artist.id);
       const directOppIds = directOppIdsData?.map(o => o.id) || [];
 
@@ -66,8 +65,7 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
         const { data } = await supabase
           .from('opportunities')
           .select('*')
-          .in('id', allOppIds)
-          .eq('user_id', user.id);
+          .in('id', allOppIds);
         opportunitiesData = data || [];
       }
       console.log('Opportunities fetched:', opportunitiesData.length);

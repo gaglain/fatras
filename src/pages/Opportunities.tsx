@@ -129,7 +129,6 @@ const [newOpportunity, setNewOpportunity] = useState({
       const { data, error } = await supabase
         .from('opportunities')
         .select('*')
-        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -341,8 +340,7 @@ setNewOpportunity({
       const { error } = await supabase
         .from('opportunities')
         .delete()
-        .eq('id', id)
-        .eq('user_id', user.id);
+        .eq('id', id);
 
       if (error) throw error;
 
