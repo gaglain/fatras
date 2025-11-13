@@ -31,7 +31,6 @@ export const CompanyTab: React.FC = () => {
       const { data, error } = await supabase
         .from('app_settings')
         .select('setting_key, setting_value')
-        .eq('user_id', user.id)
         .in('setting_key', ['company_name', 'company_logo', 'company_favicon']);
 
       if (error) throw error;

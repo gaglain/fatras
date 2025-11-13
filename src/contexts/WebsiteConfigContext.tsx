@@ -137,7 +137,6 @@ export const WebsiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({
         const { data, error } = await supabase
           .from('app_settings')
           .select('setting_key, setting_value')
-          .eq('user_id', user.id)
           .in('setting_key', ['websiteConfig', 'websiteSettings', 'websiteDesign']);
 
         if (error) {

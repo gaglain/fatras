@@ -69,7 +69,6 @@ export const EmailInbox: React.FC = () => {
       const { data: accounts } = await supabase
         .from('email_accounts')
         .select('email')
-        .eq('user_id', user.id)
         .eq('is_active', true);
 
       const myEmails = Array.from(new Set([
@@ -81,7 +80,6 @@ export const EmailInbox: React.FC = () => {
       const { data, error } = await supabase
         .from('inbound_emails')
         .select('*')
-        .eq('user_id', user.id)
         .eq('direction', 'received')
         // Exclure les dossiers d'envoi les plus courants (chevauchement de labels)
         .not('labels', 'ov', '{"Sent","Envoyés","INBOX.Sent","Sent Items","[Gmail]/Sent Mail","Sent Messages","[Gmail]/Messages envoyés"}')

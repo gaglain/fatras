@@ -18,8 +18,7 @@ export const useAppSettings = () => {
     try {
       const { data, error } = await supabase
         .from('app_settings')
-        .select('setting_key, setting_value')
-        .eq('user_id', user.id);
+        .select('setting_key, setting_value');
 
       if (error) {
         console.error('Erreur lors du chargement des paramètres:', error);

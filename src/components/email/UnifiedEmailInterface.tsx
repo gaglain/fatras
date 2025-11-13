@@ -134,11 +134,10 @@ const [accountEmails, setAccountEmails] = useState<string[]>([]);
 
     setLoading(true);
     try {
-      // Récupère les adresses des comptes email actifs de l'utilisateur
+      // Récupère les adresses des comptes email actifs
       const { data: accounts } = await supabase
         .from('email_accounts')
         .select('email')
-        .eq('user_id', user.id)
         .eq('is_active', true);
 
       const myEmails = Array.from(new Set([
@@ -153,7 +152,6 @@ const [accountEmails, setAccountEmails] = useState<string[]>([]);
       const { data, error } = await supabase
         .from('inbound_emails')
         .select('*')
-        .eq('user_id', user.id)
         .eq('direction', 'received')
         .not('labels', 'ov', '{"Sent","Envoyés","INBOX.Sent","Sent Items","[Gmail]/Sent Mail","Sent Messages","[Gmail]/Messages envoyés"}')
         .order('received_at', { ascending: false })
@@ -197,7 +195,6 @@ const [accountEmails, setAccountEmails] = useState<string[]>([]);
       const { data: settings } = await supabase
         .from('app_settings')
         .select('setting_value')
-        .eq('user_id', user.id)
         .eq('setting_key', 'email_gmail_access_token')
         .single();
 
@@ -278,8 +275,7 @@ const [accountEmails, setAccountEmails] = useState<string[]>([]);
       const { error } = await supabase
         .from('inbound_emails')
         .update({ read_at: new Date().toISOString() })
-        .eq('id', email.id)
-        .eq('user_id', user?.id);
+        .eq('id', email.id);
 
       if (error) throw error;
 
@@ -330,8 +326,7 @@ const [accountEmails, setAccountEmails] = useState<string[]>([]);
       const { error } = await supabase
         .from('inbound_emails')
         .delete()
-        .eq('id', email.id)
-        .eq('user_id', user?.id);
+        .eq('id', email.id);
 
       if (error) throw error;
 

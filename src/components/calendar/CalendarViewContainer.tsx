@@ -26,7 +26,6 @@ export const CalendarViewContainer: React.FC = () => {
       const { data, error } = await supabase
         .from('events')
         .select('*')
-        .eq('user_id', user.id)
         .order('start_date', { ascending: true });
 
       if (error) throw error;
@@ -53,8 +52,7 @@ export const CalendarViewContainer: React.FC = () => {
     try {
       const { data: calendarData, error } = await supabase
         .from('calendar_events')
-        .select('calendar_id, provider')
-        .eq('user_id', user.id);
+        .select('calendar_id, provider');
 
       if (!error && calendarData) {
         // Utiliser les données des logs pour mapper les noms de calendriers

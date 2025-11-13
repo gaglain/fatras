@@ -70,7 +70,6 @@ export const GoogleCalendarDisplay: React.FC = () => {
       const { data: nylasEvents, error: nylasErr } = await supabase
         .from('calendar_events')
         .select('*')
-        .eq('user_id', user.id)
         .gte('start_time', new Date().toISOString())
         .order('start_time', { ascending: true })
         .limit(10);
@@ -98,11 +97,10 @@ export const GoogleCalendarDisplay: React.FC = () => {
         .eq('is_active', true)
         .maybeSingle();
 
-      // Fallback: récupérer les événements de l'utilisateur depuis la table events
+      // Fallback: récupérer les événements depuis la table events
       const { data: userEvents, error } = await supabase
         .from('events')
         .select('*')
-        .eq('user_id', user.id)
         .gte('start_date', new Date().toISOString())
         .order('start_date', { ascending: true })
         .limit(10);
