@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,7 @@ import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { AgendaCSVImporter } from '@/components/agenda/AgendaCSVImporter';
 import { AgendaCSVExporter } from '@/components/agenda/AgendaCSVExporter';
+import { CalendarFilter } from '@/components/agenda/CalendarFilter';
 import { GoogleCalendarDisplay } from '@/components/integrations/GoogleCalendarDisplay';
 import { CalendarViewContainer } from '@/components/calendar/CalendarViewContainer';
 import { EventCreationDialog } from '@/components/calendar/EventCreationDialog';
@@ -18,6 +19,7 @@ import { EventEditDialog } from '@/components/calendar/EventEditDialog';
 import { useEvents } from '@/hooks/useEvents';
 import { useUser } from '@/contexts/UserContext';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface AgendaEvent {
@@ -172,6 +174,28 @@ export const Agenda: React.FC = () => {
   const [editingEvent, setEditingEvent] = useState<AgendaEvent | null>(null);
   const [csvImportOpen, setCsvImportOpen] = useState(false);
   const [visibleUsers, setVisibleUsers] = useState<string[]>(users.map(u => u.id));
+  const [selectedCalendars, setSelectedCalendars] = useState<string[]>([]);
+  const [calendarEvents, setCalendarEvents] = useState<any[]>([]);
+  
+  useEffect(() => {
+    loadCalendarEvents();
+  }, [selectedCalendars]);
+
+  const loadCalendarEvents = async () => {
+    try {
+      let query = supabase.from('calendar_events').select('*').order('start_time', { ascending: true });
+      
+      if (selectedCalendars.length > 0) {
+        query = query.in('calendar_id', selectedCalendars);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      setCalendarEvents(data || []);
+    } catch (error) {
+      console.error('Erreur lors du chargement des événements calendrier:', error);
+    }
+  };
   
   // Transformer les événements Supabase en événements de l'agenda
   const agendaEvents: AgendaEvent[] = events.map(event => ({
@@ -256,6 +280,14 @@ export const Agenda: React.FC = () => {
     );
   };
 
+  const toggleCalendarFilter = (calendarId: string) => {
+    setSelectedCalendars(prev => 
+      prev.includes(calendarId)
+        ? prev.filter(id => id !== calendarId)
+        : [...prev, calendarId]
+    );
+  };
+
   const getEventTypeColor = (type: string) => {
     switch (type) {
       case 'concert': return 'bg-purple-100 text-purple-800';
@@ -335,6 +367,12 @@ export const Agenda: React.FC = () => {
         </TabsContent>
         
         <TabsContent value="list" className="space-y-6">
+          
+          {/* Filtres par calendrier */}
+          <CalendarFilter
+            selectedCalendars={selectedCalendars}
+            onCalendarToggle={toggleCalendarFilter}
+          />
 
       {/* Sélecteur d'utilisateurs */}
       <Card className="mb-6">
@@ -372,6 +410,54 @@ export const Agenda: React.FC = () => {
 
       {/* Google Calendar Integration */}
       <GoogleCalendarDisplay />
+
+      {/* Liste des événements du calendrier */}
+      {selectedCalendars.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Événements des calendriers sélectionnés</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {calendarEvents.length === 0 ? (
+              <div className="text-center py-12">
+                <Calendar className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+                <h3 className="text-lg font-medium mb-2">Aucun événement trouvé</h3>
+                <p className="text-gray-600">Aucun événement dans les calendriers sélectionnés</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {calendarEvents.map((event) => (
+                  <div key={event.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <h4 className="font-medium text-lg">{event.title}</h4>
+                        {event.description && (
+                          <p className="text-sm text-gray-600 mt-1">{event.description}</p>
+                        )}
+                        <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-4 w-4" />
+                            {new Date(event.start_time).toLocaleString('fr-FR')}
+                          </div>
+                          {event.location && (
+                            <div className="flex items-center gap-1">
+                              <MapPin className="h-4 w-4" />
+                              {event.location}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <Badge variant="secondary" className="ml-2">
+                        {event.provider}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Liste des événements */}
       <Card>

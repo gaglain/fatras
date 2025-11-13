@@ -27,6 +27,13 @@ interface EventCreationDialogProps {
   onEventCreated?: () => void;
 }
 
+interface EmailAccount {
+  id: string;
+  email: string;
+  provider: string;
+  access_token: string;
+}
+
 export const EventCreationDialog: React.FC<EventCreationDialogProps> = ({
   open,
   onOpenChange,
@@ -35,6 +42,7 @@ export const EventCreationDialog: React.FC<EventCreationDialogProps> = ({
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [appUsers, setAppUsers] = useState<AppUser[]>([]);
+  const [emailAccounts, setEmailAccounts] = useState<EmailAccount[]>([]);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -42,11 +50,14 @@ export const EventCreationDialog: React.FC<EventCreationDialogProps> = ({
     end_time: '',
     location: '',
     attendees: [] as string[], // user IDs
+    sync_to_google: false,
+    target_calendar_id: '', // calendar_id pour Nylas
   });
 
   useEffect(() => {
     if (open) {
       loadAppUsers();
+      loadEmailAccounts();
     }
   }, [open]);
 
@@ -61,6 +72,21 @@ export const EventCreationDialog: React.FC<EventCreationDialogProps> = ({
       setAppUsers(data || []);
     } catch (error) {
       console.error('Erreur lors du chargement des utilisateurs:', error);
+    }
+  };
+
+  const loadEmailAccounts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('email_accounts')
+        .select('id, email, provider, access_token')
+        .eq('is_active', true)
+        .in('provider', ['gmail', 'google']);
+
+      if (error) throw error;
+      setEmailAccounts(data || []);
+    } catch (error) {
+      console.error('Erreur lors du chargement des comptes email:', error);
     }
   };
 
@@ -80,49 +106,43 @@ export const EventCreationDialog: React.FC<EventCreationDialogProps> = ({
     try {
       const attendeesArray = formData.attendees;
 
-      // Check if user has Nylas integration
-      const { data: integration } = await supabase
-        .from('integrations')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('service', 'google_calendar')
-        .eq('is_active', true)
-        .single();
-
-      const settings = integration?.settings as any;
-      
-      if (settings?.grant_id) {
-        // Create event in Google Calendar via Nylas
-        try {
-          const { data, error } = await supabase.functions.invoke('nylas-calendar-sync', {
-            body: {
-              action: 'create_event',
-              user_id: user.id,
-              grant_id: settings.grant_id,
-              event: {
-                title: formData.title,
-                description: formData.description,
-                when: {
-                  start_time: new Date(formData.start_time).toISOString(),
-                  end_time: new Date(formData.end_time || formData.start_time).toISOString(),
+      // Synchroniser avec Google Calendar si demandé
+      if (formData.sync_to_google && formData.target_calendar_id) {
+        const targetAccount = emailAccounts.find(acc => acc.email === formData.target_calendar_id);
+        
+        if (targetAccount?.access_token) {
+          try {
+            const { data, error } = await supabase.functions.invoke('nylas-calendar-sync', {
+              body: {
+                action: 'create_event',
+                user_id: user.id,
+                grant_id: targetAccount.access_token,
+                event: {
+                  title: formData.title,
+                  description: formData.description,
+                  when: {
+                    start_time: new Date(formData.start_time).toISOString(),
+                    end_time: new Date(formData.end_time || formData.start_time).toISOString(),
+                  },
+                  location: formData.location,
+                  participants: attendeesArray.map(userId => {
+                    const u = appUsers.find(au => au.user_id === userId);
+                    return { email: u?.email || '' };
+                  }).filter(p => p.email),
                 },
-                location: formData.location,
-                participants: attendeesArray.map(userId => {
-                  const u = appUsers.find(au => au.user_id === userId);
-                  return { email: u?.email || '' };
-                }).filter(p => p.email),
               },
-            },
-          });
+            });
 
-          if (error) {
-            console.error('Nylas calendar error:', error);
+            if (error) {
+              console.error('Nylas calendar error:', error);
+              toast.error('Erreur lors de la synchronisation avec Google Agenda');
+            } else {
+              toast.success('Événement créé dans Google Agenda');
+            }
+          } catch (nylasError) {
+            console.error('Nylas error:', nylasError);
             toast.error('Erreur lors de la synchronisation avec Google Agenda');
-          } else {
-            toast.success('Événement créé dans Google Agenda');
           }
-        } catch (nylasError) {
-          console.error('Nylas error:', nylasError);
         }
       }
 
@@ -134,8 +154,8 @@ export const EventCreationDialog: React.FC<EventCreationDialogProps> = ({
         start_time: formData.start_time,
         end_time: formData.end_time || formData.start_time,
         location: formData.location,
-        calendar_id: settings?.calendar_id || 'local',
-        provider: integration ? 'nylas' : 'local',
+        calendar_id: formData.target_calendar_id || 'local',
+        provider: formData.sync_to_google ? 'nylas' : 'local',
         external_id: `local-${Date.now()}`,
         attendees: attendeesArray,
       });
@@ -180,6 +200,8 @@ export const EventCreationDialog: React.FC<EventCreationDialogProps> = ({
         end_time: '',
         location: '',
         attendees: [],
+        sync_to_google: false,
+        target_calendar_id: '',
       });
     } catch (error: any) {
       console.error('Erreur lors de la création:', error);
@@ -249,6 +271,42 @@ export const EventCreationDialog: React.FC<EventCreationDialogProps> = ({
               placeholder="Adresse ou nom du lieu"
             />
           </div>
+
+          {emailAccounts.length > 0 && (
+            <div className="space-y-3 border rounded-lg p-4 bg-muted/30">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="sync_to_google"
+                  checked={formData.sync_to_google}
+                  onChange={(e) => setFormData({ ...formData, sync_to_google: e.target.checked })}
+                  className="h-4 w-4"
+                />
+                <Label htmlFor="sync_to_google" className="cursor-pointer">
+                  Synchroniser avec Google Agenda
+                </Label>
+              </div>
+              
+              {formData.sync_to_google && (
+                <div>
+                  <Label htmlFor="target_calendar">Calendrier Google cible</Label>
+                  <select
+                    id="target_calendar"
+                    value={formData.target_calendar_id}
+                    onChange={(e) => setFormData({ ...formData, target_calendar_id: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary"
+                  >
+                    <option value="">Sélectionner un calendrier</option>
+                    {emailAccounts.map((account) => (
+                      <option key={account.id} value={account.email}>
+                        {account.email}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+          )}
 
           <div>
             <Label>Participants (utilisateurs de l'app uniquement)</Label>
