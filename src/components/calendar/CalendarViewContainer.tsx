@@ -10,10 +10,12 @@ export const CalendarViewContainer: React.FC = () => {
   const { events: nylasEvents, loadEvents } = useNylasCalendarSync();
   const [localEvents, setLocalEvents] = useState<any[]>([]);
   const [calendars, setCalendars] = useState<CalendarSource[]>([]);
+  const [fallbackNylas, setFallbackNylas] = useState<any[]>([]);
 
   useEffect(() => {
     if (user) {
       loadEvents();
+      loadNylasFallback();
       loadLocalEvents();
       loadCalendarSources();
     }
@@ -32,6 +34,20 @@ export const CalendarViewContainer: React.FC = () => {
       setLocalEvents(data || []);
     } catch (error) {
       console.error('Erreur chargement événements locaux:', error);
+    }
+  };
+
+  const loadNylasFallback = async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase
+        .from('calendar_events')
+        .select('*')
+        .order('start_time', { ascending: true });
+      if (error) throw error;
+      setFallbackNylas(data || []);
+    } catch (error) {
+      console.error('Erreur chargement événements Nylas (fallback):', error);
     }
   };
 
@@ -103,7 +119,8 @@ export const CalendarViewContainer: React.FC = () => {
     const events: CalendarEvent[] = [];
 
     // Événements Nylas - préfixe pour éviter les doublons d'ID
-    nylasEvents.forEach(event => {
+    const nylasSource = (nylasEvents && nylasEvents.length > 0) ? nylasEvents : fallbackNylas;
+    nylasSource.forEach(event => {
       events.push({
         id: `nylas-${event.id}`,
         title: event.title,
