@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Calendar, ChevronLeft, ChevronRight, Clock, MapPin } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Calendar, ChevronLeft, ChevronRight, Clock, MapPin, Search } from 'lucide-react';
 import { format, addDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isSameMonth, addWeeks, addMonths, startOfDay, endOfDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -46,6 +47,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewType, setViewType] = useState<ViewType>('month');
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Robust date parser to handle Postgres and ISO strings (+HH, +HHMM, +HH:MM)
   const parseDate = (value: string) => {
@@ -73,6 +75,13 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 
     return new Date(s);
   };
+
+  const filteredCalendars = useMemo(() => {
+    if (!searchQuery.trim()) return calendars;
+    return calendars.filter(cal => 
+      cal.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [calendars, searchQuery]);
 
   const visibleCalendarIds = useMemo(() => 
     calendars.filter(cal => cal.visible).map(cal => cal.id),
@@ -371,26 +380,37 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
       {/* Filtres des calendriers en haut */}
       <Card>
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
             <CardTitle className="flex items-center gap-2 text-lg">
               <Calendar className="h-5 w-5" />
               Calendriers
             </CardTitle>
-            {onToggleAll && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onToggleAll}
-                className="text-xs"
-              >
-                {calendars.every(cal => cal.visible) ? 'Tout masquer' : 'Tout afficher'}
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Rechercher un agenda..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8 h-8 w-[200px]"
+                />
+              </div>
+              {onToggleAll && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onToggleAll}
+                  className="text-xs"
+                >
+                  {calendars.every(cal => cal.visible) ? 'Tout masquer' : 'Tout afficher'}
+                </Button>
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent className="pt-0">
           <div className="flex flex-wrap gap-3">
-            {calendars.map(calendar => (
+            {filteredCalendars.map(calendar => (
               <div key={calendar.id} className="flex items-center space-x-2">
                 <Checkbox
                   id={calendar.id}
