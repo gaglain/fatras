@@ -244,12 +244,12 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
         .eq('artist_id', artist.id);
       console.log('Quotes fetched:', quotesData?.length);
 
-      setContacts(contactsData?.slice(0, 5) || []);
-      setOpportunities(opportunitiesData.slice(0, 5));
-      setEvents(eventsData.slice(0, 5));
-      setTasks(tasksData?.slice(0, 5) || []);
-      setPublications(publicationsData?.slice(0, 5) || []);
-      setQuotes(quotesData?.slice(0, 5) || []);
+      setContacts(contactsData || []);
+      setOpportunities(opportunitiesData);
+      setEvents(eventsData);
+      setTasks(tasksData || []);
+      setPublications(publicationsData || []);
+      setQuotes(quotesData || []);
 
       setStats({
         contacts: contactsData?.length || 0,
