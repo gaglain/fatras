@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { UniversalSearch, SearchItem } from '@/components/UniversalSearch';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -25,9 +26,16 @@ export const OpportunityEditor: React.FC<OpportunityEditorProps> = ({
     title: '',
     description: '',
     venue: '',
-    event_date: '',
+    location: '',
+    date: '',
     budget: '',
-    status: 'pending'
+    probability_percentage: '50',
+    deadline: '',
+    requirements: '',
+    status: 'open',
+    contact_id: '',
+    artist_id: '',
+    event_id: ''
   });
   const [loading, setLoading] = useState(false);
 
@@ -37,9 +45,16 @@ export const OpportunityEditor: React.FC<OpportunityEditorProps> = ({
         title: opportunity.title || '',
         description: opportunity.description || '',
         venue: opportunity.venue || '',
-        event_date: opportunity.event_date ? new Date(opportunity.event_date).toISOString().slice(0, 16) : '',
-        budget: opportunity.budget || '',
-        status: opportunity.status || 'pending'
+        location: opportunity.location || '',
+        date: opportunity.date ? new Date(opportunity.date).toISOString().slice(0, 16) : '',
+        budget: opportunity.budget ? String(opportunity.budget) : '',
+        probability_percentage: opportunity.probability_percentage ? String(opportunity.probability_percentage) : '50',
+        deadline: opportunity.deadline ? new Date(opportunity.deadline).toISOString().slice(0, 16) : '',
+        requirements: opportunity.requirements || '',
+        status: opportunity.status || 'open',
+        contact_id: opportunity.contact_id || '',
+        artist_id: opportunity.artist_id || '',
+        event_id: opportunity.event_id || ''
       });
     }
   }, [opportunity]);
