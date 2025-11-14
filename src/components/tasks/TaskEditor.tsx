@@ -119,7 +119,7 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
   const activeUsers = users.filter(user => user.isActive && user.id && user.name);
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
       <DialogContent className="w-full max-w-2xl max-h-[90vh] overflow-y-auto mx-4">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">

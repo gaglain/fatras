@@ -605,10 +605,12 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
             content: selectedPublication.content,
             scheduled_date: selectedPublication.scheduled_date,
             platforms: selectedPublication.platforms || [],
+            assigned_to: selectedPublication.assigned_to || '',
             media_url: selectedPublication.media_url,
             media_type: selectedPublication.media_type,
             external_link: selectedPublication.external_link
           } : {}}
+
           userProfiles={userProfiles}
           isEditing={true}
         />
