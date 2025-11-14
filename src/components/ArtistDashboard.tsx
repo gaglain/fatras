@@ -5,6 +5,12 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { Calendar, Users, FileText, DollarSign, CheckSquare, Mail } from 'lucide-react';
 import { CentralizedArtist } from '@/hooks/useCentralizedData';
+import { ContactDialog } from '@/components/contacts/ContactDialog';
+import { EventDialog } from '@/components/events/EventDialog';
+import { TaskEditor } from '@/components/tasks/TaskEditor';
+import { PublicationFormMultiPlatform } from '@/components/PublicationFormMultiPlatform';
+import { OpportunityEditor } from './OpportunityEditor';
+import { QuoteEditor } from './QuoteEditor';
 
 interface ArtistDashboardProps {
   artist: CentralizedArtist;
@@ -34,10 +40,79 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
   const [tasks, setTasks] = useState<any[]>([]);
   const [events, setEvents] = useState<any[]>([]);
   const [publications, setPublications] = useState<any[]>([]);
+  
+  // Dialog states
+  const [selectedContact, setSelectedContact] = useState<any>(null);
+  const [isContactDialogOpen, setIsContactDialogOpen] = useState(false);
+  const [selectedOpportunity, setSelectedOpportunity] = useState<any>(null);
+  const [isOpportunityDialogOpen, setIsOpportunityDialogOpen] = useState(false);
+  const [selectedQuote, setSelectedQuote] = useState<any>(null);
+  const [isQuoteDialogOpen, setIsQuoteDialogOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<any>(null);
+  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
+  const [selectedPublication, setSelectedPublication] = useState<any>(null);
+  const [isPublicationDialogOpen, setIsPublicationDialogOpen] = useState(false);
+  const [userProfiles, setUserProfiles] = useState<any[]>([]);
 
   useEffect(() => {
     fetchDashboardData();
+    loadUserProfiles();
   }, [artist.id]);
+
+  const loadUserProfiles = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('user_id, username, first_name, last_name');
+      
+      if (error) throw error;
+      setUserProfiles(data || []);
+    } catch (error) {
+      console.error('Error loading user profiles:', error);
+    }
+  };
+
+  const handleContactClick = (contact: any) => {
+    setSelectedContact(contact);
+    setIsContactDialogOpen(true);
+  };
+
+  const handleOpportunityClick = (opportunity: any) => {
+    setSelectedOpportunity(opportunity);
+    setIsOpportunityDialogOpen(true);
+  };
+
+  const handleQuoteClick = (quote: any) => {
+    setSelectedQuote(quote);
+    setIsQuoteDialogOpen(true);
+  };
+
+  const handleEventClick = (event: any) => {
+    setSelectedEvent(event);
+    setIsEventDialogOpen(true);
+  };
+
+  const handleTaskClick = (task: any) => {
+    setSelectedTask(task);
+    setIsTaskDialogOpen(true);
+  };
+
+  const handlePublicationClick = (publication: any) => {
+    setSelectedPublication(publication);
+    setIsPublicationDialogOpen(true);
+  };
+
+  const handleDialogClose = () => {
+    setIsContactDialogOpen(false);
+    setIsOpportunityDialogOpen(false);
+    setIsQuoteDialogOpen(false);
+    setIsEventDialogOpen(false);
+    setIsTaskDialogOpen(false);
+    setIsPublicationDialogOpen(false);
+    fetchDashboardData();
+  };
 
   const fetchDashboardData = async () => {
     try {
@@ -292,7 +367,11 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
               ) : (
                 <div className="space-y-4">
                   {contacts.map((contact) => (
-                    <div key={contact.id} className="flex items-center justify-between border-b pb-2">
+                    <div 
+                      key={contact.id} 
+                      className="flex items-center justify-between border-b pb-2 cursor-pointer hover:bg-muted/50 transition-colors rounded p-2"
+                      onClick={() => handleContactClick(contact)}
+                    >
                       <div>
                         <p className="font-medium">{contact.first_name} {contact.last_name}</p>
                         <p className="text-sm text-muted-foreground">{contact.company}</p>
@@ -317,7 +396,11 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
               ) : (
                 <div className="space-y-4">
                   {opportunities.map((opp) => (
-                    <div key={opp.id} className="flex items-center justify-between border-b pb-2">
+                    <div 
+                      key={opp.id} 
+                      className="flex items-center justify-between border-b pb-2 cursor-pointer hover:bg-muted/50 transition-colors rounded p-2"
+                      onClick={() => handleOpportunityClick(opp)}
+                    >
                       <div>
                         <p className="font-medium">{opp.title}</p>
                         <p className="text-sm text-muted-foreground">{opp.venue}</p>
@@ -342,7 +425,11 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
               ) : (
                 <div className="space-y-4">
                   {quotes.map((quote) => (
-                    <div key={quote.id} className="flex items-center justify-between border-b pb-2">
+                    <div 
+                      key={quote.id} 
+                      className="flex items-center justify-between border-b pb-2 cursor-pointer hover:bg-muted/50 transition-colors rounded p-2"
+                      onClick={() => handleQuoteClick(quote)}
+                    >
                       <div>
                         <p className="font-medium">{quote.title}</p>
                         <p className="text-sm text-muted-foreground">{quote.total_amount}€</p>
@@ -367,7 +454,11 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
               ) : (
                 <div className="space-y-4">
                   {events.map((event) => (
-                    <div key={event.id} className="flex items-center justify-between border-b pb-2">
+                    <div 
+                      key={event.id} 
+                      className="flex items-center justify-between border-b pb-2 cursor-pointer hover:bg-muted/50 transition-colors rounded p-2"
+                      onClick={() => handleEventClick(event)}
+                    >
                       <div>
                         <p className="font-medium">{event.title}</p>
                         <p className="text-sm text-muted-foreground">{event.venue}</p>
@@ -392,7 +483,11 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
               ) : (
                 <div className="space-y-4">
                   {tasks.map((task) => (
-                    <div key={task.id} className="flex items-center justify-between border-b pb-2">
+                    <div 
+                      key={task.id} 
+                      className="flex items-center justify-between border-b pb-2 cursor-pointer hover:bg-muted/50 transition-colors rounded p-2"
+                      onClick={() => handleTaskClick(task)}
+                    >
                       <div>
                         <p className="font-medium">{task.title}</p>
                         <p className="text-sm text-muted-foreground">{task.description}</p>
@@ -417,7 +512,11 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
               ) : (
                 <div className="space-y-4">
                   {publications.map((pub) => (
-                    <div key={pub.id} className="flex items-center justify-between border-b pb-2">
+                    <div 
+                      key={pub.id} 
+                      className="flex items-center justify-between border-b pb-2 cursor-pointer hover:bg-muted/50 transition-colors rounded p-2"
+                      onClick={() => handlePublicationClick(pub)}
+                    >
                       <div>
                         <p className="font-medium">{pub.title}</p>
                         <p className="text-sm text-muted-foreground">{pub.platform}</p>
@@ -431,6 +530,81 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Dialogs */}
+      <ContactDialog
+        isOpen={isContactDialogOpen}
+        onClose={handleDialogClose}
+        contact={selectedContact}
+        onSave={handleDialogClose}
+      />
+
+      <OpportunityEditor
+        isOpen={isOpportunityDialogOpen}
+        onClose={handleDialogClose}
+        opportunity={selectedOpportunity}
+        onSave={handleDialogClose}
+      />
+
+      <QuoteEditor
+        isOpen={isQuoteDialogOpen}
+        onClose={handleDialogClose}
+        quote={selectedQuote}
+        onSave={handleDialogClose}
+      />
+
+      <EventDialog
+        open={isEventDialogOpen}
+        onOpenChange={setIsEventDialogOpen}
+        event={selectedEvent}
+        onSave={handleDialogClose}
+      />
+
+      {selectedTask && (
+        <TaskEditor
+          task={selectedTask}
+          isOpen={isTaskDialogOpen}
+          onClose={handleDialogClose}
+          onTaskUpdated={handleDialogClose}
+        />
+      )}
+
+      <PublicationFormMultiPlatform
+        isOpen={isPublicationDialogOpen}
+        onClose={handleDialogClose}
+        onSubmit={async (data) => {
+          try {
+            const { error } = await supabase
+              .from('publications')
+              .update({
+                title: data.title,
+                content: data.content,
+                scheduled_date: data.scheduled_date,
+                platforms: data.platforms,
+                media_url: data.media_url,
+                media_type: data.media_type,
+                external_link: data.external_link
+              })
+              .eq('id', selectedPublication?.id);
+
+            if (error) throw error;
+            handleDialogClose();
+          } catch (error) {
+            console.error('Error updating publication:', error);
+          }
+        }}
+        initialData={selectedPublication ? {
+          title: selectedPublication.title,
+          content: selectedPublication.content,
+          scheduled_date: selectedPublication.scheduled_date,
+          platforms: selectedPublication.platforms || [],
+          media_url: selectedPublication.media_url,
+          media_type: selectedPublication.media_type,
+          external_link: selectedPublication.external_link
+        } : {}}
+        userProfiles={userProfiles}
+        isEditing={true}
+      />
     </div>
   );
 };
