@@ -158,7 +158,7 @@ export const CalendarViewContainer: React.FC = () => {
       });
 
     return events;
-  }, [nylasEvents, localEvents]);
+  }, [nylasEvents, fallbackNylas, localEvents]);
 
   const handleCalendarToggle = (calendarId: string) => {
     setCalendars(prev => {
