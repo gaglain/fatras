@@ -425,34 +425,61 @@ export const Agenda: React.FC = () => {
                 <p className="text-gray-600">Aucun événement dans les calendriers sélectionnés</p>
               </div>
             ) : (
-              <div className="space-y-3">
-                {calendarEvents.map((event) => (
-                  <div key={event.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <h4 className="font-medium text-lg">{event.title}</h4>
-                        {event.description && (
-                          <p className="text-sm text-gray-600 mt-1">{event.description}</p>
-                        )}
-                        <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-4 w-4" />
-                            {new Date(event.start_time).toLocaleString('fr-FR')}
-                          </div>
-                          {event.location && (
-                            <div className="flex items-center gap-1">
-                              <MapPin className="h-4 w-4" />
-                              {event.location}
+              <div className="space-y-6">
+                {(() => {
+                  // Grouper les événements par jour
+                  const eventsByDay: { [key: string]: typeof calendarEvents } = {};
+                  calendarEvents
+                    .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
+                    .forEach(event => {
+                      const dateKey = new Date(event.start_time).toLocaleDateString('fr-FR', { 
+                        weekday: 'long', 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      });
+                      if (!eventsByDay[dateKey]) {
+                        eventsByDay[dateKey] = [];
+                      }
+                      eventsByDay[dateKey].push(event);
+                    });
+
+                  return Object.entries(eventsByDay).map(([dateKey, dayEvents]) => (
+                    <div key={dateKey} className="space-y-3">
+                      <h3 className="font-semibold text-lg text-primary capitalize sticky top-0 bg-background py-2 border-b">
+                        {dateKey}
+                      </h3>
+                      {dayEvents.map((event) => (
+                        <div key={event.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow ml-4">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <h4 className="font-medium text-lg">{event.title}</h4>
+                              {event.description && (
+                                <p className="text-sm text-muted-foreground mt-1">{event.description}</p>
+                              )}
+                              <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                                <div className="flex items-center gap-1">
+                                  <Clock className="h-4 w-4" />
+                                  {new Date(event.start_time).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                                  {event.end_time && ` - ${new Date(event.end_time).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`}
+                                </div>
+                                {event.location && (
+                                  <div className="flex items-center gap-1">
+                                    <MapPin className="h-4 w-4" />
+                                    {event.location}
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          )}
+                            <Badge variant="secondary" className="ml-2">
+                              {event.provider}
+                            </Badge>
+                          </div>
                         </div>
-                      </div>
-                      <Badge variant="secondary" className="ml-2">
-                        {event.provider}
-                      </Badge>
+                      ))}
                     </div>
-                  </div>
-                ))}
+                  ));
+                })()}
               </div>
             )}
           </CardContent>
@@ -492,83 +519,107 @@ export const Agenda: React.FC = () => {
               </Button>
             </div>
           ) : (
-            <div className="space-y-4">
-              {filteredEvents
-                .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
-                .map((event) => {
-                  const eventUser = users.find(u => u.id === event.userId);
-                  return (
-                    <Card key={event.id} className="hover:shadow-md transition-shadow">
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-2 mb-2">
-                              <div className="w-3 h-3 rounded-full bg-blue-500" />
-                              <h3 className="text-lg font-semibold">{event.title}</h3>
-                              <Badge className={getEventTypeColor(event.type)}>
-                                {event.type === 'concert' ? 'Concert' : 
-                                 event.type === 'meeting' ? 'Réunion' : 'Autre'}
-                              </Badge>
-                              <Badge className={getStatusColor(event.status)}>
-                                {event.status === 'confirmed' ? 'Confirmé' :
-                                 event.status === 'pending' ? 'En attente' : 'Annulé'}
-                              </Badge>
-                            </div>
-                            
-                            {event.description && (
-                              <p className="text-gray-600 mb-3">{event.description}</p>
-                            )}
-                            
-                            <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-                              <div className="flex items-center">
-                                <Clock className="h-4 w-4 mr-1" />
-                                {new Date(event.startDate).toLocaleString('fr-FR')}
-                                {event.endDate && event.endDate !== event.startDate && (
-                                  <span> → {new Date(event.endDate).toLocaleString('fr-FR')}</span>
+            <div className="space-y-6">
+              {(() => {
+                // Grouper les événements par jour
+                const eventsByDay: { [key: string]: typeof filteredEvents } = {};
+                filteredEvents
+                  .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+                  .forEach(event => {
+                    const dateKey = new Date(event.startDate).toLocaleDateString('fr-FR', { 
+                      weekday: 'long', 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    });
+                    if (!eventsByDay[dateKey]) {
+                      eventsByDay[dateKey] = [];
+                    }
+                    eventsByDay[dateKey].push(event);
+                  });
+
+                return Object.entries(eventsByDay).map(([dateKey, dayEvents]) => (
+                  <div key={dateKey} className="space-y-3">
+                    <h3 className="font-semibold text-lg text-primary capitalize sticky top-0 bg-background py-2 border-b">
+                      {dateKey}
+                    </h3>
+                    {dayEvents.map((event) => {
+                      const eventUser = users.find(u => u.id === event.userId);
+                      return (
+                        <Card key={event.id} className="hover:shadow-md transition-shadow ml-4">
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center space-x-2 mb-2">
+                                  <div className="w-3 h-3 rounded-full bg-blue-500" />
+                                  <h3 className="text-lg font-semibold">{event.title}</h3>
+                                  <Badge className={getEventTypeColor(event.type)}>
+                                    {event.type === 'concert' ? 'Concert' : 
+                                     event.type === 'meeting' ? 'Réunion' : 'Autre'}
+                                  </Badge>
+                                  <Badge className={getStatusColor(event.status)}>
+                                    {event.status === 'confirmed' ? 'Confirmé' :
+                                     event.status === 'pending' ? 'En attente' : 'Annulé'}
+                                  </Badge>
+                                </div>
+                                
+                                {event.description && (
+                                  <p className="text-gray-600 mb-3">{event.description}</p>
                                 )}
+                                
+                                <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+                                  <div className="flex items-center">
+                                    <Clock className="h-4 w-4 mr-1" />
+                                    {new Date(event.startDate).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                                    {event.endDate && event.endDate !== event.startDate && (
+                                      <span> → {new Date(event.endDate).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
+                                    )}
+                                  </div>
+                                  {event.location && (
+                                    <div className="flex items-center">
+                                      <MapPin className="h-4 w-4 mr-1" />
+                                      {event.location}
+                                    </div>
+                                  )}
+                                  {event.attendees > 0 && (
+                                    <div className="flex items-center">
+                                      <Users className="h-4 w-4 mr-1" />
+                                      {event.attendees} participants
+                                    </div>
+                                  )}
+                                  <div className="flex items-center">
+                                    <User className="h-4 w-4 mr-1" />
+                                    {event.userName}
+                                  </div>
+                                </div>
                               </div>
-                              {event.location && (
-                                <div className="flex items-center">
-                                  <MapPin className="h-4 w-4 mr-1" />
-                                  {event.location}
-                                </div>
-                              )}
-                              {event.attendees > 0 && (
-                                <div className="flex items-center">
-                                  <Users className="h-4 w-4 mr-1" />
-                                  {event.attendees} participants
-                                </div>
-                              )}
-                              <div className="flex items-center">
-                                <User className="h-4 w-4 mr-1" />
-                                {event.userName}
+                              
+                              <div className="flex space-x-2 ml-4">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleEditEvent(event)}
+                                  className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleDeleteEvent(event.id)}
+                                  className="text-red-600 border-red-600 hover:bg-red-50"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
                               </div>
                             </div>
-                          </div>
-                          
-                          <div className="flex space-x-2 ml-4">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleEditEvent(event)}
-                              className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleDeleteEvent(event.id)}
-                              className="text-red-600 border-red-600 hover:bg-red-50"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                ));
+              })()}
             </div>
           )}
         </CardContent>
