@@ -71,9 +71,16 @@ export const OpportunityEditor: React.FC<OpportunityEditorProps> = ({
           title: formData.title,
           description: formData.description,
           venue: formData.venue,
-          event_date: formData.event_date || null,
+          location: formData.location,
+          date: formData.date || null,
           budget: formData.budget ? parseFloat(formData.budget) : null,
+          probability_percentage: formData.probability_percentage ? parseInt(formData.probability_percentage) : null,
+          deadline: formData.deadline || null,
+          requirements: formData.requirements,
           status: formData.status,
+          contact_id: formData.contact_id || null,
+          artist_id: formData.artist_id || null,
+          event_id: formData.event_id || null,
           updated_at: new Date().toISOString()
         })
         .eq('id', opportunity.id);
@@ -128,12 +135,12 @@ export const OpportunityEditor: React.FC<OpportunityEditorProps> = ({
           </div>
 
           <div>
-            <Label htmlFor="event_date">Date de l'événement</Label>
+            <Label htmlFor="date">Date de l'événement</Label>
             <Input
-              id="event_date"
+              id="date"
               type="datetime-local"
-              value={formData.event_date}
-              onChange={(e) => setFormData({ ...formData, event_date: e.target.value })}
+              value={formData.date}
+              onChange={(e) => setFormData({ ...formData, date: e.target.value })}
             />
           </div>
 
