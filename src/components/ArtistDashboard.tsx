@@ -532,26 +532,32 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
       </Tabs>
 
       {/* Dialogs */}
-      <ContactDialog
-        isOpen={isContactDialogOpen}
-        onClose={handleDialogClose}
-        contact={selectedContact}
-        onSave={handleDialogClose}
-      />
+      {selectedContact && (
+        <ContactDialog
+          isOpen={isContactDialogOpen}
+          onClose={handleDialogClose}
+          contact={selectedContact}
+          onSave={handleDialogClose}
+        />
+      )}
 
-      <OpportunityEditor
-        isOpen={isOpportunityDialogOpen}
-        onClose={handleDialogClose}
-        opportunity={selectedOpportunity}
-        onSave={handleDialogClose}
-      />
+      {selectedOpportunity && (
+        <OpportunityEditor
+          isOpen={isOpportunityDialogOpen}
+          onClose={handleDialogClose}
+          opportunity={selectedOpportunity}
+          onSave={handleDialogClose}
+        />
+      )}
 
-      <QuoteEditor
-        isOpen={isQuoteDialogOpen}
-        onClose={handleDialogClose}
-        quote={selectedQuote}
-        onSave={handleDialogClose}
-      />
+      {selectedQuote && (
+        <QuoteEditor
+          isOpen={isQuoteDialogOpen}
+          onClose={handleDialogClose}
+          quote={selectedQuote}
+          onSave={handleDialogClose}
+        />
+      )}
 
       <EventDialog
         open={isEventDialogOpen}
@@ -569,42 +575,44 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
         />
       )}
 
-      <PublicationFormMultiPlatform
-        isOpen={isPublicationDialogOpen}
-        onClose={handleDialogClose}
-        onSubmit={async (data) => {
-          try {
-            const { error } = await supabase
-              .from('publications')
-              .update({
-                title: data.title,
-                content: data.content,
-                scheduled_date: data.scheduled_date,
-                platforms: data.platforms,
-                media_url: data.media_url,
-                media_type: data.media_type,
-                external_link: data.external_link
-              })
-              .eq('id', selectedPublication?.id);
+      {selectedPublication && (
+        <PublicationFormMultiPlatform
+          isOpen={isPublicationDialogOpen}
+          onClose={handleDialogClose}
+          onSubmit={async (data) => {
+            try {
+              const { error } = await supabase
+                .from('publications')
+                .update({
+                  title: data.title,
+                  content: data.content,
+                  scheduled_date: data.scheduled_date,
+                  platforms: data.platforms,
+                  media_url: data.media_url,
+                  media_type: data.media_type,
+                  external_link: data.external_link
+                })
+                .eq('id', selectedPublication?.id);
 
-            if (error) throw error;
-            handleDialogClose();
-          } catch (error) {
-            console.error('Error updating publication:', error);
-          }
-        }}
-        initialData={selectedPublication ? {
-          title: selectedPublication.title,
-          content: selectedPublication.content,
-          scheduled_date: selectedPublication.scheduled_date,
-          platforms: selectedPublication.platforms || [],
-          media_url: selectedPublication.media_url,
-          media_type: selectedPublication.media_type,
-          external_link: selectedPublication.external_link
-        } : {}}
-        userProfiles={userProfiles}
-        isEditing={true}
-      />
+              if (error) throw error;
+              handleDialogClose();
+            } catch (error) {
+              console.error('Error updating publication:', error);
+            }
+          }}
+          initialData={selectedPublication ? {
+            title: selectedPublication.title,
+            content: selectedPublication.content,
+            scheduled_date: selectedPublication.scheduled_date,
+            platforms: selectedPublication.platforms || [],
+            media_url: selectedPublication.media_url,
+            media_type: selectedPublication.media_type,
+            external_link: selectedPublication.external_link
+          } : {}}
+          userProfiles={userProfiles}
+          isEditing={true}
+        />
+      )}
     </div>
   );
 };
