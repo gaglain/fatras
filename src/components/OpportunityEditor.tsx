@@ -41,15 +41,16 @@ export const OpportunityEditor: React.FC<OpportunityEditorProps> = ({
 
   useEffect(() => {
     if (opportunity) {
+      console.debug('OpportunityEditor received opportunity', opportunity);
       setFormData({
         title: opportunity.title || '',
         description: opportunity.description || '',
         venue: opportunity.venue || '',
         location: opportunity.location || '',
-        date: opportunity.date ? new Date(opportunity.date).toISOString().slice(0, 16) : '',
+        date: opportunity.date ? new Date(opportunity.date).toISOString().slice(0, 10) : '',
         budget: opportunity.budget ? String(opportunity.budget) : '',
         probability_percentage: opportunity.probability_percentage ? String(opportunity.probability_percentage) : '50',
-        deadline: opportunity.deadline ? new Date(opportunity.deadline).toISOString().slice(0, 16) : '',
+        deadline: opportunity.deadline ? new Date(opportunity.deadline).toISOString().slice(0, 10) : '',
         requirements: opportunity.requirements || '',
         status: opportunity.status || 'open',
         contact_id: opportunity.contact_id || '',
@@ -135,10 +136,19 @@ export const OpportunityEditor: React.FC<OpportunityEditorProps> = ({
           </div>
 
           <div>
+            <Label htmlFor="location">Localisation</Label>
+            <Input
+              id="location"
+              value={formData.location}
+              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+            />
+          </div>
+
+          <div>
             <Label htmlFor="date">Date de l'événement</Label>
             <Input
               id="date"
-              type="datetime-local"
+              type="date"
               value={formData.date}
               onChange={(e) => setFormData({ ...formData, date: e.target.value })}
             />
@@ -159,13 +169,17 @@ export const OpportunityEditor: React.FC<OpportunityEditorProps> = ({
             <Label htmlFor="status">Statut</Label>
             <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue placeholder="Sélectionner un statut" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="open">Ouverte</SelectItem>
+                <SelectItem value="applied">Envoyée</SelectItem>
+                <SelectItem value="won">Gagnée</SelectItem>
+                <SelectItem value="lost">Perdue</SelectItem>
                 <SelectItem value="pending">En attente</SelectItem>
-                <SelectItem value="confirmed">Confirmé</SelectItem>
-                <SelectItem value="cancelled">Annulé</SelectItem>
-                <SelectItem value="completed">Terminé</SelectItem>
+                <SelectItem value="confirmed">Confirmée</SelectItem>
+                <SelectItem value="cancelled">Annulée</SelectItem>
+                <SelectItem value="completed">Terminée</SelectItem>
               </SelectContent>
             </Select>
           </div>
