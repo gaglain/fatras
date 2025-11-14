@@ -176,10 +176,15 @@ export const Agenda: React.FC = () => {
   const [visibleUsers, setVisibleUsers] = useState<string[]>(users.map(u => u.id));
   const [selectedCalendars, setSelectedCalendars] = useState<string[]>([]);
   const [calendarEvents, setCalendarEvents] = useState<any[]>([]);
+  const [artists, setArtists] = useState<any[]>([]);
   
   useEffect(() => {
     loadCalendarEvents();
   }, [selectedCalendars]);
+
+  useEffect(() => {
+    loadArtists();
+  }, []);
 
   const loadCalendarEvents = async () => {
     try {
@@ -195,6 +200,25 @@ export const Agenda: React.FC = () => {
     } catch (error) {
       console.error('Erreur lors du chargement des événements calendrier:', error);
     }
+  };
+
+  const loadArtists = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('centralized_artists')
+        .select('id, name');
+      
+      if (error) throw error;
+      setArtists(data || []);
+    } catch (error) {
+      console.error('Erreur lors du chargement des artistes:', error);
+    }
+  };
+
+  const getArtistName = (artistId?: string) => {
+    if (!artistId) return null;
+    const artist = artists.find(a => a.id === artistId);
+    return artist?.name;
   };
   
   // Transformer les événements Supabase en événements de l'agenda
@@ -449,34 +473,40 @@ export const Agenda: React.FC = () => {
                       <h3 className="font-semibold text-lg text-primary capitalize sticky top-0 bg-background py-2 border-b">
                         {dateKey}
                       </h3>
-                      {dayEvents.map((event) => (
-                        <div key={event.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow ml-4">
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                              <h4 className="font-medium text-lg">{event.title}</h4>
-                              {event.description && (
-                                <p className="text-sm text-muted-foreground mt-1">{event.description}</p>
-                              )}
-                              <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                                <div className="flex items-center gap-1">
-                                  <Clock className="h-4 w-4" />
-                                  {new Date(event.start_time).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                                  {event.end_time && ` - ${new Date(event.end_time).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`}
-                                </div>
-                                {event.location && (
-                                  <div className="flex items-center gap-1">
-                                    <MapPin className="h-4 w-4" />
-                                    {event.location}
-                                  </div>
+                      {dayEvents.map((event) => {
+                        const artistName = getArtistName(event.artist_id);
+                        return (
+                          <div key={event.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow ml-4">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <h4 className="font-medium text-lg">{event.title}</h4>
+                                {artistName && (
+                                  <p className="text-sm font-medium text-primary mt-1">Spectacle: {artistName}</p>
                                 )}
+                                {event.description && (
+                                  <p className="text-sm text-muted-foreground mt-1">{event.description}</p>
+                                )}
+                                <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                                  <div className="flex items-center gap-1">
+                                    <Clock className="h-4 w-4" />
+                                    {new Date(event.start_time).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                                    {event.end_time && ` - ${new Date(event.end_time).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`}
+                                  </div>
+                                  {event.location && (
+                                    <div className="flex items-center gap-1">
+                                      <MapPin className="h-4 w-4" />
+                                      {event.location}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
+                              <Badge variant="secondary" className="ml-2">
+                                {event.provider}
+                              </Badge>
                             </div>
-                            <Badge variant="secondary" className="ml-2">
-                              {event.provider}
-                            </Badge>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   ));
                 })()}
@@ -545,6 +575,8 @@ export const Agenda: React.FC = () => {
                     </h3>
                     {dayEvents.map((event) => {
                       const eventUser = users.find(u => u.id === event.userId);
+                      const correspondingSupabaseEvent = events.find(e => e.id === event.id);
+                      const artistName = getArtistName(correspondingSupabaseEvent?.artist_id);
                       return (
                         <Card key={event.id} className="hover:shadow-md transition-shadow ml-4">
                           <CardContent className="p-4">
@@ -562,6 +594,10 @@ export const Agenda: React.FC = () => {
                                      event.status === 'pending' ? 'En attente' : 'Annulé'}
                                   </Badge>
                                 </div>
+                                
+                                {artistName && (
+                                  <p className="text-sm font-medium text-primary mb-2">Spectacle: {artistName}</p>
+                                )}
                                 
                                 {event.description && (
                                   <p className="text-gray-600 mb-3">{event.description}</p>
