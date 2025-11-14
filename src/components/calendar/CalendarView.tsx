@@ -139,8 +139,14 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 
   const getEventsForDate = (date: Date) => {
     return filteredEvents.filter(event => {
-      const eventDate = parseDate(event.start_time);
-      return isSameDay(eventDate, date);
+      const eventStart = parseDate(event.start_time);
+      const eventEnd = parseDate(event.end_time);
+      const targetDate = startOfDay(date);
+      const eventStartDay = startOfDay(eventStart);
+      const eventEndDay = startOfDay(eventEnd);
+      
+      // Vérifier si la date cible se situe entre le début et la fin de l'événement
+      return targetDate >= eventStartDay && targetDate <= eventEndDay;
     });
   };
 
