@@ -315,7 +315,7 @@ export type Database = {
             foreignKeyName: "campaign_contact_lists_campaign_id_fkey"
             columns: ["campaign_id"]
             isOneToOne: false
-            referencedRelation: "campaigns"
+            referencedRelation: "email_campaigns"
             referencedColumns: ["id"]
           },
           {
