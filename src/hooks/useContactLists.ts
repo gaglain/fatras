@@ -67,7 +67,6 @@ export const useContactLists = () => {
       const { data, error } = await supabase
         .from('contacts')
         .select('id, first_name, last_name, email, accepts_marketing_emails')
-        .eq('accepts_marketing_emails', true)
         .order('first_name');
 
       if (error) throw error;
