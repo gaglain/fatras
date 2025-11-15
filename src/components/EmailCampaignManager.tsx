@@ -215,7 +215,7 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({
     try {
       // First save the campaign
       let finalCampaignId = campaignId;
-      
+
       if (!finalCampaignId) {
         const campaign = await createCampaign({
           name: campaignData.name,
@@ -224,6 +224,23 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({
           status: 'draft'
         });
         finalCampaignId = campaign.id;
+      } else {
+        // Ensure latest content/subject are saved before sending
+        await supabase
+          .from('email_campaigns')
+          .update({
+            name: campaignData.name,
+            subject: campaignData.subject,
+            content: JSON.stringify(campaignData.content),
+            status: 'draft'
+          })
+          .eq('id', finalCampaignId);
+
+        // Clean existing associations to avoid duplicates
+        await supabase
+          .from('campaign_contact_lists')
+          .delete()
+          .eq('campaign_id', finalCampaignId);
       }
 
       // Add campaign-contact-list associations

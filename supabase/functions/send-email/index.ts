@@ -37,7 +37,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const emailResponse = await resend.emails.send({
-      from: from || "Fatras <onboarding@resend.dev>",
+      from: from || "Fatras <booking@fatras.net>",
       to,
       subject,
       html,
