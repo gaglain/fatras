@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { EmailEditor } from '@/components/EmailEditor/EmailEditor';
+import { ModernEmailEditor } from '@/components/EmailEditor/ModernEmailEditor';
 import { EmailPreview } from '@/components/EmailEditor/EmailPreview';
 import { EmailScheduler } from '@/components/EmailScheduler';
 import { EmailBlock } from '@/components/EmailEditor/types';
@@ -439,11 +439,12 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({
           </Card>
         </TabsContent>
 
-        <TabsContent value="design">
-          <EmailEditor
-            initialBlocks={campaignData.content}
-            onSave={(blocks) => setCampaignData(prev => ({ ...prev, content: blocks }))}
-            onPreview={() => {}}
+        <TabsContent value="design" className="h-[calc(100vh-16rem)]">
+          <ModernEmailEditor
+            initialBlocks={campaignData.content as any}
+            onChange={(blocks) => {
+              setCampaignData(prev => ({ ...prev, content: blocks }));
+            }}
           />
         </TabsContent>
 
