@@ -34,6 +34,8 @@ export const Contacts: React.FC = () => {
   const [tagFilters, setTagFilters] = useState<string[]>([]);
   const [sourceFilter, setSourceFilter] = useState('all');
   const [cityFilter, setCityFilter] = useState('all');
+  const [departmentFilter, setDepartmentFilter] = useState('');
+  const [eventFilter, setEventFilter] = useState('all');
   const [csvImportOpen, setCsvImportOpen] = useState(false);
   const [csvExportOpen, setCsvExportOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('contacts');
@@ -41,16 +43,20 @@ export const Contacts: React.FC = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [bulkListAssignmentOpen, setBulkListAssignmentOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [events, setEvents] = useState<Array<{ id: string; title: string }>>([]);
+  const [contactEvents, setContactEvents] = useState<Record<string, string[]>>({});
 
   useEffect(() => {
     if (user) {
       fetchContacts();
+      fetchEvents();
+      fetchContactEvents();
     }
   }, [user]);
 
   useEffect(() => {
     filterContacts();
-  }, [contacts, searchTerm, statusFilter, roleFilter, tagFilters, sourceFilter, cityFilter]);
+  }, [contacts, searchTerm, statusFilter, roleFilter, tagFilters, sourceFilter, cityFilter, departmentFilter, eventFilter, contactEvents]);
 
   const fetchContacts = async () => {
     try {
@@ -66,6 +72,43 @@ export const Contacts: React.FC = () => {
       toast.error('Erreur lors du chargement des contacts');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchEvents = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('events')
+        .select('id, title')
+        .order('start_date', { ascending: false });
+
+      if (error) throw error;
+      setEvents(data || []);
+    } catch (error: any) {
+      console.error('Erreur lors du chargement des événements:', error);
+    }
+  };
+
+  const fetchContactEvents = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('contact_events')
+        .select('contact_id, event_id');
+
+      if (error) throw error;
+      
+      // Organize contact events as a map: contactId -> [eventId1, eventId2, ...]
+      const eventMap: Record<string, string[]> = {};
+      data?.forEach(ce => {
+        if (!eventMap[ce.contact_id]) {
+          eventMap[ce.contact_id] = [];
+        }
+        eventMap[ce.contact_id].push(ce.event_id);
+      });
+      
+      setContactEvents(eventMap);
+    } catch (error: any) {
+      console.error('Erreur lors du chargement des liens contact-événement:', error);
     }
   };
 
@@ -102,6 +145,20 @@ export const Contacts: React.FC = () => {
 
     if (cityFilter !== 'all') {
       filtered = filtered.filter(contact => contact.city === cityFilter);
+    }
+
+    if (departmentFilter) {
+      filtered = filtered.filter(contact => 
+        contact.postal_code && contact.postal_code.startsWith(departmentFilter)
+      );
+    }
+
+    if (eventFilter !== 'all') {
+      filtered = filtered.filter(contact => {
+        if (!contact.id) return false;
+        const events = contactEvents[contact.id] || [];
+        return events.includes(eventFilter);
+      });
     }
 
     setFilteredContacts(filtered);
@@ -192,6 +249,8 @@ export const Contacts: React.FC = () => {
     setTagFilters([]);
     setSourceFilter('all');
     setCityFilter('all');
+    setDepartmentFilter('');
+    setEventFilter('all');
   };
 
   // Get unique values for filters
@@ -346,9 +405,14 @@ export const Contacts: React.FC = () => {
             onSourceFilterChange={setSourceFilter}
             cityFilter={cityFilter}
             onCityFilterChange={setCityFilter}
+            departmentFilter={departmentFilter}
+            onDepartmentFilterChange={setDepartmentFilter}
+            eventFilter={eventFilter}
+            onEventFilterChange={setEventFilter}
             availableTags={availableTags}
             availableSources={availableSources}
             availableCities={availableCities}
+            availableEvents={events}
             totalContacts={contacts.length}
             filteredCount={filteredContacts.length}
             onClearFilters={clearAllFilters}

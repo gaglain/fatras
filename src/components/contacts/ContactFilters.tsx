@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Search, Filter, X, Calendar, MapPin, User, Tag } from 'lucide-react';
+import { Search, Filter, X, Calendar, MapPin, User, Tag, Hash, CalendarDays } from 'lucide-react';
 
 interface ContactFiltersProps {
   searchTerm: string;
@@ -20,9 +20,14 @@ interface ContactFiltersProps {
   onSourceFilterChange: (source: string) => void;
   cityFilter: string;
   onCityFilterChange: (city: string) => void;
+  departmentFilter: string;
+  onDepartmentFilterChange: (department: string) => void;
+  eventFilter: string;
+  onEventFilterChange: (event: string) => void;
   availableTags: string[];
   availableSources: string[];
   availableCities: string[];
+  availableEvents: Array<{ id: string; title: string }>;
   totalContacts: number;
   filteredCount: number;
   onClearFilters: () => void;
@@ -39,9 +44,14 @@ export const ContactFilters: React.FC<ContactFiltersProps> = ({
   onSourceFilterChange,
   cityFilter,
   onCityFilterChange,
+  departmentFilter,
+  onDepartmentFilterChange,
+  eventFilter,
+  onEventFilterChange,
   availableTags,
   availableSources,
   availableCities,
+  availableEvents,
   totalContacts,
   filteredCount,
   onClearFilters
@@ -57,7 +67,8 @@ export const ContactFilters: React.FC<ContactFiltersProps> = ({
   };
 
   const hasActiveFilters = statusFilter !== 'all' || tagFilters.length > 0 || 
-                          sourceFilter !== 'all' || cityFilter !== 'all';
+                          sourceFilter !== 'all' || cityFilter !== 'all' || 
+                          departmentFilter !== '' || eventFilter !== 'all';
 
   return (
     <Card>
@@ -83,7 +94,8 @@ export const ContactFilters: React.FC<ContactFiltersProps> = ({
             {hasActiveFilters && (
               <Badge variant="secondary" className="ml-2 h-5 w-5 p-0 flex items-center justify-center text-xs">
                 {(statusFilter !== 'all' ? 1 : 0) + tagFilters.length + 
-                 (sourceFilter !== 'all' ? 1 : 0) + (cityFilter !== 'all' ? 1 : 0)}
+                 (sourceFilter !== 'all' ? 1 : 0) + (cityFilter !== 'all' ? 1 : 0) +
+                 (departmentFilter !== '' ? 1 : 0) + (eventFilter !== 'all' ? 1 : 0)}
               </Badge>
             )}
           </Button>
@@ -105,7 +117,7 @@ export const ContactFilters: React.FC<ContactFiltersProps> = ({
 
         {/* Filtres avancés */}
         {showAdvancedFilters && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-4 border-t">
             {/* Filtre par statut */}
             <div className="space-y-2">
               <label className="text-sm font-medium flex items-center">
@@ -209,6 +221,42 @@ export const ContactFilters: React.FC<ContactFiltersProps> = ({
                   </div>
                 </PopoverContent>
               </Popover>
+            </div>
+
+            {/* Filtre par département (2 premiers chiffres du code postal) */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium flex items-center">
+                <Hash className="h-4 w-4 mr-1" />
+                Département
+              </label>
+              <Input
+                placeholder="Ex: 75, 13..."
+                value={departmentFilter}
+                onChange={(e) => onDepartmentFilterChange(e.target.value)}
+                maxLength={2}
+                className="w-full"
+              />
+            </div>
+
+            {/* Filtre par événement */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium flex items-center">
+                <CalendarDays className="h-4 w-4 mr-1" />
+                Spectacle lié
+              </label>
+              <Select value={eventFilter} onValueChange={onEventFilterChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Tous les spectacles" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous les spectacles</SelectItem>
+                  {availableEvents.map((event) => (
+                    <SelectItem key={event.id} value={event.id}>
+                      {event.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         )}
