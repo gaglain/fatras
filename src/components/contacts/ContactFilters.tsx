@@ -24,10 +24,13 @@ interface ContactFiltersProps {
   onDepartmentFilterChange: (department: string) => void;
   eventFilter: string;
   onEventFilterChange: (event: string) => void;
+  artistFilter: string;
+  onArtistFilterChange: (artist: string) => void;
   availableTags: string[];
   availableSources: string[];
   availableCities: string[];
   availableEvents: Array<{ id: string; title: string }>;
+  availableArtists: Array<{ id: string; name: string }>;
   totalContacts: number;
   filteredCount: number;
   onClearFilters: () => void;
@@ -48,10 +51,13 @@ export const ContactFilters: React.FC<ContactFiltersProps> = ({
   onDepartmentFilterChange,
   eventFilter,
   onEventFilterChange,
+  artistFilter,
+  onArtistFilterChange,
   availableTags,
   availableSources,
   availableCities,
   availableEvents,
+  availableArtists,
   totalContacts,
   filteredCount,
   onClearFilters
@@ -68,7 +74,8 @@ export const ContactFilters: React.FC<ContactFiltersProps> = ({
 
   const hasActiveFilters = statusFilter !== 'all' || tagFilters.length > 0 || 
                           sourceFilter !== 'all' || cityFilter !== 'all' || 
-                          departmentFilter !== '' || eventFilter !== 'all';
+                          departmentFilter !== '' || eventFilter !== 'all' || 
+                          artistFilter !== 'all';
 
   return (
     <Card>
@@ -95,7 +102,8 @@ export const ContactFilters: React.FC<ContactFiltersProps> = ({
               <Badge variant="secondary" className="ml-2 h-5 w-5 p-0 flex items-center justify-center text-xs">
                 {(statusFilter !== 'all' ? 1 : 0) + tagFilters.length + 
                  (sourceFilter !== 'all' ? 1 : 0) + (cityFilter !== 'all' ? 1 : 0) +
-                 (departmentFilter !== '' ? 1 : 0) + (eventFilter !== 'all' ? 1 : 0)}
+                 (departmentFilter !== '' ? 1 : 0) + (eventFilter !== 'all' ? 1 : 0) +
+                 (artistFilter !== 'all' ? 1 : 0)}
               </Badge>
             )}
           </Button>
@@ -253,6 +261,27 @@ export const ContactFilters: React.FC<ContactFiltersProps> = ({
                   {availableEvents.map((event) => (
                     <SelectItem key={event.id} value={event.id}>
                       {event.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Filtre par artiste */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium flex items-center">
+                <User className="h-4 w-4 mr-1" />
+                Artiste lié
+              </label>
+              <Select value={artistFilter} onValueChange={onArtistFilterChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Tous les artistes" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous les artistes</SelectItem>
+                  {availableArtists.map((artist) => (
+                    <SelectItem key={artist.id} value={artist.id}>
+                      {artist.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

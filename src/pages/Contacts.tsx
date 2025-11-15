@@ -45,18 +45,23 @@ export const Contacts: React.FC = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [events, setEvents] = useState<Array<{ id: string; title: string }>>([]);
   const [contactEvents, setContactEvents] = useState<Record<string, string[]>>({});
+  const [artists, setArtists] = useState<Array<{ id: string; name: string }>>([]);
+  const [contactArtists, setContactArtists] = useState<Record<string, string[]>>({});
+  const [artistFilter, setArtistFilter] = useState('all');
 
   useEffect(() => {
     if (user) {
       fetchContacts();
       fetchEvents();
       fetchContactEvents();
+      fetchArtists();
+      fetchContactArtists();
     }
   }, [user]);
 
   useEffect(() => {
     filterContacts();
-  }, [contacts, searchTerm, statusFilter, roleFilter, tagFilters, sourceFilter, cityFilter, departmentFilter, eventFilter, contactEvents]);
+  }, [contacts, searchTerm, statusFilter, roleFilter, tagFilters, sourceFilter, cityFilter, departmentFilter, eventFilter, artistFilter, contactEvents, contactArtists]);
 
   const fetchContacts = async () => {
     try {
@@ -112,6 +117,44 @@ export const Contacts: React.FC = () => {
     }
   };
 
+  const fetchArtists = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('centralized_artists')
+        .select('id, name')
+        .order('name');
+      
+      if (error) throw error;
+      
+      setArtists(data || []);
+    } catch (error: any) {
+      console.error('Erreur lors du chargement des artistes:', error);
+    }
+  };
+
+  const fetchContactArtists = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('contact_artists')
+        .select('contact_id, artist_id');
+      
+      if (error) throw error;
+      
+      // Organize contact artists as a map: contactId -> [artistId1, artistId2, ...]
+      const artistMap: Record<string, string[]> = {};
+      data?.forEach(ca => {
+        if (!artistMap[ca.contact_id]) {
+          artistMap[ca.contact_id] = [];
+        }
+        artistMap[ca.contact_id].push(ca.artist_id);
+      });
+      
+      setContactArtists(artistMap);
+    } catch (error: any) {
+      console.error('Erreur lors du chargement des liens contact-artiste:', error);
+    }
+  };
+
   const filterContacts = () => {
     let filtered = contacts;
 
@@ -158,6 +201,14 @@ export const Contacts: React.FC = () => {
         if (!contact.id) return false;
         const events = contactEvents[contact.id] || [];
         return events.includes(eventFilter);
+      });
+    }
+
+    if (artistFilter !== 'all') {
+      filtered = filtered.filter(contact => {
+        if (!contact.id) return false;
+        const artists = contactArtists[contact.id] || [];
+        return artists.includes(artistFilter);
       });
     }
 
@@ -251,6 +302,7 @@ export const Contacts: React.FC = () => {
     setCityFilter('all');
     setDepartmentFilter('');
     setEventFilter('all');
+    setArtistFilter('all');
   };
 
   // Get unique values for filters
@@ -409,10 +461,13 @@ export const Contacts: React.FC = () => {
             onDepartmentFilterChange={setDepartmentFilter}
             eventFilter={eventFilter}
             onEventFilterChange={setEventFilter}
+            artistFilter={artistFilter}
+            onArtistFilterChange={setArtistFilter}
             availableTags={availableTags}
             availableSources={availableSources}
             availableCities={availableCities}
             availableEvents={events}
+            availableArtists={artists}
             totalContacts={contacts.length}
             filteredCount={filteredContacts.length}
             onClearFilters={clearAllFilters}
