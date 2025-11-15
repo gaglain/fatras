@@ -16,13 +16,19 @@ import {
   Trash2,
   Copy,
   Eye,
-  Palette
+  Palette,
+  Facebook,
+  Twitter,
+  Instagram,
+  Linkedin
 } from 'lucide-react';
 import { RichTextEditor } from './RichTextEditor';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ImageSelector } from './ImageSelector';
 import { toast } from 'sonner';
 
 // Helper function to extract YouTube video ID from URL
@@ -263,20 +269,64 @@ export const ModernEmailEditor: React.FC<ModernEmailEditorProps> = ({
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Couleur fond</Label>
+                <Label>Couleur de fond</Label>
+                <div className="flex gap-2">
+                  <Input
+                    type="color"
+                    value={block.content.backgroundColor}
+                    onChange={(e) => updateBlock(block.id, { ...block.content, backgroundColor: e.target.value })}
+                    className="w-16 h-10"
+                  />
+                  <Input
+                    value={block.content.backgroundColor}
+                    onChange={(e) => updateBlock(block.id, { ...block.content, backgroundColor: e.target.value })}
+                    placeholder="#2563EB"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label>Couleur du texte</Label>
+                <div className="flex gap-2">
+                  <Input
+                    type="color"
+                    value={block.content.textColor}
+                    onChange={(e) => updateBlock(block.id, { ...block.content, textColor: e.target.value })}
+                    className="w-16 h-10"
+                  />
+                  <Input
+                    value={block.content.textColor}
+                    onChange={(e) => updateBlock(block.id, { ...block.content, textColor: e.target.value })}
+                    placeholder="#FFFFFF"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Arrondi (px)</Label>
                 <Input
-                  type="color"
-                  value={block.content.backgroundColor}
-                  onChange={(e) => updateBlock(block.id, { ...block.content, backgroundColor: e.target.value })}
+                  type="number"
+                  value={block.content.borderRadius}
+                  onChange={(e) => updateBlock(block.id, { ...block.content, borderRadius: parseInt(e.target.value) || 0 })}
+                  min="0"
+                  max="50"
                 />
               </div>
               <div>
-                <Label>Couleur texte</Label>
-                <Input
-                  type="color"
-                  value={block.content.textColor}
-                  onChange={(e) => updateBlock(block.id, { ...block.content, textColor: e.target.value })}
-                />
+                <Label>Alignement</Label>
+                <Select
+                  value={block.content.align || 'center'}
+                  onValueChange={(value) => updateBlock(block.id, { ...block.content, align: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="left">Gauche</SelectItem>
+                    <SelectItem value="center">Centre</SelectItem>
+                    <SelectItem value="right">Droite</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
@@ -286,19 +336,51 @@ export const ModernEmailEditor: React.FC<ModernEmailEditorProps> = ({
         return (
           <div className="space-y-4">
             <div>
-              <Label>URL de l'image</Label>
-              <Input
+              <Label>Image</Label>
+              <ImageSelector
                 value={block.content.src}
-                onChange={(e) => updateBlock(block.id, { ...block.content, src: e.target.value })}
-                placeholder="https://exemple.com/image.jpg"
+                onChange={(url) => updateBlock(block.id, { ...block.content, src: url })}
               />
+              {block.content.src && (
+                <div className="mt-2 border rounded-lg p-2">
+                  <img src={block.content.src} alt="Aperçu" className="max-w-full max-h-32 mx-auto rounded" />
+                </div>
+              )}
             </div>
             <div>
               <Label>Texte alternatif</Label>
               <Input
                 value={block.content.alt}
                 onChange={(e) => updateBlock(block.id, { ...block.content, alt: e.target.value })}
+                placeholder="Description de l'image"
               />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Largeur (%)</Label>
+                <Input
+                  type="number"
+                  value={block.content.width}
+                  onChange={(e) => updateBlock(block.id, { ...block.content, width: e.target.value })}
+                  placeholder="100"
+                />
+              </div>
+              <div>
+                <Label>Alignement</Label>
+                <Select
+                  value={block.content.align || 'center'}
+                  onValueChange={(value) => updateBlock(block.id, { ...block.content, align: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="left">Gauche</SelectItem>
+                    <SelectItem value="center">Centre</SelectItem>
+                    <SelectItem value="right">Droite</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
         );
@@ -347,6 +429,84 @@ export const ModernEmailEditor: React.FC<ModernEmailEditorProps> = ({
               min="10"
               max="200"
             />
+          </div>
+        );
+
+      case 'social':
+        return (
+          <div className="space-y-4">
+            <div>
+              <Label>Alignement</Label>
+              <Select
+                value={block.content.align || 'center'}
+                onValueChange={(value) => updateBlock(block.id, { ...block.content, align: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="left">Gauche</SelectItem>
+                  <SelectItem value="center">Centre</SelectItem>
+                  <SelectItem value="right">Droite</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-3">
+              <Label>Réseaux sociaux</Label>
+              {block.content.platforms?.map((platform: any, index: number) => (
+                <div key={index} className="flex items-center gap-2 p-3 border rounded-lg">
+                  <Checkbox
+                    checked={platform.enabled !== false}
+                    onCheckedChange={(checked) => {
+                      const newPlatforms = [...block.content.platforms];
+                      newPlatforms[index] = { ...platform, enabled: !!checked };
+                      updateBlock(block.id, { ...block.content, platforms: newPlatforms });
+                    }}
+                  />
+                  <div className="flex-1">
+                    <Label className="text-sm capitalize">{platform.type}</Label>
+                    <Input
+                      value={platform.url || ''}
+                      onChange={(e) => {
+                        const newPlatforms = [...block.content.platforms];
+                        newPlatforms[index] = { ...platform, url: e.target.value };
+                        updateBlock(block.id, { ...block.content, platforms: newPlatforms });
+                      }}
+                      placeholder={`URL ${platform.type}`}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 'columns':
+        return (
+          <div className="space-y-4">
+            <div>
+              <Label>Colonne 1</Label>
+              <RichTextEditor
+                content={block.content.columns?.[0]?.html || ''}
+                onChange={(html) => {
+                  const newColumns = [...(block.content.columns || [{ html: '' }, { html: '' }])];
+                  newColumns[0] = { html };
+                  updateBlock(block.id, { ...block.content, columns: newColumns });
+                }}
+              />
+            </div>
+            <div>
+              <Label>Colonne 2</Label>
+              <RichTextEditor
+                content={block.content.columns?.[1]?.html || ''}
+                onChange={(html) => {
+                  const newColumns = [...(block.content.columns || [{ html: '' }, { html: '' }])];
+                  newColumns[1] = { html };
+                  updateBlock(block.id, { ...block.content, columns: newColumns });
+                }}
+              />
+            </div>
           </div>
         );
 
@@ -518,6 +678,37 @@ export const ModernEmailEditor: React.FC<ModernEmailEditorProps> = ({
                             )}
                             {block.type === 'spacer' && (
                               <div style={{ height: `${block.content.height}px` }} className="bg-muted/20" />
+                            )}
+                            {block.type === 'social' && (
+                              <div style={{ textAlign: block.content.align || 'center' }}>
+                                <div className="inline-flex gap-3">
+                                  {block.content.platforms?.filter((p: any) => p.enabled !== false).map((platform: any, idx: number) => {
+                                    const Icon = platform.type === 'facebook' ? Facebook :
+                                                 platform.type === 'twitter' ? Twitter :
+                                                 platform.type === 'instagram' ? Instagram :
+                                                 platform.type === 'linkedin' ? Linkedin : Share2;
+                                    return (
+                                      <a
+                                        key={idx}
+                                        href={platform.url || '#'}
+                                        className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground hover:opacity-80 transition-opacity"
+                                        title={platform.type}
+                                      >
+                                        <Icon className="h-5 w-5" />
+                                      </a>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                            {block.type === 'columns' && (
+                              <div className="grid grid-cols-2 gap-4">
+                                {block.content.columns?.map((col: any, idx: number) => (
+                                  <div key={idx} className="border-l-2 border-muted pl-4">
+                                    <div dangerouslySetInnerHTML={{ __html: col.html || '<p>Colonne vide</p>' }} />
+                                  </div>
+                                ))}
+                              </div>
                             )}
                           </div>
                         </div>

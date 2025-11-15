@@ -1,8 +1,12 @@
 
 export interface EmailBlock {
   id: string;
-  type: 'text' | 'heading' | 'button' | 'divider' | 'spacer' | 'image' | 'video' | 'social' | 'footer';
-  content: TextBlockContent | HeadingBlockContent | ButtonBlockContent | DividerBlockContent | SpacerBlockContent | ImageBlockContent | VideoBlockContent | SocialBlockContent | FooterBlockContent;
+  type: 'text' | 'heading' | 'button' | 'divider' | 'spacer' | 'image' | 'video' | 'social' | 'footer' | 'columns';
+  content: TextBlockContent | HeadingBlockContent | ButtonBlockContent | DividerBlockContent | SpacerBlockContent | ImageBlockContent | VideoBlockContent | SocialBlockContent | FooterBlockContent | ColumnBlockContent;
+}
+
+export interface ColumnBlockContent {
+  columns: Array<{ html: string }>;
 }
 
 export interface VideoBlockContent {
