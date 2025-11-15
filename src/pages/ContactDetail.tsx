@@ -30,6 +30,7 @@ import { Contact } from '@/types/contact.types';
 import { ContactDialog } from '@/components/contacts/ContactDialog';
 import { ContactEmailHistory } from '@/components/ContactEmailHistory';
 import { EmailTemplateComposer } from '@/components/email/EmailTemplateComposer';
+import { ContactListAssignment } from '@/components/contacts/ContactListAssignment';
 import { toast } from 'sonner';
 
 export const ContactDetail: React.FC = () => {
@@ -225,10 +226,16 @@ export const ContactDetail: React.FC = () => {
             </div>
           </div>
         </div>
-        <Button onClick={() => setEditDialogOpen(true)}>
-          <Edit className="h-4 w-4 mr-2" />
-          Modifier
-        </Button>
+        <div className="flex items-center gap-2">
+          <ContactListAssignment 
+            contactId={contact.id!}
+            contactName={`${contact.first_name} ${contact.last_name}`}
+          />
+          <Button onClick={() => setEditDialogOpen(true)}>
+            <Edit className="h-4 w-4 mr-2" />
+            Modifier
+          </Button>
+        </div>
       </div>
 
       {/* Quick Info Cards */}
