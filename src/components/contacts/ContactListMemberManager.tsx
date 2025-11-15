@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Loader2, Search, Mail, MailWarning } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Loader2, Search, Mail, MailWarning, Filter, X, ChevronDown } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useContactLists } from '@/hooks/useContactLists';
 import { toast } from 'sonner';
 
@@ -27,6 +30,15 @@ export const ContactListMemberManager: React.FC<ContactListMemberManagerProps> =
   const [currentMembers, setCurrentMembers] = useState<string[]>([]);
   const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  
+  // Filtres
+  const [filterCity, setFilterCity] = useState('all');
+  const [filterDepartment, setFilterDepartment] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterMarketingConsent, setFilterMarketingConsent] = useState('all');
+  const [filterTag, setFilterTag] = useState('all');
+  const [sortBy, setSortBy] = useState<'name' | 'email' | 'company' | 'city'>('name');
 
   useEffect(() => {
     if (open && listId) {
@@ -73,11 +85,110 @@ export const ContactListMemberManager: React.FC<ContactListMemberManagerProps> =
     }
   };
 
-  const filteredContacts = contacts.filter(contact =>
-    `${contact.first_name} ${contact.last_name} ${contact.email || ''} ${contact.company || ''}`
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase())
-  );
+  // Extraire les valeurs uniques pour les filtres
+  const uniqueCities = useMemo(() => {
+    const cities = contacts
+      .map(c => c.city)
+      .filter((city): city is string => !!city);
+    return Array.from(new Set(cities)).sort();
+  }, [contacts]);
+
+  const uniqueTags = useMemo(() => {
+    const allTags = contacts
+      .flatMap(c => c.tags || [])
+      .filter((tag): tag is string => !!tag);
+    return Array.from(new Set(allTags)).sort();
+  }, [contacts]);
+
+  // Recherche et filtrage intelligents
+  const filteredContacts = useMemo(() => {
+    let filtered = contacts.filter(contact => {
+      // Recherche intelligente dans plusieurs champs
+      const searchLower = searchTerm.toLowerCase();
+      const searchableText = [
+        contact.first_name,
+        contact.last_name,
+        contact.email,
+        contact.phone,
+        contact.company,
+        contact.city,
+        contact.position,
+        contact.postal_code,
+        ...(contact.tags || [])
+      ].filter(Boolean).join(' ').toLowerCase();
+
+      const matchesSearch = searchableText.includes(searchLower);
+
+      // Filtre par ville
+      const matchesCity = filterCity === 'all' || contact.city === filterCity;
+
+      // Filtre par département (2 premiers chiffres du code postal)
+      const matchesDepartment = !filterDepartment || 
+        (contact.postal_code && contact.postal_code.startsWith(filterDepartment));
+
+      // Filtre par statut
+      const matchesStatus = filterStatus === 'all' || contact.status === filterStatus;
+
+      // Filtre par consentement marketing
+      const matchesMarketing = filterMarketingConsent === 'all' || 
+        (filterMarketingConsent === 'yes' && contact.accepts_marketing_emails) ||
+        (filterMarketingConsent === 'no' && !contact.accepts_marketing_emails);
+
+      // Filtre par tag
+      const matchesTag = filterTag === 'all' || 
+        (contact.tags && contact.tags.includes(filterTag));
+
+      return matchesSearch && matchesCity && matchesDepartment && 
+             matchesStatus && matchesMarketing && matchesTag;
+    });
+
+    // Tri
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'name':
+          return `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`);
+        case 'email':
+          return (a.email || '').localeCompare(b.email || '');
+        case 'company':
+          return (a.company || '').localeCompare(b.company || '');
+        case 'city':
+          return (a.city || '').localeCompare(b.city || '');
+        default:
+          return 0;
+      }
+    });
+
+    return filtered;
+  }, [contacts, searchTerm, filterCity, filterDepartment, filterStatus, filterMarketingConsent, filterTag, sortBy]);
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setFilterCity('all');
+    setFilterDepartment('');
+    setFilterStatus('all');
+    setFilterMarketingConsent('all');
+    setFilterTag('all');
+  };
+
+  const hasActiveFilters = searchTerm || filterCity !== 'all' || filterDepartment || 
+                          filterStatus !== 'all' || filterMarketingConsent !== 'all' || 
+                          filterTag !== 'all';
+
+  const handleSelectAll = () => {
+    setSelectedContacts(filteredContacts.map(c => c.id));
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedContacts([]);
+  };
+
+  const handleInvertSelection = () => {
+    const filteredIds = filteredContacts.map(c => c.id);
+    setSelectedContacts(prev => {
+      const newSelection = filteredIds.filter(id => !prev.includes(id));
+      return newSelection;
+    });
+  };
 
   const selectedCount = selectedContacts.length;
   const addedCount = selectedContacts.filter(id => !currentMembers.includes(id)).length;
@@ -101,14 +212,154 @@ export const ContactListMemberManager: React.FC<ContactListMemberManagerProps> =
         </DialogHeader>
 
         <div className="space-y-4 flex-1 overflow-hidden flex flex-col">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Rechercher un contact..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+          {/* Barre de recherche et actions */}
+          <div className="space-y-3">
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Rechercher (nom, email, ville, tag, téléphone...)"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Button
+                variant={showFilters ? "secondary" : "outline"}
+                size="icon"
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <Filter className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Actions rapides */}
+            <div className="flex gap-2 flex-wrap">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleSelectAll}
+              >
+                Tout sélectionner
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleDeselectAll}
+              >
+                Tout désélectionner
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleInvertSelection}
+              >
+                Inverser
+              </Button>
+              {hasActiveFilters && (
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={clearFilters}
+                >
+                  <X className="h-3 w-3 mr-1" />
+                  Effacer les filtres
+                </Button>
+              )}
+            </div>
+
+            {/* Filtres avancés */}
+            <Collapsible open={showFilters} onOpenChange={setShowFilters}>
+              <CollapsibleContent className="space-y-3 pt-3 border-t">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs">Ville</Label>
+                    <Select value={filterCity} onValueChange={setFilterCity}>
+                      <SelectTrigger className="h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Toutes</SelectItem>
+                        {uniqueCities.map(city => (
+                          <SelectItem key={city} value={city}>{city}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label className="text-xs">Département</Label>
+                    <Input
+                      placeholder="Ex: 75, 35..."
+                      value={filterDepartment}
+                      onChange={(e) => setFilterDepartment(e.target.value)}
+                      className="h-9"
+                      maxLength={2}
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="text-xs">Statut</Label>
+                    <Select value={filterStatus} onValueChange={setFilterStatus}>
+                      <SelectTrigger className="h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Tous</SelectItem>
+                        <SelectItem value="prospect">Prospect</SelectItem>
+                        <SelectItem value="lead">Lead</SelectItem>
+                        <SelectItem value="client">Client</SelectItem>
+                        <SelectItem value="inactive">Inactif</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label className="text-xs">Marketing</Label>
+                    <Select value={filterMarketingConsent} onValueChange={setFilterMarketingConsent}>
+                      <SelectTrigger className="h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Tous</SelectItem>
+                        <SelectItem value="yes">Accepte</SelectItem>
+                        <SelectItem value="no">N'accepte pas</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label className="text-xs">Tag</Label>
+                    <Select value={filterTag} onValueChange={setFilterTag}>
+                      <SelectTrigger className="h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Tous</SelectItem>
+                        {uniqueTags.map(tag => (
+                          <SelectItem key={tag} value={tag}>{tag}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label className="text-xs">Trier par</Label>
+                    <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+                      <SelectTrigger className="h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="name">Nom</SelectItem>
+                        <SelectItem value="email">Email</SelectItem>
+                        <SelectItem value="company">Entreprise</SelectItem>
+                        <SelectItem value="city">Ville</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
           </div>
 
           {loading ? (
