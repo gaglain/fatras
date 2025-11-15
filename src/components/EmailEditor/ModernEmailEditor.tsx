@@ -362,8 +362,10 @@ export const ModernEmailEditor: React.FC<ModernEmailEditorProps> = ({
                 <Label>Largeur (%)</Label>
                 <Input
                   type="number"
-                  value={block.content.width}
-                  onChange={(e) => updateBlock(block.id, { ...block.content, width: e.target.value })}
+                  value={block.content.width || 100}
+                  onChange={(e) => updateBlock(block.id, { ...block.content, width: parseInt(e.target.value) || 100 })}
+                  min="10"
+                  max="100"
                   placeholder="100"
                 />
               </div>
@@ -661,7 +663,18 @@ export const ModernEmailEditor: React.FC<ModernEmailEditorProps> = ({
                             )}
                             {block.type === 'image' && (
                               block.content.src ? (
-                                <img src={block.content.src} alt={block.content.alt} className="max-w-full" />
+                                <div style={{ textAlign: block.content.align || 'center' }}>
+                                  <img 
+                                    src={block.content.src} 
+                                    alt={block.content.alt} 
+                                    style={{
+                                      maxWidth: `${block.content.width || 100}%`,
+                                      width: `${block.content.width || 100}%`,
+                                      height: 'auto',
+                                      display: 'inline-block'
+                                    }}
+                                  />
+                                </div>
                               ) : (
                                 <div className="border-2 border-dashed rounded p-8 text-center text-muted-foreground">
                                   <ImageIcon className="h-8 w-8 mx-auto mb-2" />

@@ -40,7 +40,8 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({ blocks, onClose, onS
               src={block.content.src}
               alt={block.content.alt || ''}
               style={{
-                maxWidth: block.content.width || '100%',
+                maxWidth: `${block.content.width || 100}%`,
+                width: `${block.content.width || 100}%`,
                 height: 'auto',
                 borderRadius: block.content.borderRadius ? `${block.content.borderRadius}px` : '0'
               }}

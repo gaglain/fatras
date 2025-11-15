@@ -270,11 +270,11 @@ function convertBlocksToHtml(blocks: any[]): string {
         const src = block.content?.src || block.content?.url;
         if (src) {
           const alt = block.content?.alt || '';
-          const width = block.content?.width || '100%';
+          const width = block.content?.width || 100;
           const alignImg = block.content?.align || 'center';
           html += `
             <div style="text-align: ${alignImg}; margin: 20px 0;">
-              <img src="${src}" alt="${alt}" style="max-width: ${width}; width: ${width}; height: auto; border-radius: 4px;">
+              <img src="${src}" alt="${alt}" style="max-width: ${width}%; width: ${width}%; height: auto; border-radius: 4px;">
             </div>
           `;
         }
