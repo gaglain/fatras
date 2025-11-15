@@ -5,8 +5,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Users, Edit, Trash2, Search, Loader2 } from 'lucide-react';
+import { Plus, Users, Edit, Trash2, Search, Loader2, UserPlus } from 'lucide-react';
 import { useContactLists } from '@/hooks/useContactLists';
+import { ContactListMemberManager } from '@/components/contacts/ContactListMemberManager';
 
 export const ContactLists: React.FC = () => {
   const {
@@ -20,6 +21,7 @@ export const ContactLists: React.FC = () => {
 
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showMemberManager, setShowMemberManager] = useState(false);
   const [selectedList, setSelectedList] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [creating, setCreating] = useState(false);
@@ -87,6 +89,11 @@ export const ContactLists: React.FC = () => {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette liste ?')) {
       await deleteContactList(listId);
     }
+  };
+
+  const handleManageMembers = (list: any) => {
+    setSelectedList(list);
+    setShowMemberManager(true);
   };
 
   const filteredLists = contactLists.filter(list =>
@@ -229,6 +236,9 @@ export const ContactLists: React.FC = () => {
                 </div>
                 
                 <div className="flex space-x-2">
+                  <Button variant="outline" size="sm" onClick={() => handleManageMembers(list)}>
+                    <UserPlus className="h-4 w-4" />
+                  </Button>
                   <Button variant="outline" size="sm" onClick={() => handleEditList(list)}>
                     <Edit className="h-4 w-4" />
                   </Button>
@@ -300,6 +310,15 @@ export const ContactLists: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {selectedList && (
+        <ContactListMemberManager
+          listId={selectedList.id}
+          listName={selectedList.name}
+          open={showMemberManager}
+          onOpenChange={setShowMemberManager}
+        />
+      )}
     </div>
   );
 };
