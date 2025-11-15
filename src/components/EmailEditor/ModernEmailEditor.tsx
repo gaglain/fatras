@@ -112,9 +112,10 @@ export const ModernEmailEditor: React.FC<ModernEmailEditorProps> = ({
       case 'social':
         content = { 
           platforms: [
-            { type: 'facebook', url: '' },
-            { type: 'twitter', url: '' },
-            { type: 'instagram', url: '' }
+            { type: 'facebook', url: '', enabled: true, color: '#1877f2' },
+            { type: 'instagram', url: '', enabled: true, color: '#e4405f' },
+            { type: 'linkedin', url: '', enabled: true, color: '#0077b5' },
+            { type: 'youtube', url: '', enabled: true, color: '#ff0000' }
           ],
           align: 'center'
         };
@@ -454,27 +455,50 @@ export const ModernEmailEditor: React.FC<ModernEmailEditorProps> = ({
             <div className="space-y-3">
               <Label>Réseaux sociaux</Label>
               {block.content.platforms?.map((platform: any, index: number) => (
-                <div key={index} className="flex items-center gap-2 p-3 border rounded-lg">
-                  <Checkbox
-                    checked={platform.enabled !== false}
-                    onCheckedChange={(checked) => {
-                      const newPlatforms = [...block.content.platforms];
-                      newPlatforms[index] = { ...platform, enabled: !!checked };
-                      updateBlock(block.id, { ...block.content, platforms: newPlatforms });
-                    }}
-                  />
-                  <div className="flex-1">
-                    <Label className="text-sm capitalize">{platform.type}</Label>
-                    <Input
-                      value={platform.url || ''}
-                      onChange={(e) => {
+                <div key={index} className="space-y-2 p-3 border rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={platform.enabled !== false}
+                      onCheckedChange={(checked) => {
                         const newPlatforms = [...block.content.platforms];
-                        newPlatforms[index] = { ...platform, url: e.target.value };
+                        newPlatforms[index] = { ...platform, enabled: !!checked };
                         updateBlock(block.id, { ...block.content, platforms: newPlatforms });
                       }}
-                      placeholder={`URL ${platform.type}`}
-                      className="mt-1"
                     />
+                    <Label className="text-sm capitalize flex-1">{platform.type}</Label>
+                  </div>
+                  <Input
+                    value={platform.url || ''}
+                    onChange={(e) => {
+                      const newPlatforms = [...block.content.platforms];
+                      newPlatforms[index] = { ...platform, url: e.target.value };
+                      updateBlock(block.id, { ...block.content, platforms: newPlatforms });
+                    }}
+                    placeholder={`URL ${platform.type}`}
+                  />
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Couleur de l'icône</Label>
+                    <div className="flex gap-2 mt-1">
+                      <Input
+                        type="color"
+                        value={platform.color || '#000000'}
+                        onChange={(e) => {
+                          const newPlatforms = [...block.content.platforms];
+                          newPlatforms[index] = { ...platform, color: e.target.value };
+                          updateBlock(block.id, { ...block.content, platforms: newPlatforms });
+                        }}
+                        className="w-16 h-8"
+                      />
+                      <Input
+                        value={platform.color || '#000000'}
+                        onChange={(e) => {
+                          const newPlatforms = [...block.content.platforms];
+                          newPlatforms[index] = { ...platform, color: e.target.value };
+                          updateBlock(block.id, { ...block.content, platforms: newPlatforms });
+                        }}
+                        placeholder="#000000"
+                      />
+                    </div>
                   </div>
                 </div>
               ))}
@@ -684,14 +708,15 @@ export const ModernEmailEditor: React.FC<ModernEmailEditorProps> = ({
                                 <div className="inline-flex gap-3">
                                   {block.content.platforms?.filter((p: any) => p.enabled !== false).map((platform: any, idx: number) => {
                                     const Icon = platform.type === 'facebook' ? Facebook :
-                                                 platform.type === 'twitter' ? Twitter :
                                                  platform.type === 'instagram' ? Instagram :
-                                                 platform.type === 'linkedin' ? Linkedin : Share2;
+                                                 platform.type === 'linkedin' ? Linkedin :
+                                                 platform.type === 'youtube' ? ImageIcon : Share2;
                                     return (
                                       <a
                                         key={idx}
                                         href={platform.url || '#'}
-                                        className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground hover:opacity-80 transition-opacity"
+                                        className="inline-flex items-center justify-center w-10 h-10 rounded-full text-white hover:opacity-80 transition-opacity"
+                                        style={{ backgroundColor: platform.color || '#3498db' }}
                                         title={platform.type}
                                       >
                                         <Icon className="h-5 w-5" />
