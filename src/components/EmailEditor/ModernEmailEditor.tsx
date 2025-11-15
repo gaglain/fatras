@@ -25,9 +25,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 
+// Helper function to extract YouTube video ID from URL
+const extractYouTubeId = (url: string): string => {
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[2].length === 11) ? match[2] : '';
+};
+
 interface EmailBlock {
   id: string;
-  type: 'text' | 'heading' | 'button' | 'image' | 'divider' | 'spacer' | 'social' | 'columns';
+  type: 'text' | 'heading' | 'button' | 'image' | 'video' | 'divider' | 'spacer' | 'social' | 'columns';
   content: any;
 }
 
@@ -44,11 +51,19 @@ export const ModernEmailEditor: React.FC<ModernEmailEditorProps> = ({
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
 
+  // Update blocks when initialBlocks changes (fixes empty content on edit)
+  React.useEffect(() => {
+    if (initialBlocks && initialBlocks.length > 0 && JSON.stringify(initialBlocks) !== JSON.stringify(blocks)) {
+      setBlocks(initialBlocks);
+    }
+  }, [initialBlocks]);
+
   const blockTypes = [
     { type: 'text', icon: Type, label: 'Texte', description: 'Texte enrichi' },
     { type: 'heading', icon: Heading1, label: 'Titre', description: 'Grand titre' },
     { type: 'button', icon: Link2, label: 'Bouton', description: 'Bouton cliquable' },
     { type: 'image', icon: ImageIcon, label: 'Image', description: 'Image ou logo' },
+    { type: 'video', icon: ImageIcon, label: 'Vidéo', description: 'YouTube' },
     { type: 'divider', icon: Minus, label: 'Séparateur', description: 'Ligne horizontale' },
     { type: 'spacer', icon: Space, label: 'Espacement', description: 'Espace vide' },
     { type: 'social', icon: Share2, label: 'Réseaux', description: 'Icônes sociales' },
@@ -78,6 +93,9 @@ export const ModernEmailEditor: React.FC<ModernEmailEditorProps> = ({
         break;
       case 'image':
         content = { src: '', alt: '', width: '100%', align: 'center' };
+        break;
+      case 'video':
+        content = { url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', width: '100%', align: 'center' };
         break;
       case 'divider':
         content = { color: '#E5E7EB', height: 1 };
@@ -285,6 +303,39 @@ export const ModernEmailEditor: React.FC<ModernEmailEditorProps> = ({
           </div>
         );
 
+      case 'video':
+        return (
+          <div className="space-y-4">
+            <div>
+              <Label>URL YouTube</Label>
+              <Input
+                value={block.content.url}
+                onChange={(e) => updateBlock(block.id, { ...block.content, url: e.target.value })}
+                placeholder="https://www.youtube.com/watch?v=..."
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Collez l'URL complète d'une vidéo YouTube
+              </p>
+            </div>
+            <div>
+              <Label>Alignement</Label>
+              <Select
+                value={block.content.align || 'center'}
+                onValueChange={(value) => updateBlock(block.id, { ...block.content, align: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="left">Gauche</SelectItem>
+                  <SelectItem value="center">Centre</SelectItem>
+                  <SelectItem value="right">Droite</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        );
+
       case 'spacer':
         return (
           <div>
@@ -430,6 +481,35 @@ export const ModernEmailEditor: React.FC<ModernEmailEditorProps> = ({
                                 <div className="border-2 border-dashed rounded p-8 text-center text-muted-foreground">
                                   <ImageIcon className="h-8 w-8 mx-auto mb-2" />
                                   <p className="text-sm">Ajoutez une URL d'image</p>
+                                </div>
+                              )
+                            )}
+                            {block.type === 'video' && (
+                              block.content.url ? (
+                                <div style={{ textAlign: block.content.align || 'center' }}>
+                                  <div className="relative inline-block max-w-full">
+                                    <img 
+                                      src={`https://img.youtube.com/vi/${extractYouTubeId(block.content.url)}/maxresdefault.jpg`}
+                                      alt="Aperçu vidéo YouTube" 
+                                      className="max-w-full rounded"
+                                      onError={(e) => {
+                                        // Fallback to standard quality if maxresdefault doesn't exist
+                                        e.currentTarget.src = `https://img.youtube.com/vi/${extractYouTubeId(block.content.url)}/0.jpg`;
+                                      }}
+                                    />
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                      <div className="bg-red-600 rounded-full p-4 shadow-lg">
+                                        <svg className="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                          <path d="M8 5v14l11-7z"/>
+                                        </svg>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="border-2 border-dashed rounded p-8 text-center text-muted-foreground">
+                                  <ImageIcon className="h-8 w-8 mx-auto mb-2" />
+                                  <p className="text-sm">Ajoutez une URL YouTube</p>
                                 </div>
                               )
                             )}

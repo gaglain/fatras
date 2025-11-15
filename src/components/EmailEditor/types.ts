@@ -1,8 +1,14 @@
 
 export interface EmailBlock {
   id: string;
-  type: 'text' | 'heading' | 'button' | 'divider' | 'spacer' | 'image' | 'social' | 'footer';
-  content: TextBlockContent | HeadingBlockContent | ButtonBlockContent | DividerBlockContent | SpacerBlockContent | ImageBlockContent | SocialBlockContent | FooterBlockContent;
+  type: 'text' | 'heading' | 'button' | 'divider' | 'spacer' | 'image' | 'video' | 'social' | 'footer';
+  content: TextBlockContent | HeadingBlockContent | ButtonBlockContent | DividerBlockContent | SpacerBlockContent | ImageBlockContent | VideoBlockContent | SocialBlockContent | FooterBlockContent;
+}
+
+export interface VideoBlockContent {
+  url: string;
+  width: string;
+  align: 'left' | 'center' | 'right';
 }
 
 export interface SocialBlockContent {
