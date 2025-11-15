@@ -15,7 +15,6 @@ interface Campaign {
   id: string;
   name: string;
   subject?: string;
-  type: string;
   status: string;
   created_at: string;
   updated_at: string;
@@ -36,7 +35,7 @@ export const EmailCampaigns: React.FC = () => {
   const fetchCampaigns = async () => {
     try {
       const { data, error } = await supabase
-        .from('campaigns')
+        .from('email_campaigns')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -76,7 +75,7 @@ export const EmailCampaigns: React.FC = () => {
       if (selectedCampaign) {
         // Update existing campaign
         const { error } = await supabase
-          .from('campaigns')
+          .from('email_campaigns')
           .update({
             name: campaignData.name,
             subject: campaignData.subject,
@@ -92,11 +91,10 @@ export const EmailCampaigns: React.FC = () => {
       } else {
         // Create new campaign
         const { error } = await supabase
-          .from('campaigns')
+          .from('email_campaigns')
           .insert({
             name: campaignData.name,
             subject: campaignData.subject,
-            type: 'email',
             status: 'draft',
             content: JSON.stringify(campaignData.blocks),
             user_id: user.id
@@ -107,7 +105,7 @@ export const EmailCampaigns: React.FC = () => {
         // Add contact lists to campaign
         if (campaignData.contactListIds && campaignData.contactListIds.length > 0) {
           const { data: newCampaign } = await supabase
-            .from('campaigns')
+            .from('email_campaigns')
             .select('id')
             .eq('user_id', user.id)
             .order('created_at', { ascending: false })
