@@ -16,7 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { ArrowLeft, Send, Save, Eye, Clock } from 'lucide-react';
+import { ArrowLeft, Send, Save, Eye, Clock, Loader2 } from 'lucide-react';
 
 interface EmailCampaignManagerProps {
   campaignId?: string;
@@ -84,6 +84,8 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({
   const [sending, setSending] = useState(false);
   const [templateName, setTemplateName] = useState('');
   const [templateCategory, setTemplateCategory] = useState('Newsletter');
+  const [sendingTest, setSendingTest] = useState(false);
+  const [testEmails, setTestEmails] = useState('');
 
   const handleSave = async () => {
     if (!campaignData.name || !campaignData.subject) {
@@ -266,6 +268,55 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({
       toast.error('Erreur lors de l\'envoi: ' + error.message);
     } finally {
       setSending(false);
+    }
+  };
+
+  const handleSendTest = async () => {
+    if (!testEmails.trim()) {
+      toast.error('Veuillez entrer au moins une adresse email');
+      return;
+    }
+
+    if (!campaignData.subject || campaignData.content.length === 0) {
+      toast.error('Veuillez définir un sujet et du contenu');
+      return;
+    }
+
+    // Validate emails
+    const emails = testEmails.split(',').map(e => e.trim()).filter(e => e);
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const invalidEmails = emails.filter(e => !emailRegex.test(e));
+    
+    if (invalidEmails.length > 0) {
+      toast.error(`Adresses email invalides: ${invalidEmails.join(', ')}`);
+      return;
+    }
+
+    setSendingTest(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-test-email', {
+        body: {
+          blocks: campaignData.content,
+          subject: campaignData.subject,
+          testEmails: emails
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        toast.success(`Email de test envoyé à ${data.sent} destinataire(s)`);
+        if (data.failed > 0) {
+          toast.error(`${data.failed} envoi(s) ont échoué`);
+        }
+      } else {
+        throw new Error('Échec de l\'envoi');
+      }
+    } catch (error: any) {
+      console.error('Error sending test email:', error);
+      toast.error('Erreur lors de l\'envoi du test: ' + (error.message || 'Erreur inconnue'));
+    } finally {
+      setSendingTest(false);
     }
   };
 
@@ -473,7 +524,48 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({
                 Aperçu de l'email
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
+              {/* Test Email Section */}
+              <div className="bg-muted p-4 rounded-lg space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold">Envoyer un email de test</h3>
+                  <Badge variant="outline">Test</Badge>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Envoyez cet email à des adresses de test pour validation avant l'envoi final
+                </p>
+                <div className="space-y-2">
+                  <Label htmlFor="test-emails">Adresses email (séparées par des virgules)</Label>
+                  <Input
+                    id="test-emails"
+                    placeholder="email1@example.com, email2@example.com"
+                    value={testEmails}
+                    onChange={(e) => setTestEmails(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    L'email sera marqué avec le préfixe [TEST] dans le sujet
+                  </p>
+                </div>
+                <Button 
+                  onClick={handleSendTest} 
+                  disabled={sendingTest || !campaignData.subject || campaignData.content.length === 0}
+                  className="w-full"
+                >
+                  {sendingTest ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Envoi en cours...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4 mr-2" />
+                      Envoyer l'email de test
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {/* Email Preview */}
               <div className="border rounded-lg p-4 bg-white">
                 <div className="mb-4 pb-4 border-b">
                   <p className="text-sm text-muted-foreground">De: Campaign &lt;onboarding@resend.dev&gt;</p>
