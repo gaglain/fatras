@@ -114,7 +114,10 @@ const handler = async (req: Request): Promise<Response> => {
     const contentBlocks = typeof campaign.content === 'string' 
       ? JSON.parse(campaign.content) 
       : campaign.content || [];
+    
+    console.log('Content blocks:', JSON.stringify(contentBlocks, null, 2));
     const htmlContent = convertBlocksToHtml(contentBlocks);
+    console.log('Generated HTML length:', htmlContent.length);
 
     // Split contacts into batches of 100 (Resend batch API limit)
     const BATCH_SIZE = 100;
@@ -139,7 +142,7 @@ const handler = async (req: Request): Promise<Response> => {
           const personalizedHtml = trackedHtml.replace(/{{first_name}}/g, contact.first_name || 'there');
           
           return {
-            from: "Campaign <booking@fatras.net>",
+            from: "Fatras <booking@fatras.net>",
             to: [contact.email],
             subject: campaign.subject || "Newsletter",
             html: personalizedHtml,
