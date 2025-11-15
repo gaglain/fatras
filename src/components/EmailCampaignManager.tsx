@@ -382,10 +382,21 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({
                     <Input id="tplCat" value={templateCategory} onChange={(e) => setTemplateCategory(e.target.value)} placeholder="Ex: Newsletter" />
                   </div>
                   <div className="flex items-end">
-                    <Button onClick={handleSaveAsTemplate} disabled={!campaignData.content || (campaignData.content as any[]).length === 0}>Enregistrer</Button>
+                    <Button 
+                      onClick={handleSaveAsTemplate} 
+                      disabled={!templateName.trim() || !campaignData.subject}
+                    >
+                      Enregistrer
+                    </Button>
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">Le contenu actuel sera sauvegardé comme modèle réutilisable.</p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  {!templateName.trim() 
+                    ? "Veuillez entrer un nom pour le template" 
+                    : !campaignData.subject 
+                    ? "Veuillez définir un sujet pour la campagne d'abord"
+                    : "Le contenu actuel sera sauvegardé comme modèle réutilisable."}
+                </p>
               </div>
             </CardContent>
           </Card>
