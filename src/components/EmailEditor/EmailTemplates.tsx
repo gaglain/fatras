@@ -117,7 +117,7 @@ export const EmailTemplates: React.FC<EmailTemplatesProps> = ({ onSelectTemplate
             text: '🔥 OFFRE SPÉCIALE 🔥',
             level: 1 as const,
             color: '#dc2626',
-            alignment: 'center' as const
+            align: 'center' as const
           }
         },
         {
@@ -127,7 +127,7 @@ export const EmailTemplates: React.FC<EmailTemplatesProps> = ({ onSelectTemplate
             text: 'Profitez de -50% sur tous nos produits pendant 48h seulement !',
             fontSize: 18,
             color: '#1f2937',
-            alignment: 'center' as const,
+            align: 'center' as const,
             bold: true,
             italic: false
           }
@@ -139,7 +139,7 @@ export const EmailTemplates: React.FC<EmailTemplatesProps> = ({ onSelectTemplate
             src: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&h=400&fit=crop',
             alt: 'Produits en promotion',
             width: 80,
-            alignment: 'center' as const
+            align: 'center' as const
           }
         },
         {
@@ -150,7 +150,7 @@ export const EmailTemplates: React.FC<EmailTemplatesProps> = ({ onSelectTemplate
             url: 'https://example.com/promo',
             backgroundColor: '#dc2626',
             textColor: '#ffffff',
-            alignment: 'center' as const,
+            align: 'center' as const,
             borderRadius: 8,
             padding: { top: 16, bottom: 16, left: 32, right: 32 }
           }
@@ -162,7 +162,7 @@ export const EmailTemplates: React.FC<EmailTemplatesProps> = ({ onSelectTemplate
             text: '⏰ Offre valable jusqu\'au 31 mars 2024 à minuit\n✨ Code promo : SPECIAL50',
             fontSize: 14,
             color: '#6b7280',
-            alignment: 'center' as const,
+            align: 'center' as const,
             bold: false,
             italic: true
           }
@@ -183,7 +183,7 @@ export const EmailTemplates: React.FC<EmailTemplatesProps> = ({ onSelectTemplate
             text: 'Nos nouveaux produits',
             level: 1 as const,
             color: '#059669',
-            alignment: 'center' as const
+            align: 'center' as const
           }
         },
         {
@@ -193,7 +193,7 @@ export const EmailTemplates: React.FC<EmailTemplatesProps> = ({ onSelectTemplate
             text: 'Découvrez notre nouvelle collection printemps-été avec des designs innovants et des matériaux de qualité supérieure.',
             fontSize: 16,
             color: '#374151',
-            alignment: 'center' as const,
+            align: 'center' as const,
             bold: false,
             italic: false
           }
@@ -205,7 +205,7 @@ export const EmailTemplates: React.FC<EmailTemplatesProps> = ({ onSelectTemplate
             src: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600&h=400&fit=crop',
             alt: 'Collection produits',
             width: 90,
-            alignment: 'center' as const
+            align: 'center' as const
           }
         },
         {
@@ -215,7 +215,7 @@ export const EmailTemplates: React.FC<EmailTemplatesProps> = ({ onSelectTemplate
             text: 'Produit vedette',
             level: 2 as const,
             color: '#1f2937',
-            alignment: 'left' as const
+            align: 'left' as const
           }
         },
         {
@@ -225,7 +225,7 @@ export const EmailTemplates: React.FC<EmailTemplatesProps> = ({ onSelectTemplate
             text: 'Notre bestseller revient avec de nouvelles couleurs et améliorations. Qualité premium, design élégant, prix accessible.',
             fontSize: 14,
             color: '#374151',
-            alignment: 'left' as const,
+            align: 'left' as const,
             bold: false,
             italic: false
           }
@@ -238,7 +238,7 @@ export const EmailTemplates: React.FC<EmailTemplatesProps> = ({ onSelectTemplate
             url: 'https://example.com/products',
             backgroundColor: '#059669',
             textColor: '#ffffff',
-            alignment: 'center' as const,
+            align: 'center' as const,
             borderRadius: 6,
             padding: { top: 12, bottom: 12, left: 24, right: 24 }
           }
@@ -259,7 +259,7 @@ export const EmailTemplates: React.FC<EmailTemplatesProps> = ({ onSelectTemplate
             text: 'Vous êtes invité(e) !',
             level: 1 as const,
             color: '#7c3aed',
-            alignment: 'center' as const
+            align: 'center' as const
           }
         },
         {
@@ -269,7 +269,7 @@ export const EmailTemplates: React.FC<EmailTemplatesProps> = ({ onSelectTemplate
             text: 'Conférence annuelle 2024\nInnovation et Technologie',
             fontSize: 20,
             color: '#1f2937',
-            alignment: 'center' as const,
+            align: 'center' as const,
             bold: true,
             italic: false
           }
@@ -281,7 +281,7 @@ export const EmailTemplates: React.FC<EmailTemplatesProps> = ({ onSelectTemplate
             src: 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=600&h=300&fit=crop',
             alt: 'Événement conférence',
             width: 100,
-            alignment: 'center' as const
+            align: 'center' as const
           }
         },
         {
@@ -291,7 +291,7 @@ export const EmailTemplates: React.FC<EmailTemplatesProps> = ({ onSelectTemplate
             text: '📅 Date : 15 avril 2024\n🕒 Heure : 14h00 - 18h00\n📍 Lieu : Centre de Conférences, Paris\n👥 Conférenciers experts\n🍽️ Cocktail de networking',
             fontSize: 14,
             color: '#374151',
-            alignment: 'left' as const,
+            align: 'left' as const,
             bold: false,
             italic: false
           }
@@ -304,7 +304,7 @@ export const EmailTemplates: React.FC<EmailTemplatesProps> = ({ onSelectTemplate
             url: 'https://example.com/event',
             backgroundColor: '#7c3aed',
             textColor: '#ffffff',
-            alignment: 'center' as const,
+            align: 'center' as const,
             borderRadius: 8,
             padding: { top: 14, bottom: 14, left: 28, right: 28 }
           }
@@ -325,7 +325,7 @@ export const EmailTemplates: React.FC<EmailTemplatesProps> = ({ onSelectTemplate
             text: 'Bienvenue dans notre communauté !',
             level: 1 as const,
             color: '#ea580c',
-            alignment: 'center' as const
+            align: 'center' as const
           }
         },
         {
@@ -335,7 +335,7 @@ export const EmailTemplates: React.FC<EmailTemplatesProps> = ({ onSelectTemplate
             text: 'Merci de nous avoir fait confiance. Nous sommes ravis de vous accueillir parmi nous !',
             fontSize: 18,
             color: '#1f2937',
-            alignment: 'center' as const,
+            align: 'center' as const,
             bold: false,
             italic: false
           }
@@ -347,7 +347,7 @@ export const EmailTemplates: React.FC<EmailTemplatesProps> = ({ onSelectTemplate
             src: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&h=400&fit=crop',
             alt: 'Équipe souriante',
             width: 80,
-            alignment: 'center' as const
+            align: 'center' as const
           }
         },
         {
@@ -357,7 +357,7 @@ export const EmailTemplates: React.FC<EmailTemplatesProps> = ({ onSelectTemplate
             text: 'Prochaines étapes',
             level: 2 as const,
             color: '#1f2937',
-            alignment: 'left' as const
+            align: 'left' as const
           }
         },
         {
@@ -367,7 +367,7 @@ export const EmailTemplates: React.FC<EmailTemplatesProps> = ({ onSelectTemplate
             text: '1. Explorez votre espace personnel\n2. Configurez vos préférences\n3. Découvrez nos fonctionnalités\n4. Contactez-nous si vous avez des questions',
             fontSize: 14,
             color: '#374151',
-            alignment: 'left' as const,
+            align: 'left' as const,
             bold: false,
             italic: false
           }
@@ -380,7 +380,7 @@ export const EmailTemplates: React.FC<EmailTemplatesProps> = ({ onSelectTemplate
             url: 'https://example.com/onboarding',
             backgroundColor: '#ea580c',
             textColor: '#ffffff',
-            alignment: 'center' as const,
+            align: 'center' as const,
             borderRadius: 6,
             padding: { top: 12, bottom: 12, left: 24, right: 24 }
           }
@@ -389,13 +389,13 @@ export const EmailTemplates: React.FC<EmailTemplatesProps> = ({ onSelectTemplate
           id: '7',
           type: 'social' as const,
           content: {
-            platforms: {
-              facebook: { url: 'https://facebook.com/entreprise', enabled: true },
-              twitter: { url: 'https://twitter.com/entreprise', enabled: true },
-              linkedin: { url: 'https://linkedin.com/company/entreprise', enabled: true }
-            },
-            alignment: 'center' as const,
-            iconSize: 24,
+            platforms: [
+              { type: 'facebook' as const, url: 'https://facebook.com/entreprise', enabled: true, color: '#1877F2' },
+              { type: 'instagram' as const, url: 'https://instagram.com/entreprise', enabled: true, color: '#E4405F' },
+              { type: 'linkedin' as const, url: 'https://linkedin.com/company/entreprise', enabled: true, color: '#0A66C2' }
+            ],
+            align: 'center' as const,
+            iconSize: 40,
             spacing: 16
           }
         }
