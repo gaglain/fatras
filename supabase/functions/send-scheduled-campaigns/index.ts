@@ -228,8 +228,32 @@ function addEmailTracking(html: string, campaignId: string, contactId: string): 
 
 function convertBlocksToHtml(blocks: any[]): string {
   let html = `
-    <html>
-      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <!DOCTYPE html>
+    <html lang="fr">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <style>
+        @media only screen and (max-width: 600px) {
+          .email-container {
+            width: 100% !important;
+            padding: 10px !important;
+          }
+          .responsive-image {
+            width: 100% !important;
+            height: auto !important;
+          }
+        }
+      </style>
+    </head>
+    <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f4f4f4;">
+      <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f4f4f4;">
+        <tr>
+          <td align="center" style="padding: 20px 0;">
+            <table role="presentation" class="email-container" cellspacing="0" cellpadding="0" border="0" width="600" style="background-color: #ffffff; max-width: 600px; width: 100%;">
+              <tr>
+                <td style="padding: 20px;">
   `;
 
   (blocks || []).forEach((block: any) => {
@@ -273,9 +297,13 @@ function convertBlocksToHtml(blocks: any[]): string {
           const width = block.content?.width || 100;
           const alignImg = block.content?.align || 'center';
           html += `
-            <div style="text-align: ${alignImg}; margin: 20px 0;">
-              <img src="${src}" alt="${alt}" style="max-width: ${width}%; width: ${width}%; height: auto; border-radius: 4px;">
-            </div>
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 20px 0;">
+              <tr>
+                <td align="${alignImg}">
+                  <img src="${src}" alt="${alt}" class="responsive-image" style="max-width: ${width}%; width: ${width}%; height: auto; border-radius: 4px; display: block;" width="${Math.round(600 * width / 100)}">
+                </td>
+              </tr>
+            </table>
           `;
         }
         break;
@@ -325,30 +353,49 @@ function convertBlocksToHtml(blocks: any[]): string {
         const alignSoc = block.content?.align || 'center';
         const platforms = block.content?.platforms || [];
         
-        // SVG icons for social media
+        // Data URI SVG icons for better email compatibility
         const socialIcons: Record<string, string> = {
-          facebook: '<svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v3.385z"/></svg>',
-          instagram: '<svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>',
-          linkedin: '<svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M4.98 3.5c0 1.381-1.11 2.5-2.48 2.5s-2.48-1.119-2.48-2.5c0-1.38 1.11-2.5 2.48-2.5s2.48 1.12 2.48 2.5zm.02 4.5h-5v16h5v-16zm7.982 0h-4.968v16h4.969v-8.399c0-4.67 6.029-5.052 6.029 0v8.399h4.988v-10.131c0-7.88-8.922-7.593-11.018-3.714v-2.155z"/></svg>',
-          youtube: '<svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>'
+          facebook: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTkgOGgtM3Y0aDN2MTJoNXYtMTJoMy42NDJsLjM1OC00aC00di0xLjY2N2MwLS45NTUuMTkyLTEuMzMzIDEuMTE1LTEuMzMzaDIuODg1di01aC0zLjgwOGMtMy41OTYgMC01LjE5MiAxLjU4My01LjE5MiA0LjYxNXYzLjM4NXoiLz48L3N2Zz4=',
+          instagram: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEyIDIuMTYzYzMuMjA0IDAgMy41ODQuMDEyIDQuODUuMDcgMy4yNTIuMTQ4IDQuNzcxIDEuNjkxIDQuOTE5IDQuOTE5LjA1OCAxLjI2NS4wNjkgMS42NDUuMDY5IDQuODQ5IDAgMy4yMDUtLjAxMiAzLjU4NC0uMDY5IDQuODQ5LS4xNDkgMy4yMjUtMS42NjQgNC43NzEtNC45MTkgNC45MTktMS4yNjYuMDU4LTEuNjQ0LjA3LTQuODUuMDctMy4yMDQgMC0zLjU4NC0uMDEyLTQuODQ5LS4wNy0zLjI2LS4xNDktNC43NzEtMS42OTktNC45MTktNC45Mi0uMDU4LTEuMjY1LS4wNy0xLjY0NC0uMDctNC44NDkgMC0zLjIwNC4wMTMtMy41ODMuMDctNC44NDkuMTQ5LTMuMjI3IDEuNjY0LTQuNzcxIDQuOTE5LTQuOTE5IDEuMjY2LS4wNTcgMS42NDUtLjA2OSA0Ljg0OS0uMDY5em0wLTIuMTYzYy0zLjI1OSAwLTMuNjY3LjAxNC00Ljk0Ny4wNzItNC4zNTguMi02Ljc4IDIuNjE4LTYuOTggNi45OC0uMDU5IDEuMjgxLS4wNzMgMS42ODktLjA3MyA0Ljk0OCAwIDMuMjU5LjAxNCAzLjY2OC4wNzIgNC45NDguMiA0LjM1OCAyLjYxOCA2Ljc4IDYuOTggNi45OCAxLjI4MS4wNTggMS42ODkuMDcyIDQuOTQ4LjA3MiAzLjI1OSAwIDMuNjY4LS4wMTQgNC45NDgtLjA3MiA0LjM1NC0uMiA2Ljc4Mi0yLjYxOCA2Ljk3OS02Ljk4LjA1OS0xLjI4LjA3My0xLjY4OS4wNzMtNC45NDggMC0zLjI1OS0uMDE0LTMuNjY3LS4wNzItNC45NDctLjE5Ni00LjM1NC0yLjYxNy02Ljc4LTYuOTc5LTYuOTgtMS4yODEtLjA1OS0xLjY5LS4wNzMtNC45NDktLjA3M3ptMCA1LjgzOGMtMy40MDMgMC02LjE2MiAyLjc1OS02LjE2MiA2LjE2MnMyLjc1OSA2LjE2MyA2LjE2MiA2LjE2MyA2LjE2Mi0yLjc1OSA2LjE2Mi02LjE2M2MwLTMuNDAzLTIuNzU5LTYuMTYyLTYuMTYyLTYuMTYyem0wIDEwLjE2MmMtMi4yMDkgMC00LTEuNzktNC00IDAtMi4yMDkgMS43OTEtNCA0LTRzNCAxLjc5MSA0IDRjMCAyLjIxLTEuNzkxIDQtNCA0em02LjQwNi0xMS44NDVjLS43OTYgMC0xLjQ0MS42NDUtMS40NDEgMS40NHMuNjQ1IDEuNDQgMS40NDEgMS40NGMuNzk1IDAgMS40MzktLjY0NSAxLjQzOS0xLjQ0cy0uNjQ0LTEuNDQtMS40MzktMS40NHoiLz48L3N2Zz4=',
+          linkedin: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTQuOTggMy41YzAgMS4zODEtMS4xMSAyLjUtMi40OCAyLjVzLTIuNDgtMS4xMTktMi40OC0yLjVjMC0xLjM4IDEuMTEtMi41IDIuNDgtMi41czIuNDggMS4xMiAyLjQ4IDIuNXptLjAyIDQuNWgtNXYxNmg1di0xNnptNy45ODIgMGgtNC45Njh2MTZoNC45Njl2LTguMzk5YzAtNC42NyA2LjAyOS01LjA1MiA2LjAyOSAwdjguMzk5aDQuOTg4di0xMC4xMzFjMC03Ljg4LTguOTIyLTcuNTkzLTExLjAxOC0zLjcxNHYtMi4xNTV6Ii8+PC9zdmc+',
+          youtube: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTIzLjQ5OCA2LjE4NmEzLjAxNiAzLjAxNiAwIDAgMC0yLjEyMi0yLjEzNkMxOS41MDUgMy41NDUgMTIgMy41NDUgMTIgMy41NDVzLTcuNTA1IDAtOS4zNzcuNTA1QTMuMDE3IDMuMDE3IDAgMCAwIC41MDIgNi4xODZDMCA4LjA3IDAgMTIgMCAxMnMwIDMuOTMuNTAyIDUuODE0YTMuMDE2IDMuMDE2IDAgMCAwIDIuMTIyIDIuMTM2YzEuODcxLjUwNSA5LjM3Ni41MDUgOS4zNzYuNTA1czcuNTA1IDAgOS4zNzctLjUwNWEzLjAxNSAzLjAxNSAwIDAgMCAyLjEyMi0yLjEzNkMyNCA2LjkzIDI0IDEyIDI0IDEyczAtMy45My0uNTAyLTUuODE0ek05LjU0NSAxNS41NjhWOC40MzJMNS44MTggMTJsLTYuMjczIDMuNTY4eiIvPjwvc3ZnPg=='
         };
         
-        const linksHtml = platforms
-          .filter((p: any) => p.enabled !== false && p.url)
+        const cellsHtml = platforms
+          .filter((p: any) => p.enabled !== false && p.url && p.type !== 'twitter')
           .map((p: any) => {
             const bgColor = p.color || '#3498db';
-            const icon = socialIcons[p.type] || '';
+            const iconSrc = socialIcons[p.type] || '';
             return `
-              <a href="${p.url}" data-track-url="${p.url}" 
-                 style="display: inline-block; width: 40px; height: 40px; border-radius: 50%; background-color: ${bgColor}; margin: 0 6px; text-decoration: none; line-height: 40px; text-align: center;">
-                ${icon}
-              </a>
+              <td style="padding: 0 6px;">
+                <a href="${p.url}" data-track-url="${p.url}" style="display: block; text-decoration: none;">
+                  <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 0 auto;">
+                    <tr>
+                      <td align="center" valign="middle" style="width: 40px; height: 40px; border-radius: 50%; background-color: ${bgColor};">
+                        <img src="${iconSrc}" alt="${p.type}" width="20" height="20" style="display: block; border: 0;">
+                      </td>
+                    </tr>
+                  </table>
+                </a>
+              </td>
             `;
           })
           .join('');
         
-        if (linksHtml) {
-          html += `<div style="text-align: ${alignSoc}; margin: 20px 0;">${linksHtml}</div>`;
+        if (cellsHtml) {
+          html += `
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 20px 0;">
+              <tr>
+                <td align="${alignSoc}">
+                  <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="display: inline-block;">
+                    <tr>
+                      ${cellsHtml}
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          `;
         }
         break;
       }
@@ -363,7 +410,13 @@ function convertBlocksToHtml(blocks: any[]): string {
   });
 
   html += `
-      </body>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
     </html>
   `;
 
