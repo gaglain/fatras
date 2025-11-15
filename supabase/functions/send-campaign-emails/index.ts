@@ -164,9 +164,9 @@ const handler = async (req: Request): Promise<Response> => {
         if (batchResult.data) {
           const batchResultsProcessed = await Promise.all(
             batch.map(async (contact, index) => {
-              const emailResult = batchResult.data?.[index];
+              const emailResult = batchResult.data?.data?.[index];
               
-              if (emailResult && !emailResult.error) {
+              if (emailResult && emailResult.id && !emailResult.error) {
                 // Log email analytics
                 try {
                   await supabase.from('email_analytics').insert({

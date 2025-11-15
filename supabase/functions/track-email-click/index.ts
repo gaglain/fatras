@@ -29,18 +29,20 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Email link clicked - Campaign: ${campaignId}, Contact: ${contactId}, URL: ${originalUrl}`);
 
-    // Get campaign user_id
+    // Get campaign
     const { data: campaign } = await supabase
-      .from('campaigns')
-      .select('user_id')
+      .from('email_campaigns')
+      .select('user_id, clicked_count, opened_count, sent_count')
       .eq('id', campaignId)
       .single();
 
     if (!campaign) {
-      return new Response('Campaign not found', { status: 404, headers: corsHeaders });
+      console.error('Campaign not found');
+      // Still redirect even if campaign not found
+      return Response.redirect(decodeURIComponent(originalUrl), 302);
     }
 
-    // Track the click event
+    // Track the click event (allow multiple clicks from same contact)
     await supabase
       .from('email_analytics')
       .insert({
@@ -55,20 +57,42 @@ const handler = async (req: Request): Promise<Response> => {
         }
       });
 
-    // Update campaign stats
-    await supabase.functions.invoke('update-campaign-stats', {
-      body: {},
-      method: 'GET',
-      query: {
-        campaign: campaignId,
-        event_type: 'clicked'
-      }
-    });
+    // Check if this is the first click from this contact
+    const { data: previousClicks } = await supabase
+      .from('email_analytics')
+      .select('id')
+      .eq('campaign_id', campaignId)
+      .eq('contact_id', contactId)
+      .eq('event_type', 'clicked');
+
+    // Only increment the unique click count if this is the first click from this contact
+    if (previousClicks && previousClicks.length === 1) {
+      const newClickedCount = (campaign.clicked_count || 0) + 1;
+      const clickRate = campaign.opened_count > 0 ? (newClickedCount / campaign.opened_count) * 100 : 0;
+
+      await supabase
+        .from('email_campaigns')
+        .update({
+          clicked_count: newClickedCount,
+          click_rate: clickRate
+        })
+        .eq('id', campaignId);
+
+      console.log(`Updated campaign stats - Clicks: ${newClickedCount}, Rate: ${clickRate.toFixed(2)}%`);
+    } else {
+      console.log('Additional click tracked (not counted in unique clicks)');
+    }
 
     // Redirect to original URL
     return Response.redirect(decodeURIComponent(originalUrl), 302);
   } catch (error: any) {
     console.error('Error tracking email click:', error);
+    // Still redirect on error
+    const url = new URL(req.url);
+    const originalUrl = url.searchParams.get('url');
+    if (originalUrl) {
+      return Response.redirect(decodeURIComponent(originalUrl), 302);
+    }
     return new Response('Error', { status: 500, headers: corsHeaders });
   }
 };
