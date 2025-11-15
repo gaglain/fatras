@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useEmailCampaigns } from '@/hooks/useEmailCampaigns';
 import { useContactLists } from '@/hooks/useContactLists';
 import { Button } from '@/components/ui/button';
@@ -36,9 +36,36 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({
     name: existingCampaign?.name || '',
     subject: existingCampaign?.subject || '',
     content: existingCampaign?.content ? (typeof existingCampaign.content === 'string' ? JSON.parse(existingCampaign.content) : existingCampaign.content) : [],
-    selectedLists: [],
+    selectedLists: [] as string[],
     templateId: ''
   });
+
+  // Load existing contact lists for the campaign
+  useEffect(() => {
+    const loadContactLists = async () => {
+      if (!campaignId) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('campaign_contact_lists')
+          .select('contact_list_id')
+          .eq('campaign_id', campaignId);
+        
+        if (error) throw error;
+        
+        if (data) {
+          setCampaignData(prev => ({
+            ...prev,
+            selectedLists: data.map(item => item.contact_list_id)
+          }));
+        }
+      } catch (error) {
+        console.error('Error loading contact lists:', error);
+      }
+    };
+    
+    loadContactLists();
+  }, [campaignId]);
   
   const [activeTab, setActiveTab] = useState('design');
   const [sending, setSending] = useState(false);
@@ -59,15 +86,44 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({
         status: 'draft' as const
       };
 
+      let finalCampaignId = campaignId;
+
       if (campaignId) {
         await updateCampaign(campaignId, campaignPayload);
-        toast.success('Campagne mise à jour');
+        
+        // Delete existing contact list associations
+        await supabase
+          .from('campaign_contact_lists')
+          .delete()
+          .eq('campaign_id', campaignId);
       } else {
-        await createCampaign(campaignPayload);
-        toast.success('Campagne créée');
+        const campaign = await createCampaign(campaignPayload);
+        finalCampaignId = campaign.id;
+      }
+
+      // Save contact list associations
+      if (finalCampaignId && campaignData.selectedLists.length > 0) {
+        const associations = campaignData.selectedLists.map(listId => ({
+          campaign_id: finalCampaignId,
+          contact_list_id: listId
+        }));
+        
+        const { error: associationError } = await supabase
+          .from('campaign_contact_lists')
+          .insert(associations);
+
+        if (associationError) {
+          console.error('Error saving contact lists:', associationError);
+          throw associationError;
+        }
+      }
+
+      toast.success(campaignId ? 'Campagne mise à jour' : 'Campagne créée');
+      if (!campaignId) {
         onBack?.();
       }
     } catch (error) {
+      console.error('Save error:', error);
       toast.error('Erreur lors de la sauvegarde');
     }
   };
