@@ -720,7 +720,7 @@ export const ModernEmailEditor: React.FC<ModernEmailEditorProps> = ({
                             {block.type === 'social' && (
                               <div style={{ textAlign: block.content.align || 'center' }}>
                                 <div className="inline-flex gap-3">
-                                  {block.content.platforms?.filter((p: any) => p.enabled !== false && p.type !== 'twitter').map((platform: any, idx: number) => {
+                                  {block.content.platforms?.filter((p: any) => p.enabled && p.url).map((platform: any, idx: number) => {
                                     const Icon = platform.type === 'facebook' ? Facebook :
                                                  platform.type === 'instagram' ? Instagram :
                                                  platform.type === 'linkedin' ? Linkedin :

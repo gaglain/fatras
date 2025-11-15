@@ -7,13 +7,13 @@ import { Switch } from '@/components/ui/switch';
 import { Share2, Settings, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
 
 export interface SocialBlockContent {
-  platforms: {
-    facebook?: { url: string; enabled: boolean };
-    twitter?: { url: string; enabled: boolean };
-    instagram?: { url: string; enabled: boolean };
-    linkedin?: { url: string; enabled: boolean };
-  };
-  alignment: 'left' | 'center' | 'right';
+  platforms: Array<{
+    type: 'facebook' | 'instagram' | 'linkedin' | 'youtube';
+    url: string;
+    enabled: boolean;
+    color?: string;
+  }>;
+  align: 'left' | 'center' | 'right';
   iconSize: number;
   spacing: number;
 }
@@ -28,29 +28,36 @@ export const SocialBlock: React.FC<SocialBlockProps> = ({ content, onChange }) =
 
   const platformIcons = {
     facebook: Facebook,
-    twitter: Twitter,
     instagram: Instagram,
-    linkedin: Linkedin
+    linkedin: Linkedin,
+    youtube: Share2
   };
 
   const platformColors = {
     facebook: '#1877F2',
-    twitter: '#1DA1F2',
     instagram: '#E4405F',
-    linkedin: '#0A66C2'
+    linkedin: '#0A66C2',
+    youtube: '#FF0000'
   };
 
-  const updatePlatform = (platform: keyof typeof content.platforms, updates: Partial<NonNullable<typeof content.platforms[typeof platform]>>) => {
-    onChange({
-      ...content,
-      platforms: {
-        ...content.platforms,
-        [platform]: {
-          ...content.platforms[platform],
-          ...updates
-        }
-      }
-    });
+  const platformTypes: Array<'facebook' | 'instagram' | 'linkedin' | 'youtube'> = ['facebook', 'instagram', 'linkedin', 'youtube'];
+
+  // Initialize platforms if empty
+  if (!content.platforms || content.platforms.length === 0) {
+    const initialPlatforms = platformTypes.map(type => ({
+      type,
+      url: '',
+      enabled: false,
+      color: platformColors[type]
+    }));
+    onChange({ ...content, platforms: initialPlatforms });
+  }
+
+  const updatePlatform = (type: string, updates: Partial<{ url: string; enabled: boolean; color: string }>) => {
+    const updatedPlatforms = content.platforms.map(p => 
+      p.type === type ? { ...p, ...updates } : p
+    );
+    onChange({ ...content, platforms: updatedPlatforms });
   };
 
   if (showSettings) {
@@ -71,36 +78,39 @@ export const SocialBlock: React.FC<SocialBlockProps> = ({ content, onChange }) =
         </div>
         
         <div className="space-y-4">
-          {Object.entries(platformIcons).map(([platform, Icon]) => (
-            <div key={platform} className="border rounded-lg p-3">
-              <div className="flex items-center justify-between mb-2">
-                <Label className="flex items-center gap-2 capitalize">
-                  <Icon className="h-4 w-4" style={{ color: platformColors[platform as keyof typeof platformColors] }} />
-                  {platform}
-                </Label>
-                <Switch
-                  checked={content.platforms[platform as keyof typeof content.platforms]?.enabled || false}
-                  onCheckedChange={(enabled) => updatePlatform(platform as keyof typeof content.platforms, { enabled })}
-                />
+          {content.platforms?.map((platform) => {
+            const Icon = platformIcons[platform.type];
+            return (
+              <div key={platform.type} className="border rounded-lg p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <Label className="flex items-center gap-2 capitalize">
+                    <Icon className="h-4 w-4" style={{ color: platform.color || platformColors[platform.type] }} />
+                    {platform.type}
+                  </Label>
+                  <Switch
+                    checked={platform.enabled}
+                    onCheckedChange={(enabled) => updatePlatform(platform.type, { enabled })}
+                  />
+                </div>
+                {platform.enabled && (
+                  <Input
+                    value={platform.url}
+                    onChange={(e) => updatePlatform(platform.type, { url: e.target.value })}
+                    placeholder={`URL ${platform.type}`}
+                    className="mt-2"
+                  />
+                )}
               </div>
-              {content.platforms[platform as keyof typeof content.platforms]?.enabled && (
-                <Input
-                  value={content.platforms[platform as keyof typeof content.platforms]?.url || ''}
-                  onChange={(e) => updatePlatform(platform as keyof typeof content.platforms, { url: e.target.value })}
-                  placeholder={`URL ${platform}`}
-                  className="mt-2"
-                />
-              )}
-            </div>
-          ))}
+            );
+          })}
           
           <div className="grid grid-cols-3 gap-4">
             <div>
               <Label htmlFor="alignment">Alignement</Label>
               <Select
-                value={content.alignment}
+                value={content.align || 'center'}
                 onValueChange={(value: 'left' | 'center' | 'right') => 
-                  onChange({ ...content, alignment: value })
+                  onChange({ ...content, align: value })
                 }
               >
                 <SelectTrigger>
@@ -141,7 +151,7 @@ export const SocialBlock: React.FC<SocialBlockProps> = ({ content, onChange }) =
     );
   }
 
-  const enabledPlatforms = Object.entries(content.platforms).filter(([_, config]) => config?.enabled);
+  const enabledPlatforms = content.platforms?.filter(p => p.enabled && p.url) || [];
 
   return (
     <div className="group relative">
@@ -154,26 +164,29 @@ export const SocialBlock: React.FC<SocialBlockProps> = ({ content, onChange }) =
         <Settings className="h-4 w-4" />
       </Button>
       <div
-        style={{ textAlign: content.alignment }}
+        style={{ textAlign: content.align || 'center' }}
         onClick={() => setShowSettings(true)}
         className="p-4 hover:bg-muted/20 rounded transition-colors cursor-pointer"
       >
         {enabledPlatforms.length > 0 ? (
-          <div className="flex items-center justify-center gap-4" style={{ gap: `${content.spacing}px` }}>
-            {enabledPlatforms.map(([platform, config]) => {
-              const Icon = platformIcons[platform as keyof typeof platformIcons];
+          <div className="flex items-center gap-3" style={{ justifyContent: content.align === 'left' ? 'flex-start' : content.align === 'right' ? 'flex-end' : 'center' }}>
+            {enabledPlatforms.map((platform) => {
+              const Icon = platformIcons[platform.type];
               return (
                 <a
-                  key={platform}
-                  href={config?.url}
+                  key={platform.type}
+                  href={platform.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:scale-110 transition-transform"
+                  className="inline-flex items-center justify-center rounded-full hover:opacity-80 transition-opacity"
+                  style={{ 
+                    width: `${content.iconSize}px`,
+                    height: `${content.iconSize}px`,
+                    backgroundColor: platform.color || platformColors[platform.type],
+                    color: 'white'
+                  }}
                 >
-                  <Icon
-                    size={content.iconSize}
-                    style={{ color: platformColors[platform as keyof typeof platformColors] }}
-                  />
+                  <Icon size={content.iconSize * 0.5} />
                 </a>
               );
             })}
