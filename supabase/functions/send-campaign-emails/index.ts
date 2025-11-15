@@ -46,14 +46,17 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Get campaign details
     const { data: campaign, error: campaignError } = await supabase
-      .from('campaigns')
+      .from('email_campaigns')
       .select('*')
       .eq('id', campaignId)
       .single();
 
     if (campaignError || !campaign) {
-      throw new Error('Campaign not found');
+      console.error('Campaign error:', campaignError);
+      throw new Error('Campaign not found: ' + campaignError?.message);
     }
+
+    console.log('Campaign found:', campaign.name);
 
     // Get campaign contact lists
     const { data: campaignLists, error: listsError } = await supabase
@@ -108,7 +111,10 @@ const handler = async (req: Request): Promise<Response> => {
     console.log(`Sending campaign to ${uniqueContacts.length} contacts`);
 
     // Convert blocks to HTML
-    const htmlContent = convertBlocksToHtml(campaign.content || []);
+    const contentBlocks = typeof campaign.content === 'string' 
+      ? JSON.parse(campaign.content) 
+      : campaign.content || [];
+    const htmlContent = convertBlocksToHtml(contentBlocks);
 
     // Split contacts into batches of 100 (Resend batch API limit)
     const BATCH_SIZE = 100;
@@ -195,7 +201,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Update campaign status and stats
     await supabase
-      .from('campaigns')
+      .from('email_campaigns')
       .update({ 
         status: 'sent',
         sent_at: new Date().toISOString(),
