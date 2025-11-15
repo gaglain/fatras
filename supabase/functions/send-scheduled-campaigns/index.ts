@@ -226,8 +226,6 @@ function addEmailTracking(html: string, campaignId: string, contactId: string): 
   return wrappedHtml.replace('</body>', `${trackingPixel}</body>`);
 }
 
-}
-
 function convertBlocksToHtml(blocks: any[]): string {
   let html = `
     <html>
