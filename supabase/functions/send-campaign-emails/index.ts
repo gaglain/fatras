@@ -139,7 +139,7 @@ const handler = async (req: Request): Promise<Response> => {
           const personalizedHtml = trackedHtml.replace(/{{first_name}}/g, contact.first_name || 'there');
           
           return {
-            from: "Campaign <onboarding@resend.dev>",
+            from: "Campaign <booking@fatras.net>",
             to: [contact.email],
             subject: campaign.subject || "Newsletter",
             html: personalizedHtml,
