@@ -23,6 +23,7 @@ export interface Contact {
   first_name: string;
   last_name: string;
   email?: string;
+  company?: string;
   accepts_marketing_emails?: boolean;
 }
 
@@ -66,7 +67,7 @@ export const useContactLists = () => {
     try {
       const { data, error } = await supabase
         .from('contacts')
-        .select('id, first_name, last_name, email, accepts_marketing_emails')
+        .select('id, first_name, last_name, email, company, accepts_marketing_emails')
         .order('first_name');
 
       if (error) throw error;
