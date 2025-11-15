@@ -313,6 +313,35 @@ function convertBlocksToHtml(blocks: EmailBlock[]): string {
         }
         break;
       }
+      case 'video': {
+        const videoUrl = block.content?.url;
+        if (videoUrl) {
+          // Extract YouTube video ID
+          const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+          const match = videoUrl.match(regExp);
+          const videoId = (match && match[2].length === 11) ? match[2] : '';
+          
+          if (videoId) {
+            const alignVideo = block.content?.align || 'center';
+            const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+            const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
+            
+            html += `
+              <div style="text-align: ${alignVideo}; margin: 20px 0;">
+                <a href="${youtubeUrl}" data-track-url="${youtubeUrl}" style="display: inline-block; position: relative; max-width: 100%;">
+                  <img src="${thumbnailUrl}" alt="Vidéo YouTube" style="max-width: 100%; width: 100%; height: auto; border-radius: 8px; display: block;">
+                  <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: rgba(255, 0, 0, 0.9); border-radius: 50%; width: 68px; height: 48px; display: flex; align-items: center; justify-content: center;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="white" style="margin-left: 3px;">
+                      <path d="M8 5v14l11-7z"/>
+                    </svg>
+                  </div>
+                </a>
+              </div>
+            `;
+          }
+        }
+        break;
+      }
       case 'divider': {
         const divColor = block.content?.color || '#eee';
         const divHeight = block.content?.height || 1;
