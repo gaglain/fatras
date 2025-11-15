@@ -20,7 +20,8 @@ import {
   Facebook,
   Twitter,
   Instagram,
-  Linkedin
+  Linkedin,
+  Youtube
 } from 'lucide-react';
 import { RichTextEditor } from './RichTextEditor';
 import { Input } from '@/components/ui/input';
@@ -706,11 +707,11 @@ export const ModernEmailEditor: React.FC<ModernEmailEditorProps> = ({
                             {block.type === 'social' && (
                               <div style={{ textAlign: block.content.align || 'center' }}>
                                 <div className="inline-flex gap-3">
-                                  {block.content.platforms?.filter((p: any) => p.enabled !== false).map((platform: any, idx: number) => {
+                                  {block.content.platforms?.filter((p: any) => p.enabled !== false && p.type !== 'twitter').map((platform: any, idx: number) => {
                                     const Icon = platform.type === 'facebook' ? Facebook :
                                                  platform.type === 'instagram' ? Instagram :
                                                  platform.type === 'linkedin' ? Linkedin :
-                                                 platform.type === 'youtube' ? ImageIcon : Share2;
+                                                 platform.type === 'youtube' ? Youtube : Share2;
                                     return (
                                       <a
                                         key={idx}

@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Send } from 'lucide-react';
+import { ArrowLeft, Send, Facebook, Instagram, Linkedin, Youtube } from 'lucide-react';
 
 interface EmailPreviewProps {
   blocks: any[];
@@ -59,7 +59,7 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({ blocks, onClose, onS
                 padding: '12px 24px',
                 borderRadius: `${block.content.borderRadius || 6}px`,
                 textDecoration: 'none',
-                fontWeight: '500'
+                fontWeight: 600
               }}
             >
               {block.content.text}
@@ -81,34 +81,45 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({ blocks, onClose, onS
       case 'social':
         return (
           <div style={{ textAlign: block.content.align || 'center', margin: '20px 0' }}>
-            {block.content.platforms?.map((platform: any, idx: number) => 
-              platform.url ? (
-                <a
-                  key={idx}
-                  href={platform.url}
-                  style={{
-                    display: 'inline-block',
-                    margin: '0 8px',
-                    color: '#666',
-                    textDecoration: 'none'
-                  }}
-                >
-                  {platform.type}
-                </a>
-              ) : null
-            )}
+            <div style={{ display: 'inline-flex', gap: 12 }}>
+              {block.content.platforms
+                ?.filter((platform: any) => platform.url && platform.enabled !== false && platform.type !== 'twitter')
+                .map((platform: any, idx: number) => {
+                  const Icon = platform.type === 'facebook' ? Facebook :
+                               platform.type === 'instagram' ? Instagram :
+                               platform.type === 'linkedin' ? Linkedin :
+                               platform.type === 'youtube' ? Youtube : null;
+                  if (!Icon) return null;
+                  return (
+                    <a
+                      key={idx}
+                      href={platform.url}
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                        width: 40, height: 40, borderRadius: '50%',
+                        backgroundColor: platform.color || '#3498db', color: '#fff', textDecoration: 'none'
+                      }}
+                    >
+                      <Icon size={18} />
+                    </a>
+                  );
+                })}
+            </div>
           </div>
         );
-      case 'columns':
+      case 'video':
+        if (!block.content?.url) return null;
+        const match = (block.content.url as string).match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/);
+        const videoId = match && match[2].length === 11 ? match[2] : '';
+        if (!videoId) return null;
         return (
-          <div style={{ display: 'flex', gap: '20px', margin: '20px 0' }}>
-            {block.content.columns?.map((col: any, idx: number) => (
-              <div
-                key={idx}
-                style={{ flex: 1 }}
-                dangerouslySetInnerHTML={{ __html: col.html || '' }}
-              />
-            ))}
+          <div style={{ textAlign: block.content.align || 'center', margin: '20px 0' }}>
+            <img
+              src={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`}
+              alt="Aperçu vidéo YouTube"
+              style={{ maxWidth: '100%', borderRadius: 8 }}
+              onError={(e: any) => { e.currentTarget.src = `https://img.youtube.com/vi/${videoId}/0.jpg`; }}
+            />
           </div>
         );
       default:

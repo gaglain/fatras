@@ -367,7 +367,7 @@ function convertBlocksToHtml(blocks: EmailBlock[]): string {
         };
         
         const linksHtml = platforms
-          .filter((p: any) => p.enabled !== false && p.url)
+          .filter((p: any) => p.enabled !== false && p.url && p.type !== 'twitter')
           .map((p: any) => {
             const bgColor = p.color || '#3498db';
             const icon = socialIcons[p.type] || '';
