@@ -267,40 +267,80 @@ function convertBlocksToHtml(blocks: EmailBlock[]): string {
 
   blocks.forEach(block => {
     switch (block.type) {
-      case 'heading':
-        const level = block.content.level || 1;
-        html += `<h${level} style="color: #2c3e50; margin-bottom: 16px;">${block.content.text || ''}</h${level}>`;
+      case 'heading': {
+        const rawLevel = (block.content?.level ?? 'h1').toString();
+        const levelNum = parseInt(rawLevel.replace('h', '')) || 1;
+        const align = block.content?.align || 'left';
+        const color = block.content?.color || '#2c3e50';
+        const text = block.content?.text || '';
+        html += `<h${levelNum} style="color: ${color}; margin-bottom: 16px; text-align: ${align};">${text}</h${levelNum}>`;
         break;
-      case 'text':
-        html += `<p style="margin-bottom: 16px; font-size: 16px;">${block.content.text || ''}</p>`;
+      }
+      case 'text': {
+        const htmlText = block.content?.html ?? block.content?.text ?? '';
+        html += `<div style="margin-bottom: 16px; font-size: 16px;">${htmlText}</div>`;
         break;
-      case 'button':
+      }
+      case 'button': {
+        const url = block.content?.url || '#';
+        const btnBg = block.content?.backgroundColor || '#3498db';
+        const btnColor = block.content?.textColor || '#ffffff';
+        const alignBtn = block.content?.align || 'center';
+        const radius = Number(block.content?.borderRadius ?? 4);
+        const btnText = block.content?.text || 'Click here';
         html += `
-          <div style="text-align: center; margin: 24px 0;">
-            <a href="${block.content.url || '#'}" 
-               style="background-color: #3498db; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold;"
-               data-track-url="${block.content.url || '#'}">
-              ${block.content.text || 'Click here'}
+          <div style="text-align: ${alignBtn}; margin: 24px 0;">
+            <a href="${url}" 
+               style="background-color: ${btnBg}; color: ${btnColor}; padding: 12px 24px; text-decoration: none; border-radius: ${radius}px; display: inline-block; font-weight: bold;"
+               data-track-url="${url}">
+              ${btnText}
             </a>
           </div>
         `;
         break;
-      case 'image':
-        if (block.content.url) {
+      }
+      case 'image': {
+        const src = block.content?.src || block.content?.url;
+        if (src) {
+          const alt = block.content?.alt || '';
+          const width = block.content?.width || '100%';
+          const alignImg = block.content?.align || 'center';
           html += `
-            <div style="text-align: center; margin: 20px 0;">
-              <img src="${block.content.url}" alt="${block.content.alt || ''}" style="max-width: 100%; height: auto; border-radius: 4px;">
+            <div style="text-align: ${alignImg}; margin: 20px 0;">
+              <img src="${src}" alt="${alt}" style="max-width: ${width}; width: ${width}; height: auto; border-radius: 4px;">
             </div>
           `;
         }
         break;
-      case 'divider':
-        html += `<hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;">`;
+      }
+      case 'divider': {
+        const divColor = block.content?.color || '#eee';
+        const divHeight = block.content?.height || 1;
+        html += `<hr style="border: none; border-top: ${divHeight}px solid ${divColor}; margin: 24px 0;">`;
         break;
-      case 'spacer':
-        const height = block.content.height || 20;
+      }
+      case 'spacer': {
+        const height = block.content?.height || 20;
         html += `<div style="height: ${height}px;"></div>`;
         break;
+      }
+      case 'social': {
+        const alignSoc = block.content?.align || 'center';
+        const platforms = block.content?.platforms || [];
+        const linksHtml = platforms
+          .filter((p: any) => p.url)
+          .map((p: any) => `<a href="${p.url}" data-track-url="${p.url}" style="margin:0 8px;text-decoration:none;color:#3498db">${p.type}</a>`) 
+          .join('');
+        if (linksHtml) html += `<div style="text-align:${alignSoc}; margin: 16px 0;">${linksHtml}</div>`;
+        break;
+      }
+      case 'columns': {
+        const cols = (block.content?.columns || [])
+          .map((c: any) => `<td style=\"vertical-align: top; width:50%; padding: 0 8px;\">${c.html || ''}</td>`) 
+          .join('');
+        if (cols) html += `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin: 16px 0;"><tr>${cols}</tr></table>`;
+        break;
+      }
     }
   });
 
@@ -311,6 +351,7 @@ function convertBlocksToHtml(blocks: EmailBlock[]): string {
 
   return html;
 }
+
 
 function addEmailTracking(html: string, campaignId: string, contactId: string): string {
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
