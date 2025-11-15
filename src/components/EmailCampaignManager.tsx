@@ -33,12 +33,25 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({
   const existingCampaign = campaignId ? campaigns.find(c => c.id === campaignId) : null;
   
   const [campaignData, setCampaignData] = useState({
-    name: existingCampaign?.name || '',
-    subject: existingCampaign?.subject || '',
-    content: existingCampaign?.content ? (typeof existingCampaign.content === 'string' ? JSON.parse(existingCampaign.content) : existingCampaign.content) : [],
+    name: '',
+    subject: '',
+    content: [] as any[],
     selectedLists: [] as string[],
     templateId: ''
   });
+
+  // Load campaign data when existingCampaign is available
+  useEffect(() => {
+    if (existingCampaign) {
+      setCampaignData({
+        name: existingCampaign.name || '',
+        subject: existingCampaign.subject || '',
+        content: existingCampaign.content ? (typeof existingCampaign.content === 'string' ? JSON.parse(existingCampaign.content) : existingCampaign.content) : [],
+        selectedLists: [] as string[],
+        templateId: ''
+      });
+    }
+  }, [existingCampaign?.id]);
 
   // Load existing contact lists for the campaign
   useEffect(() => {
