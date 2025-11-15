@@ -3,98 +3,113 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Send } from 'lucide-react';
-import { EmailBlock, TextBlockContent, HeadingBlockContent, ButtonBlockContent, DividerBlockContent, SpacerBlockContent, ImageBlockContent } from './types';
 
 interface EmailPreviewProps {
-  blocks: EmailBlock[];
+  blocks: any[];
   onClose: () => void;
   onSave: () => void;
 }
 
 export const EmailPreview: React.FC<EmailPreviewProps> = ({ blocks, onClose, onSave }) => {
-  const renderBlockForPreview = (block: EmailBlock) => {
+  const renderBlockForPreview = (block: any) => {
     switch (block.type) {
       case 'text':
-        const textContent = block.content as TextBlockContent;
         return (
-          <p
-            style={{
-              fontSize: textContent.fontSize,
-              fontWeight: textContent.bold ? 'bold' : 'normal',
-              textAlign: textContent.alignment,
-              color: textContent.color,
-              margin: '10px 0',
-              fontStyle: textContent.italic ? 'italic' : 'normal'
-            }}
-          >
-            {textContent.text}
-          </p>
+          <div
+            style={{ margin: '10px 0' }}
+            dangerouslySetInnerHTML={{ __html: block.content.html || '' }}
+          />
         );
       case 'heading':
-        const headingContent = block.content as HeadingBlockContent;
-        const HeadingTag = `h${headingContent.level}` as keyof JSX.IntrinsicElements;
-        return (
-          <HeadingTag
-            style={{
-              textAlign: headingContent.alignment,
-              color: headingContent.color,
+        const HeadingTag = block.content.level || 'h1';
+        return React.createElement(
+          HeadingTag,
+          {
+            style: {
+              textAlign: block.content.align || 'left',
+              color: block.content.color || '#000000',
               margin: '20px 0 10px 0'
-            }}
-          >
-            {headingContent.text}
-          </HeadingTag>
+            }
+          },
+          block.content.text
         );
       case 'image':
-        const imageContent = block.content as ImageBlockContent;
-        return imageContent.src ? (
-          <div style={{ textAlign: imageContent.alignment, margin: '10px 0' }}>
+        return block.content.src ? (
+          <div style={{ textAlign: block.content.align || 'center', margin: '10px 0' }}>
             <img
-              src={imageContent.src}
-              alt={imageContent.alt}
+              src={block.content.src}
+              alt={block.content.alt || ''}
               style={{
-                maxWidth: `${imageContent.width}%`,
-                height: imageContent.height || 'auto',
-                borderRadius: imageContent.borderRadius ? `${imageContent.borderRadius}px` : '0'
+                maxWidth: block.content.width || '100%',
+                height: 'auto',
+                borderRadius: block.content.borderRadius ? `${block.content.borderRadius}px` : '0'
               }}
             />
           </div>
         ) : null;
       case 'button':
-        const buttonContent = block.content as ButtonBlockContent;
-        const paddingStyle = typeof buttonContent.padding === 'string' 
-          ? buttonContent.padding 
-          : `${buttonContent.padding.top}px ${buttonContent.padding.right}px ${buttonContent.padding.bottom}px ${buttonContent.padding.left}px`;
-        
         return (
-          <div style={{ textAlign: buttonContent.alignment, margin: '20px 0' }}>
+          <div style={{ textAlign: block.content.align || 'center', margin: '20px 0' }}>
             <a
-              href={buttonContent.url || buttonContent.link}
+              href={block.content.url || '#'}
               style={{
                 display: 'inline-block',
-                backgroundColor: buttonContent.backgroundColor,
-                color: buttonContent.textColor,
-                padding: paddingStyle,
-                borderRadius: `${buttonContent.borderRadius}px`,
-                textDecoration: 'none'
+                backgroundColor: block.content.backgroundColor || '#2563EB',
+                color: block.content.textColor || '#FFFFFF',
+                padding: '12px 24px',
+                borderRadius: `${block.content.borderRadius || 6}px`,
+                textDecoration: 'none',
+                fontWeight: '500'
               }}
             >
-              {buttonContent.text}
+              {block.content.text}
             </a>
           </div>
         );
       case 'spacer':
-        const spacerContent = block.content as SpacerBlockContent;
-        return <div style={{ height: spacerContent.height, margin: '5px 0' }} />;
+        return <div style={{ height: block.content.height || 40, margin: '5px 0' }} />;
       case 'divider':
-        const dividerContent = block.content as DividerBlockContent;
         return (
           <hr
             style={{
               border: 'none',
-              borderTop: `${dividerContent.thickness}px ${dividerContent.style} ${dividerContent.color}`,
+              borderTop: `${block.content.height || 1}px solid ${block.content.color || '#E5E7EB'}`,
               margin: '20px 0'
             }}
           />
+        );
+      case 'social':
+        return (
+          <div style={{ textAlign: block.content.align || 'center', margin: '20px 0' }}>
+            {block.content.platforms?.map((platform: any, idx: number) => 
+              platform.url ? (
+                <a
+                  key={idx}
+                  href={platform.url}
+                  style={{
+                    display: 'inline-block',
+                    margin: '0 8px',
+                    color: '#666',
+                    textDecoration: 'none'
+                  }}
+                >
+                  {platform.type}
+                </a>
+              ) : null
+            )}
+          </div>
+        );
+      case 'columns':
+        return (
+          <div style={{ display: 'flex', gap: '20px', margin: '20px 0' }}>
+            {block.content.columns?.map((col: any, idx: number) => (
+              <div
+                key={idx}
+                style={{ flex: 1 }}
+                dangerouslySetInnerHTML={{ __html: col.html || '' }}
+              />
+            ))}
+          </div>
         );
       default:
         return null;
