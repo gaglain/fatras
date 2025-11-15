@@ -631,13 +631,23 @@ export const useMessaging = () => {
     if (!user) return;
 
     try {
+      const nowIso = new Date().toISOString();
       const { error } = await supabase
         .from('messaging_channel_members')
-        .update({ last_read_at: new Date().toISOString() })
+        .update({ last_read_at: nowIso })
         .eq('channel_id', channelId)
         .eq('user_id', user.id);
 
       if (error) throw error;
+
+      // Update local state immediately so badges drop without needing a refetch
+      setChannels(prev => prev.map(ch => {
+        if (ch.id !== channelId) return ch;
+        const updatedMembers = (ch.members || []).map(m =>
+          m.user_id === user.id ? { ...m, last_read_at: nowIso } : m
+        );
+        return { ...ch, members: updatedMembers } as Channel;
+      }));
     } catch (error) {
       console.error('Error marking channel as read:', error);
     }
