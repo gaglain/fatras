@@ -28,59 +28,82 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Email opened - Campaign: ${campaignId}, Contact: ${contactId}`);
 
-    // Get campaign user_id
+    // Get campaign
     const { data: campaign } = await supabase
-      .from('campaigns')
-      .select('user_id')
+      .from('email_campaigns')
+      .select('user_id, opened_count, sent_count')
       .eq('id', campaignId)
       .single();
 
     if (!campaign) {
-      return new Response('Campaign not found', { status: 404, headers: corsHeaders });
+      console.error('Campaign not found');
+      // Still return pixel even if campaign not found
+      return returnPixel();
     }
 
-    // Track the open event
-    await supabase
+    // Check if this open was already tracked (to avoid duplicate counts)
+    const { data: existingOpen } = await supabase
       .from('email_analytics')
-      .insert({
-        user_id: campaign.user_id,
-        campaign_id: campaignId,
-        contact_id: contactId,
-        event_type: 'opened',
-        event_data: { user_agent: req.headers.get('user-agent') }
-      });
+      .select('id')
+      .eq('campaign_id', campaignId)
+      .eq('contact_id', contactId)
+      .eq('event_type', 'opened')
+      .maybeSingle();
 
-    // Update campaign stats
-    await supabase.functions.invoke('update-campaign-stats', {
-      body: {},
-      method: 'GET',
-      query: {
-        campaign: campaignId,
-        event_type: 'opened'
-      }
-    });
+    if (!existingOpen) {
+      // Track the open event
+      await supabase
+        .from('email_analytics')
+        .insert({
+          user_id: campaign.user_id,
+          campaign_id: campaignId,
+          contact_id: contactId,
+          event_type: 'opened',
+          event_data: { user_agent: req.headers.get('user-agent') }
+        });
 
-    // Return 1x1 transparent pixel
-    const pixel = new Uint8Array([
-      0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 0x01, 0x00, 0x01, 0x00, 0x80, 0x00, 0x00,
-      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x21, 0xF9, 0x04, 0x01, 0x00, 0x00, 0x00,
-      0x00, 0x2C, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x02, 0x02,
-      0x0C, 0x0A, 0x00, 0x3B
-    ]);
+      // Update campaign stats
+      const newOpenedCount = (campaign.opened_count || 0) + 1;
+      const openRate = campaign.sent_count > 0 ? (newOpenedCount / campaign.sent_count) * 100 : 0;
 
-    return new Response(pixel, {
-      headers: {
-        'Content-Type': 'image/gif',
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0',
-        ...corsHeaders,
-      },
-    });
+      await supabase
+        .from('email_campaigns')
+        .update({
+          opened_count: newOpenedCount,
+          open_rate: openRate
+        })
+        .eq('id', campaignId);
+
+      console.log(`Updated campaign stats - Opens: ${newOpenedCount}, Rate: ${openRate.toFixed(2)}%`);
+    } else {
+      console.log('Open already tracked, skipping duplicate');
+    }
+
+    return returnPixel();
   } catch (error: any) {
     console.error('Error tracking email open:', error);
-    return new Response('Error', { status: 500, headers: corsHeaders });
+    return returnPixel(); // Always return pixel even on error
   }
 };
+
+function returnPixel(): Response {
+  // Return 1x1 transparent pixel
+  const pixel = new Uint8Array([
+    0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 0x01, 0x00, 0x01, 0x00, 0x80, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x21, 0xF9, 0x04, 0x01, 0x00, 0x00, 0x00,
+    0x00, 0x2C, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x02, 0x02,
+    0x0C, 0x0A, 0x00, 0x3B
+  ]);
+
+  return new Response(pixel, {
+    headers: {
+      'Content-Type': 'image/gif',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+      ...corsHeaders,
+    },
+  });
+}
 
 serve(handler);
