@@ -143,11 +143,19 @@ const handler = async (req: Request): Promise<Response> => {
             to: [contact.email],
             subject: campaign.subject || "Newsletter",
             html: personalizedHtml,
+            tags: [
+              { name: 'campaign_id', value: campaign.id },
+              { name: 'contact_id', value: contact.id }
+            ]
           };
         });
 
+        console.log(`Prepared ${batchEmails.length} emails for batch send`);
+
         // Send batch using Resend batch API
         const batchResult = await resend.batch.send(batchEmails);
+
+        console.log('Batch result:', JSON.stringify(batchResult, null, 2));
 
         // Process batch results
         if (batchResult.data) {
@@ -169,15 +177,23 @@ const handler = async (req: Request): Promise<Response> => {
                   console.error(`Failed to log analytics for ${contact.email}:`, analyticsError);
                 }
 
-                console.log(`Email sent to ${contact.email}:`, emailResult);
+                console.log(`✓ Email sent to ${contact.email}`);
                 return { success: true, email: contact.email, result: emailResult };
               } else {
-                console.error(`Failed to send email to ${contact.email}:`, emailResult?.error);
-                return { success: false, email: contact.email, error: emailResult?.error };
+                console.error(`✗ Failed to send email to ${contact.email}:`, emailResult?.error || emailResult);
+                return { success: false, email: contact.email, error: emailResult?.error || 'Unknown error' };
               }
             })
           );
           allResults = [...allResults, ...batchResultsProcessed];
+        } else if (batchResult.error) {
+          console.error('Batch send error:', batchResult.error);
+          const failedResults = batch.map(contact => ({
+            success: false,
+            email: contact.email,
+            error: batchResult.error.message
+          }));
+          allResults = [...allResults, ...failedResults];
         }
 
         // Add small delay between batches to avoid rate limiting
