@@ -25,7 +25,7 @@ export const EmailTemplates: React.FC<EmailTemplatesProps> = ({ onSelectTemplate
             text: 'Newsletter - Mars 2024',
             level: 1 as const,
             color: '#2563eb',
-            alignment: 'center' as const
+            align: 'center' as const
           }
         },
         {
@@ -35,7 +35,7 @@ export const EmailTemplates: React.FC<EmailTemplatesProps> = ({ onSelectTemplate
             src: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=600&h=300&fit=crop',
             alt: 'Image d\'en-tête',
             width: 100,
-            alignment: 'center' as const
+            align: 'center' as const
           }
         },
         {
@@ -45,7 +45,7 @@ export const EmailTemplates: React.FC<EmailTemplatesProps> = ({ onSelectTemplate
             text: 'Bonjour,\n\nNous sommes ravis de vous présenter les dernières nouveautés de notre entreprise. Ce mois-ci, nous avons le plaisir de partager avec vous nos dernières réalisations et les événements à venir.',
             fontSize: 16,
             color: '#374151',
-            alignment: 'left' as const,
+            align: 'left' as const,
             bold: false,
             italic: false
           }
@@ -57,7 +57,7 @@ export const EmailTemplates: React.FC<EmailTemplatesProps> = ({ onSelectTemplate
             text: 'Nos actualités',
             level: 2 as const,
             color: '#1f2937',
-            alignment: 'left' as const
+            align: 'left' as const
           }
         },
         {
@@ -67,7 +67,7 @@ export const EmailTemplates: React.FC<EmailTemplatesProps> = ({ onSelectTemplate
             text: '• Lancement de notre nouveau produit\n• Ouverture d\'un nouveau bureau\n• Partenariat stratégique avec une entreprise leader',
             fontSize: 14,
             color: '#374151',
-            alignment: 'left' as const,
+            align: 'left' as const,
             bold: false,
             italic: false
           }
@@ -80,7 +80,7 @@ export const EmailTemplates: React.FC<EmailTemplatesProps> = ({ onSelectTemplate
             url: 'https://example.com',
             backgroundColor: '#2563eb',
             textColor: '#ffffff',
-            alignment: 'center' as const,
+            align: 'center' as const,
             borderRadius: 6,
             padding: { top: 12, bottom: 12, left: 24, right: 24 }
           }

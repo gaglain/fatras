@@ -16,13 +16,13 @@ export interface VideoBlockContent {
 }
 
 export interface SocialBlockContent {
-  platforms: {
-    facebook?: { url: string; enabled: boolean };
-    twitter?: { url: string; enabled: boolean };
-    instagram?: { url: string; enabled: boolean };
-    linkedin?: { url: string; enabled: boolean };
-  };
-  alignment: 'left' | 'center' | 'right';
+  platforms: Array<{
+    type: 'facebook' | 'instagram' | 'linkedin' | 'youtube';
+    url: string;
+    enabled: boolean;
+    color?: string;
+  }>;
+  align: 'left' | 'center' | 'right';
   iconSize: number;
   spacing: number;
 }
@@ -44,18 +44,19 @@ export interface TextBlockContent {
   text: string;
   fontSize: number;
   color: string;
-  alignment: 'left' | 'center' | 'right';
+  align: 'left' | 'center' | 'right';
   bold: boolean;
   italic: boolean;
   fontWeight?: string;
   textAlign?: 'left' | 'center' | 'right';
+  html?: string;
 }
 
 export interface HeadingBlockContent {
   text: string;
-  level: 1 | 2 | 3;
+  level: 1 | 2 | 3 | 'h1' | 'h2' | 'h3';
   color: string;
-  alignment: 'left' | 'center' | 'right';
+  align: 'left' | 'center' | 'right';
   textAlign?: 'left' | 'center' | 'right';
 }
 
@@ -65,7 +66,7 @@ export interface ButtonBlockContent {
   link?: string;
   backgroundColor: string;
   textColor: string;
-  alignment: 'left' | 'center' | 'right';
+  align: 'left' | 'center' | 'right';
   borderRadius: number;
   padding: {
     top: number;
@@ -90,6 +91,6 @@ export interface ImageBlockContent {
   alt: string;
   width: number;
   height?: string;
-  alignment: 'left' | 'center' | 'right';
+  align: 'left' | 'center' | 'right';
   borderRadius?: number;
 }

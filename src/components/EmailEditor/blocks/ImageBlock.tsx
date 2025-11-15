@@ -96,9 +96,9 @@ export const ImageBlock: React.FC<ImageBlockProps> = ({ content, onChange }) => 
           <div>
             <label className="block text-sm font-medium mb-2">Alignement</label>
             <Select
-              value={content.alignment}
+              value={content.align}
               onValueChange={(value: 'left' | 'center' | 'right') => 
-                onChange({ ...content, alignment: value })
+                onChange({ ...content, align: value })
               }
             >
               <SelectTrigger>
@@ -140,25 +140,25 @@ export const ImageBlock: React.FC<ImageBlockProps> = ({ content, onChange }) => 
   return (
     <div 
       className={`p-4 cursor-pointer hover:bg-gray-50 rounded-lg border-2 border-dashed border-gray-200 ${
-        content.alignment === 'center' ? 'text-center' : 
-        content.alignment === 'right' ? 'text-right' : 'text-left'
+        content.align === 'center' ? 'text-center' : 
+        content.align === 'right' ? 'text-right' : 'text-left'
       }`}
       onClick={() => setIsEditing(true)}
     >
       {content.src ? (
-        <div style={{ textAlign: content.alignment }}>
+        <div style={{ textAlign: content.align }}>
           <img
             src={content.src}
             alt={content.alt}
             style={{
               maxWidth: `${content.width}%`,
               height: 'auto',
-              display: content.alignment === 'center' ? 'inline-block' : 
-                     content.alignment === 'right' ? 'block' : 'block',
-              marginLeft: content.alignment === 'right' ? 'auto' : 
-                         content.alignment === 'center' ? 'auto' : '0',
-              marginRight: content.alignment === 'left' ? 'auto' : 
-                          content.alignment === 'center' ? 'auto' : '0'
+              display: content.align === 'center' ? 'inline-block' : 
+                     content.align === 'right' ? 'block' : 'block',
+              marginLeft: content.align === 'right' ? 'auto' : 
+                         content.align === 'center' ? 'auto' : '0',
+              marginRight: content.align === 'left' ? 'auto' : 
+                          content.align === 'center' ? 'auto' : '0'
             }}
             className="rounded-lg shadow-sm"
           />

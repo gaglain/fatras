@@ -82,9 +82,9 @@ export const HeadingBlock: React.FC<HeadingBlockProps> = ({ content, onChange })
             <div>
               <Label htmlFor="heading-alignment">Alignement</Label>
               <Select
-                value={content.alignment}
+                value={content.align}
                 onValueChange={(value: 'left' | 'center' | 'right') => 
-                  onChange({ ...content, alignment: value })
+                  onChange({ ...content, align: value })
                 }
               >
                 <SelectTrigger>
@@ -115,9 +115,9 @@ export const HeadingBlock: React.FC<HeadingBlockProps> = ({ content, onChange })
       </Button>
       <HeadingTag
         style={{
-          fontSize: getHeadingSize(content.level),
+          fontSize: typeof content.level === 'number' ? getHeadingSize(content.level) : getHeadingSize(parseInt(content.level.replace('h', ''))),
           color: content.color,
-          textAlign: content.alignment,
+          textAlign: content.align,
           fontWeight: 'bold',
           margin: 0,
           lineHeight: 1.2,

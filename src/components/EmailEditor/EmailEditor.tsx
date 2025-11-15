@@ -47,7 +47,7 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
           text: 'Votre texte ici...',
           fontSize: 14,
           color: '#000000',
-          alignment: 'left' as const,
+          align: 'left' as const,
           bold: false,
           italic: false
         } as TextBlockContent;
@@ -57,7 +57,7 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
           text: 'Votre titre ici',
           level: 1 as const,
           color: '#000000',
-          alignment: 'left' as const
+          align: 'left' as const
         } as HeadingBlockContent;
         break;
       case 'button':
@@ -66,7 +66,7 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
           url: 'https://example.com',
           backgroundColor: '#007bff',
           textColor: '#ffffff',
-          alignment: 'center' as const,
+          align: 'center' as const,
           borderRadius: 4,
           padding: { top: 12, bottom: 12, left: 24, right: 24 }
         } as ButtonBlockContent;
@@ -88,19 +88,19 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
           src: '',
           alt: '',
           width: 100,
-          alignment: 'center' as const
+          align: 'center' as const
         } as ImageBlockContent;
         break;
       case 'social':
         content = {
-          platforms: {
-            facebook: { url: '', enabled: false },
-            twitter: { url: '', enabled: false },
-            instagram: { url: '', enabled: false },
-            linkedin: { url: '', enabled: false }
-          },
-          alignment: 'center' as const,
-          iconSize: 24,
+          platforms: [
+            { type: 'facebook' as const, url: '', enabled: false, color: '#1877F2' },
+            { type: 'instagram' as const, url: '', enabled: false, color: '#E4405F' },
+            { type: 'linkedin' as const, url: '', enabled: false, color: '#0A66C2' },
+            { type: 'youtube' as const, url: '', enabled: false, color: '#FF0000' }
+          ],
+          align: 'center' as const,
+          iconSize: 40,
           spacing: 12
         } as SocialBlockContent;
         break;

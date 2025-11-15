@@ -14,7 +14,7 @@ export const ButtonBlock: React.FC<ButtonBlockProps> = ({ content, onChange }) =
     : `${content.padding.top}px ${content.padding.right}px ${content.padding.bottom}px ${content.padding.left}px`;
 
   return (
-    <div style={{ textAlign: content.alignment }}>
+    <div style={{ textAlign: content.align }}>
       <div
         style={{
           display: 'inline-block',

@@ -68,9 +68,9 @@ export const TextBlock: React.FC<TextBlockProps> = ({ content, onChange }) => {
             <div>
               <Label htmlFor="alignment">Alignement</Label>
               <Select
-                value={content.alignment}
+                value={content.align}
                 onValueChange={(value: 'left' | 'center' | 'right') => 
-                  onChange({ ...content, alignment: value })
+                  onChange({ ...content, align: value })
                 }
               >
                 <SelectTrigger>
@@ -121,7 +121,7 @@ export const TextBlock: React.FC<TextBlockProps> = ({ content, onChange }) => {
         style={{
           fontSize: `${content.fontSize}px`,
           color: content.color,
-          textAlign: content.alignment,
+          textAlign: content.align,
           fontWeight: content.bold ? 'bold' : 'normal',
           fontStyle: content.italic ? 'italic' : 'normal',
           whiteSpace: 'pre-wrap',
