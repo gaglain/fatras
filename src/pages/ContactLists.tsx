@@ -198,14 +198,14 @@ export const ContactLists: React.FC = () => {
                 <div>
                   <label className="block text-sm font-medium mb-2">Lier à un artiste (optionnel)</label>
                   <Select
-                    value={formData.artist_id}
-                    onValueChange={(value) => setFormData({ ...formData, artist_id: value })}
+                    value={formData.artist_id || "none"}
+                    onValueChange={(value) => setFormData({ ...formData, artist_id: value === "none" ? "" : value })}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Sélectionner un artiste..." />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Aucun</SelectItem>
+                      <SelectItem value="none">Aucun</SelectItem>
                       {artists.map(artist => (
                         <SelectItem key={artist.id} value={artist.id}>
                           {artist.name}
@@ -217,14 +217,14 @@ export const ContactLists: React.FC = () => {
                 <div>
                   <label className="block text-sm font-medium mb-2">Lier à un spectacle (optionnel)</label>
                   <Select
-                    value={formData.event_id}
-                    onValueChange={(value) => setFormData({ ...formData, event_id: value })}
+                    value={formData.event_id || "none"}
+                    onValueChange={(value) => setFormData({ ...formData, event_id: value === "none" ? "" : value })}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Sélectionner un spectacle..." />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Aucun</SelectItem>
+                      <SelectItem value="none">Aucun</SelectItem>
                       {events.map(event => (
                         <SelectItem key={event.id} value={event.id}>
                           {event.title}
@@ -404,14 +404,14 @@ export const ContactLists: React.FC = () => {
                 <div>
                   <label className="block text-sm font-medium mb-2">Lier à un artiste (optionnel)</label>
                   <Select
-                    value={formData.artist_id}
-                    onValueChange={(value) => setFormData({ ...formData, artist_id: value })}
+                    value={formData.artist_id || "none"}
+                    onValueChange={(value) => setFormData({ ...formData, artist_id: value === "none" ? "" : value })}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Sélectionner un artiste..." />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Aucun</SelectItem>
+                      <SelectItem value="none">Aucun</SelectItem>
                       {artists.map(artist => (
                         <SelectItem key={artist.id} value={artist.id}>
                           {artist.name}
@@ -423,14 +423,14 @@ export const ContactLists: React.FC = () => {
                 <div>
                   <label className="block text-sm font-medium mb-2">Lier à un spectacle (optionnel)</label>
                   <Select
-                    value={formData.event_id}
-                    onValueChange={(value) => setFormData({ ...formData, event_id: value })}
+                    value={formData.event_id || "none"}
+                    onValueChange={(value) => setFormData({ ...formData, event_id: value === "none" ? "" : value })}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Sélectionner un spectacle..." />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Aucun</SelectItem>
+                      <SelectItem value="none">Aucun</SelectItem>
                       {events.map(event => (
                         <SelectItem key={event.id} value={event.id}>
                           {event.title}
