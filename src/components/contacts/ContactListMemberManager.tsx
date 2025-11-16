@@ -144,8 +144,16 @@ export const ContactListMemberManager: React.FC<ContactListMemberManagerProps> =
              matchesStatus && matchesMarketing && matchesTag;
     });
 
-    // Tri
+    // Tri: sélectionnés en premier, puis par critère choisi
     filtered.sort((a, b) => {
+      const aSelected = selectedContacts.includes(a.id);
+      const bSelected = selectedContacts.includes(b.id);
+      
+      // Les sélectionnés en premier
+      if (aSelected && !bSelected) return -1;
+      if (!aSelected && bSelected) return 1;
+      
+      // Si même statut de sélection, trier par critère
       switch (sortBy) {
         case 'name':
           return `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`);
