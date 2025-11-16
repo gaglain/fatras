@@ -6,6 +6,16 @@ export interface ContactList {
   id: string;
   name: string;
   description?: string;
+  artist_id?: string;
+  event_id?: string;
+  centralized_artists?: {
+    id: string;
+    name: string;
+  };
+  events?: {
+    id: string;
+    title: string;
+  };
   created_at: string;
   updated_at: string;
   contactCount?: number;
@@ -46,6 +56,14 @@ export const useContactLists = () => {
           *,
           contact_list_members (
             contact_id
+          ),
+          centralized_artists (
+            id,
+            name
+          ),
+          events (
+            id,
+            title
           )
         `)
         .order('created_at', { ascending: false });
@@ -91,6 +109,8 @@ export const useContactLists = () => {
   const createContactList = async (listData: {
     name: string;
     description?: string;
+    artist_id?: string;
+    event_id?: string;
     contactIds: string[];
   }) => {
     try {
@@ -104,6 +124,8 @@ export const useContactLists = () => {
         .insert({
           name: listData.name,
           description: listData.description,
+          artist_id: listData.artist_id || null,
+          event_id: listData.event_id || null,
           user_id: user.id
         })
         .select()
@@ -148,17 +170,22 @@ export const useContactLists = () => {
     updates: {
       name?: string;
       description?: string;
+      artist_id?: string | null;
+      event_id?: string | null;
       contactIds?: string[];
     }
   ) => {
     try {
       // Update list details
-      if (updates.name !== undefined || updates.description !== undefined) {
+      if (updates.name !== undefined || updates.description !== undefined || 
+          updates.artist_id !== undefined || updates.event_id !== undefined) {
         const { error: updateError } = await supabase
           .from('contact_lists')
           .update({
             ...(updates.name !== undefined && { name: updates.name }),
-            ...(updates.description !== undefined && { description: updates.description })
+            ...(updates.description !== undefined && { description: updates.description }),
+            ...(updates.artist_id !== undefined && { artist_id: updates.artist_id }),
+            ...(updates.event_id !== undefined && { event_id: updates.event_id })
           })
           .eq('id', listId);
 

@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Users, Edit, Trash2, Search, Loader2, UserPlus } from 'lucide-react';
 import { useContactLists } from '@/hooks/useContactLists';
 import { ContactListMemberManager } from '@/components/contacts/ContactListMemberManager';
+import { supabase } from '@/integrations/supabase/client';
 
 export const ContactLists: React.FC = () => {
   const {
@@ -25,17 +27,56 @@ export const ContactLists: React.FC = () => {
   const [selectedList, setSelectedList] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [creating, setCreating] = useState(false);
+  const [artists, setArtists] = useState<Array<{ id: string; name: string }>>([]);
+  const [events, setEvents] = useState<Array<{ id: string; title: string }>>([]);
   
   const [formData, setFormData] = useState({
     name: '',
     description: '',
+    artist_id: '',
+    event_id: '',
     selectedContacts: [] as string[]
   });
+
+  useEffect(() => {
+    fetchArtists();
+    fetchEvents();
+  }, []);
+
+  const fetchArtists = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('centralized_artists')
+        .select('id, name')
+        .order('name');
+      
+      if (error) throw error;
+      setArtists(data || []);
+    } catch (error) {
+      console.error('Error fetching artists:', error);
+    }
+  };
+
+  const fetchEvents = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('events')
+        .select('id, title')
+        .order('start_date', { ascending: false });
+      
+      if (error) throw error;
+      setEvents(data || []);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+    }
+  };
 
   const resetForm = () => {
     setFormData({
       name: '',
       description: '',
+      artist_id: '',
+      event_id: '',
       selectedContacts: []
     });
   };
@@ -48,6 +89,8 @@ export const ContactLists: React.FC = () => {
       await createContactList({
         name: formData.name,
         description: formData.description || undefined,
+        artist_id: formData.artist_id || undefined,
+        event_id: formData.event_id || undefined,
         contactIds: formData.selectedContacts
       });
       setShowCreateDialog(false);
@@ -64,6 +107,8 @@ export const ContactLists: React.FC = () => {
     setFormData({
       name: list.name,
       description: list.description || '',
+      artist_id: list.artist_id || '',
+      event_id: list.event_id || '',
       selectedContacts: []
     });
     setShowEditDialog(true);
@@ -75,7 +120,9 @@ export const ContactLists: React.FC = () => {
     try {
       await updateContactList(selectedList.id, {
         name: formData.name,
-        description: formData.description || undefined
+        description: formData.description || undefined,
+        artist_id: formData.artist_id || null,
+        event_id: formData.event_id || null
       });
       setShowEditDialog(false);
       setSelectedList(null);
@@ -147,6 +194,44 @@ export const ContactLists: React.FC = () => {
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     placeholder="Description de la liste"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Lier à un artiste (optionnel)</label>
+                  <Select
+                    value={formData.artist_id}
+                    onValueChange={(value) => setFormData({ ...formData, artist_id: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner un artiste..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Aucun</SelectItem>
+                      {artists.map(artist => (
+                        <SelectItem key={artist.id} value={artist.id}>
+                          {artist.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Lier à un spectacle (optionnel)</label>
+                  <Select
+                    value={formData.event_id}
+                    onValueChange={(value) => setFormData({ ...formData, event_id: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner un spectacle..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Aucun</SelectItem>
+                      {events.map(event => (
+                        <SelectItem key={event.id} value={event.id}>
+                          {event.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
@@ -230,6 +315,22 @@ export const ContactLists: React.FC = () => {
                     <p className="text-muted-foreground mb-3">{list.description}</p>
                   )}
                   
+                  {(list.centralized_artists || list.events) && (
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {list.centralized_artists && (
+                        <Badge variant="secondary" className="flex items-center gap-1">
+                          <Users className="h-3 w-3" />
+                          {list.centralized_artists.name}
+                        </Badge>
+                      )}
+                      {list.events && (
+                        <Badge variant="secondary" className="flex items-center gap-1">
+                          📅 {list.events.title}
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+                  
                   <div className="text-sm text-muted-foreground mt-3">
                     Créée le {new Date(list.created_at).toLocaleDateString('fr-FR')}
                   </div>
@@ -299,6 +400,44 @@ export const ContactLists: React.FC = () => {
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     placeholder="Description de la liste"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Lier à un artiste (optionnel)</label>
+                  <Select
+                    value={formData.artist_id}
+                    onValueChange={(value) => setFormData({ ...formData, artist_id: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner un artiste..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Aucun</SelectItem>
+                      {artists.map(artist => (
+                        <SelectItem key={artist.id} value={artist.id}>
+                          {artist.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Lier à un spectacle (optionnel)</label>
+                  <Select
+                    value={formData.event_id}
+                    onValueChange={(value) => setFormData({ ...formData, event_id: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner un spectacle..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Aucun</SelectItem>
+                      {events.map(event => (
+                        <SelectItem key={event.id} value={event.id}>
+                          {event.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <Button 
                   onClick={handleUpdateList} 
