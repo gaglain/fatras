@@ -272,14 +272,14 @@ export const PublicationFormMultiPlatform: React.FC<PublicationFormMultiPlatform
           <div>
             <Label htmlFor="assigned_to">Assigner à</Label>
             <Select 
-              value={formData.assigned_to} 
-              onValueChange={(value) => handleInputChange('assigned_to', value)}
+              value={formData.assigned_to || "unassigned"} 
+              onValueChange={(value) => handleInputChange('assigned_to', value === "unassigned" ? "" : value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Choisir un utilisateur" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Non assigné</SelectItem>
+                <SelectItem value="unassigned">Non assigné</SelectItem>
                 {userProfiles.length === 0 ? (
                   <SelectItem value="no-users" disabled>
                     Aucun utilisateur disponible

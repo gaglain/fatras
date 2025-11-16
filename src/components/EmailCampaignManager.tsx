@@ -572,7 +572,11 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({
                   <p className="text-sm text-muted-foreground">À: contact@example.com</p>
                   <p className="font-medium">{campaignData.subject}</p>
                 </div>
-                <EmailPreview blocks={campaignData.content} onClose={() => {}} onSave={() => {}} />
+                <EmailPreview 
+                  blocks={campaignData.content} 
+                  onClose={() => setActiveTab('design')} 
+                  onSave={() => setActiveTab('design')} 
+                />
               </div>
             </CardContent>
           </Card>
