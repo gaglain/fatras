@@ -42,21 +42,21 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
 
   const handleFileUpload = async (file: File) => {
     try {
-      // Créer un aperçu local immédiatement
-      const localPreview = URL.createObjectURL(file);
-      const fileType = file.type.startsWith('image/') ? 'image' : 'video';
-      
-      setPreviewUrl(localPreview);
+      const fileType: 'image' | 'video' = file.type.startsWith('image/') ? 'image' : 'video';
+
+      // Upload réel vers Supabase Storage (bucket public publication-media)
+      const result = await uploadFile(
+        file,
+        'publication-media',
+        fileType === 'image' ? 'images' : 'videos'
+      );
+
+      setPreviewUrl(result.url);
       setMediaType(fileType);
-      console.log('📸 Preview created:', localPreview);
-      
-      // Simuler l'upload avec l'URL locale pour l'instant
-      onMediaUploaded(localPreview, fileType);
-      toast.success('Média chargé avec succès !');
-      
-      // Optionnel : upload réel en arrière-plan
-      // const result = await uploadFile(file, 'publication-media', `media/${Date.now()}-${file.name}`);
-      // onMediaUploaded(result.url, fileType);
+      console.log('📸 Preview set to uploaded URL:', result.url);
+
+      onMediaUploaded(result.url, fileType);
+      toast.success(`${fileType === 'image' ? 'Image' : 'Vidéo'} téléchargée avec succès !`);
     } catch (error) {
       console.error('Erreur upload:', error);
       toast.error('Erreur lors du téléchargement');
