@@ -19,8 +19,26 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
 }) => {
   const { uploadFile, isUploading } = useFileUpload();
   const [dragOver, setDragOver] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [mediaType, setMediaType] = useState<'image' | 'video'>('image');
+  const [previewUrl, setPreviewUrl] = useState<string | null>(currentMedia || null);
+  
+  // Détecter automatiquement le type de média
+  const detectMediaType = (url: string): 'image' | 'video' => {
+    const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.avi'];
+    const isVideo = videoExtensions.some(ext => url.toLowerCase().includes(ext));
+    return isVideo ? 'video' : 'image';
+  };
+  
+  const [mediaType, setMediaType] = useState<'image' | 'video'>(
+    currentMedia ? detectMediaType(currentMedia) : 'image'
+  );
+
+  // Mettre à jour previewUrl quand currentMedia change
+  React.useEffect(() => {
+    if (currentMedia) {
+      setPreviewUrl(currentMedia);
+      setMediaType(detectMediaType(currentMedia));
+    }
+  }, [currentMedia]);
 
   const handleFileUpload = async (file: File) => {
     try {
@@ -77,24 +95,25 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
       {(currentMedia || previewUrl) ? (
         <div className="relative">
           {/* Aperçu du média */}
-          <div className="mb-3 p-3 bg-gray-50 rounded-lg border">
+          <div className="mb-3 p-3 bg-muted rounded-lg border">
             {(previewUrl || currentMedia) && (
-              <div className="flex items-center justify-center bg-white rounded border p-4">
+              <div className="flex items-center justify-center bg-background rounded border p-4">
                 {mediaType === 'image' ? (
                   <img 
                     src={previewUrl || currentMedia} 
                     alt="Aperçu" 
                     className="max-w-full max-h-48 object-contain rounded"
+                    onLoad={() => console.log('✅ Image loaded successfully')}
                     onError={(e) => {
-                      console.error('Image load error');
-                      (e.currentTarget as HTMLImageElement).style.display = 'none';
+                      console.error('❌ Image load error:', previewUrl || currentMedia);
                     }}
                   />
                 ) : (
-                  <div className="flex items-center space-x-2 text-blue-600">
-                    <Play className="h-8 w-8" />
-                    <span>Vidéo sélectionnée</span>
-                  </div>
+                  <video 
+                    src={previewUrl || currentMedia}
+                    className="max-w-full max-h-48 rounded"
+                    controls
+                  />
                 )}
               </div>
             )}
