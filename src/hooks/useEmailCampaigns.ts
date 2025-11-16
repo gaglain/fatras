@@ -143,7 +143,9 @@ export const useEmailCampaigns = () => {
           content: campaignData.content,
           template_id: campaignData.template_id,
           user_id: user.id,
-          status: 'draft'
+          status: 'draft',
+          artist_id: (campaignData as any).artist_id || null,
+          event_id: (campaignData as any).event_id || null
         })
         .select()
         .single();
