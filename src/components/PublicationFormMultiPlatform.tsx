@@ -62,7 +62,8 @@ export const PublicationFormMultiPlatform: React.FC<PublicationFormMultiPlatform
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (isOpen && Object.keys(initialData).length > 0) {
+    if (isOpen) {
+      console.log('📝 Loading form with initialData:', initialData);
       setFormData({
         title: initialData.title || '',
         content: initialData.content || '',
@@ -76,7 +77,7 @@ export const PublicationFormMultiPlatform: React.FC<PublicationFormMultiPlatform
       setErrors({});
       setIsSubmitting(false);
     }
-  }, [isOpen, initialData]);
+  }, [isOpen, isEditing]);
 
   const validateForm = (): boolean => {
     const newErrors: any = {};

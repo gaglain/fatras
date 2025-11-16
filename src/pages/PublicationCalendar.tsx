@@ -510,12 +510,12 @@ export const PublicationCalendar: React.FC = () => {
         initialData={editingPublication ? {
           title: editingPublication.title,
           content: editingPublication.content,
-          scheduled_date: editingPublication.scheduled_date,
-          platforms: [editingPublication.platform],
-          assigned_to: editingPublication.assigned_to,
-          media_url: editingPublication.media_url,
-          media_type: editingPublication.media_type,
-          external_link: editingPublication.external_link
+          scheduled_date: editingPublication.scheduled_date ? new Date(editingPublication.scheduled_date).toISOString().slice(0, 16) : '',
+          platforms: editingPublication.platform ? [editingPublication.platform] : [],
+          assigned_to: editingPublication.assigned_to || '',
+          media_url: editingPublication.media_url || '',
+          media_type: editingPublication.media_type || 'image',
+          external_link: editingPublication.external_link || ''
         } : formData}
         userProfiles={users.map(u => ({ 
           user_id: u.user_id, 
