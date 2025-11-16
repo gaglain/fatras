@@ -24,7 +24,7 @@ import { useUserManagement } from '@/hooks/useUserManagement';
 
 export const PublicationCalendar: React.FC = () => {
   const { currentUser } = useUser();
-  const { users } = useUserManagement();
+  const { users, fetchUsers } = useUserManagement();
   const { publications, addPublication, updatePublication, deletePublication } = useCentralizedData();
   const [showForm, setShowForm] = useState(false);
   const [editingPublication, setEditingPublication] = useState<Publication | null>(null);
@@ -32,6 +32,11 @@ export const PublicationCalendar: React.FC = () => {
   const [newComment, setNewComment] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [realPublications, setRealPublications] = useState<Publication[]>([]);
+
+  // Charger les utilisateurs au démarrage
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   // Charger les données sauvegardées au démarrage
   const loadSavedFormData = () => {
