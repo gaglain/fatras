@@ -3,8 +3,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Upload, X, Image, Play } from 'lucide-react';
+import { Upload, X, Image, Play, Folder } from 'lucide-react';
 import { useFileUpload } from '@/hooks/useFileUpload';
+import { ImageGalleryPicker } from '@/components/website/ImageGalleryPicker';
 
 interface MediaUploadProps {
   onMediaUploaded: (url: string, type: 'image' | 'video') => void;
@@ -63,6 +64,14 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
     }
   };
 
+  const handleLibrarySelect = (url: string, type?: 'image' | 'pdf' | 'audio' | 'video' | 'text' | 'other') => {
+    const mediaType: 'image' | 'video' = (type === 'video') ? 'video' : 'image';
+    setPreviewUrl(url);
+    setMediaType(mediaType);
+    onMediaUploaded(url, mediaType);
+    toast.success(`${mediaType === 'image' ? 'Image' : 'Vidéo'} sélectionnée depuis la bibliothèque`);
+  };
+
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragOver(false);
@@ -104,14 +113,14 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
                       src={previewUrl || currentMedia} 
                       alt="Aperçu" 
                       className="max-w-full max-h-48 object-contain rounded"
-                      onLoad={() => console.log('✅ Image loaded successfully')}
-                      onError={() => {
-                        console.warn('❌ Aperçu indisponible, URL invalide ou expirée');
-                        setPreviewUrl(null);
-                      }}
+                      onLoad={() => console.log('✅ Image chargée avec succès')}
+                      onError={() => console.warn('⚠️ Erreur de chargement image (URL ancienne ou expirée)')}
                     />
                   ) : (
-                    <div className="text-sm text-muted-foreground">Aucun média à prévisualiser</div>
+                    <div className="flex flex-col items-center justify-center text-sm text-muted-foreground space-y-2">
+                      <Image className="h-12 w-12 text-muted-foreground/30" />
+                      <span>Aucun média à prévisualiser</span>
+                    </div>
                   )
                 ) : (
                   (previewUrl || currentMedia) ? (
@@ -119,13 +128,13 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
                       src={previewUrl || currentMedia}
                       className="max-w-full max-h-48 rounded"
                       controls
-                      onError={() => {
-                        console.warn('❌ Aperçu vidéo indisponible');
-                        setPreviewUrl(null);
-                      }}
+                      onError={() => console.warn('⚠️ Erreur de chargement vidéo (URL ancienne ou expirée)')}
                     />
                   ) : (
-                    <div className="text-sm text-muted-foreground">Aucune vidéo à prévisualiser</div>
+                    <div className="flex flex-col items-center justify-center text-sm text-muted-foreground space-y-2">
+                      <Play className="h-12 w-12 text-muted-foreground/30" />
+                      <span>Aucune vidéo à prévisualiser</span>
+                    </div>
                   )
                 )}
               </div>
@@ -186,14 +195,24 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
             className="hidden"
             id="media-upload"
           />
-          <Button
-            type="button"
-            variant="outline"
-            disabled={isUploading}
-            onClick={() => document.getElementById('media-upload')?.click()}
-          >
-            {isUploading ? 'Téléchargement...' : 'Choisir un fichier'}
-          </Button>
+          <div className="flex flex-col gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isUploading}
+              onClick={() => document.getElementById('media-upload')?.click()}
+              className="w-full"
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              {isUploading ? 'Téléchargement...' : 'Depuis l\'ordinateur'}
+            </Button>
+            
+            <ImageGalleryPicker
+              onSelect={handleLibrarySelect}
+              buttonText="Choisir depuis la bibliothèque"
+              acceptedTypes={['image', 'video']}
+            />
+          </div>
         </div>
       )}
     </div>
