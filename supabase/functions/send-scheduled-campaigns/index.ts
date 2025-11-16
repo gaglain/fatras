@@ -372,12 +372,6 @@ function convertBlocksToHtml(blocks: any[]): string {
                   ${logoSvg}
                 </a>
               </td>`;
-                      </td>
-                    </tr>
-                  </table>
-                </a>
-              </td>
-            `;
           })
           .join('');
         
