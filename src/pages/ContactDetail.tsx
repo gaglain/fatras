@@ -170,11 +170,51 @@ export const ContactDetail: React.FC = () => {
         console.error('❌ Fallback tâches error:', e);
       }
     }
+    
+    // Fallback ciblé devis si vide
+    if (!data?.quotes || data.quotes.length === 0) {
+      try {
+        const [directQuotesRes, viaQuotesRes] = await Promise.all([
+          supabase
+            .from('quotes')
+            .select('id, title, status, created_at')
+            .eq('contact_id', id),
+          supabase
+            .from('contact_quotes')
+            .select('quote_id, role, quotes(id, title, status, created_at)')
+            .eq('contact_id', id)
+        ]);
+
+        const directQuotes = directQuotesRes.data?.map((q: any) => ({
+          id: q.id,
+          entity_type: 'quote',
+          entity_id: q.id,
+          title: q.title,
+          status: q.status,
+          date: q.created_at
+        })) || [];
+
+        const viaQuotes = (viaQuotesRes.data?.map((cq: any) => cq.quotes).filter(Boolean) || []).map((q: any) => ({
+          id: q.id,
+          entity_type: 'quote',
+          entity_id: q.id,
+          title: q.title,
+          status: q.status,
+          date: q.created_at
+        }));
+
+        const mergedQuoteMap = new Map<string, any>();
+        [...directQuotes, ...viaQuotes].forEach((q) => mergedQuoteMap.set(q.id, q));
+
+        data = { ...(data || {}), quotes: Array.from(mergedQuoteMap.values()) } as any;
+      } catch (e) {
+        console.error('❌ Fallback devis error:', e);
+      }
+    }
 
     console.log('📊 Données de connexions reçues (avec fallback):', data);
     setConnections(data);
   };
-
   const getEntityIcon = (type: string) => {
     switch (type) {
       case 'event': return <Calendar className="h-4 w-4" />;
