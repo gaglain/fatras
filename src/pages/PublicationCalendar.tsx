@@ -151,7 +151,9 @@ export const PublicationCalendar: React.FC = () => {
           external_link: formData.external_link || '',
           status: editingPublication?.status || 'draft' as const,
           created_by: currentUser.id,
-          user_id: currentUser.id
+          user_id: currentUser.id,
+          artist_id: formData.artist_id || null,
+          event_id: formData.event_id || null,
         };
 
         if (editingPublication) {

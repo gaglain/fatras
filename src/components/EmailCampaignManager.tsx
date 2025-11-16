@@ -16,7 +16,8 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { ArrowLeft, Send, Save, Eye, Clock, Loader2 } from 'lucide-react';
+import { ArrowLeft, Send, Save, Eye, Clock, Loader2, X } from 'lucide-react';
+import { UniversalSearch, SearchItem } from '@/components/UniversalSearch';
 
 interface EmailCampaignManagerProps {
   campaignId?: string;
@@ -37,21 +38,39 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({
     subject: '',
     content: [] as any[],
     selectedLists: [] as string[],
-    templateId: ''
+    templateId: '',
+    artistId: '' as string | null,
+    eventId: '' as string | null,
   });
 
   // Load campaign data when existingCampaign is available
   useEffect(() => {
     if (existingCampaign) {
-      setCampaignData({
-        name: existingCampaign.name || '',
-        subject: existingCampaign.subject || '',
-        content: existingCampaign.content ? (typeof existingCampaign.content === 'string' ? JSON.parse(existingCampaign.content) : existingCampaign.content) : [],
-        selectedLists: [] as string[],
+      setCampaignData(prev => ({
+        ...prev,
+        name: (existingCampaign as any).name || '',
+        subject: (existingCampaign as any).subject || '',
+        content: (existingCampaign as any).content ? (typeof (existingCampaign as any).content === 'string' ? JSON.parse((existingCampaign as any).content) : (existingCampaign as any).content) : [],
         templateId: ''
-      });
+      }));
     }
   }, [existingCampaign?.id]);
+
+  // Load artist/event links for existing campaign
+  useEffect(() => {
+    const loadLinks = async () => {
+      if (!campaignId) return;
+      const { data } = await supabase
+        .from('email_campaigns')
+        .select('artist_id,event_id')
+        .eq('id', campaignId)
+        .single();
+      if (data) {
+        setCampaignData(prev => ({ ...prev, artistId: data.artist_id || null, eventId: data.event_id || null }));
+      }
+    };
+    loadLinks();
+  }, [campaignId]);
 
   // Load existing contact lists for the campaign
   useEffect(() => {
@@ -94,11 +113,13 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({
     }
 
     try {
-      const campaignPayload = {
+      const campaignPayload: any = {
         name: campaignData.name,
         subject: campaignData.subject,
         content: JSON.stringify(campaignData.content),
-        status: 'draft' as const
+        status: 'draft' as const,
+        artist_id: campaignData.artistId || null,
+        event_id: campaignData.eventId || null,
       };
 
       let finalCampaignId = campaignId;
@@ -113,7 +134,7 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({
           .eq('campaign_id', campaignId);
       } else {
         const campaign = await createCampaign(campaignPayload);
-        finalCampaignId = campaign.id;
+        finalCampaignId = (campaign as any).id;
       }
 
       // Save contact list associations
@@ -177,9 +198,11 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({
           name: campaignData.name,
           subject: campaignData.subject,
           content: JSON.stringify(campaignData.content),
-          status: 'scheduled'
-        });
-        finalCampaignId = campaign.id;
+          status: 'scheduled',
+          artist_id: campaignData.artistId || null,
+          event_id: campaignData.eventId || null,
+        } as any);
+        finalCampaignId = (campaign as any).id;
       }
 
       // Add campaign-contact-list associations
@@ -437,34 +460,45 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({
                   </Select>
                 </div>
               )}
-
-              <div className="mt-6 p-4 border rounded-md">
-                <Label>Enregistrer comme template</Label>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-2">
-                  <div>
-                    <Label htmlFor="tplName">Nom</Label>
-                    <Input id="tplName" value={templateName} onChange={(e) => setTemplateName(e.target.value)} placeholder="Nom du template" />
-                  </div>
-                  <div>
-                    <Label htmlFor="tplCat">Catégorie</Label>
-                    <Input id="tplCat" value={templateCategory} onChange={(e) => setTemplateCategory(e.target.value)} placeholder="Ex: Newsletter" />
-                  </div>
-                  <div className="flex items-end">
-                    <Button 
-                      onClick={handleSaveAsTemplate} 
-                      disabled={!templateName.trim() || !campaignData.subject}
-                    >
-                      Enregistrer
-                    </Button>
-                  </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Artiste (optionnel)</Label>
+                  <UniversalSearch
+                    filterTypes={['artist']}
+                    placeholder="Rechercher un artiste..."
+                    triggerText="Sélectionner un artiste"
+                    onSelect={(item: SearchItem) => {
+                      setCampaignData(prev => ({ ...prev, artistId: item.id }));
+                    }}
+                  />
+                  {campaignData.artistId && (
+                    <div className="mt-2 p-2 bg-muted rounded-md flex items-center justify-between">
+                      <span className="text-sm">Artiste sélectionné</span>
+                      <Button variant="ghost" size="sm" onClick={() => setCampaignData(prev => ({ ...prev, artistId: null }))}>
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  {!templateName.trim() 
-                    ? "Veuillez entrer un nom pour le template" 
-                    : !campaignData.subject 
-                    ? "Veuillez définir un sujet pour la campagne d'abord"
-                    : "Le contenu actuel sera sauvegardé comme modèle réutilisable."}
-                </p>
+                <div>
+                  <Label>Spectacle (optionnel)</Label>
+                  <UniversalSearch
+                    filterTypes={['event']}
+                    placeholder="Rechercher un spectacle..."
+                    triggerText="Sélectionner un spectacle"
+                    onSelect={(item: SearchItem) => {
+                      setCampaignData(prev => ({ ...prev, eventId: item.id }));
+                    }}
+                  />
+                  {campaignData.eventId && (
+                    <div className="mt-2 p-2 bg-muted rounded-md flex items-center justify-between">
+                      <span className="text-sm">Spectacle sélectionné</span>
+                      <Button variant="ghost" size="sm" onClick={() => setCampaignData(prev => ({ ...prev, eventId: null }))}>
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>
