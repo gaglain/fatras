@@ -275,37 +275,52 @@ export const ContactLists: React.FC = () => {
 
       {/* Dialog de modification */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle>Modifier la liste de contacts</DialogTitle>
           </DialogHeader>
-          <div className="space-y-6">
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Nom de la liste</label>
-                <Input
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Festivals été 2024"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Description</label>
-                <Input
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Description de la liste"
-                />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 overflow-y-auto flex-1">
+            {/* Informations de la liste */}
+            <div className="lg:col-span-1 space-y-4">
+              <div className="space-y-4 p-4 bg-muted/30 rounded-lg border">
+                <h3 className="font-semibold">Informations</h3>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Nom de la liste</label>
+                  <Input
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="Festivals été 2024"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Description</label>
+                  <Input
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="Description de la liste"
+                  />
+                </div>
+                <Button 
+                  onClick={handleUpdateList} 
+                  disabled={!formData.name.trim()}
+                  className="w-full"
+                >
+                  Sauvegarder les infos
+                </Button>
               </div>
             </div>
 
-            <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={() => setShowEditDialog(false)}>
-                Annuler
-              </Button>
-              <Button onClick={handleUpdateList} disabled={!formData.name.trim()}>
-                Sauvegarder
-              </Button>
+            {/* Gestion des membres */}
+            <div className="lg:col-span-2 overflow-y-auto">
+              {selectedList && (
+                <ContactListMemberManager
+                  listId={selectedList.id}
+                  listName={selectedList.name}
+                  open={true}
+                  onOpenChange={() => {}}
+                  embedded={true}
+                />
+              )}
             </div>
           </div>
         </DialogContent>
