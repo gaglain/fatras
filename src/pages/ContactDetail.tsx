@@ -129,6 +129,48 @@ export const ContactDetail: React.FC = () => {
       }
     }
 
+    // Fallback ciblé tâches si vide
+    if (!data?.tasks || data.tasks.length === 0) {
+      try {
+        const [directTasksRes, viaEntitiesRes] = await Promise.all([
+          supabase
+            .from('tasks')
+            .select('id, title, status, due_date')
+            .eq('contact_id', id),
+          supabase
+            .from('task_entities')
+            .select('task_id, tasks(id, title, status, due_date)')
+            .eq('entity_type', 'contact')
+            .eq('entity_id', id)
+        ]);
+
+        const directTasks = directTasksRes.data?.map((t: any) => ({
+          id: t.id,
+          entity_type: 'task',
+          entity_id: t.id,
+          title: t.title,
+          status: t.status,
+          date: t.due_date
+        })) || [];
+
+        const viaTasks = (viaEntitiesRes.data?.map((te: any) => te.tasks).filter(Boolean) || []).map((t: any) => ({
+          id: t.id,
+          entity_type: 'task',
+          entity_id: t.id,
+          title: t.title,
+          status: t.status,
+          date: t.due_date
+        }));
+
+        const mergedMap = new Map<string, any>();
+        [...directTasks, ...viaTasks].forEach((t) => mergedMap.set(t.id, t));
+
+        data = { ...(data || {}), tasks: Array.from(mergedMap.values()) } as any;
+      } catch (e) {
+        console.error('❌ Fallback tâches error:', e);
+      }
+    }
+
     console.log('📊 Données de connexions reçues (avec fallback):', data);
     setConnections(data);
   };
