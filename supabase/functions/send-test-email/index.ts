@@ -225,9 +225,6 @@ function convertBlocksToHtml(blocks: EmailBlock[]): string {
                   ${logoSvg}
                 </a>
               </td>`;
-                </a>
-              </td>
-            `;
           })
           .join('');
         
