@@ -206,25 +206,25 @@ function convertBlocksToHtml(blocks: EmailBlock[]): string {
         const alignSoc = block.content?.align || 'center';
         const platforms = block.content?.platforms || [];
         
-        const socialIcons: Record<string, string> = {
-          facebook: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTkgOGgtM3Y0aDN2MTJoNXYtMTJoMy42NDJsLjM1OC00aC00di0xLjY2N2MwLS45NTUuMTkyLTEuMzMzIDEuMTE1LTEuMzMzaDIuODg1di01aC0zLjgwOGMtMy41OTYgMC01LjE5MiAxLjU4My01LjE5MiA0LjYxNXYzLjM4NXoiLz48L3N2Zz4=',
-          instagram: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEyIDIuMTYzYzMuMjA0IDAgMy41ODQuMDEyIDQuODUuMDcgMy4yNTIuMTQ4IDQuNzcxIDEuNjkxIDQuOTE5IDQuOTE5LjA1OCAxLjI2NS4wNjkgMS42NDUuMDY5IDQuODQ5IDAgMy4yMDUtLjAxMiAzLjU4NC0uMDY5IDQuODQ5LS4xNDkgMy4yMjUtMS42NjQgNC43NzEtNC45MTkgNC45MTktMS4yNjYuMDU4LTEuNjQ0LjA3LTQuODUuMDctMy4yMDQgMC0zLjU4NC0uMDEyLTQuODQ5LS4wNy0zLjI2LS4xNDktNC43NzEtMS42OTktNC45MTktNC45Mi0uMDU4LTEuMjY1LS4wNy0xLjY0NC0uMDctNC44NDkgMC0zLjIwNC4wMTMtMy41ODMuMDctNC44NDkuMTQ5LTMuMjI3IDEuNjY0LTQuNzcxIDQuOTE5LTQuOTE5IDEuMjY2LS4wNTcgMS42NDUtLjA2OSA0Ljg0OS0uMDY5em0wLTIuMTYzYy0zLjI1OSAwLTMuNjY3LjAxNC00Ljk0Ny4wNzItNC4zNTguMi02Ljc4IDIuNjE4LTYuOTggNi45OC0uMDU5IDEuMjgxLS4wNzMgMS42ODktLjA3MyA0Ljk0OCAwIDMuMjU5LjAxNCAzLjY2OC4wNzIgNC45NDguMiA0LjM1OCAyLjYxOCA2Ljc4IDYuOTggNi45OCAxLjI4MS4wNTggMS42ODkuMDcyIDQuOTQ4LjA3MiAzLjI1OSAwIDMuNjY4LS4wMTQgNC45NDgtLjA3MiA0LjM1NC0uMiA2Ljc4Mi0yLjYxOCA2Ljk3OS02Ljk4LjA1OS0xLjI4LjA3My0xLjY4OS4wNzMtNC45NDggMC0zLjI1OS0uMDE0LTMuNjY3LS4wNzItNC45NDctLjE5Ni00LjM1NC0yLjYxNy02Ljc4LTYuOTc5LTYuOTgtMS4yODEtLjA1OS0xLjY5LS4wNzMtNC45NDktLjA3M3ptMCA1LjgzOGMtMy40MDMgMC02LjE2MiAyLjc1OS02LjE2MiA2LjE2MnMyLjc1OSA2LjE2MyA2LjE2MiA2LjE2MyA2LjE2Mi0yLjc1OSA2LjE2Mi02LjE2M2MwLTMuNDAzLTIuNzU5LTYuMTYyLTYuMTYyLTYuMTYyem0wIDEwLjE2MmMtMi4yMDkgMC00LTEuNzktNC00IDAtMi4yMDkgMS43OTEtNCA0LTRzNCAxLjc5MSA0IDRjMCAyLjIxLTEuNzkxIDQtNCA0em02LjQwNi0xMS44NDVjLS43OTYgMC0xLjQ0MS42NDUtMS40NDEgMS40NHMuNjQ1IDEuNDQgMS40NDEgMS40NGMuNzk1IDAgMS40MzktLjY0NSAxLjQzOS0xLjQ0cy0uNjQ0LTEuNDQtMS40MzktMS40NHoiLz48L3N2Zz4=',
-          linkedin: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTQuOTggMy41YzAgMS4zODEtMS4xMSAyLjUtMi40OCAyLjVzLTIuNDgtMS4xMTktMi40OC0yLjVjMC0xLjM4IDEuMTEtMi41IDIuNDgtMi41czIuNDggMS4xMiAyLjQ4IDIuNXptLjAyIDQuNWgtNXYxNmg1di0xNnptNy45ODIgMGgtNC45Njh2MTZoNC45Njl2LTguMzk5YzAtNC42NyA2LjAyOS01LjA1MiA2LjAyOSAwdjguMzk5aDQuOTg4di0xMC4xMzFjMC03Ljg4LTguOTIyLTcuNTkzLTExLjAxOC0zLjcxNHYtMi4xNTV6Ii8+PC9zdmc+',
-          youtube: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTIzLjQ5OCA2LjE4NmEzLjAxNiAzLjAxNiAwIDAgMC0yLjEyMi0yLjEzNkMxOS41MDUgMy41NDUgMTIgMy41NDUgMTIgMy41NDVzLTcuNTA1IDAtOS4zNzcuNTA1QTMuMDE3IDMuMDE3IDAgMCAwIC41MDIgNi4xODZDMCA4LjA3IDAgMTIgMCAxMnMwIDMuOTMuNTAyIDUuODE0YTMuMDE2IDMuMDE2IDAgMCAwIDIuMTIyIDIuMTM2YzEuODcxLjUwNSA5LjM3Ni41MDUgOS4zNzYuNTA1czcuNTA1IDAgOS4zNzctLjUwNWEzLjAxNSAzLjAxNSAwIDAgMCAyLjEyMi0yLjEzNkMyNCA2LjkzIDI0IDEyIDI0IDEyczAtMy45My0uNTAyLTUuODE0ek05LjU0NSAxNS41NjhWOC40MzJMNS44MTggMTJsLTYuMjczIDMuNTY4eiIvPjwvc3ZnPg=='
+        const platformColors: Record<string, string> = {
+          facebook: '#1877F2',
+          instagram: '#E4405F',
+          linkedin: '#0A66C2',
+          youtube: '#FF0000'
         };
         
         const cellsHtml = platforms
-          .filter((p: any) => p.enabled !== false && p.url && p.type !== 'twitter')
+          .filter((p: any) => p.enabled !== false && p.url)
           .map((p: any) => {
-            const bgColor = p.color || '#3498db';
-            const iconSrc = socialIcons[p.type] || '';
+            const bgColor = p.color || platformColors[p.type] || '#3498db';
+            const iconText = p.type === 'facebook' ? 'f' : p.type === 'instagram' ? '📷' : p.type === 'linkedin' ? 'in' : p.type === 'youtube' ? '▶' : '●';
             return `
               <td style="padding: 0 6px;">
                 <a href="${p.url}" style="display: block; text-decoration: none;">
                   <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 0 auto;">
                     <tr>
-                      <td align="center" valign="middle" style="width: 40px; height: 40px; border-radius: 50%; background-color: ${bgColor};">
-                        <img src="${iconSrc}" alt="${p.type}" width="20" height="20" style="display: block; border: 0;">
+                      <td align="center" valign="middle" style="width: 40px; height: 40px; border-radius: 50%; background-color: ${bgColor}; font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; color: white; line-height: 40px;">
+                        ${iconText}
                       </td>
                     </tr>
                   </table>
