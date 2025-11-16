@@ -120,8 +120,17 @@ export const useEntityConnections = () => {
         eventsRes: { data: eventsRes.data, error: eventsRes.error },
         opportunitiesRes: { data: opportunitiesRes.data, error: opportunitiesRes.error },
         quotesRes: { data: quotesRes.data, error: quotesRes.error },
-        tasksRes: { data: tasksRes.data, error: tasksRes.error },
-        taskEntitiesRes: { data: taskEntitiesRes.data, error: taskEntitiesRes.error }
+        tasksRes: { 
+          data: tasksRes.data, 
+          error: tasksRes.error,
+          count: tasksRes.data?.length,
+          sample: tasksRes.data?.[0]
+        },
+        taskEntitiesRes: { 
+          data: taskEntitiesRes.data, 
+          error: taskEntitiesRes.error,
+          count: taskEntitiesRes.data?.length 
+        }
       });
 
       const connections: ConnectedEntities = {
