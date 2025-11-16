@@ -47,7 +47,8 @@ const handler = async (req: Request): Promise<Response> => {
     const imapPort = parseInt(settingsMap.imap_port || '993');
     const imapUsername = settingsMap.imap_username;
     const imapPassword = settingsMap.imap_password;
-    const imapSecurity = (settingsMap.imap_security || (imapPort === 143 ? 'starttls' : 'ssl')).toLowerCase();
+    // Correction: port 993 = TLS direct, port 143 = STARTTLS
+    const imapSecurity = settingsMap.imap_security?.toLowerCase() || (imapPort === 143 ? 'starttls' : 'tls');
 
     console.log('📧 Configuration IMAP:', { host: imapHost, port: imapPort, user: imapUsername, security: imapSecurity });
 
@@ -62,7 +63,7 @@ const handler = async (req: Request): Promise<Response> => {
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
 
-    const useStartTls = imapSecurity === 'starttls' || imapPort === 143;
+    const useStartTls = imapSecurity === 'starttls' && imapPort === 143;
 
     if (useStartTls) {
       // Plain TCP d'abord, on passera en TLS avec STARTTLS ensuite
@@ -79,48 +80,59 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    // Helper pour lire la réponse IMAP
-    const readResponse = async (): Promise<string> => {
+    // Helper pour lire la réponse IMAP avec timeout
+    const readResponse = async (timeoutMs: number = 10000): Promise<string> => {
       const chunks: Uint8Array[] = [];
       const buffer = new Uint8Array(8192);
       
-      try {
-        let totalBytes = 0;
-        while (true) {
-          const n = await conn.read(buffer);
-          if (n === null) break;
+      const readPromise = (async () => {
+        try {
+          let totalBytes = 0;
+          const startTime = Date.now();
           
-          const chunk = buffer.subarray(0, n);
-          chunks.push(chunk);
-          totalBytes += n;
-          
-          // Vérifier si on a reçu la fin d'une réponse IMAP
-          const text = decoder.decode(chunk);
-          if (text.includes('\r\n') && totalBytes > 0) {
-            // Vérifier si c'est une réponse complète (commence par un tag ou *)
-            const fullText = decoder.decode(new Uint8Array(totalBytes));
-            if (fullText.match(/^(\* |\w+ )/m)) {
-              break;
+          while (true) {
+            // Vérifier le timeout
+            if (Date.now() - startTime > timeoutMs) {
+              throw new Error('IMAP read timeout');
             }
+            
+            const n = await conn.read(buffer);
+            if (n === null) break;
+            
+            const chunk = buffer.subarray(0, n);
+            chunks.push(chunk.slice());
+            totalBytes += n;
+            
+            // Vérifier si on a reçu la fin d'une réponse IMAP
+            const text = decoder.decode(chunk);
+            if (text.includes('\r\n') && totalBytes > 0) {
+              // Vérifier si c'est une réponse complète (commence par un tag ou *)
+              const fullText = chunks.map(c => decoder.decode(c)).join('');
+              if (fullText.match(/^(\* |\w+ )/m)) {
+                break;
+              }
+            }
+            
+            // Limite de sécurité
+            if (totalBytes > 65536) break;
           }
           
-          // Limite de sécurité
-          if (totalBytes > 65536) break;
+          // Concaténer tous les chunks
+          const allBytes = new Uint8Array(chunks.reduce((acc, chunk) => acc + chunk.length, 0));
+          let offset = 0;
+          for (const chunk of chunks) {
+            allBytes.set(chunk, offset);
+            offset += chunk.length;
+          }
+          
+          return decoder.decode(allBytes);
+        } catch (error) {
+          console.error('Error reading IMAP response:', error);
+          throw error;
         }
-        
-        // Concaténer tous les chunks
-        const allBytes = new Uint8Array(totalBytes);
-        let offset = 0;
-        for (const chunk of chunks) {
-          allBytes.set(chunk, offset);
-          offset += chunk.length;
-        }
-        
-        return decoder.decode(allBytes);
-      } catch (error) {
-        console.error('Error reading IMAP response:', error);
-        throw new Error('Failed to read IMAP response');
-      }
+      })();
+      
+      return readPromise;
     };
 
     // Helper pour envoyer une commande IMAP
@@ -152,12 +164,19 @@ const handler = async (req: Request): Promise<Response> => {
     };
 
     try {
-      // Lire le message d'accueil
-      let response = await readResponse();
-      console.log('👋 Server greeting:', response.trim());
+      // Lire le message d'accueil avec timeout de 5 secondes
+      let response = '';
+      try {
+        response = await readResponse(5000);
+        console.log('👋 Server greeting:', response.trim());
+      } catch (error) {
+        console.error('❌ Failed to read greeting:', error);
+        throw new Error(`IMAP connection failed: Unable to read server greeting. Error: ${error.message}`);
+      }
 
-      if (!response.includes('* OK')) {
-        throw new Error(`IMAP server not ready: ${response}`);
+      // Vérifier que le serveur est prêt (accepte * OK ou * PREAUTH)
+      if (!response.includes('* OK') && !response.includes('* PREAUTH')) {
+        throw new Error(`IMAP server not ready. Server response: ${response || '(empty)'}`);
       }
 
       // Si STARTTLS est requis, on l'initialise maintenant puis on relance CAPABILITY

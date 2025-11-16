@@ -517,7 +517,9 @@ export const PublicationCalendar: React.FC = () => {
           assigned_to: editingPublication.assigned_to || '',
           media_url: editingPublication.media_url || '',
           media_type: editingPublication.media_type || 'image',
-          external_link: editingPublication.external_link || ''
+          external_link: editingPublication.external_link || '',
+          artist_id: (editingPublication as any).artist_id,
+          event_id: (editingPublication as any).event_id
         } : formData}
         userProfiles={users.map(u => ({ 
           user_id: u.user_id, 
