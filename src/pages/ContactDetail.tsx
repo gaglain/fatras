@@ -19,7 +19,7 @@ import {
   FileText,
   Target,
   CheckSquare,
-  Map,
+  Map as MapIcon,
   Clock,
   Eye
 } from 'lucide-react';
@@ -181,7 +181,7 @@ export const ContactDetail: React.FC = () => {
       case 'opportunity': return <Target className="h-4 w-4" />;
       case 'quote': return <FileText className="h-4 w-4" />;
       case 'task': return <CheckSquare className="h-4 w-4" />;
-      case 'roadshow_stop': return <Map className="h-4 w-4" />;
+      case 'roadshow_stop': return <MapIcon className="h-4 w-4" />;
       default: return <FileText className="h-4 w-4" />;
     }
   };
