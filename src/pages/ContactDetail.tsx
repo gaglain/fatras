@@ -37,7 +37,7 @@ export const ContactDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { getContactConnections, loading: connectionsLoading } = useEntityConnections();
   
   const [contact, setContact] = useState<Contact | null>(null);
@@ -56,9 +56,15 @@ export const ContactDetail: React.FC = () => {
   useEffect(() => {
     if (id) {
       loadContact();
-      loadConnections();
     }
   }, [id]);
+
+  // Fetch connections only once auth is ready
+  useEffect(() => {
+    if (id && !authLoading && user) {
+      loadConnections();
+    }
+  }, [id, authLoading, user?.id]);
 
   // Handle URL params for composing emails from tasks
   useEffect(() => {
