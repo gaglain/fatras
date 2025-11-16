@@ -4,7 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Share2, Settings, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
+import { Share2, Settings } from 'lucide-react';
 
 export interface SocialBlockContent {
   platforms: Array<{
@@ -26,11 +26,35 @@ interface SocialBlockProps {
 export const SocialBlock: React.FC<SocialBlockProps> = ({ content, onChange }) => {
   const [showSettings, setShowSettings] = useState(false);
 
-  const platformIcons = {
-    facebook: Facebook,
-    instagram: Instagram,
-    linkedin: Linkedin,
-    youtube: Share2
+  // Inline brand SVGs for cleaner, consistent look in emails
+  const renderLogo = (type: 'facebook' | 'instagram' | 'linkedin' | 'youtube', size = 14) => {
+    const common = { width: size, height: size, viewBox: '0 0 24 24', fill: 'currentColor' } as const;
+    switch (type) {
+      case 'facebook':
+        return (
+          <svg {...common} aria-hidden="true">
+            <path d="M22 12a10 10 0 1 0-11.56 9.9v-7h-2.2V12h2.2V9.8c0-2.17 1.29-3.37 3.27-3.37.95 0 1.94.17 1.94.17v2.13h-1.09c-1.07 0-1.41.66-1.41 1.34V12h2.4l-.38 2.9h-2.02v7A10 10 0 0 0 22 12z" />
+          </svg>
+        );
+      case 'instagram':
+        return (
+          <svg {...common} aria-hidden="true">
+            <path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zm5 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm6-1.25a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5zM12 9a3 3 0 1 1 0 6 3 3 0 0 1 0-6z" />
+          </svg>
+        );
+      case 'linkedin':
+        return (
+          <svg {...common} aria-hidden="true">
+            <path d="M4.98 3.5C4.98 4.61 4.1 5.5 3 5.5S1.02 4.61 1.02 3.5C1.02 2.39 1.9 1.5 3 1.5s1.98.89 1.98 2zM1 8h4v13H1zM9 8h3.8v1.8h.05c.53-1 1.84-2.05 3.78-2.05 4.04 0 4.79 2.66 4.79 6.12V21H17v-5.3c0-1.27-.02-2.91-1.77-2.91-1.77 0-2.04 1.38-2.04 2.82V21H9z" />
+          </svg>
+        );
+      case 'youtube':
+        return (
+          <svg {...common} aria-hidden="true">
+            <path d="M23.5 7.2a3 3 0 0 0-2.1-2.1C19.5 4.5 12 4.5 12 4.5s-7.5 0-9.4.6A3 3 0 0 0 .5 7.2C0 9.1 0 12 0 12s0 2.9.5 4.8a3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1c.5-1.9.5-4.8.5-4.8s0-2.9-.5-4.8zM9.75 15.02V8.98L15.5 12l-5.75 3.02z" />
+          </svg>
+        );
+    }
   };
 
   const platformColors = {
@@ -38,8 +62,7 @@ export const SocialBlock: React.FC<SocialBlockProps> = ({ content, onChange }) =
     instagram: '#E4405F',
     linkedin: '#0A66C2',
     youtube: '#FF0000'
-  };
-
+  } as const;
   const platformTypes: Array<'facebook' | 'instagram' | 'linkedin' | 'youtube'> = ['facebook', 'instagram', 'linkedin', 'youtube'];
 
   // Initialize platforms if empty
@@ -79,12 +102,16 @@ export const SocialBlock: React.FC<SocialBlockProps> = ({ content, onChange }) =
         
         <div className="space-y-4">
           {content.platforms?.map((platform) => {
-            const Icon = platformIcons[platform.type];
             return (
               <div key={platform.type} className="border rounded-lg p-3">
                 <div className="flex items-center justify-between mb-2">
                   <Label className="flex items-center gap-2 capitalize">
-                    <Icon className="h-4 w-4" style={{ color: platform.color || platformColors[platform.type] }} />
+                    <span
+                      className="inline-flex items-center justify-center rounded-full"
+                      style={{ width: 18, height: 18, backgroundColor: platform.color || platformColors[platform.type], color: '#fff' }}
+                    >
+                      {renderLogo(platform.type, 12)}
+                    </span>
                     {platform.type}
                   </Label>
                   <Switch
@@ -170,26 +197,23 @@ export const SocialBlock: React.FC<SocialBlockProps> = ({ content, onChange }) =
       >
         {enabledPlatforms.length > 0 ? (
           <div className="flex items-center gap-3" style={{ justifyContent: content.align === 'left' ? 'flex-start' : content.align === 'right' ? 'flex-end' : 'center' }}>
-            {enabledPlatforms.map((platform) => {
-              const Icon = platformIcons[platform.type];
-              return (
-                <a
-                  key={platform.type}
-                  href={platform.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center rounded-full hover:opacity-80 transition-opacity"
-                  style={{ 
-                    width: `${content.iconSize}px`,
-                    height: `${content.iconSize}px`,
-                    backgroundColor: platform.color || platformColors[platform.type],
-                    color: 'white'
-                  }}
-                >
-                  <Icon size={content.iconSize * 0.5} />
-                </a>
-              );
-            })}
+            {enabledPlatforms.map((platform) => (
+              <a
+                key={platform.type}
+                href={platform.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center rounded-full hover:opacity-80 transition-opacity"
+                style={{ 
+                  width: `${content.iconSize}px`,
+                  height: `${content.iconSize}px`,
+                  backgroundColor: platform.color || platformColors[platform.type],
+                  color: 'white'
+                }}
+              >
+                {renderLogo(platform.type, Math.max(10, Math.round(content.iconSize * 0.5)))}
+              </a>
+            ))}
           </div>
         ) : (
           <div className="text-center text-gray-500 py-4">
