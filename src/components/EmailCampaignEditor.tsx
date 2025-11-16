@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -50,6 +50,49 @@ export const EmailCampaignEditor: React.FC<EmailCampaignEditorProps> = ({
   const [uploading, setUploading] = useState(false);
   const [selectedArtist, setSelectedArtist] = useState<any>(null);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
+
+  // Load existing artist/event on mount
+  useEffect(() => {
+    const loadLinkedData = async () => {
+      if (campaign.artist_id) {
+        const { data: artist } = await supabase
+          .from('centralized_artists')
+          .select('id, name')
+          .eq('id', campaign.artist_id)
+          .single();
+        
+        if (artist) {
+          setSelectedArtist({
+            id: artist.id,
+            title: artist.name,
+            type: 'artist',
+            subtitle: '',
+            data: artist
+          });
+        }
+      }
+
+      if (campaign.event_id) {
+        const { data: event } = await supabase
+          .from('events')
+          .select('id, title')
+          .eq('id', campaign.event_id)
+          .single();
+        
+        if (event) {
+          setSelectedEvent({
+            id: event.id,
+            title: event.title,
+            type: 'event',
+            subtitle: '',
+            data: event
+          });
+        }
+      }
+    };
+
+    loadLinkedData();
+  }, [campaign.artist_id, campaign.event_id]);
 
   const handleSave = () => {
     if (!editedCampaign.name.trim() || !editedCampaign.subject.trim()) {
@@ -224,7 +267,7 @@ export const EmailCampaignEditor: React.FC<EmailCampaignEditorProps> = ({
                 />
                 {selectedArtist && (
                   <div className="mt-2 p-2 bg-muted rounded-md flex items-center justify-between">
-                    <span className="text-sm">{selectedArtist.name}</span>
+                    <span className="text-sm">{selectedArtist.title}</span>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -244,7 +287,7 @@ export const EmailCampaignEditor: React.FC<EmailCampaignEditorProps> = ({
                 />
                 {selectedEvent && (
                   <div className="mt-2 p-2 bg-muted rounded-md flex items-center justify-between">
-                    <span className="text-sm">{selectedEvent.name}</span>
+                    <span className="text-sm">{selectedEvent.title}</span>
                     <Button
                       variant="ghost"
                       size="sm"
