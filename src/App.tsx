@@ -18,6 +18,7 @@ import { Artists } from "./pages/Artists";
 import { ArtistDetail } from "./pages/ArtistDetail";
 import { ArtistDetailPage } from "./pages/ArtistDetailPage";
 import { Events } from "./pages/Events";
+import { EventDetail } from "./pages/EventDetail";
 import { Contacts } from "./pages/Contacts";
 import { Preferences } from "./pages/Preferences";
 import { Tasks } from "./pages/Tasks";
@@ -164,6 +165,7 @@ const App = () => {
                 <Route path="/artists" element={<ProtectedRoute><Layout><Artists /></Layout></ProtectedRoute>} />
                 <Route path="/artists/:id" element={<ProtectedRoute><Layout><ArtistDetailPage /></Layout></ProtectedRoute>} />
                 <Route path="/events" element={<ProtectedRoute><Layout><Events /></Layout></ProtectedRoute>} />
+                <Route path="/events/:id" element={<ProtectedRoute><Layout><EventDetail /></Layout></ProtectedRoute>} />
 <Route path="/contacts" element={<ProtectedRoute><Layout><Contacts /></Layout></ProtectedRoute>} />
 <Route path="/contacts/:id" element={<ProtectedRoute><Layout><ContactDetail /></Layout></ProtectedRoute>} />
 <Route path="/contact-types" element={<ProtectedRoute><Layout><ContactTypes /></Layout></ProtectedRoute>} />

@@ -3,12 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Calendar, MapPin, User, Edit, Trash2, MoreHorizontal, Users, Euro, FileText } from 'lucide-react';
+import { Calendar, MapPin, User, Edit, Trash2, MoreHorizontal, Users, Euro, FileText, Eye } from 'lucide-react';
 import { Event } from '@/types/event.types';
 import { Contact } from '@/types/contact.types';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { ContactEventManager } from '@/components/contacts/ContactEventManager';
+import { useNavigate } from 'react-router-dom';
 
 interface EventCardProps {
   event: Event;
@@ -24,6 +25,7 @@ export const EventCard: React.FC<EventCardProps> = ({
   viewMode
 }) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [contact, setContact] = useState<Contact | null>(null);
   const [linkedContacts, setLinkedContacts] = useState<Contact[]>([]);
   const [contactManagerOpen, setContactManagerOpen] = useState(false);
@@ -237,6 +239,10 @@ export const EventCard: React.FC<EventCardProps> = ({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => navigate(`/events/${event.id}`)}>
+                <Eye className="h-4 w-4 mr-2" />
+                Voir
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onEdit(event)}>
                 <Edit className="h-4 w-4 mr-2" />
                 Modifier
