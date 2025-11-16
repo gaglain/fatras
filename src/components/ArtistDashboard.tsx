@@ -23,6 +23,8 @@ interface DashboardStats {
   tasks: number;
   events: number;
   publications: number;
+  contactLists: number;
+  campaigns: number;
 }
 
 export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
@@ -32,7 +34,9 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
     opportunities: 0,
     tasks: 0,
     events: 0,
-    publications: 0
+    publications: 0,
+    contactLists: 0,
+    campaigns: 0
   });
   const [contacts, setContacts] = useState<any[]>([]);
   const [quotes, setQuotes] = useState<any[]>([]);
@@ -40,6 +44,8 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
   const [tasks, setTasks] = useState<any[]>([]);
   const [events, setEvents] = useState<any[]>([]);
   const [publications, setPublications] = useState<any[]>([]);
+  const [contactLists, setContactLists] = useState<any[]>([]);
+  const [campaigns, setCampaigns] = useState<any[]>([]);
   
   // Dialog states
   const [selectedContact, setSelectedContact] = useState<any>(null);
@@ -227,14 +233,32 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
         }
       }
 
-      // Fetch artist publications
+      // Fetch artist publications using artist_id
       const { data: publicationsData } = await supabase
         .from('publications')
         .select('*')
         .eq('user_id', user.id)
-        .ilike('title', `%${artist.name}%`);
+        .eq('artist_id', artist.id);
 
       console.log('Publications fetched:', publicationsData?.length);
+
+      // Fetch contact lists linked to artist
+      const { data: contactListsData } = await supabase
+        .from('contact_lists')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('artist_id', artist.id);
+      
+      console.log('Contact lists fetched:', contactListsData?.length);
+
+      // Fetch email campaigns linked to artist
+      const { data: campaignsData } = await supabase
+        .from('email_campaigns')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('artist_id', artist.id);
+      
+      console.log('Campaigns fetched:', campaignsData?.length);
 
       // Fetch quotes linked via artist_id
       const { data: quotesData } = await supabase
@@ -250,6 +274,8 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
       setTasks(tasksData || []);
       setPublications(publicationsData || []);
       setQuotes(quotesData || []);
+      setContactLists(contactListsData || []);
+      setCampaigns(campaignsData || []);
 
       setStats({
         contacts: contactsData?.length || 0,
@@ -257,7 +283,9 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
         opportunities: opportunitiesData.length,
         tasks: tasksData?.length || 0,
         events: eventsData.length,
-        publications: publicationsData?.length || 0
+        publications: publicationsData?.length || 0,
+        contactLists: contactListsData?.length || 0,
+        campaigns: campaignsData?.length || 0
       });
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -344,6 +372,32 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
             </p>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Listes de contacts</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.contactLists}</div>
+            <p className="text-xs text-muted-foreground">
+              Listes dédiées
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Campagnes email</CardTitle>
+            <Mail className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.campaigns}</div>
+            <p className="text-xs text-muted-foreground">
+              Campagnes créées
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
       <Tabs defaultValue="contacts" className="space-y-4">
@@ -354,6 +408,8 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
           <TabsTrigger value="events">Événements</TabsTrigger>
           <TabsTrigger value="tasks">Tâches</TabsTrigger>
           <TabsTrigger value="publications">Publications</TabsTrigger>
+          <TabsTrigger value="lists">Listes</TabsTrigger>
+          <TabsTrigger value="campaigns">Campagnes</TabsTrigger>
         </TabsList>
 
         <TabsContent value="contacts" className="space-y-4">
@@ -522,6 +578,64 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
                         <p className="text-sm text-muted-foreground">{pub.platform}</p>
                       </div>
                       <Badge>{pub.status}</Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="lists" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Listes de contacts liées</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {contactLists.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Aucune liste liée à cet artiste</p>
+              ) : (
+                <div className="space-y-4">
+                  {contactLists.map((list: any) => (
+                    <div 
+                      key={list.id} 
+                      className="flex items-center justify-between border-b pb-2 rounded p-2"
+                    >
+                      <div>
+                        <p className="font-medium">{list.name}</p>
+                        <p className="text-sm text-muted-foreground">{list.description}</p>
+                      </div>
+                      <Badge variant="secondary">
+                        {new Date(list.created_at).toLocaleDateString('fr-FR')}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="campaigns" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Campagnes email liées</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {campaigns.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Aucune campagne liée à cet artiste</p>
+              ) : (
+                <div className="space-y-4">
+                  {campaigns.map((campaign: any) => (
+                    <div 
+                      key={campaign.id} 
+                      className="flex items-center justify-between border-b pb-2 rounded p-2"
+                    >
+                      <div>
+                        <p className="font-medium">{campaign.name}</p>
+                        <p className="text-sm text-muted-foreground">{campaign.subject}</p>
+                      </div>
+                      <Badge>{campaign.status}</Badge>
                     </div>
                   ))}
                 </div>

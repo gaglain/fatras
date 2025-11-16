@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { MediaUpload } from '@/components/MediaUpload';
+import { UniversalSearch, SearchItem } from '@/components/UniversalSearch';
 import { X } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -20,6 +21,8 @@ interface PublicationFormData {
   media_url: string;
   media_type: 'image' | 'video';
   external_link: string;
+  artist_id?: string;
+  event_id?: string;
 }
 
 interface PublicationFormMultiPlatformProps {
@@ -55,11 +58,15 @@ export const PublicationFormMultiPlatform: React.FC<PublicationFormMultiPlatform
     assigned_to: '',
     media_url: '',
     media_type: 'image',
-    external_link: ''
+    external_link: '',
+    artist_id: undefined,
+    event_id: undefined
   });
 
   const [errors, setErrors] = useState<Partial<PublicationFormData>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedArtist, setSelectedArtist] = useState<SearchItem | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<SearchItem | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -72,8 +79,12 @@ export const PublicationFormMultiPlatform: React.FC<PublicationFormMultiPlatform
         assigned_to: initialData.assigned_to || '',
         media_url: initialData.media_url || '',
         media_type: initialData.media_type || 'image',
-        external_link: initialData.external_link || ''
+        external_link: initialData.external_link || '',
+        artist_id: initialData.artist_id,
+        event_id: initialData.event_id
       });
+      setSelectedArtist(null);
+      setSelectedEvent(null);
       setErrors({});
       setIsSubmitting(false);
     }
@@ -317,6 +328,58 @@ export const PublicationFormMultiPlatform: React.FC<PublicationFormMultiPlatform
               onChange={(e) => handleInputChange('external_link', e.target.value)}
               placeholder="https://..."
             />
+          </div>
+
+          <div>
+            <Label>Lier à un artiste (optionnel)</Label>
+            {selectedArtist ? (
+              <div className="flex items-center gap-2 p-2 border rounded-lg bg-muted/30">
+                <Badge variant="secondary" className="flex-1">
+                  {selectedArtist.title}
+                </Badge>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedArtist(null)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <UniversalSearch
+                filterTypes={['artist']}
+                placeholder="Rechercher un artiste..."
+                triggerText="Sélectionner un artiste"
+                onSelect={(item) => setSelectedArtist(item)}
+              />
+            )}
+          </div>
+
+          <div>
+            <Label>Lier à un spectacle (optionnel)</Label>
+            {selectedEvent ? (
+              <div className="flex items-center gap-2 p-2 border rounded-lg bg-muted/30">
+                <Badge variant="secondary" className="flex-1">
+                  {selectedEvent.title}
+                </Badge>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedEvent(null)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <UniversalSearch
+                filterTypes={['event']}
+                placeholder="Rechercher un spectacle..."
+                triggerText="Sélectionner un spectacle"
+                onSelect={(item) => setSelectedEvent(item)}
+              />
+            )}
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">
