@@ -100,8 +100,36 @@ export const ContactDetail: React.FC = () => {
     if (!id) return;
     
     console.log('🔍 Chargement des connexions pour le contact:', id);
-    const data = await getContactConnections(id);
-    console.log('📊 Données de connexions reçues:', data);
+    let data = await getContactConnections(id);
+
+    // Fallback: si tout est vide, interroger directement les tables (évite un éventuel souci de RLS sur les tables de liaison)
+    const isAllEmpty = !data || ['events','opportunities','quotes','tasks','roadshow_stops']
+      .every((k) => (data as any)[k]?.length === 0);
+
+    if (isAllEmpty) {
+      try {
+        const [eventsRes, oppsRes] = await Promise.all([
+          supabase.from('events').select('id, title, status, start_date').eq('contact_id', id),
+          supabase.from('opportunities').select('id, title, status, date').eq('contact_id', id),
+        ]);
+
+        console.log('🧪 Fallback résultats:', { eventsRes, oppsRes });
+
+        data = {
+          events: eventsRes.data?.map((e: any) => ({ id: e.id, entity_type: 'event', entity_id: e.id, title: e.title, status: e.status, date: e.start_date })) || [],
+          opportunities: oppsRes.data?.map((o: any) => ({ id: o.id, entity_type: 'opportunity', entity_id: o.id, title: o.title, status: o.status, date: o.date })) || [],
+          quotes: [],
+          tasks: [],
+          artists: [],
+          roadshow_stops: [],
+          contacts: []
+        } as any;
+      } catch (e) {
+        console.error('❌ Fallback error:', e);
+      }
+    }
+
+    console.log('📊 Données de connexions reçues (avec fallback):', data);
     setConnections(data);
   };
 
