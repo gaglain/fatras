@@ -1037,6 +1037,7 @@ export type Database = {
       }
       email_campaigns: {
         Row: {
+          artist_id: string | null
           auto_send: boolean | null
           bounced_count: number | null
           click_rate: number | null
@@ -1044,6 +1045,7 @@ export type Database = {
           content: string
           created_at: string
           delivered_count: number | null
+          event_id: string | null
           id: string
           name: string
           open_rate: number | null
@@ -1061,6 +1063,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          artist_id?: string | null
           auto_send?: boolean | null
           bounced_count?: number | null
           click_rate?: number | null
@@ -1068,6 +1071,7 @@ export type Database = {
           content: string
           created_at?: string
           delivered_count?: number | null
+          event_id?: string | null
           id?: string
           name: string
           open_rate?: number | null
@@ -1085,6 +1089,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          artist_id?: string | null
           auto_send?: boolean | null
           bounced_count?: number | null
           click_rate?: number | null
@@ -1092,6 +1097,7 @@ export type Database = {
           content?: string
           created_at?: string
           delivered_count?: number | null
+          event_id?: string | null
           id?: string
           name?: string
           open_rate?: number | null
@@ -1108,7 +1114,22 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "email_campaigns_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "centralized_artists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_campaigns_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       email_contacts: {
         Row: {
@@ -2297,11 +2318,13 @@ export type Database = {
       }
       publications: {
         Row: {
+          artist_id: string | null
           assigned_to: string | null
           assigned_username: string | null
           content: string
           created_at: string
           created_by: string
+          event_id: string | null
           external_link: string | null
           id: string
           media_type: string | null
@@ -2314,11 +2337,13 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          artist_id?: string | null
           assigned_to?: string | null
           assigned_username?: string | null
           content: string
           created_at?: string
           created_by: string
+          event_id?: string | null
           external_link?: string | null
           id?: string
           media_type?: string | null
@@ -2331,11 +2356,13 @@ export type Database = {
           user_id: string
         }
         Update: {
+          artist_id?: string | null
           assigned_to?: string | null
           assigned_username?: string | null
           content?: string
           created_at?: string
           created_by?: string
+          event_id?: string | null
           external_link?: string | null
           id?: string
           media_type?: string | null
@@ -2347,7 +2374,22 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "publications_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "centralized_artists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "publications_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       quote_events: {
         Row: {
