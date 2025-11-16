@@ -99,21 +99,34 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
             {(previewUrl || currentMedia) && (
               <div className="flex items-center justify-center bg-background rounded border p-4">
                 {mediaType === 'image' ? (
-                  <img 
-                    src={previewUrl || currentMedia} 
-                    alt="Aperçu" 
-                    className="max-w-full max-h-48 object-contain rounded"
-                    onLoad={() => console.log('✅ Image loaded successfully')}
-                    onError={(e) => {
-                      console.error('❌ Image load error:', previewUrl || currentMedia);
-                    }}
-                  />
+                  previewUrl || currentMedia ? (
+                    <img 
+                      src={previewUrl || currentMedia} 
+                      alt="Aperçu" 
+                      className="max-w-full max-h-48 object-contain rounded"
+                      onLoad={() => console.log('✅ Image loaded successfully')}
+                      onError={() => {
+                        console.warn('❌ Aperçu indisponible, URL invalide ou expirée');
+                        setPreviewUrl(null);
+                      }}
+                    />
+                  ) : (
+                    <div className="text-sm text-muted-foreground">Aucun média à prévisualiser</div>
+                  )
                 ) : (
-                  <video 
-                    src={previewUrl || currentMedia}
-                    className="max-w-full max-h-48 rounded"
-                    controls
-                  />
+                  (previewUrl || currentMedia) ? (
+                    <video 
+                      src={previewUrl || currentMedia}
+                      className="max-w-full max-h-48 rounded"
+                      controls
+                      onError={() => {
+                        console.warn('❌ Aperçu vidéo indisponible');
+                        setPreviewUrl(null);
+                      }}
+                    />
+                  ) : (
+                    <div className="text-sm text-muted-foreground">Aucune vidéo à prévisualiser</div>
+                  )
                 )}
               </div>
             )}
@@ -124,6 +137,18 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
             <span className="text-sm text-green-700 flex-1">
               {mediaType === 'image' ? 'Image' : 'Vidéo'} téléchargée avec succès
             </span>
+            {(previewUrl || currentMedia) ? (
+              <a
+                href={previewUrl || currentMedia || '#'}
+                target="_blank"
+                rel="noreferrer"
+                className="text-sm underline"
+              >
+                Ouvrir
+              </a>
+            ) : (
+              <span className="text-sm text-amber-600">Aperçu indisponible (ancien lien). Remplacez le média.</span>
+            )}
             <Button
               type="button"
               variant="ghost"
