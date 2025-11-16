@@ -197,23 +197,23 @@ export const SocialBlock: React.FC<SocialBlockProps> = ({ content, onChange }) =
       >
         {enabledPlatforms.length > 0 ? (
           <div className="flex items-center gap-3" style={{ justifyContent: content.align === 'left' ? 'flex-start' : content.align === 'right' ? 'flex-end' : 'center' }}>
-            {enabledPlatforms.map((platform) => (
-              <a
-                key={platform.type}
-                href={platform.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center rounded-full hover:opacity-80 transition-opacity"
-                style={{ 
-                  width: `${content.iconSize}px`,
-                  height: `${content.iconSize}px`,
-                  backgroundColor: platform.color || platformColors[platform.type],
-                  color: 'white'
-                }}
-              >
-                {renderLogo(platform.type, Math.max(10, Math.round(content.iconSize * 0.5)))}
-              </a>
-            ))}
+              {enabledPlatforms.map((platform) => (
+                <a
+                  key={platform.type}
+                  href={platform.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center hover:opacity-80 transition-opacity"
+                  style={{ 
+                    lineHeight: 0,
+                    color: platform.color || platformColors[platform.type]
+                  }}
+                  aria-label={`Ouvrir ${platform.type}`}
+                >
+                  {renderLogo(platform.type, Math.max(16, content.iconSize))}
+                  <span className="sr-only">{`Ouvrir ${platform.type}`}</span>
+                </a>
+              ))}
           </div>
         ) : (
           <div className="text-center text-gray-500 py-4">
