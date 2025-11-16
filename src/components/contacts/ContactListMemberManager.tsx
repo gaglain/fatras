@@ -16,13 +16,15 @@ interface ContactListMemberManagerProps {
   listName: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  embedded?: boolean;
 }
 
 export const ContactListMemberManager: React.FC<ContactListMemberManagerProps> = ({
   listId,
   listName,
   open,
-  onOpenChange
+  onOpenChange,
+  embedded = false
 }) => {
   const { contacts, getContactsInList, updateContactList } = useContactLists();
   const [loading, setLoading] = useState(false);
@@ -194,9 +196,9 @@ export const ContactListMemberManager: React.FC<ContactListMemberManagerProps> =
   const addedCount = selectedContacts.filter(id => !currentMembers.includes(id)).length;
   const removedCount = currentMembers.filter(id => !selectedContacts.includes(id)).length;
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
+  const content = (
+    <>
+      {!embedded && (
         <DialogHeader>
           <DialogTitle>Gérer les contacts - {listName}</DialogTitle>
           <p className="text-sm text-muted-foreground">
@@ -210,6 +212,23 @@ export const ContactListMemberManager: React.FC<ContactListMemberManagerProps> =
             )}
           </p>
         </DialogHeader>
+      )}
+
+      {embedded && (
+        <div className="mb-4 p-4 bg-muted/30 rounded-lg border">
+          <h3 className="font-semibold mb-1">Membres de la liste</h3>
+          <p className="text-sm text-muted-foreground">
+            {selectedCount} contact{selectedCount > 1 ? 's' : ''} sélectionné{selectedCount > 1 ? 's' : ''}
+            {(addedCount > 0 || removedCount > 0) && (
+              <span className="ml-2 text-primary font-medium">
+                ({addedCount > 0 && `+${addedCount}`}
+                {addedCount > 0 && removedCount > 0 && ', '}
+                {removedCount > 0 && `-${removedCount}`})
+              </span>
+            )}
+          </p>
+        </div>
+      )}
 
         <div className="space-y-4 flex-1 overflow-hidden flex flex-col">
           {/* Barre de recherche et actions */}
@@ -442,17 +461,28 @@ export const ContactListMemberManager: React.FC<ContactListMemberManagerProps> =
             disabled={saving}
             className="flex-1"
           >
-            Annuler
-          </Button>
-          <Button
-            onClick={handleSave}
-            disabled={saving || loading}
-            className="flex-1"
-          >
-            {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Enregistrer
-          </Button>
-        </div>
+          Annuler
+        </Button>
+        <Button
+          onClick={handleSave}
+          disabled={saving || loading}
+          className="flex-1"
+        >
+          {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Enregistrer
+        </Button>
+      </div>
+    </>
+  );
+
+  if (embedded) {
+    return <div className="space-y-4 flex flex-col h-full">{content}</div>;
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
+        {content}
       </DialogContent>
     </Dialog>
   );
