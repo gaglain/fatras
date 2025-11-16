@@ -44,21 +44,21 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
     try {
       const fileType: 'image' | 'video' = file.type.startsWith('image/') ? 'image' : 'video';
 
-      // Upload réel vers Supabase Storage (bucket public publication-media)
+      // Upload vers Supabase Storage (bucket public publication-media)
       const result = await uploadFile(
         file,
         'publication-media',
         fileType === 'image' ? 'images' : 'videos'
       );
 
+      console.log('✅ Upload success, public URL:', result.url);
       setPreviewUrl(result.url);
       setMediaType(fileType);
-      console.log('📸 Preview set to uploaded URL:', result.url);
 
       onMediaUploaded(result.url, fileType);
       toast.success(`${fileType === 'image' ? 'Image' : 'Vidéo'} téléchargée avec succès !`);
     } catch (error) {
-      console.error('Erreur upload:', error);
+      console.error('❌ Upload error:', error);
       toast.error('Erreur lors du téléchargement');
     }
   };
