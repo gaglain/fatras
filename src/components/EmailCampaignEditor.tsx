@@ -10,6 +10,7 @@ import { EmailBlock } from '@/components/EmailEditor/types';
 import { toast } from 'sonner';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { supabase } from '@/integrations/supabase/client';
+import { UniversalSearch } from '@/components/UniversalSearch';
 
 interface EmailCampaign {
   id: string;
@@ -20,6 +21,8 @@ interface EmailCampaign {
   status: 'draft' | 'scheduled' | 'sent';
   scheduledDate?: string;
   attachments?: Array<{name: string; url: string}>;
+  artist_id?: string | null;
+  event_id?: string | null;
 }
 
 interface ContactList {
@@ -45,6 +48,8 @@ export const EmailCampaignEditor: React.FC<EmailCampaignEditorProps> = ({
   const [attachments, setAttachments] = useState<File[]>([]);
   const { isUploading } = useFileUpload();
   const [uploading, setUploading] = useState(false);
+  const [selectedArtist, setSelectedArtist] = useState<any>(null);
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
 
   const handleSave = () => {
     if (!editedCampaign.name.trim() || !editedCampaign.subject.trim()) {
@@ -57,7 +62,13 @@ export const EmailCampaignEditor: React.FC<EmailCampaignEditorProps> = ({
       return;
     }
 
-    onSave(editedCampaign);
+    const campaignToSave = {
+      ...editedCampaign,
+      artist_id: selectedArtist?.id || null,
+      event_id: selectedEvent?.id || null
+    };
+
+    onSave(campaignToSave);
     toast.success('Campagne sauvegardée');
   };
 
@@ -133,7 +144,9 @@ export const EmailCampaignEditor: React.FC<EmailCampaignEditorProps> = ({
 
       const campaignWithAttachments = {
         ...editedCampaign,
-        attachments: attachmentUrls.length > 0 ? attachmentUrls : editedCampaign.attachments
+        attachments: attachmentUrls.length > 0 ? attachmentUrls : editedCampaign.attachments,
+        artist_id: selectedArtist?.id || null,
+        event_id: selectedEvent?.id || null
       };
 
       onSave(campaignWithAttachments);
@@ -198,6 +211,49 @@ export const EmailCampaignEditor: React.FC<EmailCampaignEditorProps> = ({
                   onChange={(e) => setEditedCampaign({ ...editedCampaign, subject: e.target.value })}
                   placeholder="ex: Nos nouveautés du mois"
                 />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Artiste (optionnel)</label>
+                <UniversalSearch
+                  onSelect={(result) => setSelectedArtist(result)}
+                  placeholder="Rechercher un artiste..."
+                  filterTypes={['artist']}
+                />
+                {selectedArtist && (
+                  <div className="mt-2 p-2 bg-muted rounded-md flex items-center justify-between">
+                    <span className="text-sm">{selectedArtist.name}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedArtist(null)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Spectacle (optionnel)</label>
+                <UniversalSearch
+                  onSelect={(result) => setSelectedEvent(result)}
+                  placeholder="Rechercher un spectacle..."
+                  filterTypes={['event']}
+                />
+                {selectedEvent && (
+                  <div className="mt-2 p-2 bg-muted rounded-md flex items-center justify-between">
+                    <span className="text-sm">{selectedEvent.name}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedEvent(null)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
 
