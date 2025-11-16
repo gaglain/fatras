@@ -102,9 +102,9 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
       <Label>Média (image ou vidéo)</Label>
       
       {(currentMedia || previewUrl) ? (
-        <div className="relative">
+        <div className="space-y-3">
           {/* Aperçu du média */}
-          <div className="mb-3 p-3 bg-muted rounded-lg border">
+          <div className="p-3 bg-muted rounded-lg border">
             {(previewUrl || currentMedia) && (
               <div className="flex items-center justify-center bg-background rounded border p-4">
                 {mediaType === 'image' ? (
@@ -141,32 +141,62 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
             )}
           </div>
           
-          <div className="flex items-center space-x-2 p-3 bg-green-50 rounded-lg border border-green-200">
-            <Image className="h-5 w-5 text-green-600" />
-            <span className="text-sm text-green-700 flex-1">
-              {mediaType === 'image' ? 'Image' : 'Vidéo'} téléchargée avec succès
-            </span>
-            {(previewUrl || currentMedia) ? (
-              <a
-                href={previewUrl || currentMedia || '#'}
-                target="_blank"
-                rel="noreferrer"
-                className="text-sm underline"
+          <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+            <div className="flex items-center gap-2">
+              <Image className="h-5 w-5 text-green-600" />
+              <span className="text-sm text-green-700">
+                {mediaType === 'image' ? 'Image' : 'Vidéo'} téléchargée
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              {(previewUrl || currentMedia) && (
+                <a
+                  href={previewUrl || currentMedia || '#'}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-sm text-blue-600 hover:text-blue-700 underline"
+                >
+                  Ouvrir
+                </a>
+              )}
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleRemove}
+                className="text-red-600 hover:text-red-700 h-8 px-2"
               >
-                Ouvrir
-              </a>
-            ) : (
-              <span className="text-sm text-amber-600">Aperçu indisponible (ancien lien). Remplacez le média.</span>
-            )}
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Options de remplacement */}
+          <div className="flex flex-col gap-2">
+            <Input
+              type="file"
+              accept="image/*,video/*"
+              onChange={handleFileSelect}
+              disabled={isUploading}
+              className="hidden"
+              id="media-replace"
+            />
             <Button
               type="button"
-              variant="ghost"
-              size="sm"
-              onClick={handleRemove}
-              className="text-red-600 hover:text-red-700"
+              variant="outline"
+              disabled={isUploading}
+              onClick={() => document.getElementById('media-replace')?.click()}
+              className="w-full"
             >
-              <X className="h-4 w-4" />
+              <Upload className="h-4 w-4 mr-2" />
+              {isUploading ? 'Téléchargement...' : 'Remplacer par un autre fichier'}
             </Button>
+            
+            <ImageGalleryPicker
+              onSelect={handleLibrarySelect}
+              buttonText="Remplacer depuis la bibliothèque"
+              acceptedTypes={['image', 'video']}
+            />
           </div>
         </div>
       ) : (

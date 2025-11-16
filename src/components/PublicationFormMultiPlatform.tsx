@@ -112,6 +112,12 @@ export const PublicationFormMultiPlatform: React.FC<PublicationFormMultiPlatform
       return;
     }
     
+    // Bloquer les blob: URLs qui ne sont pas persistantes
+    if (formData.media_url && formData.media_url.startsWith('blob:')) {
+      toast.error('Le média n\'a pas été correctement téléchargé. Veuillez le charger à nouveau.');
+      return;
+    }
+    
     setIsSubmitting(true);
     
     try {
