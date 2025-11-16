@@ -108,18 +108,20 @@ export const ContactDetail: React.FC = () => {
 
     if (isAllEmpty) {
       try {
-        const [eventsRes, oppsRes] = await Promise.all([
+        const [eventsRes, oppsRes, quotesRes, tasksRes] = await Promise.all([
           supabase.from('events').select('id, title, status, start_date').eq('contact_id', id),
           supabase.from('opportunities').select('id, title, status, date').eq('contact_id', id),
+          supabase.from('quotes').select('id, title, status, created_at').eq('contact_id', id),
+          supabase.from('tasks').select('id, title, status, due_date').eq('contact_id', id),
         ]);
 
-        console.log('🧪 Fallback résultats:', { eventsRes, oppsRes });
+        console.log('🧪 Fallback résultats:', { eventsRes, oppsRes, quotesRes, tasksRes });
 
         data = {
           events: eventsRes.data?.map((e: any) => ({ id: e.id, entity_type: 'event', entity_id: e.id, title: e.title, status: e.status, date: e.start_date })) || [],
           opportunities: oppsRes.data?.map((o: any) => ({ id: o.id, entity_type: 'opportunity', entity_id: o.id, title: o.title, status: o.status, date: o.date })) || [],
-          quotes: [],
-          tasks: [],
+          quotes: quotesRes.data?.map((q: any) => ({ id: q.id, entity_type: 'quote', entity_id: q.id, title: q.title, status: q.status, date: q.created_at })) || [],
+          tasks: tasksRes.data?.map((t: any) => ({ id: t.id, entity_type: 'task', entity_id: t.id, title: t.title, status: t.status, date: t.due_date })) || [],
           artists: [],
           roadshow_stops: [],
           contacts: []
