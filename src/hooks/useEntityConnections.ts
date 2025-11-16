@@ -94,12 +94,12 @@ export const useEntityConnections = () => {
           .select('roadshow_stop_id, role, roadshow_stops(id, city, status, event_date)')
           .eq('contact_id', contactId),
 
-        // Événements via table de liaison contact_events
+        // Événements via table de liaison contact_events (centralized_events)
         supabase
           .from('contact_events')
           .select(`
             event_id,
-            events!inner(id, title, status, start_date)
+            centralized_events!inner(id, title, status, start_date)
           `)
           .eq('contact_id', contactId),
 
@@ -154,33 +154,23 @@ export const useEntityConnections = () => {
         });
       }
 
-      // Traiter les événements via liaison
+      // Traiter les événements via liaison (supporte centralized_events)
       if (eventsMapRes.data && !eventsMapRes.error) {
         eventsMapRes.data.forEach((item: any) => {
-          if (item.events && Array.isArray(item.events) && item.events.length > 0) {
-            const event = item.events[0];
-            if (event && !eventMap.has(event.id)) {
-              eventMap.set(event.id, {
-                id: event.id,
-                entity_type: 'event',
-                entity_id: event.id,
-                title: event.title,
-                status: event.status,
-                date: event.start_date
-              });
-            }
-          } else if (item.events && typeof item.events === 'object') {
-            const event = item.events;
-            if (!eventMap.has(event.id)) {
-              eventMap.set(event.id, {
-                id: event.id,
-                entity_type: 'event',
-                entity_id: event.id,
-                title: event.title,
-                status: event.status,
-                date: event.start_date
-              });
-            }
+          // Normaliser l'événement joint (peut être centralized_events ou events selon la relation)
+          const ev = Array.isArray(item.centralized_events)
+            ? item.centralized_events[0]
+            : (item.centralized_events || (Array.isArray(item.events) ? item.events[0] : item.events));
+
+          if (ev && !eventMap.has(ev.id)) {
+            eventMap.set(ev.id, {
+              id: ev.id,
+              entity_type: 'event',
+              entity_id: ev.id,
+              title: ev.title,
+              status: ev.status,
+              date: ev.start_date
+            });
           }
         });
       }
