@@ -22,13 +22,13 @@ export const ContactRelatedEntities: React.FC<ContactRelatedEntitiesProps> = ({ 
     roadshow_stops: []
   });
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
   useEffect(() => {
     let isSubscribed = true;
 
     const loadData = async () => {
-      if (contact.id && isSubscribed) {
+      if (!authLoading && contact.id && isSubscribed) {
         const data = await getContactConnections(contact.id);
         if (isSubscribed) setConnections(data);
       }
@@ -39,7 +39,7 @@ export const ContactRelatedEntities: React.FC<ContactRelatedEntitiesProps> = ({ 
     return () => {
       isSubscribed = false;
     };
-  }, [contact.id]);
+  }, [contact.id, authLoading, user?.id]);
 
   const loadConnections = async () => {
     if (!contact.id) return;
