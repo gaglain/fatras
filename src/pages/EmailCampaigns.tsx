@@ -80,6 +80,8 @@ export const EmailCampaigns: React.FC = () => {
             name: campaignData.name,
             subject: campaignData.subject,
             content: JSON.stringify(campaignData.blocks),
+            artist_id: campaignData.artist_id || null,
+            event_id: campaignData.event_id || null,
           })
           .eq('id', selectedCampaign.id);
 
@@ -97,6 +99,8 @@ export const EmailCampaigns: React.FC = () => {
             subject: campaignData.subject,
             status: 'draft',
             content: JSON.stringify(campaignData.blocks),
+            artist_id: campaignData.artist_id || null,
+            event_id: campaignData.event_id || null,
             user_id: user.id
           });
 

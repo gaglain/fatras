@@ -11,6 +11,7 @@ import { MediaUpload } from '@/components/MediaUpload';
 import { UniversalSearch, SearchItem } from '@/components/UniversalSearch';
 import { X } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface PublicationFormData {
   title: string;
@@ -69,25 +70,70 @@ export const PublicationFormMultiPlatform: React.FC<PublicationFormMultiPlatform
   const [selectedEvent, setSelectedEvent] = useState<SearchItem | null>(null);
 
   useEffect(() => {
-    if (isOpen) {
-      console.log('📝 Loading form with initialData:', initialData);
-      setFormData({
-        title: initialData.title || '',
-        content: initialData.content || '',
-        scheduled_date: initialData.scheduled_date || '',
-        platforms: initialData.platforms || [],
-        assigned_to: initialData.assigned_to || '',
-        media_url: initialData.media_url || '',
-        media_type: initialData.media_type || 'image',
-        external_link: initialData.external_link || '',
-        artist_id: initialData.artist_id,
-        event_id: initialData.event_id
-      });
-      setSelectedArtist(null);
-      setSelectedEvent(null);
-      setErrors({});
-      setIsSubmitting(false);
-    }
+    const loadData = async () => {
+      if (isOpen) {
+        console.log('📝 Loading form with initialData:', initialData);
+        setFormData({
+          title: initialData.title || '',
+          content: initialData.content || '',
+          scheduled_date: initialData.scheduled_date || '',
+          platforms: initialData.platforms || [],
+          assigned_to: initialData.assigned_to || '',
+          media_url: initialData.media_url || '',
+          media_type: initialData.media_type || 'image',
+          external_link: initialData.external_link || '',
+          artist_id: initialData.artist_id,
+          event_id: initialData.event_id
+        });
+        
+        // Load artist if artist_id is present
+        if (initialData.artist_id) {
+          const { data: artist } = await supabase
+            .from('centralized_artists')
+            .select('id, name')
+            .eq('id', initialData.artist_id)
+            .single();
+          
+          if (artist) {
+            setSelectedArtist({
+              id: artist.id,
+              title: artist.name,
+              type: 'artist',
+              subtitle: '',
+              data: artist
+            });
+          }
+        } else {
+          setSelectedArtist(null);
+        }
+
+        // Load event if event_id is present
+        if (initialData.event_id) {
+          const { data: event } = await supabase
+            .from('events')
+            .select('id, title')
+            .eq('id', initialData.event_id)
+            .single();
+          
+          if (event) {
+            setSelectedEvent({
+              id: event.id,
+              title: event.title,
+              type: 'event',
+              subtitle: '',
+              data: event
+            });
+          }
+        } else {
+          setSelectedEvent(null);
+        }
+        
+        setErrors({});
+        setIsSubmitting(false);
+      }
+    };
+
+    loadData();
   }, [isOpen, isEditing]);
 
   const validateForm = (): boolean => {
@@ -132,7 +178,13 @@ export const PublicationFormMultiPlatform: React.FC<PublicationFormMultiPlatform
     setIsSubmitting(true);
     
     try {
-      await onSubmit(formData);
+      const dataToSubmit = {
+        ...formData,
+        artist_id: selectedArtist?.id || null,
+        event_id: selectedEvent?.id || null
+      };
+      
+      await onSubmit(dataToSubmit);
       
       setFormData({
         title: '',
@@ -142,8 +194,12 @@ export const PublicationFormMultiPlatform: React.FC<PublicationFormMultiPlatform
         assigned_to: '',
         media_url: '',
         media_type: 'image',
-        external_link: ''
+        external_link: '',
+        artist_id: undefined,
+        event_id: undefined
       });
+      setSelectedArtist(null);
+      setSelectedEvent(null);
       
       toast.success(isEditing ? 'Publication modifiée avec succès' : 'Publication créée avec succès');
     } catch (error) {
