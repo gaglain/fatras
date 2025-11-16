@@ -211,22 +211,10 @@ export const ArtistDetailPage: React.FC = () => {
                 className="w-32 h-32 rounded-lg object-cover"
               />
               <div className="flex-1">
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Spectacles à venir</p>
-                    <p className="text-2xl font-bold">{artist.upcoming_shows}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Total spectacles</p>
-                    <p className="text-2xl font-bold">{artist.total_shows}</p>
-                  </div>
-                  {artist.rating && (
-                    <div>
-                      <p className="text-sm text-muted-foreground">Note</p>
-                      <p className="text-2xl font-bold">{artist.rating}/5</p>
-                    </div>
-                  )}
-                </div>
+                <h3 className="text-lg font-semibold mb-2">{artist.name}</h3>
+                {artist.bio && (
+                  <p className="text-sm text-muted-foreground line-clamp-3">{artist.bio}</p>
+                )}
               </div>
             </div>
           </CardContent>
