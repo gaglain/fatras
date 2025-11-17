@@ -15,7 +15,7 @@ import { LogoutButton } from '@/components/ui/logout-button';
  
 export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
   const { currentUser } = useUser();
-  const { user: authUser } = useAuth();
+  const { user: authUser } = useAuthContext();
   const { updateUserProfile, loading, fetchUsers } = useUserManagement();
   const [isEditing, setIsEditing] = useState(false);
 

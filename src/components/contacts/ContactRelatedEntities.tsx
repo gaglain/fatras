@@ -22,7 +22,7 @@ export const ContactRelatedEntities: React.FC<ContactRelatedEntitiesProps> = ({ 
     roadshow_stops: []
   });
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useAuthContext();
 
   useEffect(() => {
     let isSubscribed = true;
