@@ -5,28 +5,49 @@ import { Users, Calendar, FileText, TrendingUp } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-export const DashboardStats: React.FC = () => {
+interface DashboardStatsProps {
+  selectedArtist: string;
+}
+
+export const DashboardStats: React.FC<DashboardStatsProps> = ({ selectedArtist }) => {
   // Récupération des données réelles depuis Supabase avec refetch automatique
   const { data: contacts = [], refetch: refetchContacts } = useQuery({
-    queryKey: ['dashboard-contacts'],
+    queryKey: ['dashboard-contacts', selectedArtist],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('contacts')
-        .select('*');
+      let query = supabase.from('contacts').select('*');
       
+      if (selectedArtist !== 'all') {
+        // Filtrer les contacts liés à l'artiste via la table contact_artists
+        const { data: contactArtists } = await supabase
+          .from('contact_artists')
+          .select('contact_id')
+          .eq('artist_id', selectedArtist);
+        
+        const contactIds = contactArtists?.map(ca => ca.contact_id) || [];
+        if (contactIds.length > 0) {
+          query = query.in('id', contactIds);
+        } else {
+          return [];
+        }
+      }
+      
+      const { data, error } = await query;
       if (error) throw error;
       return data || [];
     },
-    refetchInterval: 30000, // Refetch every 30 seconds
+    refetchInterval: 30000,
   });
 
   const { data: events = [], refetch: refetchEvents } = useQuery({
-    queryKey: ['dashboard-events'],
+    queryKey: ['dashboard-events', selectedArtist],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('events')
-        .select('*');
+      let query = supabase.from('events').select('*');
       
+      if (selectedArtist !== 'all') {
+        query = query.eq('artist_id', selectedArtist);
+      }
+      
+      const { data, error } = await query;
       if (error) throw error;
       return data || [];
     },
@@ -34,12 +55,15 @@ export const DashboardStats: React.FC = () => {
   });
 
   const { data: quotes = [], refetch: refetchQuotes } = useQuery({
-    queryKey: ['dashboard-quotes'],
+    queryKey: ['dashboard-quotes', selectedArtist],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('quotes')
-        .select('*');
+      let query = supabase.from('quotes').select('*, events!inner(artist_id)');
       
+      if (selectedArtist !== 'all') {
+        query = query.eq('events.artist_id', selectedArtist);
+      }
+      
+      const { data, error } = await query;
       if (error) throw error;
       return data || [];
     },
@@ -47,12 +71,26 @@ export const DashboardStats: React.FC = () => {
   });
 
   const { data: opportunities = [] } = useQuery({
-    queryKey: ['dashboard-opportunities'],
+    queryKey: ['dashboard-opportunities', selectedArtist],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('opportunities')
-        .select('*');
+      let query = supabase.from('opportunities').select('*');
       
+      if (selectedArtist !== 'all') {
+        // Filtrer les opportunités liées à l'artiste via artist_opportunities
+        const { data: artistOpps } = await supabase
+          .from('artist_opportunities')
+          .select('opportunity_id')
+          .eq('artist_id', selectedArtist);
+        
+        const oppIds = artistOpps?.map(ao => ao.opportunity_id) || [];
+        if (oppIds.length > 0) {
+          query = query.in('id', oppIds);
+        } else {
+          return [];
+        }
+      }
+      
+      const { data, error } = await query;
       if (error) throw error;
       return data || [];
     },

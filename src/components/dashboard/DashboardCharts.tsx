@@ -25,10 +25,14 @@ const chartConfig = {
   },
 };
 
-export const DashboardCharts: React.FC = () => {
+interface DashboardChartsProps {
+  selectedArtist: string;
+}
+
+export const DashboardCharts: React.FC<DashboardChartsProps> = ({ selectedArtist }) => {
   // Données pour le graphique de revenus mensuels
   const { data: monthlyRevenue = [] } = useQuery({
-    queryKey: ['dashboard-monthly-revenue'],
+    queryKey: ['dashboard-monthly-revenue', selectedArtist],
     queryFn: async () => {
       const months = [];
       for (let i = 5; i >= 0; i--) {
@@ -36,12 +40,18 @@ export const DashboardCharts: React.FC = () => {
         const start = startOfMonth(date);
         const end = endOfMonth(date);
         
-        const { data: quotes, error } = await supabase
+        let query = supabase
           .from('quotes')
-          .select('total_amount, created_at')
+          .select('total_amount, created_at, events!inner(artist_id)')
           .gte('created_at', start.toISOString())
           .lte('created_at', end.toISOString())
           .eq('status', 'accepted');
+        
+        if (selectedArtist !== 'all') {
+          query = query.eq('events.artist_id', selectedArtist);
+        }
+        
+        const { data: quotes, error } = await query;
         
         if (error) throw error;
         
@@ -58,7 +68,7 @@ export const DashboardCharts: React.FC = () => {
 
   // Données pour l'activité hebdomadaire
   const { data: weeklyActivity = [] } = useQuery({
-    queryKey: ['dashboard-weekly-activity'],
+    queryKey: ['dashboard-weekly-activity', selectedArtist],
     queryFn: async () => {
       const days = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
       const weekData = [];
@@ -70,11 +80,17 @@ export const DashboardCharts: React.FC = () => {
         const dayEnd = new Date(date.setHours(23, 59, 59, 999));
         
         // Compter les événements du jour
-        const { data: events } = await supabase
+        let eventsQuery = supabase
           .from('events')
           .select('id')
           .gte('created_at', dayStart.toISOString())
           .lte('created_at', dayEnd.toISOString());
+        
+        if (selectedArtist !== 'all') {
+          eventsQuery = eventsQuery.eq('artist_id', selectedArtist);
+        }
+        
+        const { data: events } = await eventsQuery;
           
         // Compter les contacts du jour
         const { data: contacts } = await supabase
@@ -96,11 +112,15 @@ export const DashboardCharts: React.FC = () => {
 
   // Données pour la répartition des statuts d'événements
   const { data: eventStatus = [] } = useQuery({
-    queryKey: ['dashboard-event-status'],
+    queryKey: ['dashboard-event-status', selectedArtist],
     queryFn: async () => {
-      const { data: events, error } = await supabase
-        .from('events')
-        .select('status');
+      let query = supabase.from('events').select('status');
+      
+      if (selectedArtist !== 'all') {
+        query = query.eq('artist_id', selectedArtist);
+      }
+      
+      const { data: events, error } = await query;
       
       if (error) throw error;
       
