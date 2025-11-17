@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -59,7 +59,7 @@ export const ModernEmailEditor: React.FC<ModernEmailEditorProps> = ({
   const [showPreview, setShowPreview] = useState(false);
 
   // Update blocks when initialBlocks changes (fixes empty content on edit)
-  React.useEffect(() => {
+  useEffect(() => {
     if (initialBlocks && initialBlocks.length > 0 && JSON.stringify(initialBlocks) !== JSON.stringify(blocks)) {
       setBlocks(initialBlocks);
     }

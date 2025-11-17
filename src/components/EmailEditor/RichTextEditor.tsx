@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { TextStyle } from '@tiptap/extension-text-style';
@@ -61,7 +61,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   });
 
   // Keep editor content in sync when switching between blocks
-  React.useEffect(() => {
+  useEffect(() => {
     if (editor && content !== editor.getHTML()) {
       editor.commands.setContent(content, { emitUpdate: false });
     }
