@@ -1,21 +1,39 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { DashboardStats } from './DashboardStats';
 import { DashboardCharts } from './DashboardCharts';
 import { OpportunityStatsCard } from './OpportunityStatsCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Calendar, Users, FileText, Mail } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Plus, Calendar, Users, FileText, Mail, Filter } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 export const DashboardHome: React.FC = () => {
+  const [selectedArtist, setSelectedArtist] = useState<string>('all');
+
+  // Charger la liste des artistes
+  const { data: artists = [] } = useQuery({
+    queryKey: ['dashboard-artists-filter'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('centralized_artists')
+        .select('id, name')
+        .order('name');
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
   return (
     <div className="space-y-3 sm:space-y-4 md:space-y-6 min-h-screen" style={{
       background: 'var(--custom-background, #ffffff)',
       color: 'var(--custom-text, #18181b)'
     }}>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <h1 className="text-2xl lg:text-3xl font-bold truncate" style={{
             color: 'var(--custom-text, #18181b)'
           }}>
@@ -27,7 +45,23 @@ export const DashboardHome: React.FC = () => {
             Bienvenue sur votre plateforme de booking d'artistes
           </p>
         </div>
-        <div className="flex w-full sm:w-auto">
+        
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
+          <Select value={selectedArtist} onValueChange={setSelectedArtist}>
+            <SelectTrigger className="w-full sm:w-[200px]">
+              <Filter className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="Filtrer par artiste" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous les artistes</SelectItem>
+              {artists.map(artist => (
+                <SelectItem key={artist.id} value={artist.id}>
+                  {artist.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
           <Link to="/events" className="w-full sm:w-auto">
             <Button className="back-office-button w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
@@ -39,10 +73,10 @@ export const DashboardHome: React.FC = () => {
       </div>
 
       {/* Stats Cards */}
-      <DashboardStats />
+      <DashboardStats selectedArtist={selectedArtist} />
 
       {/* Charts Section */}
-      <DashboardCharts />
+      <DashboardCharts selectedArtist={selectedArtist} />
       
       {/* Opportunity Stats */}
       <OpportunityStatsCard />
