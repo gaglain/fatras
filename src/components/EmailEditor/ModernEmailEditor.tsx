@@ -189,6 +189,7 @@ export const ModernEmailEditor: React.FC<ModernEmailEditorProps> = ({
             <div>
               <Label>Contenu</Label>
               <RichTextEditor
+                key={block.id}
                 content={block.content.html || ''}
                 onChange={(html) => updateBlock(block.id, { ...block.content, html })}
               />

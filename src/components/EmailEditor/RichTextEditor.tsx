@@ -60,6 +60,13 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     }
   });
 
+  // Keep editor content in sync when switching between blocks
+  React.useEffect(() => {
+    if (editor && content !== editor.getHTML()) {
+      editor.commands.setContent(content, { emitUpdate: false });
+    }
+  }, [content, editor]);
+
   if (!editor) {
     return null;
   }
