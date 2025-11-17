@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -26,6 +26,11 @@ interface FooterBlockProps {
 
 export const FooterBlock: React.FC<FooterBlockProps> = ({ content, onChange, isSelected = false }) => {
   const [showSettings, setShowSettings] = useState(false);
+  
+  // Sync settings panel with current selection
+  useEffect(() => {
+    setShowSettings(isSelected);
+  }, [isSelected]);
   
   const shouldShowSettings = isSelected && showSettings;
 
