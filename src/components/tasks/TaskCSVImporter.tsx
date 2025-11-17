@@ -34,7 +34,7 @@ export const TaskCSVImporter: React.FC = () => {
   const [errors, setErrors] = useState<string[]>([]);
   const [success, setSuccess] = useState<number>(0);
   const { addTask } = useTasks();
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const { users } = useUser();
   const { contacts } = useContacts();
   const { events } = useEvents();

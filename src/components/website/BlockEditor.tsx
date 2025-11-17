@@ -75,7 +75,7 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({ page, onSave, onCancel
   const [editingBlock, setEditingBlock] = useState<string | null>(null);
   const [showBlockSelector, setShowBlockSelector] = useState(false);
   const [availableForms, setAvailableForms] = useState<any[]>([]);
-  const { user } = useAuth();
+  const { user } = useAuthContext();
 
   // Charger les formulaires disponibles
   useEffect(() => {

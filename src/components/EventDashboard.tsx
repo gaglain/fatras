@@ -23,7 +23,7 @@ interface DashboardStats {
 }
 
 export const EventDashboard: React.FC<EventDashboardProps> = ({ eventId, eventName }) => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [stats, setStats] = useState<DashboardStats>({
     totalPublications: 0,
     upcomingPublications: 0,

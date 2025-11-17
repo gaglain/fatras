@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { useNotifications } from '@/hooks/useNotifications';
 
 export const NotificationTester: React.FC = () => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
 
   const createTestNotification = async () => {

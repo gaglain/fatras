@@ -29,7 +29,7 @@ interface InboundEmail {
 }
 
 export const EmailInbox: React.FC = () => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const { syncEmails, isLoading: isSyncing } = useEmailSync();
   const [emails, setEmails] = useState<InboundEmail[]>([]);
   const [selectedEmail, setSelectedEmail] = useState<InboundEmail | null>(null);

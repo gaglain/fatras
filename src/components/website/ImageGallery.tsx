@@ -25,7 +25,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({ onImageSelect, selec
   const [isUploading, setIsUploading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [isOpen, setIsOpen] = useState(false);
-  const { user } = useAuth();
+  const { user } = useAuthContext();
 
   useEffect(() => {
     if (isOpen) {

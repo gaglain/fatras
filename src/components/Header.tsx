@@ -17,7 +17,7 @@ import { toast } from 'sonner';
 
 export const Header: React.FC = () => {
   const { currentUser } = useUser();
-  const { signOut } = useAuth();
+  const { signOut } = useAuthContext();
   const { unreadCount } = useNotifications();
   
   // Debug du badge

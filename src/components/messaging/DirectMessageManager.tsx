@@ -17,7 +17,7 @@ export const DirectMessageManager: React.FC<DirectMessageManagerProps> = ({ trig
   const [isOpen, setIsOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const { availableUsers, createDirectMessage } = useMessaging();
 
   React.useEffect(() => {

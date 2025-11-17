@@ -26,7 +26,7 @@ export const ContactEventManager: React.FC<ContactEventManagerProps> = ({
   eventId,
   eventTitle
 }) => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [availableContacts, setAvailableContacts] = useState<Contact[]>([]);
   const [linkedContacts, setLinkedContacts] = useState<any[]>([]);
   const [selectedContact, setSelectedContact] = useState<string>('');

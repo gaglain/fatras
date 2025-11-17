@@ -24,7 +24,7 @@ export const EventCard: React.FC<EventCardProps> = ({
   onDelete,
   viewMode
 }) => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const navigate = useNavigate();
   const [contact, setContact] = useState<Contact | null>(null);
   const [linkedContacts, setLinkedContacts] = useState<Contact[]>([]);

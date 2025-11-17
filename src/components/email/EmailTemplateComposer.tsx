@@ -47,7 +47,7 @@ export const EmailTemplateComposer: React.FC<EmailTemplateComposerProps> = ({
   eventData,
   quoteData
 }) => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const { currentUser } = useUser();
   const { sendEmail, sending } = useEmailSender();
   const { accounts, loadAccounts, sendEmail: sendViaNylas } = useNylasEmail();

@@ -34,7 +34,7 @@ export const EventDialog: React.FC<EventDialogProps> = ({
   event,
   onSave
 }) => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [eventTypes, setEventTypes] = useState<EventType[]>([]);
   const [artists, setArtists] = useState<any[]>([]);

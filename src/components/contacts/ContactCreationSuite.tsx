@@ -33,7 +33,7 @@ export const ContactCreationSuite: React.FC<ContactCreationSuiteProps> = ({
   contactId,
   contactName
 }) => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const { addEvent } = useEvents();
   const { addOpportunity } = useOpportunities();
   const { addTask } = useTasks();

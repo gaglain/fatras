@@ -25,7 +25,7 @@ export const EnhancedTaskCreator: React.FC<EnhancedTaskCreatorProps> = ({
   contacts = [],
   events = []
 }) => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const { addTask } = useTasks();
   const { sendTaskAssignmentEmail } = useEmailSender();
   

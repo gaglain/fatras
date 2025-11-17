@@ -26,7 +26,7 @@ interface ContractFileManagerProps {
 }
 
 export const ContractFileManager: React.FC<ContractFileManagerProps> = ({ artists }) => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [files, setFiles] = useState<ContractFile[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedArtist, setSelectedArtist] = useState<string>('none');

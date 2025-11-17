@@ -11,7 +11,7 @@ interface TaskNotificationBannerProps {
 }
 
 export const TaskNotificationBanner: React.FC<TaskNotificationBannerProps> = ({ className }) => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const { checkOverdueTasks, checkUpcomingTasks } = useTaskNotifications();
   const [urgentNotifications, setUrgentNotifications] = useState<any[]>([]);
   const [dismissedNotifications, setDismissedNotifications] = useState<Set<string>>(new Set());

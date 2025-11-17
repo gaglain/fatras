@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 export const QuickActions: React.FC = () => {
-  const { signOut } = useAuth();
+  const { signOut } = useAuthContext();
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const isMobile = useIsMobile();
 

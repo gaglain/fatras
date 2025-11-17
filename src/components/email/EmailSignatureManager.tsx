@@ -19,7 +19,7 @@ export const EmailSignatureManager: React.FC<EmailSignatureManagerProps> = ({
   isOpen,
   onClose
 }) => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [signature, setSignature] = useState('');
   const [trackingEnabled, setTrackingEnabled] = useState(true);
   const [loading, setLoading] = useState(false);

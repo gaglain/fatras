@@ -14,7 +14,7 @@ export const LoginForm = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp } = useAuthContext();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

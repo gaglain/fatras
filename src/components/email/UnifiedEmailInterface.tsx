@@ -56,7 +56,7 @@ interface InboundEmail {
 }
 
 export const UnifiedEmailInterface: React.FC = () => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const { 
     sendEmail, 
     getActiveProviders, 

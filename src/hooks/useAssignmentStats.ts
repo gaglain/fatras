@@ -32,7 +32,7 @@ export const useAssignmentStats = () => {
     recentAssignments: []
   });
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+  const { user } = useAuthContext();
 
   useEffect(() => {
     if (!user) return;

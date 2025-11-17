@@ -20,7 +20,7 @@ interface ExtendedEmailAccount {
 }
 
 export const NylasCalendarIntegration: React.FC = () => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const { accounts: emailAccounts, loadAccounts } = useNylasEmail();
   const { 
     isLoading, 

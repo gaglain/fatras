@@ -26,7 +26,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
 }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentImage || null);
-  const { user } = useAuth();
+  const { user } = useAuthContext();
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

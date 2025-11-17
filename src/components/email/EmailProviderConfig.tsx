@@ -51,7 +51,7 @@ interface EmailConfig {
 }
 
 export const EmailProviderConfig: React.FC = () => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [configs, setConfigs] = useState<Record<string, EmailConfig>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);

@@ -35,7 +35,7 @@ export const EventEditDialog: React.FC<EventEditDialogProps> = ({
   eventId,
   onEventUpdated,
 }) => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [loading, setLoading] = useState(false);
   const [appUsers, setAppUsers] = useState<AppUser[]>([]);
   const [formData, setFormData] = useState({

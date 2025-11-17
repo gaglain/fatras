@@ -12,7 +12,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 
 export const PublicChatWidget: React.FC = () => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const isMobile = useIsMobile();
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
   

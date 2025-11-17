@@ -4,7 +4,7 @@ import { useAuthContext } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 export const useAppSettings = () => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [settings, setSettings] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
 

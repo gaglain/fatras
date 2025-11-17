@@ -32,7 +32,7 @@ export interface Contact {
 export const useContacts = () => {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+  const { user } = useAuthContext();
 
   useEffect(() => {
     if (!user) return;

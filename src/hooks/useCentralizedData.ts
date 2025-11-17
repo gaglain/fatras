@@ -86,7 +86,7 @@ export interface CentralizedEvent {
 }
 
 export const useCentralizedData = () => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [artists, setArtists] = useState<CentralizedArtist[]>([]);
   const [publications, setPublications] = useState<Publication[]>([]);
   const [events, setEvents] = useState<CentralizedEvent[]>([]);

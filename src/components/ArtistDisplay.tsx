@@ -13,7 +13,7 @@ interface ArtistDisplayProps {
 }
 
 export const ArtistDisplay: React.FC<ArtistDisplayProps> = ({ artistIds, className = "" }) => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [artists, setArtists] = useState<Artist[]>([]);
   const [loading, setLoading] = useState(true);
 

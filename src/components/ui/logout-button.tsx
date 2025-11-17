@@ -18,7 +18,7 @@ export const LogoutButton: React.FC<LogoutButtonProps> = ({
   showText = true,
   className = ""
 }) => {
-  const { signOut } = useAuth();
+  const { signOut } = useAuthContext();
   const navigate = useNavigate();
 
   const handleLogout = async () => {

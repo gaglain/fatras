@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { useAppSettings } from '@/hooks/useAppSettings';
 
 export const CalendarViewContainer: React.FC = () => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const { events: nylasEvents, loadEvents } = useNylasCalendarSync();
   const { getSetting, setSetting } = useAppSettings();
   const [localEvents, setLocalEvents] = useState<any[]>([]);

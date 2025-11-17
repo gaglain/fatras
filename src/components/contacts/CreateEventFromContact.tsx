@@ -37,7 +37,7 @@ export const CreateEventFromContact: React.FC<CreateEventFromContactProps> = ({
     requirements: '',
   });
 
-  const { user } = useAuth();
+  const { user } = useAuthContext();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

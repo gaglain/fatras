@@ -111,7 +111,7 @@ const WebsiteConfigContext = createContext<WebsiteConfigContextType | undefined>
 
 export const WebsiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [config, setConfig] = useState<WebsiteConfig>(defaultConfig);
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const loadConfig = useCallback(async () => {
     try {
       console.log('🔄 Loading website config...');

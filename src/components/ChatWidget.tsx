@@ -19,7 +19,7 @@ export const ChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedChannel, setSelectedChannel] = useState('');
   const [inputValue, setInputValue] = useState('');
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const { createNotification } = useNotifications();
   const isMobile = useIsMobile();
   const messagesEndRef = React.useRef<HTMLDivElement>(null);

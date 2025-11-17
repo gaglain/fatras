@@ -20,7 +20,7 @@ interface ArtistDetailProps {
 }
 
 export const ArtistDetail: React.FC<ArtistDetailProps> = ({ artist, setCurrentPage }) => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [isEditing, setIsEditing] = useState(false);
   const [artistData, setArtistData] = useState(artist);
   const [users, setUsers] = useState<any[]>([]);

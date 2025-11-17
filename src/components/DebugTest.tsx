@@ -9,7 +9,7 @@ import { useAuthContext } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 export const DebugTest: React.FC = () => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [testData, setTestData] = useState('');

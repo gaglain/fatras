@@ -39,7 +39,7 @@ export const EventCreationDialog: React.FC<EventCreationDialogProps> = ({
   onOpenChange,
   onEventCreated,
 }) => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [loading, setLoading] = useState(false);
   const [appUsers, setAppUsers] = useState<AppUser[]>([]);
   const [emailAccounts, setEmailAccounts] = useState<EmailAccount[]>([]);

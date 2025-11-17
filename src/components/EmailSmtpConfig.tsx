@@ -10,7 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Mail, Send, TestTube } from 'lucide-react';
 
 export const EmailSmtpConfig = () => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [config, setConfig] = useState({
     smtp_host: '',
     smtp_port: '587',

@@ -37,7 +37,7 @@ interface QuoteTemplateManagerProps {
 export const QuoteTemplateManager: React.FC<QuoteTemplateManagerProps> = ({
   onApplyTemplate
 }) => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [templates, setTemplates] = useState<QuoteTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateDialog, setShowCreateDialog] = useState(false);

@@ -25,7 +25,7 @@ export const ArtistSelector: React.FC<ArtistSelectorProps> = ({
   selectedArtists,
   onArtistsChange
 }) => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [artists, setArtists] = useState<Artist[]>([]);

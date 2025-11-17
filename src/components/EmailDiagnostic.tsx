@@ -26,7 +26,7 @@ interface DiagnosticResult {
 }
 
 export const EmailDiagnostic: React.FC = () => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const { testImapConnection } = useEmailSync();
   const [results, setResults] = useState<DiagnosticResult[]>([]);
   const [isRunning, setIsRunning] = useState(false);

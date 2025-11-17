@@ -16,7 +16,7 @@ export interface BackgroundImage {
 }
 
 export const useBackgroundImages = () => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [images, setImages] = useState<BackgroundImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);

@@ -34,7 +34,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
   contact,
   onSave
 }) => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [spectacles, setSpectacles] = useState<Spectacle[]>([]);
   const [contactTypes, setContactTypes] = useState<Array<{ id: string; name: string; color: string }>>([]);
   const [selectedArtistId, setSelectedArtistId] = useState<string>('');
