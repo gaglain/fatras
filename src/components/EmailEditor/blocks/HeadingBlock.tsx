@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -15,6 +15,11 @@ interface HeadingBlockProps {
 
 export const HeadingBlock: React.FC<HeadingBlockProps> = ({ content, onChange, isSelected = false }) => {
   const [showSettings, setShowSettings] = useState(false);
+  
+  // Sync settings panel with current selection
+  useEffect(() => {
+    setShowSettings(isSelected);
+  }, [isSelected]);
   
   const shouldShowSettings = isSelected && showSettings;
   

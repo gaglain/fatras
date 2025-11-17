@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
 export type UserRole = 'super_admin' | 'admin' | 'manager' | 'artiste' | 'utilisateur';
@@ -64,8 +64,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [users, setUsers] = useState<User[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   
-  const { user: authUser, loading } = useAuth();
-  console.log('👤 UserProvider - useAuth result:', { user: authUser?.email, loading });
+  const { user: authUser, loading } = useAuthContext();
+  console.log('👤 UserProvider - useAuthContext result:', { user: authUser?.email, loading });
 
   // Charger tous les utilisateurs depuis Supabase - OPTIMISÉ
   useEffect(() => {

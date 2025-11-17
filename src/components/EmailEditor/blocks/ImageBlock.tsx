@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -15,6 +15,11 @@ interface ImageBlockProps {
 export const ImageBlock: React.FC<ImageBlockProps> = ({ content, onChange, isSelected = false }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [uploadMethod, setUploadMethod] = useState<'file' | 'url'>('url');
+  
+  // Sync settings panel with current selection
+  useEffect(() => {
+    setIsEditing(isSelected);
+  }, [isSelected]);
   
   const shouldShowSettings = isSelected && isEditing;
 

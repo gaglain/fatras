@@ -52,6 +52,7 @@ import { Layout } from "./components/Layout";
 import { FontManager } from "./components/website/FontManager";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { UserProvider } from "./contexts/UserContext";
+import { AuthProvider } from "./contexts/AuthContext";
 import { FrontLayout } from "./components/FrontLayout";
 import { WebsiteConfigProvider } from "./contexts/WebsiteConfigContext";
 import { WebsiteMenuSyncBridge } from "./components/WebsiteMenuSyncBridge";
@@ -126,6 +127,7 @@ const App = () => {
       }}
     >
       <QueryClientProvider client={queryClient}>
+      <AuthProvider>
       <HelmetProvider>
       <ThemeProvider 
         attribute="class"
@@ -204,6 +206,7 @@ const App = () => {
         </TooltipProvider>
       </ThemeProvider>
       </HelmetProvider>
+      </AuthProvider>
     </QueryClientProvider>
   </ErrorBoundary>
   );
