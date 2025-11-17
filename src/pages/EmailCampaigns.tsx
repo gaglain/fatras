@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Mail, Send, Search, Edit, Trash2, Loader2, Calendar, Eye, ArrowLeft } from 'lucide-react';
+import { Plus, Mail, Send, Search, Edit, Trash2, Loader2, Calendar, Eye, ArrowLeft, MousePointer, TrendingDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { EmailCampaignEditor } from '@/components/EmailCampaignEditor';
@@ -303,11 +303,22 @@ export const EmailCampaigns: React.FC = () => {
             Créez et gérez vos campagnes de marketing par email
           </p>
         </div>
-        <Button onClick={handleCreateCampaign} className="w-full lg:w-auto">
-          <Plus className="h-4 w-4 mr-2" />
-          <span className="hidden sm:inline">Nouvelle Campagne</span>
-          <span className="sm:hidden">Nouvelle</span>
-        </Button>
+        <div className="flex gap-2 w-full lg:w-auto">
+          <Button 
+            variant="outline" 
+            onClick={() => setShowAnalytics(true)} 
+            className="flex-1 lg:flex-initial"
+          >
+            <Eye className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Statistiques</span>
+            <span className="sm:hidden">Stats</span>
+          </Button>
+          <Button onClick={handleCreateCampaign} className="flex-1 lg:flex-initial">
+            <Plus className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Nouvelle Campagne</span>
+            <span className="sm:hidden">Nouvelle</span>
+          </Button>
+        </div>
       </div>
 
       {/* Statistics Cards */}
@@ -377,7 +388,7 @@ export const EmailCampaigns: React.FC = () => {
 
       {/* Campaigns List */}
       <div className="grid gap-6">
-        {filteredCampaigns.map((campaign) => (
+        {filteredCampaigns.map((campaign: any) => (
           <Card key={campaign.id} className="hover:shadow-lg transition-shadow">
             <CardContent className="p-6">
               <div className="flex items-start justify-between">
@@ -393,8 +404,35 @@ export const EmailCampaigns: React.FC = () => {
                       Sujet: {campaign.subject}
                     </p>
                   )}
+                  {campaign.status === 'sent' && (
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      <Badge variant="secondary" className="flex items-center gap-1">
+                        <Mail className="h-3 w-3" />
+                        {campaign.sent_count || 0} envoyés
+                      </Badge>
+                      {campaign.open_rate !== null && (
+                        <Badge variant="outline" className="flex items-center gap-1">
+                          <Eye className="h-3 w-3" />
+                          {campaign.open_rate?.toFixed(1) || 0}% ouverture
+                        </Badge>
+                      )}
+                      {campaign.click_rate !== null && (
+                        <Badge variant="outline" className="flex items-center gap-1">
+                          <MousePointer className="h-3 w-3" />
+                          {campaign.click_rate?.toFixed(1) || 0}% clic
+                        </Badge>
+                      )}
+                      {campaign.bounced_count > 0 && (
+                        <Badge variant="destructive" className="flex items-center gap-1">
+                          <TrendingDown className="h-3 w-3" />
+                          {campaign.bounced_count} rebonds
+                        </Badge>
+                      )}
+                    </div>
+                  )}
                   <p className="text-sm text-muted-foreground">
                     Créée le {new Date(campaign.created_at).toLocaleDateString('fr-FR')}
+                    {campaign.sent_at && ` • Envoyée le ${new Date(campaign.sent_at).toLocaleDateString('fr-FR')}`}
                   </p>
                 </div>
                 <div className="flex space-x-2">
