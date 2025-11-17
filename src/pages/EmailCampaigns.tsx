@@ -266,7 +266,7 @@ export const EmailCampaigns: React.FC = () => {
     );
   }
 
-  if (showAnalytics && selectedCampaign) {
+  if (showAnalytics) {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -276,8 +276,12 @@ export const EmailCampaigns: React.FC = () => {
               Retour
             </Button>
             <div>
-              <h1 className="text-3xl font-bold">{selectedCampaign.name}</h1>
-              <p className="text-muted-foreground">Analytics de la campagne</p>
+              <h1 className="text-3xl font-bold">
+                {selectedCampaign ? selectedCampaign.name : 'Statistiques globales'}
+              </h1>
+              <p className="text-muted-foreground">
+                {selectedCampaign ? 'Analytics de la campagne' : 'Vue d\'ensemble de toutes vos campagnes'}
+              </p>
             </div>
           </div>
         </div>
