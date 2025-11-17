@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Calendar, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { useNylasEmail } from '@/hooks/useNylasEmail';
 import { useNylasCalendarSync } from '@/hooks/useNylasCalendarSync';
 import { supabase } from '@/integrations/supabase/client';

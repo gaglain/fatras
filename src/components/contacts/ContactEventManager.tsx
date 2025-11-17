@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { X, Plus, Calendar, Building2, MapPin } from 'lucide-react';
 import { Contact } from '@/types/contact.types';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 interface ContactEventManagerProps {

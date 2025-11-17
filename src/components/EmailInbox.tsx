@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Mail, RefreshCw, Clock, User, ArrowLeft, Reply, Forward, Trash2, AlertOctagon, MoreVertical } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { useEmailSync } from '@/hooks/useEmailSync';
 import { toast } from 'sonner';
 import { EmailComposer } from '@/components/email/EmailComposer';

@@ -6,7 +6,7 @@ import { Calendar, FileText, Target, Briefcase, CheckSquare, Map, Eye, Plus } fr
 import { Contact } from '@/types/contact.types';
 import { useEntityConnections } from '@/hooks/useEntityConnections';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthContext } from '@/contexts/AuthContext';
 
 interface ContactRelatedEntitiesProps {
   contact: Contact;

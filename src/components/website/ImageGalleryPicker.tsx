@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { Image as ImageIcon, Search, Loader2, Check, FileText, Music, Video, File } from 'lucide-react';
 import { useShowBible } from '@/hooks/useShowBible';

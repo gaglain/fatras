@@ -14,7 +14,7 @@ import {
   Loader2 
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { useEmailSync } from '@/hooks/useEmailSync';
 import { toast } from 'sonner';
 

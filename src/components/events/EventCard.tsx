@@ -7,7 +7,7 @@ import { Calendar, MapPin, User, Edit, Trash2, MoreHorizontal, Users, Euro, File
 import { Event } from '@/types/event.types';
 import { Contact } from '@/types/contact.types';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { ContactEventManager } from '@/components/contacts/ContactEventManager';
 import { useNavigate } from 'react-router-dom';
 

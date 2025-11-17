@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus, User, Calendar, UserCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTasks } from '@/hooks/useTasks';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { useEmailSender } from '@/hooks/useEmailSender';
 
 interface EnhancedTaskCreatorProps {

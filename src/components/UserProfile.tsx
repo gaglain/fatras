@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { X, User, Edit2 } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { useUserManagement } from '@/hooks/useUserManagement';
 import { ExtendedUserForm } from '@/components/users/ExtendedUserForm';
 import { toast } from 'sonner';

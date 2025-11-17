@@ -26,7 +26,7 @@ import {
   MoreVertical
 } from 'lucide-react';
 import { useEmailSystem } from '@/hooks/useEmailSystem';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { EmailComposer } from '@/components/email/EmailComposer';

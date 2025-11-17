@@ -6,7 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MessageSquare, X, Send, User, Hash, Plus } from 'lucide-react';
 import { useMessaging } from '@/hooks/useMessaging';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { useNotifications } from '@/hooks/useNotifications';
 import { ChannelManager } from '@/components/messaging/ChannelManager';
 import { DirectMessageManager } from '@/components/messaging/DirectMessageManager';

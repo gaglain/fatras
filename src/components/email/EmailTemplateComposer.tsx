@@ -12,7 +12,7 @@ import { Mail, Send, FileText, X, Paperclip, Signature } from 'lucide-react';
 import { useEmailSender } from '@/hooks/useEmailSender';
 import { supabase } from '@/integrations/supabase/client';
 import { useNylasEmail } from '@/hooks/useNylasEmail';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { useEmailTemplates } from '@/hooks/useEmailTemplates';
 import { generateEmailSignature } from '@/utils/emailSignature';

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { CalendarView, CalendarEvent, CalendarSource } from './CalendarView';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { useNylasCalendarSync } from '@/hooks/useNylasCalendarSync';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
