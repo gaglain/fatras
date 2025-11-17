@@ -99,10 +99,18 @@ async function processWebhookEvent(supabase: any, body: any) {
   let contactId = null;
   
   if (data.tags) {
-    const campaignTag = data.tags.find((tag: any) => tag.name === 'campaign_id');
-    const contactTag = data.tags.find((tag: any) => tag.name === 'contact_id');
-    if (campaignTag) campaignId = campaignTag.value;
-    if (contactTag) contactId = contactTag.value;
+    // Resend tags can be either an object or an array
+    if (typeof data.tags === 'object' && !Array.isArray(data.tags)) {
+      // Tags is an object like { campaign_id: "xxx", contact_id: "yyy" }
+      campaignId = data.tags.campaign_id || null;
+      contactId = data.tags.contact_id || null;
+    } else if (Array.isArray(data.tags)) {
+      // Tags is an array of objects like [{ name: "campaign_id", value: "xxx" }]
+      const campaignTag = data.tags.find((tag: any) => tag.name === 'campaign_id');
+      const contactTag = data.tags.find((tag: any) => tag.name === 'contact_id');
+      if (campaignTag) campaignId = campaignTag.value;
+      if (contactTag) contactId = contactTag.value;
+    }
   }
 
   console.log('Campaign ID from tags:', campaignId);
