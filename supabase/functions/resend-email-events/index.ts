@@ -94,41 +94,83 @@ async function processWebhookEvent(supabase: any, body: any) {
     return;
   }
 
-  // Find email by message_id
+  // Extract campaign_id from tags if available
+  let campaignId = null;
+  let contactId = null;
+  
+  if (data.tags) {
+    const campaignTag = data.tags.find((tag: any) => tag.name === 'campaign_id');
+    const contactTag = data.tags.find((tag: any) => tag.name === 'contact_id');
+    if (campaignTag) campaignId = campaignTag.value;
+    if (contactTag) contactId = contactTag.value;
+  }
+
+  console.log('Campaign ID from tags:', campaignId);
+  console.log('Contact ID from tags:', contactId);
+
+  // Try to find email by message_id in emails table
   const { data: email, error: findError } = await supabase
     .from('emails')
     .select('*')
     .eq('message_id', data.email_id)
-    .single();
+    .maybeSingle();
 
-  if (findError || !email) {
-    console.log('Email not found for message_id:', data.email_id);
-    return;
+  if (email) {
+    // Update email status in emails table
+    const updateData: any = { status };
+
+    if (type === 'email.delivered') {
+      updateData.delivered_at = new Date().toISOString();
+    } else if (type === 'email.opened') {
+      updateData.opened_at = new Date().toISOString();
+      updateData.is_read = true;
+    }
+
+    const { error: updateError } = await supabase
+      .from('emails')
+      .update(updateData)
+      .eq('id', email.id);
+
+    if (updateError) {
+      console.error('Error updating email:', updateError);
+    }
+
+    // Use campaign_id from email record if available
+    if (email.campaign_id) {
+      campaignId = email.campaign_id;
+    }
+  } else {
+    console.log('Email not found in emails table for message_id:', data.email_id);
   }
 
-  // Update email status
-  const updateData: any = { status };
+  // If this is a campaign email (from tags or email record), update campaign stats
+  if (campaignId) {
+    console.log('Updating campaign stats for campaign:', campaignId);
+    await updateCampaignStats(supabase, campaignId, type);
+    
+    // Also log the event in email_analytics
+    if (contactId) {
+      try {
+        // Get campaign to find user_id
+        const { data: campaign } = await supabase
+          .from('email_campaigns')
+          .select('user_id')
+          .eq('id', campaignId)
+          .single();
 
-  if (type === 'email.delivered') {
-    updateData.delivered_at = new Date().toISOString();
-  } else if (type === 'email.opened') {
-    updateData.opened_at = new Date().toISOString();
-    updateData.is_read = true;
-  }
-
-  const { error: updateError } = await supabase
-    .from('emails')
-    .update(updateData)
-    .eq('id', email.id);
-
-  if (updateError) {
-    console.error('Error updating email:', updateError);
-    return;
-  }
-
-  // If this is a campaign email, update campaign stats
-  if (email.campaign_id) {
-    await updateCampaignStats(supabase, email.campaign_id, type);
+        if (campaign) {
+          await supabase.from('email_analytics').insert({
+            user_id: campaign.user_id,
+            campaign_id: campaignId,
+            contact_id: contactId,
+            event_type: status,
+            event_data: { email_id: data.email_id, timestamp: new Date().toISOString() }
+          });
+        }
+      } catch (analyticsError) {
+        console.error('Error logging analytics:', analyticsError);
+      }
+    }
   }
 
   console.log('Successfully processed webhook event');
