@@ -150,13 +150,14 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
     setBlocks(items);
   };
 
-  const renderBlock = (block: EmailBlock) => {
+  const renderBlock = (block: EmailBlock, isSelected: boolean) => {
     switch (block.type) {
       case 'text':
         return (
           <TextBlock
             content={block.content as TextBlockContent}
             onChange={(content) => updateBlock(block.id, content)}
+            isSelected={isSelected}
           />
         );
       case 'heading':
@@ -164,6 +165,7 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
           <HeadingBlock
             content={block.content as HeadingBlockContent}
             onChange={(content) => updateBlock(block.id, content)}
+            isSelected={isSelected}
           />
         );
       case 'button':
@@ -171,6 +173,7 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
           <ButtonBlock
             content={block.content as ButtonBlockContent}
             onChange={(content) => updateBlock(block.id, content)}
+            isSelected={isSelected}
           />
         );
       case 'divider':
@@ -178,6 +181,7 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
           <DividerBlock
             content={block.content as DividerBlockContent}
             onChange={(content) => updateBlock(block.id, content)}
+            isSelected={isSelected}
           />
         );
       case 'spacer':
@@ -185,6 +189,7 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
           <SpacerBlock
             content={block.content as SpacerBlockContent}
             onChange={(content) => updateBlock(block.id, content)}
+            isSelected={isSelected}
           />
         );
       case 'image':
@@ -192,6 +197,7 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
           <ImageBlock
             content={block.content as ImageBlockContent}
             onChange={(content) => updateBlock(block.id, content)}
+            isSelected={isSelected}
           />
         );
       case 'social':
@@ -199,6 +205,7 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
           <SocialBlock
             content={block.content as SocialBlockContent}
             onChange={(content) => updateBlock(block.id, content)}
+            isSelected={isSelected}
           />
         );
       case 'footer':
@@ -206,6 +213,7 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
           <FooterBlock
             content={block.content as FooterBlockContent}
             onChange={(content) => updateBlock(block.id, content)}
+            isSelected={isSelected}
           />
         );
       default:
@@ -449,7 +457,7 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
                             onDelete={() => deleteBlock(block.id)}
                             dragHandleProps={provided.dragHandleProps}
                           />
-                          {renderBlock(block)}
+                          {renderBlock(block, selectedBlockId === block.id)}
                         </div>
                       )}
                     </Draggable>

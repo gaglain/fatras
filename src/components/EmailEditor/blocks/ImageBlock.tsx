@@ -9,11 +9,14 @@ import { ImageBlockContent } from '../types';
 interface ImageBlockProps {
   content: ImageBlockContent;
   onChange: (content: ImageBlockContent) => void;
+  isSelected?: boolean;
 }
 
-export const ImageBlock: React.FC<ImageBlockProps> = ({ content, onChange }) => {
+export const ImageBlock: React.FC<ImageBlockProps> = ({ content, onChange, isSelected = false }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [uploadMethod, setUploadMethod] = useState<'file' | 'url'>('url');
+  
+  const shouldShowSettings = isSelected && isEditing;
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -31,7 +34,7 @@ export const ImageBlock: React.FC<ImageBlockProps> = ({ content, onChange }) => 
     onChange({ ...content, src: url });
   };
 
-  if (isEditing) {
+  if (shouldShowSettings) {
     return (
       <div className="space-y-4 p-4 border rounded-lg bg-gray-50">
         <div className="flex space-x-2">

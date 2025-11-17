@@ -21,12 +21,15 @@ export interface FooterBlockContent {
 interface FooterBlockProps {
   content: FooterBlockContent;
   onChange: (content: FooterBlockContent) => void;
+  isSelected?: boolean;
 }
 
-export const FooterBlock: React.FC<FooterBlockProps> = ({ content, onChange }) => {
+export const FooterBlock: React.FC<FooterBlockProps> = ({ content, onChange, isSelected = false }) => {
   const [showSettings, setShowSettings] = useState(false);
+  
+  const shouldShowSettings = isSelected && showSettings;
 
-  if (showSettings) {
+  if (shouldShowSettings) {
     return (
       <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
         <div className="flex items-center justify-between">

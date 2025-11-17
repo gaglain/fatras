@@ -5,6 +5,7 @@ import { SpacerBlockContent } from '../types';
 interface SpacerBlockProps {
   content: SpacerBlockContent;
   onChange: (content: SpacerBlockContent) => void;
+  isSelected?: boolean;
 }
 
 export const SpacerBlock: React.FC<SpacerBlockProps> = ({ content }) => {
