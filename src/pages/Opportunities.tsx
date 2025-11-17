@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Plus, Search, Calendar, MapPin, DollarSign, Edit, Trash2, User, CalendarDays, CheckSquare, Grid, List } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { useContacts } from '@/hooks/useContacts';
 import { useEvents } from '@/hooks/useEvents';
 import { useTasks } from '@/hooks/useTasks';
@@ -38,7 +38,7 @@ interface Opportunity {
 }
 
 export const Opportunities: React.FC = () => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const { contacts } = useContacts();
   const { events } = useEvents();
   const { tasks } = useTasks();

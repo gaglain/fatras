@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from './useAuth';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 export interface UnifiedEmail {
@@ -28,7 +28,7 @@ export interface UnifiedEmail {
 }
 
 export const useUnifiedEmails = () => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [emails, setEmails] = useState<UnifiedEmail[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 

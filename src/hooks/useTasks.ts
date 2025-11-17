@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { notifyTaskAssignment } from '@/utils/notificationHelpers';
 
 export interface Task {
@@ -25,7 +25,7 @@ export interface Task {
 export const useTasks = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+  const { user } = useAuthContext();
 
   useEffect(() => {
     if (!user?.id) return;

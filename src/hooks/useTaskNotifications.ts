@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from './useAuth';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 export interface TaskNotification {
@@ -42,7 +42,7 @@ const markToastShown = (key: string) => {
 };
 
 export const useTaskNotifications = () => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [notifications, setNotifications] = useState<TaskNotification[]>([]);
 
   useEffect(() => {

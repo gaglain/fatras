@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 export interface WebsiteDesign {
@@ -32,7 +32,7 @@ const defaultDesign: WebsiteDesign = {
 };
 
 export const useWebsiteDesign = () => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [design, setDesign] = useState<WebsiteDesign>(defaultDesign);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);

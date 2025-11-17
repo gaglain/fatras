@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from './useAuth';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 export interface SyncTask {
@@ -28,7 +28,7 @@ export interface SyncNotification {
 }
 
 export const useSyncTasks = () => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [tasks, setTasks] = useState<SyncTask[]>([]);
   const [notifications, setNotifications] = useState<SyncNotification[]>([]);
   const [loading, setLoading] = useState(true);
