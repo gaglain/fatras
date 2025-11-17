@@ -193,7 +193,7 @@ export const EmailAnalytics: React.FC = () => {
           <CardContent>
             <div className="text-2xl font-bold">{globalStats.total_sent.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">
-              {globalStats.total_delivered} livrés ({globalStats.total_sent ? ((globalStats.total_delivered / globalStats.total_sent) * 100).toFixed(1) : 0}%)
+              {globalStats.total_delivered} livrés ({globalStats.total_sent > 0 ? ((globalStats.total_delivered / globalStats.total_sent) * 100).toFixed(1) : 0}%)
             </p>
           </CardContent>
         </Card>
@@ -209,7 +209,7 @@ export const EmailAnalytics: React.FC = () => {
           <CardContent>
             <div className="text-2xl font-bold">{globalOpenRate.toFixed(1)}%</div>
             <p className="text-xs text-muted-foreground">
-              {globalStats.total_opened} ouvertures
+              {globalStats.total_opened.toLocaleString()} ouvertures - Benchmark: 20%
             </p>
           </CardContent>
         </Card>
@@ -225,7 +225,7 @@ export const EmailAnalytics: React.FC = () => {
           <CardContent>
             <div className="text-2xl font-bold">{globalClickRate.toFixed(1)}%</div>
             <p className="text-xs text-muted-foreground">
-              {globalStats.total_clicked} clics
+              {globalStats.total_clicked.toLocaleString()} clics - Benchmark: 3%
             </p>
           </CardContent>
         </Card>
@@ -234,14 +234,13 @@ export const EmailAnalytics: React.FC = () => {
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Taux de rebond</CardTitle>
             <div className="flex items-center gap-1">
-              <TrendingDown className="h-4 w-4 text-muted-foreground" />
-              {getTrendIcon(5 - globalBounceRate, 5)}
+              <TrendingDown className="h-4 w-4 text-destructive" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{globalBounceRate.toFixed(1)}%</div>
+            <div className="text-2xl font-bold text-destructive">{globalBounceRate.toFixed(1)}%</div>
             <p className="text-xs text-muted-foreground">
-              {globalStats.total_bounced} rebonds
+              {globalStats.total_bounced.toLocaleString()} rebonds - Max acceptable: 2%
             </p>
           </CardContent>
         </Card>
