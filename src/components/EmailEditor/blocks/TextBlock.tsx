@@ -11,12 +11,15 @@ import { TextBlockContent } from '../types';
 interface TextBlockProps {
   content: TextBlockContent;
   onChange: (content: TextBlockContent) => void;
+  isSelected?: boolean;
 }
 
-export const TextBlock: React.FC<TextBlockProps> = ({ content, onChange }) => {
+export const TextBlock: React.FC<TextBlockProps> = ({ content, onChange, isSelected = false }) => {
   const [showSettings, setShowSettings] = useState(false);
+  
+  const shouldShowSettings = isSelected && showSettings;
 
-  if (showSettings) {
+  if (shouldShowSettings) {
     return (
       <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
         <div className="flex items-center justify-between">

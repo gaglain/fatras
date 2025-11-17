@@ -10,10 +10,13 @@ import { HeadingBlockContent } from '../types';
 interface HeadingBlockProps {
   content: HeadingBlockContent;
   onChange: (content: HeadingBlockContent) => void;
+  isSelected?: boolean;
 }
 
-export const HeadingBlock: React.FC<HeadingBlockProps> = ({ content, onChange }) => {
+export const HeadingBlock: React.FC<HeadingBlockProps> = ({ content, onChange, isSelected = false }) => {
   const [showSettings, setShowSettings] = useState(false);
+  
+  const shouldShowSettings = isSelected && showSettings;
   
   const getHeadingSize = (level: number) => {
     switch (level) {
@@ -26,7 +29,7 @@ export const HeadingBlock: React.FC<HeadingBlockProps> = ({ content, onChange })
 
   const HeadingTag = `h${content.level}` as keyof JSX.IntrinsicElements;
 
-  if (showSettings) {
+  if (shouldShowSettings) {
     return (
       <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
         <div className="flex items-center justify-between">

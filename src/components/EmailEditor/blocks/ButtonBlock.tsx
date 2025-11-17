@@ -6,6 +6,7 @@ import { ButtonBlockContent } from '../types';
 interface ButtonBlockProps {
   content: ButtonBlockContent;
   onChange: (content: ButtonBlockContent) => void;
+  isSelected?: boolean;
 }
 
 export const ButtonBlock: React.FC<ButtonBlockProps> = ({ content, onChange }) => {

@@ -5,6 +5,7 @@ import { DividerBlockContent } from '../types';
 interface DividerBlockProps {
   content: DividerBlockContent;
   onChange: (content: DividerBlockContent) => void;
+  isSelected?: boolean;
 }
 
 export const DividerBlock: React.FC<DividerBlockProps> = ({ content }) => {

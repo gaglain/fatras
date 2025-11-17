@@ -21,10 +21,13 @@ export interface SocialBlockContent {
 interface SocialBlockProps {
   content: SocialBlockContent;
   onChange: (content: SocialBlockContent) => void;
+  isSelected?: boolean;
 }
 
-export const SocialBlock: React.FC<SocialBlockProps> = ({ content, onChange }) => {
+export const SocialBlock: React.FC<SocialBlockProps> = ({ content, onChange, isSelected = false }) => {
   const [showSettings, setShowSettings] = useState(false);
+  
+  const shouldShowSettings = isSelected && showSettings;
 
   // Inline brand SVGs for cleaner, consistent look in emails
   const renderLogo = (type: 'facebook' | 'instagram' | 'linkedin' | 'youtube', size = 14) => {
@@ -83,7 +86,7 @@ export const SocialBlock: React.FC<SocialBlockProps> = ({ content, onChange }) =
     onChange({ ...content, platforms: updatedPlatforms });
   };
 
-  if (showSettings) {
+  if (shouldShowSettings) {
     return (
       <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
         <div className="flex items-center justify-between">

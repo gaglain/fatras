@@ -105,13 +105,7 @@ export const EmailCampaignEditor: React.FC<EmailCampaignEditorProps> = ({
       return;
     }
 
-    const campaignToSave = {
-      ...editedCampaign,
-      artist_id: selectedArtist?.id || null,
-      event_id: selectedEvent?.id || null
-    };
-
-    onSave(campaignToSave);
+    onSave(editedCampaign);
     toast.success('Campagne sauvegardée');
   };
 
@@ -261,7 +255,10 @@ export const EmailCampaignEditor: React.FC<EmailCampaignEditorProps> = ({
               <div>
                 <label className="block text-sm font-medium mb-1">Artiste (optionnel)</label>
                 <UniversalSearch
-                  onSelect={(result) => setSelectedArtist(result)}
+                  onSelect={(result) => {
+                    setSelectedArtist(result);
+                    setEditedCampaign({ ...editedCampaign, artist_id: result.id });
+                  }}
                   placeholder="Rechercher un artiste..."
                   filterTypes={['artist']}
                 />
@@ -271,7 +268,10 @@ export const EmailCampaignEditor: React.FC<EmailCampaignEditorProps> = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => setSelectedArtist(null)}
+                      onClick={() => {
+                        setSelectedArtist(null);
+                        setEditedCampaign({ ...editedCampaign, artist_id: null });
+                      }}
                     >
                       <X className="h-4 w-4" />
                     </Button>
@@ -281,7 +281,10 @@ export const EmailCampaignEditor: React.FC<EmailCampaignEditorProps> = ({
               <div>
                 <label className="block text-sm font-medium mb-1">Spectacle (optionnel)</label>
                 <UniversalSearch
-                  onSelect={(result) => setSelectedEvent(result)}
+                  onSelect={(result) => {
+                    setSelectedEvent(result);
+                    setEditedCampaign({ ...editedCampaign, event_id: result.id });
+                  }}
                   placeholder="Rechercher un spectacle..."
                   filterTypes={['event']}
                 />
@@ -291,7 +294,10 @@ export const EmailCampaignEditor: React.FC<EmailCampaignEditorProps> = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => setSelectedEvent(null)}
+                      onClick={() => {
+                        setSelectedEvent(null);
+                        setEditedCampaign({ ...editedCampaign, event_id: null });
+                      }}
                     >
                       <X className="h-4 w-4" />
                     </Button>
