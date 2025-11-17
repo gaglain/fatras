@@ -175,7 +175,7 @@ export const EmailCampaigns: React.FC = () => {
 
     try {
       const { error } = await supabase
-        .from('campaigns')
+        .from('email_campaigns')
         .delete()
         .eq('id', campaignId);
 
