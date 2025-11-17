@@ -17,7 +17,7 @@ export interface RoadshowExpense {
 }
 
 export const useRoadshowExpenses = () => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [loading, setLoading] = useState(false);
 
   const getExpenses = async (roadshowStopId: string): Promise<RoadshowExpense[]> => {

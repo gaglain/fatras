@@ -17,7 +17,7 @@ interface CalendarEvent {
 }
 
 export const useNylasCalendarSync = () => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [isLoading, setIsLoading] = useState(false);
   const [calendars, setCalendars] = useState<any[]>([]);
   const [events, setEvents] = useState<CalendarEvent[]>([]);

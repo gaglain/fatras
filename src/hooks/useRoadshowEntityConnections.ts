@@ -11,7 +11,7 @@ export interface RoadshowEntityConnection {
 }
 
 export const useRoadshowEntityConnections = () => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [loading, setLoading] = useState(false);
 
   // Fetch all entities connected to a roadshow stop

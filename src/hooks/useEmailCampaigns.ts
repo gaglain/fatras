@@ -60,7 +60,7 @@ interface Email {
 }
 
 export const useEmailCampaigns = () => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

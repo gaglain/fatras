@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import type { Json } from '@/integrations/supabase/types';
 
@@ -36,7 +36,7 @@ export interface ShopStats {
 }
 
 export const useSecureShopOrders = () => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [orders, setOrders] = useState<ShopOrder[]>([]);
   const [stats, setStats] = useState<ShopStats | null>(null);
   const [loading, setLoading] = useState(true);

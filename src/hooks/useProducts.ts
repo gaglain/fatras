@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 export const useProducts = () => {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const { user } = useAuth();
+  const { user } = useAuthContext();
 
   useEffect(() => {
     fetchProducts();

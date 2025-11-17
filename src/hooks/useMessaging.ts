@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 export interface Channel {
@@ -49,7 +49,7 @@ export interface Message {
 }
 
 export const useMessaging = () => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [channels, setChannels] = useState<Channel[]>([]);
   const [messages, setMessages] = useState<Record<string, Message[]>>({});
   const [availableUsers, setAvailableUsers] = useState<any[]>([]);

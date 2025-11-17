@@ -21,7 +21,7 @@ interface EmailConfig {
 }
 
 export const useNylasEmail = () => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [isLoading, setIsLoading] = useState(false);
   const [accounts, setAccounts] = useState<EmailAccount[]>([]);
   const { injectEmailTracking } = useIndividualEmailTracking();

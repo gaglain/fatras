@@ -15,7 +15,7 @@ export interface EmailNotification {
 }
 
 export const useEmailNotifications = () => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [notifications, setNotifications] = useState<EmailNotification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 

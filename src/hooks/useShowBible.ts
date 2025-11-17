@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 export interface ShowBibleDocument {
@@ -37,7 +37,7 @@ export interface CreateDocumentData {
 }
 
 export const useShowBible = () => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [documents, setDocuments] = useState<ShowBibleDocument[]>([]);
   const [loading, setLoading] = useState(true);
 

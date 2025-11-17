@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { TourStop } from '@/types/roadshow.types';
 
 export interface RoadshowStop {
@@ -31,7 +31,7 @@ export interface RoadshowStop {
 }
 
 export const useRoadshowStops = () => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [stops, setStops] = useState<RoadshowStop[]>([]);
   const [loading, setLoading] = useState(true);
 

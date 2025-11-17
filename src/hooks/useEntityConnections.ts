@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { notifyOpportunityAssignment, notifyQuoteAssignment } from '@/utils/notificationHelpers';
 
@@ -25,7 +25,7 @@ export interface ConnectedEntities {
 }
 
 export const useEntityConnections = () => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [loading, setLoading] = useState(false);
 
   // Obtenir toutes les entités liées à un contact

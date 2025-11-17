@@ -29,7 +29,7 @@ export interface EmailProvider {
 }
 
 export const useEmailSystem = () => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [sending, setSending] = useState(false);
   const [providers, setProviders] = useState<EmailProvider[]>([]);
 

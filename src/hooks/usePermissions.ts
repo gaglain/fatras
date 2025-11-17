@@ -21,7 +21,7 @@ export interface UserRole {
 }
 
 export const usePermissions = () => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [userRoles, setUserRoles] = useState<UserRole[]>([]);
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [loading, setLoading] = useState(true);
