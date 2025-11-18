@@ -58,6 +58,7 @@ import { FrontLayout } from "./components/FrontLayout";
 import { WebsiteConfigProvider } from "./contexts/WebsiteConfigContext";
 import { WebsiteMenuSyncBridge } from "./components/WebsiteMenuSyncBridge";
 import { ErrorBoundary } from "react-error-boundary";
+import { PWAManifestSync } from "./components/PWAManifestSync";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -129,6 +130,7 @@ const App = () => {
     >
       <QueryClientProvider client={queryClient}>
       <AuthProvider>
+      <PWAManifestSync />
       <HelmetProvider>
       <ThemeProvider 
         attribute="class"

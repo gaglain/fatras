@@ -9,14 +9,17 @@ import { Save, Globe, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { usePWAManifest } from "@/hooks/usePWAManifest";
 
 export const CompanyTab: React.FC = () => {
   const { user } = useAuth();
+  const { updateManifest } = usePWAManifest();
   const [loading, setLoading] = useState(false);
   const [companySettings, setCompanySettings] = useState({
     name: "Fatras Booking",
     logo: "",
-    favicon: ""
+    favicon: "",
+    appIcon: ""
   });
 
   // Charger les paramètres sauvegardés depuis Supabase
@@ -31,7 +34,7 @@ export const CompanyTab: React.FC = () => {
       const { data, error } = await supabase
         .from('app_settings')
         .select('setting_key, setting_value')
-        .in('setting_key', ['company_name', 'company_logo', 'company_favicon']);
+        .in('setting_key', ['company_name', 'company_logo', 'company_favicon', 'app_icon']);
 
       if (error) throw error;
 
@@ -46,9 +49,12 @@ export const CompanyTab: React.FC = () => {
           case 'company_favicon':
             acc.favicon = item.setting_value;
             break;
+          case 'app_icon':
+            acc.appIcon = item.setting_value;
+            break;
         }
         return acc;
-      }, { name: "Fatras Booking", logo: "", favicon: "" });
+      }, { name: "Fatras Booking", logo: "", favicon: "", appIcon: "" });
 
       if (settings) {
         setCompanySettings(settings);
@@ -91,7 +97,8 @@ export const CompanyTab: React.FC = () => {
       const settingsToSave = [
         { setting_key: 'company_name', setting_value: companySettings.name },
         { setting_key: 'company_logo', setting_value: companySettings.logo },
-        { setting_key: 'company_favicon', setting_value: companySettings.favicon }
+        { setting_key: 'company_favicon', setting_value: companySettings.favicon },
+        { setting_key: 'app_icon', setting_value: companySettings.appIcon }
       ];
 
       for (const setting of settingsToSave) {
@@ -140,7 +147,7 @@ export const CompanyTab: React.FC = () => {
     }
   };
 
-  const handleFileUpload = async (type: "logo" | "favicon", event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (type: "logo" | "favicon" | "appIcon", event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !user?.id) return;
 
@@ -184,11 +191,12 @@ export const CompanyTab: React.FC = () => {
       }
       window.dispatchEvent(new CustomEvent('companySettingsChanged', { detail: next }));
       // Also save to database immediately
+      const settingKey = type === "logo" ? 'company_logo' : type === "favicon" ? 'company_favicon' : 'app_icon';
       const { error: dbError } = await supabase
         .from('app_settings')
         .upsert({
           user_id: user.id,
-          setting_key: type === "logo" ? 'company_logo' : 'company_favicon',
+          setting_key: settingKey,
           setting_value: publicUrl
         }, {
           onConflict: 'user_id,setting_key'
@@ -196,7 +204,16 @@ export const CompanyTab: React.FC = () => {
 
       if (dbError) throw dbError;
 
-      toast.success(`${type === "logo" ? "Logo" : "Icône"} chargé et enregistré avec succès`);
+      // Mettre à jour le manifest PWA immédiatement
+      updateManifest({
+        name: companySettings.name,
+        shortName: companySettings.name.length > 12 ? companySettings.name.substring(0, 12) : companySettings.name,
+        iconUrl: type === 'appIcon' ? publicUrl : (companySettings.appIcon || companySettings.logo || companySettings.favicon),
+        themeColor: '#8b5cf6',
+        backgroundColor: '#ffffff'
+      });
+
+      toast.success(`${type === "logo" ? "Logo" : type === "favicon" ? "Icône" : "Icône d'app"} chargé et enregistré avec succès`);
     } catch (error) {
       console.error('Erreur lors du chargement du fichier:', error);
       toast.error("Erreur lors du chargement du fichier");
@@ -224,7 +241,39 @@ export const CompanyTab: React.FC = () => {
           />
         </div>
         <div>
-          <Label htmlFor="company-logo">Logo de l'entreprise</Label>
+          <Label htmlFor="app-icon">Icône de l'application PWA (mobile)</Label>
+          <p className="text-sm text-muted-foreground mb-2">
+            Cette icône sera affichée sur l'écran d'accueil mobile (512x512px recommandé)
+          </p>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex-1">
+              <Input
+                id="app-icon"
+                type="file"
+                accept="image/*"
+                onChange={e => handleFileUpload('appIcon', e)}
+                disabled={loading}
+              />
+            </div>
+            {companySettings.appIcon && (
+              <div className="flex flex-col items-center space-y-2 sm:items-start">
+                <img
+                  src={companySettings.appIcon}
+                  alt="Icône d'app"
+                  className="h-16 w-16 object-contain border rounded-lg shadow-sm"
+                  onError={(e) => { 
+                    console.error('❌ Erreur de chargement de l\'icône d\'app');
+                    (e.currentTarget as HTMLImageElement).style.display = 'none'; 
+                  }}
+                />
+                <Badge variant="secondary" className="text-xs">Icône active</Badge>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div>
+          <Label htmlFor="company-logo">Logo de l'entreprise (desktop)</Label>
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="flex-1">
               <Input
