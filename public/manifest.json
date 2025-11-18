@@ -20,5 +20,11 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["business", "productivity"]
+  "categories": ["business", "productivity"],
+  "orientation": "any",
+  "scope": "/",
+  "serviceworker": {
+    "src": "/sw.js",
+    "scope": "/"
+  }
 }
