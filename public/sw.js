@@ -1,5 +1,5 @@
 // Smarter Service Worker with network-first for pages and cache-busting support
-const CACHE_NAME = 'artistcrm-v3';
+const CACHE_NAME = 'artistcrm-v5';
 const urlsToCache = [
   // Keep minimal precache
   '/favicon.ico'
