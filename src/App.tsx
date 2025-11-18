@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import Index from "./pages/Index";
+import Install from "./pages/Install";
 import Auth from "./pages/Auth";
 import { HelmetProvider } from "react-helmet-async";
 import { FrontHome } from "./pages/FrontHome";
@@ -160,6 +161,7 @@ const App = () => {
                 
                 <Route path="/artist-showcase" element={<FrontArtistShowcase />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/install" element={<Install />} />
                 
                 {/* Routes du back-office - PROTÉGÉES */}
                 <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
