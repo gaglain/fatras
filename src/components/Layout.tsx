@@ -7,6 +7,10 @@ import { BackOfficeHeader } from '@/components/BackOfficeHeader';
 import { ChatWidget } from '@/components/ChatWidget';
 import { TaskNotificationBanner } from '@/components/TaskNotificationBanner';
 import { UnifiedNotificationCenter } from '@/components/UnifiedNotificationCenter';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { FloatingActionButton } from '@/components/mobile/FloatingActionButton';
+import { MobileBottomNav } from '@/components/mobile/MobileBottomNav';
+import { MobileTopBar } from '@/components/mobile/MobileTopBar';
 
 const adminRoutes = [
   '/admin', '/dashboard', '/artists', '/events', '/agenda', '/contacts',
@@ -21,12 +25,13 @@ interface LayoutProps {
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
+  const isMobile = useIsMobile();
   
   const isAdminRoute = adminRoutes.some(route =>
     location.pathname === route || location.pathname.startsWith(route + '/')
   );
   
-  console.log('🏗️ Layout - WITH CHAT - Path:', location.pathname, 'isAdmin:', isAdminRoute);
+  console.log('🏗️ Layout - WITH CHAT - Path:', location.pathname, 'isAdmin:', isAdminRoute, 'isMobile:', isMobile);
   
   if (!isAdminRoute) {
     return (
@@ -37,6 +42,25 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     );
   }
 
+  // Mobile Admin Layout
+  if (isMobile) {
+    return (
+      <div className="flex flex-col h-screen w-full pb-16 pt-14">
+        <MobileTopBar />
+        
+        <main className="flex-1 overflow-auto p-3">
+          <TaskNotificationBanner className="mb-3" />
+          {children}
+        </main>
+
+        <MobileBottomNav />
+        <FloatingActionButton />
+        <ChatWidget />
+      </div>
+    );
+  }
+
+  // Desktop Admin Layout
   return (
     <SidebarProvider>
       <div className="flex h-screen w-full">
