@@ -42,15 +42,14 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Check if this open was already tracked (to avoid duplicate counts)
-    const { data: existingOpen } = await supabase
+    const { count } = await supabase
       .from('email_analytics')
-      .select('id')
+      .select('*', { count: 'exact', head: true })
       .eq('campaign_id', campaignId)
       .eq('contact_id', contactId)
-      .eq('event_type', 'opened')
-      .maybeSingle();
+      .eq('event_type', 'opened');
 
-    if (!existingOpen) {
+    if (count === 0) {
       // Track the open event
       await supabase
         .from('email_analytics')
