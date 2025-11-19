@@ -5,8 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { QuoteItemManager } from '@/components/quotes/QuoteItemManager';
+import { FileText, List } from 'lucide-react';
 
 interface QuoteEditorProps {
   isOpen: boolean;
@@ -75,11 +78,25 @@ export const QuoteEditor: React.FC<QuoteEditorProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Modifier le devis</DialogTitle>
+          <DialogTitle>Modifier le devis - {quote?.quote_number || quote?.title}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        
+        <Tabs defaultValue="details" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="details" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Informations générales
+            </TabsTrigger>
+            <TabsTrigger value="items" className="flex items-center gap-2">
+              <List className="h-4 w-4" />
+              Lignes détaillées
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="details" className="space-y-4 mt-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label htmlFor="title">Titre *</Label>
             <Input
@@ -146,6 +163,22 @@ export const QuoteEditor: React.FC<QuoteEditorProps> = ({
             </Button>
           </div>
         </form>
+      </TabsContent>
+
+      <TabsContent value="items" className="mt-4">
+        {quote?.id && (
+          <QuoteItemManager 
+            quoteId={quote.id}
+            quote={quote}
+          />
+        )}
+        {!quote?.id && (
+          <div className="text-center py-8 text-muted-foreground">
+            <p>Veuillez d'abord enregistrer le devis pour ajouter des lignes détaillées.</p>
+          </div>
+        )}
+      </TabsContent>
+    </Tabs>
       </DialogContent>
     </Dialog>
   );
