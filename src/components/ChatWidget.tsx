@@ -137,7 +137,9 @@ export const ChatWidget: React.FC = () => {
       "fixed z-50",
       isMobile && isOpen 
         ? "inset-0" 
-        : "bottom-6 right-6"
+        : isMobile 
+          ? "bottom-20 right-4"
+          : "bottom-6 right-6"
     )}>
       {isOpen && (
         <div 
