@@ -127,50 +127,29 @@ export function updatePWAManifest(config: {
   themeColor?: string;
   backgroundColor?: string;
 }) {
-  console.log('📝 Mise à jour du manifest PWA...');
+  console.log('📝 Mise à jour des meta tags PWA...');
 
-  // Créer le manifest
-  const manifest = {
+  // Ne PAS utiliser blob URLs pour le manifest (ne fonctionne pas sur mobile)
+  // Le manifest.json statique dans /public sera utilisé à la place
+  
+  // Stocker les URLs dans localStorage et la DB pour référence
+  const pwaConfig = {
     name: config.name,
-    short_name: config.shortName,
-    description: `${config.name} - Application de gestion professionnelle`,
-    start_url: "/",
-    display: "standalone",
-    background_color: config.backgroundColor || "#ffffff",
-    theme_color: config.themeColor || "#8b5cf6",
-    icons: [
-      {
-        src: config.icon192Url,
-        sizes: "192x192",
-        type: "image/png",
-        purpose: "any maskable"
-      },
-      {
-        src: config.icon512Url,
-        sizes: "512x512",
-        type: "image/png",
-        purpose: "any maskable"
-      }
-    ],
-    categories: ["business", "productivity"],
-    orientation: "any",
-    scope: "/"
+    shortName: config.shortName,
+    icon192: config.icon192Url,
+    icon512: config.icon512Url,
+    appleIcon: config.appleIconUrl,
+    themeColor: config.themeColor || "#8b5cf6",
+    backgroundColor: config.backgroundColor || "#ffffff"
   };
-
-  // Convertir en blob et créer une URL
-  const manifestBlob = new Blob([JSON.stringify(manifest, null, 2)], { 
-    type: 'application/manifest+json' 
-  });
-  const manifestURL = URL.createObjectURL(manifestBlob);
-
-  // Mettre à jour le lien vers le manifest
+  localStorage.setItem('pwaConfig', JSON.stringify(pwaConfig));
+  
+  // Mettre à jour le lien du manifest vers l'edge function
   let manifestLink = document.querySelector('link[rel="manifest"]') as HTMLLinkElement;
-  if (!manifestLink) {
-    manifestLink = document.createElement('link');
-    manifestLink.rel = 'manifest';
-    document.head.appendChild(manifestLink);
+  if (manifestLink) {
+    // Utiliser l'edge function pour servir un manifest dynamique
+    manifestLink.href = 'https://nhoemjarkxqwruupqgyd.supabase.co/functions/v1/pwa-manifest';
   }
-  manifestLink.href = manifestURL;
 
   // Mettre à jour le favicon
   let faviconLink = document.querySelector("link[rel*='icon']") as HTMLLinkElement;
@@ -197,7 +176,9 @@ export function updatePWAManifest(config: {
   }
   themeColorMeta.content = config.themeColor || "#8b5cf6";
 
-  console.log('✅ Manifest PWA mis à jour');
+  console.log('✅ PWA configuré avec succès');
+  console.log('📱 iOS: Supprimez l\'ancienne app de l\'écran d\'accueil et rajoutez-la');
+  console.log('🤖 Android: Désinstallez l\'app et réinstallez-la depuis Chrome');
 }
 
 /**
