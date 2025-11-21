@@ -8,9 +8,10 @@ import { ChatWidget } from '@/components/ChatWidget';
 import { TaskNotificationBanner } from '@/components/TaskNotificationBanner';
 import { UnifiedNotificationCenter } from '@/components/UnifiedNotificationCenter';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { FloatingActionButton } from '@/components/mobile/FloatingActionButton';
 import { MobileBottomNav } from '@/components/mobile/MobileBottomNav';
 import { MobileTopBar } from '@/components/mobile/MobileTopBar';
+import { useNotifications } from '@/hooks/useNotifications';
+import { usePWABadge } from '@/hooks/usePWABadge';
 
 const adminRoutes = [
   '/admin', '/dashboard', '/artists', '/events', '/agenda', '/contacts',
@@ -26,6 +27,10 @@ interface LayoutProps {
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   const isMobile = useIsMobile();
+  const { unreadCount } = useNotifications();
+  
+  // Mettre à jour le badge PWA avec le nombre de notifications non lues
+  usePWABadge(unreadCount);
   
   const isAdminRoute = adminRoutes.some(route =>
     location.pathname === route || location.pathname.startsWith(route + '/')
