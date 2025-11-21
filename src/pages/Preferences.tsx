@@ -37,39 +37,38 @@ export const Preferences: React.FC = () => {
         </p>
       </div>
       <Tabs defaultValue={defaultTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-1">
-          <TabsTrigger value="company" className="text-xs lg:text-sm">
-            <Globe className="h-4 w-4 lg:mr-2" />
-            <span className="hidden lg:inline">Entreprise</span>
+        <TabsList className="w-full flex flex-wrap h-auto gap-2 p-2 bg-muted/50">
+          <TabsTrigger value="company" className="flex-1 min-w-[100px] text-xs sm:text-sm data-[state=active]:bg-background">
+            <Globe className="h-4 w-4 mr-1 sm:mr-2" />
+            <span>Entreprise</span>
           </TabsTrigger>
-          <TabsTrigger value="appearance" className="text-xs lg:text-sm">
-            <Palette className="h-4 w-4 lg:mr-2" />
-            <span className="hidden lg:inline">Apparence</span>
+          <TabsTrigger value="appearance" className="flex-1 min-w-[100px] text-xs sm:text-sm data-[state=active]:bg-background">
+            <Palette className="h-4 w-4 mr-1 sm:mr-2" />
+            <span>Apparence</span>
           </TabsTrigger>
-          <TabsTrigger value="notifications" className="text-xs lg:text-sm">
-            <Bell className="h-4 w-4 lg:mr-2" />
-            <span className="hidden sm:inline lg:inline">Notifications</span>
-            <span className="sm:hidden">Notifs</span>
+          <TabsTrigger value="notifications" className="flex-1 min-w-[100px] text-xs sm:text-sm data-[state=active]:bg-background">
+            <Bell className="h-4 w-4 mr-1 sm:mr-2" />
+            <span>Notifications</span>
           </TabsTrigger>
-          <TabsTrigger value="email" className="text-xs lg:text-sm">
-            <Settings className="h-4 w-4 lg:mr-2" />
-            <span className="hidden lg:inline">Email</span>
+          <TabsTrigger value="email" className="flex-1 min-w-[100px] text-xs sm:text-sm data-[state=active]:bg-background">
+            <Settings className="h-4 w-4 mr-1 sm:mr-2" />
+            <span>Email</span>
           </TabsTrigger>
-          <TabsTrigger value="calendar" className="text-xs lg:text-sm">
-            <Calendar className="h-4 w-4 lg:mr-2" />
-            <span className="hidden lg:inline">Agenda</span>
+          <TabsTrigger value="calendar" className="flex-1 min-w-[100px] text-xs sm:text-sm data-[state=active]:bg-background">
+            <Calendar className="h-4 w-4 mr-1 sm:mr-2" />
+            <span>Agenda</span>
           </TabsTrigger>
-          <TabsTrigger value="gmail" className="text-xs lg:text-sm">
-            <Mail className="h-4 w-4 lg:mr-2" />
-            <span className="hidden lg:inline">Gmail</span>
+          <TabsTrigger value="gmail" className="flex-1 min-w-[100px] text-xs sm:text-sm data-[state=active]:bg-background">
+            <Mail className="h-4 w-4 mr-1 sm:mr-2" />
+            <span>Gmail</span>
           </TabsTrigger>
-          <TabsTrigger value="mobile" className="text-xs lg:text-sm">
-            <Smartphone className="h-4 w-4 lg:mr-2" />
-            <span className="hidden lg:inline">Mobile</span>
+          <TabsTrigger value="mobile" className="flex-1 min-w-[100px] text-xs sm:text-sm data-[state=active]:bg-background">
+            <Smartphone className="h-4 w-4 mr-1 sm:mr-2" />
+            <span>Mobile</span>
           </TabsTrigger>
-          <TabsTrigger value="colors" className="text-xs lg:text-sm">
-            <Palette className="h-4 w-4 lg:mr-2" />
-            <span className="hidden lg:inline">Couleurs</span>
+          <TabsTrigger value="colors" className="flex-1 min-w-[100px] text-xs sm:text-sm data-[state=active]:bg-background">
+            <Palette className="h-4 w-4 mr-1 sm:mr-2" />
+            <span>Couleurs</span>
           </TabsTrigger>
         </TabsList>
         <TabsContent value="company" className="space-y-4">

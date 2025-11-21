@@ -173,14 +173,40 @@ export const ChatWidget: React.FC = () => {
                   <SelectValue placeholder="Sélectionner un canal" />
                 </SelectTrigger>
                 <SelectContent className="bg-card text-card-foreground">
-                  {channels.map((channel) => (
-                    <SelectItem key={channel.id} value={channel.id}>
-                      <div className="flex items-center">
-                        {getChannelIcon(channel)}
-                        <span className="ml-2">{getChannelDisplayName(channel)}</span>
+                  {channels.filter(c => c.type !== 'direct').length > 0 && (
+                    <>
+                      <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                        CHANNELS
                       </div>
-                    </SelectItem>
-                  ))}
+                      {channels
+                        .filter(c => c.type !== 'direct')
+                        .map((channel) => (
+                          <SelectItem key={channel.id} value={channel.id}>
+                            <div className="flex items-center">
+                              {getChannelIcon(channel)}
+                              <span className="ml-2">{getChannelDisplayName(channel)}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                    </>
+                  )}
+                  {channels.filter(c => c.type === 'direct').length > 0 && (
+                    <>
+                      <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground mt-2">
+                        MESSAGES DIRECTS
+                      </div>
+                      {channels
+                        .filter(c => c.type === 'direct')
+                        .map((channel) => (
+                          <SelectItem key={channel.id} value={channel.id}>
+                            <div className="flex items-center">
+                              {getChannelIcon(channel)}
+                              <span className="ml-2">{getChannelDisplayName(channel)}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                    </>
+                  )}
                 </SelectContent>
               </Select>
               
