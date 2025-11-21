@@ -54,7 +54,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         </main>
 
         <MobileBottomNav />
-        <FloatingActionButton />
         <ChatWidget />
       </div>
     );

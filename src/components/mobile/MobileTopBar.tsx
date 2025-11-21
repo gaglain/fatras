@@ -1,18 +1,53 @@
-import React, { useState } from 'react';
-import { Menu, X, LogOut, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Menu, X, LogOut, ChevronRight, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { navigationData } from '@/data/navigationData';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 export const MobileTopBar: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [expandedSections, setExpandedSections] = useState<string[]>([]);
+  const [appLogo, setAppLogo] = useState<string>('');
+  const [userProfile, setUserProfile] = useState<{ avatar_url?: string } | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
+
+  useEffect(() => {
+    const loadAppSettings = async () => {
+      const { data } = await supabase
+        .from('app_settings')
+        .select('setting_value')
+        .eq('setting_key', 'app_icon')
+        .maybeSingle();
+      
+      if (data?.setting_value) {
+        setAppLogo(data.setting_value);
+      }
+    };
+
+    const loadUserProfile = async () => {
+      if (!user?.id) return;
+      
+      const { data } = await supabase
+        .from('user_profiles')
+        .select('avatar_url')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (data) {
+        setUserProfile(data);
+      }
+    };
+
+    loadAppSettings();
+    loadUserProfile();
+  }, [user]);
 
   const handleLogout = async () => {
     try {
@@ -46,22 +81,47 @@ export const MobileTopBar: React.FC = () => {
       {/* Top Bar */}
       <header className="fixed top-0 left-0 right-0 h-14 bg-background border-b z-40 flex items-center justify-between px-4">
         <div className="flex items-center gap-2">
-          <img 
-            src="/lovable-uploads/0dc85f93-e1c6-4afe-9b81-8b29ee2a3dcf.png" 
-            alt="Logo" 
-            className="h-6 w-6"
-            onError={(e) => e.currentTarget.style.display = 'none'}
-          />
+          {appLogo ? (
+            <img 
+              src={appLogo} 
+              alt="Logo" 
+              className="h-8 w-8 rounded object-cover"
+              onError={(e) => e.currentTarget.style.display = 'none'}
+            />
+          ) : (
+            <img 
+              src="/lovable-uploads/0dc85f93-e1c6-4afe-9b81-8b29ee2a3dcf.png" 
+              alt="Logo" 
+              className="h-6 w-6"
+              onError={(e) => e.currentTarget.style.display = 'none'}
+            />
+          )}
           <h1 className="font-semibold text-sm">Fatras</h1>
         </div>
 
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setMenuOpen(!menuOpen)}
-        >
-          {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full"
+            onClick={() => navigate('/preferences')}
+          >
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={userProfile?.avatar_url} />
+              <AvatarFallback>
+                <User className="h-4 w-4" />
+              </AvatarFallback>
+            </Avatar>
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setMenuOpen(!menuOpen)}
+          >
+            {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </Button>
+        </div>
       </header>
 
       {/* Slide-in Menu */}
