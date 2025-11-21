@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, LogOut, ChevronRight, User } from 'lucide-react';
+import { Menu, X, LogOut, ChevronRight, User, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -8,15 +8,21 @@ import { toast } from 'sonner';
 import { navigationData } from '@/data/navigationData';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import { useNotifications } from '@/hooks/useNotifications';
+import { NotificationBadge } from '@/components/notifications/NotificationBadge';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { EmailNotificationCenter } from '@/components/EmailNotificationCenter';
 
 export const MobileTopBar: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [expandedSections, setExpandedSections] = useState<string[]>([]);
   const [appLogo, setAppLogo] = useState<string>('');
   const [userProfile, setUserProfile] = useState<{ avatar_url?: string } | null>(null);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { signOut, user } = useAuth();
+  const { unreadCount } = useNotifications();
 
   useEffect(() => {
     const loadAppSettings = async () => {
@@ -100,6 +106,16 @@ export const MobileTopBar: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative"
+            onClick={() => setNotificationsOpen(true)}
+          >
+            <Bell className="h-5 w-5" />
+            <NotificationBadge count={unreadCount} />
+          </Button>
+
           <Button
             variant="ghost"
             size="icon"
@@ -209,6 +225,18 @@ export const MobileTopBar: React.FC = () => {
           </div>
         </>
       )}
+
+      {/* Notification Center Sheet */}
+      <Sheet open={notificationsOpen} onOpenChange={setNotificationsOpen}>
+        <SheetContent side="right" className="w-full sm:w-96">
+          <SheetHeader>
+            <SheetTitle>Notifications</SheetTitle>
+          </SheetHeader>
+          <div className="mt-4">
+            <EmailNotificationCenter />
+          </div>
+        </SheetContent>
+      </Sheet>
     </>
   );
 };
