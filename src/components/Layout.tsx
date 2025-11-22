@@ -11,6 +11,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileBottomNav } from '@/components/mobile/MobileBottomNav';
 import { MobileTopBar } from '@/components/mobile/MobileTopBar';
 import { useNotifications } from '@/hooks/useNotifications';
+import { useEmailNotifications } from '@/hooks/useEmailNotifications';
 import { usePWABadge } from '@/hooks/usePWABadge';
 
 const adminRoutes = [
@@ -27,10 +28,12 @@ interface LayoutProps {
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   const isMobile = useIsMobile();
-  const { unreadCount } = useNotifications();
+  const { unreadCount: generalUnreadCount } = useNotifications();
+  const { getUnreadCount } = useEmailNotifications();
   
-  // Mettre à jour le badge PWA avec le nombre de notifications non lues
-  usePWABadge(unreadCount);
+  // Badge PWA avec toutes les notifications (général + email)
+  const totalUnreadCount = generalUnreadCount + getUnreadCount();
+  usePWABadge(totalUnreadCount);
   
   const isAdminRoute = adminRoutes.some(route =>
     location.pathname === route || location.pathname.startsWith(route + '/')
