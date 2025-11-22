@@ -13,6 +13,7 @@ import { useEmailNotifications } from '@/hooks/useEmailNotifications';
 import { NotificationBadge } from '@/components/notifications/NotificationBadge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { NotificationList } from '@/components/notifications/NotificationList';
+import { useMessagingUnreadCount } from '@/hooks/useMessagingUnreadCount';
 
 export const MobileTopBar: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -25,9 +26,10 @@ export const MobileTopBar: React.FC = () => {
   const { signOut, user } = useAuth();
   const { unreadCount: generalUnreadCount } = useNotifications();
   const { getUnreadCount } = useEmailNotifications();
+  const messagingUnreadCount = useMessagingUnreadCount();
   
-  // Comptage total des notifications
-  const totalUnreadCount = generalUnreadCount + getUnreadCount();
+  // Comptage total des notifications (général + email + messagerie)
+  const totalUnreadCount = generalUnreadCount + getUnreadCount() + messagingUnreadCount;
 
   useEffect(() => {
     const loadAppSettings = async () => {

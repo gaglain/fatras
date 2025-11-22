@@ -13,6 +13,7 @@ import { MobileTopBar } from '@/components/mobile/MobileTopBar';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useEmailNotifications } from '@/hooks/useEmailNotifications';
 import { usePWABadge } from '@/hooks/usePWABadge';
+import { useMessagingUnreadCount } from '@/hooks/useMessagingUnreadCount';
 
 const adminRoutes = [
   '/admin', '/dashboard', '/artists', '/events', '/agenda', '/contacts',
@@ -30,9 +31,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const isMobile = useIsMobile();
   const { unreadCount: generalUnreadCount } = useNotifications();
   const { getUnreadCount } = useEmailNotifications();
+  const messagingUnreadCount = useMessagingUnreadCount();
   
-  // Badge PWA avec toutes les notifications (général + email)
-  const totalUnreadCount = generalUnreadCount + getUnreadCount();
+  // Badge PWA avec toutes les notifications (général + email + messagerie)
+  const totalUnreadCount = generalUnreadCount + getUnreadCount() + messagingUnreadCount;
   usePWABadge(totalUnreadCount);
   
   const isAdminRoute = adminRoutes.some(route =>
