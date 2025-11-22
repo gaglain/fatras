@@ -9,9 +9,10 @@ import { navigationData } from '@/data/navigationData';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useNotifications } from '@/hooks/useNotifications';
+import { useEmailNotifications } from '@/hooks/useEmailNotifications';
 import { NotificationBadge } from '@/components/notifications/NotificationBadge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { EmailNotificationCenter } from '@/components/EmailNotificationCenter';
+import { NotificationList } from '@/components/notifications/NotificationList';
 
 export const MobileTopBar: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -22,7 +23,11 @@ export const MobileTopBar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { signOut, user } = useAuth();
-  const { unreadCount } = useNotifications();
+  const { unreadCount: generalUnreadCount } = useNotifications();
+  const { getUnreadCount } = useEmailNotifications();
+  
+  // Comptage total des notifications
+  const totalUnreadCount = generalUnreadCount + getUnreadCount();
 
   useEffect(() => {
     const loadAppSettings = async () => {
@@ -113,7 +118,7 @@ export const MobileTopBar: React.FC = () => {
             onClick={() => setNotificationsOpen(true)}
           >
             <Bell className="h-5 w-5" />
-            <NotificationBadge count={unreadCount} />
+            <NotificationBadge count={totalUnreadCount} />
           </Button>
 
           <Button
@@ -229,11 +234,8 @@ export const MobileTopBar: React.FC = () => {
       {/* Notification Center Sheet */}
       <Sheet open={notificationsOpen} onOpenChange={setNotificationsOpen}>
         <SheetContent side="right" className="w-full sm:w-96">
-          <SheetHeader>
-            <SheetTitle>Notifications</SheetTitle>
-          </SheetHeader>
-          <div className="mt-4">
-            <EmailNotificationCenter />
+          <div className="h-full overflow-y-auto">
+            <NotificationList />
           </div>
         </SheetContent>
       </Sheet>
