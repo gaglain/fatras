@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 export interface CompanySettings {
   name: string;
@@ -7,57 +9,98 @@ export interface CompanySettings {
 }
 
 export function useCompanySettings() {
+  const { user } = useAuth();
   const [settings, setSettings] = useState<CompanySettings>({
     name: "MusiConnect",
     logo: "/logo.svg",
     favicon: ""
   });
 
+  // Charger les paramètres depuis Supabase quand l'utilisateur change
   useEffect(() => {
-    const applyFavicon = (url?: string) => {
-      if (!url) return;
+    const loadFromSupabase = async () => {
+      if (!user?.id) {
+        // Si pas d'utilisateur, charger depuis localStorage
+        try {
+          const stored = localStorage.getItem("companySettings");
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            setSettings((old) => ({ ...old, ...parsed }));
+            applySettings(parsed);
+          }
+        } catch (err) {
+          console.error("Error loading from localStorage:", err);
+        }
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('app_settings')
+          .select('setting_key, setting_value')
+          .eq('user_id', user.id)
+          .in('setting_key', ['company_name', 'company_logo', 'company_favicon']);
+
+        if (error) throw error;
+
+        const loadedSettings = data?.reduce((acc, item) => {
+          switch (item.setting_key) {
+            case 'company_name':
+              acc.name = item.setting_value;
+              break;
+            case 'company_logo':
+              acc.logo = item.setting_value;
+              break;
+            case 'company_favicon':
+              acc.favicon = item.setting_value;
+              break;
+          }
+          return acc;
+        }, {
+          name: "MusiConnect",
+          logo: "/logo.svg",
+          favicon: ""
+        });
+
+        if (loadedSettings) {
+          setSettings(loadedSettings);
+          localStorage.setItem('companySettings', JSON.stringify(loadedSettings));
+          applySettings(loadedSettings);
+        }
+      } catch (error) {
+        console.error('Error loading company settings:', error);
+      }
+    };
+
+    loadFromSupabase();
+  }, [user?.id]);
+
+  const applySettings = (settings: CompanySettings) => {
+    if (settings.favicon) {
       let link = document.querySelector('link[rel="icon"]') as HTMLLinkElement | null;
       if (!link) {
         link = document.createElement('link');
         link.rel = 'icon';
         document.head.appendChild(link);
       }
-      link.href = url;
-      try { localStorage.setItem('customFavicon', url); } catch {}
-    };
-
-    // Chargement depuis le localStorage
-    const stored = localStorage.getItem("companySettings");
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        setSettings((old) => ({ ...old, ...parsed }));
-        if (parsed?.favicon) applyFavicon(parsed.favicon);
-        if (parsed?.name) document.title = parsed.name;
-      } catch (err) {
-        // Ignore/Keep defaults
-      }
+      link.href = settings.favicon;
+      try { localStorage.setItem('customFavicon', settings.favicon); } catch {}
     }
+    if (settings.name) {
+      document.title = settings.name;
+    }
+  };
 
-    // Appliquer un favicon personnalisé persistant si présent
-    try {
-      const savedFav = localStorage.getItem('customFavicon');
-      if (savedFav) applyFavicon(savedFav);
-    } catch {}
-
-    // Mettre à jour le titre si non défini
-    if (settings?.name) document.title = settings.name;
-
-    // Écoute des mises à jour envoyées par la page Préférences
+  // Écoute des mises à jour envoyées par la page Préférences
+  useEffect(() => {
     const onChange = (e: Event) => {
       const detail = (e as CustomEvent).detail || {};
       setSettings((old) => ({ ...old, ...detail }));
-      if ((detail as any).favicon) applyFavicon((detail as any).favicon);
-      if ((detail as any).name) document.title = (detail as any).name;
+      applySettings(detail);
     };
     window.addEventListener("companySettingsChanged", onChange as any);
     return () => window.removeEventListener("companySettingsChanged", onChange as any);
-  }, [settings?.name]);
+  }, []);
 
   return settings;
 }

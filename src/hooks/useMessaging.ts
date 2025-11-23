@@ -231,13 +231,31 @@ export const useMessaging = () => {
 
   // Fetch available users for adding to channels
   const fetchAvailableUsers = async () => {
+    if (!user) {
+      setAvailableUsers([]);
+      return;
+    }
+
     try {
-      // Use security definer RPC to bypass RLS safely and fetch minimal public user info
-      const { data, error } = await (supabase as any).rpc('get_active_users_basic');
-      if (error) throw error;
-      setAvailableUsers((data as any[]) || []);
+      // Try RPC first
+      const { data: rpcData, error: rpcError } = await (supabase as any).rpc('get_active_users_basic');
+      if (!rpcError && rpcData) {
+        setAvailableUsers(rpcData || []);
+        return;
+      }
+
+      // Fallback: fetch from user_profiles directly
+      console.warn('RPC get_active_users_basic not available, using fallback', rpcError);
+      const { data: profiles, error: profilesError } = await supabase
+        .from('user_profiles')
+        .select('user_id, first_name, last_name, username, email, is_active')
+        .eq('is_active', true)
+        .neq('user_id', user.id);
+
+      if (profilesError) throw profilesError;
+      setAvailableUsers(profiles || []);
     } catch (error) {
-      console.error('Error fetching users via RPC:', error);
+      console.error('Error fetching available users:', error);
       setAvailableUsers([]);
     }
   };
