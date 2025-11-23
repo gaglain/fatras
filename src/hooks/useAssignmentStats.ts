@@ -51,9 +51,7 @@ export const useAssignmentStats = () => {
             title,
             assigned_to,
             user_id,
-            created_at,
-            assigned_user:profiles!tasks_assigned_to_fkey(id, email, first_name, last_name),
-            creator:profiles!tasks_user_id_fkey(id, email, first_name, last_name)
+            created_at
           `)
           .not('assigned_to', 'is', null)
           .order('created_at', { ascending: false });
@@ -65,17 +63,40 @@ export const useAssignmentStats = () => {
 
         console.log('✅ Tasks fetched:', tasks?.length || 0);
 
+        // Récupérer tous les profiles nécessaires
+        const userIds = new Set<string>();
+        tasks?.forEach(t => {
+          if (t.assigned_to) userIds.add(t.assigned_to);
+          if (t.user_id) userIds.add(t.user_id);
+        });
+
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, email, first_name, last_name')
+          .in('id', Array.from(userIds));
+
+        if (profilesError) {
+          console.error('❌ Error fetching profiles:', profilesError);
+        }
+
+        const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
+
         // Mapper uniquement les tâches assignées
-        const allAssignments = (tasks || []).map((t: any) => ({
-          id: t.id,
-          type: 'task' as const,
-          title: t.title,
-          assigned_by: t.creator?.email || 'Système',
-          assigned_by_name: t.creator ? `${t.creator.first_name || ''} ${t.creator.last_name || ''}`.trim() || t.creator.email : 'Système',
-          assigned_to: t.assigned_user?.email || 'Inconnu',
-          assigned_to_name: t.assigned_user ? `${t.assigned_user.first_name || ''} ${t.assigned_user.last_name || ''}`.trim() || t.assigned_user.email : 'Inconnu',
-          created_at: t.created_at
-        }));
+        const allAssignments = (tasks || []).map((t: any) => {
+          const assignedUser = profilesMap.get(t.assigned_to);
+          const creator = profilesMap.get(t.user_id);
+          
+          return {
+            id: t.id,
+            type: 'task' as const,
+            title: t.title,
+            assigned_by: creator?.email || 'Système',
+            assigned_by_name: creator ? `${creator.first_name || ''} ${creator.last_name || ''}`.trim() || creator.email : 'Système',
+            assigned_to: assignedUser?.email || 'Inconnu',
+            assigned_to_name: assignedUser ? `${assignedUser.first_name || ''} ${assignedUser.last_name || ''}`.trim() || assignedUser.email : 'Inconnu',
+            created_at: t.created_at
+          };
+        });
 
         // Trier par date
         allAssignments.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());

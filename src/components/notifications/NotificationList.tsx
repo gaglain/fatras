@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BellOff, Check, Mail, Clock, CheckSquare, Calendar, User, MessageSquare, AlertTriangle } from 'lucide-react';
@@ -191,7 +190,7 @@ export const NotificationList: React.FC = () => {
     }
 
     return (
-      <ScrollArea className="h-[400px]">
+      <div className="max-h-[400px] overflow-y-auto">
         <div className="space-y-2">
           {notifications.map((notification) => (
             <div
@@ -232,7 +231,7 @@ export const NotificationList: React.FC = () => {
             </div>
           ))}
         </div>
-      </ScrollArea>
+      </div>
     );
   };
 
