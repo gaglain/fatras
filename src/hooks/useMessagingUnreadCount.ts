@@ -7,49 +7,23 @@ export const useMessagingUnreadCount = () => {
   const { user } = useAuth();
 
   useEffect(() => {
-    if (!user) {
+    if (!user?.id) {
       setUnreadCount(0);
       return;
     }
 
     const fetchUnreadCount = async () => {
       try {
-        // Récupérer l'ID utilisateur depuis auth
-        const { data: { user: authUser } } = await supabase.auth.getUser();
-        if (!authUser) {
-          setUnreadCount(0);
-          return;
-        }
+        // Compter simplement les notifications de type 'message' non lues
+        const { count, error } = await supabase
+          .from('notifications')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .eq('type', 'message')
+          .eq('read', false);
 
-        // Récupérer les canaux dont l'utilisateur est membre
-        const { data: memberships, error: memberError } = await supabase
-          .from('messaging_channel_members')
-          .select('channel_id, last_read_at')
-          .eq('user_id', authUser.id);
-
-        if (memberError) throw memberError;
-        if (!memberships || memberships.length === 0) {
-          setUnreadCount(0);
-          return;
-        }
-
-        // Pour chaque canal, compter les messages non lus
-        let totalUnread = 0;
-        
-        for (const membership of memberships) {
-          const { count, error: countError } = await supabase
-            .from('messaging_messages')
-            .select('*', { count: 'exact', head: true })
-            .eq('channel_id', membership.channel_id)
-            .neq('user_id', authUser.id)
-            .gt('created_at', membership.last_read_at || '1970-01-01');
-
-          if (!countError && count) {
-            totalUnread += count;
-          }
-        }
-
-        setUnreadCount(totalUnread);
+        if (error) throw error;
+        setUnreadCount(count || 0);
       } catch (error) {
         console.error('Error fetching messaging unread count:', error);
         setUnreadCount(0);
@@ -58,52 +32,29 @@ export const useMessagingUnreadCount = () => {
 
     fetchUnreadCount();
 
-    // S'abonner aux nouveaux messages
-    const subscribeToChanges = async () => {
-      const { data: { user: authUser } } = await supabase.auth.getUser();
-      if (!authUser) return;
-
-      const channel = supabase
-        .channel('messaging-unread')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'messaging_messages'
-          },
-          () => {
-            fetchUnreadCount();
-          }
-        )
-        .on(
-          'postgres_changes',
-          {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'messaging_channel_members',
-            filter: `user_id=eq.${authUser.id}`
-          },
-          () => {
-            fetchUnreadCount();
-          }
-        )
-        .subscribe();
-
-      return channel;
-    };
-
-    let channelSubscription: any;
-    subscribeToChanges().then(channel => {
-      channelSubscription = channel;
-    });
+    // S'abonner aux changements de notifications de type 'message'
+    const channel = supabase
+      .channel('messaging-notifications-unread')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('📨 Notification change detected:', payload);
+          // Rafraîchir immédiatement le compteur
+          fetchUnreadCount();
+        }
+      )
+      .subscribe();
 
     return () => {
-      if (channelSubscription) {
-        channelSubscription.unsubscribe();
-      }
+      channel.unsubscribe();
     };
-  }, [user]);
+  }, [user?.id]);
 
   return unreadCount;
 };
