@@ -8,12 +8,14 @@ import { MessageSquare, X, Send, User, Hash, Plus } from 'lucide-react';
 import { useMessaging } from '@/hooks/useMessaging';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotifications } from '@/hooks/useNotifications';
+import { useMessagingUnreadCount } from '@/hooks/useMessagingUnreadCount';
 import { ChannelManager } from '@/components/messaging/ChannelManager';
 import { DirectMessageManager } from '@/components/messaging/DirectMessageManager';
 import { ChannelBrowser } from '@/components/messaging/ChannelBrowser';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 export const ChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -23,6 +25,8 @@ export const ChatWidget: React.FC = () => {
   const { createNotification } = useNotifications();
   const isMobile = useIsMobile();
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
+
+  const messagingUnreadCount = useMessagingUnreadCount();
 
   const { 
     channels, 
@@ -71,12 +75,30 @@ export const ChatWidget: React.FC = () => {
   const currentChannel = channels.find(c => c.id === selectedChannel);
   const currentMessages = messages[selectedChannel] || [];
 
-  // Mark channel as read when widget is opened
+  // Mark channel as read and clear notifications when widget is opened
   useEffect(() => {
-    if (isOpen && selectedChannel) {
+    if (isOpen && selectedChannel && user?.id) {
       markChannelAsRead(selectedChannel);
+      
+      // Marquer les notifications de ce canal comme lues
+      const markNotificationsAsRead = async () => {
+        try {
+          const { error } = await supabase
+            .from('notifications')
+            .update({ read: true })
+            .eq('user_id', user.id)
+            .eq('type', 'message')
+            .eq('metadata->>channel_id', selectedChannel);
+          
+          if (error) console.error('Error marking notifications as read:', error);
+        } catch (err) {
+          console.error('Error updating notifications:', err);
+        }
+      };
+      
+      markNotificationsAsRead();
     }
-  }, [isOpen, selectedChannel, markChannelAsRead]);
+  }, [isOpen, selectedChannel, markChannelAsRead, user?.id]);
 
   // Scroll automatique vers le dernier message
   useEffect(() => {
@@ -121,16 +143,8 @@ export const ChatWidget: React.FC = () => {
     }
   };
 
-  // Count unread messages using last_read_at per channel member
-  const totalUnreadCount = channels.reduce((total, channel) => {
-    const channelMessages = messages[channel.id] || [];
-    const myMember = channel.members?.find(m => m.user_id === user?.id);
-    const lastRead = myMember?.last_read_at ? new Date(myMember.last_read_at).getTime() : 0;
-    const unreadCount = channelMessages.filter(msg =>
-      msg.user_id !== user?.id && new Date(msg.created_at).getTime() > lastRead
-    ).length;
-    return total + unreadCount;
-  }, 0);
+  // Utiliser le compteur de notifications de messagerie
+  const totalUnreadCount = messagingUnreadCount;
 
   return (
     <div className={cn(
