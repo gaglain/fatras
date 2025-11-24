@@ -33,8 +33,10 @@ export const useMessagingUnreadCount = () => {
     fetchUnreadCount();
 
     // S'abonner aux changements de notifications de type 'message'
+    // Utiliser un nom de canal unique avec l'ID utilisateur pour éviter les conflits
+    const channelName = `messaging-notifications-unread-${user.id}`;
     const channel = supabase
-      .channel('messaging-notifications-unread')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -52,7 +54,7 @@ export const useMessagingUnreadCount = () => {
       .subscribe();
 
     return () => {
-      channel.unsubscribe();
+      supabase.removeChannel(channel);
     };
   }, [user?.id]);
 
