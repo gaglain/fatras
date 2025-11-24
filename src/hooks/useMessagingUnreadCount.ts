@@ -32,29 +32,11 @@ export const useMessagingUnreadCount = () => {
 
     fetchUnreadCount();
 
-    // S'abonner aux changements de notifications de type 'message'
-    // Utiliser un nom de canal unique avec l'ID utilisateur pour éviter les conflits
-    const channelName = `messaging-notifications-unread-${user.id}`;
-    const channel = supabase
-      .channel(channelName)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${user.id}`
-        },
-        (payload) => {
-          console.log('📨 Notification change detected:', payload);
-          // Rafraîchir immédiatement le compteur
-          fetchUnreadCount();
-        }
-      )
-      .subscribe();
+    // Rafraîchir périodiquement (toutes les 10 secondes)
+    const interval = setInterval(fetchUnreadCount, 10000);
 
     return () => {
-      supabase.removeChannel(channel);
+      clearInterval(interval);
     };
   }, [user?.id]);
 
