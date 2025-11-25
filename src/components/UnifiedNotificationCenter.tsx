@@ -44,9 +44,8 @@ export const UnifiedNotificationCenter: React.FC = () => {
     markAllAsRead: markAllGeneralAsRead 
   } = useNotifications();
   
-  const { 
-    notifications: taskNotifications 
-  } = useTaskNotifications();
+  // useTaskNotifications pour la vérification en arrière-plan
+  useTaskNotifications();
 
   // Unifier toutes les notifications
   const allNotifications = useMemo<UnifiedNotification[]>(() => {
@@ -66,39 +65,43 @@ export const UnifiedNotificationCenter: React.FC = () => {
       });
     });
 
-    // Ajouter les notifications générales
+    // Ajouter les notifications générales et de tâches
     generalNotifications.forEach(notif => {
-      unified.push({
-        id: `general-${notif.id}`,
-        type: (notif.type as any) || 'general',
-        title: notif.title,
-        message: notif.message,
-        is_read: notif.read,
-        created_at: notif.created_at,
-        source: 'general',
-        priority: 'medium'
-      });
-    });
-
-    // Ajouter les notifications de tâches
-    taskNotifications.forEach(notif => {
-      unified.push({
-        id: `task-${notif.task_id}`,
-        type: 'task',
-        title: notif.task_title,
-        message: notif.message,
-        is_read: false,
-        created_at: notif.created_at,
-        source: 'task',
-        priority: notif.type === 'overdue' ? 'high' : 'medium'
-      });
+      // Déterminer si c'est une notification de tâche
+      const isTaskNotif = notif.type === 'task_overdue' || notif.type === 'task_due_soon';
+      
+      if (isTaskNotif && notif.data?.task_id) {
+        // Notification de tâche avec task_id
+        unified.push({
+          id: `task-${notif.id}-${notif.data.task_id}`, // Inclure l'ID de la notification ET du task
+          type: 'task',
+          title: notif.title,
+          message: notif.message,
+          is_read: notif.read,
+          created_at: notif.created_at,
+          source: 'general',
+          priority: notif.type === 'task_overdue' ? 'high' : 'medium'
+        });
+      } else {
+        // Notification générale normale
+        unified.push({
+          id: `general-${notif.id}`,
+          type: (notif.type as any) || 'general',
+          title: notif.title,
+          message: notif.message,
+          is_read: notif.read,
+          created_at: notif.created_at,
+          source: 'general',
+          priority: 'medium'
+        });
+      }
     });
 
     // Trier par date décroissante
     return unified.sort((a, b) => 
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
-  }, [emailNotifications, generalNotifications, taskNotifications]);
+  }, [emailNotifications, generalNotifications]);
 
   const totalUnreadCount = useMemo(() => {
     return allNotifications.filter(n => !n.is_read).length;
@@ -130,8 +133,9 @@ export const UnifiedNotificationCenter: React.FC = () => {
         navigateTo('/email');
         break;
       case 'task':
-        // Extraire le task_id de l'id de la notification (format: "task-{task_id}")
-        const taskId = notification.id.split('-')[1];
+        // Extraire le task_id de l'id de la notification (format: "task-{notif_id}-{task_id}")
+        const parts = notification.id.split('-');
+        const taskId = parts[parts.length - 1]; // Dernier élément = task_id
         navigateTo(`/tasks?taskId=${taskId}`);
         break;
       case 'event':
