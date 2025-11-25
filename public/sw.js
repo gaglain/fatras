@@ -29,6 +29,57 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// Handle push notifications
+self.addEventListener('push', (event) => {
+  console.log('📬 Push notification received:', event);
+  
+  let notificationData = {
+    title: 'Nouvelle notification',
+    body: 'Vous avez une nouvelle notification',
+    badge: '/favicon.ico',
+    icon: '/favicon.ico',
+    tag: 'notification',
+    data: {}
+  };
+
+  if (event.data) {
+    try {
+      const payload = event.data.json();
+      notificationData = {
+        title: payload.title || notificationData.title,
+        body: payload.body || notificationData.body,
+        badge: payload.badge || notificationData.badge,
+        icon: payload.icon || notificationData.icon,
+        tag: payload.tag || notificationData.tag,
+        data: payload.data || {}
+      };
+    } catch (error) {
+      console.error('Error parsing push payload:', error);
+    }
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(notificationData.title, {
+      body: notificationData.body,
+      icon: notificationData.icon,
+      badge: notificationData.badge,
+      tag: notificationData.tag,
+      data: notificationData.data,
+      vibrate: [200, 100, 200]
+    })
+  );
+});
+
+// Handle notification clicks
+self.addEventListener('notificationclick', (event) => {
+  console.log('🔔 Notification clicked:', event);
+  event.notification.close();
+
+  event.waitUntil(
+    clients.openWindow(event.notification.data.url || '/')
+  );
+});
+
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
