@@ -130,7 +130,9 @@ export const UnifiedNotificationCenter: React.FC = () => {
         navigateTo('/email');
         break;
       case 'task':
-        navigateTo('/tasks');
+        // Extraire le task_id de l'id de la notification (format: "task-{task_id}")
+        const taskId = notification.id.split('-')[1];
+        navigateTo(`/tasks?taskId=${taskId}`);
         break;
       case 'event':
         navigateTo('/events');

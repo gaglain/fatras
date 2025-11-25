@@ -54,6 +54,21 @@ export const Tasks: React.FC = () => {
   const { users } = useUser();
   const { tasks, loading, updateTask, deleteTask } = useTasks();
 
+  // Ouvrir automatiquement une tâche si taskId est dans l'URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const taskId = urlParams.get('taskId');
+    
+    if (taskId && tasks.length > 0) {
+      const task = tasks.find(t => t.id === taskId);
+      if (task) {
+        setSelectedTask(task);
+        // Nettoyer l'URL sans recharger la page
+        window.history.replaceState({}, '', '/tasks');
+      }
+    }
+  }, [tasks]);
+
   const handleTaskCreated = async () => {
     toast.success('Tâche créée avec succès');
   };
