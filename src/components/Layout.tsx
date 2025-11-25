@@ -14,6 +14,7 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { useEmailNotifications } from '@/hooks/useEmailNotifications';
 import { usePWABadge } from '@/hooks/usePWABadge';
 import { useMessagingUnreadCount } from '@/hooks/useMessagingUnreadCount';
+import { PushNotificationPrompt } from '@/components/notifications/PushNotificationPrompt';
 
 const adminRoutes = [
   '/admin', '/dashboard', '/artists', '/events', '/agenda', '/contacts',
@@ -48,6 +49,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       <>
         {children}
         <ChatWidget />
+        <PushNotificationPrompt />
       </>
     );
   }
@@ -65,6 +67,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
         <MobileBottomNav />
         <ChatWidget />
+        <PushNotificationPrompt />
       </div>
     );
   }
@@ -89,6 +92,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
       </div>
       <ChatWidget />
+      <PushNotificationPrompt />
     </SidebarProvider>
   );
 };
