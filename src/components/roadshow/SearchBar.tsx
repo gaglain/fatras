@@ -31,8 +31,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   users 
 }) => {
   return (
-    <div className="flex flex-wrap gap-4">
-      <div className="relative flex-1 max-w-md">
+    <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-4">
+      <div className="relative w-full sm:flex-1 sm:max-w-md">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
         <Input
           placeholder="Rechercher par ville ou lieu..."
@@ -42,46 +42,48 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         />
       </div>
       
-      <Select value={filterArtist} onValueChange={setFilterArtist}>
-        <SelectTrigger className="w-48">
-          <SelectValue placeholder="Filtrer par artiste" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Tous les artistes</SelectItem>
-          {artists.map((artist) => (
-            <SelectItem key={artist.id} value={artist.id}>
-              {artist.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <div className="grid grid-cols-2 sm:flex gap-2 sm:gap-4">
+        <Select value={filterArtist} onValueChange={setFilterArtist}>
+          <SelectTrigger className="w-full sm:w-40">
+            <SelectValue placeholder="Artiste" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tous les artistes</SelectItem>
+            {artists.map((artist) => (
+              <SelectItem key={artist.id} value={artist.id}>
+                {artist.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-      <Select value={filterUser} onValueChange={setFilterUser}>
-        <SelectTrigger className="w-48">
-          <SelectValue placeholder="Filtrer par créateur" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Tous les utilisateurs</SelectItem>
-          {users.filter(user => user.isActive).map((user) => (
-            <SelectItem key={user.id} value={user.id}>
-              {user.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+        <Select value={filterUser} onValueChange={setFilterUser}>
+          <SelectTrigger className="w-full sm:w-40">
+            <SelectValue placeholder="Créateur" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tous les utilisateurs</SelectItem>
+            {users.filter(user => user.isActive).map((user) => (
+              <SelectItem key={user.id} value={user.id}>
+                {user.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-      <Select value={sortBy} onValueChange={setSortBy}>
-        <SelectTrigger className="w-52">
-          <ArrowUpDown className="h-4 w-4 mr-2" />
-          <SelectValue placeholder="Trier par" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="date-asc">Date (plus ancien)</SelectItem>
-          <SelectItem value="date-desc">Date (plus récent)</SelectItem>
-          <SelectItem value="artist">Spectacle (A-Z)</SelectItem>
-          <SelectItem value="city">Ville (A-Z)</SelectItem>
-        </SelectContent>
-      </Select>
+        <Select value={sortBy} onValueChange={setSortBy}>
+          <SelectTrigger className="w-full sm:w-44 col-span-2 sm:col-span-1">
+            <ArrowUpDown className="h-4 w-4 mr-2 flex-shrink-0" />
+            <SelectValue placeholder="Trier par" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="date-asc">Date (plus ancien)</SelectItem>
+            <SelectItem value="date-desc">Date (plus récent)</SelectItem>
+            <SelectItem value="artist">Spectacle (A-Z)</SelectItem>
+            <SelectItem value="city">Ville (A-Z)</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
     </div>
   );
 };

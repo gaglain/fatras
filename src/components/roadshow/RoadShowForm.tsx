@@ -23,13 +23,13 @@ export const RoadShowForm: React.FC<RoadShowFormProps> = ({
 }) => {
   return (
     <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-      <TabsList className="grid grid-cols-6 mb-4">
-        <TabsTrigger value="general">Général</TabsTrigger>
-        <TabsTrigger value="logistics">Logistique</TabsTrigger>
-        <TabsTrigger value="contacts">Contacts</TabsTrigger>
-        <TabsTrigger value="lineup">Casting</TabsTrigger>
-        <TabsTrigger value="entities">Entités</TabsTrigger>
-        <TabsTrigger value="expenses">Note de frais</TabsTrigger>
+      <TabsList className="grid grid-cols-3 sm:grid-cols-6 mb-4 h-auto">
+        <TabsTrigger value="general" className="text-xs sm:text-sm py-2">Général</TabsTrigger>
+        <TabsTrigger value="logistics" className="text-xs sm:text-sm py-2">Logistique</TabsTrigger>
+        <TabsTrigger value="contacts" className="text-xs sm:text-sm py-2">Contacts</TabsTrigger>
+        <TabsTrigger value="lineup" className="text-xs sm:text-sm py-2">Casting</TabsTrigger>
+        <TabsTrigger value="entities" className="text-xs sm:text-sm py-2">Entités</TabsTrigger>
+        <TabsTrigger value="expenses" className="text-xs sm:text-sm py-2">Frais</TabsTrigger>
       </TabsList>
 
       <TabsContent value="general">
