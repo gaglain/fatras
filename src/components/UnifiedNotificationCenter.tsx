@@ -1,4 +1,5 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -23,12 +24,8 @@ interface UnifiedNotification {
 }
 
 export const UnifiedNotificationCenter: React.FC = () => {
-  const navigateTo = (path: string) => {
-    if (typeof window !== 'undefined') {
-      window.history.pushState({}, '', path);
-      window.dispatchEvent(new PopStateEvent('popstate'));
-    }
-  };
+  const navigate = useNavigate();
+  const [isOpen, setIsOpen] = useState(false);
   const { 
     notifications: emailNotifications, 
     isLoading: emailLoading, 
@@ -126,30 +123,33 @@ export const UnifiedNotificationCenter: React.FC = () => {
 
   const handleNotificationClick = (notification: UnifiedNotification) => {
     handleMarkAsRead(notification);
+    setIsOpen(false); // Fermer le popover
     
-    // Navigation basée sur le type
-    switch (notification.type) {
-      case 'email':
-        navigateTo('/email');
-        break;
-      case 'task':
-        // Extraire le task_id de l'id de la notification (format: "task-{notif_id}-{task_id}")
-        const parts = notification.id.split('-');
-        const taskId = parts[parts.length - 1]; // Dernier élément = task_id
-        navigateTo(`/tasks?taskId=${taskId}`);
-        break;
-      case 'event':
-        navigateTo('/events');
-        break;
-      case 'contact':
-        navigateTo('/contacts');
-        break;
-      case 'message':
-        navigateTo('/messagerie');
-        break;
-      default:
-        break;
-    }
+    // Navigation basée sur le type avec un petit délai pour laisser le popover se fermer
+    setTimeout(() => {
+      switch (notification.type) {
+        case 'email':
+          navigate('/email');
+          break;
+        case 'task':
+          // Extraire le task_id de l'id de la notification (format: "task-{notif_id}-{task_id}")
+          const parts = notification.id.split('-');
+          const taskId = parts[parts.length - 1]; // Dernier élément = task_id
+          navigate(`/tasks?taskId=${taskId}`);
+          break;
+        case 'event':
+          navigate('/events');
+          break;
+        case 'contact':
+          navigate('/contacts');
+          break;
+        case 'message':
+          navigate('/messagerie');
+          break;
+        default:
+          break;
+      }
+    }, 100);
   };
 
   const formatDate = (dateString: string) => {
@@ -204,8 +204,8 @@ export const UnifiedNotificationCenter: React.FC = () => {
     }
 
     return (
-      <ScrollArea className="h-[400px]">
-        <div className="space-y-2">
+      <div className="max-h-[60vh] overflow-y-auto">
+        <div className="space-y-2 pb-2">
           {notifications.map((notification) => (
             <div
               key={notification.id}
@@ -245,12 +245,12 @@ export const UnifiedNotificationCenter: React.FC = () => {
             </div>
           ))}
         </div>
-      </ScrollArea>
+      </div>
     );
   };
 
   return (
-    <Popover>
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
           {totalUnreadCount > 0 ? (
@@ -268,7 +268,7 @@ export const UnifiedNotificationCenter: React.FC = () => {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-96" align="end">
+      <PopoverContent className="w-[90vw] max-w-96" align="end">
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h4 className="font-semibold text-lg">Notifications</h4>

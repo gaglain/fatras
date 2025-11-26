@@ -3,11 +3,9 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { MapPin, Calendar, Clock, Users, Eye, Edit, Trash2, Download } from 'lucide-react';
 import { TourStop, Artist } from '@/types/roadshow.types';
 import { TourStopPreview } from './TourStopPreview';
-import { RoadshowEntityLinks } from './RoadshowEntityLinks';
 import { generateTourStopPDF } from '@/utils/pdfGenerator';
 import { toast } from 'sonner';
 
@@ -74,48 +72,51 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
   return (
     <>
       <Card className="hover:shadow-lg transition-shadow">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center space-x-2">
-              <MapPin className="h-5 w-5 text-purple-600" />
-              <span>{stop.city} - {stop.venue}</span>
+        <CardHeader className="pb-2 sm:pb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <CardTitle className="flex items-center space-x-2 text-base sm:text-lg">
+              <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600 flex-shrink-0" />
+              <span className="truncate">{stop.city} - {stop.venue}</span>
             </CardTitle>
-            <Badge className={getStatusColor(stop.status)}>
+            <Badge className={`${getStatusColor(stop.status)} w-fit`}>
               {getStatusLabel(stop.status)}
             </Badge>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <CardContent className="pt-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4 mb-4">
             <div className="flex items-center space-x-2">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm">{new Date(stop.date).toLocaleDateString()}</span>
+              <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <span className="text-xs sm:text-sm truncate">{new Date(stop.date).toLocaleDateString()}</span>
             </div>
             <div className="flex items-center space-x-2">
-              <Clock className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm">{stop.time}</span>
+              <Clock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <span className="text-xs sm:text-sm">{stop.time || '-'}</span>
             </div>
-            <div className="flex items-center space-x-2">
-              <Users className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm">Capacité: {stop.capacity}</span>
+            <div className="flex items-center space-x-2 col-span-2 sm:col-span-1">
+              <Users className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <span className="text-xs sm:text-sm">Capacité: {stop.capacity}</span>
             </div>
           </div>
 
-          <div className="mb-4">
-            <p className="text-sm text-muted-foreground mb-1">Adresse:</p>
-            <p className="text-sm">{stop.address}</p>
-          </div>
+          {stop.address && (
+            <div className="mb-4">
+              <p className="text-xs sm:text-sm text-muted-foreground mb-1">Adresse:</p>
+              <p className="text-xs sm:text-sm">{stop.address}</p>
+            </div>
+          )}
 
           {stop.artistLineup.length > 0 && (
             <div className="mb-4">
-              <p className="text-sm text-muted-foreground mb-2">Casting:</p>
-              <div className="flex flex-wrap gap-2">
+              <p className="text-xs sm:text-sm text-muted-foreground mb-2">Casting:</p>
+              <div className="flex flex-wrap gap-1 sm:gap-2">
                 {stop.artistLineup.map((artistInfo) => {
                   const user = getUserById(artistInfo.userId);
                   return (
                     <Badge 
                       key={artistInfo.userId} 
                       variant={artistInfo.confirmed ? "default" : "secondary"}
+                      className="text-xs"
                     >
                       {user?.name} {artistInfo.confirmed ? '✓' : '?'}
                     </Badge>
@@ -127,43 +128,37 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
 
           {stop.notes && (
             <div className="mb-4">
-              <p className="text-sm text-muted-foreground mb-1">Notes:</p>
-              <p className="text-sm">{stop.notes}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground mb-1">Notes:</p>
+              <p className="text-xs sm:text-sm line-clamp-2">{stop.notes}</p>
             </div>
           )}
 
-          <Separator className="my-4" />
-
-          <div className="mb-4">
-            <RoadshowEntityLinks roadshowStopId={stop.id} />
-          </div>
-
-          <div className="flex items-center justify-between pt-4 border-t">
-            <div className="text-sm text-muted-foreground">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-4 border-t">
+            <div className="text-xs sm:text-sm text-muted-foreground">
               Créé par: {creator?.name || 'Utilisateur inconnu'}
             </div>
             
-            <div className="flex space-x-2">
-              <Button variant="outline" size="sm" onClick={handlePreview}>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" onClick={handlePreview} className="flex-1 sm:flex-none">
                 <Eye className="h-3 w-3 mr-1" />
-                Aperçu
+                <span className="hidden xs:inline">Aperçu</span>
               </Button>
-              <Button variant="outline" size="sm" onClick={handleDownloadPDF}>
+              <Button variant="outline" size="sm" onClick={handleDownloadPDF} className="flex-1 sm:flex-none">
                 <Download className="h-3 w-3 mr-1" />
-                PDF
+                <span className="hidden xs:inline">PDF</span>
               </Button>
-              <Button variant="outline" size="sm" onClick={() => onEdit(stop)}>
+              <Button variant="outline" size="sm" onClick={() => onEdit(stop)} className="flex-1 sm:flex-none">
                 <Edit className="h-3 w-3 mr-1" />
-                Modifier
+                <span className="hidden xs:inline">Modifier</span>
               </Button>
               <Button 
                 variant="outline" 
                 size="sm" 
                 onClick={() => onDelete(stop.id)}
-                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                className="text-red-600 hover:text-red-700 hover:bg-red-50 flex-1 sm:flex-none"
               >
                 <Trash2 className="h-3 w-3 mr-1" />
-                Supprimer
+                <span className="hidden xs:inline">Supprimer</span>
               </Button>
             </div>
           </div>

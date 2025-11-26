@@ -217,26 +217,26 @@ Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleT
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>Aperçu - {stop.city}</span>
+          <DialogTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <span className="text-lg sm:text-xl">Aperçu - {stop.city}</span>
             <div className="flex space-x-2">
               <Button variant="outline" size="sm" onClick={handlePrint}>
                 <Printer className="h-4 w-4 mr-2" />
-                Imprimer
+                <span className="hidden sm:inline">Imprimer</span>
               </Button>
               <Button variant="outline" size="sm" onClick={handleDownloadPDF}>
                 <Download className="h-4 w-4 mr-2" />
-                Télécharger
+                <span className="hidden sm:inline">Télécharger</span>
               </Button>
             </div>
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6 p-4 bg-white rounded-lg">
+        <div className="space-y-6 p-2 sm:p-4 bg-white rounded-lg">
           {/* En-tête */}
           <div className="text-center border-b pb-4">
-            <h1 className="text-2xl font-bold text-gray-900">FEUILLE DE ROUTE</h1>
-            <h2 className="text-xl text-gray-700 mt-2">{stop.city} - {stop.venue}</h2>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">FEUILLE DE ROUTE</h1>
+            <h2 className="text-lg sm:text-xl text-gray-700 mt-2">{stop.city} - {stop.venue}</h2>
             <div className={`inline-block px-3 py-1 rounded-full text-sm font-medium mt-2 ${getStatusColor(stop.status)}`}>
               {stop.status === 'confirmed' ? 'CONFIRMÉ' : 
                stop.status === 'pending' ? 'EN ATTENTE' : 
@@ -245,15 +245,15 @@ Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleT
           </div>
 
           {/* Informations principales */}
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2 flex items-center">
                   <MapPin className="h-4 w-4 mr-2 text-purple-600" />
                   Lieu et Adresse
                 </h3>
-                <p className="text-gray-700">{stop.venue}</p>
-                <p className="text-gray-600 text-sm">{stop.address}</p>
+                <p className="text-gray-700">{stop.venue || 'Non défini'}</p>
+                <p className="text-gray-600 text-sm">{stop.address || 'Adresse non définie'}</p>
               </div>
 
               <div>
@@ -267,9 +267,9 @@ Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleT
                   month: 'long', 
                   day: 'numeric' 
                 })}</p>
-                <p className="text-gray-600 text-sm">Spectacle: {stop.time}</p>
-                {stop.checkInTime && <p className="text-gray-600 text-sm">Arrivée équipe: {stop.checkInTime}</p>}
-                {stop.departureTime && <p className="text-gray-600 text-sm">Départ: {stop.departureTime}</p>}
+                <p className="text-gray-600 text-sm">Spectacle: {stop.time || 'Non défini'}</p>
+                <p className="text-gray-600 text-sm">Arrivée équipe: {stop.checkInTime || 'Non défini'}</p>
+                <p className="text-gray-600 text-sm">Départ: {stop.departureTime || 'Non défini'}</p>
               </div>
             </div>
 
@@ -279,25 +279,23 @@ Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleT
                   <Users className="h-4 w-4 mr-2 text-purple-600" />
                   Capacité
                 </h3>
-                <p className="text-gray-700">Capacité totale: {stop.capacity} personnes</p>
-                {stop.ticketsAvailable && <p className="text-gray-600 text-sm">Billets disponibles: {stop.ticketsAvailable}</p>}
+                <p className="text-gray-700">Capacité totale: {stop.capacity || 0} personnes</p>
+                <p className="text-gray-600 text-sm">Billets disponibles: {stop.ticketsAvailable || 'Non défini'}</p>
               </div>
 
-              {stop.localContact && (
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Contact Local</h3>
-                  <p className="text-gray-700">{stop.localContact}</p>
-                  {stop.localContactPhone && <p className="text-gray-600 text-sm">{stop.localContactPhone}</p>}
-                </div>
-              )}
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2">📞 Contact Local</h3>
+                <p className="text-gray-700">{stop.localContact || 'Non défini'}</p>
+                <p className="text-gray-600 text-sm">{stop.localContactPhone || 'Téléphone non défini'}</p>
+              </div>
             </div>
           </div>
 
           {/* Casting */}
-          {stop.artistLineup.length > 0 && (
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-3">🎭 Casting</h3>
-              <div className="grid md:grid-cols-2 gap-2">
+          <div>
+            <h3 className="font-semibold text-gray-900 mb-3">🎭 Casting</h3>
+            {stop.artistLineup.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {stop.artistLineup.map((artist, index) => {
                   const user = getUserById(artist.userId);
                   return (
@@ -310,42 +308,36 @@ Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleT
                   );
                 })}
               </div>
-            </div>
-          )}
+            ) : (
+              <p className="text-gray-500 italic">Aucun artiste assigné</p>
+            )}
+          </div>
 
           {/* Hébergement et Transport */}
-          {(stop.accommodation || stop.transport) && (
-            <div className="grid md:grid-cols-2 gap-6">
-              {stop.accommodation && (
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">🏨 Hébergement</h3>
-                  <p className="text-gray-700">{stop.accommodation}</p>
-                  {stop.accommodationAddress && <p className="text-gray-600 text-sm">{stop.accommodationAddress}</p>}
-                </div>
-              )}
-              
-              {stop.transport && (
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">🚐 Transport</h3>
-                  <p className="text-gray-700">{stop.transport}</p>
-                </div>
-              )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">🏨 Hébergement</h3>
+              <p className="text-gray-700">{stop.accommodation || 'Non défini'}</p>
+              <p className="text-gray-600 text-sm">{stop.accommodationAddress || 'Adresse non définie'}</p>
             </div>
-          )}
+            
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">🚐 Transport</h3>
+              <p className="text-gray-700">{stop.transport || 'Non défini'}</p>
+            </div>
+          </div>
 
           {/* Notes */}
-          {stop.notes && (
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">📝 Notes Importantes</h3>
-              <p className="text-gray-700 bg-yellow-50 p-3 rounded">{stop.notes}</p>
-            </div>
-          )}
+          <div>
+            <h3 className="font-semibold text-gray-900 mb-2">📝 Notes Importantes</h3>
+            <p className="text-gray-700 bg-yellow-50 p-3 rounded">{stop.notes || 'Aucune note spécifique'}</p>
+          </div>
 
           {/* Équipe technique */}
-          {stop.crew && stop.crew.length > 0 && (
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-3">🎵 Équipe Technique</h3>
-              <div className="grid md:grid-cols-2 gap-2">
+          <div>
+            <h3 className="font-semibold text-gray-900 mb-3">🎵 Équipe Technique</h3>
+            {stop.crew && stop.crew.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {stop.crew.map((crewId) => {
                   const user = getUserById(crewId);
                   return (
@@ -355,8 +347,10 @@ Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleT
                   );
                 })}
               </div>
-            </div>
-          )}
+            ) : (
+              <p className="text-gray-500 italic">Aucune équipe assignée</p>
+            )}
+          </div>
 
           {/* Notes de frais */}
           {expenses.length > 0 && (
