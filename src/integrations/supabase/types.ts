@@ -206,11 +206,15 @@ export type Database = {
       }
       background_images: {
         Row: {
+          category: string | null
           created_at: string | null
           file_size: number | null
           height: number | null
           id: string
           name: string
+          source_id: string | null
+          source_type: string | null
+          tags: string[] | null
           thumbnail_url: string | null
           updated_at: string | null
           url: string
@@ -218,11 +222,15 @@ export type Database = {
           width: number | null
         }
         Insert: {
+          category?: string | null
           created_at?: string | null
           file_size?: number | null
           height?: number | null
           id?: string
           name: string
+          source_id?: string | null
+          source_type?: string | null
+          tags?: string[] | null
           thumbnail_url?: string | null
           updated_at?: string | null
           url: string
@@ -230,11 +238,15 @@ export type Database = {
           width?: number | null
         }
         Update: {
+          category?: string | null
           created_at?: string | null
           file_size?: number | null
           height?: number | null
           id?: string
           name?: string
+          source_id?: string | null
+          source_type?: string | null
+          tags?: string[] | null
           thumbnail_url?: string | null
           updated_at?: string | null
           url?: string
