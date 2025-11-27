@@ -2,8 +2,11 @@
 import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { TourStop } from '@/types/roadshow.types';
-import { MapPin, Calendar, Clock, Users, Download, Printer, FileText, DollarSign, Contact, CalendarDays } from 'lucide-react';
+import { MapPin, Calendar, Clock, Users, Download, Printer, FileText, DollarSign, Contact, CalendarDays, Plus, Trash2, Image as ImageIcon, Eye, X } from 'lucide-react';
 import { useRoadshowExpenses, RoadshowExpense } from '@/hooks/useRoadshowExpenses';
 import { useRoadshowEntityConnections, RoadshowEntityConnection } from '@/hooks/useRoadshowEntityConnections';
 import { Badge } from '@/components/ui/badge';
@@ -21,7 +24,7 @@ export const TourStopPreview: React.FC<TourStopPreviewProps> = ({
   onClose,
   getUserById
 }) => {
-  const { getExpenses } = useRoadshowExpenses();
+  const { getExpenses, createExpense, deleteExpense, loading: expenseLoading } = useRoadshowExpenses();
   const { getRoadshowConnections } = useRoadshowEntityConnections();
   
   const [expenses, setExpenses] = useState<RoadshowExpense[]>([]);
@@ -32,9 +35,21 @@ export const TourStopPreview: React.FC<TourStopPreviewProps> = ({
     contracts: RoadshowEntityConnection[];
   }>({ contacts: [], events: [], quotes: [], contracts: [] });
 
+  // Expense form state
+  const [showAddExpense, setShowAddExpense] = useState(false);
+  const [expenseTitle, setExpenseTitle] = useState('');
+  const [expenseDescription, setExpenseDescription] = useState('');
+  const [expenseAmount, setExpenseAmount] = useState('');
+  const [expenseFile, setExpenseFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
   useEffect(() => {
     if (stop && isOpen) {
       loadData();
+    }
+    // Reset form when dialog closes
+    if (!isOpen) {
+      resetExpenseForm();
     }
   }, [stop?.id, isOpen]);
 
@@ -46,6 +61,63 @@ export const TourStopPreview: React.FC<TourStopPreviewProps> = ({
     
     const connectionsData = await getRoadshowConnections(stop.id);
     setConnections(connectionsData);
+  };
+
+  const resetExpenseForm = () => {
+    setShowAddExpense(false);
+    setExpenseTitle('');
+    setExpenseDescription('');
+    setExpenseAmount('');
+    setExpenseFile(null);
+    setPreviewUrl(null);
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const isImage = file.type.startsWith('image/');
+      const isPdf = file.type === 'application/pdf';
+      
+      if (isImage || isPdf) {
+        setExpenseFile(file);
+        // Create preview for images
+        if (isImage) {
+          const reader = new FileReader();
+          reader.onload = (e) => setPreviewUrl(e.target?.result as string);
+          reader.readAsDataURL(file);
+        } else {
+          setPreviewUrl(null);
+        }
+      } else {
+        alert('Seuls les images et PDF sont acceptés');
+      }
+    }
+  };
+
+  const handleAddExpense = async () => {
+    if (!stop || !expenseFile || !expenseTitle) return;
+
+    const success = await createExpense(
+      stop.id,
+      expenseTitle,
+      expenseFile,
+      expenseDescription,
+      expenseAmount ? parseFloat(expenseAmount) : undefined
+    );
+
+    if (success) {
+      resetExpenseForm();
+      loadData();
+    }
+  };
+
+  const handleDeleteExpense = async (expense: RoadshowExpense) => {
+    if (confirm('Supprimer cette note de frais ?')) {
+      const success = await deleteExpense(expense.id, expense.file_url);
+      if (success) {
+        loadData();
+      }
+    }
   };
 
   if (!stop) return null;
@@ -353,41 +425,152 @@ Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleT
           </div>
 
           {/* Notes de frais */}
-          {expenses.length > 0 && (
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
+          <div className="border-t pt-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold text-gray-900 flex items-center">
                 <FileText className="h-4 w-4 mr-2 text-purple-600" />
                 Notes de Frais ({expenses.length})
               </h3>
-              <div className="grid md:grid-cols-2 gap-2">
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => setShowAddExpense(!showAddExpense)}
+              >
+                {showAddExpense ? <X className="h-4 w-4 mr-1" /> : <Plus className="h-4 w-4 mr-1" />}
+                {showAddExpense ? 'Annuler' : 'Ajouter'}
+              </Button>
+            </div>
+
+            {/* Add expense form */}
+            {showAddExpense && (
+              <div className="bg-gray-50 p-4 rounded-lg mb-4 space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="expense-title" className="text-sm">Titre *</Label>
+                    <Input
+                      id="expense-title"
+                      value={expenseTitle}
+                      onChange={(e) => setExpenseTitle(e.target.value)}
+                      placeholder="Ex: Repas équipe"
+                      className="bg-white"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="expense-amount" className="text-sm">Montant (€)</Label>
+                    <Input
+                      id="expense-amount"
+                      type="number"
+                      step="0.01"
+                      value={expenseAmount}
+                      onChange={(e) => setExpenseAmount(e.target.value)}
+                      placeholder="0.00"
+                      className="bg-white"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="expense-description" className="text-sm">Description</Label>
+                  <Textarea
+                    id="expense-description"
+                    value={expenseDescription}
+                    onChange={(e) => setExpenseDescription(e.target.value)}
+                    placeholder="Détails..."
+                    rows={2}
+                    className="bg-white"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="expense-file" className="text-sm">Fichier (Image ou PDF) *</Label>
+                  <Input
+                    id="expense-file"
+                    type="file"
+                    accept="image/*,.pdf"
+                    onChange={handleFileSelect}
+                    className="bg-white"
+                  />
+                  {previewUrl && (
+                    <img 
+                      src={previewUrl} 
+                      alt="Aperçu" 
+                      className="mt-2 max-h-32 rounded border"
+                    />
+                  )}
+                  {expenseFile && !previewUrl && (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      📄 {expenseFile.name}
+                    </p>
+                  )}
+                </div>
+                <Button 
+                  onClick={handleAddExpense}
+                  disabled={!expenseTitle || !expenseFile || expenseLoading}
+                  className="w-full sm:w-auto"
+                >
+                  {expenseLoading ? 'Ajout...' : 'Ajouter la note de frais'}
+                </Button>
+              </div>
+            )}
+
+            {/* Expenses list with visual preview */}
+            {expenses.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {expenses.map((expense) => (
-                  <div key={expense.id} className="p-3 bg-gray-50 rounded">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <p className="font-medium text-gray-900">{expense.title}</p>
-                        {expense.description && (
-                          <p className="text-sm text-gray-600 mt-1">{expense.description}</p>
-                        )}
-                        {expense.amount && (
-                          <p className="text-sm font-semibold text-purple-600 mt-1">
-                            {expense.amount}€
-                          </p>
-                        )}
+                  <div key={expense.id} className="bg-gray-50 rounded-lg overflow-hidden border">
+                    {/* Visual preview */}
+                    <div className="aspect-video bg-gray-200 relative overflow-hidden">
+                      {expense.file_type === 'image' ? (
+                        <img 
+                          src={expense.file_url} 
+                          alt={expense.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                          <FileText className="h-12 w-12 text-gray-400" />
+                          <span className="absolute bottom-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded">PDF</span>
+                        </div>
+                      )}
+                      {/* Overlay actions */}
+                      <div className="absolute top-2 right-2 flex gap-1">
+                        <a 
+                          href={expense.file_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="p-1.5 bg-white/90 rounded-full hover:bg-white transition-colors"
+                        >
+                          <Eye className="h-4 w-4 text-gray-700" />
+                        </a>
+                        <button 
+                          onClick={() => handleDeleteExpense(expense)}
+                          className="p-1.5 bg-white/90 rounded-full hover:bg-red-100 transition-colors"
+                        >
+                          <Trash2 className="h-4 w-4 text-red-600" />
+                        </button>
                       </div>
-                      <a 
-                        href={expense.file_url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-purple-600 hover:text-purple-700"
-                      >
-                        <FileText className="h-4 w-4" />
-                      </a>
+                    </div>
+                    {/* Info */}
+                    <div className="p-3">
+                      <p className="font-medium text-gray-900 truncate">{expense.title}</p>
+                      {expense.description && (
+                        <p className="text-sm text-gray-600 truncate">{expense.description}</p>
+                      )}
+                      {expense.amount && (
+                        <p className="text-sm font-semibold text-purple-600 mt-1">
+                          {expense.amount}€
+                        </p>
+                      )}
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
-          )}
+            ) : (
+              <div className="text-center py-6 text-gray-500 bg-gray-50 rounded-lg">
+                <FileText className="h-10 w-10 mx-auto mb-2 opacity-50" />
+                <p>Aucune note de frais</p>
+                <p className="text-sm">Cliquez sur "Ajouter" pour créer une note de frais</p>
+              </div>
+            )}
+          </div>
 
           {/* Entités liées */}
           {(connections.contacts.length > 0 || connections.events.length > 0 || 

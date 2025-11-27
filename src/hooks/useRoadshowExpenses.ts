@@ -67,6 +67,34 @@ export const useRoadshowExpenses = () => {
     }
   };
 
+  // Add expense to media bank (background_images table with category)
+  const addToMediaBank = async (
+    fileUrl: string,
+    fileName: string,
+    fileSize: number,
+    roadshowStopId: string
+  ) => {
+    if (!user) return;
+
+    try {
+      await supabase
+        .from('background_images')
+        .insert({
+          user_id: user.id,
+          name: fileName,
+          url: fileUrl,
+          file_size: fileSize,
+          category: 'notes_de_frais',
+          source_type: 'roadshow_expense',
+          source_id: roadshowStopId,
+          tags: ['note de frais', 'roadshow']
+        });
+    } catch (error) {
+      console.error('Error adding to media bank:', error);
+      // Non-blocking error - don't show toast
+    }
+  };
+
   const createExpense = async (
     roadshowStopId: string,
     title: string,
@@ -96,6 +124,10 @@ export const useRoadshowExpenses = () => {
         });
 
       if (error) throw error;
+
+      // Also add to media bank
+      await addToMediaBank(fileUrl, `${title} - ${file.name}`, file.size, roadshowStopId);
+
       toast.success('Note de frais créée avec succès');
       return true;
     } catch (error) {
@@ -129,6 +161,13 @@ export const useRoadshowExpenses = () => {
         .eq('id', expenseId);
 
       if (error) throw error;
+
+      // Also remove from media bank
+      await supabase
+        .from('background_images')
+        .delete()
+        .eq('url', fileUrl);
+
       toast.success('Note de frais supprimée');
       return true;
     } catch (error) {
