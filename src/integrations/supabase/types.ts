@@ -3195,6 +3195,85 @@ export type Database = {
           },
         ]
       }
+      show_bible_setlist_songs: {
+        Row: {
+          created_at: string
+          duration: string | null
+          id: string
+          notes: string | null
+          position: number
+          setlist_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          duration?: string | null
+          id?: string
+          notes?: string | null
+          position: number
+          setlist_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          duration?: string | null
+          id?: string
+          notes?: string | null
+          position?: number
+          setlist_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "show_bible_setlist_songs_setlist_id_fkey"
+            columns: ["setlist_id"]
+            isOneToOne: false
+            referencedRelation: "show_bible_setlists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      show_bible_setlists: {
+        Row: {
+          artist_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          artist_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          artist_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "show_bible_setlists_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "centralized_artists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sync_notifications: {
         Row: {
           created_at: string
