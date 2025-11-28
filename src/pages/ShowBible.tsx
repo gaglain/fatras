@@ -20,7 +20,8 @@ import {
   Filter,
   X,
   Image as ImageIcon,
-  FileEdit
+  FileEdit,
+  Music
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useFileUpload } from '@/hooks/useFileUpload';
@@ -31,6 +32,7 @@ import { DocumentPreview } from '@/components/DocumentPreview';
 import { useCentralizedData } from '@/hooks/useCentralizedData';
 import { MediaBankManager } from '@/components/MediaBankManager';
 import { ShowBibleNotesEditor } from '@/components/ShowBibleNotesEditor';
+import { ShowBibleSetlistEditor } from '@/components/ShowBibleSetlistEditor';
 
 
 interface Category {
@@ -216,7 +218,7 @@ export const ShowBible: React.FC = () => {
       </div>
 
       <Tabs defaultValue="documents" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="documents" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
             Documents
@@ -228,6 +230,10 @@ export const ShowBible: React.FC = () => {
           <TabsTrigger value="notes" className="flex items-center gap-2">
             <FileEdit className="h-4 w-4" />
             Notes
+          </TabsTrigger>
+          <TabsTrigger value="setlists" className="flex items-center gap-2">
+            <Music className="h-4 w-4" />
+            Setlists
           </TabsTrigger>
         </TabsList>
 
@@ -629,6 +635,10 @@ export const ShowBible: React.FC = () => {
 
         <TabsContent value="notes" className="mt-6">
           <ShowBibleNotesEditor />
+        </TabsContent>
+
+        <TabsContent value="setlists" className="mt-6">
+          <ShowBibleSetlistEditor />
         </TabsContent>
       </Tabs>
     </div>

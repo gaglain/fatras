@@ -1,15 +1,17 @@
-
 import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TourStop } from '@/types/roadshow.types';
-import { MapPin, Calendar, Clock, Users, Download, Printer, FileText, DollarSign, Contact, CalendarDays, Plus, Trash2, Image as ImageIcon, Eye, X } from 'lucide-react';
+import { MapPin, Calendar, Clock, Users, Download, Printer, FileText, DollarSign, Contact, CalendarDays, Plus, Trash2, Image as ImageIcon, Eye, X, Music } from 'lucide-react';
 import { useRoadshowExpenses, RoadshowExpense } from '@/hooks/useRoadshowExpenses';
 import { useRoadshowEntityConnections, RoadshowEntityConnection } from '@/hooks/useRoadshowEntityConnections';
+import { useShowBibleSetlists } from '@/hooks/useShowBibleSetlists';
 import { Badge } from '@/components/ui/badge';
+import { ShowBibleSetlistEditor } from '@/components/ShowBibleSetlistEditor';
 
 interface TourStopPreviewProps {
   stop: TourStop | null;
@@ -304,6 +306,19 @@ Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleT
           </DialogTitle>
         </DialogHeader>
 
+        <Tabs defaultValue="roadmap" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="roadmap">
+              <FileText className="h-4 w-4 mr-2" />
+              Feuille de Route
+            </TabsTrigger>
+            <TabsTrigger value="setlist">
+              <Music className="h-4 w-4 mr-2" />
+              Setlist
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="roadmap" className="mt-4">
         <div className="space-y-6 p-2 sm:p-4 bg-white rounded-lg">
           {/* En-tête */}
           <div className="text-center border-b pb-4">
@@ -649,6 +664,12 @@ Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleT
             </div>
           )}
         </div>
+          </TabsContent>
+
+          <TabsContent value="setlist" className="mt-4">
+            <ShowBibleSetlistEditor />
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );
