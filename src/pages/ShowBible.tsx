@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Plus, 
   FileText, 
@@ -17,7 +18,9 @@ import {
   Users,
   User,
   Filter,
-  X
+  X,
+  Image as ImageIcon,
+  FileEdit
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useFileUpload } from '@/hooks/useFileUpload';
@@ -26,6 +29,8 @@ import { useShowBible, CreateDocumentData } from '@/hooks/useShowBible';
 import { FilePreview } from '@/components/FilePreview';
 import { DocumentPreview } from '@/components/DocumentPreview';
 import { useCentralizedData } from '@/hooks/useCentralizedData';
+import { MediaBankManager } from '@/components/MediaBankManager';
+import { ShowBibleNotesEditor } from '@/components/ShowBibleNotesEditor';
 
 
 interface Category {
@@ -205,20 +210,40 @@ export const ShowBible: React.FC = () => {
             Bible du Spectacle
           </h1>
           <p className="mt-2" style={{ color: 'var(--app-text, #666666)' }}>
-            Centralisez tous vos documents, médias et ressources
+            Centralisez tous vos documents, médias et ressources collaboratifs
           </p>
         </div>
-        <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
-          <DialogTrigger asChild>
-            <Button className="w-full lg:w-auto" style={{
-              backgroundColor: 'var(--app-button-bg, #1632f4)',
-              color: 'var(--app-button-text, #ffffff)'
-            }}>
-              <Plus className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">Ajouter Document</span>
-              <span className="sm:hidden">Ajouter</span>
-            </Button>
-          </DialogTrigger>
+      </div>
+
+      <Tabs defaultValue="documents" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="documents" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Documents
+          </TabsTrigger>
+          <TabsTrigger value="media" className="flex items-center gap-2">
+            <ImageIcon className="h-4 w-4" />
+            Banque Médias
+          </TabsTrigger>
+          <TabsTrigger value="notes" className="flex items-center gap-2">
+            <FileEdit className="h-4 w-4" />
+            Notes
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="documents" className="space-y-6 mt-6">
+          <div className="flex justify-end">
+            <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
+              <DialogTrigger asChild>
+                <Button className="w-full lg:w-auto" style={{
+                  backgroundColor: 'var(--app-button-bg, #1632f4)',
+                  color: 'var(--app-button-text, #ffffff)'
+                }}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  <span className="hidden sm:inline">Ajouter Document</span>
+                  <span className="sm:hidden">Ajouter</span>
+                </Button>
+              </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Ajouter un document</DialogTitle>
@@ -385,8 +410,8 @@ export const ShowBible: React.FC = () => {
         </Dialog>
       </div>
 
-      {/* Filtres */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+          {/* Filtres */}
+          <div className="flex flex-col sm:flex-row gap-4 mb-6">
         <div className="flex-1">
           <label className="block text-sm font-medium mb-2">Filtrer par catégorie</label>
           <Select value={filterCategory} onValueChange={setFilterCategory}>
@@ -596,6 +621,16 @@ export const ShowBible: React.FC = () => {
           ))}
         </div>
       )}
+        </TabsContent>
+
+        <TabsContent value="media" className="mt-6">
+          <MediaBankManager />
+        </TabsContent>
+
+        <TabsContent value="notes" className="mt-6">
+          <ShowBibleNotesEditor />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

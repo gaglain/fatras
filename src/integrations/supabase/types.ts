@@ -3145,6 +3145,56 @@ export type Database = {
         }
         Relationships: []
       }
+      show_bible_notes: {
+        Row: {
+          artist_id: string | null
+          content: string
+          content_type: string
+          created_at: string
+          id: string
+          is_pinned: boolean | null
+          mentioned_users: string[] | null
+          tags: string[] | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          artist_id?: string | null
+          content: string
+          content_type?: string
+          created_at?: string
+          id?: string
+          is_pinned?: boolean | null
+          mentioned_users?: string[] | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          artist_id?: string | null
+          content?: string
+          content_type?: string
+          created_at?: string
+          id?: string
+          is_pinned?: boolean | null
+          mentioned_users?: string[] | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "show_bible_notes_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "centralized_artists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sync_notifications: {
         Row: {
           created_at: string
