@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,12 +6,19 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Music, GripVertical, Trash2, Edit, Plus } from 'lucide-react';
 import { useShowBibleSetlists, Setlist, SetlistSong } from '@/hooks/useShowBibleSetlists';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface ShowBibleSetlistEditorProps {
   artistId?: string;
+}
+
+interface Artist {
+  id: string;
+  name: string;
 }
 
 export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps) => {
@@ -20,11 +27,26 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isAddSongDialogOpen, setIsAddSongDialogOpen] = useState(false);
   const [editingSong, setEditingSong] = useState<SetlistSong | null>(null);
+  const [artists, setArtists] = useState<Artist[]>([]);
 
   const [newSetlistData, setNewSetlistData] = useState({
     title: '',
-    description: ''
+    description: '',
+    artist_id: artistId || ''
   });
+
+  useEffect(() => {
+    const fetchArtists = async () => {
+      const { data } = await supabase
+        .from('centralized_artists')
+        .select('id, name')
+        .eq('status', 'active')
+        .order('name');
+      
+      if (data) setArtists(data);
+    };
+    fetchArtists();
+  }, []);
 
   const [newSongData, setNewSongData] = useState({
     title: '',
@@ -41,12 +63,12 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
     const result = await createSetlist({
       title: newSetlistData.title,
       description: newSetlistData.description,
-      artist_id: artistId
+      artist_id: newSetlistData.artist_id || artistId
     });
 
     if (result) {
       setIsCreateDialogOpen(false);
-      setNewSetlistData({ title: '', description: '' });
+      setNewSetlistData({ title: '', description: '', artist_id: artistId || '' });
     }
   };
 
@@ -106,6 +128,26 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
               <DialogTitle>Créer une setlist</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
+              {!artistId && (
+                <div>
+                  <Label>Artiste/Spectacle</Label>
+                  <Select
+                    value={newSetlistData.artist_id}
+                    onValueChange={(value) => setNewSetlistData(prev => ({ ...prev, artist_id: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner un artiste" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {artists.map((artist) => (
+                        <SelectItem key={artist.id} value={artist.id}>
+                          {artist.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <div>
                 <Label>Titre</Label>
                 <Input
@@ -148,7 +190,12 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
                     <h5 className="font-medium truncate">{setlist.title}</h5>
-                    <p className="text-xs text-muted-foreground truncate">
+                    {setlist.artist_id && (
+                      <p className="text-xs text-muted-foreground truncate">
+                        {artists.find(a => a.id === setlist.artist_id)?.name}
+                      </p>
+                    )}
+                    <p className="text-xs text-muted-foreground">
                       {setlist.songs?.length || 0} chanson(s)
                     </p>
                   </div>
