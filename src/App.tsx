@@ -74,9 +74,6 @@ const queryClient = new QueryClient({
 const App = () => {
   console.log('🚀 App starting - WITH ALL ROUTES...');
   
-  // Auto-sync des emails en arrière-plan
-  useEmailAutoSync();
-  
   return (
     <ErrorBoundary
       fallbackRender={({ error, resetErrorBoundary }) => (
