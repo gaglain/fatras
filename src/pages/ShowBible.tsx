@@ -28,7 +28,7 @@ import { useFileUpload } from '@/hooks/useFileUpload';
 import { useAuth } from '@/hooks/useAuth';
 import { useShowBible, CreateDocumentData } from '@/hooks/useShowBible';
 import { FilePreview } from '@/components/FilePreview';
-import { DocumentPreview } from '@/components/DocumentPreview';
+import { ImprovedDocumentPreview } from '@/components/ImprovedDocumentPreview';
 import { useCentralizedData } from '@/hooks/useCentralizedData';
 import { MediaBankManager } from '@/components/MediaBankManager';
 import { ShowBibleNotesEditor } from '@/components/ShowBibleNotesEditor';
@@ -553,7 +553,7 @@ export const ShowBible: React.FC = () => {
               </CardHeader>
               <CardContent className="space-y-3">
                 {/* Aperçu du document */}
-                <DocumentPreview document={doc} />
+                <ImprovedDocumentPreview document={doc} />
                 
                 {/* Informations du document */}
                 <div className="space-y-2">

@@ -1,4 +1,5 @@
 import { Toaster } from "@/components/ui/sonner";
+import { useEmailAutoSync } from "@/hooks/useEmailAutoSync";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
@@ -72,6 +73,9 @@ const queryClient = new QueryClient({
 
 const App = () => {
   console.log('🚀 App starting - WITH ALL ROUTES...');
+  
+  // Auto-sync des emails en arrière-plan
+  useEmailAutoSync();
   
   return (
     <ErrorBoundary
