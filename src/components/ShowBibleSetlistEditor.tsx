@@ -21,6 +21,34 @@ interface Artist {
   name: string;
 }
 
+const calculateTotalDuration = (songs: SetlistSong[]): string => {
+  let totalSeconds = 0;
+
+  songs.forEach(song => {
+    if (song.duration) {
+      // Parse duration in format "MM:SS" or "HH:MM:SS"
+      const parts = song.duration.split(':').map(p => parseInt(p) || 0);
+      if (parts.length === 2) {
+        // MM:SS
+        totalSeconds += parts[0] * 60 + parts[1];
+      } else if (parts.length === 3) {
+        // HH:MM:SS
+        totalSeconds += parts[0] * 3600 + parts[1] * 60 + parts[2];
+      }
+    }
+  });
+
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (hours > 0) {
+    return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  } else {
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  }
+};
+
 export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps) => {
   const { setlists, loading, createSetlist, updateSetlist, deleteSetlist, addSong, updateSong, deleteSong, reorderSongs } = useShowBibleSetlists(artistId);
   const [selectedSetlist, setSelectedSetlist] = useState<Setlist | null>(null);
@@ -225,11 +253,19 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
           ) : (
             <div className="space-y-4">
               <div className="flex items-start justify-between">
-                <div>
+                <div className="flex-1">
                   <h4 className="text-xl font-semibold">{selectedSetlist.title}</h4>
                   {selectedSetlist.description && (
                     <p className="text-sm text-muted-foreground mt-1">{selectedSetlist.description}</p>
                   )}
+                  <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                    <span>{selectedSetlist.songs?.length || 0} chanson(s)</span>
+                    {selectedSetlist.songs && selectedSetlist.songs.length > 0 && (
+                      <span className="font-medium">
+                        Durée totale: {calculateTotalDuration(selectedSetlist.songs)}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <Dialog open={isAddSongDialogOpen} onOpenChange={setIsAddSongDialogOpen}>
                   <DialogTrigger asChild>
