@@ -21,3 +21,6 @@ verify_jwt = false
 
 [functions.nylas-email-callback]
 verify_jwt = false
+
+[functions.auto-email-sync]
+verify_jwt = false
