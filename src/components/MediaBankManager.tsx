@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,18 +8,29 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { 
   Upload, Image as ImageIcon, FileText, Trash2, Eye, 
-  Filter, FolderOpen, Tag, X, Edit2
+  Filter, FolderOpen, Tag, X, Edit2, Music
 } from 'lucide-react';
 import { useBackgroundImages, BackgroundImage, MEDIA_CATEGORIES } from '@/hooks/useBackgroundImages';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+
+interface Artist {
+  id: string;
+  name: string;
+}
 
 export const MediaBankManager: React.FC = () => {
+  const { user } = useAuth();
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [tagFilter, setTagFilter] = useState<string>('');
+  const [artistFilter, setArtistFilter] = useState<string>('');
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [selectedImage, setSelectedImage] = useState<BackgroundImage | null>(null);
   const [uploadCategory, setUploadCategory] = useState('general');
   const [uploadTags, setUploadTags] = useState('');
+  const [uploadArtistId, setUploadArtistId] = useState<string>('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [artists, setArtists] = useState<Artist[]>([]);
 
   const { 
     images, 
@@ -32,24 +43,56 @@ export const MediaBankManager: React.FC = () => {
     getAllTags 
   } = useBackgroundImages(categoryFilter === 'all' ? undefined : categoryFilter);
 
+  // Fetch artists
+  useEffect(() => {
+    const fetchArtists = async () => {
+      if (!user) return;
+      
+      const { data, error } = await supabase
+        .from('centralized_artists')
+        .select('id, name')
+        .eq('user_id', user.id)
+        .order('name');
+      
+      if (data && !error) {
+        setArtists(data);
+      }
+    };
+    
+    fetchArtists();
+  }, [user]);
+
   const allTags = getAllTags();
   const imagesByCategory = getImagesByCategory();
 
-  // Filter by tag if specified
-  const filteredImages = tagFilter 
-    ? images.filter(img => (img.tags || []).includes(tagFilter))
-    : images;
+  // Filter by tag and artist if specified
+  let filteredImages = images;
+  
+  if (tagFilter) {
+    filteredImages = filteredImages.filter(img => (img.tags || []).includes(tagFilter));
+  }
+  
+  if (artistFilter) {
+    filteredImages = filteredImages.filter(img => img.source_id === artistFilter);
+  }
+
+  // Get artist name for display
+  const getArtistName = (sourceId?: string) => {
+    if (!sourceId) return null;
+    return artists.find(a => a.id === sourceId)?.name;
+  };
 
   const handleUpload = async () => {
     if (!selectedFile) return;
 
     const tags = uploadTags.split(',').map(t => t.trim()).filter(Boolean);
-    await uploadImage(selectedFile, uploadCategory, tags);
+    await uploadImage(selectedFile, uploadCategory, tags, uploadArtistId || undefined);
     
     setShowUploadDialog(false);
     setSelectedFile(null);
     setUploadTags('');
     setUploadCategory('general');
+    setUploadArtistId('');
   };
 
   const handleDelete = async (image: BackgroundImage) => {
@@ -112,6 +155,25 @@ export const MediaBankManager: React.FC = () => {
             </Select>
           </div>
 
+          {artists.length > 0 && (
+            <div className="flex items-center gap-2">
+              <Music className="h-4 w-4 text-muted-foreground" />
+              <Select value={artistFilter} onValueChange={setArtistFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Tous les artistes" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Tous les artistes</SelectItem>
+                  {artists.map(artist => (
+                    <SelectItem key={artist.id} value={artist.id}>
+                      {artist.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           {allTags.length > 0 && (
             <div className="flex items-center gap-2">
               <Tag className="h-4 w-4 text-muted-foreground" />
@@ -129,13 +191,14 @@ export const MediaBankManager: React.FC = () => {
             </div>
           )}
 
-          {(categoryFilter !== 'all' || tagFilter) && (
+          {(categoryFilter !== 'all' || tagFilter || artistFilter) && (
             <Button 
               variant="ghost" 
               size="sm"
               onClick={() => {
                 setCategoryFilter('all');
                 setTagFilter('');
+                setArtistFilter('');
               }}
             >
               <X className="h-4 w-4 mr-1" />
@@ -177,10 +240,16 @@ export const MediaBankManager: React.FC = () => {
                 )}
 
                 {/* Category badge */}
-                <div className="absolute top-2 left-2">
+                <div className="absolute top-2 left-2 flex flex-col gap-1">
                   <Badge className={`text-xs ${getCategoryColor(image.category || 'general')}`}>
                     {getCategoryLabel(image.category || 'general')}
                   </Badge>
+                  {image.source_id && (
+                    <Badge variant="secondary" className="text-xs">
+                      <Music className="h-3 w-3 mr-1" />
+                      {getArtistName(image.source_id)}
+                    </Badge>
+                  )}
                 </div>
 
                 {/* Hover overlay */}
@@ -262,6 +331,22 @@ export const MediaBankManager: React.FC = () => {
               </Select>
             </div>
             <div>
+              <Label>Artiste/Spectacle (optionnel)</Label>
+              <Select value={uploadArtistId} onValueChange={setUploadArtistId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Aucun artiste" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Aucun artiste</SelectItem>
+                  {artists.map(artist => (
+                    <SelectItem key={artist.id} value={artist.id}>
+                      {artist.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
               <Label>Tags (séparés par des virgules)</Label>
               <Input
                 value={uploadTags}
@@ -306,6 +391,14 @@ export const MediaBankManager: React.FC = () => {
                 <Label>Nom</Label>
                 <p className="text-sm text-muted-foreground">{selectedImage.name}</p>
               </div>
+              {selectedImage.source_id && (
+                <div>
+                  <Label>Artiste/Spectacle</Label>
+                  <p className="text-sm text-muted-foreground">
+                    {getArtistName(selectedImage.source_id)}
+                  </p>
+                </div>
+              )}
               <div>
                 <Label>Catégorie</Label>
                 <Select 

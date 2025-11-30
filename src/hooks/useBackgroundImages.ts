@@ -83,7 +83,8 @@ export const useBackgroundImages = (categoryFilter?: string) => {
   const uploadImage = async (
     file: File, 
     category: string = 'general',
-    tags: string[] = []
+    tags: string[] = [],
+    artistId?: string
   ): Promise<BackgroundImage | null> => {
     if (!user) {
       toast.error('Vous devez être connecté pour uploader une image');
@@ -117,7 +118,8 @@ export const useBackgroundImages = (categoryFilter?: string) => {
           file_size: file.size,
           category,
           tags,
-          source_type: 'upload'
+          source_type: artistId ? 'artist' : 'upload',
+          source_id: artistId || null
         })
         .select()
         .single();
