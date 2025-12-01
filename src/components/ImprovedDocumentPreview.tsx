@@ -142,6 +142,7 @@ export const ImprovedDocumentPreview: React.FC<ImprovedDocumentPreviewProps> = (
                   src={document.url}
                   className="w-full h-full"
                   title={document.name}
+                  sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
                 />
               ) : null}
             </div>
