@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { FileText, Film, Music, Image as ImageIcon, FileType, Eye, ExternalLink, Maximize2 } from 'lucide-react';
 import { ShowBibleDocument } from '@/hooks/useShowBible';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ImprovedDocumentPreviewProps {
   document: ShowBibleDocument;
@@ -11,6 +12,14 @@ interface ImprovedDocumentPreviewProps {
 
 export const ImprovedDocumentPreview: React.FC<ImprovedDocumentPreviewProps> = ({ document, className = "" }) => {
   const [showFullPreview, setShowFullPreview] = useState(false);
+
+  // Générer l'URL publique correcte depuis Supabase Storage
+  const publicUrl = useMemo(() => {
+    const { data } = supabase.storage
+      .from(document.bucket_name)
+      .getPublicUrl(document.file_path);
+    return data.publicUrl;
+  }, [document.bucket_name, document.file_path]);
 
   const getFileIcon = (type: string) => {
     if (type === 'image') return <ImageIcon className="h-4 w-4" />;
@@ -26,7 +35,7 @@ export const ImprovedDocumentPreview: React.FC<ImprovedDocumentPreviewProps> = (
       return (
         <div className="relative group">
           <img 
-            src={document.url} 
+            src={publicUrl} 
             alt={document.name}
             className="w-full h-32 object-cover rounded cursor-pointer transition-opacity group-hover:opacity-75"
             onClick={() => setShowFullPreview(true)}
@@ -43,7 +52,7 @@ export const ImprovedDocumentPreview: React.FC<ImprovedDocumentPreviewProps> = (
       return (
         <div 
           className="flex flex-col items-center justify-center h-32 border-2 border-border rounded bg-red-50 dark:bg-red-950/20 cursor-pointer hover:bg-red-100 dark:hover:bg-red-950/30 transition-colors p-4"
-          onClick={() => window.open(document.url, '_blank')}
+          onClick={() => window.open(publicUrl, '_blank')}
         >
           <FileText className="h-12 w-12 text-red-600 dark:text-red-400 mb-2" />
           <span className="text-xs text-red-700 dark:text-red-300 font-medium">PDF</span>
@@ -57,7 +66,7 @@ export const ImprovedDocumentPreview: React.FC<ImprovedDocumentPreviewProps> = (
       return (
         <div 
           className="flex flex-col items-center justify-center h-32 border-2 border-border rounded bg-blue-50 dark:bg-blue-950/20 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-950/30 transition-colors"
-          onClick={() => window.open(document.url, '_blank')}
+          onClick={() => window.open(publicUrl, '_blank')}
         >
           <Film className="h-12 w-12 text-blue-600 dark:text-blue-400 mb-2" />
           <span className="text-xs text-blue-700 dark:text-blue-300 font-medium">VIDÉO</span>
@@ -70,7 +79,7 @@ export const ImprovedDocumentPreview: React.FC<ImprovedDocumentPreviewProps> = (
     return (
       <div 
         className="flex flex-col items-center justify-center h-32 border-2 border-border rounded bg-muted cursor-pointer hover:bg-muted/80 transition-colors"
-        onClick={() => window.open(document.url, '_blank')}
+        onClick={() => window.open(publicUrl, '_blank')}
       >
         {getFileIcon(document.type)}
         <span className="text-xs text-muted-foreground font-medium mt-2">{document.type.toUpperCase()}</span>
@@ -96,7 +105,7 @@ export const ImprovedDocumentPreview: React.FC<ImprovedDocumentPreviewProps> = (
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => window.open(document.url, '_blank')}
+                  onClick={() => window.open(publicUrl, '_blank')}
                 >
                   <ExternalLink className="h-4 w-4 mr-2" />
                   Ouvrir
@@ -104,7 +113,7 @@ export const ImprovedDocumentPreview: React.FC<ImprovedDocumentPreviewProps> = (
               </div>
               <div className="flex-1 border-2 border-border rounded overflow-hidden">
                 <img 
-                  src={document.url} 
+                  src={publicUrl} 
                   alt={document.name}
                   className="w-full h-full object-contain"
                 />
