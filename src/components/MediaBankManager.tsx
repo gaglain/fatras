@@ -22,13 +22,13 @@ interface Artist {
 export const MediaBankManager: React.FC = () => {
   const { user } = useAuth();
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
-  const [tagFilter, setTagFilter] = useState<string>('');
-  const [artistFilter, setArtistFilter] = useState<string>('');
+  const [tagFilter, setTagFilter] = useState<string>('all');
+  const [artistFilter, setArtistFilter] = useState<string>('all');
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [selectedImage, setSelectedImage] = useState<BackgroundImage | null>(null);
   const [uploadCategory, setUploadCategory] = useState('general');
   const [uploadTags, setUploadTags] = useState('');
-  const [uploadArtistId, setUploadArtistId] = useState<string>('');
+  const [uploadArtistId, setUploadArtistId] = useState<string>('none');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [artists, setArtists] = useState<Artist[]>([]);
 
@@ -68,11 +68,11 @@ export const MediaBankManager: React.FC = () => {
   // Filter by tag and artist if specified
   let filteredImages = images;
   
-  if (tagFilter) {
+  if (tagFilter && tagFilter !== 'all') {
     filteredImages = filteredImages.filter(img => (img.tags || []).includes(tagFilter));
   }
   
-  if (artistFilter) {
+  if (artistFilter && artistFilter !== 'all') {
     filteredImages = filteredImages.filter(img => img.source_id === artistFilter);
   }
 
@@ -86,13 +86,13 @@ export const MediaBankManager: React.FC = () => {
     if (!selectedFile) return;
 
     const tags = uploadTags.split(',').map(t => t.trim()).filter(Boolean);
-    await uploadImage(selectedFile, uploadCategory, tags, uploadArtistId || undefined);
+    await uploadImage(selectedFile, uploadCategory, tags, uploadArtistId !== 'none' ? uploadArtistId : undefined);
     
     setShowUploadDialog(false);
     setSelectedFile(null);
     setUploadTags('');
     setUploadCategory('general');
-    setUploadArtistId('');
+    setUploadArtistId('none');
   };
 
   const handleDelete = async (image: BackgroundImage) => {
@@ -163,7 +163,7 @@ export const MediaBankManager: React.FC = () => {
                   <SelectValue placeholder="Tous les artistes" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tous les artistes</SelectItem>
+                  <SelectItem value="all">Tous les artistes</SelectItem>
                   {artists.map(artist => (
                     <SelectItem key={artist.id} value={artist.id}>
                       {artist.name}
@@ -182,7 +182,7 @@ export const MediaBankManager: React.FC = () => {
                   <SelectValue placeholder="Tous les tags" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tous les tags</SelectItem>
+                  <SelectItem value="all">Tous les tags</SelectItem>
                   {allTags.map(tag => (
                     <SelectItem key={tag} value={tag}>{tag}</SelectItem>
                   ))}
@@ -191,14 +191,14 @@ export const MediaBankManager: React.FC = () => {
             </div>
           )}
 
-          {(categoryFilter !== 'all' || tagFilter || artistFilter) && (
+          {(categoryFilter !== 'all' || tagFilter !== 'all' || artistFilter !== 'all') && (
             <Button 
               variant="ghost" 
               size="sm"
               onClick={() => {
                 setCategoryFilter('all');
-                setTagFilter('');
-                setArtistFilter('');
+                setTagFilter('all');
+                setArtistFilter('all');
               }}
             >
               <X className="h-4 w-4 mr-1" />
@@ -337,7 +337,7 @@ export const MediaBankManager: React.FC = () => {
                   <SelectValue placeholder="Aucun artiste" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Aucun artiste</SelectItem>
+                  <SelectItem value="none">Aucun artiste</SelectItem>
                   {artists.map(artist => (
                     <SelectItem key={artist.id} value={artist.id}>
                       {artist.name}
