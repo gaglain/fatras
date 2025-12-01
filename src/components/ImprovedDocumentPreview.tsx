@@ -38,45 +38,16 @@ export const ImprovedDocumentPreview: React.FC<ImprovedDocumentPreviewProps> = (
       );
     }
 
-    // Pour les PDF - aperçu avec iframe
+    // Pour les PDF - carte avec boutons d'action
     if (document.type === 'pdf') {
       return (
-        <div className="space-y-2">
-          <div 
-            className="relative h-64 border-2 border-border rounded bg-muted overflow-hidden cursor-pointer hover:border-primary transition-colors group"
-            onClick={() => setShowFullPreview(true)}
-          >
-            <iframe
-              src={`${document.url}#view=FitH&toolbar=0&navpanes=0&scrollbar=0&page=1`}
-              className="w-full h-full pointer-events-none scale-105"
-              title={document.name}
-              style={{ marginTop: '-20px' }}
-            />
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/50">
-              <div className="flex flex-col items-center gap-2">
-                <Maximize2 className="h-10 w-10 text-white" />
-                <span className="text-white text-sm font-medium">Cliquez pour agrandir</span>
-              </div>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1"
-              onClick={() => setShowFullPreview(true)}
-            >
-              <Eye className="h-4 w-4 mr-2" />
-              Aperçu
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => window.open(document.url, '_blank')}
-            >
-              <ExternalLink className="h-4 w-4" />
-            </Button>
-          </div>
+        <div 
+          className="flex flex-col items-center justify-center h-32 border-2 border-border rounded bg-red-50 dark:bg-red-950/20 cursor-pointer hover:bg-red-100 dark:hover:bg-red-950/30 transition-colors p-4"
+          onClick={() => window.open(document.url, '_blank')}
+        >
+          <FileText className="h-12 w-12 text-red-600 dark:text-red-400 mb-2" />
+          <span className="text-xs text-red-700 dark:text-red-300 font-medium">PDF</span>
+          <ExternalLink className="h-4 w-4 text-red-500 mt-1" />
         </div>
       );
     }
@@ -115,40 +86,33 @@ export const ImprovedDocumentPreview: React.FC<ImprovedDocumentPreviewProps> = (
         <p className="text-xs text-muted-foreground truncate text-center">{document.name}</p>
       </div>
 
-      {/* Full preview dialog */}
-      <Dialog open={showFullPreview} onOpenChange={setShowFullPreview}>
-        <DialogContent className="max-w-5xl h-[90vh]">
-          <div className="flex flex-col h-full gap-2">
-            <div className="flex items-center justify-between">
-              <h3 className="font-semibold truncate flex-1">{document.name}</h3>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => window.open(document.url, '_blank')}
-              >
-                <ExternalLink className="h-4 w-4 mr-2" />
-                Ouvrir
-              </Button>
-            </div>
-            <div className="flex-1 border-2 border-border rounded overflow-hidden">
-              {document.type === 'image' ? (
+      {/* Full preview dialog - images only */}
+      {document.type === 'image' && (
+        <Dialog open={showFullPreview} onOpenChange={setShowFullPreview}>
+          <DialogContent className="max-w-5xl h-[90vh]">
+            <div className="flex flex-col h-full gap-2">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold truncate flex-1">{document.name}</h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.open(document.url, '_blank')}
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Ouvrir
+                </Button>
+              </div>
+              <div className="flex-1 border-2 border-border rounded overflow-hidden">
                 <img 
                   src={document.url} 
                   alt={document.name}
                   className="w-full h-full object-contain"
                 />
-              ) : document.type === 'pdf' ? (
-                <iframe
-                  src={document.url}
-                  className="w-full h-full"
-                  title={document.name}
-                  sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
-                />
-              ) : null}
+              </div>
             </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+      )}
     </>
   );
 };
