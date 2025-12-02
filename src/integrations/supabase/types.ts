@@ -206,8 +206,10 @@ export type Database = {
       }
       background_images: {
         Row: {
+          bucket_name: string | null
           category: string | null
           created_at: string | null
+          file_path: string | null
           file_size: number | null
           height: number | null
           id: string
@@ -222,8 +224,10 @@ export type Database = {
           width: number | null
         }
         Insert: {
+          bucket_name?: string | null
           category?: string | null
           created_at?: string | null
+          file_path?: string | null
           file_size?: number | null
           height?: number | null
           id?: string
@@ -238,8 +242,10 @@ export type Database = {
           width?: number | null
         }
         Update: {
+          bucket_name?: string | null
           category?: string | null
           created_at?: string | null
+          file_path?: string | null
           file_size?: number | null
           height?: number | null
           id?: string
