@@ -8,6 +8,8 @@ export interface BackgroundImage {
   user_id: string;
   name: string;
   url: string;
+  bucket_name?: string;
+  file_path?: string;
   thumbnail_url?: string;
   width?: number;
   height?: number;
@@ -96,25 +98,28 @@ export const useBackgroundImages = (categoryFilter?: string) => {
       // Upload file to storage
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+      const bucketName = 'background-images';
       
       const { error: uploadError } = await supabase.storage
-        .from('background-images')
+        .from(bucketName)
         .upload(fileName, file);
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
+      // Get public URL (for backward compatibility)
       const { data: { publicUrl } } = supabase.storage
-        .from('background-images')
+        .from(bucketName)
         .getPublicUrl(fileName);
 
-      // Create database record with category and tags
+      // Create database record with category, tags, and permalink info
       const { data, error: dbError } = await supabase
         .from('background_images')
         .insert({
           user_id: user.id,
           name: file.name,
           url: publicUrl,
+          bucket_name: bucketName,
+          file_path: fileName,
           file_size: file.size,
           category,
           tags,

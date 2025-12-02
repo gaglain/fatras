@@ -13,6 +13,7 @@ import {
 import { useBackgroundImages, BackgroundImage, MEDIA_CATEGORIES } from '@/hooks/useBackgroundImages';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { getDocumentUrl } from '@/utils/documentPermalinks';
 
 interface Artist {
   id: string;
@@ -229,7 +230,10 @@ export const MediaBankManager: React.FC = () => {
                 {/* Image preview */}
                 {image.url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
                   <img 
-                    src={image.url} 
+                    src={image.bucket_name && image.file_path 
+                      ? getDocumentUrl(image.bucket_name, image.file_path, image.category)
+                      : image.url
+                    } 
                     alt={image.name}
                     className="w-full h-full object-cover"
                   />
@@ -256,7 +260,10 @@ export const MediaBankManager: React.FC = () => {
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
                   <div className="flex gap-2">
                     <a 
-                      href={image.url} 
+                      href={image.bucket_name && image.file_path 
+                        ? getDocumentUrl(image.bucket_name, image.file_path, image.category)
+                        : image.url
+                      } 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="p-2 bg-white rounded-full hover:bg-gray-100"
