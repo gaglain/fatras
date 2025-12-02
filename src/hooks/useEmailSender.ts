@@ -54,20 +54,66 @@ export const useEmailSender = () => {
       // Injecter le pixel de tracking et les liens trackés
       const trackedHtml = injectEmailTracking(emailRecord.id, emailData.html);
 
-      // Utiliser Resend pour l'envoi d'emails
-      const { data, error } = await supabase.functions.invoke('send-email-resend', {
-        body: {
-          to: emailData.to,
-          subject: emailData.subject,
-          html: trackedHtml,
-          from: emailData.from,
-          userId: user.id,
-          attachments: emailData.attachments,
-        }
-      });
+      // Vérifier si config SMTP existe pour utiliser SMTP, sinon fallback sur Resend
+      const { data: smtpConfig } = await supabase
+        .from('app_settings')
+        .select('setting_key')
+        .eq('user_id', user.id)
+        .eq('setting_key', 'smtp_host')
+        .single();
 
-      if (error) {
-        throw new Error(error.message);
+      let result;
+      let provider = 'resend';
+
+      if (smtpConfig) {
+        // Utiliser SMTP si configuré
+        console.log('📧 Envoi via SMTP configuré');
+        const { data, error } = await supabase.functions.invoke('send-email-smtp', {
+          body: {
+            to: emailData.to,
+            subject: emailData.subject,
+            html: trackedHtml,
+            from: emailData.from,
+            userId: user.id,
+          }
+        });
+        
+        if (error) {
+          console.warn('⚠️ Échec SMTP, fallback sur Resend:', error);
+          // Fallback sur Resend si SMTP échoue
+          const resendResult = await supabase.functions.invoke('send-email-resend', {
+            body: {
+              to: emailData.to,
+              subject: emailData.subject,
+              html: trackedHtml,
+              from: emailData.from,
+              userId: user.id,
+              attachments: emailData.attachments,
+            }
+          });
+          result = resendResult.data;
+        } else {
+          result = data;
+          provider = 'smtp';
+        }
+      } else {
+        // Utiliser Resend par défaut
+        console.log('📧 Envoi via Resend (pas de SMTP configuré)');
+        const { data, error } = await supabase.functions.invoke('send-email-resend', {
+          body: {
+            to: emailData.to,
+            subject: emailData.subject,
+            html: trackedHtml,
+            from: emailData.from,
+            userId: user.id,
+            attachments: emailData.attachments,
+          }
+        });
+
+        if (error) {
+          throw new Error(error.message);
+        }
+        result = data;
       }
 
       // Mettre à jour le statut de l'email
@@ -76,11 +122,11 @@ export const useEmailSender = () => {
         .update({ 
           status: 'sent', 
           sent_at: new Date().toISOString(),
-          provider: 'resend'
+          provider: provider
         })
         .eq('id', emailRecord.id);
 
-      return data;
+      return result;
     } catch (error) {
       console.error('Error sending email:', error);
       throw error;
