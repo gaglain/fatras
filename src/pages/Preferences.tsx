@@ -21,6 +21,7 @@ import {
   MobileTab,
   ColorsTab,
   EmailTab,
+  SmtpTab,
 } from "./preferences";
 import { useSearchParams } from 'react-router-dom';
 
@@ -52,7 +53,11 @@ export const Preferences: React.FC = () => {
           </TabsTrigger>
           <TabsTrigger value="email" className="flex-1 min-w-[100px] text-xs sm:text-sm data-[state=active]:bg-background">
             <Settings className="h-4 w-4 mr-1 sm:mr-2" />
-            <span>Email</span>
+            <span>IMAP</span>
+          </TabsTrigger>
+          <TabsTrigger value="smtp" className="flex-1 min-w-[100px] text-xs sm:text-sm data-[state=active]:bg-background">
+            <Mail className="h-4 w-4 mr-1 sm:mr-2" />
+            <span>SMTP</span>
           </TabsTrigger>
           <TabsTrigger value="calendar" className="flex-1 min-w-[100px] text-xs sm:text-sm data-[state=active]:bg-background">
             <Calendar className="h-4 w-4 mr-1 sm:mr-2" />
@@ -84,6 +89,9 @@ export const Preferences: React.FC = () => {
           <EmailTab />
           <EmailTestComponent />
           <EmailInbox />
+        </TabsContent>
+        <TabsContent value="smtp" className="space-y-6">
+          <SmtpTab />
         </TabsContent>
         <TabsContent value="calendar" className="space-y-4">
           <GoogleCalendarTab />

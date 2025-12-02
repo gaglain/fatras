@@ -350,14 +350,31 @@ const handler = async (req: Request): Promise<Response> => {
             .single();
           
           if (!existing) {
-            const { error } = await supabase
+            const { error: insertError } = await supabase
               .from('inbound_emails')
               .insert(email);
             
-            if (!error) {
+            if (!insertError) {
               syncedCount++;
+              
+              // Créer une notification pour le nouvel email
+              try {
+                await supabase
+                  .from('email_notifications')
+                  .insert({
+                    user_id: userId,
+                    type: 'new_email',
+                    title: 'Nouveau message',
+                    message: `De: ${email.from_name || email.from_email}\nSujet: ${email.subject}`,
+                    is_read: false
+                  });
+                console.log('✅ Notification créée pour:', email.subject);
+              } catch (notifError) {
+                console.error('⚠️ Erreur création notification:', notifError);
+                // Ne pas bloquer la sync si la notification échoue
+              }
             } else {
-              console.error('❌ Erreur insertion email:', error);
+              console.error('❌ Erreur insertion email:', insertError);
             }
           }
         } catch (error) {

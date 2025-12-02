@@ -3,7 +3,7 @@ import { FileText, Film, Music, Image as ImageIcon, FileType, Eye, ExternalLink,
 import { ShowBibleDocument } from '@/hooks/useShowBible';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
+import { getDocumentUrl } from '@/utils/documentPermalinks';
 
 interface ImprovedDocumentPreviewProps {
   document: ShowBibleDocument;
@@ -13,13 +13,10 @@ interface ImprovedDocumentPreviewProps {
 export const ImprovedDocumentPreview: React.FC<ImprovedDocumentPreviewProps> = ({ document, className = "" }) => {
   const [showFullPreview, setShowFullPreview] = useState(false);
 
-  // Générer l'URL publique correcte depuis Supabase Storage
+  // Générer l'URL avec permalien propre
   const publicUrl = useMemo(() => {
-    const { data } = supabase.storage
-      .from(document.bucket_name)
-      .getPublicUrl(document.file_path);
-    return data.publicUrl;
-  }, [document.bucket_name, document.file_path]);
+    return getDocumentUrl(document.bucket_name, document.file_path, document.category);
+  }, [document.bucket_name, document.file_path, document.category]);
 
   const getFileIcon = (type: string) => {
     if (type === 'image') return <ImageIcon className="h-4 w-4" />;
