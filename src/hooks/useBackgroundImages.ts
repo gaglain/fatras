@@ -145,7 +145,7 @@ export const useBackgroundImages = (categoryFilter?: string) => {
 
   const updateImage = async (
     imageId: string, 
-    updates: { category?: string; tags?: string[]; name?: string }
+    updates: { category?: string; tags?: string[]; name?: string; source_id?: string | null }
   ): Promise<boolean> => {
     if (!user) return false;
 

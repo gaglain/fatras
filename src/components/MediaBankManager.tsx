@@ -398,14 +398,25 @@ export const MediaBankManager: React.FC = () => {
                 <Label>Nom</Label>
                 <p className="text-sm text-muted-foreground">{selectedImage.name}</p>
               </div>
-              {selectedImage.source_id && (
-                <div>
-                  <Label>Artiste/Spectacle</Label>
-                  <p className="text-sm text-muted-foreground">
-                    {getArtistName(selectedImage.source_id)}
-                  </p>
-                </div>
-              )}
+              <div>
+                <Label>Artiste/Spectacle</Label>
+                <Select 
+                  value={selectedImage.source_id || 'none'} 
+                  onValueChange={(value) => updateImage(selectedImage.id, { source_id: value === 'none' ? null : value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Aucun artiste" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Aucun artiste</SelectItem>
+                    {artists.map(artist => (
+                      <SelectItem key={artist.id} value={artist.id}>
+                        {artist.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div>
                 <Label>Catégorie</Label>
                 <Select 
