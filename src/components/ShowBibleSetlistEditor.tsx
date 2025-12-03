@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,8 +7,11 @@ import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Music, GripVertical, Trash2, Edit, Plus } from 'lucide-react';
-import { useShowBibleSetlists, Setlist, SetlistSong } from '@/hooks/useShowBibleSetlists';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Music, GripVertical, Trash2, Edit, Plus, Library, FileText, Search } from 'lucide-react';
+import { useShowBibleSetlists, Setlist, SetlistSong, LibrarySong } from '@/hooks/useShowBibleSetlists';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -21,18 +24,18 @@ interface Artist {
   name: string;
 }
 
+const TONALITIES = ['C', 'C#/Db', 'D', 'D#/Eb', 'E', 'F', 'F#/Gb', 'G', 'G#/Ab', 'A', 'A#/Bb', 'B'];
+const TONALITY_MODES = ['Majeur', 'Mineur'];
+
 const calculateTotalDuration = (songs: SetlistSong[]): string => {
   let totalSeconds = 0;
 
   songs.forEach(song => {
     if (song.duration) {
-      // Parse duration in format "MM:SS" or "HH:MM:SS"
       const parts = song.duration.split(':').map(p => parseInt(p) || 0);
       if (parts.length === 2) {
-        // MM:SS
         totalSeconds += parts[0] * 60 + parts[1];
       } else if (parts.length === 3) {
-        // HH:MM:SS
         totalSeconds += parts[0] * 3600 + parts[1] * 60 + parts[2];
       }
     }
@@ -50,17 +53,41 @@ const calculateTotalDuration = (songs: SetlistSong[]): string => {
 };
 
 export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps) => {
-  const { setlists, loading, createSetlist, updateSetlist, deleteSetlist, addSong, updateSong, deleteSong, reorderSongs } = useShowBibleSetlists(artistId);
+  const { 
+    setlists, 
+    librarySongs,
+    loading, 
+    createSetlist, 
+    updateSetlist, 
+    deleteSetlist, 
+    addSong, 
+    addSongFromLibrary,
+    updateSong, 
+    deleteSong, 
+    reorderSongs 
+  } = useShowBibleSetlists(artistId);
+  
   const [selectedSetlist, setSelectedSetlist] = useState<Setlist | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isAddSongDialogOpen, setIsAddSongDialogOpen] = useState(false);
   const [editingSong, setEditingSong] = useState<SetlistSong | null>(null);
   const [artists, setArtists] = useState<Artist[]>([]);
+  const [librarySearchQuery, setLibrarySearchQuery] = useState('');
+  const [addSongTab, setAddSongTab] = useState<'new' | 'library'>('library');
 
   const [newSetlistData, setNewSetlistData] = useState({
     title: '',
     description: '',
     artist_id: artistId || ''
+  });
+
+  const [newSongData, setNewSongData] = useState({
+    title: '',
+    duration: '',
+    notes: '',
+    tonality: '',
+    bpm: '',
+    lyrics: ''
   });
 
   useEffect(() => {
@@ -76,11 +103,26 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
     fetchArtists();
   }, []);
 
-  const [newSongData, setNewSongData] = useState({
-    title: '',
-    duration: '',
-    notes: ''
-  });
+  // Filter library songs for the selected setlist's artist
+  const filteredLibrarySongs = useMemo(() => {
+    let songs = librarySongs;
+    
+    // Filter by artist if setlist has an artist
+    if (selectedSetlist?.artist_id) {
+      songs = songs.filter(s => s.artist_id === selectedSetlist.artist_id);
+    }
+    
+    // Filter by search query
+    if (librarySearchQuery) {
+      const query = librarySearchQuery.toLowerCase();
+      songs = songs.filter(s => 
+        s.title.toLowerCase().includes(query) ||
+        s.tonality?.toLowerCase().includes(query)
+      );
+    }
+    
+    return songs;
+  }, [librarySongs, selectedSetlist?.artist_id, librarySearchQuery]);
 
   const handleCreateSetlist = async () => {
     if (!newSetlistData.title.trim()) {
@@ -106,10 +148,32 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
       return;
     }
 
-    const result = await addSong(selectedSetlist.id, newSongData);
+    const result = await addSong(
+      selectedSetlist.id, 
+      {
+        title: newSongData.title,
+        duration: newSongData.duration || undefined,
+        notes: newSongData.notes || undefined,
+        tonality: newSongData.tonality || undefined,
+        bpm: newSongData.bpm ? parseInt(newSongData.bpm) : undefined,
+        lyrics: newSongData.lyrics || undefined
+      },
+      selectedSetlist.artist_id || undefined
+    );
+
     if (result) {
       setIsAddSongDialogOpen(false);
-      setNewSongData({ title: '', duration: '', notes: '' });
+      resetNewSongData();
+    }
+  };
+
+  const handleAddFromLibrary = async (librarySong: LibrarySong) => {
+    if (!selectedSetlist) return;
+    
+    const result = await addSongFromLibrary(selectedSetlist.id, librarySong);
+    if (result) {
+      setIsAddSongDialogOpen(false);
+      setLibrarySearchQuery('');
     }
   };
 
@@ -119,11 +183,23 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
       return;
     }
 
-    const result = await updateSong(editingSong.id, newSongData);
+    const result = await updateSong(editingSong.id, {
+      title: newSongData.title,
+      duration: newSongData.duration || undefined,
+      notes: newSongData.notes || undefined,
+      tonality: newSongData.tonality || undefined,
+      bpm: newSongData.bpm ? parseInt(newSongData.bpm) : undefined,
+      lyrics: newSongData.lyrics || undefined
+    });
+
     if (result) {
       setEditingSong(null);
-      setNewSongData({ title: '', duration: '', notes: '' });
+      resetNewSongData();
     }
+  };
+
+  const resetNewSongData = () => {
+    setNewSongData({ title: '', duration: '', notes: '', tonality: '', bpm: '', lyrics: '' });
   };
 
   const handleDragEnd = (result: DropResult) => {
@@ -134,6 +210,18 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
     songs.splice(result.destination.index, 0, reorderedSong);
 
     reorderSongs(selectedSetlist.id, songs);
+  };
+
+  const openEditDialog = (song: SetlistSong) => {
+    setEditingSong(song);
+    setNewSongData({
+      title: song.title,
+      duration: song.duration || '',
+      notes: song.notes || '',
+      tonality: song.tonality || '',
+      bpm: song.bpm?.toString() || '',
+      lyrics: song.lyrics || ''
+    });
   };
 
   if (loading) {
@@ -267,44 +355,154 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
                     )}
                   </div>
                 </div>
-                <Dialog open={isAddSongDialogOpen} onOpenChange={setIsAddSongDialogOpen}>
+                <Dialog open={isAddSongDialogOpen} onOpenChange={(open) => {
+                  setIsAddSongDialogOpen(open);
+                  if (!open) {
+                    resetNewSongData();
+                    setLibrarySearchQuery('');
+                  }
+                }}>
                   <DialogTrigger asChild>
                     <Button size="sm">
                       <Plus className="h-4 w-4 mr-2" />
                       Ajouter
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="max-w-2xl">
                     <DialogHeader>
                       <DialogTitle>Ajouter une chanson</DialogTitle>
                     </DialogHeader>
-                    <div className="space-y-4">
-                      <div>
-                        <Label>Titre</Label>
-                        <Input
-                          value={newSongData.title}
-                          onChange={(e) => setNewSongData(prev => ({ ...prev, title: e.target.value }))}
-                          placeholder="Titre de la chanson"
-                        />
-                      </div>
-                      <div>
-                        <Label>Durée</Label>
-                        <Input
-                          value={newSongData.duration}
-                          onChange={(e) => setNewSongData(prev => ({ ...prev, duration: e.target.value }))}
-                          placeholder="ex: 3:45"
-                        />
-                      </div>
-                      <div>
-                        <Label>Notes</Label>
-                        <Textarea
-                          value={newSongData.notes}
-                          onChange={(e) => setNewSongData(prev => ({ ...prev, notes: e.target.value }))}
-                          placeholder="Notes personnelles..."
-                        />
-                      </div>
-                      <Button onClick={handleAddSong} className="w-full">Ajouter</Button>
-                    </div>
+                    <Tabs value={addSongTab} onValueChange={(v) => setAddSongTab(v as 'new' | 'library')}>
+                      <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="library" className="flex items-center gap-2">
+                          <Library className="h-4 w-4" />
+                          Bibliothèque
+                        </TabsTrigger>
+                        <TabsTrigger value="new" className="flex items-center gap-2">
+                          <Plus className="h-4 w-4" />
+                          Nouvelle chanson
+                        </TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="library" className="mt-4">
+                        <div className="space-y-4">
+                          <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              placeholder="Rechercher une chanson..."
+                              value={librarySearchQuery}
+                              onChange={(e) => setLibrarySearchQuery(e.target.value)}
+                              className="pl-10"
+                            />
+                          </div>
+                          <ScrollArea className="h-[300px]">
+                            {filteredLibrarySongs.length === 0 ? (
+                              <div className="text-center text-muted-foreground py-8">
+                                <Library className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                                <p>Aucune chanson dans la bibliothèque</p>
+                                <p className="text-xs mt-1">Les chansons ajoutées aux setlists sont automatiquement enregistrées</p>
+                              </div>
+                            ) : (
+                              <div className="space-y-2">
+                                {filteredLibrarySongs.map((song) => (
+                                  <div
+                                    key={song.id}
+                                    className="p-3 border rounded-lg hover:bg-accent/50 cursor-pointer transition-colors"
+                                    onClick={() => handleAddFromLibrary(song)}
+                                  >
+                                    <div className="flex items-center justify-between">
+                                      <div>
+                                        <p className="font-medium">{song.title}</p>
+                                        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                                          {song.duration && <span>{song.duration}</span>}
+                                          {song.tonality && <Badge variant="outline" className="text-xs">{song.tonality}</Badge>}
+                                          {song.bpm && <span>{song.bpm} BPM</span>}
+                                        </div>
+                                      </div>
+                                      <Plus className="h-4 w-4 text-primary" />
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </ScrollArea>
+                        </div>
+                      </TabsContent>
+                      
+                      <TabsContent value="new" className="mt-4">
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="col-span-2">
+                              <Label>Titre *</Label>
+                              <Input
+                                value={newSongData.title}
+                                onChange={(e) => setNewSongData(prev => ({ ...prev, title: e.target.value }))}
+                                placeholder="Titre de la chanson"
+                              />
+                            </div>
+                            <div>
+                              <Label>Durée</Label>
+                              <Input
+                                value={newSongData.duration}
+                                onChange={(e) => setNewSongData(prev => ({ ...prev, duration: e.target.value }))}
+                                placeholder="ex: 3:45"
+                              />
+                            </div>
+                            <div>
+                              <Label>BPM</Label>
+                              <Input
+                                type="number"
+                                value={newSongData.bpm}
+                                onChange={(e) => setNewSongData(prev => ({ ...prev, bpm: e.target.value }))}
+                                placeholder="ex: 120"
+                              />
+                            </div>
+                            <div className="col-span-2">
+                              <Label>Tonalité</Label>
+                              <Select
+                                value={newSongData.tonality}
+                                onValueChange={(value) => setNewSongData(prev => ({ ...prev, tonality: value }))}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Sélectionner une tonalité" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {TONALITIES.map((tone) => (
+                                    TONALITY_MODES.map((mode) => (
+                                      <SelectItem key={`${tone}-${mode}`} value={`${tone} ${mode}`}>
+                                        {tone} {mode}
+                                      </SelectItem>
+                                    ))
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="col-span-2">
+                              <Label>Notes</Label>
+                              <Textarea
+                                value={newSongData.notes}
+                                onChange={(e) => setNewSongData(prev => ({ ...prev, notes: e.target.value }))}
+                                placeholder="Notes personnelles..."
+                                rows={2}
+                              />
+                            </div>
+                            <div className="col-span-2">
+                              <Label className="flex items-center gap-2">
+                                <FileText className="h-4 w-4" />
+                                Paroles
+                              </Label>
+                              <Textarea
+                                value={newSongData.lyrics}
+                                onChange={(e) => setNewSongData(prev => ({ ...prev, lyrics: e.target.value }))}
+                                placeholder="Paroles de la chanson..."
+                                rows={4}
+                              />
+                            </div>
+                          </div>
+                          <Button onClick={handleAddSong} className="w-full">Ajouter</Button>
+                        </div>
+                      </TabsContent>
+                    </Tabs>
                   </DialogContent>
                 </Dialog>
               </div>
@@ -328,15 +526,32 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
                                   <GripVertical className="h-5 w-5 text-muted-foreground" />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-2 flex-wrap">
                                     <span className="text-sm text-muted-foreground">#{index + 1}</span>
                                     <h5 className="font-medium">{song.title}</h5>
                                     {song.duration && (
                                       <span className="text-sm text-muted-foreground">({song.duration})</span>
                                     )}
+                                    {song.tonality && (
+                                      <Badge variant="outline" className="text-xs">{song.tonality}</Badge>
+                                    )}
+                                    {song.bpm && (
+                                      <Badge variant="secondary" className="text-xs">{song.bpm} BPM</Badge>
+                                    )}
                                   </div>
                                   {song.notes && (
                                     <p className="text-sm text-muted-foreground mt-1">{song.notes}</p>
+                                  )}
+                                  {song.lyrics && (
+                                    <details className="mt-2">
+                                      <summary className="text-xs text-primary cursor-pointer flex items-center gap-1">
+                                        <FileText className="h-3 w-3" />
+                                        Voir les paroles
+                                      </summary>
+                                      <pre className="text-xs text-muted-foreground mt-2 whitespace-pre-wrap bg-muted/50 p-2 rounded">
+                                        {song.lyrics}
+                                      </pre>
+                                    </details>
                                   )}
                                 </div>
                                 <div className="flex gap-1">
@@ -344,15 +559,10 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
                                     open={editingSong?.id === song.id}
                                     onOpenChange={(open) => {
                                       if (open) {
-                                        setEditingSong(song);
-                                        setNewSongData({
-                                          title: song.title,
-                                          duration: song.duration || '',
-                                          notes: song.notes || ''
-                                        });
+                                        openEditDialog(song);
                                       } else {
                                         setEditingSong(null);
-                                        setNewSongData({ title: '', duration: '', notes: '' });
+                                        resetNewSongData();
                                       }
                                     }}
                                   >
@@ -361,31 +571,75 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
                                         <Edit className="h-4 w-4" />
                                       </Button>
                                     </DialogTrigger>
-                                    <DialogContent>
+                                    <DialogContent className="max-w-2xl">
                                       <DialogHeader>
                                         <DialogTitle>Modifier la chanson</DialogTitle>
                                       </DialogHeader>
                                       <div className="space-y-4">
-                                        <div>
-                                          <Label>Titre</Label>
-                                          <Input
-                                            value={newSongData.title}
-                                            onChange={(e) => setNewSongData(prev => ({ ...prev, title: e.target.value }))}
-                                          />
-                                        </div>
-                                        <div>
-                                          <Label>Durée</Label>
-                                          <Input
-                                            value={newSongData.duration}
-                                            onChange={(e) => setNewSongData(prev => ({ ...prev, duration: e.target.value }))}
-                                          />
-                                        </div>
-                                        <div>
-                                          <Label>Notes</Label>
-                                          <Textarea
-                                            value={newSongData.notes}
-                                            onChange={(e) => setNewSongData(prev => ({ ...prev, notes: e.target.value }))}
-                                          />
+                                        <div className="grid grid-cols-2 gap-4">
+                                          <div className="col-span-2">
+                                            <Label>Titre *</Label>
+                                            <Input
+                                              value={newSongData.title}
+                                              onChange={(e) => setNewSongData(prev => ({ ...prev, title: e.target.value }))}
+                                            />
+                                          </div>
+                                          <div>
+                                            <Label>Durée</Label>
+                                            <Input
+                                              value={newSongData.duration}
+                                              onChange={(e) => setNewSongData(prev => ({ ...prev, duration: e.target.value }))}
+                                              placeholder="ex: 3:45"
+                                            />
+                                          </div>
+                                          <div>
+                                            <Label>BPM</Label>
+                                            <Input
+                                              type="number"
+                                              value={newSongData.bpm}
+                                              onChange={(e) => setNewSongData(prev => ({ ...prev, bpm: e.target.value }))}
+                                              placeholder="ex: 120"
+                                            />
+                                          </div>
+                                          <div className="col-span-2">
+                                            <Label>Tonalité</Label>
+                                            <Select
+                                              value={newSongData.tonality}
+                                              onValueChange={(value) => setNewSongData(prev => ({ ...prev, tonality: value }))}
+                                            >
+                                              <SelectTrigger>
+                                                <SelectValue placeholder="Sélectionner une tonalité" />
+                                              </SelectTrigger>
+                                              <SelectContent>
+                                                {TONALITIES.map((tone) => (
+                                                  TONALITY_MODES.map((mode) => (
+                                                    <SelectItem key={`${tone}-${mode}`} value={`${tone} ${mode}`}>
+                                                      {tone} {mode}
+                                                    </SelectItem>
+                                                  ))
+                                                ))}
+                                              </SelectContent>
+                                            </Select>
+                                          </div>
+                                          <div className="col-span-2">
+                                            <Label>Notes</Label>
+                                            <Textarea
+                                              value={newSongData.notes}
+                                              onChange={(e) => setNewSongData(prev => ({ ...prev, notes: e.target.value }))}
+                                              rows={2}
+                                            />
+                                          </div>
+                                          <div className="col-span-2">
+                                            <Label className="flex items-center gap-2">
+                                              <FileText className="h-4 w-4" />
+                                              Paroles
+                                            </Label>
+                                            <Textarea
+                                              value={newSongData.lyrics}
+                                              onChange={(e) => setNewSongData(prev => ({ ...prev, lyrics: e.target.value }))}
+                                              rows={6}
+                                            />
+                                          </div>
                                         </div>
                                         <Button onClick={handleUpdateSong} className="w-full">Enregistrer</Button>
                                       </div>

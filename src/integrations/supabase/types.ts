@@ -172,6 +172,56 @@ export type Database = {
           },
         ]
       }
+      artist_songs: {
+        Row: {
+          artist_id: string | null
+          bpm: number | null
+          created_at: string
+          duration: string | null
+          id: string
+          lyrics: string | null
+          notes: string | null
+          title: string
+          tonality: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          artist_id?: string | null
+          bpm?: number | null
+          created_at?: string
+          duration?: string | null
+          id?: string
+          lyrics?: string | null
+          notes?: string | null
+          title: string
+          tonality?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          artist_id?: string | null
+          bpm?: number | null
+          created_at?: string
+          duration?: string | null
+          id?: string
+          lyrics?: string | null
+          notes?: string | null
+          title?: string
+          tonality?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "artist_songs_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "centralized_artists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       artist_users: {
         Row: {
           artist_id: string
@@ -3203,36 +3253,55 @@ export type Database = {
       }
       show_bible_setlist_songs: {
         Row: {
+          bpm: number | null
           created_at: string
           duration: string | null
           id: string
+          library_song_id: string | null
+          lyrics: string | null
           notes: string | null
           position: number
           setlist_id: string
           title: string
+          tonality: string | null
           updated_at: string
         }
         Insert: {
+          bpm?: number | null
           created_at?: string
           duration?: string | null
           id?: string
+          library_song_id?: string | null
+          lyrics?: string | null
           notes?: string | null
           position: number
           setlist_id: string
           title: string
+          tonality?: string | null
           updated_at?: string
         }
         Update: {
+          bpm?: number | null
           created_at?: string
           duration?: string | null
           id?: string
+          library_song_id?: string | null
+          lyrics?: string | null
           notes?: string | null
           position?: number
           setlist_id?: string
           title?: string
+          tonality?: string | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "show_bible_setlist_songs_library_song_id_fkey"
+            columns: ["library_song_id"]
+            isOneToOne: false
+            referencedRelation: "artist_songs"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "show_bible_setlist_songs_setlist_id_fkey"
             columns: ["setlist_id"]
