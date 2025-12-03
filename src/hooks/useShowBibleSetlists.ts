@@ -10,6 +10,10 @@ export interface SetlistSong {
   duration: string | null;
   position: number;
   notes: string | null;
+  tonality: string | null;
+  bpm: number | null;
+  lyrics: string | null;
+  library_song_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -25,9 +29,24 @@ export interface Setlist {
   songs?: SetlistSong[];
 }
 
+export interface LibrarySong {
+  id: string;
+  user_id: string;
+  artist_id: string | null;
+  title: string;
+  duration: string | null;
+  notes: string | null;
+  tonality: string | null;
+  bpm: number | null;
+  lyrics: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export const useShowBibleSetlists = (artistId?: string) => {
   const { user } = useAuth();
   const [setlists, setSetlists] = useState<Setlist[]>([]);
+  const [librarySongs, setLibrarySongs] = useState<LibrarySong[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchSetlists = async () => {
@@ -77,6 +96,35 @@ export const useShowBibleSetlists = (artistId?: string) => {
       toast.error('Erreur lors du chargement des setlists');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchLibrarySongs = async () => {
+    if (!user) {
+      setLibrarySongs([]);
+      return;
+    }
+
+    try {
+      let query = supabase
+        .from('artist_songs')
+        .select('*')
+        .order('title', { ascending: true });
+
+      if (artistId) {
+        query = query.eq('artist_id', artistId);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Error fetching library songs:', error);
+        return;
+      }
+
+      setLibrarySongs((data || []) as LibrarySong[]);
+    } catch (error) {
+      console.error('Error fetching library songs:', error);
     }
   };
 
@@ -160,7 +208,97 @@ export const useShowBibleSetlists = (artistId?: string) => {
     }
   };
 
-  const addSong = async (setlistId: string, song: { title: string; duration?: string; notes?: string }) => {
+  const addSongToLibrary = async (song: { 
+    title: string; 
+    duration?: string; 
+    notes?: string; 
+    tonality?: string; 
+    bpm?: number; 
+    lyrics?: string;
+    artist_id?: string;
+  }): Promise<LibrarySong | null> => {
+    if (!user) return null;
+
+    try {
+      // Check if song already exists in library for this artist
+      const existingQuery = supabase
+        .from('artist_songs')
+        .select('*')
+        .eq('title', song.title);
+      
+      if (song.artist_id) {
+        existingQuery.eq('artist_id', song.artist_id);
+      }
+
+      const { data: existing } = await existingQuery.maybeSingle();
+
+      if (existing) {
+        // Update existing song with new data if provided
+        const updates: any = {};
+        if (song.duration) updates.duration = song.duration;
+        if (song.notes) updates.notes = song.notes;
+        if (song.tonality) updates.tonality = song.tonality;
+        if (song.bpm) updates.bpm = song.bpm;
+        if (song.lyrics) updates.lyrics = song.lyrics;
+
+        if (Object.keys(updates).length > 0) {
+          await supabase
+            .from('artist_songs')
+            .update(updates)
+            .eq('id', existing.id);
+        }
+
+        await fetchLibrarySongs();
+        return existing as LibrarySong;
+      }
+
+      // Create new library song
+      const { data: newSong, error } = await supabase
+        .from('artist_songs')
+        .insert([{
+          user_id: user.id,
+          artist_id: song.artist_id || null,
+          title: song.title,
+          duration: song.duration || null,
+          notes: song.notes || null,
+          tonality: song.tonality || null,
+          bpm: song.bpm || null,
+          lyrics: song.lyrics || null
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error adding song to library:', error);
+        return null;
+      }
+
+      await fetchLibrarySongs();
+      return newSong as LibrarySong;
+    } catch (error) {
+      console.error('Error adding song to library:', error);
+      return null;
+    }
+  };
+
+  const addSong = async (
+    setlistId: string, 
+    song: { 
+      title: string; 
+      duration?: string; 
+      notes?: string;
+      tonality?: string;
+      bpm?: number;
+      lyrics?: string;
+      library_song_id?: string;
+    },
+    setlistArtistId?: string
+  ) => {
+    if (!user) {
+      toast.error('Vous devez être connecté');
+      return false;
+    }
+
     try {
       // Get max position
       const { data: songs } = await supabase
@@ -172,6 +310,16 @@ export const useShowBibleSetlists = (artistId?: string) => {
 
       const maxPosition = songs && songs.length > 0 ? songs[0].position : -1;
 
+      // Add to library if not from library
+      let librarySongId = song.library_song_id;
+      if (!librarySongId && setlistArtistId) {
+        const librarySong = await addSongToLibrary({
+          ...song,
+          artist_id: setlistArtistId
+        });
+        librarySongId = librarySong?.id;
+      }
+
       const { error } = await supabase
         .from('show_bible_setlist_songs')
         .insert([{
@@ -179,6 +327,10 @@ export const useShowBibleSetlists = (artistId?: string) => {
           title: song.title,
           duration: song.duration || null,
           notes: song.notes || null,
+          tonality: song.tonality || null,
+          bpm: song.bpm || null,
+          lyrics: song.lyrics || null,
+          library_song_id: librarySongId || null,
           position: maxPosition + 1
         }]);
 
@@ -198,7 +350,26 @@ export const useShowBibleSetlists = (artistId?: string) => {
     }
   };
 
-  const updateSong = async (songId: string, data: { title?: string; duration?: string; notes?: string }) => {
+  const addSongFromLibrary = async (setlistId: string, librarySong: LibrarySong) => {
+    return addSong(setlistId, {
+      title: librarySong.title,
+      duration: librarySong.duration || undefined,
+      notes: librarySong.notes || undefined,
+      tonality: librarySong.tonality || undefined,
+      bpm: librarySong.bpm || undefined,
+      lyrics: librarySong.lyrics || undefined,
+      library_song_id: librarySong.id
+    });
+  };
+
+  const updateSong = async (songId: string, data: { 
+    title?: string; 
+    duration?: string; 
+    notes?: string;
+    tonality?: string;
+    bpm?: number;
+    lyrics?: string;
+  }) => {
     try {
       const { error } = await supabase
         .from('show_bible_setlist_songs')
@@ -216,6 +387,36 @@ export const useShowBibleSetlists = (artistId?: string) => {
       return true;
     } catch (error) {
       console.error('Error updating song:', error);
+      toast.error('Erreur lors de la mise à jour');
+      return false;
+    }
+  };
+
+  const updateLibrarySong = async (songId: string, data: { 
+    title?: string; 
+    duration?: string; 
+    notes?: string;
+    tonality?: string;
+    bpm?: number;
+    lyrics?: string;
+  }) => {
+    try {
+      const { error } = await supabase
+        .from('artist_songs')
+        .update(data)
+        .eq('id', songId);
+
+      if (error) {
+        console.error('Error updating library song:', error);
+        toast.error('Erreur lors de la mise à jour');
+        return false;
+      }
+
+      await fetchLibrarySongs();
+      toast.success('Chanson mise à jour dans la bibliothèque');
+      return true;
+    } catch (error) {
+      console.error('Error updating library song:', error);
       toast.error('Erreur lors de la mise à jour');
       return false;
     }
@@ -244,6 +445,29 @@ export const useShowBibleSetlists = (artistId?: string) => {
     }
   };
 
+  const deleteLibrarySong = async (songId: string) => {
+    try {
+      const { error } = await supabase
+        .from('artist_songs')
+        .delete()
+        .eq('id', songId);
+
+      if (error) {
+        console.error('Error deleting library song:', error);
+        toast.error('Erreur lors de la suppression');
+        return false;
+      }
+
+      await fetchLibrarySongs();
+      toast.success('Chanson supprimée de la bibliothèque');
+      return true;
+    } catch (error) {
+      console.error('Error deleting library song:', error);
+      toast.error('Erreur lors de la suppression');
+      return false;
+    }
+  };
+
   const reorderSongs = async (setlistId: string, songs: SetlistSong[]) => {
     try {
       const updates = songs.map((song, index) => 
@@ -265,18 +489,25 @@ export const useShowBibleSetlists = (artistId?: string) => {
 
   useEffect(() => {
     fetchSetlists();
+    fetchLibrarySongs();
   }, [user, artistId]);
 
   return {
     setlists,
+    librarySongs,
     loading,
     createSetlist,
     updateSetlist,
     deleteSetlist,
     addSong,
+    addSongFromLibrary,
+    addSongToLibrary,
     updateSong,
+    updateLibrarySong,
     deleteSong,
+    deleteLibrarySong,
     reorderSongs,
-    refetch: fetchSetlists
+    refetch: fetchSetlists,
+    refetchLibrary: fetchLibrarySongs
   };
 };
