@@ -402,7 +402,11 @@ export const MediaBankManager: React.FC = () => {
                 <Label>Artiste/Spectacle</Label>
                 <Select 
                   value={selectedImage.source_id || 'none'} 
-                  onValueChange={(value) => updateImage(selectedImage.id, { source_id: value === 'none' ? null : value })}
+                  onValueChange={async (value) => {
+                    const newSourceId = value === 'none' ? null : value;
+                    await updateImage(selectedImage.id, { source_id: newSourceId });
+                    setSelectedImage({ ...selectedImage, source_id: newSourceId || undefined });
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Aucun artiste" />
@@ -421,7 +425,10 @@ export const MediaBankManager: React.FC = () => {
                 <Label>Catégorie</Label>
                 <Select 
                   value={selectedImage.category || 'general'} 
-                  onValueChange={(value) => handleUpdateCategory(selectedImage.id, value)}
+                  onValueChange={async (value) => {
+                    await updateImage(selectedImage.id, { category: value });
+                    setSelectedImage({ ...selectedImage, category: value });
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue />
