@@ -480,6 +480,7 @@ export type Database = {
           id: string
           image: string | null
           instagram: string | null
+          is_touring: boolean | null
           logo_url: string | null
           name: string
           official_photos: string[] | null
@@ -515,6 +516,7 @@ export type Database = {
           id?: string
           image?: string | null
           instagram?: string | null
+          is_touring?: boolean | null
           logo_url?: string | null
           name: string
           official_photos?: string[] | null
@@ -550,6 +552,7 @@ export type Database = {
           id?: string
           image?: string | null
           instagram?: string | null
+          is_touring?: boolean | null
           logo_url?: string | null
           name?: string
           official_photos?: string[] | null

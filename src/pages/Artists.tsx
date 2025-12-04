@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ViewToggle } from '@/components/ui/view-toggle';
-import { Plus, Music, Calendar, MapPin, Clock, Bed, BookOpen, Trash2, Upload, Image, Search, Edit2 } from 'lucide-react';
+import { Plus, Music, Calendar, MapPin, Clock, Bed, BookOpen, Trash2, Upload, Image, Search, Edit2, Plane } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCentralizedData, CentralizedArtist as Artist } from '@/hooks/useCentralizedData';
 import { useOpportunities } from '@/hooks/useOpportunities';
@@ -243,10 +243,16 @@ export const Artists: React.FC = () => {
                       <h3 className="font-medium text-gray-900">{artist.name}</h3>
                       <p className="text-sm text-gray-500">{artist.genre}</p>
                     </div>
-                    <div className="flex items-center space-x-1">
+                    <div className="flex items-center flex-wrap gap-1">
                       <Badge variant={artist.status === 'active' ? 'default' : 'secondary'}>
                         {artist.status === 'active' ? 'Actif' : 'Inactif'}
                       </Badge>
+                      {(artist as any).is_touring && (
+                        <Badge className="bg-green-100 text-green-800 border-green-200">
+                          <Plane className="h-3 w-3 mr-1" />
+                          Tournée
+                        </Badge>
+                      )}
                       <Button
                         variant="outline"
                         size="sm"

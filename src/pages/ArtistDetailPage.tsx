@@ -8,7 +8,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Edit2 } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { ArrowLeft, Edit2, Plane } from 'lucide-react';
 import { useCentralizedData } from '@/hooks/useCentralizedData';
 import { ArtistDashboard } from '@/components/ArtistDashboard';
 import { ArtistMediaManager } from '@/components/ArtistMediaManager';
@@ -79,7 +80,7 @@ export const ArtistDetailPage: React.FC = () => {
   return (
     <div className="container mx-auto py-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" onClick={() => navigate('/artists')}>
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -92,16 +93,39 @@ export const ArtistDetailPage: React.FC = () => {
               <Badge variant={artist.status === 'active' ? 'default' : 'secondary'}>
                 {artist.status === 'active' ? 'Actif' : 'Inactif'}
               </Badge>
+              {(artist as any).is_touring && (
+                <Badge className="bg-green-100 text-green-800 border-green-200">
+                  <Plane className="h-3 w-3 mr-1" />
+                  En tournée
+                </Badge>
+              )}
             </div>
           </div>
         </div>
-        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline">
-              <Edit2 className="h-4 w-4 mr-2" />
-              Modifier les infos générales
-            </Button>
-          </DialogTrigger>
+        
+        {/* Toggle disponible en tournée */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 bg-muted/50 px-4 py-2 rounded-lg">
+            <Plane className="h-4 w-4 text-muted-foreground" />
+            <Label htmlFor="touring-toggle" className="text-sm font-medium cursor-pointer">
+              Disponible en tournée
+            </Label>
+            <Switch
+              id="touring-toggle"
+              checked={(artist as any).is_touring || false}
+              onCheckedChange={async (checked) => {
+                await handleUpdate({ is_touring: checked });
+                toast.success(checked ? 'Spectacle marqué disponible en tournée' : 'Spectacle retiré de la tournée');
+              }}
+            />
+          </div>
+          <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Edit2 className="h-4 w-4 mr-2" />
+                Modifier les infos générales
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Modifier les informations générales</DialogTitle>
@@ -196,8 +220,9 @@ export const ArtistDetailPage: React.FC = () => {
                 </Button>
               </div>
             </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Artist Image */}

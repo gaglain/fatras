@@ -20,7 +20,8 @@ import {
   Calendar,
   MapPin,
   Download,
-  ArrowLeft
+  ArrowLeft,
+  Plane
 } from 'lucide-react';
 
 export const FrontArtistDetail: React.FC = () => {
@@ -125,11 +126,19 @@ export const FrontArtistDetail: React.FC = () => {
                   <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-2">
                     {artist.name}
                   </h1>
-                  {artist.genre && (
-                    <Badge variant="outline" className="text-lg px-4 py-1">
-                      {artist.genre}
-                    </Badge>
-                  )}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {artist.genre && (
+                      <Badge variant="outline" className="text-lg px-4 py-1">
+                        {artist.genre}
+                      </Badge>
+                    )}
+                    {artist.is_touring && (
+                      <Badge className="bg-green-100 text-green-800 border-green-200 text-lg px-4 py-1">
+                        <Plane className="h-4 w-4 mr-2" />
+                        Disponible en tournée
+                      </Badge>
+                    )}
+                  </div>
                 </div>
 
                 {artist.short_description && (

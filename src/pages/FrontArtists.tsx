@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Users } from 'lucide-react';
+import { Users, Plane } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 export const FrontArtists: React.FC = () => {
@@ -34,7 +34,8 @@ export const FrontArtists: React.FC = () => {
         photo_url: artist.image || artist.logo_url || '/placeholder.svg',
         website: artist.website,
         contact_email: artist.contact_email,
-        contact_phone: artist.contact_phone
+        contact_phone: artist.contact_phone,
+        is_touring: artist.is_touring
       }));
       
       setArtists(mappedArtists);
@@ -86,9 +87,17 @@ export const FrontArtists: React.FC = () => {
                   )}
                   <div className="text-center">
                     <h3 className="text-xl font-semibold mb-2">{artist.name}</h3>
-                    {artist.genre && (
-                      <Badge variant="outline" className="mb-3">{artist.genre}</Badge>
-                    )}
+                    <div className="flex items-center justify-center gap-2 mb-3">
+                      {artist.genre && (
+                        <Badge variant="outline">{artist.genre}</Badge>
+                      )}
+                      {artist.is_touring && (
+                        <Badge className="bg-green-100 text-green-800 border-green-200">
+                          <Plane className="h-3 w-3 mr-1" />
+                          En tournée
+                        </Badge>
+                      )}
+                    </div>
                     {artist.bio && (
                       <p className="text-muted-foreground text-sm mb-4">{artist.bio}</p>
                     )}
