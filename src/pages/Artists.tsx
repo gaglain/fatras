@@ -451,12 +451,12 @@ export const Artists: React.FC = () => {
 
       {/* Add/Edit Artist Form Modal */}
       {showAddForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <Card className="w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-            <CardHeader>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-2xl flex flex-col max-h-[90vh]">
+            <CardHeader className="flex-shrink-0">
               <CardTitle>{editingArtist ? 'Modifier le Spectacle' : 'Ajouter Nouveau Spectacle'}</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 overflow-y-auto flex-1">
               <div className="grid grid-cols-2 gap-4">
                 <Input 
                   placeholder="Nom du spectacle *" 
@@ -531,7 +531,7 @@ export const Artists: React.FC = () => {
                 />
               </div>
               
-              <div className="flex space-x-3 pt-4">
+              <div className="flex space-x-3 pt-4 sticky bottom-0 bg-background pb-2">
                 <Button 
                   onClick={() => {
                     setShowAddForm(false);
