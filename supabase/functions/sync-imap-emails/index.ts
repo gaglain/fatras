@@ -203,9 +203,7 @@ const handler = async (req: Request): Promise<Response> => {
 
       // Authenticate using LOGIN
       console.log('📝 Authenticating...');
-      await sendCommand(`LOGIN "${imapUsername}" "${imapPassword}"`);
-      const loginResponse = await readResponse();
-      console.log('🔓 Authentication response:', loginResponse);
+      const loginResponse = await sendCommand(`LOGIN "${imapUsername}" "${imapPassword}"`);
       
       if (!loginResponse.includes('OK')) {
         console.error('❌ IMAP authentication failed:', loginResponse);
