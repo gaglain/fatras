@@ -297,13 +297,13 @@ export const UserManagement: React.FC = () => {
           </p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
-          {isSuperAdmin() && (
+          {!permissionsLoading && isSuperAdmin() && (
             <Button variant="outline" onClick={exportUsersToPDF} className="flex-1 sm:flex-none">
               <FileDown className="h-4 w-4 mr-2" />
               <span className="hidden sm:inline">Export </span>PDF
             </Button>
           )}
-          {hasPermission('users', 'create') && (
+          {!permissionsLoading && hasPermission('users', 'create') && (
             <Button onClick={() => setIsFormOpen(true)} className="flex-1 sm:flex-none">
               <Plus className="h-4 w-4 mr-2" />
               <span className="hidden sm:inline">Nouvel </span>Utilisateur
