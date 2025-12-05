@@ -14,7 +14,8 @@ import {
   Mail, 
   Phone,
   User,
-  Save
+  Save,
+  FileDown
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useUser, UserRole } from '@/contexts/UserContext';
@@ -23,6 +24,7 @@ import { useUserManagement } from '@/hooks/useUserManagement';
 import { usePermissions } from '@/hooks/usePermissions';
 import { ExtendedUserForm } from '@/components/users/ExtendedUserForm';
 import { supabase } from '@/integrations/supabase/client';
+import jsPDF from 'jspdf';
 
 
 export const UserManagement: React.FC = () => {
@@ -40,10 +42,80 @@ export const UserManagement: React.FC = () => {
   
   const { sendUserWelcomeEmail, sending } = useEmailSender();
   const { users, loading, fetchUsers, createUser, updateUserProfile, deactivateUser } = useUserManagement();
-  const { hasPermission, loading: permissionsLoading } = usePermissions();
+  const { hasPermission, isSuperAdmin, loading: permissionsLoading } = usePermissions();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+
+  const exportUsersToPDF = () => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    let yPosition = 20;
+
+    // Title
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Liste des Utilisateurs', pageWidth / 2, yPosition, { align: 'center' });
+    yPosition += 15;
+
+    // Date
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Exporté le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}`, pageWidth / 2, yPosition, { align: 'center' });
+    yPosition += 15;
+
+    // Users
+    filteredUsers.forEach((user, index) => {
+      // Check if we need a new page
+      if (yPosition > 270) {
+        doc.addPage();
+        yPosition = 20;
+      }
+
+      // User header
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`${index + 1}. ${user.first_name || ''} ${user.last_name || ''}`, 15, yPosition);
+      yPosition += 6;
+
+      // User details
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      
+      const details = [
+        `Email: ${user.email || 'Non renseigné'}`,
+        `Rôle: ${roleLabels[user.role as UserRole] || user.role || 'Non renseigné'}`,
+        `Téléphone: ${user.phone || 'Non renseigné'}`,
+        `Fonction: ${user.function_title || 'Non renseigné'}`,
+        `Nom de scène: ${user.show_name || 'Non renseigné'}`,
+        `Adresse: ${user.address || 'Non renseigné'}`,
+        `Ville: ${user.city || 'Non renseigné'}`,
+        `Nationalité: ${user.nationality || 'Non renseigné'}`,
+      ];
+
+      details.forEach(detail => {
+        if (yPosition > 280) {
+          doc.addPage();
+          yPosition = 20;
+        }
+        doc.text(detail, 20, yPosition);
+        yPosition += 5;
+      });
+
+      yPosition += 8; // Space between users
+    });
+
+    // Footer
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.text(`Page ${i} / ${pageCount}`, pageWidth / 2, 290, { align: 'center' });
+    }
+
+    doc.save(`utilisateurs_${new Date().toISOString().split('T')[0]}.pdf`);
+    toast.success('Export PDF généré avec succès');
+  };
 
   const roleLabels = {
     super_admin: 'Super Admin',
@@ -224,12 +296,20 @@ export const UserManagement: React.FC = () => {
             Gérez les utilisateurs et leurs permissions
           </p>
         </div>
-        {hasPermission('users', 'create') && (
-          <Button onClick={() => setIsFormOpen(true)} className="w-full sm:w-auto">
-            <Plus className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">Nouvel </span>Utilisateur
-          </Button>
-        )}
+        <div className="flex gap-2 w-full sm:w-auto">
+          {isSuperAdmin() && (
+            <Button variant="outline" onClick={exportUsersToPDF} className="flex-1 sm:flex-none">
+              <FileDown className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Export </span>PDF
+            </Button>
+          )}
+          {hasPermission('users', 'create') && (
+            <Button onClick={() => setIsFormOpen(true)} className="flex-1 sm:flex-none">
+              <Plus className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Nouvel </span>Utilisateur
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Barre de recherche */}
