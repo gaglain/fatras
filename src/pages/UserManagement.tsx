@@ -47,6 +47,99 @@ export const UserManagement: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
+  const exportSingleUserToPDF = (user: any) => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    let yPosition = 20;
+
+    // Title
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Fiche Utilisateur', pageWidth / 2, yPosition, { align: 'center' });
+    yPosition += 15;
+
+    // User name as subtitle
+    doc.setFontSize(14);
+    doc.text(`${user.first_name || ''} ${user.last_name || ''}`, pageWidth / 2, yPosition, { align: 'center' });
+    yPosition += 10;
+
+    // Date
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Exporté le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}`, pageWidth / 2, yPosition, { align: 'center' });
+    yPosition += 20;
+
+    // User details
+    doc.setFontSize(11);
+    const details = [
+      { label: 'Email', value: user.email || 'Non renseigné' },
+      { label: 'Nom d\'utilisateur', value: user.username || 'Non renseigné' },
+      { label: 'Rôle', value: roleLabels[user.role as UserRole] || user.role || 'Non renseigné' },
+      { label: 'Téléphone', value: user.phone || 'Non renseigné' },
+      { label: 'Fonction', value: user.function_title || 'Non renseigné' },
+      { label: 'Nom de scène', value: user.show_name || 'Non renseigné' },
+      { label: 'Adresse', value: user.address || 'Non renseigné' },
+      { label: 'Ville', value: user.city || 'Non renseigné' },
+      { label: 'Date de naissance', value: user.birth_date || 'Non renseigné' },
+      { label: 'Lieu de naissance', value: user.birth_place || 'Non renseigné' },
+      { label: 'Nationalité', value: user.nationality || 'Non renseigné' },
+      { label: 'N° Sécurité Sociale', value: user.social_security_number || 'Non renseigné' },
+    ];
+
+    details.forEach(({ label, value }) => {
+      doc.setFont('helvetica', 'bold');
+      doc.text(`${label}:`, 20, yPosition);
+      doc.setFont('helvetica', 'normal');
+      doc.text(value, 80, yPosition);
+      yPosition += 8;
+    });
+
+    // Bank details if available
+    if (user.bank_details) {
+      yPosition += 5;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.text('Coordonnées bancaires', 20, yPosition);
+      yPosition += 8;
+      doc.setFontSize(11);
+
+      const bankInfo = [
+        { label: 'IBAN', value: user.bank_details.iban || 'Non renseigné' },
+        { label: 'BIC', value: user.bank_details.bic || 'Non renseigné' },
+        { label: 'Banque', value: user.bank_details.bankName || 'Non renseigné' },
+        { label: 'Titulaire', value: user.bank_details.accountHolder || 'Non renseigné' },
+      ];
+
+      bankInfo.forEach(({ label, value }) => {
+        doc.setFont('helvetica', 'bold');
+        doc.text(`${label}:`, 25, yPosition);
+        doc.setFont('helvetica', 'normal');
+        doc.text(value, 80, yPosition);
+        yPosition += 7;
+      });
+    }
+
+    // Skills if available
+    if (user.skills && user.skills.length > 0) {
+      yPosition += 5;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.text('Compétences', 20, yPosition);
+      yPosition += 8;
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
+      doc.text(user.skills.join(', '), 25, yPosition);
+    }
+
+    // Footer
+    doc.setFontSize(8);
+    doc.text('Page 1 / 1', pageWidth / 2, 290, { align: 'center' });
+
+    const fileName = `utilisateur_${(user.first_name || 'user').toLowerCase()}_${(user.last_name || '').toLowerCase()}_${new Date().toISOString().split('T')[0]}.pdf`;
+    doc.save(fileName);
+    toast.success('Fiche utilisateur exportée');
+  };
+
   const exportUsersToPDF = () => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -378,6 +471,16 @@ export const UserManagement: React.FC = () => {
                   <span className="hidden sm:inline">Modifier</span>
                   <span className="sm:hidden">Edit</span>
                 </Button>
+                {!permissionsLoading && isSuperAdmin() && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => exportSingleUserToPDF(user)}
+                    title="Exporter en PDF"
+                  >
+                    <FileDown className="h-3 w-3" />
+                  </Button>
+                )}
                 <Button 
                   variant="outline" 
                   size="sm" 
