@@ -148,20 +148,21 @@ export const useNylasEmail = () => {
     }
   };
 
-const sendEmail = async (accountId: string, email: {
-  to: string;
-  subject: string;
-  content: string;
-  html?: string;
-  attachments?: Array<{ name: string; url: string }>; // public URLs, used for fallback
-}) => {
+  // Envoi direct via Resend (sans passer par Nylas qui ne fonctionne pas)
+  const sendEmail = async (accountId: string, email: {
+    to: string;
+    subject: string;
+    content: string;
+    html?: string;
+    attachments?: Array<{ name: string; url: string }>;
+  }) => {
     if (!user) {
       throw new Error('User must be authenticated');
     }
 
     setIsLoading(true);
     try {
-      console.log('📤 Sending email...');
+      console.log('📤 Sending email via Resend...');
 
       // Trouver le contact correspondant à l'email destinataire
       const { data: contact } = await supabase
@@ -181,7 +182,7 @@ const sendEmail = async (accountId: string, email: {
           html_content: email.html || email.content,
           direction: 'sent',
           status: 'sending',
-          contact_id: contact?.id || null // Lier au contact si trouvé
+          contact_id: contact?.id || null
         })
         .select()
         .single();
@@ -207,85 +208,46 @@ const sendEmail = async (accountId: string, email: {
         emailWithSignature = injectEmailTracking(emailRecord.id, emailWithSignature);
       }
 
-      const { data, error } = await supabase.functions.invoke('nylas-email', {
+      // Récupérer l'email de l'expéditeur depuis le compte sélectionné
+      const { data: accountData } = await supabase
+        .from('email_accounts')
+        .select('email')
+        .eq('id', accountId)
+        .single();
+
+      const fromEmail = accountData?.email || 'booking@fatras.net';
+
+      // Envoyer directement via Resend
+      const { data: resendData, error: resendError } = await supabase.functions.invoke('send-email-resend', {
         body: {
-          action: 'send',
-          accountId,
-          email: {
-            ...email,
-            content: signature ? `${email.content}\n\n${signature}` : email.content,
-            html: email.html ? emailWithSignature : undefined
-          }
+          to: [email.to],
+          subject: email.subject,
+          html: emailWithSignature,
+          fromName: 'Fatras',
+          fromEmail: fromEmail,
+          userId: user.id,
+          attachments: email.attachments,
         }
       });
 
-      if (error) {
-        console.error('❌ Send error:', error);
-        throw error;
-      }
-
-      console.log('✅ Send result:', data);
-
-      if (data.success) {
+      if (resendError) throw resendError;
+      
+      if (resendData?.success) {
         // Mettre à jour le statut de l'email si on a un enregistrement
         if (emailRecord) {
           await supabase
             .from('emails')
-            .update({ status: 'sent', sent_at: new Date().toISOString() })
+            .update({ status: 'sent', sent_at: new Date().toISOString(), provider: 'resend' })
             .eq('id', emailRecord.id);
         }
-        toast.success('Email sent successfully!');
-        return data;
-      } else {
-        throw new Error(data.error || 'Failed to send email');
+        toast.success('Email envoyé avec succès!');
+        return { ...resendData, provider: 'resend' };
       }
+      
+      throw new Error(resendData?.error || 'Échec de l\'envoi');
     } catch (error: any) {
-      // If Nylas fails due to missing IMAP/SMTP grant settings, fallback to Resend
-      const msg = String(error?.message || '');
-      const needsGrantSettings = /grant is missing imap username|smtphost|smtpport/i.test(msg);
-      if (needsGrantSettings) {
-        try {
-          console.warn('⚠️ Nylas grant settings missing. Falling back to Resend.');
-          toast.message('Nylas indisponible, tentative via Resend…');
-          
-          // Charger la signature de l'utilisateur
-          const { data: profileData } = await supabase
-            .from('user_profiles')
-            .select('email_signature')
-            .eq('user_id', user.id)
-            .single();
-
-          const signature = profileData?.email_signature || '';
-          const contentWithSignature = email.content.replace(/\n/g, '<br>');
-          const html = email.html 
-            ? `${email.html}<br><br>${signature}`
-            : `<div>${contentWithSignature}<br><br>${signature}</div>`;
-
-          const { data: resendData, error: resendError } = await supabase.functions.invoke('send-email-resend', {
-            body: {
-              to: [email.to],
-              subject: email.subject,
-              html,
-              fromName: 'Fatras',
-              userId: user.id,
-              attachments: email.attachments,
-            }
-          });
-          if (resendError) throw resendError;
-          if (resendData?.success) {
-            toast.success('Email envoyé via Resend');
-            return { ...resendData, provider: 'resend' };
-          }
-          throw new Error(resendData?.error || 'Resend fallback failed');
-        } catch (fallbackErr: any) {
-          console.error('❌ Resend fallback failed:', fallbackErr);
-          toast.error(`Send failed (Resend): ${fallbackErr?.message || 'Unknown error'}`);
-          throw fallbackErr;
-        }
-      }
-
       console.error('❌ Error sending email:', error);
-      toast.error(`Send failed: ${msg}`);
+      toast.error(`Échec de l'envoi: ${error?.message || 'Erreur inconnue'}`);
       throw error;
     } finally {
       setIsLoading(false);
