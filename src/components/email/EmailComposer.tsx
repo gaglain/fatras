@@ -189,7 +189,7 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
           {accounts.length === 0 ? (
             <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
               <p className="text-sm text-destructive">
-                Aucun compte email Nylas configuré. Veuillez configurer un compte dans les préférences.
+                Aucun compte email configuré. Veuillez configurer un compte dans les préférences.
               </p>
             </div>
           ) : (

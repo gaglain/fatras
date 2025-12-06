@@ -38,9 +38,9 @@ export const useUnifiedEmails = () => {
     loadEmails();
     const cleanup = setupRealtimeSubscription();
 
-    // Auto-sync Nylas accounts once on mount, then every 2 minutes
+    // Auto-sync toutes les 30 secondes pour une synchronisation plus réactive
     syncAllAccounts();
-    const interval = setInterval(syncAllAccounts, 120000);
+    const interval = setInterval(syncAllAccounts, 30000);
 
     return () => {
       cleanup?.();
