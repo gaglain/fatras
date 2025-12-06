@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, ReactNode } from 'react';
 import { Search, User, Calendar, CheckSquare, Sparkles, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,7 +26,7 @@ interface UniversalSearchProps {
   allowMultiple?: boolean;
   selectedItems?: SearchItem[];
   onSelectionChange?: (items: SearchItem[]) => void;
-  triggerText?: string;
+  triggerText?: string | ReactNode;
   filterTypes?: UniversalType[];
   selectedId?: string;
 }
@@ -199,18 +199,24 @@ export const UniversalSearch = ({
       {/* Déclencheur de recherche */}
       <Dialog open={open} onOpenChange={setOpen} modal={false}>
         <DialogTrigger asChild>
-          <Button variant="outline" className="w-full justify-start text-left">
-            <Search className="mr-2 h-4 w-4 flex-shrink-0" />
-            <span className={selectedItem ? 'text-foreground' : 'text-muted-foreground'}>
-              {selectedItem ? (
-                <>
-                  {selectedItem.external_id && <span className="text-muted-foreground mr-1">{selectedItem.external_id}</span>}
-                  {selectedItem.title}
-                </>
-              ) : (
-                triggerText
-              )}
-            </span>
+          <Button variant="outline" className={typeof triggerText === 'string' ? "w-full justify-start text-left" : "px-3"}>
+            {typeof triggerText !== 'string' ? (
+              triggerText
+            ) : (
+              <>
+                <Search className="mr-2 h-4 w-4 flex-shrink-0" />
+                <span className={selectedItem ? 'text-foreground' : 'text-muted-foreground'}>
+                  {selectedItem ? (
+                    <>
+                      {selectedItem.external_id && <span className="text-muted-foreground mr-1">{selectedItem.external_id}</span>}
+                      {selectedItem.title}
+                    </>
+                  ) : (
+                    triggerText
+                  )}
+                </span>
+              </>
+            )}
           </Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-[640px]">

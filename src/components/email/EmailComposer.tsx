@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Mail, X, Paperclip } from 'lucide-react';
+import { Mail, X, Paperclip, Search } from 'lucide-react';
 import { RichTextEditor } from '@/components/RichTextEditor';
 import { generateEmailSignature } from '@/utils/emailSignature';
 import { useUser } from '@/contexts/UserContext';
@@ -13,6 +13,7 @@ import { useNylasEmail } from '@/hooks/useNylasEmail';
 import { supabase } from '@/integrations/supabase/client';
 import { useIndividualEmailTracking } from '@/hooks/useIndividualEmailTracking';
 import { ImageGalleryPicker } from '@/components/website/ImageGalleryPicker';
+import { UniversalSearch } from '@/components/UniversalSearch';
 
 interface EmailComposerProps {
   isOpen: boolean;
@@ -212,14 +213,29 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
           
           <div>
             <Label htmlFor="to">Destinataire *</Label>
-            <Input
-              id="to"
-              type="email"
-              value={to}
-              onChange={(e) => setTo(e.target.value)}
-              placeholder="email@exemple.com"
-              required
-            />
+            <div className="flex gap-2">
+              <Input
+                id="to"
+                type="email"
+                value={to}
+                onChange={(e) => setTo(e.target.value)}
+                placeholder="email@exemple.com"
+                required
+                className="flex-1"
+              />
+              <UniversalSearch
+                filterTypes={['contact']}
+                onSelect={(item) => {
+                  if (item.data?.email) {
+                    setTo(item.data.email);
+                  } else {
+                    toast.error('Ce contact n\'a pas d\'adresse email');
+                  }
+                }}
+                placeholder="Rechercher un contact..."
+                triggerText={<Search className="h-4 w-4" />}
+              />
+            </div>
           </div>
 
           <div>
