@@ -257,11 +257,11 @@ const handler = async (req: Request): Promise<Response> => {
         });
       }
 
-      // Récupérer les 10 derniers messages pour le test
-      const startMsg = Math.max(1, totalMessages - 9);
+      // Récupérer les 50 derniers messages pour une synchronisation plus complète
+      const startMsg = Math.max(1, totalMessages - 49);
       const endMsg = totalMessages;
       
-      console.log(`🔍 Fetching messages ${startMsg}:${endMsg}`);
+      console.log(`🔍 Fetching messages ${startMsg}:${endMsg} (${endMsg - startMsg + 1} emails)`);
 
       // FETCH les en-têtes des messages
       response = await sendCommand(`FETCH ${startMsg}:${endMsg} (FLAGS ENVELOPE BODY.PEEK[HEADER])`);
