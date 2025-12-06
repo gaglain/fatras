@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Mail, Send, FileText, X, Paperclip, Signature } from 'lucide-react';
+import { Mail, Send, FileText, X, Paperclip, Signature, Search } from 'lucide-react';
 import { useEmailSender } from '@/hooks/useEmailSender';
 import { supabase } from '@/integrations/supabase/client';
 import { useNylasEmail } from '@/hooks/useNylasEmail';
@@ -19,6 +19,7 @@ import { generateEmailSignature } from '@/utils/emailSignature';
 import { useUser } from '@/contexts/UserContext';
 import { VariableInserter } from './VariableInserter';
 import { replaceEmailVariables } from '@/utils/emailVariables';
+import { UniversalSearch } from '@/components/UniversalSearch';
 
 interface EmailTemplate {
   id: string;
@@ -273,14 +274,29 @@ export const EmailTemplateComposer: React.FC<EmailTemplateComposerProps> = ({
         {/* Destinataire */}
         <div>
           <Label htmlFor="to">Destinataire *</Label>
-          <Input
-            id="to"
-            type="email"
-            value={to}
-            onChange={(e) => setTo(e.target.value)}
-            placeholder="email@exemple.com"
-            required
-          />
+          <div className="flex gap-2">
+            <Input
+              id="to"
+              type="email"
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+              placeholder="email@exemple.com"
+              required
+              className="flex-1"
+            />
+            <UniversalSearch
+              filterTypes={['contact']}
+              onSelect={(item) => {
+                if (item.data?.email) {
+                  setTo(item.data.email);
+                } else {
+                  toast.error('Ce contact n\'a pas d\'adresse email');
+                }
+              }}
+              placeholder="Rechercher un contact..."
+              triggerText={<Search className="h-4 w-4" />}
+            />
+          </div>
         </div>
 
         {/* Sujet avec bouton modèle */}
