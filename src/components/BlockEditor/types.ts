@@ -29,6 +29,7 @@ export interface HeroBlockContent {
   backgroundImage: string;
   buttonText?: string;
   buttonLink?: string;
+  showButton?: boolean;
   textColor?: string;
   overlayOpacity?: number;
 }

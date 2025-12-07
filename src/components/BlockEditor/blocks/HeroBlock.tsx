@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Upload } from 'lucide-react';
 import { HeroBlockContent } from '../types';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 interface HeroBlockProps {
   content: HeroBlockContent;
@@ -111,17 +113,30 @@ export const HeroBlock: React.FC<HeroBlockProps> = ({ content, isEditing, onChan
               placeholder="Sous-titre"
             />
             
-            <Input
-              value={content.buttonText || ''}
-              onChange={(e) => onChange({ ...content, buttonText: e.target.value })}
-              placeholder="Texte du bouton"
-            />
-            
-            <Input
-              value={content.buttonLink || ''}
-              onChange={(e) => onChange({ ...content, buttonLink: e.target.value })}
-              placeholder="Lien du bouton"
-            />
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="show-button"
+                checked={content.showButton !== false}
+                onCheckedChange={(checked) => onChange({ ...content, showButton: checked })}
+              />
+              <Label htmlFor="show-button">Afficher le bouton</Label>
+            </div>
+
+            {content.showButton !== false && (
+              <>
+                <Input
+                  value={content.buttonText || ''}
+                  onChange={(e) => onChange({ ...content, buttonText: e.target.value })}
+                  placeholder="Texte du bouton"
+                />
+                
+                <Input
+                  value={content.buttonLink || ''}
+                  onChange={(e) => onChange({ ...content, buttonLink: e.target.value })}
+                  placeholder="Lien du bouton"
+                />
+              </>
+            )}
             
             <Button onClick={() => setIsEditingHero(false)}>
               Terminer
@@ -148,7 +163,7 @@ export const HeroBlock: React.FC<HeroBlockProps> = ({ content, isEditing, onChan
           Bienvenue sur FATRAS (TEST DIRECT)
         </h1>
         <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto">{content.subtitle}</p>
-        {content.buttonText && content.buttonLink && (
+        {content.showButton !== false && content.buttonText && content.buttonLink && (
           <Button size="lg" className="bg-white text-gray-900 hover:bg-gray-100">
             {content.buttonText}
           </Button>
