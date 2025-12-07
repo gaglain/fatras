@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -14,7 +15,8 @@ import {
   ShoppingCart,
   Settings,
   Mail,
-  BarChart3
+  BarChart3,
+  ArrowLeft
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { usePermissions, AppRole } from '@/hooks/usePermissions';
@@ -60,6 +62,7 @@ const resourceIcons = {
 };
 
 export const RolePermissions: React.FC = () => {
+  const navigate = useNavigate();
   const { permissions, loading, fetchPermissions } = usePermissions();
   const [permissionsState, setPermissionsState] = useState<Record<string, any>>({});
   const [saving, setSaving] = useState(false);
@@ -153,14 +156,19 @@ export const RolePermissions: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold flex items-center">
-            <Shield className="h-6 w-6 sm:h-8 sm:w-8 mr-3 text-primary" />
-            Gestion des Permissions
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Configurez les permissions pour chaque rôle utilisateur
-          </p>
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold flex items-center">
+              <Shield className="h-6 w-6 sm:h-8 sm:w-8 mr-3 text-primary" />
+              Gestion des Permissions
+            </h1>
+            <p className="text-muted-foreground mt-2">
+              Configurez les permissions pour chaque rôle utilisateur
+            </p>
+          </div>
         </div>
         <Button onClick={savePermissions} disabled={saving}>
           {saving ? 'Sauvegarde...' : 'Sauvegarder'}
