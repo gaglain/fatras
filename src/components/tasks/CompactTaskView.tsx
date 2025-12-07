@@ -1,6 +1,7 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { CheckCircle2, Circle, Trash } from 'lucide-react';
 import { Task } from '@/hooks/useTasks';
 import { TaskExecuteButton } from './TaskExecuteButton';
@@ -10,13 +11,19 @@ interface CompactTaskViewProps {
   onUpdateStatus: (taskId: string, status: Task['status']) => void;
   onTaskClick: (task: Task) => void;
   onDeleteTask?: (taskId: string) => void;
+  selectedTaskIds?: string[];
+  onToggleSelection?: (taskId: string) => void;
+  onSelectAll?: () => void;
 }
 
 export const CompactTaskView: React.FC<CompactTaskViewProps> = ({
   tasks,
   onUpdateStatus,
   onTaskClick,
-  onDeleteTask
+  onDeleteTask,
+  selectedTaskIds = [],
+  onToggleSelection,
+  onSelectAll
 }) => {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -36,23 +43,49 @@ export const CompactTaskView: React.FC<CompactTaskViewProps> = ({
     }
   };
 
+  const allSelected = tasks.length > 0 && selectedTaskIds.length === tasks.length;
+
   return (
     <div className="space-y-1">
+      {tasks.length > 0 && onToggleSelection && (
+        <div className="flex items-center gap-3 py-2 px-3 border-b mb-2">
+          <Checkbox
+            checked={allSelected}
+            onCheckedChange={() => onSelectAll?.()}
+          />
+          <span className="text-sm text-muted-foreground">
+            {selectedTaskIds.length > 0 
+              ? `${selectedTaskIds.length} sélectionnée(s)`
+              : 'Tout sélectionner'
+            }
+          </span>
+        </div>
+      )}
+      
       {tasks.length === 0 ? (
         <p className="text-sm text-muted-foreground py-8 text-center">Aucune tâche</p>
       ) : (
         tasks.map((task) => {
           const isOverdue = task.due_date && new Date(task.due_date) < new Date() && task.status !== 'completed';
+          const isSelected = selectedTaskIds.includes(task.id);
           
           return (
             <div
               key={task.id}
               className={`flex items-center justify-between gap-4 py-2 px-3 hover:bg-accent/50 rounded-lg border transition-colors ${
                 isOverdue ? 'bg-red-50/50 dark:bg-red-950/20' : ''
-              }`}
+              } ${isSelected ? 'bg-primary/10 border-primary/30' : ''}`}
             >
-              {/* Left: Checkbox + Title */}
+              {/* Left: Selection Checkbox + Complete Checkbox + Title */}
               <div className="flex items-center gap-3 flex-1 min-w-0">
+                {onToggleSelection && (
+                  <Checkbox
+                    checked={isSelected}
+                    onCheckedChange={() => onToggleSelection(task.id)}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                )}
+                
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
