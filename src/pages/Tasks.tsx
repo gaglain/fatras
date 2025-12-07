@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CheckSquare, Search, Plus, Trash, Upload, LayoutGrid, List } from 'lucide-react';
+import { CheckSquare, Search, Plus, Trash, Upload, LayoutGrid, List, Edit, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { TaskCreator } from '@/components/tasks/TaskCreator';
 import { TaskCSVImporter } from '@/components/tasks/TaskCSVImporter';
@@ -15,6 +15,7 @@ import { useUser } from '@/contexts/UserContext';
 import { useTasks, Task as TaskType } from '@/hooks/useTasks';
 import { EmailComposer } from '@/components/email/EmailComposer';
 import { TaskEditor } from '@/components/tasks/TaskEditor';
+import { TaskBulkEditor } from '@/components/tasks/TaskBulkEditor';
 import { NotificationTest } from '@/components/NotificationTest';
 
 interface Task {
@@ -40,6 +41,8 @@ export const Tasks: React.FC = () => {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [viewMode, setViewMode] = useState<'list' | 'compact'>('compact');
   const [selectedTask, setSelectedTask] = useState<TaskType | null>(null);
+  const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
+  const [bulkEditorOpen, setBulkEditorOpen] = useState(false);
   const [emailComposer, setEmailComposer] = useState<{
     isOpen: boolean;
     to: string;
@@ -53,6 +56,38 @@ export const Tasks: React.FC = () => {
   });
   const { users } = useUser();
   const { tasks, loading, updateTask, deleteTask } = useTasks();
+
+  const toggleTaskSelection = (taskId: string) => {
+    setSelectedTaskIds(prev => 
+      prev.includes(taskId) 
+        ? prev.filter(id => id !== taskId)
+        : [...prev, taskId]
+    );
+  };
+
+  const selectAllTasks = () => {
+    if (selectedTaskIds.length === sortedTasks.length) {
+      setSelectedTaskIds([]);
+    } else {
+      setSelectedTaskIds(sortedTasks.map(t => t.id));
+    }
+  };
+
+  const handleBulkUpdate = async (taskIds: string[], updates: Partial<TaskType>) => {
+    for (const taskId of taskIds) {
+      await updateTask(taskId, updates);
+    }
+    setSelectedTaskIds([]);
+  };
+
+  const handleBulkDelete = async () => {
+    if (!confirm(`Supprimer ${selectedTaskIds.length} tâche(s) ?`)) return;
+    for (const taskId of selectedTaskIds) {
+      await deleteTask(taskId);
+    }
+    setSelectedTaskIds([]);
+    toast.success(`${selectedTaskIds.length} tâche(s) supprimée(s)`);
+  };
 
   // Ouvrir automatiquement une tâche si taskId est dans l'URL
   useEffect(() => {
@@ -184,7 +219,35 @@ export const Tasks: React.FC = () => {
             {todoTasks.length} à faire • {inProgressTasks.length} en cours • {completedTasks.length} terminées
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          {selectedTaskIds.length > 0 && (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSelectedTaskIds([])}
+              >
+                <X className="h-4 w-4 mr-2" />
+                Annuler ({selectedTaskIds.length})
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => setBulkEditorOpen(true)}
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Modifier
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleBulkDelete}
+              >
+                <Trash className="h-4 w-4 mr-2" />
+                Supprimer
+              </Button>
+            </>
+          )}
           <Button
             variant={viewMode === 'compact' ? 'default' : 'outline'}
             size="sm"
@@ -284,6 +347,9 @@ export const Tasks: React.FC = () => {
           onUpdateStatus={updateTaskStatus}
           onTaskClick={(task) => setSelectedTask(task)}
           onDeleteTask={handleDeleteTask}
+          selectedTaskIds={selectedTaskIds}
+          onToggleSelection={toggleTaskSelection}
+          onSelectAll={selectAllTasks}
         />
       ) : (
         <Tabs defaultValue="all" className="space-y-6">
@@ -403,6 +469,13 @@ export const Tasks: React.FC = () => {
         toEmail={emailComposer.to}
         subject={emailComposer.subject}
         preText={emailComposer.preText}
+      />
+
+      <TaskBulkEditor
+        isOpen={bulkEditorOpen}
+        onClose={() => setBulkEditorOpen(false)}
+        selectedTasks={tasks.filter(t => selectedTaskIds.includes(t.id))}
+        onBulkUpdate={handleBulkUpdate}
       />
     </div>
   );
