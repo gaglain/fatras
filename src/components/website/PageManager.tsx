@@ -364,7 +364,10 @@ export const PageManager: React.FC = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => window.open(page.slug === '/' ? '/front' : `/front${page.slug}`, '_blank')}
+                        onClick={() => {
+                          const previewSlug = page.slug === '/' ? '/front' : `/front${page.slug.startsWith('/') ? page.slug : '/' + page.slug}`;
+                          window.open(previewSlug, '_blank');
+                        }}
                       >
                         <Eye className="h-4 w-4 mr-1" />
                         Voir
