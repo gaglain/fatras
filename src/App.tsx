@@ -14,6 +14,7 @@ import { FrontEvents } from "./pages/FrontEvents";
 import { FrontTour } from "./pages/FrontTour";
 import { FrontContact } from "./pages/FrontContact";
 import { FrontShop } from "./pages/FrontShop";
+import { FrontDynamicPage } from "./pages/FrontDynamicPage";
 import Dashboard from "./pages/Dashboard";
 import { Artists } from "./pages/Artists";
 import { ArtistDetail } from "./pages/ArtistDetail";
@@ -154,6 +155,8 @@ const App = () => {
                 <Route path="/front/events" element={<FrontLayout><FrontEvents /></FrontLayout>} />
                 <Route path="/front/contact" element={<FrontLayout><FrontContact /></FrontLayout>} />
                 <Route path="/front/shop" element={<FrontLayout><FrontShop /></FrontLayout>} />
+                {/* Route dynamique pour les pages personnalisées */}
+                <Route path="/front/*" element={<FrontDynamicPage />} />
                 
                 {/* Routes publiques pour les artistes et tournées */}
                 <Route path="/artistes" element={<FrontLayout><FrontArtists /></FrontLayout>} />
