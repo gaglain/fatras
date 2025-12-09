@@ -40,17 +40,21 @@ export const FrontDynamicPage: React.FC = () => {
     setLoading(true);
     setNotFound(false);
     
-    const pageSlug = slug ? `/${slug}` : '/';
-    console.log('📄 Loading page with slug:', pageSlug);
+    // Normaliser le slug (supprimer le / initial si présent)
+    const normalizedSlug = slug?.replace(/^\/+/, '') || '';
+    console.log('📄 Loading page with slug:', normalizedSlug);
     
     try {
       // D'abord essayer de charger depuis Supabase
+      // Chercher avec plusieurs variantes du slug (avec et sans /)
       const { data: supabasePages, error } = await supabase
         .from('website_pages')
         .select('*')
-        .or(`slug.eq.${pageSlug},slug.eq.${slug}`)
-        .eq('status', 'published')
+        .or(`slug.eq.${normalizedSlug},slug.eq./${normalizedSlug}`)
+        .in('status', ['published', 'draft'])
         .limit(1);
+
+      console.log('🔍 Supabase query result:', { error, pages: supabasePages });
 
       if (!error && supabasePages && supabasePages.length > 0) {
         console.log('✅ Page found in Supabase:', supabasePages[0].title);
@@ -65,14 +69,16 @@ export const FrontDynamicPage: React.FC = () => {
         const parsed = JSON.parse(savedPages);
         const pages: WebsitePage[] = Array.isArray(parsed) ? parsed : [];
         
+        console.log('🔍 Searching in localStorage, pages:', pages.map(p => ({ slug: p.slug, title: p.title, status: p.status })));
+        
         // Trouver la page correspondante au slug
         const foundPage = pages.find((p: WebsitePage) => {
-          const normalizedPageSlug = p.slug?.startsWith('/') ? p.slug : `/${p.slug}`;
-          const normalizedRequestSlug = pageSlug.startsWith('/') ? pageSlug : `/${pageSlug}`;
-          return normalizedPageSlug === normalizedRequestSlug || p.slug === slug;
+          const pageSlugNormalized = p.slug?.replace(/^\/+/, '') || '';
+          return pageSlugNormalized === normalizedSlug || 
+                 pageSlugNormalized.toLowerCase() === normalizedSlug.toLowerCase();
         });
         
-        if (foundPage && (foundPage.status === 'published' || foundPage.status === 'draft')) {
+        if (foundPage) {
           console.log('✅ Page found in localStorage:', foundPage.title);
           setPage(foundPage);
           setLoading(false);
@@ -80,7 +86,7 @@ export const FrontDynamicPage: React.FC = () => {
         }
       }
 
-      console.log('❌ Page not found for slug:', pageSlug);
+      console.log('❌ Page not found for slug:', normalizedSlug);
       setNotFound(true);
     } catch (error) {
       console.error('Error loading page:', error);
