@@ -26,7 +26,9 @@ interface WebsitePage {
 }
 
 export const FrontDynamicPage: React.FC = () => {
-  const { '*': slug } = useParams();
+  const params = useParams();
+  // Supporte à la fois /:slug et /front/*
+  const rawSlug = params.slug || params['*'] || '';
   const navigate = useNavigate();
   const [page, setPage] = useState<WebsitePage | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,14 +36,14 @@ export const FrontDynamicPage: React.FC = () => {
 
   useEffect(() => {
     loadPage();
-  }, [slug]);
+  }, [rawSlug]);
 
   const loadPage = async () => {
     setLoading(true);
     setNotFound(false);
     
     // Normaliser le slug (supprimer le / initial si présent)
-    const normalizedSlug = slug?.replace(/^\/+/, '') || '';
+    const normalizedSlug = rawSlug?.replace(/^\/+/, '') || '';
     console.log('📄 Loading page with slug:', normalizedSlug);
     
     try {
