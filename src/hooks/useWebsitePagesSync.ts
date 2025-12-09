@@ -2,10 +2,11 @@
 import { useEffect, useCallback, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
-
+import { useAuth } from '@/hooks/useAuth';
 type WebsitePage = Tables<'website_pages'>;
 
 export const useWebsitePagesSync = () => {
+  const { user } = useAuth();
   const [pages, setPages] = useState<WebsitePage[]>([]);
   const [loading, setLoading] = useState(true);
   const lastSyncTime = useRef(0);
@@ -80,12 +81,18 @@ export const useWebsitePagesSync = () => {
   }, []);
 
   const savePage = useCallback(async (pageData: Partial<WebsitePage>) => {
+    if (!user?.id) {
+      console.error('❌ No user logged in');
+      throw new Error('Vous devez être connecté pour créer une page');
+    }
+    
     try {
-      console.log('💾 Saving new page:', pageData.title);
+      console.log('💾 Saving new page:', pageData.title, 'for user:', user.id);
       
       const { data, error } = await supabase
         .from('website_pages')
         .insert([{
+          user_id: user.id,
           title: pageData.title!,
           slug: pageData.slug!,
           content: pageData.content || [],
@@ -115,7 +122,7 @@ export const useWebsitePagesSync = () => {
       console.error('❌ Error saving page:', error);
       throw error;
     }
-  }, [pages]);
+  }, [pages, user]);
 
   const updatePage = useCallback(async (id: string, pageData: Partial<WebsitePage>) => {
     try {
