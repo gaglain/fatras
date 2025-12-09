@@ -14,10 +14,12 @@ import {
   Users,
   Calendar,
   Store,
-  Mail
+  Mail,
+  Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdvancedBlockEditor } from '@/components/BlockEditor/AdvancedBlockEditor';
+import { useWebsitePagesSync } from '@/hooks/useWebsitePagesSync';
 
 interface WebPage {
   id: string;
@@ -26,77 +28,27 @@ interface WebPage {
   status: 'published' | 'draft' | 'private';
   type: 'page' | 'home' | 'artists' | 'events' | 'shop' | 'contact';
   blocks: any[];
-  seo: {
-    title: string;
-    description: string;
-    keywords: string;
+  content?: any[];
+  seo?: {
+    title?: string;
+    description?: string;
+    keywords?: string;
   };
-  createdAt: string;
-  updatedAt: string;
+  meta_title?: string;
+  meta_description?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
-const defaultPages: WebPage[] = [
-  {
-    id: 'home',
-    title: 'Accueil',
-    slug: '/',
-    status: 'published',
-    type: 'home',
-    blocks: [
-      {
-        id: 'hero-1',
-        type: 'hero',
-        content: {
-          title: 'Bienvenue sur notre site',
-          subtitle: 'Découvrez notre univers musical',
-          backgroundImage: '',
-          buttonText: 'Découvrir',
-          buttonLink: '/artists'
-        }
-      }
-    ],
-    seo: {
-      title: 'Accueil - Fatras',
-      description: 'Bienvenue sur le site officiel de Fatras',
-      keywords: 'fatras, musique, artistes'
-    },
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: 'artists',
-    title: 'Nos Artistes',
-    slug: '/artists',
-    status: 'published',
-    type: 'artists',
-    blocks: [
-      {
-        id: 'artists-grid-1',
-        type: 'artist-grid',
-        content: {
-          title: 'Nos Artistes',
-          subtitle: 'Découvrez notre sélection d\'artistes',
-          showRating: false,
-          showStats: true,
-          columns: 3
-        }
-      }
-    ],
-    seo: {
-      title: 'Nos Artistes - Fatras',
-      description: 'Découvrez notre sélection d\'artistes exceptionnels',
-      keywords: 'artistes, musique, booking'
-    },
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  }
-];
-
 export const PageManager: React.FC = () => {
-  const [pages, setPages] = useState<WebPage[]>([]);
+  const { pages: supabasePages, loading, savePage, updatePage, deletePage, loadPages } = useWebsitePagesSync();
+  const [localPages, setLocalPages] = useState<WebPage[]>([]);
   const [editingPage, setEditingPage] = useState<WebPage | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [newPageData, setNewPageData] = useState({
     title: '',
     slug: '',
@@ -104,38 +56,46 @@ export const PageManager: React.FC = () => {
     status: 'draft' as WebPage['status']
   });
 
-  // Charger les pages au démarrage
+  // Synchroniser les pages Supabase avec l'état local
   useEffect(() => {
-    loadPages();
-  }, []);
+    if (supabasePages && supabasePages.length > 0) {
+      // Convertir les pages Supabase au format local
+      const convertedPages = supabasePages.map(p => ({
+        id: p.id,
+        title: p.title,
+        slug: p.slug,
+        status: (p.status || 'draft') as WebPage['status'],
+        type: 'page' as WebPage['type'],
+        blocks: Array.isArray(p.content) ? p.content : [],
+        content: Array.isArray(p.content) ? p.content : [],
+        meta_title: p.meta_title,
+        meta_description: p.meta_description,
+        created_at: p.created_at,
+        updated_at: p.updated_at
+      }));
+      setLocalPages(convertedPages);
+      // Sync to localStorage for FrontDynamicPage fallback
+      localStorage.setItem('websitePages', JSON.stringify(convertedPages));
+    } else if (!loading) {
+      // Charger les pages par défaut depuis localStorage
+      loadLocalStoragePages();
+    }
+  }, [supabasePages, loading]);
 
-  const loadPages = () => {
+  const loadLocalStoragePages = () => {
     const savedPages = localStorage.getItem('websitePages');
     if (savedPages) {
       try {
         const parsedPages = JSON.parse(savedPages);
-        // S'assurer que chaque page a un tableau blocks
         const pagesWithBlocks = parsedPages.map((page: any) => ({
           ...page,
-          blocks: page.blocks || []
+          blocks: page.blocks || page.content || []
         }));
-        setPages(pagesWithBlocks);
+        setLocalPages(pagesWithBlocks);
       } catch (error) {
         console.error('Error loading pages:', error);
-        setPages(defaultPages);
-        savePages(defaultPages);
       }
-    } else {
-      setPages(defaultPages);
-      savePages(defaultPages);
     }
-  };
-
-  const savePages = (pagesToSave: WebPage[]) => {
-    localStorage.setItem('websitePages', JSON.stringify(pagesToSave));
-    // Déclencher des événements pour synchroniser avec le front
-    window.dispatchEvent(new CustomEvent('websitePagesSaved', { detail: pagesToSave }));
-    window.dispatchEvent(new CustomEvent('frontDataRefresh'));
   };
 
   const getPageIcon = (type: WebPage['type']) => {
@@ -158,88 +118,100 @@ export const PageManager: React.FC = () => {
     }
   };
 
-  const filteredPages = pages.filter(page =>
+  const filteredPages = localPages.filter(page =>
     page.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     page.slug.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleCreatePage = () => {
+  const handleCreatePage = async () => {
     if (!newPageData.title.trim()) {
       toast.error('Le titre est requis');
       return;
     }
 
-    const slug = newPageData.slug || `/${newPageData.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`;
+    setSaving(true);
     
-    const newPage: WebPage = {
-      id: Date.now().toString(),
-      title: newPageData.title,
-      slug: slug,
-      status: 'draft',
-      type: newPageData.type,
-      blocks: [],
-      seo: {
-        title: newPageData.title,
-        description: `Page ${newPageData.title}`,
-        keywords: ''
-      },
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
+    try {
+      // Générer le slug
+      const slug = newPageData.slug || newPageData.title.toLowerCase()
+        .replace(/\s+/g, '-')
+        .replace(/[^a-z0-9-]/g, '')
+        .replace(/^-+|-+$/g, '');
 
-    const updatedPages = [...pages, newPage];
-    setPages(updatedPages);
-    savePages(updatedPages);
-    setNewPageData({ title: '', slug: '', type: 'page', status: 'draft' });
-    setShowCreateForm(false);
-    toast.success('Page créée avec succès');
+      // Sauvegarder dans Supabase
+      await savePage({
+        title: newPageData.title,
+        slug: slug,
+        content: [],
+        status: 'draft',
+        page_type: newPageData.type
+      });
+
+      setNewPageData({ title: '', slug: '', type: 'page', status: 'draft' });
+      setShowCreateForm(false);
+      toast.success('Page créée avec succès');
+      
+      // Recharger les pages
+      await loadPages();
+    } catch (error) {
+      console.error('Error creating page:', error);
+      toast.error('Erreur lors de la création de la page');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleEditPage = (page: WebPage) => {
-    setEditingPage({ ...page, blocks: page.blocks || [] });
+    setEditingPage({ ...page, blocks: page.blocks || page.content || [] });
   };
 
-  const handleSavePage = (blocks: any[]) => {
+  const handleSavePage = async (blocks: any[]) => {
     if (!editingPage) return;
     
-    const updatedPage = {
-      ...editingPage,
-      blocks,
-      updatedAt: new Date().toISOString()
-    };
+    setSaving(true);
     
-    const updatedPages = pages.map(page => 
-      page.id === updatedPage.id ? updatedPage : page
-    );
-    setPages(updatedPages);
-    savePages(updatedPages);
-    setEditingPage(null);
-    toast.success('Page sauvegardée');
+    try {
+      await updatePage(editingPage.id, {
+        title: editingPage.title,
+        slug: editingPage.slug,
+        content: blocks,
+        status: editingPage.status
+      });
+      
+      setEditingPage(null);
+      toast.success('Page sauvegardée');
+      
+      // Recharger les pages
+      await loadPages();
+    } catch (error) {
+      console.error('Error saving page:', error);
+      toast.error('Erreur lors de la sauvegarde');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleDeletePage = (pageId: string) => {
-    if (pageId === 'home') {
-      toast.error('Impossible de supprimer la page d\'accueil');
-      return;
-    }
-    
+  const handleDeletePage = async (pageId: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette page ?')) {
-      const updatedPages = pages.filter(page => page.id !== pageId);
-      setPages(updatedPages);
-      savePages(updatedPages);
-      toast.success('Page supprimée');
+      try {
+        await deletePage(pageId);
+        toast.success('Page supprimée');
+      } catch (error) {
+        console.error('Error deleting page:', error);
+        toast.error('Erreur lors de la suppression');
+      }
     }
   };
 
-  const handlePublishPage = (pageId: string) => {
-    const updatedPages = pages.map(page => 
-      page.id === pageId 
-        ? { ...page, status: 'published' as const, updatedAt: new Date().toISOString() }
-        : page
-    );
-    setPages(updatedPages);
-    savePages(updatedPages);
-    toast.success('Page publiée');
+  const handlePublishPage = async (pageId: string) => {
+    try {
+      await updatePage(pageId, { status: 'published' });
+      toast.success('Page publiée');
+      await loadPages();
+    } catch (error) {
+      console.error('Error publishing page:', error);
+      toast.error('Erreur lors de la publication');
+    }
   };
 
   if (editingPage) {
@@ -266,137 +238,160 @@ export const PageManager: React.FC = () => {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Gestionnaire de Pages</CardTitle>
-            <Button onClick={() => setShowCreateForm(true)}>
+            <Button onClick={() => setShowCreateForm(true)} disabled={loading}>
               <Plus className="h-4 w-4 mr-2" />
               Nouvelle Page
             </Button>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center space-x-2">
-            <Search className="h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Rechercher une page..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="flex-1"
-            />
-          </div>
-
-          {showCreateForm && (
-            <Card className="p-4 border-2 border-dashed border-blue-200 bg-blue-50/50">
-              <div className="space-y-4">
-                <h3 className="font-medium text-blue-900">Créer une nouvelle page</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Titre *</label>
-                    <Input
-                      placeholder="Titre de la page"
-                      value={newPageData.title}
-                      onChange={(e) => setNewPageData(prev => ({ ...prev, title: e.target.value }))}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">URL</label>
-                    <Input
-                      placeholder="/ma-page"
-                      value={newPageData.slug}
-                      onChange={(e) => setNewPageData(prev => ({ ...prev, slug: e.target.value }))}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Type</label>
-                    <select
-                      className="w-full px-3 py-2 border rounded-lg"
-                      value={newPageData.type}
-                      onChange={(e) => setNewPageData(prev => ({ ...prev, type: e.target.value as WebPage['type'] }))}
-                    >
-                      <option value="page">Page standard</option>
-                      <option value="artists">Page artistes</option>
-                      <option value="events">Page événements</option>
-                      <option value="shop">Page boutique</option>
-                      <option value="contact">Page contact</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="flex space-x-2">
-                  <Button onClick={handleCreatePage}>Créer</Button>
-                  <Button variant="outline" onClick={() => setShowCreateForm(false)}>
-                    Annuler
-                  </Button>
-                </div>
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
+              <span>Chargement des pages...</span>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center space-x-2">
+                <Search className="h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Rechercher une page..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="flex-1"
+                />
               </div>
-            </Card>
-          )}
 
-          <div className="grid gap-4">
-            {filteredPages.map((page) => {
-              const Icon = getPageIcon(page.type);
-              const blockCount = page.blocks ? page.blocks.length : 0;
-              
-              return (
-                <Card key={page.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="flex items-center justify-between p-4">
-                    <div className="flex items-center space-x-4">
-                      <Icon className="h-5 w-5 text-gray-500" />
+              {showCreateForm && (
+                <Card className="p-4 border-2 border-dashed border-primary/30 bg-primary/5">
+                  <div className="space-y-4">
+                    <h3 className="font-medium">Créer une nouvelle page</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
-                        <h3 className="font-medium">{page.title}</h3>
-                        <p className="text-sm text-gray-500">{page.slug}</p>
-                        <div className="flex items-center space-x-2 mt-1">
-                          <Badge className={getStatusColor(page.status)}>
-                            {page.status}
-                          </Badge>
-                          <span className="text-xs text-gray-400">
-                            {blockCount} bloc(s)
-                          </span>
-                        </div>
+                        <label className="block text-sm font-medium mb-1">Titre *</label>
+                        <Input
+                          placeholder="Titre de la page"
+                          value={newPageData.title}
+                          onChange={(e) => setNewPageData(prev => ({ ...prev, title: e.target.value }))}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">URL (slug)</label>
+                        <Input
+                          placeholder="ma-page"
+                          value={newPageData.slug}
+                          onChange={(e) => setNewPageData(prev => ({ ...prev, slug: e.target.value }))}
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Sera accessible sur /front/{newPageData.slug || newPageData.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') || 'ma-page'}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Type</label>
+                        <select
+                          className="w-full px-3 py-2 border rounded-lg bg-background"
+                          value={newPageData.type}
+                          onChange={(e) => setNewPageData(prev => ({ ...prev, type: e.target.value as WebPage['type'] }))}
+                        >
+                          <option value="page">Page standard</option>
+                          <option value="artists">Page artistes</option>
+                          <option value="events">Page événements</option>
+                          <option value="shop">Page boutique</option>
+                          <option value="contact">Page contact</option>
+                        </select>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEditPage(page)}
-                      >
-                        <Edit className="h-4 w-4 mr-1" />
-                        Éditer
+                    <div className="flex space-x-2">
+                      <Button onClick={handleCreatePage} disabled={saving}>
+                        {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+                        Créer
                       </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          const previewSlug = page.slug === '/' ? '/front' : `/front${page.slug.startsWith('/') ? page.slug : '/' + page.slug}`;
-                          window.open(previewSlug, '_blank');
-                        }}
-                      >
-                        <Eye className="h-4 w-4 mr-1" />
-                        Voir
+                      <Button variant="outline" onClick={() => setShowCreateForm(false)}>
+                        Annuler
                       </Button>
-                      {page.status !== 'published' && (
-                        <Button
-                          variant="default"
-                          size="sm"
-                          onClick={() => handlePublishPage(page.id)}
-                        >
-                          Publier
-                        </Button>
-                      )}
-                      {page.id !== 'home' && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDeletePage(page.id)}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
                     </div>
-                  </CardContent>
+                  </div>
                 </Card>
-              );
-            })}
-          </div>
+              )}
+            </>
+          )}
+
+          {!loading && (
+            <div className="grid gap-4">
+              {filteredPages.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>Aucune page créée</p>
+                  <p className="text-sm">Créez votre première page en cliquant sur "Nouvelle Page"</p>
+                </div>
+              ) : (
+                filteredPages.map((page) => {
+                  const Icon = getPageIcon(page.type);
+                  const blockCount = page.blocks ? page.blocks.length : 0;
+                  
+                  return (
+                    <Card key={page.id} className="hover:shadow-md transition-shadow">
+                      <CardContent className="flex items-center justify-between p-4">
+                        <div className="flex items-center space-x-4">
+                          <Icon className="h-5 w-5 text-muted-foreground" />
+                          <div>
+                            <h3 className="font-medium">{page.title}</h3>
+                            <p className="text-sm text-muted-foreground">/front/{page.slug.replace(/^\/+/, '')}</p>
+                            <div className="flex items-center space-x-2 mt-1">
+                              <Badge className={getStatusColor(page.status)}>
+                                {page.status === 'published' ? 'Publié' : page.status === 'draft' ? 'Brouillon' : 'Privé'}
+                              </Badge>
+                              <span className="text-xs text-muted-foreground">
+                                {blockCount} bloc(s)
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditPage(page)}
+                          >
+                            <Edit className="h-4 w-4 mr-1" />
+                            Éditer
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              const slug = page.slug.replace(/^\/+/, '');
+                              window.open(`/front/${slug}`, '_blank');
+                            }}
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            Voir
+                          </Button>
+                          {page.status !== 'published' && (
+                            <Button
+                              variant="default"
+                              size="sm"
+                              onClick={() => handlePublishPage(page.id)}
+                            >
+                              Publier
+                            </Button>
+                          )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeletePage(page.id)}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
