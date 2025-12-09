@@ -205,6 +205,10 @@ const App = () => {
                 {/* Admin aliases */}
                 <Route path="/admin" element={<Navigate to="/dashboard" replace />} />
                 <Route path="/Admin" element={<Navigate to="/dashboard" replace />} />
+                
+                {/* Pages dynamiques du site web - doit être avant le catch-all */}
+                <Route path="/:slug" element={<FrontDynamicPage />} />
+                
                 <Route path="*" element={<NotFound />} />
                 </Routes>
               </WebsiteConfigProvider>
