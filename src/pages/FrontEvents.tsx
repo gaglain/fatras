@@ -1,8 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar, MapPin, Clock, Ticket } from 'lucide-react';
 import { SEOHead } from '@/components/SEOHead';
 import { supabase } from '@/integrations/supabase/client';
@@ -92,6 +93,113 @@ export const FrontEvents: React.FC = () => {
     });
   };
 
+  // Séparer les événements à venir et passés
+  const { upcomingEvents, pastEvents } = useMemo(() => {
+    const now = new Date();
+    const upcoming: any[] = [];
+    const past: any[] = [];
+    
+    events.forEach(event => {
+      const eventDate = new Date(event.start_date);
+      if (eventDate >= now) {
+        upcoming.push(event);
+      } else {
+        past.push(event);
+      }
+    });
+    
+    // Trier les événements à venir par date croissante
+    upcoming.sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
+    // Trier les événements passés par date décroissante (les plus récents d'abord)
+    past.sort((a, b) => new Date(b.start_date).getTime() - new Date(a.start_date).getTime());
+    
+    return { upcomingEvents: upcoming, pastEvents: past };
+  }, [events]);
+
+  const renderEventCard = (event: any, isPast: boolean = false) => (
+    <Card key={event.id} className={`hover:shadow-lg transition-shadow ${isPast ? 'opacity-75' : ''}`}>
+      <CardContent className="p-6">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:space-x-6">
+          {event.image && (
+            <div className="flex-shrink-0 mb-4 lg:mb-0">
+              <img 
+                src={event.image} 
+                alt={event.title}
+                className="w-full lg:w-32 h-32 object-cover rounded-lg"
+              />
+            </div>
+          )}
+          
+          <div className="flex-1 space-y-4">
+            <div>
+              <div className="flex items-start justify-between mb-2">
+                <h3 className="text-2xl font-bold text-gray-900">{event.title}</h3>
+                <Badge className={getStatusColor(event.status)}>
+                  {event.status === 'confirmed' ? 'Confirmé' : 
+                   event.status === 'option' ? 'Option' :
+                   event.status === 'pending' ? 'En attente' : 
+                   event.status === 'cancelled' ? 'Annulé' : event.status}
+                </Badge>
+              </div>
+              {event.artist && (
+                <p className="text-lg text-purple-600 font-medium mb-2">
+                  Spectacle : {event.artist.name}
+                </p>
+              )}
+              {event.description && (
+                <p className="text-gray-600 mt-2">{event.description}</p>
+              )}
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+              <div className="flex items-center">
+                <Calendar className="h-4 w-4 mr-2" />
+                {formatDate(event.start_date)}
+              </div>
+              <div className="flex items-center">
+                <Clock className="h-4 w-4 mr-2" />
+                {formatTime(event.start_date)}
+              </div>
+              <div className="flex items-center">
+                <MapPin className="h-4 w-4 mr-2" />
+                {event.venue && `${event.venue}, `}{event.city}
+              </div>
+            </div>
+
+            {event.event_type && (
+              <div className="flex items-center">
+                <Badge variant="outline">{event.event_type}</Badge>
+                {event.attendees_count && (
+                  <span className="ml-3 text-sm text-gray-500">
+                    Capacité: {event.attendees_count} personnes
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+          
+          <div className="flex flex-col items-end space-y-3 mt-4 lg:mt-0">
+            <div className="text-right">
+              <div className="text-2xl font-bold text-gray-900">
+                {formatPrice(event.budget_min, event.budget_max)}
+              </div>
+              <div className="text-sm text-gray-500">par personne</div>
+            </div>
+            {!isPast && (
+              <Button 
+                className="bg-purple-600 hover:bg-purple-700"
+                disabled={event.status !== 'confirmed' && event.status !== 'option'}
+              >
+                <Ticket className="h-4 w-4 mr-2" />
+                {event.status === 'confirmed' || event.status === 'option' ? 'Réserver' : 'Indisponible'}
+              </Button>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   if (loading) {
     return (
       <div className="py-12">
@@ -123,95 +231,46 @@ export const FrontEvents: React.FC = () => {
             </p>
           </div>
 
-          {events.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-500 text-lg">Aucun événement programmé pour le moment.</p>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {events.map((event) => (
-                <Card key={event.id} className="hover:shadow-lg transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="flex flex-col lg:flex-row lg:items-center lg:space-x-6">
-                      {event.image && (
-                        <div className="flex-shrink-0 mb-4 lg:mb-0">
-                          <img 
-                            src={event.image} 
-                            alt={event.title}
-                            className="w-full lg:w-32 h-32 object-cover rounded-lg"
-                          />
-                        </div>
-                      )}
-                      
-                      <div className="flex-1 space-y-4">
-                          <div>
-                          <div className="flex items-start justify-between mb-2">
-                            <h3 className="text-2xl font-bold text-gray-900">{event.title}</h3>
-                            <Badge className={getStatusColor(event.status)}>
-                              {event.status === 'confirmed' ? 'Confirmé' : 
-                               event.status === 'option' ? 'Option' :
-                               event.status === 'pending' ? 'En attente' : 
-                               event.status === 'cancelled' ? 'Annulé' : event.status}
-                            </Badge>
-                          </div>
-                          {event.artist && (
-                            <p className="text-lg text-purple-600 font-medium mb-2">
-                              Spectacle : {event.artist.name}
-                            </p>
-                          )}
-                          {event.description && (
-                            <p className="text-gray-600 mt-2">{event.description}</p>
-                          )}
-                        </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
-                          <div className="flex items-center">
-                            <Calendar className="h-4 w-4 mr-2" />
-                            {formatDate(event.start_date)}
-                          </div>
-                          <div className="flex items-center">
-                            <Clock className="h-4 w-4 mr-2" />
-                            {formatTime(event.start_date)}
-                          </div>
-                          <div className="flex items-center">
-                            <MapPin className="h-4 w-4 mr-2" />
-                            {event.venue && `${event.venue}, `}{event.city}
-                          </div>
-                        </div>
+          <Tabs defaultValue="upcoming" className="w-full">
+            <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-8">
+              <TabsTrigger value="upcoming" className="flex items-center gap-2">
+                À venir
+                {upcomingEvents.length > 0 && (
+                  <Badge variant="secondary" className="ml-1">{upcomingEvents.length}</Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="past" className="flex items-center gap-2">
+                Passés
+                {pastEvents.length > 0 && (
+                  <Badge variant="secondary" className="ml-1">{pastEvents.length}</Badge>
+                )}
+              </TabsTrigger>
+            </TabsList>
 
-                        {event.event_type && (
-                          <div className="flex items-center">
-                            <Badge variant="outline">{event.event_type}</Badge>
-                            {event.attendees_count && (
-                              <span className="ml-3 text-sm text-gray-500">
-                                Capacité: {event.attendees_count} personnes
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                      
-                      <div className="flex flex-col items-end space-y-3 mt-4 lg:mt-0">
-                        <div className="text-right">
-                          <div className="text-2xl font-bold text-gray-900">
-                            {formatPrice(event.budget_min, event.budget_max)}
-                          </div>
-                          <div className="text-sm text-gray-500">par personne</div>
-                        </div>
-                        <Button 
-                          className="bg-purple-600 hover:bg-purple-700"
-                          disabled={event.status !== 'confirmed' && event.status !== 'option'}
-                        >
-                          <Ticket className="h-4 w-4 mr-2" />
-                          {event.status === 'confirmed' || event.status === 'option' ? 'Réserver' : 'Indisponible'}
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+            <TabsContent value="upcoming">
+              {upcomingEvents.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-gray-500 text-lg">Aucun événement à venir pour le moment.</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {upcomingEvents.map((event) => renderEventCard(event, false))}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="past">
+              {pastEvents.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-gray-500 text-lg">Aucun événement passé.</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {pastEvents.map((event) => renderEventCard(event, true))}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </>
