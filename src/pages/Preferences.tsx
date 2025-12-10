@@ -1,14 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
-import { Upload, Save, Palette, Bell, Globe, Smartphone, Download, Calendar, Mail, Settings } from 'lucide-react';
-import { toast } from 'sonner';
+import { Globe, Palette, Bell, Smartphone, Calendar, Mail, Settings, MapPin } from 'lucide-react';
 import { CustomColorsForm } from "./preferences/CustomColorsForm";
 import { GoogleCalendarTab } from "./preferences/GoogleCalendarTab";
 import { GmailTab } from "./preferences/GmailTab";
@@ -23,6 +16,7 @@ import {
   EmailTab,
   SmtpTab,
 } from "./preferences";
+import { ContactSettingsTab } from '@/components/preferences/ContactSettingsTab';
 import { useSearchParams } from 'react-router-dom';
 
 export const Preferences: React.FC = () => {
@@ -42,6 +36,10 @@ export const Preferences: React.FC = () => {
           <TabsTrigger value="company" className="flex-1 min-w-[100px] text-xs sm:text-sm data-[state=active]:bg-background">
             <Globe className="h-4 w-4 mr-1 sm:mr-2" />
             <span>Entreprise</span>
+          </TabsTrigger>
+          <TabsTrigger value="contact" className="flex-1 min-w-[100px] text-xs sm:text-sm data-[state=active]:bg-background">
+            <MapPin className="h-4 w-4 mr-1 sm:mr-2" />
+            <span>Contact</span>
           </TabsTrigger>
           <TabsTrigger value="appearance" className="flex-1 min-w-[100px] text-xs sm:text-sm data-[state=active]:bg-background">
             <Palette className="h-4 w-4 mr-1 sm:mr-2" />
@@ -78,6 +76,9 @@ export const Preferences: React.FC = () => {
         </TabsList>
         <TabsContent value="company" className="space-y-4">
           <CompanyTab />
+        </TabsContent>
+        <TabsContent value="contact" className="space-y-4">
+          <ContactSettingsTab />
         </TabsContent>
         <TabsContent value="appearance" className="space-y-4">
           <AppearanceTab />
