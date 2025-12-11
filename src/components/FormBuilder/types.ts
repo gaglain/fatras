@@ -1,11 +1,34 @@
 
+export type FieldType = 
+  | 'text' 
+  | 'email' 
+  | 'tel' 
+  | 'textarea' 
+  | 'select' 
+  | 'checkbox' 
+  | 'radio'
+  | 'number'
+  | 'date'
+  | 'time'
+  | 'url'
+  | 'rating'
+  | 'file'
+  | 'heading'
+  | 'paragraph';
+
 export interface FormField {
   id: string;
-  type: 'text' | 'email' | 'tel' | 'textarea' | 'select' | 'checkbox' | 'radio';
+  type: FieldType;
   label: string;
   placeholder?: string;
   required: boolean;
   options?: string[];
+  description?: string;
+  min?: number;
+  max?: number;
+  maxLength?: number;
+  acceptedFileTypes?: string[];
+  width?: 'full' | 'half';
 }
 
 export interface FormSettings {
@@ -14,6 +37,10 @@ export interface FormSettings {
   sendNotification: boolean;
   notificationEmail: string;
   addToContacts: boolean;
+  redirectUrl?: string;
+  theme?: 'default' | 'minimal' | 'modern';
+  showProgressBar?: boolean;
+  confirmationEmail?: boolean;
 }
 
 export interface FormData {
@@ -30,4 +57,6 @@ export interface FormSubmission {
   data: Record<string, any>;
   submittedAt: string;
   contactId?: string;
+  ipAddress?: string;
+  userAgent?: string;
 }
