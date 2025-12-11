@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ExternalLink, Info } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -114,6 +116,23 @@ export const ContactSettingsTab: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      <Alert>
+        <Info className="h-4 w-4" />
+        <AlertDescription className="flex items-center justify-between">
+          <span>
+            Pour recevoir les emails du formulaire contact, vérifiez votre domaine sur Resend.
+          </span>
+          <a 
+            href="https://resend.com/domains" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 text-primary hover:underline ml-2"
+          >
+            Configurer <ExternalLink className="h-3 w-3" />
+          </a>
+        </AlertDescription>
+      </Alert>
+
       <Card>
         <CardHeader>
           <CardTitle>Coordonnées de contact</CardTitle>

@@ -110,13 +110,52 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('📤 Envoi email vers:', recipientEmail);
 
-    const emailResponse = await resend.emails.send({
-      from: 'Formulaire Contact <onboarding@resend.dev>',
-      to: [recipientEmail],
-      replyTo: email,
-      subject: `[Contact] ${subject}`,
-      html: htmlContent,
-    });
+    // Sauvegarder la soumission dans la base de données
+    const { error: insertError } = await supabase
+      .from('form_submissions')
+      .insert({
+        form_id: '00000000-0000-0000-0000-000000000001', // ID spécial pour formulaire contact
+        data: { name, email, phone, subject, message },
+        ip_address: req.headers.get('x-forwarded-for') || 'unknown',
+        user_agent: req.headers.get('user-agent') || 'unknown'
+      });
+
+    if (insertError) {
+      console.warn('⚠️ Erreur sauvegarde soumission (non bloquant):', insertError);
+    }
+
+    // Tenter d'envoyer l'email
+    try {
+      const emailResponse = await resend.emails.send({
+        from: 'Formulaire Contact <onboarding@resend.dev>',
+        to: [recipientEmail],
+        replyTo: email,
+        subject: `[Contact] ${subject}`,
+        html: htmlContent,
+      });
+
+      if (emailResponse.error) {
+        console.error('❌ Erreur Resend:', emailResponse.error);
+        
+        // Si c'est une erreur de domaine non vérifié, informer clairement
+        if (emailResponse.error.message?.includes('verify a domain')) {
+          console.log('⚠️ Domaine non vérifié - Message sauvegardé mais email non envoyé');
+          return new Response(JSON.stringify({
+            success: true,
+            message: 'Message reçu (notification email désactivée - domaine non vérifié)',
+            warning: 'Pour recevoir les notifications par email, vérifiez votre domaine sur resend.com/domains'
+          }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json', ...corsHeaders },
+          });
+        }
+      }
+
+      console.log('✅ Email contact envoyé:', emailResponse);
+    } catch (emailError: any) {
+      console.error('❌ Erreur envoi email:', emailError);
+      // Ne pas bloquer si l'email échoue, le message est sauvegardé
+    }
 
     console.log('✅ Email contact envoyé:', emailResponse);
 

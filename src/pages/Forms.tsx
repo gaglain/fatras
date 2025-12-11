@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Edit, Trash2, Eye } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Plus, Edit, Trash2, Eye, Code, FileText, BarChart3 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import { FormBuilder } from '@/components/FormBuilder/FormBuilder';
 import { FormRenderer } from '@/components/FormBuilder/FormRenderer';
+import { FormSubmissions } from '@/components/FormBuilder/FormSubmissions';
+import { FormEmbedCode } from '@/components/FormBuilder/FormEmbedCode';
 import { FormData } from '@/components/FormBuilder/types';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -16,6 +20,7 @@ export const Forms: React.FC = () => {
   const [showBuilder, setShowBuilder] = useState(false);
   const [editingForm, setEditingForm] = useState<FormData | null>(null);
   const [previewForm, setPreviewForm] = useState<FormData | null>(null);
+  const [embedForm, setEmbedForm] = useState<FormData | null>(null);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -124,17 +129,13 @@ export const Forms: React.FC = () => {
     setShowBuilder(true);
   };
 
-  const handlePreviewForm = (form: FormData) => {
-    setPreviewForm(form);
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Formulaires</h1>
           <p className="text-muted-foreground mt-2">
-            Créez et gérez vos formulaires personnalisés
+            Créez des formulaires personnalisés style TypeForm
           </p>
         </div>
         <Button 
@@ -149,74 +150,106 @@ export const Forms: React.FC = () => {
         </Button>
       </div>
 
-      {loading ? (
-        <div className="text-center py-8">Chargement...</div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {forms.length === 0 ? (
-            <div className="col-span-full text-center py-12">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun formulaire</h3>
-              <p className="text-gray-500 mb-4">Créez votre premier formulaire pour commencer</p>
-              <Button 
-                onClick={() => {
-                  setEditingForm(null);
-                  setShowBuilder(true);
-                }}
-                className="bg-primary hover:bg-primary/90"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Créer un formulaire
-              </Button>
-            </div>
+      <Tabs defaultValue="forms" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="forms" className="gap-2">
+            <FileText className="h-4 w-4" />
+            Formulaires
+            <Badge variant="secondary" className="ml-1">{forms.length}</Badge>
+          </TabsTrigger>
+          <TabsTrigger value="submissions" className="gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Soumissions
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="forms">
+          {loading ? (
+            <div className="text-center py-8">Chargement...</div>
           ) : (
-            forms.map((form) => (
-              <Card key={form.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <CardTitle className="text-lg">{form.name}</CardTitle>
-                  {form.description && (
-                    <p className="text-sm text-muted-foreground">{form.description}</p>
-                  )}
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm text-muted-foreground">
-                      {form.fields.length} champ{form.fields.length > 1 ? 's' : ''}
-                    </div>
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handlePreviewForm(form)}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditForm(form)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteForm(form.id)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {forms.length === 0 ? (
+                <div className="col-span-full text-center py-12">
+                  <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
+                  <h3 className="text-lg font-medium mb-2">Aucun formulaire</h3>
+                  <p className="text-muted-foreground mb-4">Créez votre premier formulaire pour commencer</p>
+                  <Button 
+                    onClick={() => {
+                      setEditingForm(null);
+                      setShowBuilder(true);
+                    }}
+                    className="bg-primary hover:bg-primary/90"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Créer un formulaire
+                  </Button>
+                </div>
+              ) : (
+                forms.map((form) => (
+                  <Card key={form.id} className="hover:shadow-lg transition-shadow group">
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center justify-between">
+                        {form.name}
+                        <Badge variant="outline" className="text-xs font-normal">
+                          {form.fields.length} champ{form.fields.length > 1 ? 's' : ''}
+                        </Badge>
+                      </CardTitle>
+                      {form.description && (
+                        <p className="text-sm text-muted-foreground line-clamp-2">{form.description}</p>
+                      )}
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setPreviewForm(form)}
+                          title="Aperçu"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setEmbedForm(form)}
+                          title="Code d'intégration"
+                        >
+                          <Code className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditForm(form)}
+                          title="Modifier"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteForm(form.id)}
+                          className="text-destructive hover:text-destructive"
+                          title="Supprimer"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
           )}
-        </div>
-      )}
+        </TabsContent>
+
+        <TabsContent value="submissions">
+          <FormSubmissions forms={forms} />
+        </TabsContent>
+      </Tabs>
 
       {/* Form Builder Dialog */}
       <Dialog open={showBuilder} onOpenChange={setShowBuilder}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-hidden">
           <DialogHeader>
             <DialogTitle>
               {editingForm ? 'Modifier le formulaire' : 'Nouveau formulaire'}
@@ -243,9 +276,18 @@ export const Forms: React.FC = () => {
                 console.log('Form submitted:', data);
                 toast.success('Formulaire soumis (mode aperçu)');
               }}
-              
             />
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Embed Code Dialog */}
+      <Dialog open={!!embedForm} onOpenChange={() => setEmbedForm(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Code d'intégration</DialogTitle>
+          </DialogHeader>
+          {embedForm && <FormEmbedCode form={embedForm} />}
         </DialogContent>
       </Dialog>
     </div>
