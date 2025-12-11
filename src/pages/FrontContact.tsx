@@ -23,11 +23,6 @@ interface ContactInfo {
   phone: string;
   address: string;
   city: string;
-  hours: {
-    weekdays: string;
-    saturday: string;
-    sunday: string;
-  };
 }
 
 export const FrontContact: React.FC = () => {
@@ -44,12 +39,7 @@ export const FrontContact: React.FC = () => {
     email: 'Booking@fatras.net',
     phone: '',
     address: '',
-    city: '',
-    hours: {
-      weekdays: '9:00 - 18:00',
-      saturday: '10:00 - 16:00',
-      sunday: 'Fermé'
-    }
+    city: ''
   });
 
   useEffect(() => {
@@ -65,10 +55,7 @@ export const FrontContact: React.FC = () => {
           'contact_email',
           'contact_phone', 
           'contact_address',
-          'contact_city',
-          'contact_hours_weekdays',
-          'contact_hours_saturday',
-          'contact_hours_sunday'
+          'contact_city'
         ]);
 
       if (error) {
@@ -86,12 +73,7 @@ export const FrontContact: React.FC = () => {
           email: configMap.contact_email || 'Booking@fatras.net',
           phone: configMap.contact_phone || '',
           address: configMap.contact_address || '',
-          city: configMap.contact_city || '',
-          hours: {
-            weekdays: configMap.contact_hours_weekdays || '9:00 - 18:00',
-            saturday: configMap.contact_hours_saturday || '10:00 - 16:00',
-            sunday: configMap.contact_hours_sunday || 'Fermé'
-          }
+          city: configMap.contact_city || ''
         });
       }
     } catch (error) {
@@ -336,26 +318,6 @@ export const FrontContact: React.FC = () => {
                 </CardContent>
               </Card>
             )}
-
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="font-semibold text-lg mb-4">Horaires</h3>
-                <div className="space-y-2 text-gray-600">
-                  <div className="flex justify-between">
-                    <span>Lundi - Vendredi</span>
-                    <span>{contactInfo.hours.weekdays}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Samedi</span>
-                    <span>{contactInfo.hours.saturday}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Dimanche</span>
-                    <span>{contactInfo.hours.sunday}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </div>
