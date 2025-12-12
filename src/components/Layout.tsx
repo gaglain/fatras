@@ -15,6 +15,7 @@ import { useEmailNotifications } from '@/hooks/useEmailNotifications';
 import { usePWABadge } from '@/hooks/usePWABadge';
 import { useMessagingUnreadCount } from '@/hooks/useMessagingUnreadCount';
 import { PushNotificationPrompt } from '@/components/notifications/PushNotificationPrompt';
+import { usePublicChatNotifications } from '@/hooks/usePublicChatNotifications';
 
 const adminRoutes = [
   '/admin', '/dashboard', '/artists', '/events', '/agenda', '/contacts',
@@ -33,6 +34,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { unreadCount: generalUnreadCount } = useNotifications();
   const { getUnreadCount } = useEmailNotifications();
   const messagingUnreadCount = useMessagingUnreadCount();
+  
+  // Global listener for public chat messages -> creates notifications
+  usePublicChatNotifications();
   
   // Badge PWA avec toutes les notifications (général + email + messagerie)
   const totalUnreadCount = generalUnreadCount + getUnreadCount() + messagingUnreadCount;
