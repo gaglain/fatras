@@ -127,7 +127,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Tenter d'envoyer l'email
     try {
       const emailResponse = await resend.emails.send({
-        from: 'Formulaire Contact <onboarding@resend.dev>',
+        from: 'Contact Fatras <contact@fatras.net>',
         to: [recipientEmail],
         replyTo: email,
         subject: `[Contact] ${subject}`,
@@ -157,12 +157,10 @@ const handler = async (req: Request): Promise<Response> => {
       // Ne pas bloquer si l'email échoue, le message est sauvegardé
     }
 
-    console.log('✅ Email contact envoyé:', emailResponse);
-
     // Optionnel: Envoyer une confirmation à l'expéditeur
     try {
       await resend.emails.send({
-        from: 'Confirmation <onboarding@resend.dev>',
+        from: 'Fatras <noreply@fatras.net>',
         to: [email],
         subject: `Confirmation: Nous avons bien reçu votre message`,
         html: `
