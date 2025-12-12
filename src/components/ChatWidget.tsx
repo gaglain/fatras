@@ -126,10 +126,13 @@ export const ChatWidget: React.FC = () => {
     if (channel.type === 'direct') {
       const otherMember = channel.members?.find((m: any) => m.user_id !== user?.id);
       if (otherMember?.user_profile) {
-        const { first_name, last_name, username } = otherMember.user_profile;
-        return first_name && last_name ? `${first_name} ${last_name}` : username || 'Utilisateur';
+        const { first_name, last_name, username, email } = otherMember.user_profile;
+        const fullName = `${first_name || ''} ${last_name || ''}`.trim();
+        if (fullName) return fullName;
+        if (username) return username;
+        if (email) return email.split('@')[0];
       }
-      return 'Message Direct';
+      return 'Conversation privée';
     }
     return channel.name;
   };
