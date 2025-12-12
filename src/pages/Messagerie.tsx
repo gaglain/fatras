@@ -76,13 +76,27 @@ export const Messagerie: React.FC = () => {
 
   const getChannelDisplayName = (channel: any) => {
     if (channel.type === 'direct') {
+      // Chercher l'autre membre
       const otherMember = channel.members?.find((m: any) => m.user_id !== user?.id);
       if (otherMember?.user_profile) {
         const firstName = otherMember.user_profile.first_name || '';
         const lastName = otherMember.user_profile.last_name || '';
-        return `${firstName} ${lastName}`.trim() || otherMember.user_profile.username || 'Message Direct';
+        const fullName = `${firstName} ${lastName}`.trim();
+        if (fullName) return fullName;
+        if (otherMember.user_profile.username) return otherMember.user_profile.username;
+        if (otherMember.user_profile.email) return otherMember.user_profile.email.split('@')[0];
       }
-      return 'Message Direct';
+      // Fallback : chercher dans tous les membres (y compris soi-même si seul visible)
+      const anyOtherMember = channel.members?.find((m: any) => {
+        const profile = m.user_profile;
+        return profile && (profile.first_name || profile.last_name || profile.username);
+      });
+      if (anyOtherMember?.user_profile) {
+        const firstName = anyOtherMember.user_profile.first_name || '';
+        const lastName = anyOtherMember.user_profile.last_name || '';
+        return `${firstName} ${lastName}`.trim() || anyOtherMember.user_profile.username || 'Conversation';
+      }
+      return 'Conversation privée';
     }
     return channel.name;
   };

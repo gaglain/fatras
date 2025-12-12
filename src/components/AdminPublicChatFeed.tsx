@@ -45,14 +45,17 @@ export const AdminPublicChatFeed: React.FC = () => {
   // Load all conversations
   const loadConversations = async () => {
     setIsLoading(true);
+    console.log('📨 Loading public chat messages...');
     
     const { data, error } = await supabase
       .from('public_chat_messages')
       .select('*')
       .order('created_at', { ascending: true });
 
+    console.log('📨 Public chat result:', { data, error, count: data?.length });
+
     if (error) {
-      console.error('Error loading messages:', error);
+      console.error('❌ Error loading messages:', error);
       toast.error('Erreur lors du chargement des messages');
       setIsLoading(false);
       return;
