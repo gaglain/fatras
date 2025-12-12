@@ -78,7 +78,61 @@ export const useContacts = () => {
     fetchContacts();
   }, [user]);
 
-  const addContact = async (contactData: Omit<Contact, 'id' | 'created_at' | 'updated_at'>) => {
+  // Check if a contact with this email already exists
+  const checkDuplicateEmail = async (email: string, excludeId?: string): Promise<Contact | null> => {
+    if (!email || !email.trim()) return null;
+    
+    let query = supabase
+      .from('contacts')
+      .select('*')
+      .ilike('email', email.trim());
+    
+    if (excludeId) {
+      query = query.neq('id', excludeId);
+    }
+    
+    const { data } = await query.maybeSingle();
+    
+    if (data) {
+      return {
+        id: data.id,
+        user_id: data.user_id,
+        external_id: data.external_id || '',
+        first_name: data.first_name,
+        last_name: data.last_name,
+        email: data.email || '',
+        phone: data.phone || '',
+        position: data.position || '',
+        address: data.address || '',
+        city: data.city || '',
+        postal_code: data.postal_code || '',
+        country: data.country || '',
+        status: data.status || 'prospect',
+        source: data.source || '',
+        notes: data.notes || '',
+        tags: data.tags || [],
+        role: data.role || '',
+        event_id: data.event_id || '',
+        event_type_id: data.event_type_id || '',
+        accepts_marketing_emails: data.accepts_marketing_emails ?? true,
+        lead_score: data.lead_score || 0,
+        created_at: data.created_at,
+        updated_at: data.updated_at
+      };
+    }
+    
+    return null;
+  };
+
+  const addContact = async (contactData: Omit<Contact, 'id' | 'created_at' | 'updated_at'>): Promise<{ contact: Contact | null; isDuplicate: boolean; existingContact?: Contact }> => {
+    // Check for duplicate email first
+    if (contactData.email) {
+      const existingContact = await checkDuplicateEmail(contactData.email);
+      if (existingContact) {
+        return { contact: null, isDuplicate: true, existingContact };
+      }
+    }
+
     const { data, error } = await supabase
       .from('contacts')
       .insert({
@@ -153,9 +207,9 @@ export const useContacts = () => {
         }
       }
 
-      return newContact;
+      return { contact: newContact, isDuplicate: false };
     }
-    return null;
+    return { contact: null, isDuplicate: false };
   };
 
   const updateContact = async (id: string, updates: Partial<Contact>) => {
@@ -232,6 +286,7 @@ export const useContacts = () => {
     loading,
     addContact,
     updateContact,
-    deleteContact
+    deleteContact,
+    checkDuplicateEmail
   };
 };
