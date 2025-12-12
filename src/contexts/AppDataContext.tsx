@@ -107,12 +107,23 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, []);
 
   const addContact = (contact: Omit<Contact, 'id' | 'createdAt'>) => {
+    // Check for duplicate email
+    const existingContact = contacts.find(c => 
+      c.email && contact.email && c.email.toLowerCase() === contact.email.toLowerCase()
+    );
+    
+    if (existingContact) {
+      console.log('Contact with this email already exists:', existingContact);
+      return null; // Indicate duplicate
+    }
+    
     const newContact: Contact = {
       ...contact,
       id: Date.now().toString(),
       createdAt: new Date().toISOString().split('T')[0]
     };
     setContacts(prev => [...prev, newContact]);
+    return newContact;
   };
 
   const addEvent = (event: Omit<Event, 'id'>) => {
