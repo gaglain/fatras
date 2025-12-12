@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import { FormData, FormSubmission } from './types';
 
 interface FormRendererProps {
@@ -19,6 +19,8 @@ interface FormRendererProps {
 export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) => {
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Honeypot anti-spam field
+  const [honeypot, setHoneypot] = useState('');
 
   const updateFieldValue = (fieldId: string, value: any) => {
     setFormData(prev => ({
@@ -29,6 +31,15 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) =>
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Honeypot check - if filled, it's a bot
+    if (honeypot) {
+      console.log('🤖 Bot detected via honeypot');
+      // Fake success to not alert the bot
+      toast.success(form.settings.successMessage);
+      return;
+    }
+    
     setIsSubmitting(true);
 
     // Validate required fields
@@ -43,42 +54,36 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) =>
     }
 
     try {
+      // Call edge function to handle submission, contact creation, and notification
+      const { data: response, error } = await supabase.functions.invoke('form-submission-handler', {
+        body: {
+          formId: form.id,
+          data: formData,
+          honeypot: honeypot, // Send honeypot for server-side check too
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
       const submission: FormSubmission = {
-        id: `submission_${Date.now()}`,
+        id: response?.submissionId || `submission_${Date.now()}`,
         formId: form.id,
         data: formData,
         submittedAt: new Date().toISOString()
       };
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Add to contacts if enabled
-      if (form.settings.addToContacts) {
-        const contact = {
-          id: `contact_${Date.now()}`,
-          name: formData.name || formData.firstName || 'Contact sans nom',
-          email: formData.email,
-          phone: formData.phone || formData.tel,
-          source: `Formulaire: ${form.name}`,
-          createdAt: new Date().toISOString(),
-          ...formData
-        };
-        
-        // Here you would normally save to your contact database
-        console.log('Adding contact:', contact);
-      }
-
-      // Send notification if enabled
-      if (form.settings.sendNotification && form.settings.notificationEmail) {
-        console.log('Sending notification to:', form.settings.notificationEmail);
-        // Here you would send an email notification
-      }
-
       onSubmit?.(submission);
       toast.success(form.settings.successMessage);
       setFormData({});
-    } catch (error) {
+      
+      // Redirect if configured
+      if (form.settings.redirectUrl) {
+        window.location.href = form.settings.redirectUrl;
+      }
+    } catch (error: any) {
+      console.error('Form submission error:', error);
       toast.error('Erreur lors de l\'envoi du formulaire');
     } finally {
       setIsSubmitting(false);
@@ -90,12 +95,26 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) =>
       case 'text':
       case 'email':
       case 'tel':
+      case 'number':
         return (
           <Input
             type={field.type}
             value={formData[field.id] || ''}
             onChange={(e) => updateFieldValue(field.id, e.target.value)}
             placeholder={field.placeholder}
+            required={field.required}
+            min={field.min}
+            max={field.max}
+            maxLength={field.maxLength}
+          />
+        );
+
+      case 'date':
+        return (
+          <Input
+            type="date"
+            value={formData[field.id] || ''}
+            onChange={(e) => updateFieldValue(field.id, e.target.value)}
             required={field.required}
           />
         );
@@ -107,6 +126,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) =>
             onChange={(e) => updateFieldValue(field.id, e.target.value)}
             placeholder={field.placeholder}
             required={field.required}
+            maxLength={field.maxLength}
             rows={4}
           />
         );
@@ -168,6 +188,28 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) =>
           </RadioGroup>
         );
 
+      case 'rating':
+        return (
+          <div className="flex gap-2">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button
+                key={star}
+                type="button"
+                onClick={() => updateFieldValue(field.id, star)}
+                className={`text-2xl ${formData[field.id] >= star ? 'text-yellow-400' : 'text-muted-foreground'}`}
+              >
+                ★
+              </button>
+            ))}
+          </div>
+        );
+
+      case 'heading':
+        return <h3 className="text-lg font-semibold">{field.label}</h3>;
+
+      case 'paragraph':
+        return <p className="text-muted-foreground">{field.placeholder}</p>;
+
       default:
         return null;
     }
@@ -178,17 +220,38 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) =>
       <CardHeader>
         <CardTitle>{form.name}</CardTitle>
         {form.description && (
-          <p className="text-sm text-gray-600">{form.description}</p>
+          <p className="text-sm text-muted-foreground">{form.description}</p>
         )}
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Honeypot field - hidden from humans, visible to bots */}
+          <div 
+            className="absolute left-[-9999px]" 
+            aria-hidden="true"
+            style={{ position: 'absolute', left: '-9999px' }}
+          >
+            <Input
+              type="text"
+              name="website_url"
+              value={honeypot}
+              onChange={(e) => setHoneypot(e.target.value)}
+              tabIndex={-1}
+              autoComplete="off"
+            />
+          </div>
+
           {form.fields.map((field) => (
-            <div key={field.id} className="space-y-2">
-              <Label htmlFor={field.id}>
-                {field.label}
-                {field.required && <span className="text-red-500 ml-1">*</span>}
-              </Label>
+            <div 
+              key={field.id} 
+              className={`space-y-2 ${field.width === 'half' ? 'w-1/2 inline-block pr-2' : 'w-full'}`}
+            >
+              {field.type !== 'heading' && field.type !== 'paragraph' && (
+                <Label htmlFor={field.id}>
+                  {field.label}
+                  {field.required && <span className="text-destructive ml-1">*</span>}
+                </Label>
+              )}
               {renderField(field)}
             </div>
           ))}
