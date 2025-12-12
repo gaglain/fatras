@@ -12,9 +12,12 @@ import {
   Shield, 
   Save,
   Upload,
-  MessageSquare
+  MessageSquare,
+  Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuthContext } from '@/contexts/AuthContext';
 
 interface SiteSettings {
   siteName: string;
@@ -85,121 +88,217 @@ const defaultSettings: SiteSettings = {
 };
 
 export const SiteSettings: React.FC = () => {
+  const { user } = useAuthContext();
   const [settings, setSettings] = useState<SiteSettings>(defaultSettings);
   const [activeSection, setActiveSection] = useState<'general' | 'design' | 'features' | 'maintenance'>('general');
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Essayer de charger depuis site_settings d'abord
-    const savedSettings = localStorage.getItem('site_settings');
-    if (savedSettings) {
-      try {
-        const parsed = JSON.parse(savedSettings);
-        setSettings({ ...defaultSettings, ...parsed });
-        return;
-      } catch (error) {
-        console.error('Erreur chargement paramètres site_settings:', error);
-      }
-    }
+  // Synchroniser avec localStorage pour le front (défini avant useEffect)
+  const syncToLocalStorage = React.useCallback((s: SiteSettings) => {
+    localStorage.setItem('site_settings', JSON.stringify(s));
     
-    // Sinon essayer de charger depuis websiteConfig
-    const websiteConfig = localStorage.getItem('websiteConfig');
-    if (websiteConfig) {
-      try {
-        const config = JSON.parse(websiteConfig);
-        setSettings({
-          ...defaultSettings,
-          siteName: config.siteName || defaultSettings.siteName,
-          siteDescription: config.siteDescription || defaultSettings.siteDescription,
-          logo: config.logo || defaultSettings.logo,
-          favicon: config.favicon || defaultSettings.favicon,
-          contactEmail: config.contactEmail || defaultSettings.contactEmail,
-          contactPhone: config.contactPhone || defaultSettings.contactPhone,
-          address: config.address || defaultSettings.address,
-          socialLinks: config.socialLinks || defaultSettings.socialLinks,
-          theme: {
-            primaryColor: config.primaryColor || defaultSettings.theme.primaryColor,
-            secondaryColor: config.secondaryColor || defaultSettings.theme.secondaryColor,
-            backgroundColor: config.headerBg || defaultSettings.theme.backgroundColor,
-            textColor: config.textColor || defaultSettings.theme.textColor
-          }
-        });
-      } catch (error) {
-        console.error('Erreur chargement websiteConfig:', error);
-      }
-    }
-  }, []);
-
-  const saveSettings = () => {
-    // Sauvegarder dans site_settings (ancien système)
-    localStorage.setItem('site_settings', JSON.stringify(settings));
-    
-    // Sauvegarder dans websiteSettings (clé largement utilisée par le front)
     const websiteSettings = {
-      siteName: settings.siteName,
-      siteDescription: settings.siteDescription,
-      contactEmail: settings.contactEmail,
-      contactPhone: settings.contactPhone,
-      address: settings.address,
-      socialLinks: settings.socialLinks
+      siteName: s.siteName,
+      siteDescription: s.siteDescription,
+      contactEmail: s.contactEmail,
+      contactPhone: s.contactPhone,
+      address: s.address,
+      socialLinks: s.socialLinks
     };
     localStorage.setItem('websiteSettings', JSON.stringify(websiteSettings));
     
-    // Sauvegarder un design minimal pour les composants qui lisent websiteDesign
     const websiteDesign = {
-      siteName: settings.siteName,
-      logo: settings.logo,
-      primaryColor: settings.theme.primaryColor,
-      secondaryColor: settings.theme.secondaryColor,
-      headerBg: settings.theme.backgroundColor,
-      textColor: settings.theme.textColor,
-      linkColor: settings.theme.primaryColor
+      siteName: s.siteName,
+      logo: s.logo,
+      primaryColor: s.theme.primaryColor,
+      secondaryColor: s.theme.secondaryColor,
+      headerBg: s.theme.backgroundColor,
+      textColor: s.theme.textColor,
+      linkColor: s.theme.primaryColor
     };
     localStorage.setItem('websiteDesign', JSON.stringify(websiteDesign));
     
-    // Sauvegarder dans websiteConfig (configuration unifiée utilisée par plusieurs composants)
     const websiteConfig = {
-      siteName: settings.siteName,
-      siteDescription: settings.siteDescription,
-      logo: settings.logo,
-      favicon: settings.favicon,
-      primaryColor: settings.theme.primaryColor,
-      secondaryColor: settings.theme.secondaryColor,
-      headerBg: settings.theme.backgroundColor,
+      siteName: s.siteName,
+      siteDescription: s.siteDescription,
+      logo: s.logo,
+      favicon: s.favicon,
+      primaryColor: s.theme.primaryColor,
+      secondaryColor: s.theme.secondaryColor,
+      headerBg: s.theme.backgroundColor,
       footerBg: '#1a1a1a',
-      textColor: settings.theme.textColor,
-      linkColor: settings.theme.primaryColor,
-      contactEmail: settings.contactEmail,
-      contactPhone: settings.contactPhone,
-      address: settings.address,
-      socialLinks: settings.socialLinks,
-      menuItems: []
+      textColor: s.theme.textColor,
+      linkColor: s.theme.primaryColor,
+      contactEmail: s.contactEmail,
+      contactPhone: s.contactPhone,
+      address: s.address,
+      socialLinks: s.socialLinks
     };
     localStorage.setItem('websiteConfig', JSON.stringify(websiteConfig));
     
-    // Appliquer les changements immédiatement
-    document.title = settings.siteName;
-    
-    // Mettre à jour les CSS custom properties pour le thème
+    // Appliquer les changements CSS
+    document.title = s.siteName;
     const root = document.documentElement;
-    root.style.setProperty('--primary-color', settings.theme.primaryColor);
-    root.style.setProperty('--secondary-color', settings.theme.secondaryColor);
-    root.style.setProperty('--background-color', settings.theme.backgroundColor);
-    root.style.setProperty('--text-color', settings.theme.textColor);
-    // Variables utilisées par le front
-    root.style.setProperty('--site-header-bg', settings.theme.backgroundColor);
+    root.style.setProperty('--primary-color', s.theme.primaryColor);
+    root.style.setProperty('--secondary-color', s.theme.secondaryColor);
+    root.style.setProperty('--background-color', s.theme.backgroundColor);
+    root.style.setProperty('--text-color', s.theme.textColor);
+    root.style.setProperty('--site-header-bg', s.theme.backgroundColor);
     root.style.setProperty('--site-footer-bg', '#1a1a1a');
-    root.style.setProperty('--site-text-color', settings.theme.textColor);
-    root.style.setProperty('--site-link-color', settings.theme.primaryColor);
+    root.style.setProperty('--site-text-color', s.theme.textColor);
+    root.style.setProperty('--site-link-color', s.theme.primaryColor);
     
-    // Déclencher les événements de synchronisation
-    window.dispatchEvent(new CustomEvent('siteSettingsUpdated', { detail: settings }));
+    // Déclencher les événements
     window.dispatchEvent(new CustomEvent('websiteSettingsUpdated', { detail: websiteSettings }));
     window.dispatchEvent(new CustomEvent('websiteDesignUpdated', { detail: websiteDesign }));
     window.dispatchEvent(new CustomEvent('websiteConfigChanged', { detail: websiteConfig }));
     window.dispatchEvent(new Event('websiteSettingsSaved'));
-    window.dispatchEvent(new Event('storage'));
-    
-    toast.success('Paramètres sauvegardés avec succès');
+  }, []);
+
+  // Charger les paramètres depuis Supabase
+  useEffect(() => {
+    const loadSettings = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // Charger depuis website_designs
+        const { data: designData } = await supabase
+          .from('website_designs')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        // Charger depuis app_settings
+        const { data: appSettings } = await supabase
+          .from('app_settings')
+          .select('setting_key, setting_value')
+          .eq('user_id', user.id)
+          .in('setting_key', ['website_settings', 'website_social_links', 'website_features', 'website_maintenance']);
+
+        const settingsMap: Record<string, any> = {};
+        appSettings?.forEach(s => {
+          try {
+            settingsMap[s.setting_key] = JSON.parse(s.setting_value);
+          } catch {
+            settingsMap[s.setting_key] = s.setting_value;
+          }
+        });
+
+        const loadedSettings: SiteSettings = {
+          siteName: designData?.site_name || defaultSettings.siteName,
+          siteDescription: settingsMap.website_settings?.description || defaultSettings.siteDescription,
+          logo: designData?.logo || defaultSettings.logo,
+          favicon: settingsMap.website_settings?.favicon || defaultSettings.favicon,
+          contactEmail: settingsMap.website_settings?.contactEmail || defaultSettings.contactEmail,
+          contactPhone: settingsMap.website_settings?.contactPhone || defaultSettings.contactPhone,
+          address: settingsMap.website_settings?.address || defaultSettings.address,
+          socialLinks: settingsMap.website_social_links || defaultSettings.socialLinks,
+          theme: {
+            primaryColor: designData?.primary_color || defaultSettings.theme.primaryColor,
+            secondaryColor: designData?.secondary_color || defaultSettings.theme.secondaryColor,
+            backgroundColor: designData?.header_bg || defaultSettings.theme.backgroundColor,
+            textColor: designData?.text_color || defaultSettings.theme.textColor
+          },
+          features: settingsMap.website_features || defaultSettings.features,
+          maintenance: settingsMap.website_maintenance || defaultSettings.maintenance
+        };
+
+        setSettings(loadedSettings);
+        
+        // Synchroniser avec localStorage pour le front
+        syncToLocalStorage(loadedSettings);
+      } catch (error) {
+        console.error('Erreur chargement paramètres:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadSettings();
+  }, [user, syncToLocalStorage]);
+
+  const saveSettings = async () => {
+    if (!user) {
+      toast.error('Vous devez être connecté pour sauvegarder');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      // Sauvegarder dans website_designs (logo, nom, couleurs)
+      const designData = {
+        user_id: user.id,
+        logo: settings.logo,
+        site_name: settings.siteName,
+        primary_color: settings.theme.primaryColor,
+        secondary_color: settings.theme.secondaryColor,
+        accent_color: settings.theme.secondaryColor,
+        header_bg: settings.theme.backgroundColor,
+        footer_bg: '#1a1a1a',
+        text_color: settings.theme.textColor,
+        link_color: settings.theme.primaryColor
+      };
+
+      const { error: designError } = await supabase
+        .from('website_designs')
+        .upsert([designData], { onConflict: 'user_id' });
+
+      if (designError) throw designError;
+
+      // Sauvegarder les autres paramètres dans app_settings
+      const settingsToSave = [
+        {
+          user_id: user.id,
+          setting_key: 'website_settings',
+          setting_value: JSON.stringify({
+            description: settings.siteDescription,
+            favicon: settings.favicon,
+            contactEmail: settings.contactEmail,
+            contactPhone: settings.contactPhone,
+            address: settings.address
+          })
+        },
+        {
+          user_id: user.id,
+          setting_key: 'website_social_links',
+          setting_value: JSON.stringify(settings.socialLinks)
+        },
+        {
+          user_id: user.id,
+          setting_key: 'website_features',
+          setting_value: JSON.stringify(settings.features)
+        },
+        {
+          user_id: user.id,
+          setting_key: 'website_maintenance',
+          setting_value: JSON.stringify(settings.maintenance)
+        }
+      ];
+
+      for (const setting of settingsToSave) {
+        const { error } = await supabase
+          .from('app_settings')
+          .upsert([setting], { onConflict: 'user_id,setting_key' });
+        
+        if (error) {
+          console.error('Erreur sauvegarde setting:', setting.setting_key, error);
+        }
+      }
+
+      // Synchroniser avec localStorage pour le front
+      syncToLocalStorage(settings);
+      
+      toast.success('Paramètres sauvegardés avec succès');
+    } catch (error) {
+      console.error('Erreur sauvegarde:', error);
+      toast.error('Erreur lors de la sauvegarde');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleFileUpload = (field: 'logo' | 'favicon', event: React.ChangeEvent<HTMLInputElement>) => {
@@ -215,9 +314,18 @@ export const SiteSettings: React.FC = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2">Chargement des paramètres...</span>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
+      <div className="flex space-x-1 bg-muted p-1 rounded-lg w-fit">
         <Button
           variant={activeSection === 'general' ? 'default' : 'ghost'}
           size="sm"
@@ -538,9 +646,18 @@ export const SiteSettings: React.FC = () => {
       )}
 
       <div className="pt-4">
-        <Button onClick={saveSettings} className="w-full">
-          <Save className="h-4 w-4 mr-2" />
-          Sauvegarder tous les paramètres
+        <Button onClick={saveSettings} className="w-full" disabled={saving}>
+          {saving ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Sauvegarde en cours...
+            </>
+          ) : (
+            <>
+              <Save className="h-4 w-4 mr-2" />
+              Sauvegarder tous les paramètres
+            </>
+          )}
         </Button>
       </div>
     </div>
