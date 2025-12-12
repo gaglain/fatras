@@ -151,7 +151,7 @@ export const Messagerie: React.FC = () => {
                 </div>
               </div>
 
-              <ScrollArea className="flex-1 h-[300px] lg:h-auto">
+              <ScrollArea className="h-[200px] lg:h-[calc(100vh-20rem)]">
                 <div className="p-2">
                   {loading ? (
                     <div className="text-center py-4 text-muted-foreground">
