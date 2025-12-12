@@ -4,21 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FrontThemeToggle } from './FrontThemeToggle';
-
-interface WebsiteSettings {
-  siteName: string;
-  siteDescription: string;
-  contactEmail: string;
-  contactPhone: string;
-  address: string;
-  socialLinks: {
-    facebook: string;
-    instagram: string;
-    twitter: string;
-    youtube: string;
-    linkedin: string;
-  };
-}
+import { supabase } from '@/integrations/supabase/client';
 
 interface SiteDesign {
   logo: string;
@@ -32,84 +18,99 @@ interface SiteDesign {
   linkColor: string;
 }
 
+const defaultDesign: SiteDesign = {
+  logo: '/logo.svg',
+  siteName: 'MusiConnect',
+  primaryColor: '#1632f4',
+  secondaryColor: '#ec5f65',
+  accentColor: '#f19e9c',
+  headerBg: 'linear-gradient(to right, #1a1f2e, #222c45)',
+  footerBg: 'linear-gradient(to right, #1a1f2e, #222c45)',
+  textColor: '#ffffff',
+  linkColor: '#60a5fa'
+};
+
 export const FrontNavigation: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [siteName, setSiteName] = useState('MusiConnect');
-  const [design, setDesign] = useState<SiteDesign>({
-    logo: '/logo.svg',
-    siteName: 'MusiConnect',
-    primaryColor: '#1632f4',
-    secondaryColor: '#ec5f65',
-    accentColor: '#f19e9c',
-    headerBg: 'linear-gradient(to right, #1a1f2e, #222c45)',
-    footerBg: 'linear-gradient(to right, #1a1f2e, #222c45)',
-    textColor: '#ffffff',
-    linkColor: '#60a5fa'
-  });
-
+  const [design, setDesign] = useState<SiteDesign>(defaultDesign);
   const location = useLocation();
 
-  // FONCTION DE CHARGEMENT UNIFIÉE ET AGRESSIVE
-  const loadSiteData = () => {
-    console.log('🔍 FrontNavigation - Loading site data...');
-    
+  // Charger depuis Supabase puis localStorage
+  const loadSiteData = async () => {
     try {
-      // PRIORITÉ ABSOLUE : websiteDesign
+      // D'abord essayer Supabase (données prioritaires)
+      const { data: designData } = await supabase
+        .from('website_designs')
+        .select('*')
+        .limit(1)
+        .maybeSingle();
+
+      if (designData) {
+        const newDesign: SiteDesign = {
+          logo: designData.logo || defaultDesign.logo,
+          siteName: designData.site_name || defaultDesign.siteName,
+          primaryColor: designData.primary_color || defaultDesign.primaryColor,
+          secondaryColor: designData.secondary_color || defaultDesign.secondaryColor,
+          accentColor: designData.accent_color || defaultDesign.accentColor,
+          headerBg: designData.header_bg || defaultDesign.headerBg,
+          footerBg: designData.footer_bg || defaultDesign.footerBg,
+          textColor: designData.text_color || defaultDesign.textColor,
+          linkColor: designData.link_color || defaultDesign.linkColor
+        };
+        
+        setSiteName(newDesign.siteName);
+        setDesign(newDesign);
+        document.title = newDesign.siteName;
+        
+        // Mettre à jour localStorage pour la cohérence
+        localStorage.setItem('websiteDesign', JSON.stringify({
+          siteName: newDesign.siteName,
+          logo: newDesign.logo,
+          primaryColor: newDesign.primaryColor,
+          secondaryColor: newDesign.secondaryColor,
+          headerBg: newDesign.headerBg,
+          textColor: newDesign.textColor,
+          linkColor: newDesign.linkColor
+        }));
+        return;
+      }
+    } catch (error) {
+      console.error('Erreur chargement Supabase:', error);
+    }
+
+    // Fallback localStorage
+    try {
       const savedDesign = localStorage.getItem('websiteDesign');
       if (savedDesign) {
-        const design = JSON.parse(savedDesign);
-        console.log('✅ FrontNavigation - Design found:', design);
-        
-        if (design.siteName) {
-          setSiteName(design.siteName);
-          setDesign(prev => ({ ...prev, ...design }));
-          document.title = design.siteName;
-          console.log('🎯 FrontNavigation - Applied siteName:', design.siteName);
-          return;
+        const parsed = JSON.parse(savedDesign);
+        if (parsed.siteName) {
+          setSiteName(parsed.siteName);
+          setDesign(prev => ({ ...prev, ...parsed }));
+          document.title = parsed.siteName;
         }
       }
-
-      // Fallback vers websiteSettings
-      const savedSettings = localStorage.getItem('websiteSettings');
-      if (savedSettings) {
-        const settings = JSON.parse(savedSettings);
-        console.log('📋 FrontNavigation - Settings fallback:', settings);
-        
-        if (settings.siteName) {
-          setSiteName(settings.siteName);
-          document.title = settings.siteName;
-          console.log('🎯 FrontNavigation - Applied siteName from settings:', settings.siteName);
-        }
-      }
-
     } catch (error) {
-      console.error('❌ FrontNavigation - Error loading data:', error);
+      console.error('Erreur localStorage:', error);
     }
   };
 
   useEffect(() => {
-    console.log('🚀 FrontNavigation - Initializing...');
-    
-    // Chargement immédiat
     loadSiteData();
 
     const handleUpdate = () => {
-      console.log('📡 FrontNavigation - Event received, reloading...');
-      setTimeout(loadSiteData, 10);
+      setTimeout(loadSiteData, 100);
     };
 
-    // Écouter TOUS les événements
     window.addEventListener('websiteDesignUpdated', handleUpdate);
-    window.addEventListener('websiteDesignSaved', handleUpdate);
     window.addEventListener('websiteSettingsUpdated', handleUpdate);
     window.addEventListener('storage', handleUpdate);
 
-    // Polling agressif toutes les secondes
-    const interval = setInterval(loadSiteData, 1000);
+    // Polling réduit à 10 secondes (les données viennent de Supabase maintenant)
+    const interval = setInterval(loadSiteData, 10000);
 
     return () => {
       window.removeEventListener('websiteDesignUpdated', handleUpdate);
-      window.removeEventListener('websiteDesignSaved', handleUpdate);
       window.removeEventListener('websiteSettingsUpdated', handleUpdate);
       window.removeEventListener('storage', handleUpdate);
       clearInterval(interval);
