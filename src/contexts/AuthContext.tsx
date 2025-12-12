@@ -1,4 +1,4 @@
-import React, { createContext, useContext } from 'react';
+import { createContext, useContext, type ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -13,7 +13,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const auth = useAuth();
   
   return (
