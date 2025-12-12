@@ -104,10 +104,11 @@ export const AdminPublicChatFeed: React.FC = () => {
     loadConversations();
   }, []);
 
-  // Subscribe to realtime updates
+  // Subscribe to realtime updates - unique channel name to avoid conflicts
   useEffect(() => {
+    const channelName = `admin-chat-${Date.now()}`;
     const channel = supabase
-      .channel('admin-chat-updates')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -115,8 +116,25 @@ export const AdminPublicChatFeed: React.FC = () => {
           schema: 'public',
           table: 'public_chat_messages'
         },
-        () => {
+        (payload) => {
+          console.log('🔔 New public chat message received:', payload);
           loadConversations();
+          
+          // Create notification for admin if message is from visitor
+          const newMsg = payload.new as any;
+          if (!newMsg.is_from_admin && user) {
+            // Create notification in notifications table
+            supabase.from('notifications').insert({
+              user_id: user.id,
+              type: 'public_chat',
+              title: 'Nouveau message du site',
+              message: `${newMsg.visitor_name || 'Un visiteur'} vous a envoyé un message`,
+              read: false,
+              data: { visitor_id: newMsg.visitor_id }
+            }).then(({ error }) => {
+              if (error) console.error('Error creating notification:', error);
+            });
+          }
         }
       )
       .subscribe();
@@ -124,7 +142,7 @@ export const AdminPublicChatFeed: React.FC = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [user]);
 
   // Auto-scroll when viewing conversation
   useEffect(() => {

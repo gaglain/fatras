@@ -71,12 +71,13 @@ export const PublicChatWidget: React.FC = () => {
     loadMessages();
   }, [isOpen, visitorId]);
 
-  // Subscribe to realtime updates
+  // Subscribe to realtime updates - use unique channel name per visitor
   useEffect(() => {
     if (!isOpen) return;
 
+    const channelName = `public-chat-${visitorId}-${Date.now()}`;
     const channel = supabase
-      .channel('public-chat-updates')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
