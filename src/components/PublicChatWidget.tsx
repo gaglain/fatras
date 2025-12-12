@@ -1,140 +1,143 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { MessageCircle, X, Send, Users, Plus } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { MessageCircle, X, Send, User } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useMessaging } from '@/hooks/useMessaging';
-import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 
-export const PublicChatWidget: React.FC = () => {
-  const { user } = useAuth();
-  const isMobile = useIsMobile();
-  const messagesEndRef = React.useRef<HTMLDivElement>(null);
+interface ChatMessage {
+  id: string;
+  visitor_id: string;
+  visitor_name: string | null;
+  visitor_email: string | null;
+  message: string;
+  is_from_admin: boolean;
+  created_at: string;
+}
+
+// Generate or retrieve visitor ID from localStorage
+const getVisitorId = (): string => {
+  const stored = localStorage.getItem('chat_visitor_id');
+  if (stored) return stored;
   
-  const {
-    channels, 
-    messages, 
-    sendMessage, 
-    createChannel, 
-    createDirectMessage,
-    availableUsers,
-    fetchMessages,
-    fetchAvailableChannels,
-    joinChannel,
-    ensureMembership,
-    markChannelAsRead,
-  } = useMessaging();
+  const newId = `visitor_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  localStorage.setItem('chat_visitor_id', newId);
+  return newId;
+};
+
+export const PublicChatWidget: React.FC = () => {
+  const isMobile = useIsMobile();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const [isOpen, setIsOpen] = useState(false);
-  const [activeChannel, setActiveChannel] = useState<string | null>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
-  const [showChannelCreator, setShowChannelCreator] = useState(false);
-  const [showChannelBrowser, setShowChannelBrowser] = useState(false);
-  const [availableChannels, setAvailableChannels] = useState<any[]>([]);
-  const [newChannelName, setNewChannelName] = useState('');
-  const [selectedUser, setSelectedUser] = useState<string>('');
+  const [visitorName, setVisitorName] = useState('');
+  const [visitorEmail, setVisitorEmail] = useState('');
+  const [isIntroStep, setIsIntroStep] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [visitorId] = useState(getVisitorId);
 
+  // Load existing messages for this visitor
   useEffect(() => {
-    if (channels.length > 0 && !activeChannel) {
-      setActiveChannel(channels[0].id);
-    }
-  }, [channels, activeChannel]);
+    if (!isOpen) return;
 
-  // Charger l'historique et marquer comme lu lors de la sélection (avec auto-adhésion)
+    const loadMessages = async () => {
+      const { data, error } = await supabase
+        .from('public_chat_messages')
+        .select('*')
+        .eq('visitor_id', visitorId)
+        .order('created_at', { ascending: true });
+
+      if (data && !error) {
+        setMessages(data as ChatMessage[]);
+        // If there are existing messages, skip intro
+        if (data.length > 0) {
+          setIsIntroStep(false);
+          // Restore visitor info from first message
+          const firstMsg = data.find(m => !m.is_from_admin);
+          if (firstMsg) {
+            setVisitorName(firstMsg.visitor_name || '');
+            setVisitorEmail(firstMsg.visitor_email || '');
+          }
+        }
+      }
+    };
+
+    loadMessages();
+  }, [isOpen, visitorId]);
+
+  // Subscribe to realtime updates
   useEffect(() => {
-    if (activeChannel) {
-      ensureMembership(activeChannel).finally(() => {
-        fetchMessages(activeChannel);
-        markChannelAsRead(activeChannel);
-      });
-    }
-  }, [activeChannel, ensureMembership, fetchMessages, markChannelAsRead]);
+    if (!isOpen) return;
 
-  const activeChannelData = channels.find(c => c.id === activeChannel);
-  const channelMessages = activeChannel ? messages[activeChannel] || [] : [];
+    const channel = supabase
+      .channel('public-chat-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'public_chat_messages',
+          filter: `visitor_id=eq.${visitorId}`
+        },
+        (payload) => {
+          const newMsg = payload.new as ChatMessage;
+          setMessages(prev => {
+            // Avoid duplicates
+            if (prev.some(m => m.id === newMsg.id)) return prev;
+            return [...prev, newMsg];
+          });
+        }
+      )
+      .subscribe();
 
-  // Scroll automatique
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isOpen, visitorId]);
+
+  // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [channelMessages]);
+  }, [messages]);
+
+  const handleStartChat = () => {
+    if (!visitorName.trim()) {
+      toast.error('Veuillez entrer votre nom');
+      return;
+    }
+    setIsIntroStep(false);
+  };
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !activeChannel) return;
+    if (!newMessage.trim()) return;
 
-    const res = await sendMessage(activeChannel, newMessage.trim());
-    if (!res) {
-      toast.error("L'envoi du message a échoué. Vérifiez vos droits et réessayez.");
-      return;
-    }
-    setNewMessage('');
-  };
+    setIsLoading(true);
+    
+    const { error } = await supabase
+      .from('public_chat_messages')
+      .insert({
+        visitor_id: visitorId,
+        visitor_name: visitorName.trim() || 'Visiteur',
+        visitor_email: visitorEmail.trim() || null,
+        message: newMessage.trim(),
+        is_from_admin: false
+      });
 
-  const handleCreateChannel = async () => {
-    if (!newChannelName.trim()) {
-      toast.error('Le nom du canal est requis');
-      return;
-    }
-
-    try {
-      const channelId = await createChannel(newChannelName, '', 'public', []);
-      if (channelId) {
-        setActiveChannel(channelId);
-        setNewChannelName('');
-        setShowChannelCreator(false);
-        toast.success('Canal créé avec succès');
-      }
-    } catch (error) {
-      console.error('Erreur création canal:', error);
-      toast.error('Erreur lors de la création du canal');
-    }
-  };
-
-  const handleCreateDM = async () => {
-    if (!selectedUser) {
-      toast.error('Veuillez sélectionner un utilisateur');
-      return;
-    }
-
-    try {
-      const channelId = await createDirectMessage(selectedUser);
-      if (channelId) {
-        setActiveChannel(channelId);
-        setSelectedUser('');
-        toast.success('Message privé créé');
-      }
-    } catch (error) {
-      console.error('Erreur création DM:', error);
-      toast.error('Erreur lors de la création du message privé');
-    }
-  };
-
-  const loadAvailableChannels = async () => {
-    try {
-      const channels = await fetchAvailableChannels();
-      setAvailableChannels(channels);
-    } catch (error) {
-      console.error('Error loading available channels:', error);
-    }
-  };
-
-  const handleJoinChannel = async (channelId: string, channelName: string) => {
-    const success = await joinChannel(channelId);
-    if (success) {
-      setActiveChannel(channelId);
-      setShowChannelBrowser(false);
-      toast.success(`Vous avez rejoint #${channelName}`);
-      await loadAvailableChannels();
+    if (error) {
+      console.error('Error sending message:', error);
+      toast.error('Erreur lors de l\'envoi du message');
     } else {
-      toast.error('Erreur lors de l\'adhésion au canal');
+      setNewMessage('');
     }
+    
+    setIsLoading(false);
   };
-
-  if (!user) return null;
 
   return (
     <>
@@ -143,7 +146,7 @@ export const PublicChatWidget: React.FC = () => {
         <div className="fixed bottom-6 right-6 z-50">
           <Button
             onClick={() => setIsOpen(true)}
-            className="rounded-full w-14 h-14 shadow-lg"
+            className="rounded-full w-14 h-14 shadow-lg bg-primary hover:bg-primary/90"
             size="icon"
           >
             <MessageCircle className="h-6 w-6" />
@@ -157,222 +160,119 @@ export const PublicChatWidget: React.FC = () => {
           "shadow-xl z-50 flex flex-col",
           isMobile 
             ? "fixed inset-0 rounded-none h-full w-full" 
-            : "fixed bottom-24 right-6 w-96 h-[500px] z-40"
+            : "fixed bottom-6 right-6 w-96 h-[500px]"
         )}>
-          <CardHeader className={cn(isMobile ? "pb-2" : "pb-3")}>
+          <CardHeader className="pb-3 bg-primary text-primary-foreground rounded-t-lg">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Messages</CardTitle>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <MessageCircle className="h-5 w-5" />
+                Chat Support
+              </CardTitle>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsOpen(false)}
+                className="text-primary-foreground hover:bg-primary/80"
               >
-                {isMobile ? "Masquer" : <X className="h-4 w-4" />}
+                <X className="h-4 w-4" />
               </Button>
             </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowChannelCreator(!showChannelCreator)}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setShowChannelBrowser(!showChannelBrowser);
-                  if (!showChannelBrowser) loadAvailableChannels();
-                }}
-              >
-                Parcourir
-              </Button>
-            </div>
-            
-            {/* Channel Creation */}
-            {showChannelCreator && (
-              <div className="space-y-2 p-3 bg-muted rounded-lg">
-                <div className="space-y-2">
-                  <Input
-                    placeholder="Nom du canal"
-                    value={newChannelName}
-                    onChange={(e) => setNewChannelName(e.target.value)}
-                  />
-                  <div className="flex gap-2">
-                    <Button size="sm" onClick={handleCreateChannel}>
-                      Créer Canal
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowChannelCreator(false)}
-                    >
-                      Annuler
-                    </Button>
-                  </div>
-                </div>
-                
-                <div className="border-t pt-2">
-                  <select
-                    value={selectedUser}
-                    onChange={(e) => setSelectedUser(e.target.value)}
-                    className="w-full p-2 border rounded"
-                  >
-                    <option value="">Sélectionner un utilisateur pour DM</option>
-                    {availableUsers.map((user) => (
-                      <option key={user.user_id} value={user.user_id}>
-                        {user.first_name && user.last_name 
-                          ? `${user.first_name} ${user.last_name}` 
-                          : user.username || user.email}
-                      </option>
-                    ))}
-                  </select>
-                  {selectedUser && (
-                    <Button
-                      size="sm"
-                      onClick={handleCreateDM}
-                      className="mt-2 w-full"
-                    >
-                      Créer Message Privé
-                    </Button>
-            )}
-            
-            {/* Channel Browser */}
-            {showChannelBrowser && (
-              <div className="space-y-2 p-3 bg-muted rounded-lg max-h-48 overflow-y-auto">
-                <h4 className="font-medium text-sm">Canaux disponibles</h4>
-                {availableChannels.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Aucun canal public disponible</p>
-                ) : (
-                  <div className="space-y-1">
-                    {availableChannels.map((channel) => (
-                      <div key={channel.id} className="flex items-center justify-between p-2 bg-background rounded">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-1">
-                            <span className="text-sm font-medium">#{channel.name}</span>
-                            {channel.is_member && <span className="text-xs text-muted-foreground">(Membre)</span>}
-                          </div>
-                          {channel.description && (
-                            <p className="text-xs text-muted-foreground">{channel.description}</p>
-                          )}
-                        </div>
-                        {!channel.is_member && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleJoinChannel(channel.id, channel.name)}
-                          >
-                            Rejoindre
-                          </Button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowChannelBrowser(false)}
-                  className="w-full"
-                >
-                  Fermer
-                </Button>
-              </div>
-            )}
-                </div>
-              </div>
-            )}
           </CardHeader>
 
-          <CardContent className="flex-1 flex flex-col p-0">
-            {/* Channel List */}
-            <div className="border-b p-3">
-              <ScrollArea className="max-h-20">
-                <div className="flex flex-wrap gap-1">
-                  {channels.map((channel) => {
-                    let displayName = channel.name;
-                    if (channel.type === 'direct') {
-                      const otherMember = channel.members?.find((m: any) => m.user_id !== user?.id);
-                      if (otherMember?.user_profile) {
-                        const { first_name, last_name, username } = otherMember.user_profile;
-                        displayName = first_name && last_name ? `${first_name} ${last_name}` : username || 'Utilisateur';
-                      }
-                    }
-                    
-                    return (
-                      <Badge
-                        key={channel.id}
-                        variant={activeChannel === channel.id ? "default" : "outline"}
-                        className="cursor-pointer"
-                        onClick={() => setActiveChannel(channel.id)}
-                      >
-                        {channel.type === 'direct' ? (
-                          <Users className="h-3 w-3 mr-1" />
-                        ) : null}
-                        {displayName.length > 15 
-                          ? `${displayName.substring(0, 15)}...` 
-                          : displayName}
-                      </Badge>
-                    );
-                  })}
+          <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
+            {isIntroStep ? (
+              // Introduction step - collect visitor info
+              <div className="flex-1 flex flex-col justify-center p-6 space-y-4">
+                <div className="text-center mb-4">
+                  <User className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
+                  <h3 className="font-semibold text-lg">Bienvenue !</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Présentez-vous pour commencer la discussion
+                  </p>
                 </div>
-              </ScrollArea>
-            </div>
-
-            {/* Messages */}
-            <ScrollArea className="flex-1 p-3">
-              {activeChannelData ? (
-                <div className="space-y-3">
-                  {channelMessages.map((message) => {
-                    const isMe = message.user_id === user?.id;
-                    const displayName = message.user_profile?.first_name || 'Utilisateur';
+                
+                <Input
+                  placeholder="Votre nom *"
+                  value={visitorName}
+                  onChange={(e) => setVisitorName(e.target.value)}
+                />
+                
+                <Input
+                  type="email"
+                  placeholder="Votre email (optionnel)"
+                  value={visitorEmail}
+                  onChange={(e) => setVisitorEmail(e.target.value)}
+                />
+                
+                <Button onClick={handleStartChat} className="w-full">
+                  Commencer la discussion
+                </Button>
+              </div>
+            ) : (
+              <>
+                {/* Messages */}
+                <ScrollArea className="flex-1 p-4">
+                  <div className="space-y-3">
+                    {messages.length === 0 && (
+                      <div className="text-center text-muted-foreground py-8">
+                        <p>Envoyez votre premier message !</p>
+                        <p className="text-xs mt-1">Notre équipe vous répondra rapidement.</p>
+                      </div>
+                    )}
                     
-                    return (
+                    {messages.map((msg) => (
                       <div
-                        key={message.id}
-                        className={`flex ${isMe ? 'justify-end' : 'justify-start'} animate-fade-in`}
+                        key={msg.id}
+                        className={cn(
+                          "flex",
+                          msg.is_from_admin ? "justify-start" : "justify-end"
+                        )}
                       >
                         <div
-                          className={`max-w-[80%] p-2 rounded-lg transition-all duration-200 hover:shadow-md ${
-                            isMe
-                              ? 'bg-primary text-primary-foreground'
-                              : 'bg-muted'
-                          }`}
+                          className={cn(
+                            "max-w-[80%] p-3 rounded-lg",
+                            msg.is_from_admin
+                              ? "bg-muted"
+                              : "bg-primary text-primary-foreground"
+                          )}
                         >
-                          <p className="text-xs font-medium mb-1">{isMe ? 'Moi' : displayName}</p>
-                          <p className="text-sm">{message.content}</p>
-                          <p className="text-xs opacity-70 mt-1">
-                            {new Date(message.created_at).toLocaleTimeString()}
+                          <p className="text-xs font-medium mb-1 opacity-70">
+                            {msg.is_from_admin ? 'Support' : 'Vous'}
+                          </p>
+                          <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
+                          <p className="text-xs opacity-50 mt-1">
+                            {new Date(msg.created_at).toLocaleTimeString('fr-FR', { 
+                              hour: '2-digit', 
+                              minute: '2-digit' 
+                            })}
                           </p>
                         </div>
                       </div>
-                    );
-                  })}
-                  <div ref={messagesEndRef} />
-                </div>
-              ) : (
-                <div className="text-center text-muted-foreground">
-                  Sélectionnez un canal pour voir les messages
-                </div>
-              )}
-            </ScrollArea>
+                    ))}
+                    <div ref={messagesEndRef} />
+                  </div>
+                </ScrollArea>
 
-            {/* Message Input */}
-            {activeChannelData && (
-              <div className="border-t p-3">
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Tapez votre message..."
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                  />
-                  <Button onClick={handleSendMessage} size="icon">
-                    <Send className="h-4 w-4" />
-                  </Button>
+                {/* Message Input */}
+                <div className="border-t p-3">
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Tapez votre message..."
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && !isLoading && handleSendMessage()}
+                      disabled={isLoading}
+                    />
+                    <Button 
+                      onClick={handleSendMessage} 
+                      size="icon"
+                      disabled={isLoading || !newMessage.trim()}
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              </>
             )}
           </CardContent>
         </Card>
