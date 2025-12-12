@@ -10,6 +10,53 @@ const corsHeaders = {
 interface FormSubmissionPayload {
   formId: string;
   data: Record<string, any>;
+  honeypot?: string;
+}
+
+// Extract contact information from form data
+function extractContactInfo(data: Record<string, any>): {
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  company?: string;
+} {
+  const result: any = {};
+  
+  // Look for common field names (case insensitive)
+  for (const [key, value] of Object.entries(data)) {
+    const lowerKey = key.toLowerCase();
+    
+    if (!result.email && (lowerKey.includes('email') || lowerKey.includes('mail'))) {
+      result.email = String(value).trim();
+    }
+    if (!result.firstName && (lowerKey.includes('prenom') || lowerKey.includes('prénom') || lowerKey.includes('first') || lowerKey === 'nom')) {
+      result.firstName = String(value).trim();
+    }
+    if (!result.lastName && (lowerKey.includes('nom_famille') || lowerKey.includes('last') || lowerKey.includes('surname'))) {
+      result.lastName = String(value).trim();
+    }
+    if (!result.phone && (lowerKey.includes('phone') || lowerKey.includes('tel') || lowerKey.includes('téléphone') || lowerKey.includes('mobile'))) {
+      result.phone = String(value).trim();
+    }
+    if (!result.company && (lowerKey.includes('entreprise') || lowerKey.includes('company') || lowerKey.includes('société') || lowerKey.includes('organisation'))) {
+      result.company = String(value).trim();
+    }
+  }
+  
+  // If we have a combined "name" field, split it
+  if (!result.firstName) {
+    const nameField = Object.entries(data).find(([key]) => 
+      key.toLowerCase() === 'name' || key.toLowerCase() === 'nom'
+    );
+    if (nameField) {
+      const parts = String(nameField[1]).trim().split(' ');
+      result.firstName = parts[0] || '';
+      result.lastName = parts.slice(1).join(' ') || '';
+    }
+  }
+  
+  return result;
 }
 
 serve(async (req: Request) => {
@@ -26,7 +73,17 @@ serve(async (req: Request) => {
       });
     }
 
-    const { formId, data }: FormSubmissionPayload = await req.json();
+    const { formId, data, honeypot }: FormSubmissionPayload = await req.json();
+
+    // Honeypot anti-spam check
+    if (honeypot && honeypot.trim() !== '') {
+      console.log("🤖 Bot detected via honeypot, rejecting submission");
+      // Return fake success to not alert the bot
+      return new Response(
+        JSON.stringify({ success: true, submissionId: "fake_id", emailSent: false }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
 
     if (!formId || !data) {
       return new Response(JSON.stringify({ error: "Missing formId or data" }), {
@@ -61,8 +118,9 @@ serve(async (req: Request) => {
         ? JSON.parse(formRow.settings)
         : formRow.settings || {};
 
-    const sendNotification = settings.sendNotification !== false; // default true
+    const sendNotification = settings.sendNotification !== false;
     const notificationEmail: string | undefined = settings.notificationEmail;
+    const addToContacts = settings.addToContacts !== false; // default true
 
     // Insert submission
     const userAgent = req.headers.get("user-agent") || null;
@@ -90,6 +148,50 @@ serve(async (req: Request) => {
       });
     }
 
+    console.log("✅ Submission saved:", submissionInsert.id);
+
+    // Auto-create contact if enabled and email is present
+    let contactCreated = false;
+    if (addToContacts) {
+      const contactInfo = extractContactInfo(data);
+      
+      if (contactInfo.email) {
+        // Check if contact already exists by email for this user
+        const { data: existingContact } = await supabase
+          .from("contacts")
+          .select("id, email")
+          .eq("user_id", formRow.user_id)
+          .ilike("email", contactInfo.email)
+          .maybeSingle();
+
+        if (!existingContact) {
+          // Create new contact
+          const { error: contactError } = await supabase
+            .from("contacts")
+            .insert({
+              user_id: formRow.user_id,
+              email: contactInfo.email,
+              first_name: contactInfo.firstName || 'Contact',
+              last_name: contactInfo.lastName || 'Formulaire',
+              phone: contactInfo.phone || null,
+              company: contactInfo.company || null,
+              source: `Formulaire: ${formRow.name}`,
+              status: 'prospect',
+              tags: ['formulaire', formRow.name.toLowerCase().replace(/\s+/g, '-')],
+            });
+
+          if (contactError) {
+            console.error("Error creating contact:", contactError);
+          } else {
+            contactCreated = true;
+            console.log("✅ Contact created:", contactInfo.email);
+          }
+        } else {
+          console.log("ℹ️ Contact already exists:", existingContact.email);
+        }
+      }
+    }
+
     // Create a task for the form owner
     const taskTitle = `Nouvelle soumission: ${formRow.name}`;
     const taskDescription =
@@ -108,7 +210,6 @@ serve(async (req: Request) => {
 
     if (taskError) {
       console.error("Error creating task:", taskError);
-      // Continue even if task creation fails
     }
 
     // Send notification email if configured
@@ -129,32 +230,36 @@ serve(async (req: Request) => {
         try {
           const resend = new Resend(resendApiKey);
           const html = `
-            <div>
-              <h2>Nouvelle soumission au formulaire: ${formRow.name}</h2>
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #7C3AED;">Nouvelle soumission: ${formRow.name}</h2>
               <p>Une nouvelle entrée vient d'être enregistrée.</p>
+              ${contactCreated ? '<p style="color: #10B981;">✅ Un nouveau contact a été ajouté automatiquement.</p>' : ''}
               <h3>Détails:</h3>
-              <table style="border-collapse:collapse;">
+              <table style="border-collapse: collapse; width: 100%;">
                 ${Object.entries(data)
                   .map(
                     ([k, v]) => `
                   <tr>
-                    <td style="border:1px solid #eee;padding:8px;font-weight:600;">${k}</td>
-                    <td style="border:1px solid #eee;padding:8px;">${String(v)}</td>
+                    <td style="border: 1px solid #E5E7EB; padding: 8px; font-weight: 600; background: #F9FAFB;">${k}</td>
+                    <td style="border: 1px solid #E5E7EB; padding: 8px;">${String(v)}</td>
                   </tr>`
                   )
                   .join("")}
               </table>
-              <p style="color:#888;">Soumis le: ${submissionInsert.submitted_at}</p>
+              <p style="color: #6B7280; font-size: 12px; margin-top: 20px;">
+                Soumis le: ${new Date(submissionInsert.submitted_at).toLocaleString('fr-FR')}
+              </p>
             </div>
           `;
 
           await resend.emails.send({
-            from: "Formulaires <noreply@fatras-booking.com>",
+            from: "Formulaires <noreply@fatras.net>",
             to: [toEmail],
             subject: `[Formulaire] ${formRow.name} - nouvelle entrée`,
             html,
           });
           emailSent = true;
+          console.log("✅ Email notification sent to:", toEmail);
         } catch (e) {
           console.error("Error sending email:", e);
         }
@@ -168,6 +273,7 @@ serve(async (req: Request) => {
         success: true,
         submissionId: submissionInsert.id,
         emailSent,
+        contactCreated,
       }),
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
