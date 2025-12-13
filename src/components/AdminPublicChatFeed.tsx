@@ -108,23 +108,28 @@ export const AdminPublicChatFeed: React.FC = () => {
   // Note: Notifications are created globally via usePublicChatNotifications hook in Layout
   useEffect(() => {
     const channelName = `admin-chat-feed-${Date.now()}`;
+    console.log('🔔 AdminPublicChatFeed: Setting up realtime subscription:', channelName);
+    
     const channel = supabase
       .channel(channelName)
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'public_chat_messages'
         },
         (payload) => {
-          console.log('🔔 AdminPublicChatFeed: New message received:', payload);
+          console.log('🔔 AdminPublicChatFeed: Message change received:', payload);
           loadConversations();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('🔔 AdminPublicChatFeed: Subscription status:', status);
+      });
 
     return () => {
+      console.log('🔔 AdminPublicChatFeed: Cleaning up subscription');
       supabase.removeChannel(channel);
     };
   }, []);

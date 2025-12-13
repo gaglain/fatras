@@ -17,7 +17,7 @@ export const usePublicChatNotifications = () => {
     // Create unique channel name
     const channelName = `global-public-chat-notif-${user.id}-${Date.now()}`;
     
-    console.log('🔔 Setting up global public chat notification listener');
+    console.log('🔔 usePublicChatNotifications: Setting up listener for user:', user.id);
     
     channelRef.current = supabase
       .channel(channelName)
@@ -30,36 +30,42 @@ export const usePublicChatNotifications = () => {
         },
         async (payload) => {
           const newMsg = payload.new as any;
-          console.log('🔔 Global: New public chat message received:', newMsg);
+          console.log('🔔 usePublicChatNotifications: New message received:', newMsg);
           
           // Only create notification if message is from visitor (not admin)
           if (!newMsg.is_from_admin) {
-            console.log('📨 Creating notification for public chat message');
+            console.log('📨 usePublicChatNotifications: Creating notification for visitor message');
             
-            const { error } = await supabase.from('notifications').insert({
-              user_id: user.id,
-              type: 'public_chat',
-              title: 'Nouveau message du site',
-              message: `${newMsg.visitor_name || 'Un visiteur'}: ${newMsg.message?.substring(0, 50)}${newMsg.message?.length > 50 ? '...' : ''}`,
-              read: false,
-              data: { visitor_id: newMsg.visitor_id, message_id: newMsg.id }
-            });
-            
-            if (error) {
-              console.error('❌ Error creating public chat notification:', error);
-            } else {
-              console.log('✅ Public chat notification created successfully');
+            try {
+              const { data, error } = await supabase.from('notifications').insert({
+                user_id: user.id,
+                type: 'public_chat',
+                title: 'Nouveau message du site',
+                message: `${newMsg.visitor_name || 'Un visiteur'}: ${newMsg.message?.substring(0, 50)}${newMsg.message?.length > 50 ? '...' : ''}`,
+                read: false,
+                data: { visitor_id: newMsg.visitor_id, message_id: newMsg.id }
+              }).select();
+              
+              if (error) {
+                console.error('❌ usePublicChatNotifications: Error creating notification:', error);
+              } else {
+                console.log('✅ usePublicChatNotifications: Notification created:', data);
+              }
+            } catch (err) {
+              console.error('❌ usePublicChatNotifications: Exception:', err);
             }
+          } else {
+            console.log('🔔 usePublicChatNotifications: Skipping admin message');
           }
         }
       )
       .subscribe((status) => {
-        console.log('🔔 Global public chat subscription status:', status);
+        console.log('🔔 usePublicChatNotifications: Subscription status:', status);
       });
 
     return () => {
       if (channelRef.current) {
-        console.log('🔔 Cleaning up global public chat listener');
+        console.log('🔔 usePublicChatNotifications: Cleaning up listener');
         supabase.removeChannel(channelRef.current);
       }
     };
