@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -15,9 +16,24 @@ import { toast } from 'sonner';
 
 export const Messagerie: React.FC = () => {
   const { user } = useAuth();
+  const location = useLocation();
   const [selectedChannel, setSelectedChannel] = useState<string>('');
   const [message, setMessage] = useState('');
-  const [activeTab, setActiveTab] = useState('internal');
+  
+  // Handle navigation state from notification click
+  const navigationState = location.state as { tab?: string; visitorId?: string } | null;
+  const [activeTab, setActiveTab] = useState(navigationState?.tab || 'internal');
+  const [initialVisitorId, setInitialVisitorId] = useState<string | undefined>(navigationState?.visitorId);
+
+  // Clear navigation state after using it
+  useEffect(() => {
+    if (navigationState?.tab) {
+      setActiveTab(navigationState.tab);
+    }
+    if (navigationState?.visitorId) {
+      setInitialVisitorId(navigationState.visitorId);
+    }
+  }, [navigationState]);
   
   const { 
     channels, 
@@ -327,7 +343,7 @@ export const Messagerie: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="public" className="mt-0">
-          <AdminPublicChatFeed />
+          <AdminPublicChatFeed initialVisitorId={initialVisitorId} />
         </TabsContent>
       </Tabs>
     </div>

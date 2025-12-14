@@ -32,12 +32,16 @@ interface Conversation {
   messages: ChatMessage[];
 }
 
-export const AdminPublicChatFeed: React.FC = () => {
+interface AdminPublicChatFeedProps {
+  initialVisitorId?: string;
+}
+
+export const AdminPublicChatFeed: React.FC<AdminPublicChatFeedProps> = ({ initialVisitorId }) => {
   const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
+  const [selectedConversation, setSelectedConversation] = useState<string | null>(initialVisitorId || null);
   const [replyMessage, setReplyMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
@@ -103,6 +107,13 @@ export const AdminPublicChatFeed: React.FC = () => {
   useEffect(() => {
     loadConversations();
   }, []);
+
+  // Auto-select conversation from navigation state
+  useEffect(() => {
+    if (initialVisitorId && conversations.length > 0 && !isLoading) {
+      handleSelectConversation(initialVisitorId);
+    }
+  }, [initialVisitorId, conversations.length, isLoading]);
 
   // Subscribe to realtime updates - unique channel name to avoid conflicts
   // Note: Notifications are created globally via usePublicChatNotifications hook in Layout
