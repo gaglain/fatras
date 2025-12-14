@@ -133,7 +133,10 @@ export const Header: React.FC = () => {
                 </Button>
                 
                 {showNotificationCenter && (
-                  <div className="absolute top-12 right-0 z-50">
+                  <div 
+                    className="absolute top-12 right-0 z-50"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <NotificationCenter onClose={() => setShowNotificationCenter(false)} />
                   </div>
                 )}
