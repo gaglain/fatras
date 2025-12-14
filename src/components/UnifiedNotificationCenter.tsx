@@ -14,13 +14,14 @@ import { useTaskNotifications } from '@/hooks/useTaskNotifications';
 
 interface UnifiedNotification {
   id: string;
-  type: 'email' | 'task' | 'event' | 'contact' | 'message' | 'general';
+  type: 'email' | 'task' | 'event' | 'contact' | 'message' | 'general' | 'public_chat';
   title: string;
   message?: string;
   is_read: boolean;
   created_at: string;
   source: 'email' | 'general' | 'task';
   priority?: 'high' | 'medium' | 'low';
+  data?: any;
 }
 
 export const UnifiedNotificationCenter: React.FC = () => {
@@ -80,7 +81,7 @@ export const UnifiedNotificationCenter: React.FC = () => {
           priority: notif.type === 'task_overdue' ? 'high' : 'medium'
         });
       } else {
-        // Notification générale normale
+        // Notification générale normale (incluant public_chat)
         unified.push({
           id: `general-${notif.id}`,
           type: (notif.type as any) || 'general',
@@ -89,7 +90,8 @@ export const UnifiedNotificationCenter: React.FC = () => {
           is_read: notif.read,
           created_at: notif.created_at,
           source: 'general',
-          priority: 'medium'
+          priority: 'medium',
+          data: notif.data
         });
       }
     });
@@ -146,6 +148,12 @@ export const UnifiedNotificationCenter: React.FC = () => {
         case 'message':
           navigate('/messagerie');
           break;
+        case 'public_chat':
+          // Navigate to messagerie with visitor_id to open the conversation
+          const visitorId = notification.data?.visitor_id;
+          console.log('🔔 Public chat notification clicked, navigating with visitorId:', visitorId);
+          navigate('/messagerie', { state: { tab: 'public', visitorId } });
+          break;
         default:
           break;
       }
@@ -183,6 +191,8 @@ export const UnifiedNotificationCenter: React.FC = () => {
         return <User className="h-4 w-4 text-orange-500" />;
       case 'message':
         return <MessageSquare className="h-4 w-4 text-cyan-500" />;
+      case 'public_chat':
+        return <MessageSquare className="h-4 w-4 text-purple-500" />;
       default:
         return <Bell className={className} />;
     }
