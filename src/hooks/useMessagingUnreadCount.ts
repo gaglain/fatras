@@ -13,12 +13,13 @@ export const useMessagingUnreadCount = () => {
     }
 
     try {
-      // Compter les notifications de type 'message' ou 'public_chat' non lues
+      // Compter uniquement les notifications de type 'message' non lues (messagerie interne)
+      // Les notifications 'public_chat' sont gérées dans le UnifiedNotificationCenter
       const { count, error } = await supabase
         .from('notifications')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id)
-        .in('type', ['message', 'public_chat'])
+        .eq('type', 'message')
         .eq('read', false);
 
       if (error) throw error;
