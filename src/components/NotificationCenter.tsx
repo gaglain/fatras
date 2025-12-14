@@ -31,7 +31,9 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
         navigate('/email');
         break;
       case 'public_chat':
-        navigate('/messagerie');
+        // Navigate to messagerie with visitor_id to open the conversation
+        const visitorId = notification.data?.visitor_id;
+        navigate('/messagerie', { state: { tab: 'public', visitorId } });
         break;
       default:
         break;
