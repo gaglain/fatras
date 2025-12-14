@@ -17,8 +17,12 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
   const { theme } = useTheme();
   const navigate = useNavigate();
 
-  const handleNotificationClick = (notification: any) => {
+  const handleNotificationClick = (e: React.MouseEvent, notification: any) => {
+    e.stopPropagation();
+    console.log('🔔 Notification clicked:', notification.type, notification.data);
+    
     markAsRead(notification.id);
+    
     // Navigation basée sur le type de notification
     switch (notification.type) {
       case 'task_reminder':
@@ -33,6 +37,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
       case 'public_chat':
         // Navigate to messagerie with visitor_id to open the conversation
         const visitorId = notification.data?.visitor_id;
+        console.log('🔔 Navigating to public chat with visitorId:', visitorId);
         navigate('/messagerie', { state: { tab: 'public', visitorId } });
         break;
       default:
@@ -147,7 +152,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
                     : (theme === 'dark' ? '#374151' : '#e5e7eb'),
                   borderWidth: !notification.read ? '2px' : '1px'
                 }}
-                onClick={() => handleNotificationClick(notification)}
+                onClick={(e) => handleNotificationClick(e, notification)}
               >
                 <div className="flex items-start space-x-3">
                   <div className="text-gray-600 dark:text-gray-300">
