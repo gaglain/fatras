@@ -45,19 +45,75 @@ export const MenuManager: React.FC = () => {
   });
 
   useEffect(() => {
-    const savedMenu = localStorage.getItem('websiteMenu') || localStorage.getItem('website_menu');
-    if (savedMenu) {
+    const loadMenuFromSupabase = async () => {
       try {
-        setMenuItems(JSON.parse(savedMenu));
+        const { data: authData } = await supabase.auth.getUser();
+        if (!authData?.user?.id) {
+          console.log('⚠️ Non authentifié, chargement depuis localStorage');
+          loadFromLocalStorage();
+          return;
+        }
+
+        const { data: menuData, error } = await supabase
+          .from('website_menu')
+          .select('*')
+          .eq('user_id', authData.user.id)
+          .order('menu_order', { ascending: true });
+
+        if (error) {
+          console.error('❌ Erreur chargement menu Supabase:', error);
+          loadFromLocalStorage();
+          return;
+        }
+
+        if (menuData && menuData.length > 0) {
+          const normalized = menuData.map((item, idx) => ({
+            id: item.id,
+            label: item.label,
+            url: item.url,
+            visible: item.is_visible ?? true,
+            order: item.menu_order ?? (idx + 1),
+            target: (item.target as '_self' | '_blank') || '_self',
+            isSystem: false
+          }));
+          console.log('✅ Menu chargé depuis Supabase:', normalized.length, 'items');
+          setMenuItems(normalized);
+          localStorage.setItem('websiteMenu', JSON.stringify(normalized));
+        } else {
+          console.log('📝 Aucun menu en BDD, utilisation des valeurs par défaut');
+          setMenuItems(defaultMenuItems);
+        }
       } catch (error) {
-        console.error('Erreur chargement menu:', error);
-        localStorage.setItem('websiteMenu', JSON.stringify(defaultMenuItems));
-        localStorage.setItem('website_menu', JSON.stringify(defaultMenuItems));
+        console.error('❌ Erreur chargement menu:', error);
+        loadFromLocalStorage();
       }
-    } else {
-      localStorage.setItem('websiteMenu', JSON.stringify(defaultMenuItems));
-      localStorage.setItem('website_menu', JSON.stringify(defaultMenuItems));
-    }
+    };
+
+    const loadFromLocalStorage = () => {
+      const savedMenu = localStorage.getItem('websiteMenu') || localStorage.getItem('website_menu');
+      if (savedMenu) {
+        try {
+          const parsed = JSON.parse(savedMenu);
+          const normalized = parsed.map((item: any, idx: number) => ({
+            id: item.id,
+            label: item.label,
+            url: item.url || item.path || '/',
+            visible: item.visible ?? item.is_visible ?? true,
+            order: item.order ?? item.menu_order ?? (idx + 1),
+            target: item.target || '_self',
+            isSystem: item.isSystem ?? false
+          }));
+          setMenuItems(normalized);
+        } catch (error) {
+          console.error('Erreur chargement menu localStorage:', error);
+          setMenuItems(defaultMenuItems);
+        }
+      } else {
+        setMenuItems(defaultMenuItems);
+      }
+    };
+
+    loadMenuFromSupabase();
   }, []);
 
   const saveMenu = async () => {
