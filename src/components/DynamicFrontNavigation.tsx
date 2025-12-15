@@ -62,14 +62,14 @@ export const DynamicFrontNavigation: React.FC = () => {
     setIsLoading(true);
     
     try {
-      // Tenter de charger depuis Supabase d'abord
-      const { data: menuData, error } = await import('@/integrations/supabase/client').then(m => 
-        m.supabase
-          .from('website_menu')
-          .select('*')
-          .eq('is_visible', true)
-          .order('menu_order', { ascending: true })
-      );
+      const { supabase } = await import('@/integrations/supabase/client');
+      
+      // Charger le menu depuis Supabase
+      const { data: menuData, error } = await supabase
+        .from('website_menu')
+        .select('*')
+        .eq('is_visible', true)
+        .order('menu_order', { ascending: true });
 
       if (!error && menuData && menuData.length > 0) {
         const normalized = menuData.map((item: any) => ({
@@ -87,36 +87,39 @@ export const DynamicFrontNavigation: React.FC = () => {
         // Fallback vers localStorage
         loadFromLocalStorage();
       }
+
+      // Charger le nom du site et logo depuis website_designs (Supabase en priorité)
+      const { data: designData } = await supabase
+        .from('website_designs')
+        .select('site_name, logo')
+        .limit(1)
+        .maybeSingle();
+
+      if (designData) {
+        if (designData.site_name) {
+          setSiteName(designData.site_name);
+          console.log('✅ Navigation - Site name from Supabase:', designData.site_name);
+        }
+        if (designData.logo) {
+          setLogo(designData.logo);
+        }
+      } else {
+        // Fallback localStorage pour le nom/logo
+        const settings = safeParse('websiteSettings') || safeParse('site_settings');
+        if (settings?.siteName) setSiteName(settings.siteName);
+        if (settings?.logo) setLogo(settings.logo);
+        
+        const design = safeParse('websiteDesign');
+        if (design?.logo) setLogo(design.logo);
+        if (design?.siteName) setSiteName(design.siteName);
+
+        const config = safeParse('websiteConfig');
+        if (config?.logo) setLogo(config.logo);
+        if (config?.siteName) setSiteName(config.siteName);
+      }
     } catch (err) {
       console.error('❌ Navigation - Error loading from Supabase:', err);
       loadFromLocalStorage();
-    }
-
-    // Charger les paramètres avec parse sécurisé
-    const settings = safeParse('websiteSettings') || safeParse('site_settings');
-    if (settings?.siteName) {
-      setSiteName(settings.siteName);
-    }
-    if (settings?.logo) {
-      setLogo(settings.logo);
-    }
-    
-    // Charger le design avec parse sécurisé
-    const design = safeParse('websiteDesign');
-    if (design?.logo) {
-      setLogo(design.logo);
-    }
-    if (design?.siteName) {
-      setSiteName(design.siteName);
-    }
-
-    // Charger la configuration unifiée avec parse sécurisé
-    const config = safeParse('websiteConfig');
-    if (config?.logo) {
-      setLogo(config.logo);
-    }
-    if (config?.siteName) {
-      setSiteName(config.siteName);
     }
     
     setIsLoading(false);
