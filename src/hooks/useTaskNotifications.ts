@@ -81,12 +81,14 @@ export const useTaskNotifications = () => {
         const key = `overdue:${task.id}`;
         if (hasShownToast(key)) continue;
 
+        const targetUserId = task.assigned_to || task.user_id;
         const { data: existing, error: existingError } = await supabase
           .from('notifications')
           .select('id')
+          .eq('user_id', targetUserId)
           .eq('type', 'task_overdue')
-          .eq('data->>task_id', String(task.id))
-          .maybeSingle();
+          .filter('data->task_id', 'eq', task.id)
+          .limit(1);
 
         if (existingError) {
           console.warn('⚠️ Impossible de vérifier les notifications existantes (overdue):', existingError);
@@ -95,7 +97,7 @@ export const useTaskNotifications = () => {
           continue;
         }
 
-        if (!existing) {
+        if (!existing || existing.length === 0) {
           await supabase
             .from('notifications')
             .insert({
@@ -151,13 +153,15 @@ export const useTaskNotifications = () => {
         const key = `due_soon:${task.id}:${today}`;
         if (hasShownToast(key)) continue;
 
+        const targetUserId = task.assigned_to || task.user_id;
         const { data: existing, error: existingError } = await supabase
           .from('notifications')
           .select('id')
+          .eq('user_id', targetUserId)
           .eq('type', 'task_due_soon')
-          .eq('data->>task_id', String(task.id))
+          .filter('data->task_id', 'eq', task.id)
           .gte('created_at', `${today}T00:00:00Z`)
-          .maybeSingle();
+          .limit(1);
 
         if (existingError) {
           console.warn('⚠️ Impossible de vérifier les notifications existantes (due_soon):', existingError);
@@ -176,7 +180,7 @@ export const useTaskNotifications = () => {
           message = `La tâche "${task.title}" est due dans ${hoursUntilDue} heures`;
         }
 
-        if (!existing) {
+        if (!existing || existing.length === 0) {
           await supabase
             .from('notifications')
             .insert({
