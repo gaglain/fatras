@@ -277,6 +277,11 @@ export const WebsiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({
             { user_id: user.id, setting_key: 'websiteConfig', setting_value: JSON.stringify(updatedConfig) },
             { user_id: user.id, setting_key: 'websiteDesign', setting_value: JSON.stringify(legacyDesign) },
             { user_id: user.id, setting_key: 'websiteSettings', setting_value: JSON.stringify(legacySettings) },
+
+            // Branding global de l'app (utilisé ailleurs dans le produit)
+            { user_id: user.id, setting_key: 'company_name', setting_value: updatedConfig.siteName },
+            { user_id: user.id, setting_key: 'company_logo', setting_value: updatedConfig.logo },
+            { user_id: user.id, setting_key: 'favicon', setting_value: updatedConfig.favicon },
           ];
           const { error } = await supabase
             .from('app_settings')
