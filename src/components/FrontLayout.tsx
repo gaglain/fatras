@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { DynamicFrontNavigation } from './DynamicFrontNavigation';
@@ -8,6 +7,7 @@ import { PublicChatWidget } from './PublicChatWidget';
 import { RGPDModule } from './RGPDModule';
 import { GoogleAnalytics } from './GoogleAnalytics';
 import { Facebook, Instagram, Twitter, Youtube, Linkedin } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface FrontLayoutProps {
   children?: React.ReactNode;
@@ -52,42 +52,54 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
   useEffect(() => {
     console.log('🎯 FrontLayout mounted - Starting sync');
     
-    const loadSettings = () => {
-      // 1) Nouvelle clé back-office (SiteSettings)
-      const savedSiteSettings = localStorage.getItem('site_settings');
-      // 2) Clé standard historique
-      const savedWebsiteSettings = localStorage.getItem('websiteSettings');
-      // 3) Configuration unifiée (WebsiteConfigManager)
-      const savedWebsiteConfig = localStorage.getItem('websiteConfig');
-
+    const loadSettings = async () => {
       try {
-        let merged: any = { ...settings };
-        if (savedWebsiteSettings) {
-          const parsed = JSON.parse(savedWebsiteSettings);
-          merged = { ...merged, ...parsed };
+        // Charger depuis Supabase en priorité
+        const { data: designData } = await supabase
+          .from('website_designs')
+          .select('*')
+          .limit(1)
+          .maybeSingle();
+        
+        const { data: appSettings } = await supabase
+          .from('app_settings')
+          .select('setting_key, setting_value')
+          .in('setting_key', ['contact_email', 'contact_phone', 'address', 'social_facebook', 'social_instagram', 'social_twitter', 'social_youtube', 'social_linkedin', 'google_analytics_id']);
+
+        let merged: WebsiteSettings = { ...settings };
+        
+        if (designData) {
+          merged.siteName = designData.site_name || merged.siteName;
+          merged.siteDescription = merged.siteDescription;
+          console.log('📦 Loaded site name from Supabase:', designData.site_name);
         }
-        if (savedSiteSettings) {
-          const parsedSite = JSON.parse(savedSiteSettings);
-          merged = {
-            ...merged,
-            ...parsedSite,
-            socialLinks: { ...(merged.socialLinks || {}), ...(parsedSite.socialLinks || {}) }
+        
+        if (appSettings) {
+          const settingsMap = Object.fromEntries(
+            appSettings.map(s => [s.setting_key, s.setting_value])
+          );
+          merged.contactEmail = settingsMap['contact_email'] || merged.contactEmail;
+          merged.contactPhone = settingsMap['contact_phone'] || merged.contactPhone;
+          merged.address = settingsMap['address'] || merged.address;
+          merged.googleAnalyticsId = settingsMap['google_analytics_id'];
+          merged.socialLinks = {
+            facebook: settingsMap['social_facebook'] || '',
+            instagram: settingsMap['social_instagram'] || '',
+            twitter: settingsMap['social_twitter'] || '',
+            youtube: settingsMap['social_youtube'] || '',
+            linkedin: settingsMap['social_linkedin'] || ''
           };
         }
-        if (savedWebsiteConfig) {
-          const parsedConfig = JSON.parse(savedWebsiteConfig);
-          merged = {
-            ...merged,
-            // champs principaux
-            siteName: parsedConfig.siteName || merged.siteName,
-            siteDescription: parsedConfig.siteDescription || merged.siteDescription,
-            contactEmail: parsedConfig.contactEmail || merged.contactEmail,
-            contactPhone: parsedConfig.contactPhone || merged.contactPhone,
-            address: parsedConfig.address || merged.address,
-            // réseaux sociaux
-            socialLinks: { ...(merged.socialLinks || {}), ...(parsedConfig.socialLinks || {}) }
-          };
+
+        // Fallback sur localStorage si rien en base
+        if (!designData) {
+          const savedWebsiteSettings = localStorage.getItem('websiteSettings');
+          if (savedWebsiteSettings) {
+            const parsed = JSON.parse(savedWebsiteSettings);
+            merged = { ...merged, ...parsed };
+          }
         }
+
         setSettings(merged);
         if (merged.siteName) document.title = merged.siteName;
       } catch (error) {

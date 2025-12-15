@@ -57,12 +57,30 @@ export const FrontHome: React.FC = () => {
     setLoading(true);
     
     try {
-      // Charger les paramètres du site
-      const savedSettings = localStorage.getItem('websiteSettings');
-      if (savedSettings) {
-        const settings = JSON.parse(savedSettings);
-        setSiteSettings(settings);
-        console.log('⚙️ Site settings loaded:', settings.siteName);
+      // Charger les paramètres du site depuis Supabase
+      const { data: designData } = await supabase
+        .from('website_designs')
+        .select('*')
+        .limit(1)
+        .maybeSingle();
+      
+      if (designData) {
+        setSiteSettings({
+          siteName: designData.site_name || 'Mon Site',
+          siteDescription: '',
+          logo: designData.logo,
+          primaryColor: designData.primary_color,
+          secondaryColor: designData.secondary_color
+        });
+        console.log('⚙️ Site settings loaded from Supabase:', designData.site_name);
+      } else {
+        // Fallback sur localStorage
+        const savedSettings = localStorage.getItem('websiteSettings');
+        if (savedSettings) {
+          const settings = JSON.parse(savedSettings);
+          setSiteSettings(settings);
+          console.log('⚙️ Site settings loaded from localStorage:', settings.siteName);
+        }
       }
 
       // Charger les événements depuis Supabase
@@ -80,24 +98,27 @@ export const FrontHome: React.FC = () => {
         console.log('🎭 Events loaded:', eventsData?.length);
       }
 
-      // Charger les artistes depuis les données locales ou créer des données d'exemple
-      try {
-        const savedArtists = localStorage.getItem('backoffice_artists');
-        if (savedArtists) {
-          const parsedArtists = JSON.parse(savedArtists);
-          setArtists(parsedArtists.slice(0, 6) || []);
-          console.log('🎤 Artists loaded from localStorage:', parsedArtists.length);
-        } else {
-          // Données d'exemple
-          setArtists([
-            { id: '1', name: 'Spectacle Jazz Fusion', genre: 'Jazz', bio: 'Un spectacle unique mêlant jazz moderne et fusion.' },
-            { id: '2', name: 'Concert Classique', genre: 'Classique', bio: 'Soirée de musique classique avec orchestre.' },
-            { id: '3', name: 'Show Rock Énergie', genre: 'Rock', bio: 'Concert rock avec une énergie débordante.' }
-          ]);
+      // Charger les artistes depuis Supabase
+      const { data: artistsData, error: artistsError } = await supabase
+        .from('centralized_artists')
+        .select('*')
+        .limit(6);
+
+      if (!artistsError && artistsData?.length) {
+        setArtists(artistsData);
+        console.log('🎤 Artists loaded from Supabase:', artistsData.length);
+      } else {
+        // Fallback sur localStorage
+        try {
+          const savedArtists = localStorage.getItem('backoffice_artists');
+          if (savedArtists) {
+            const parsedArtists = JSON.parse(savedArtists);
+            setArtists(parsedArtists.slice(0, 6) || []);
+          }
+        } catch (error) {
+          console.error('❌ Error loading artists:', error);
+          setArtists([]);
         }
-      } catch (error) {
-        console.error('❌ Error loading artists:', error);
-        setArtists([]);
       }
 
       // Charger la page d'accueil personnalisée
