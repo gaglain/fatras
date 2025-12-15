@@ -54,17 +54,33 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
     
     const loadSettings = async () => {
       try {
+        // Identifier l'utilisateur courant (si connecté) afin de charger LES bons paramètres
+        const { data: authData } = await supabase.auth.getUser();
+        const userId = authData?.user?.id;
+
         // Charger depuis Supabase en priorité
-        const { data: designData } = await supabase
-          .from('website_designs')
-          .select('*')
-          .limit(1)
-          .maybeSingle();
+        const designQuery = supabase.from('website_designs').select('*').limit(1);
+        const { data: designData } = userId
+          ? await designQuery.eq('user_id', userId).maybeSingle()
+          : await designQuery.maybeSingle();
         
-        const { data: appSettings } = await supabase
+        const settingsQuery = supabase
           .from('app_settings')
           .select('setting_key, setting_value')
-          .in('setting_key', ['contact_email', 'contact_phone', 'address', 'social_facebook', 'social_instagram', 'social_twitter', 'social_youtube', 'social_linkedin', 'google_analytics_id']);
+          .in('setting_key', [
+            'contact_email',
+            'contact_phone',
+            'address',
+            'social_facebook',
+            'social_instagram',
+            'social_twitter',
+            'social_youtube',
+            'social_linkedin',
+            'google_analytics_id'
+          ]);
+        const { data: appSettings } = userId
+          ? await settingsQuery.eq('user_id', userId)
+          : await settingsQuery;
 
         let merged: WebsiteSettings = { ...settings };
         

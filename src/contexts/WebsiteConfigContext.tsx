@@ -272,6 +272,7 @@ export const WebsiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({
     if (user) {
       (async () => {
         try {
+          // 1) app_settings (source historique / config unifiée)
           const payload = [
             { user_id: user.id, setting_key: 'websiteConfig', setting_value: JSON.stringify(updatedConfig) },
             { user_id: user.id, setting_key: 'websiteDesign', setting_value: JSON.stringify(legacyDesign) },
@@ -282,6 +283,25 @@ export const WebsiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({
             .upsert(payload, { onConflict: 'user_id,setting_key' });
           if (error) console.error('❌ Persist website config failed:', error);
           else console.log('✅ Website config persisted to Supabase');
+
+          // 2) website_designs (consommé par plusieurs composants du front)
+          const designRow = {
+            user_id: user.id,
+            site_name: updatedConfig.siteName,
+            logo: updatedConfig.logo,
+            primary_color: updatedConfig.primaryColor,
+            secondary_color: updatedConfig.secondaryColor,
+            accent_color: updatedConfig.accentColor,
+            header_bg: updatedConfig.headerBg,
+            footer_bg: updatedConfig.footerBg,
+            text_color: updatedConfig.textColor,
+            link_color: updatedConfig.linkColor,
+          };
+          const { error: designError } = await supabase
+            .from('website_designs')
+            .upsert([designRow], { onConflict: 'user_id' });
+          if (designError) console.error('❌ Persist website_designs failed:', designError);
+          else console.log('✅ website_designs updated');
         } catch (e) {
           console.error('❌ Persist website config exception:', e);
         }
