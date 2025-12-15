@@ -56,12 +56,73 @@ export const DynamicFrontNavigation: React.FC = () => {
     }
   };
 
-  // Fonction de chargement des données
-  const loadAllData = React.useCallback(() => {
+  // Fonction de chargement des données depuis Supabase puis localStorage fallback
+  const loadAllData = React.useCallback(async () => {
     console.log('📄 Navigation - Loading data...');
     setIsLoading(true);
     
-    // Charger le menu avec parse sécurisé
+    try {
+      // Tenter de charger depuis Supabase d'abord
+      const { data: menuData, error } = await import('@/integrations/supabase/client').then(m => 
+        m.supabase
+          .from('website_menu')
+          .select('*')
+          .eq('is_visible', true)
+          .order('menu_order', { ascending: true })
+      );
+
+      if (!error && menuData && menuData.length > 0) {
+        const normalized = menuData.map((item: any) => ({
+          id: item.id,
+          label: item.label,
+          path: item.url,
+          visible: item.is_visible ?? true,
+          order: item.menu_order ?? 0
+        }));
+        
+        console.log('✅ Navigation - Menu loaded from Supabase:', normalized.length, 'items');
+        setMenuItems(normalized);
+        localStorage.setItem('websiteMenu', JSON.stringify(menuData));
+      } else {
+        // Fallback vers localStorage
+        loadFromLocalStorage();
+      }
+    } catch (err) {
+      console.error('❌ Navigation - Error loading from Supabase:', err);
+      loadFromLocalStorage();
+    }
+
+    // Charger les paramètres avec parse sécurisé
+    const settings = safeParse('websiteSettings') || safeParse('site_settings');
+    if (settings?.siteName) {
+      setSiteName(settings.siteName);
+    }
+    if (settings?.logo) {
+      setLogo(settings.logo);
+    }
+    
+    // Charger le design avec parse sécurisé
+    const design = safeParse('websiteDesign');
+    if (design?.logo) {
+      setLogo(design.logo);
+    }
+    if (design?.siteName) {
+      setSiteName(design.siteName);
+    }
+
+    // Charger la configuration unifiée avec parse sécurisé
+    const config = safeParse('websiteConfig');
+    if (config?.logo) {
+      setLogo(config.logo);
+    }
+    if (config?.siteName) {
+      setSiteName(config.siteName);
+    }
+    
+    setIsLoading(false);
+  }, []);
+
+  const loadFromLocalStorage = React.useCallback(() => {
     const rawMenu = safeParse('websiteMenu') || safeParse('website_menu', []);
     if (rawMenu) {
       const baseArr = Array.isArray(rawMenu)
@@ -92,13 +153,13 @@ export const DynamicFrontNavigation: React.FC = () => {
         .filter((item: any) => item.visible)
         .sort((a: any, b: any) => a.order - b.order);
 
-      // Deduplicate by label+normalized path to avoid double menu entries
+      // Deduplicate by label+normalized path
       const seen = new Set<string>();
       const deduped = visibleItems.filter((item: any) => {
         const label = String(item.label || '').trim().toLowerCase();
         const path = String(item.path || '')
-          .replace(/\/$/, '') // remove trailing slash
-          .replace(/^\/http(s)?:\/\//, 'http$1://'); // fix accidental leading slash before http
+          .replace(/\/$/, '')
+          .replace(/^\/http(s)?:\/\//, 'http$1://');
         const key = `${label}|${path}`;
         if (seen.has(key)) return false;
         seen.add(key);
@@ -106,45 +167,10 @@ export const DynamicFrontNavigation: React.FC = () => {
       });
 
       setMenuItems(deduped);
-      console.log('✅ Navigation - Menu loaded:', deduped.length, 'items');
+      console.log('✅ Navigation - Menu loaded from localStorage:', deduped.length, 'items');
     } else {
       setMenuItems([]);
     }
-
-    // Charger les paramètres avec parse sécurisé
-    const settings = safeParse('websiteSettings') || safeParse('site_settings');
-    if (settings?.siteName) {
-      setSiteName(settings.siteName);
-      console.log('⚙️ Navigation - Site name from settings:', settings.siteName);
-    }
-    if (settings?.logo) {
-      setLogo(settings.logo);
-      console.log('⚙️ Navigation - Logo from settings');
-    }
-    
-    // Charger le design avec parse sécurisé
-    const design = safeParse('websiteDesign');
-    if (design?.logo) {
-      setLogo(design.logo);
-      console.log('🎨 Navigation - Logo loaded');
-    }
-    if (design?.siteName) {
-      setSiteName(design.siteName);
-      console.log('🎨 Navigation - Site name from design:', design.siteName);
-    }
-
-    // Charger la configuration unifiée avec parse sécurisé
-    const config = safeParse('websiteConfig');
-    if (config?.logo) {
-      setLogo(config.logo);
-      console.log('🧩 Navigation - Logo from websiteConfig');
-    }
-    if (config?.siteName) {
-      setSiteName(config.siteName);
-      console.log('🧩 Navigation - Site name from websiteConfig:', config.siteName);
-    }
-    
-    setIsLoading(false);
   }, []);
 
   // Charger les données initiales
