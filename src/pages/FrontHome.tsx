@@ -57,12 +57,14 @@ export const FrontHome: React.FC = () => {
     setLoading(true);
     
     try {
-      // Charger les paramètres du site depuis Supabase
-      const { data: designData } = await supabase
-        .from('website_designs')
-        .select('*')
-        .limit(1)
-        .maybeSingle();
+      // Charger les paramètres du site depuis Supabase (bons paramètres si connecté)
+      const { data: authData } = await supabase.auth.getUser();
+      const userId = authData?.user?.id;
+
+      const designQuery = supabase.from('website_designs').select('*').limit(1);
+      const { data: designData } = userId
+        ? await designQuery.eq('user_id', userId).maybeSingle()
+        : await designQuery.maybeSingle();
       
       if (designData) {
         setSiteSettings({
