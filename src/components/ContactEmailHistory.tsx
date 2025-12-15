@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useUnifiedEmails } from '@/hooks/useUnifiedEmails';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { EmailComposer } from '@/components/email/EmailComposer';
+import { sanitizeEmailHtml } from '@/lib/sanitize';
 
 interface ContactEmailHistoryProps {
   contactId: string;
@@ -35,7 +36,7 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
     const base = email?.html_content || email?.content || '';
     return stripTags(base).slice(0, 120);
   };
-  const sanitizeHtml = (s: string) => s ? s.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '') : '';
+  // Using sanitizeEmailHtml from @/lib/sanitize instead of inline function
 
   // Filter emails for this specific contact - memoized to avoid recalculating on every render
   const contactEmails = React.useMemo(() => 
@@ -298,7 +299,7 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
               <div 
                 className="prose prose-sm max-w-none"
                 dangerouslySetInnerHTML={{ 
-                  __html: sanitizeHtml(selectedEmail.html_content) 
+                  __html: sanitizeEmailHtml(selectedEmail.html_content) 
                 }} 
               />
             ) : (
