@@ -26,6 +26,7 @@ import { useUnifiedEmails, UnifiedEmail } from '@/hooks/useUnifiedEmails';
 import { useEmailNotifications } from '@/hooks/useEmailNotifications';
 import { useNylasEmail } from '@/hooks/useNylasEmail';
 import { supabase } from '@/integrations/supabase/client';
+import { sanitizeEmailHtml } from '@/lib/sanitize';
 
 export const UnifiedEmailManager: React.FC = () => {
   const { emails, isLoading, loadEmails, markAsRead, getEmailsByDirection, getUnreadCount } = useUnifiedEmails();
@@ -300,7 +301,7 @@ export const UnifiedEmailManager: React.FC = () => {
             
             <div className="prose prose-sm max-w-none">
               {selectedEmail.html_content ? (
-                <div dangerouslySetInnerHTML={{ __html: selectedEmail.html_content }} />
+                <div dangerouslySetInnerHTML={{ __html: sanitizeEmailHtml(selectedEmail.html_content) }} />
               ) : (
                 <div className="whitespace-pre-wrap">{selectedEmail.content}</div>
               )}

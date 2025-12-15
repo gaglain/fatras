@@ -12,6 +12,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useEmailSync } from '@/hooks/useEmailSync';
 import { toast } from 'sonner';
 import { EmailComposer } from '@/components/email/EmailComposer';
+import { sanitizeEmailHtml } from '@/lib/sanitize';
 
 interface InboundEmail {
   id: string;
@@ -291,7 +292,7 @@ export const EmailInbox: React.FC = () => {
             <div className="prose prose-sm max-w-none">
               {selectedEmail.html_content ? (
                 <div className="bg-white p-4 rounded border">
-                  <div dangerouslySetInnerHTML={{ __html: selectedEmail.html_content }} />
+                  <div dangerouslySetInnerHTML={{ __html: sanitizeEmailHtml(selectedEmail.html_content) }} />
                 </div>
               ) : (
                 <div className="whitespace-pre-wrap bg-muted/30 p-4 rounded">{selectedEmail.content}</div>

@@ -1,10 +1,10 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { TextBlockContent } from '../types';
+import { sanitizeHtml } from '@/lib/sanitize';
 
 interface TextBlockProps {
   content: TextBlockContent;
@@ -86,7 +86,7 @@ export const TextBlock: React.FC<TextBlockProps> = ({ content, isEditing, onChan
       <div
         className={`${getTextSizeClass(content.fontSize)} text-${content.alignment}`}
         onClick={() => isEditing && setIsEditingText(true)}
-        dangerouslySetInnerHTML={{ __html: content.content }}
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.content) }}
       />
     </div>
   );
