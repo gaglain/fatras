@@ -1,0 +1,12 @@
+export { HeroEditor } from './HeroEditor';
+export { TextEditor } from './TextEditor';
+export { ImageEditor } from './ImageEditor';
+export { ColumnsEditor } from './ColumnsEditor';
+export { TestimonialsEditor } from './TestimonialsEditor';
+export { FaqEditor } from './FaqEditor';
+export { PricingEditor } from './PricingEditor';
+export { TeamEditor } from './TeamEditor';
+export { CounterEditor } from './CounterEditor';
+export { CtaEditor } from './CtaEditor';
+export { GalleryEditor } from './GalleryEditor';
+export { SpacerEditor } from './SpacerEditor';
