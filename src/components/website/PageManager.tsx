@@ -294,6 +294,7 @@ export const PageManager: React.FC = () => {
                           onChange={(e) => setNewPageData(prev => ({ ...prev, type: e.target.value as WebPage['type'] }))}
                         >
                           <option value="page">Page standard</option>
+                          <option value="home">Page d'accueil</option>
                           <option value="artists">Page artistes</option>
                           <option value="events">Page événements</option>
                           <option value="shop">Page boutique</option>
@@ -361,7 +362,9 @@ export const PageManager: React.FC = () => {
                             size="sm"
                             onClick={() => {
                               const slug = page.slug.replace(/^\/+/, '');
-                              window.open(`/front/${slug}`, '_blank');
+                              // Homepage (slug "/" or empty) should go to /front
+                              const url = slug === '' || page.slug === '/' ? '/front' : `/front/${slug}`;
+                              window.open(url, '_blank');
                             }}
                           >
                             <Eye className="h-4 w-4 mr-1" />

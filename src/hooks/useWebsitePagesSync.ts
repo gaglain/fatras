@@ -12,6 +12,7 @@ export const useWebsitePagesSync = () => {
   const lastSyncTime = useRef(0);
   const syncInProgress = useRef(false);
   const isInitialized = useRef(false);
+  const userIdRef = useRef<string | null>(null);
 
   const loadPages = useCallback(async (): Promise<WebsitePage[]> => {
     if (syncInProgress.current) return pages;
@@ -41,36 +42,74 @@ export const useWebsitePagesSync = () => {
         return [];
       }
 
-      if (pagesData && pagesData.length > 0) {
+      if (pagesData) {
         console.log('✅ Pages loaded from Supabase:', pagesData.length);
         localStorage.setItem('websitePages', JSON.stringify(pagesData));
         setPages(pagesData);
-        return pagesData;
-      } else {
-        // Create default page if none exist
-        const defaultPages: Partial<WebsitePage>[] = [{
-          title: 'Accueil',
-          slug: '/',
-          status: 'published',
-          content: [{
-            id: 'hero-1',
-            type: 'hero',
-            order: 0,
-            content: {
-              title: 'Bienvenue sur notre site',
-              subtitle: 'Découvrez notre univers musical',
-              backgroundImage: '',
-              buttonText: 'En savoir plus',
-              buttonLink: '#'
-            }
-          }],
-          meta_description: 'Page d\'accueil - Découvrez notre univers musical',
-          page_type: 'page'
-        }];
         
-        console.log('📄 No pages found, using defaults');
-        return [];
+        // Check if homepage exists
+        const hasHomepage = pagesData.some(p => 
+          p.slug === '/' || p.slug === '' || p.slug === 'home' || p.slug === 'accueil'
+        );
+        
+        // Create homepage if it doesn't exist and user is logged in
+        if (!hasHomepage && user?.id) {
+          console.log('📄 No homepage found, creating default...');
+          
+          const defaultHomepage = {
+            user_id: user.id,
+            title: 'Accueil',
+            slug: '/',
+            status: 'published' as const,
+            content: [
+              {
+                id: 'hero-1',
+                type: 'hero',
+                order: 0,
+                content: {
+                  title: 'Bienvenue sur notre site',
+                  subtitle: 'Découvrez notre univers musical',
+                  backgroundImage: '',
+                  buttonText: 'En savoir plus',
+                  buttonLink: '/front/artists'
+                }
+              },
+              {
+                id: 'events-1',
+                type: 'events',
+                order: 1,
+                content: { title: 'Nos Spectacles à Venir', showAll: false }
+              },
+              {
+                id: 'artists-1',
+                type: 'artists',
+                order: 2,
+                content: { title: 'Nos Spectacles', showAll: false }
+              }
+            ],
+            meta_description: 'Page d\'accueil',
+            page_type: 'home'
+          };
+          
+          const { data: newPage, error: insertError } = await supabase
+            .from('website_pages')
+            .insert([defaultHomepage])
+            .select()
+            .single();
+          
+          if (!insertError && newPage) {
+            console.log('✅ Default homepage created');
+            const updatedPages = [newPage, ...pagesData];
+            localStorage.setItem('websitePages', JSON.stringify(updatedPages));
+            setPages(updatedPages);
+            return updatedPages;
+          }
+        }
+        
+        return pagesData;
       }
+      
+      return [];
     } catch (error) {
       console.error('❌ Error loading pages:', error);
       return [];
@@ -202,13 +241,14 @@ export const useWebsitePagesSync = () => {
     return await loadPages();
   }, [loadPages]);
 
-  // Initialize once
+  // Initialize once per user
   useEffect(() => {
-    if (!isInitialized.current) {
+    if (!isInitialized.current || (user?.id && userIdRef.current !== user.id)) {
       isInitialized.current = true;
+      userIdRef.current = user?.id || null;
       loadPages();
     }
-  }, []);
+  }, [user?.id, loadPages]);
 
   return { 
     pages,
