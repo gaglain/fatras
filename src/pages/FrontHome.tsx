@@ -469,16 +469,15 @@ export const FrontHome: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {artists.map((artist) => (
                         <Card key={artist.id} className="hover:shadow-lg transition-shadow overflow-hidden">
-                          {/* Image de couverture complète */}
+                          {/* Image de couverture complète sans recadrage */}
                           {artist.image && (
-                            <div className="relative h-56 w-full">
+                            <div className="relative w-full bg-muted">
                               <img 
                                 src={artist.image} 
                                 alt={artist.name}
-                                className="w-full h-full object-cover"
+                                className="w-full h-auto object-contain"
                               />
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                              <div className="absolute bottom-4 left-4 right-4">
+                              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
                                 <h3 className="text-xl font-bold text-white mb-1">{artist.name}</h3>
                                 {artist.genre && (
                                   <Badge className="bg-primary/90 text-primary-foreground">{artist.genre}</Badge>
