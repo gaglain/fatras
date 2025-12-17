@@ -494,10 +494,10 @@ export const FrontHome: React.FC = () => {
                               )}
                             </CardContent>
                           )}
-                          {/* Description courte si image présente */}
-                          {artist.image && artist.short_description && (
+                          {/* Description complète */}
+                          {artist.short_description && (
                             <CardContent className="p-4">
-                              <p className="text-muted-foreground text-sm line-clamp-2">{artist.short_description}</p>
+                              <p className="text-muted-foreground text-sm">{artist.short_description}</p>
                             </CardContent>
                           )}
                         </Card>
