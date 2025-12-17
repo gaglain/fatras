@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { DynamicFrontNavigation } from './DynamicFrontNavigation';
-import { useFrontSync } from '@/hooks/useFrontSync';
-import { useFrontDataSync } from '@/hooks/useFrontDataSync';
 import { PublicChatWidget } from './PublicChatWidget';
 import { RGPDModule } from './RGPDModule';
 import { GoogleAnalytics } from './GoogleAnalytics';
@@ -30,10 +28,6 @@ interface WebsiteSettings {
 }
 
 export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
-  // Utiliser les hooks de synchronisation front
-  const { forceSync } = useFrontSync();
-  const { forceSync: forceFrontDataSync } = useFrontDataSync();
-  
   const [settings, setSettings] = useState<WebsiteSettings>({
     siteName: 'MusiConnect',
     siteDescription: 'Plateforme de gestion artistique',
@@ -123,35 +117,22 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
       }
     };
 
-    // Chargement initial
+    // Chargement initial unique
     loadSettings();
-    
-    // Force sync après un délai pour s'assurer que tout est chargé
-    setTimeout(() => {
-      console.log('🔄 FrontLayout - Force sync after mount');
-      forceSync();
-      forceFrontDataSync();
-      loadSettings(); // Recharger après le force sync
-    }, 500);
 
-    // Polling plus fréquent pour s'assurer de la synchronisation
-    const pollInterval = setInterval(() => {
+    const handleSettingsUpdate = () => {
+      console.log('🔄 FrontLayout - Settings update detected');
       loadSettings();
-    }, 2000);
-
-    const handleSettingsUpdate = (event: any) => {
-      console.log('🔄 FrontLayout - Settings update detected:', event.detail || 'Custom event');
-      setTimeout(loadSettings, 100); // Petit délai pour s'assurer que localStorage est à jour
     };
 
     const handleStorageChange = (event: StorageEvent) => {
       if (event.key === 'websiteSettings' || event.key === 'websiteDesign' || event.key === 'site_settings' || event.key === 'websiteConfig') {
         console.log('💾 FrontLayout - Storage change detected for:', event.key);
-        setTimeout(loadSettings, 100);
+        loadSettings();
       }
     };
 
-    // Écouter tous les types d'événements possibles
+    // Écouter les événements de mise à jour (sans polling)
     window.addEventListener('websiteSettingsUpdated', handleSettingsUpdate);
     window.addEventListener('siteSettingsUpdated', handleSettingsUpdate);
     window.addEventListener('websiteDesignUpdated', handleSettingsUpdate);
@@ -160,7 +141,6 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
     window.addEventListener('storage', handleStorageChange);
 
     return () => {
-      clearInterval(pollInterval);
       window.removeEventListener('websiteSettingsUpdated', handleSettingsUpdate);
       window.removeEventListener('siteSettingsUpdated', handleSettingsUpdate);
       window.removeEventListener('websiteDesignUpdated', handleSettingsUpdate);
@@ -168,7 +148,8 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
       window.removeEventListener('websiteConfigChanged', handleSettingsUpdate);
       window.removeEventListener('storage', handleStorageChange);
     };
-  }, [forceSync, forceFrontDataSync]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col" data-theme-element="page">
