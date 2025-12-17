@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Save, Eye } from 'lucide-react';
 import { useWebsiteConfig } from '@/contexts/WebsiteConfigContext';
 import { toast } from 'sonner';
+import { SimpleFrontHeader } from '@/components/SimpleFrontHeader';
+import { SimpleFrontFooter } from '@/components/SimpleFrontFooter';
 
 export const LayoutSection: React.FC = () => {
   const { config, updateConfig } = useWebsiteConfig();
@@ -286,29 +288,8 @@ export const LayoutSection: React.FC = () => {
         <CardHeader>
           <CardTitle>Aperçu du header</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div 
-            className="p-4 rounded border"
-            style={{
-              background: localConfig.headerBg,
-              color: localConfig.textColor
-            }}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                {localConfig.logo && (
-                  <img src={localConfig.logo} alt="Logo" className="h-8 w-auto" />
-                )}
-                <span className="text-xl font-bold">{localConfig.siteName}</span>
-              </div>
-              <nav className="flex space-x-4">
-                <a href="#" style={{ color: localConfig.linkColor }}>Accueil</a>
-                <a href="#" style={{ color: localConfig.linkColor }}>Artistes</a>
-                <a href="#" style={{ color: localConfig.linkColor }}>Événements</a>
-                <a href="#" style={{ color: localConfig.linkColor }}>Contact</a>
-              </nav>
-            </div>
-          </div>
+        <CardContent className="p-0 overflow-hidden rounded-b-lg">
+          <SimpleFrontHeader />
         </CardContent>
       </Card>
 
@@ -316,56 +297,8 @@ export const LayoutSection: React.FC = () => {
         <CardHeader>
           <CardTitle>Aperçu du footer</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div 
-            className="p-4 rounded border"
-            style={{
-              background: localConfig.footerBg,
-              color: localConfig.textColor
-            }}
-          >
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div>
-                <h3 className="font-semibold mb-4 text-lg">Contact</h3>
-                <div className="space-y-2 text-sm">
-                  <p>{localConfig.contactEmail}</p>
-                  <p>{localConfig.contactPhone}</p>
-                  <p>{localConfig.address}</p>
-                </div>
-              </div>
-              <div>
-                <h3 className="font-semibold mb-4 text-lg">Suivez-nous</h3>
-                <div className="flex space-x-4">
-                  {localConfig.socialLinks.facebook && (
-                    <a href={localConfig.socialLinks.facebook} style={{ color: localConfig.linkColor }}>Facebook</a>
-                  )}
-                  {localConfig.socialLinks.instagram && (
-                    <a href={localConfig.socialLinks.instagram} style={{ color: localConfig.linkColor }}>Instagram</a>
-                  )}
-                  {localConfig.socialLinks.twitter && (
-                    <a href={localConfig.socialLinks.twitter} style={{ color: localConfig.linkColor }}>Twitter</a>
-                  )}
-                  {localConfig.socialLinks.linkedin && (
-                    <a href={localConfig.socialLinks.linkedin} style={{ color: localConfig.linkColor }}>LinkedIn</a>
-                  )}
-                  {localConfig.socialLinks.youtube && (
-                    <a href={localConfig.socialLinks.youtube} style={{ color: localConfig.linkColor }}>YouTube</a>
-                  )}
-                </div>
-              </div>
-              <div>
-                <h3 className="font-semibold mb-4 text-lg">Informations légales</h3>
-                <div className="space-y-2 text-sm">
-                  <a href="/mentions-legales" style={{ color: localConfig.linkColor }}>Mentions légales</a>
-                  <a href="/cgv" style={{ color: localConfig.linkColor }}>CGV</a>
-                  <a href="/politique-confidentialite" style={{ color: localConfig.linkColor }}>Politique de confidentialité</a>
-                </div>
-              </div>
-            </div>
-            <div className="border-t border-gray-600 mt-8 pt-8 text-center text-sm">
-              <p>© 2024 {localConfig.siteName}. Tous droits réservés.</p>
-            </div>
-          </div>
+        <CardContent className="p-0 overflow-hidden rounded-b-lg">
+          <SimpleFrontFooter />
         </CardContent>
       </Card>
     </div>
