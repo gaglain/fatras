@@ -1,5 +1,5 @@
 // Smarter Service Worker with network-first for pages and cache-busting support
-const CACHE_NAME = 'artistcrm-v5';
+const CACHE_NAME = 'artistcrm-v6';
 const urlsToCache = [
   // Keep minimal precache
   '/favicon.ico'
@@ -22,9 +22,24 @@ self.addEventListener('activate', (event) => {
       const keys = await caches.keys();
       await Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)));
       await self.clients.claim();
-      // Inform clients they can refresh if needed
+
+      // Inform clients they can refresh if needed + force reload to prevent stale UI
       const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-      clients.forEach((client) => client.postMessage({ type: 'SW_UPDATED' }));
+      await Promise.all(
+        clients.map(async (client) => {
+          try {
+            client.postMessage({ type: 'SW_UPDATED' });
+            // Force reload with cache-busting param to escape old cached bundles
+            const u = new URL(client.url);
+            u.searchParams.set('v', String(Date.now()));
+            if (typeof client.navigate === 'function') {
+              await client.navigate(u.toString());
+            }
+          } catch (_) {
+            // ignore
+          }
+        })
+      );
     })()
   );
 });
