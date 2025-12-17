@@ -150,10 +150,14 @@ export const FrontHome: React.FC = () => {
         setEvents([]);
       }
 
-      // 4) Artists (best-effort)
+      // 4) Artists (best-effort) - Only touring artists
       try {
         const { data: artistsData, error: artistsError } = await withTimeout(
-          supabase.from('centralized_artists').select('*').limit(6),
+          supabase
+            .from('centralized_artists')
+            .select('*')
+            .eq('is_touring', true)
+            .limit(6),
           8000,
           'loading artists'
         );
@@ -464,23 +468,39 @@ export const FrontHome: React.FC = () => {
                   {Array.isArray(artists) && artists.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {artists.map((artist) => (
-                        <Card key={artist.id} className="hover:shadow-lg transition-shadow">
-                          <CardContent className="p-6 text-center">
-                            {artist.photo_url && (
+                        <Card key={artist.id} className="hover:shadow-lg transition-shadow overflow-hidden">
+                          {/* Image de couverture complète */}
+                          {artist.image && (
+                            <div className="relative h-56 w-full">
                               <img 
-                                src={artist.photo_url} 
+                                src={artist.image} 
                                 alt={artist.name}
-                                className="w-24 h-24 rounded-full mx-auto mb-4 object-cover"
+                                className="w-full h-full object-cover"
                               />
-                            )}
-                            <h3 className="text-xl font-semibold mb-2">{artist.name}</h3>
-                            {artist.genre && (
-                              <Badge variant="outline" className="mb-2">{artist.genre}</Badge>
-                            )}
-                            {artist.bio && (
-                              <p className="text-muted-foreground text-sm">{artist.bio}</p>
-                            )}
-                          </CardContent>
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                              <div className="absolute bottom-4 left-4 right-4">
+                                <h3 className="text-xl font-bold text-white mb-1">{artist.name}</h3>
+                                {artist.genre && (
+                                  <Badge className="bg-primary/90 text-primary-foreground">{artist.genre}</Badge>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                          {/* Fallback sans image */}
+                          {!artist.image && (
+                            <CardContent className="p-6 text-center">
+                              <h3 className="text-xl font-semibold mb-2">{artist.name}</h3>
+                              {artist.genre && (
+                                <Badge variant="outline" className="mb-2">{artist.genre}</Badge>
+                              )}
+                            </CardContent>
+                          )}
+                          {/* Description courte si image présente */}
+                          {artist.image && artist.short_description && (
+                            <CardContent className="p-4">
+                              <p className="text-muted-foreground text-sm line-clamp-2">{artist.short_description}</p>
+                            </CardContent>
+                          )}
                         </Card>
                       ))}
                     </div>
