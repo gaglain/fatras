@@ -136,20 +136,16 @@ export const FrontHome: React.FC = () => {
   const loadHomePage = async (userId?: string) => {
     try {
       // 1. D'abord essayer de charger depuis Supabase website_pages
-      console.log('🏠 Loading homepage from Supabase for user:', userId);
+      console.log('🏠 Loading homepage from Supabase...');
       
-      let query = supabase
+      // Query for published homepage - don't filter by user_id for public access
+      const { data: supabaseHomePage, error } = await supabase
         .from('website_pages')
         .select('*')
         .or('slug.eq./,slug.eq.home,slug.eq.accueil,slug.eq.')
         .eq('status', 'published')
-        .limit(1);
-      
-      if (userId) {
-        query = query.eq('user_id', userId);
-      }
-      
-      const { data: supabaseHomePage, error } = await query.maybeSingle();
+        .limit(1)
+        .maybeSingle();
       
       if (error) {
         console.error('❌ Error loading homepage from Supabase:', error);
