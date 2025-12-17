@@ -52,83 +52,144 @@ export const FrontHome: React.FC = () => {
     };
   }, []);
 
+  const withTimeout = async <T,>(promise: PromiseLike<T>, ms: number, label: string): Promise<T> => {
+    let timeoutId: number | undefined;
+    const timeoutPromise = new Promise<T>((_, reject) => {
+      timeoutId = window.setTimeout(() => {
+        reject(new Error(`Timeout while ${label} (${ms}ms)`));
+      }, ms);
+    });
+
+    try {
+      // Supabase builders are "thenable" but not real Promises — normalize first
+      const normalized = Promise.resolve(promise);
+      return await Promise.race([normalized, timeoutPromise]);
+    } finally {
+      if (timeoutId) window.clearTimeout(timeoutId);
+    }
+  };
+
   const loadAllData = async (opts?: { silent?: boolean }) => {
     console.log('🔄 Loading all front data...');
+
+    const watchdogId = !opts?.silent
+      ? window.setTimeout(() => {
+          console.warn('⏱️ FrontHome load timeout: forcing UI render');
+          setLoading(false);
+        }, 12000)
+      : undefined;
+
     if (!opts?.silent) setLoading(true);
-    
+
+    let userId: string | undefined;
+
     try {
-      // Charger les paramètres du site depuis Supabase (bons paramètres si connecté)
-      const { data: authData } = await supabase.auth.getUser();
-      const userId = authData?.user?.id;
-
-      const designQuery = supabase.from('website_designs').select('*').limit(1);
-      const { data: designData } = userId
-        ? await designQuery.eq('user_id', userId).maybeSingle()
-        : await designQuery.maybeSingle();
-      
-      if (designData) {
-        setSiteSettings({
-          siteName: designData.site_name || 'Mon Site',
-          siteDescription: '',
-          logo: designData.logo,
-          primaryColor: designData.primary_color,
-          secondaryColor: designData.secondary_color
-        });
-        console.log('⚙️ Site settings loaded from Supabase:', designData.site_name);
-      } else {
-        // Fallback sur localStorage
-        const savedSettings = localStorage.getItem('websiteSettings');
-        if (savedSettings) {
-          const settings = JSON.parse(savedSettings);
-          setSiteSettings(settings);
-          console.log('⚙️ Site settings loaded from localStorage:', settings.siteName);
-        }
+      // 1) Auth (optionnel) — ne doit jamais bloquer le rendu public
+      try {
+        const { data: authData } = await withTimeout(supabase.auth.getUser(), 4000, 'getting current user');
+        userId = authData?.user?.id;
+      } catch (e) {
+        console.warn('⚠️ FrontHome auth.getUser failed (public mode continues):', e);
       }
 
-      // Charger les événements depuis Supabase
-      const { data: eventsData, error: eventsError } = await supabase
-        .from('events')
-        .select('*')
-        .eq('status', 'confirmed')
-        .order('start_date', { ascending: true })
-        .limit(6);
+      // 2) Settings (best-effort)
+      try {
+        const designQuery = supabase.from('website_designs').select('*').limit(1);
+        const { data: designData } = userId
+          ? await withTimeout(designQuery.eq('user_id', userId).maybeSingle(), 6000, 'loading website_designs (by user_id)')
+          : await withTimeout(designQuery.maybeSingle(), 6000, 'loading website_designs (public)');
 
-      if (eventsError) {
-        console.error('❌ Error loading events:', eventsError);
-      } else {
-        setEvents(eventsData || []);
-        console.log('🎭 Events loaded:', eventsData?.length);
-      }
-
-      // Charger les artistes depuis Supabase
-      const { data: artistsData, error: artistsError } = await supabase
-        .from('centralized_artists')
-        .select('*')
-        .limit(6);
-
-      if (!artistsError && artistsData?.length) {
-        setArtists(artistsData);
-        console.log('🎤 Artists loaded from Supabase:', artistsData.length);
-      } else {
-        // Fallback sur localStorage
-        try {
-          const savedArtists = localStorage.getItem('backoffice_artists');
-          if (savedArtists) {
-            const parsedArtists = JSON.parse(savedArtists);
-            setArtists(parsedArtists.slice(0, 6) || []);
+        if (designData) {
+          setSiteSettings({
+            siteName: designData.site_name || 'Mon Site',
+            siteDescription: '',
+            logo: designData.logo,
+            primaryColor: designData.primary_color,
+            secondaryColor: designData.secondary_color,
+          });
+          console.log('⚙️ Site settings loaded from Supabase:', designData.site_name);
+        } else {
+          const savedSettings = localStorage.getItem('websiteSettings');
+          if (savedSettings) {
+            const settings = JSON.parse(savedSettings);
+            setSiteSettings(settings);
+            console.log('⚙️ Site settings loaded from localStorage:', settings.siteName);
           }
-        } catch (error) {
-          console.error('❌ Error loading artists:', error);
-          setArtists([]);
         }
+      } catch (e) {
+        console.warn('⚠️ FrontHome settings load failed:', e);
       }
 
-      // Charger la page d'accueil personnalisée depuis Supabase d'abord
-      await loadHomePage(userId);
-      
+      // 3) Events (best-effort)
+      try {
+        const { data: eventsData, error: eventsError } = await withTimeout(
+          supabase
+            .from('events')
+            .select('*')
+            .eq('status', 'confirmed')
+            .order('start_date', { ascending: true })
+            .limit(6),
+          8000,
+          'loading events'
+        );
+
+        if (eventsError) {
+          console.error('❌ Error loading events:', eventsError);
+          setEvents([]);
+        } else {
+          setEvents(eventsData || []);
+          console.log('🎭 Events loaded:', eventsData?.length);
+        }
+      } catch (e) {
+        console.warn('⚠️ FrontHome events load failed:', e);
+        setEvents([]);
+      }
+
+      // 4) Artists (best-effort)
+      try {
+        const { data: artistsData, error: artistsError } = await withTimeout(
+          supabase.from('centralized_artists').select('*').limit(6),
+          8000,
+          'loading artists'
+        );
+
+        if (!artistsError && artistsData?.length) {
+          setArtists(artistsData);
+          console.log('🎤 Artists loaded from Supabase:', artistsData.length);
+        } else {
+          try {
+            const savedArtists = localStorage.getItem('backoffice_artists');
+            if (savedArtists) {
+              const parsedArtists = JSON.parse(savedArtists);
+              setArtists(parsedArtists.slice(0, 6) || []);
+            } else {
+              setArtists([]);
+            }
+          } catch (error) {
+            console.error('❌ Error loading artists:', error);
+            setArtists([]);
+          }
+        }
+      } catch (e) {
+        console.warn('⚠️ FrontHome artists load failed:', e);
+        setArtists([]);
+      }
+
+      // 5) Homepage content (always attempt)
+      try {
+        await withTimeout(loadHomePage(userId), 8000, 'loading homepage');
+      } catch (e) {
+        console.warn('⚠️ FrontHome homepage load failed, using default blocks:', e);
+        // If homepage load fails unexpectedly, ensure we still have something to render.
+        setHomePageBlocks([]);
+        await loadHomePage(undefined);
+      }
     } catch (error) {
       console.error('❌ Error loading front data:', error);
+      // Ensure we still render something
+      await loadHomePage(undefined);
     } finally {
+      if (watchdogId) window.clearTimeout(watchdogId);
       if (!opts?.silent) setLoading(false);
     }
   };
