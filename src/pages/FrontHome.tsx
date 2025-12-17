@@ -17,17 +17,17 @@ export const FrontHome: React.FC = () => {
   const { forceSync } = useFrontDataSync();
 
   useEffect(() => {
-    loadAllData();
+    loadAllData({ silent: false });
     
     // Écouter les changements de localStorage et forcer le rechargement
     const handleStorageChange = () => {
       console.log('📱 Storage change detected in FrontHome, reloading data');
-      loadAllData();
+      loadAllData({ silent: true });
     };
 
     const handleFrontDataRefresh = () => {
       console.log('🔄 Front data refresh event detected');
-      loadAllData();
+      loadAllData({ silent: true });
     };
 
     window.addEventListener('storage', handleStorageChange);
@@ -52,9 +52,9 @@ export const FrontHome: React.FC = () => {
     };
   }, []);
 
-  const loadAllData = async () => {
+  const loadAllData = async (opts?: { silent?: boolean }) => {
     console.log('🔄 Loading all front data...');
-    setLoading(true);
+    if (!opts?.silent) setLoading(true);
     
     try {
       // Charger les paramètres du site depuis Supabase (bons paramètres si connecté)
@@ -129,7 +129,7 @@ export const FrontHome: React.FC = () => {
     } catch (error) {
       console.error('❌ Error loading front data:', error);
     } finally {
-      setLoading(false);
+      if (!opts?.silent) setLoading(false);
     }
   };
 

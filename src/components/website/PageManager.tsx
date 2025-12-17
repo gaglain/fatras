@@ -56,28 +56,44 @@ export const PageManager: React.FC = () => {
     status: 'draft' as WebPage['status']
   });
 
-  // Synchroniser les pages Supabase avec l'état local
   useEffect(() => {
     if (supabasePages && supabasePages.length > 0) {
-      // Convertir les pages Supabase au format local
-      const convertedPages = supabasePages.map(p => ({
-        id: p.id,
-        title: p.title,
-        slug: p.slug,
-        status: (p.status || 'draft') as WebPage['status'],
-        type: 'page' as WebPage['type'],
-        blocks: Array.isArray(p.content) ? p.content : [],
-        content: Array.isArray(p.content) ? p.content : [],
-        meta_title: p.meta_title,
-        meta_description: p.meta_description,
-        created_at: p.created_at,
-        updated_at: p.updated_at
-      }));
+      const convertedPages = supabasePages.map((p) => {
+        const raw = (p.content as any);
+        let blocks: any[] = [];
+
+        if (Array.isArray(raw)) {
+          blocks = raw;
+        } else if (typeof raw === 'string') {
+          try {
+            const parsed = JSON.parse(raw);
+            blocks = Array.isArray(parsed) ? parsed : (parsed?.blocks || []);
+          } catch {
+            blocks = [];
+          }
+        } else if (raw && typeof raw === 'object' && Array.isArray(raw.blocks)) {
+          blocks = raw.blocks;
+        }
+
+        return {
+          id: p.id,
+          title: p.title,
+          slug: p.slug,
+          status: (p.status || 'draft') as WebPage['status'],
+          type: ((p.page_type as any) || 'page') as WebPage['type'],
+          blocks,
+          content: blocks,
+          meta_title: p.meta_title,
+          meta_description: p.meta_description,
+          created_at: p.created_at,
+          updated_at: p.updated_at,
+        };
+      });
+
       setLocalPages(convertedPages);
       // Sync to localStorage for FrontDynamicPage fallback
       localStorage.setItem('websitePages', JSON.stringify(convertedPages));
     } else if (!loading) {
-      // Charger les pages par défaut depuis localStorage
       loadLocalStoragePages();
     }
   }, [supabasePages, loading]);
@@ -133,18 +149,20 @@ export const PageManager: React.FC = () => {
     
     try {
       // Générer le slug
-      const slug = newPageData.slug || newPageData.title.toLowerCase()
-        .replace(/\s+/g, '-')
-        .replace(/[^a-z0-9-]/g, '')
-        .replace(/^-+|-+$/g, '');
+      const slug = newPageData.type === 'home'
+        ? '/'
+        : (newPageData.slug || newPageData.title.toLowerCase()
+          .replace(/\s+/g, '-')
+          .replace(/[^a-z0-9-]/g, '')
+          .replace(/^-+|-+$/g, ''));
 
       // Sauvegarder dans Supabase
       await savePage({
         title: newPageData.title,
-        slug: slug,
+        slug,
         content: [],
         status: 'draft',
-        page_type: newPageData.type
+        page_type: newPageData.type,
       });
 
       setNewPageData({ title: '', slug: '', type: 'page', status: 'draft' });
@@ -283,7 +301,9 @@ export const PageManager: React.FC = () => {
                           onChange={(e) => setNewPageData(prev => ({ ...prev, slug: e.target.value }))}
                         />
                         <p className="text-xs text-muted-foreground mt-1">
-                          Sera accessible sur /front/{newPageData.slug || newPageData.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') || 'ma-page'}
+                          {newPageData.type === 'home'
+                            ? 'Sera accessible sur /front'
+                            : `Sera accessible sur /front/${newPageData.slug || newPageData.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') || 'ma-page'}`}
                         </p>
                       </div>
                       <div>
@@ -337,7 +357,7 @@ export const PageManager: React.FC = () => {
                           <Icon className="h-5 w-5 text-muted-foreground" />
                           <div>
                             <h3 className="font-medium">{page.title}</h3>
-                            <p className="text-sm text-muted-foreground">/front/{page.slug.replace(/^\/+/, '')}</p>
+                            <p className="text-sm text-muted-foreground">{page.slug === '/' || page.slug === '' ? '/front' : `/front/${page.slug.replace(/^\/+/, '')}`}</p>
                             <div className="flex items-center space-x-2 mt-1">
                               <Badge className={getStatusColor(page.status)}>
                                 {page.status === 'published' ? 'Publié' : page.status === 'draft' ? 'Brouillon' : 'Privé'}
@@ -360,12 +380,12 @@ export const PageManager: React.FC = () => {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => {
-                              const slug = page.slug.replace(/^\/+/, '');
-                              // Homepage (slug "/" or empty) should go to /front
-                              const url = slug === '' || page.slug === '/' ? '/front' : `/front/${slug}`;
-                              window.open(url, '_blank');
-                            }}
+                             onClick={() => {
+                               const slug = page.slug.replace(/^\/+/, '');
+                               // Homepage (slug "/" or empty) should go to /front
+                               const baseUrl = slug === '' || page.slug === '/' ? '/front' : `/front/${slug}`;
+                               window.open(`${baseUrl}?v=${Date.now()}`, '_blank');
+                             }}
                           >
                             <Eye className="h-4 w-4 mr-1" />
                             Voir
