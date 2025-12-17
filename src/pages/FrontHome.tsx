@@ -120,13 +120,18 @@ export const FrontHome: React.FC = () => {
         console.warn('⚠️ FrontHome settings load failed:', e);
       }
 
-      // 3) Events (best-effort)
+      // 3) Events (best-effort) - Only future events with artist data
       try {
+        const now = new Date().toISOString();
         const { data: eventsData, error: eventsError } = await withTimeout(
           supabase
             .from('events')
-            .select('*')
+            .select(`
+              *,
+              artist:centralized_artists(id, name, image)
+            `)
             .eq('status', 'confirmed')
+            .gte('start_date', now)
             .order('start_date', { ascending: true })
             .limit(6),
           8000,
@@ -370,16 +375,38 @@ export const FrontHome: React.FC = () => {
                   {Array.isArray(events) && events.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {events.map((event) => (
-                        <Card key={event.id} className="hover:shadow-lg transition-shadow">
+                        <Card key={event.id} className="hover:shadow-lg transition-shadow overflow-hidden">
+                          {/* Image de couverture de l'artiste */}
+                          {event.artist?.image && (
+                            <div className="relative h-48 w-full">
+                              <img 
+                                src={event.artist.image} 
+                                alt={event.artist.name || event.title}
+                                className="w-full h-full object-cover"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                              <div className="absolute bottom-3 left-3 right-3">
+                                <Badge className="bg-primary/90 text-primary-foreground">
+                                  {event.artist.name}
+                                </Badge>
+                              </div>
+                            </div>
+                          )}
                           <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                               <Calendar className="h-5 w-5 text-primary" />
                               {event.title}
                             </CardTitle>
+                            {/* Nom de l'artiste si pas d'image */}
+                            {event.artist && !event.artist.image && (
+                              <p className="text-sm text-primary font-medium">
+                                Spectacle : {event.artist.name}
+                              </p>
+                            )}
                           </CardHeader>
                           <CardContent className="space-y-3">
                             {event.description && (
-                              <p className="text-muted-foreground text-sm">{event.description}</p>
+                              <p className="text-muted-foreground text-sm line-clamp-2">{event.description}</p>
                             )}
                             
                             {event.start_date && (
@@ -411,7 +438,6 @@ export const FrontHome: React.FC = () => {
                             
                             <div className="flex justify-between items-center mt-4">
                               <Badge variant="secondary">{event.event_type || 'Spectacle'}</Badge>
-                              <Badge variant="outline">{event.status}</Badge>
                             </div>
                           </CardContent>
                         </Card>
