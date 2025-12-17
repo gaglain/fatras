@@ -123,8 +123,8 @@ export const FrontHome: React.FC = () => {
         }
       }
 
-      // Charger la page d'accueil personnalisée
-      loadHomePage();
+      // Charger la page d'accueil personnalisée depuis Supabase d'abord
+      await loadHomePage(userId);
       
     } catch (error) {
       console.error('❌ Error loading front data:', error);
@@ -133,8 +133,48 @@ export const FrontHome: React.FC = () => {
     }
   };
 
-  const loadHomePage = () => {
+  const loadHomePage = async (userId?: string) => {
     try {
+      // 1. D'abord essayer de charger depuis Supabase website_pages
+      const slugsToCheck = ['/', 'home', 'accueil', ''];
+      
+      const homeQuery = supabase
+        .from('website_pages')
+        .select('*')
+        .or(slugsToCheck.map(s => `slug.eq.${s}`).join(','))
+        .eq('status', 'published')
+        .limit(1);
+      
+      const { data: supabaseHomePage } = userId
+        ? await homeQuery.eq('user_id', userId).maybeSingle()
+        : await homeQuery.maybeSingle();
+      
+      if (supabaseHomePage?.content) {
+        let blocks: any[] = [];
+        const rawContent = supabaseHomePage.content as any;
+        
+        // Le content peut être un objet avec blocks ou directement un tableau
+        if (typeof rawContent === 'string') {
+          try {
+            const parsed = JSON.parse(rawContent);
+            blocks = Array.isArray(parsed) ? parsed : (parsed?.blocks || []);
+          } catch {
+            blocks = [];
+          }
+        } else if (Array.isArray(rawContent)) {
+          blocks = rawContent;
+        } else if (rawContent && typeof rawContent === 'object' && rawContent.blocks) {
+          blocks = rawContent.blocks;
+        }
+        
+        if (blocks.length > 0) {
+          console.log('🏠 Loading home page blocks from Supabase:', blocks.length);
+          setHomePageBlocks(blocks);
+          return;
+        }
+      }
+      
+      // 2. Fallback: charger depuis localStorage
       const savedPages = localStorage.getItem('websitePages');
       if (savedPages) {
         const parsed = JSON.parse(savedPages);
@@ -146,10 +186,26 @@ export const FrontHome: React.FC = () => {
               ? (parsed as any).pages
               : [];
 
-        const homePage = pages.find((page: any) => page?.type === 'home' || page?.slug === '/');
-        const blocks = Array.isArray(homePage?.blocks) ? homePage.blocks : [];
-        if (blocks.length) {
-          console.log('🏠 Loading custom home page blocks:', blocks.length);
+        const homePage = pages.find((page: any) => 
+          page?.slug === '/' || 
+          page?.slug === 'home' || 
+          page?.slug === 'accueil' ||
+          page?.slug === ''
+        );
+        
+        let blocks: any[] = [];
+        if (homePage?.content) {
+          if (Array.isArray(homePage.content)) {
+            blocks = homePage.content;
+          } else if (homePage.content?.blocks) {
+            blocks = homePage.content.blocks;
+          }
+        } else if (Array.isArray(homePage?.blocks)) {
+          blocks = homePage.blocks;
+        }
+        
+        if (blocks.length > 0) {
+          console.log('🏠 Loading custom home page blocks from localStorage:', blocks.length);
           setHomePageBlocks(blocks);
           return;
         }
@@ -158,7 +214,7 @@ export const FrontHome: React.FC = () => {
       console.error('❌ Error loading home page:', error);
     }
     
-    // Page d'accueil par défaut avec spectacles
+    // 3. Page d'accueil par défaut avec spectacles
     setHomePageBlocks([
       {
         id: 'hero-1',
