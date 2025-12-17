@@ -3,14 +3,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Save, Eye } from 'lucide-react';
+import { Save, Eye, RefreshCw } from 'lucide-react';
 import { useWebsiteConfig } from '@/contexts/WebsiteConfigContext';
 import { toast } from 'sonner';
-import { SimpleFrontHeader } from '@/components/SimpleFrontHeader';
-import { SimpleFrontFooter } from '@/components/SimpleFrontFooter';
+import { ResponsivePreview, getViewportWidth } from '@/components/page-builder/ResponsivePreview';
+import type { ViewportMode } from '@/components/page-builder/types';
 
 export const LayoutSection: React.FC = () => {
   const { config, updateConfig } = useWebsiteConfig();
+
+  const [viewport, setViewport] = React.useState<ViewportMode>('desktop');
+  const [previewNonce, setPreviewNonce] = React.useState(0);
 
   const [localConfig, setLocalConfig] = React.useState({
     siteName: config.siteName,
@@ -45,15 +48,17 @@ export const LayoutSection: React.FC = () => {
   const handleSave = () => {
     console.log('💾 Saving layout config:', localConfig.siteName);
     updateConfig(localConfig);
+    setPreviewNonce((n) => n + 1);
     toast.success(`Configuration sauvegardée ! Site: "${localConfig.siteName}"`);
   };
 
   const handlePreview = () => {
     console.log('👁️ Preview requested');
-    
+
     // Sauvegarder d'abord
     updateConfig(localConfig);
-    
+    setPreviewNonce((n) => n + 1);
+
     // Ouvrir la preview après un court délai
     setTimeout(() => {
       window.open('/front', '_blank');
@@ -83,6 +88,8 @@ export const LayoutSection: React.FC = () => {
     }
   };
 
+  const frameWidth = getViewportWidth(viewport);
+
   return (
     <div className="space-y-6">
       <Card>
@@ -93,7 +100,7 @@ export const LayoutSection: React.FC = () => {
           {/* Informations générales */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Informations générales</h3>
-            
+
             <div>
               <Label htmlFor="siteName">Nom du site</Label>
               <Input
@@ -134,7 +141,7 @@ export const LayoutSection: React.FC = () => {
 
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Couleurs et style</h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="headerBg">Couleur de fond du header</Label>
@@ -180,7 +187,7 @@ export const LayoutSection: React.FC = () => {
 
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Informations de contact (Footer)</h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="contactEmail">Email de contact</Label>
@@ -216,7 +223,7 @@ export const LayoutSection: React.FC = () => {
 
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Réseaux sociaux</h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="facebook">Facebook</Label>
@@ -285,20 +292,37 @@ export const LayoutSection: React.FC = () => {
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Aperçu du header</CardTitle>
+        <CardHeader className="gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <CardTitle>Aperçu (rendu front)</CardTitle>
+          </div>
+          <div className="flex items-center gap-2">
+            <ResponsivePreview mode={viewport} onModeChange={setViewport} />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPreviewNonce((n) => n + 1)}
+              title="Recharger l’aperçu"
+              className="h-9"
+            >
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+          </div>
         </CardHeader>
-        <CardContent className="p-0 overflow-hidden rounded-b-lg">
-          <SimpleFrontHeader />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Aperçu du footer</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0 overflow-hidden rounded-b-lg">
-          <SimpleFrontFooter />
+        <CardContent className="p-3 sm:p-4">
+          <div className="rounded-lg border bg-muted/30 p-2 sm:p-3">
+            <div
+              className="mx-auto overflow-hidden rounded-md border bg-background"
+              style={{ width: frameWidth }}
+            >
+              <iframe
+                key={`${viewport}-${previewNonce}`}
+                title="Aperçu du site (front)"
+                src={`/front?preview=1&v=${previewNonce}`}
+                className="w-full h-[720px]"
+              />
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
