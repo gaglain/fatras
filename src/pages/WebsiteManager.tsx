@@ -9,26 +9,47 @@ import { LegalManager } from '@/components/website/LegalManager';
 import { AnalyticsManager } from '@/components/website/AnalyticsManager';
 import { SiteSettings } from '@/components/website/SiteSettings';
 import { LayoutSection } from '@/components/website-design/LayoutSection';
-import { 
-  FileText, 
-  Menu, 
-  Search, 
-  Shield, 
-  BarChart3, 
+import {
+  FileText,
+  Menu,
+  Search,
+  Shield,
+  BarChart3,
   Settings,
   Eye,
   Globe,
-  Layout as LayoutIcon
+  Layout as LayoutIcon,
+  RefreshCw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 export const WebsiteManager: React.FC = () => {
   const [activeTab, setActiveTab] = useState('layout');
   const navigate = useNavigate();
 
   const handlePreviewSite = () => {
-    // Navigue dans l'appli pour que l'aperçu s'affiche dans le panneau de droite
-    navigate('/front');
+    // Cache-busting pour éviter d'afficher une ancienne version (service worker)
+    navigate(`/front?v=${Date.now()}`);
+  };
+
+  const handleClearCache = async () => {
+    toast('Mise à jour en cours…');
+    try {
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((k) => caches.delete(k)));
+      }
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map((r) => r.unregister()));
+      }
+    } catch (e) {
+      console.warn('Cache clear error:', e);
+    } finally {
+      // Reload complet pour être sûr de charger le dernier bundle
+      window.location.assign(`/front?v=${Date.now()}`);
+    }
   };
 
   return (
@@ -41,6 +62,11 @@ export const WebsiteManager: React.FC = () => {
           </p>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+          <Button variant="outline" onClick={handleClearCache} className="text-sm">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Vider le cache</span>
+            <span className="sm:hidden">Cache</span>
+          </Button>
           <Button variant="outline" onClick={handlePreviewSite} className="text-sm">
             <Eye className="h-4 w-4 mr-2" />
             <span className="hidden sm:inline">Prévisualiser</span>
