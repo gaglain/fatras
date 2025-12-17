@@ -16,16 +16,22 @@ export const useWebsitePagesSync = () => {
 
   const loadPages = useCallback(async (): Promise<WebsitePage[]> => {
     if (syncInProgress.current) return pages;
+    if (!user?.id) {
+      console.log('📄 No user logged in, skipping page load');
+      setLoading(false);
+      return [];
+    }
     
     syncInProgress.current = true;
     setLoading(true);
     
     try {
-      console.log('📄 Loading pages from Supabase...');
+      console.log('📄 Loading pages from Supabase for user:', user.id);
       
       const { data: pagesData, error } = await supabase
         .from('website_pages')
         .select('*')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) {
