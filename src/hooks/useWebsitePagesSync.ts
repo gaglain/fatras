@@ -117,7 +117,7 @@ export const useWebsitePagesSync = () => {
       syncInProgress.current = false;
       setLoading(false);
     }
-  }, []);
+  }, [pages, user?.id]);
 
   const savePage = useCallback(async (pageData: Partial<WebsitePage>) => {
     if (!user?.id) {
