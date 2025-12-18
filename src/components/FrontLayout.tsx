@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, Link } from 'react-router-dom';
 import { DynamicFrontNavigation } from './DynamicFrontNavigation';
 import { PublicChatWidget } from './PublicChatWidget';
 import { RGPDModule } from './RGPDModule';
@@ -285,31 +285,31 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
               </h3>
               <div className="space-y-2 text-sm">
                 <div>
-                  <a 
-                    href="/mentions-legales"
+                  <Link 
+                    to="/front/mentions-legales"
                     className="front-link hover:opacity-80"
                     style={{ color: 'var(--site-link-color, #3b82f6)' }}
                   >
                     Mentions légales
-                  </a>
+                  </Link>
                 </div>
                 <div>
-                  <a 
-                    href="/cgv"
+                  <Link 
+                    to="/front/cgv"
                     className="front-link hover:opacity-80"
                     style={{ color: 'var(--site-link-color, #3b82f6)' }}
                   >
                     Conditions générales de vente
-                  </a>
+                  </Link>
                 </div>
                 <div>
-                  <a 
-                    href="/politique-confidentialite"
+                  <Link 
+                    to="/front/politique-confidentialite"
                     className="front-link hover:opacity-80"
                     style={{ color: 'var(--site-link-color, #3b82f6)' }}
                   >
                     Politique de confidentialité
-                  </a>
+                  </Link>
                 </div>
               </div>
             </div>

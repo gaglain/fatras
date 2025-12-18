@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { FrontLayout } from '@/components/FrontLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -59,13 +60,23 @@ const HeroBlock: React.FC<{ content: any; siteSettings: any }> = ({ content, sit
             {subtitle}
           </p>
           {buttonText && (
-            <a 
-              href={buttonLink}
-              className="inline-flex items-center px-6 lg:px-8 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-base lg:text-lg font-medium"
-            >
-              {buttonText}
-              <ArrowRight className="ml-2 h-4 w-4 lg:h-5 lg:w-5" />
-            </a>
+            buttonLink?.startsWith('#') ? (
+              <a 
+                href={buttonLink}
+                className="inline-flex items-center px-6 lg:px-8 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-base lg:text-lg font-medium"
+              >
+                {buttonText}
+                <ArrowRight className="ml-2 h-4 w-4 lg:h-5 lg:w-5" />
+              </a>
+            ) : (
+              <Link 
+                to={buttonLink || '/front'}
+                className="inline-flex items-center px-6 lg:px-8 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-base lg:text-lg font-medium"
+              >
+                {buttonText}
+                <ArrowRight className="ml-2 h-4 w-4 lg:h-5 lg:w-5" />
+              </Link>
+            )
           )}
         </div>
       </div>
