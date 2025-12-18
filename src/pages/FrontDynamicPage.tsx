@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { FrontLayout } from '@/components/FrontLayout';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -132,12 +132,23 @@ export const FrontDynamicPage: React.FC = () => {
                 </p>
               )}
               {content.showButton !== false && content.buttonText && (
-                <a 
-                  href={content.buttonLink || '#'}
-                  className="inline-flex items-center px-6 py-3 bg-white text-primary rounded-lg hover:bg-white/90 transition-colors font-medium"
-                >
-                  {content.buttonText}
-                </a>
+                content.buttonLink?.startsWith('#') || content.buttonLink?.startsWith('http') ? (
+                  <a 
+                    href={content.buttonLink || '#'}
+                    target={content.buttonLink?.startsWith('http') ? '_blank' : undefined}
+                    rel={content.buttonLink?.startsWith('http') ? 'noopener noreferrer' : undefined}
+                    className="inline-flex items-center px-6 py-3 bg-white text-primary rounded-lg hover:bg-white/90 transition-colors font-medium"
+                  >
+                    {content.buttonText}
+                  </a>
+                ) : (
+                  <Link 
+                    to={content.buttonLink || '/front'}
+                    className="inline-flex items-center px-6 py-3 bg-white text-primary rounded-lg hover:bg-white/90 transition-colors font-medium"
+                  >
+                    {content.buttonText}
+                  </Link>
+                )
               )}
             </div>
           </div>
