@@ -4,13 +4,15 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar, MapPin, Clock, Ticket } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Calendar, MapPin, Clock, Ticket, Filter } from 'lucide-react';
 import { SEOHead } from '@/components/SEOHead';
 import { supabase } from '@/integrations/supabase/client';
 
 export const FrontEvents: React.FC = () => {
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedArtist, setSelectedArtist] = useState<string>('all');
 
   useEffect(() => {
     loadEvents();
@@ -30,21 +32,7 @@ export const FrontEvents: React.FC = () => {
 
       if (error) {
         console.error('❌ Error loading events:', error);
-        // Données d'exemple en cas d'erreur
-        setEvents([
-          {
-            id: '1',
-            title: 'Concert Jazz Fusion',
-            description: 'Soirée jazz fusion exceptionnelle',
-            start_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-            venue: 'Salle Pleyel',
-            city: 'Paris',
-            status: 'confirmed',
-            budget_min: 25,
-            budget_max: 45,
-            event_type: 'Concert'
-          }
-        ]);
+        setEvents([]);
       } else {
         setEvents(eventsData || []);
       }
@@ -55,6 +43,23 @@ export const FrontEvents: React.FC = () => {
       setLoading(false);
     }
   };
+
+  // Extraire la liste unique des artistes
+  const artists = useMemo(() => {
+    const artistMap = new Map<string, { id: string; name: string }>();
+    events.forEach(event => {
+      if (event.artist?.id && event.artist?.name) {
+        artistMap.set(event.artist.id, { id: event.artist.id, name: event.artist.name });
+      }
+    });
+    return Array.from(artistMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [events]);
+
+  // Filtrer les événements par artiste
+  const filteredEvents = useMemo(() => {
+    if (selectedArtist === 'all') return events;
+    return events.filter(event => event.artist?.id === selectedArtist);
+  }, [events, selectedArtist]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -93,13 +98,13 @@ export const FrontEvents: React.FC = () => {
     });
   };
 
-  // Séparer les événements à venir et passés
+  // Séparer les événements filtrés en à venir et passés
   const { upcomingEvents, pastEvents } = useMemo(() => {
     const now = new Date();
     const upcoming: any[] = [];
     const past: any[] = [];
     
-    events.forEach(event => {
+    filteredEvents.forEach(event => {
       const eventDate = new Date(event.start_date);
       if (eventDate >= now) {
         upcoming.push(event);
@@ -114,7 +119,7 @@ export const FrontEvents: React.FC = () => {
     past.sort((a, b) => new Date(b.start_date).getTime() - new Date(a.start_date).getTime());
     
     return { upcomingEvents: upcoming, pastEvents: past };
-  }, [events]);
+  }, [filteredEvents]);
 
   const renderEventCard = (event: any, isPast: boolean = false) => (
     <Card key={event.id} className={`hover:shadow-lg transition-shadow ${isPast ? 'opacity-75' : ''}`}>
@@ -224,12 +229,34 @@ export const FrontEvents: React.FC = () => {
       
       <div className="py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">Événements à Venir</h1>
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">Événements</h1>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
               Ne manquez aucun de nos événements exceptionnels
             </p>
           </div>
+
+          {/* Filtre par artiste/spectacle */}
+          {artists.length > 0 && (
+            <div className="flex justify-center mb-8">
+              <div className="flex items-center gap-3 bg-white rounded-lg shadow-sm p-2 border">
+                <Filter className="h-4 w-4 text-gray-500" />
+                <Select value={selectedArtist} onValueChange={setSelectedArtist}>
+                  <SelectTrigger className="w-[200px] border-0 shadow-none">
+                    <SelectValue placeholder="Tous les spectacles" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tous les spectacles</SelectItem>
+                    {artists.map(artist => (
+                      <SelectItem key={artist.id} value={artist.id}>
+                        {artist.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
 
           <Tabs defaultValue="upcoming" className="w-full">
             <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-8">
