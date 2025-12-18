@@ -58,18 +58,15 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
           ? await designQuery.eq('user_id', userId).maybeSingle()
           : await designQuery.maybeSingle();
         
+        // Charger websiteConfig qui contient toutes les infos y compris socialLinks
         const settingsQuery = supabase
           .from('app_settings')
           .select('setting_key, setting_value')
           .in('setting_key', [
+            'websiteConfig',
             'contact_email',
             'contact_phone',
             'address',
-            'social_facebook',
-            'social_instagram',
-            'social_twitter',
-            'social_youtube',
-            'social_linkedin',
             'google_analytics_id'
           ]);
         const { data: appSettings } = userId
@@ -88,17 +85,27 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
           const settingsMap = Object.fromEntries(
             appSettings.map(s => [s.setting_key, s.setting_value])
           );
-          merged.contactEmail = settingsMap['contact_email'] || merged.contactEmail;
-          merged.contactPhone = settingsMap['contact_phone'] || merged.contactPhone;
-          merged.address = settingsMap['address'] || merged.address;
-          merged.googleAnalyticsId = settingsMap['google_analytics_id'];
-          merged.socialLinks = {
-            facebook: settingsMap['social_facebook'] || '',
-            instagram: settingsMap['social_instagram'] || '',
-            twitter: settingsMap['social_twitter'] || '',
-            youtube: settingsMap['social_youtube'] || '',
-            linkedin: settingsMap['social_linkedin'] || ''
-          };
+          
+          // Priorité au websiteConfig qui contient tout
+          if (settingsMap['websiteConfig']) {
+            try {
+              const config = JSON.parse(settingsMap['websiteConfig']);
+              merged.contactEmail = config.contactEmail || merged.contactEmail;
+              merged.contactPhone = config.contactPhone || merged.contactPhone;
+              merged.address = config.address || merged.address;
+              merged.googleAnalyticsId = config.googleAnalyticsId || merged.googleAnalyticsId;
+              merged.socialLinks = config.socialLinks || merged.socialLinks;
+              console.log('📦 Loaded settings from websiteConfig:', config.socialLinks);
+            } catch (e) {
+              console.error('❌ Error parsing websiteConfig:', e);
+            }
+          } else {
+            // Fallback sur les clés individuelles
+            merged.contactEmail = settingsMap['contact_email'] || merged.contactEmail;
+            merged.contactPhone = settingsMap['contact_phone'] || merged.contactPhone;
+            merged.address = settingsMap['address'] || merged.address;
+            merged.googleAnalyticsId = settingsMap['google_analytics_id'];
+          }
         }
 
         // Fallback sur localStorage si rien en base
