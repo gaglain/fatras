@@ -431,7 +431,7 @@ export const Contracts: React.FC = () => {
             Gérez vos devis et contrats clients
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <Button 
             onClick={() => setShowTemplates(true)} 
             variant="outline"
@@ -779,11 +779,13 @@ export const Contracts: React.FC = () => {
       <div className={viewMode === 'grid' ? "grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6" : "space-y-4"}>
         {filteredQuotes.map(quote => (
           <Card key={quote.id} className="hover:shadow-lg transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h3 className="text-lg font-semibold">{quote.title}</h3>
-                  <p className="text-sm text-gray-600">N° {quote.quote_number}</p>
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex items-start justify-between mb-4 gap-3">
+                <div className="min-w-0">
+                  <h3 className="text-base sm:text-lg font-semibold leading-tight break-words">
+                    {quote.title}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-gray-600">N° {quote.quote_number}</p>
                 </div>
                 <Badge className={getStatusColor(quote.status)}>
                   {getStatusLabel(quote.status)}
@@ -791,11 +793,11 @@ export const Contracts: React.FC = () => {
               </div>
 
               {quote.description && (
-                <p className="text-gray-600 text-sm mb-4">{quote.description}</p>
+                <p className="text-gray-600 text-sm mb-4 break-words">{quote.description}</p>
               )}
 
               <div className="space-y-2 mb-4">
-                <div className="text-2xl font-bold text-blue-600">
+                <div className="text-xl sm:text-2xl font-bold text-blue-600">
                   {Number(quote.total_amount ?? 0).toFixed(2)} € TTC
                 </div>
                 
@@ -831,7 +833,7 @@ export const Contracts: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex space-x-2">
+              <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={() => handleEdit(quote)} className="flex-1">
                   <Edit className="h-3 w-3 mr-1" />
                   Modifier
