@@ -5,22 +5,24 @@ import { cn } from "@/lib/utils"
 const Card = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & {
-    variant?: "default" | "elevated" | "outlined" | "glass" | "interactive"
+    variant?: "default" | "elevated" | "outlined" | "outlined-strong" | "glass" | "interactive" | "flat"
   }
 >(({ className, variant = "default", ...props }, ref) => {
   const variants = {
-    default: "bg-card text-card-foreground border border-border/50 shadow-sm",
-    elevated: "bg-card text-card-foreground border-0 shadow-lg",
+    default: "bg-card text-card-foreground border-2 border-border shadow-sm",
+    elevated: "bg-card text-card-foreground border-0 shadow-xl",
     outlined: "bg-transparent text-card-foreground border-2 border-border",
-    glass: "bg-card/60 text-card-foreground backdrop-blur-md border border-border/30 shadow-lg",
-    interactive: "bg-card text-card-foreground border border-border/50 shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-primary/30 cursor-pointer",
+    "outlined-strong": "bg-transparent text-card-foreground border-3 border-border-strong",
+    glass: "bg-card/70 text-card-foreground backdrop-blur-lg border-2 border-border/40 shadow-lg",
+    interactive: "bg-card text-card-foreground border-2 border-border shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-border-strong cursor-pointer",
+    flat: "bg-secondary/50 text-card-foreground border-0",
   }
 
   return (
     <div
       ref={ref}
       className={cn(
-        "rounded-xl",
+        "rounded-lg",
         variants[variant],
         className
       )}
