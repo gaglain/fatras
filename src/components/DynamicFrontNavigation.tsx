@@ -52,36 +52,14 @@ export const DynamicFrontNavigation: React.FC = () => {
     try {
       const { supabase } = await import('@/integrations/supabase/client');
       
-      // Charger le menu depuis Supabase
-      const { data: menuData, error } = await supabase
-        .from('website_menu')
-        .select('*')
-        .eq('is_visible', true)
-        .order('menu_order', { ascending: true });
-
-      if (!error && menuData && menuData.length > 0) {
-        const normalized = menuData.map((item: any) => ({
-          id: item.id,
-          label: item.label,
-          path: item.url,
-          visible: item.is_visible ?? true,
-          order: item.menu_order ?? 0
-        }));
-        
-        console.log('✅ Navigation - Menu loaded from Supabase:', normalized.length, 'items');
-        setMenuItems(normalized);
-        localStorage.setItem('websiteMenu', JSON.stringify(menuData));
-      } else {
-        // Fallback vers localStorage
-        loadFromLocalStorage();
-      }
-
-      // Charger le nom du site et logo depuis website_designs (Supabase en priorité)
+      // D'abord charger le design pour obtenir le user_id du propriétaire du site
       const { data: designData } = await supabase
         .from('website_designs')
-        .select('site_name, logo')
+        .select('user_id, site_name, logo')
         .limit(1)
         .maybeSingle();
+
+      const siteOwnerId = designData?.user_id;
 
       if (designData) {
         if (designData.site_name) {
@@ -104,6 +82,37 @@ export const DynamicFrontNavigation: React.FC = () => {
         const config = safeParse('websiteConfig');
         if (config?.logo) setLogo(config.logo);
         if (config?.siteName) setSiteName(config.siteName);
+      }
+
+      // Charger le menu depuis Supabase - filtrer par le propriétaire du site
+      let menuQuery = supabase
+        .from('website_menu')
+        .select('*')
+        .eq('is_visible', true)
+        .order('menu_order', { ascending: true });
+      
+      // Si on a trouvé le propriétaire du site, filtrer par son user_id
+      if (siteOwnerId) {
+        menuQuery = menuQuery.eq('user_id', siteOwnerId);
+      }
+
+      const { data: menuData, error } = await menuQuery;
+
+      if (!error && menuData && menuData.length > 0) {
+        const normalized = menuData.map((item: any) => ({
+          id: item.id,
+          label: item.label,
+          path: item.url,
+          visible: item.is_visible ?? true,
+          order: item.menu_order ?? 0
+        }));
+        
+        console.log('✅ Navigation - Menu loaded from Supabase:', normalized.length, 'items');
+        setMenuItems(normalized);
+        localStorage.setItem('websiteMenu', JSON.stringify(menuData));
+      } else {
+        // Fallback vers localStorage
+        loadFromLocalStorage();
       }
     } catch (err) {
       console.error('❌ Navigation - Error loading from Supabase:', err);
