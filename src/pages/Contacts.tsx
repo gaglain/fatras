@@ -273,7 +273,7 @@ export const Contacts: React.FC = () => {
 
       if (error) throw error;
       toast.success('Contact supprimé avec succès');
-      fetchContacts();
+      fetchContacts({ reset: true });
     } catch (error: any) {
       console.error('Erreur lors de la suppression:', error);
       toast.error('Erreur lors de la suppression du contact');
@@ -287,7 +287,7 @@ export const Contacts: React.FC = () => {
 
   const handleImportComplete = (importedContacts: any[]) => {
     console.log('Import completed:', importedContacts.length, 'contacts');
-    fetchContacts(); // Refresh the contacts list
+    fetchContacts({ reset: true }); // Refresh the contacts list
     setCsvImportOpen(false);
   };
 
@@ -322,7 +322,7 @@ export const Contacts: React.FC = () => {
       
       toast.success(`${selectedContactIds.length} contact(s) supprimé(s) avec succès`);
       setSelectedContactIds([]);
-      fetchContacts();
+      fetchContacts({ reset: true });
     } catch (error: any) {
       console.error('Erreur lors de la suppression en masse:', error);
       toast.error('Erreur lors de la suppression des contacts');
@@ -588,7 +588,7 @@ export const Contacts: React.FC = () => {
         onClose={handleDialogClose}
         contact={editingContact}
         onSave={() => {
-          fetchContacts();
+          fetchContacts({ reset: true });
           handleDialogClose();
         }}
       />
