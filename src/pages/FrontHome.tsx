@@ -3,8 +3,75 @@ import { FrontLayout } from '@/components/FrontLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, MapPin, Clock, Users } from 'lucide-react';
+import { Calendar, MapPin, Clock, Users, ArrowRight } from 'lucide-react';
 import { useFrontDataSync } from '@/hooks/useFrontDataSync';
+import { Button } from '@/components/ui/button';
+
+// Composant Hero avec effet hover
+const HeroBlock: React.FC<{ content: any; siteSettings: any }> = ({ content, siteSettings }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  
+  // Toujours utiliser "Fatras" comme titre par défaut
+  const title = 'Fatras';
+  const subtitle = 'Spectacle de rue & de scène';
+  const backgroundImage = content?.backgroundImage;
+  const buttonText = content?.buttonText || 'Découvrir nos Spectacles';
+  const buttonLink = content?.buttonLink || '#spectacles';
+
+  return (
+    <section 
+      className="relative min-h-screen flex items-center justify-center overflow-hidden cursor-pointer group"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {/* Background image or gradient */}
+      {backgroundImage ? (
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-700 group-hover:scale-105"
+          style={{ backgroundImage: `url(${backgroundImage})` }}
+        />
+      ) : (
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900" />
+      )}
+      
+      {/* Overlay that darkens on hover */}
+      <div 
+        className={`absolute inset-0 bg-black transition-opacity duration-500 ${
+          isHovered ? 'opacity-60' : 'opacity-30'
+        }`}
+      />
+      
+      {/* Content */}
+      <div className="relative z-10 text-center text-white px-4 lg:px-8 max-w-4xl mx-auto">
+        <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold mb-4 lg:mb-6 leading-tight tracking-tight drop-shadow-lg">
+          {title}
+        </h1>
+        
+        {/* Presentation text that appears on hover */}
+        <div 
+          className={`transition-all duration-500 ease-out ${
+            isHovered 
+              ? 'opacity-100 translate-y-0' 
+              : 'opacity-0 translate-y-4'
+          }`}
+        >
+          <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl mb-6 lg:mb-8 text-white/90 font-light tracking-wide">
+            {subtitle}
+          </p>
+          {buttonText && (
+            <a 
+              href={buttonLink}
+              className="inline-flex items-center px-6 lg:px-8 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-base lg:text-lg font-medium"
+            >
+              {buttonText}
+              <ArrowRight className="ml-2 h-4 w-4 lg:h-5 lg:w-5" />
+            </a>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+};
 
 export const FrontHome: React.FC = () => {
   const [homePageBlocks, setHomePageBlocks] = useState<any[]>([]);
@@ -294,9 +361,9 @@ export const FrontHome: React.FC = () => {
         id: 'hero-1',
         type: 'hero',
         content: {
-          title: siteSettings.siteName || 'Bienvenue sur notre site',
-          subtitle: siteSettings.siteDescription || 'Découvrez nos spectacles et artistes',
-          buttonText: 'Voir nos spectacles',
+          title: 'Fatras',
+          subtitle: 'Spectacle de rue & de scène',
+          buttonText: 'Découvrir nos Spectacles',
           buttonLink: '#spectacles'
         }
       },
@@ -338,34 +405,12 @@ export const FrontHome: React.FC = () => {
         {Array.isArray(homePageBlocks) && homePageBlocks.length > 0 ? homePageBlocks.map((block, index) => (
           <div key={block.id || index} className="block-container">
             
-            {/* Section Hero */}
+            {/* Section Hero avec effet hover */}
             {block.type === 'hero' && (
-              <div
-                className="relative py-16 px-4"
-                style={block.content?.backgroundImage ? {
-                  backgroundImage: `url(${block.content.backgroundImage})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center'
-                } : {}}
-              >
-                <div className="absolute inset-0 bg-background/60" aria-hidden="true"></div>
-                <div className="container mx-auto text-center relative">
-                  <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
-                    {block.content?.title || siteSettings.siteName || 'Bienvenue'}
-                  </h1>
-                  <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-                    {block.content?.subtitle || siteSettings.siteDescription || 'Découvrez notre univers'}
-                  </p>
-                  {block.content?.buttonText && (
-                    <a 
-                      href={block.content?.buttonLink || '#'}
-                      className="inline-flex items-center px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
-                    >
-                      {block.content.buttonText}
-                    </a>
-                  )}
-                </div>
-              </div>
+              <HeroBlock 
+                content={block.content} 
+                siteSettings={siteSettings}
+              />
             )}
             
             {/* Section Spectacles */}
