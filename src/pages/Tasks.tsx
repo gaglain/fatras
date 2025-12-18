@@ -353,16 +353,31 @@ export const Tasks: React.FC = () => {
         />
       ) : (
         <Tabs defaultValue="all" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="all">Toutes ({filteredTasks.length})</TabsTrigger>
-            <TabsTrigger value="todo">À faire ({todoTasks.length})</TabsTrigger>
-            <TabsTrigger value="in_progress">En cours ({inProgressTasks.length})</TabsTrigger>
-            <TabsTrigger value="completed">Terminées ({completedTasks.length})</TabsTrigger>
-            <TabsTrigger value="import" className="flex items-center gap-1">
-              <Upload className="h-3 w-3" />
-              Import CSV
-            </TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+            <TabsList className="inline-flex min-w-max sm:grid sm:w-full sm:grid-cols-5 sm:min-w-0">
+              <TabsTrigger value="all" className="text-xs sm:text-sm px-3 whitespace-nowrap">
+                <span className="hidden sm:inline">Toutes</span>
+                <span className="sm:hidden">Tout</span> ({filteredTasks.length})
+              </TabsTrigger>
+              <TabsTrigger value="todo" className="text-xs sm:text-sm px-3 whitespace-nowrap">
+                <span className="hidden sm:inline">À faire</span>
+                <span className="sm:hidden">Todo</span> ({todoTasks.length})
+              </TabsTrigger>
+              <TabsTrigger value="in_progress" className="text-xs sm:text-sm px-3 whitespace-nowrap">
+                <span className="hidden sm:inline">En cours</span>
+                <span className="sm:hidden">Cours</span> ({inProgressTasks.length})
+              </TabsTrigger>
+              <TabsTrigger value="completed" className="text-xs sm:text-sm px-3 whitespace-nowrap">
+                <span className="hidden sm:inline">Terminées</span>
+                <span className="sm:hidden">Fait</span> ({completedTasks.length})
+              </TabsTrigger>
+              <TabsTrigger value="import" className="flex items-center gap-1 text-xs sm:text-sm px-3 whitespace-nowrap">
+                <Upload className="h-3 w-3" />
+                <span className="hidden sm:inline">Import CSV</span>
+                <span className="sm:hidden">CSV</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="all">
           <TaskList 
