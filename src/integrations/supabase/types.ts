@@ -491,6 +491,7 @@ export type Database = {
           quote_template_id: string | null
           rating: number | null
           short_description: string | null
+          slug: string | null
           status: string
           tech_sheet_pdf_url: string | null
           technical_contact_id: string | null
@@ -527,6 +528,7 @@ export type Database = {
           quote_template_id?: string | null
           rating?: number | null
           short_description?: string | null
+          slug?: string | null
           status?: string
           tech_sheet_pdf_url?: string | null
           technical_contact_id?: string | null
@@ -563,6 +565,7 @@ export type Database = {
           quote_template_id?: string | null
           rating?: number | null
           short_description?: string | null
+          slug?: string | null
           status?: string
           tech_sheet_pdf_url?: string | null
           technical_contact_id?: string | null

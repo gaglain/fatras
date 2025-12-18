@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 
 export const FrontArtistDetail: React.FC = () => {
-  const { id } = useParams();
+  const { id: slugOrId } = useParams();
   const navigate = useNavigate();
   const [artist, setArtist] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -33,26 +33,43 @@ export const FrontArtistDetail: React.FC = () => {
 
   useEffect(() => {
     loadArtistData();
-  }, [id]);
+  }, [slugOrId]);
 
   const loadArtistData = async () => {
     setLoading(true);
     try {
-      // Charger les données de l'artiste
-      const { data: artistData, error: artistError } = await supabase
+      // D'abord essayer par slug, puis par id si c'est un UUID
+      let artistData = null;
+      let artistError = null;
+      
+      // Essayer par slug
+      const { data: bySlug, error: slugError } = await supabase
         .from('centralized_artists')
         .select('*')
-        .eq('id', id)
+        .eq('slug', slugOrId)
         .single();
+      
+      if (bySlug) {
+        artistData = bySlug;
+      } else {
+        // Fallback par ID (pour les anciens liens)
+        const { data: byId, error: idError } = await supabase
+          .from('centralized_artists')
+          .select('*')
+          .eq('id', slugOrId)
+          .single();
+        artistData = byId;
+        artistError = idError;
+      }
 
-      if (artistError) throw artistError;
+      if (!artistData) throw artistError || new Error('Artist not found');
       setArtist(artistData);
 
       // Charger les dates de tournée
       const { data: eventsData } = await supabase
         .from('events')
         .select('*')
-        .eq('artist_id', id)
+        .eq('artist_id', artistData.id)
         .in('status', ['confirmed', 'option'])
         .order('start_date', { ascending: true });
 

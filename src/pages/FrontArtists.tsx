@@ -28,6 +28,7 @@ export const FrontArtists: React.FC = () => {
       // Mapper les données pour correspondre au format attendu
       const mappedArtists = (data || []).map(artist => ({
         id: artist.id,
+        slug: artist.slug,
         name: artist.name,
         genre: artist.genre,
         bio: artist.bio || artist.short_description,
@@ -102,7 +103,7 @@ export const FrontArtists: React.FC = () => {
                       <p className="text-muted-foreground text-sm mb-4">{artist.bio}</p>
                     )}
                     <a 
-                      href={`/artistes/${artist.id}`}
+                      href={`/artistes/${artist.slug || artist.id}`}
                       className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
                     >
                       Découvrir
