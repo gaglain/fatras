@@ -94,29 +94,28 @@ export const useTaskNotifications = () => {
           console.warn('⚠️ Erreur vérification notifications (overdue):', existingError);
         }
 
-        // Créer la notification si elle n'existe pas en base
-        if (!existing || existing.length === 0) {
-          const { error: insertError } = await supabase
-            .from('notifications')
-            .insert({
-              user_id: targetUserId,
-              type: 'task_overdue',
-              title: 'Tâche en retard',
-              message: `La tâche "${task.title}" était due le ${new Date(task.due_date).toLocaleDateString('fr-FR')}`,
-              data: {
-                task_id: task.id,
-                task_title: task.title,
-                due_date: task.due_date,
-                priority: task.priority
-              },
-              read: false
-            });
-          
-          if (insertError) {
-            console.error('❌ Erreur création notification overdue:', insertError);
-          } else {
-            console.log('✅ Notification overdue créée pour:', task.title);
-          }
+        // Créer la notification via upsert (l'index unique empêche les doublons)
+        const { error: insertError } = await supabase
+          .from('notifications')
+          .upsert({
+            user_id: targetUserId,
+            type: 'task_overdue',
+            title: 'Tâche en retard',
+            message: `La tâche "${task.title}" était due le ${new Date(task.due_date).toLocaleDateString('fr-FR')}`,
+            data: {
+              task_id: task.id,
+              task_title: task.title,
+              due_date: task.due_date,
+              priority: task.priority
+            },
+            read: false
+          }, {
+            onConflict: 'user_id,type,data->>task_id,data->>due_date',
+            ignoreDuplicates: true
+          });
+        
+        if (insertError && !insertError.message?.includes('duplicate')) {
+          console.error('❌ Erreur création notification overdue:', insertError);
         }
 
         // Afficher le toast seulement s'il n'a pas déjà été montré
@@ -182,30 +181,29 @@ export const useTaskNotifications = () => {
           message = `La tâche "${task.title}" est due dans ${hoursUntilDue} heures`;
         }
 
-        // Créer la notification si elle n'existe pas en base
-        if (!existing || existing.length === 0) {
-          const { error: insertError } = await supabase
-            .from('notifications')
-            .insert({
-              user_id: targetUserId,
-              type: 'task_due_soon',
-              title: 'Tâche bientôt due',
-              message: message || `La tâche "${task.title}" est bientôt due`,
-              data: {
-                task_id: task.id,
-                task_title: task.title,
-                due_date: task.due_date,
-                priority: task.priority,
-                hours_until_due: hoursUntilDue
-              },
-              read: false
-            });
-          
-          if (insertError) {
-            console.error('❌ Erreur création notification due_soon:', insertError);
-          } else {
-            console.log('✅ Notification due_soon créée pour:', task.title);
-          }
+        // Créer la notification via upsert (l'index unique empêche les doublons)
+        const { error: insertError } = await supabase
+          .from('notifications')
+          .upsert({
+            user_id: targetUserId,
+            type: 'task_due_soon',
+            title: 'Tâche bientôt due',
+            message: message || `La tâche "${task.title}" est bientôt due`,
+            data: {
+              task_id: task.id,
+              task_title: task.title,
+              due_date: task.due_date,
+              priority: task.priority,
+              hours_until_due: hoursUntilDue
+            },
+            read: false
+          }, {
+            onConflict: 'user_id,type,data->>task_id,data->>due_date',
+            ignoreDuplicates: true
+          });
+        
+        if (insertError && !insertError.message?.includes('duplicate')) {
+          console.error('❌ Erreur création notification due_soon:', insertError);
         }
 
         // Afficher le toast seulement s'il n'a pas été montré et si c'est urgent
