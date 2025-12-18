@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Search, Filter, Users, UserCheck, UserX, Upload, Download, Mail, List, Grid, LayoutList } from 'lucide-react';
+import { Plus, Search, Filter, Users, UserCheck, UserX, Upload, Download, Mail, List, Grid, LayoutList, Loader2 } from 'lucide-react';
 import { ContactCard } from '@/components/contacts/ContactCard';
 import { ContactDialog } from '@/components/contacts/ContactDialog';
 import { CSVImporter } from '@/components/CSVImporter';
@@ -19,10 +19,13 @@ import { toast } from 'sonner';
 import { Contact } from '@/types/contact.types';
 import { useNavigate } from 'react-router-dom';
 
+const PAGE_SIZE = 200;
+
 export const Contacts: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { contactLists } = useContactLists();
+
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [filteredContacts, setFilteredContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,40 +46,124 @@ export const Contacts: React.FC = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [bulkListAssignmentOpen, setBulkListAssignmentOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
   const [events, setEvents] = useState<Array<{ id: string; title: string }>>([]);
   const [contactEvents, setContactEvents] = useState<Record<string, string[]>>({});
   const [artists, setArtists] = useState<Array<{ id: string; name: string }>>([]);
   const [contactArtists, setContactArtists] = useState<Record<string, string[]>>({});
   const [artistFilter, setArtistFilter] = useState('all');
 
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [totalContactsCount, setTotalContactsCount] = useState<number>(0);
+
   useEffect(() => {
     if (user) {
-      fetchContacts();
+      fetchContacts({ reset: true });
       fetchEvents();
-      fetchContactEvents();
       fetchArtists();
-      fetchContactArtists();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   useEffect(() => {
     filterContacts();
   }, [contacts, searchTerm, statusFilter, roleFilter, tagFilters, sourceFilter, cityFilter, departmentFilter, eventFilter, artistFilter, contactEvents, contactArtists]);
 
-  const fetchContacts = async () => {
+  const fetchRelationsForContacts = async (contactIds: string[]) => {
+    if (contactIds.length === 0) return;
+
     try {
-      const { data, error } = await supabase
+      const [eventsRes, artistsRes] = await Promise.all([
+        supabase
+          .from('contact_events')
+          .select('contact_id, event_id')
+          .in('contact_id', contactIds),
+        supabase
+          .from('contact_artists')
+          .select('contact_id, artist_id')
+          .in('contact_id', contactIds),
+      ]);
+
+      if (!eventsRes.error && eventsRes.data) {
+        setContactEvents(prev => {
+          const next = { ...prev };
+          for (const ce of eventsRes.data) {
+            const arr = next[ce.contact_id] ?? [];
+            if (!arr.includes(ce.event_id)) next[ce.contact_id] = [...arr, ce.event_id];
+          }
+          return next;
+        });
+      }
+
+      if (!artistsRes.error && artistsRes.data) {
+        setContactArtists(prev => {
+          const next = { ...prev };
+          for (const ca of artistsRes.data) {
+            const arr = next[ca.contact_id] ?? [];
+            if (!arr.includes(ca.artist_id)) next[ca.contact_id] = [...arr, ca.artist_id];
+          }
+          return next;
+        });
+      }
+    } catch (error: any) {
+      console.error('Erreur lors du chargement des liens contacts:', error);
+    }
+  };
+
+  const fetchContacts = async ({ reset }: { reset: boolean }) => {
+    const targetPage = reset ? 0 : page;
+    const from = targetPage * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+
+    if (reset) {
+      setLoading(true);
+      setContacts([]);
+      setFilteredContacts([]);
+      setSelectedContactIds([]);
+      setContactEvents({});
+      setContactArtists({});
+      setPage(0);
+    } else {
+      setIsLoadingMore(true);
+    }
+
+    try {
+      const { data, error, count } = await supabase
         .from('contacts')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .select('*', { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .range(from, to);
 
       if (error) throw error;
-      setContacts(data || []);
+
+      if (typeof count === 'number') {
+        setTotalContactsCount(count);
+      }
+
+      const newContacts = (data || []) as Contact[];
+
+      let mergedCount = 0;
+      setContacts(prev => {
+        const merged = reset ? newContacts : [...prev, ...newContacts];
+        mergedCount = merged.length;
+        return merged;
+      });
+
+      setPage(reset ? 1 : targetPage + 1);
+
+      const total = typeof count === 'number' ? count : totalContactsCount;
+      setHasMore(total ? mergedCount < total : newContacts.length === PAGE_SIZE);
+
+      // Charger les liens (événements/artistes) uniquement pour les contacts présents sur cette page
+      await fetchRelationsForContacts(newContacts.map(c => c.id).filter(Boolean));
     } catch (error: any) {
       console.error('Erreur lors du chargement des contacts:', error);
       toast.error('Erreur lors du chargement des contacts');
     } finally {
       setLoading(false);
+      setIsLoadingMore(false);
     }
   };
 
@@ -94,66 +181,21 @@ export const Contacts: React.FC = () => {
     }
   };
 
-  const fetchContactEvents = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('contact_events')
-        .select('contact_id, event_id');
-
-      if (error) throw error;
-      
-      // Organize contact events as a map: contactId -> [eventId1, eventId2, ...]
-      const eventMap: Record<string, string[]> = {};
-      data?.forEach(ce => {
-        if (!eventMap[ce.contact_id]) {
-          eventMap[ce.contact_id] = [];
-        }
-        eventMap[ce.contact_id].push(ce.event_id);
-      });
-      
-      setContactEvents(eventMap);
-    } catch (error: any) {
-      console.error('Erreur lors du chargement des liens contact-événement:', error);
-    }
-  };
-
   const fetchArtists = async () => {
     try {
       const { data, error } = await supabase
         .from('centralized_artists')
         .select('id, name')
         .order('name');
-      
+
       if (error) throw error;
-      
+
       setArtists(data || []);
     } catch (error: any) {
       console.error('Erreur lors du chargement des artistes:', error);
     }
   };
 
-  const fetchContactArtists = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('contact_artists')
-        .select('contact_id, artist_id');
-      
-      if (error) throw error;
-      
-      // Organize contact artists as a map: contactId -> [artistId1, artistId2, ...]
-      const artistMap: Record<string, string[]> = {};
-      data?.forEach(ca => {
-        if (!artistMap[ca.contact_id]) {
-          artistMap[ca.contact_id] = [];
-        }
-        artistMap[ca.contact_id].push(ca.artist_id);
-      });
-      
-      setContactArtists(artistMap);
-    } catch (error: any) {
-      console.error('Erreur lors du chargement des liens contact-artiste:', error);
-    }
-  };
 
   const filterContacts = () => {
     let filtered = contacts;
