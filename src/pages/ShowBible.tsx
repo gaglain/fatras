@@ -218,22 +218,25 @@ export const ShowBible: React.FC = () => {
       </div>
 
       <Tabs defaultValue="documents" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="documents" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            Documents
+        <TabsList className="grid w-full grid-cols-4 h-auto">
+          <TabsTrigger value="documents" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-xs sm:text-sm">
+            <FileText className="h-4 w-4 flex-shrink-0" />
+            <span className="hidden sm:inline">Documents</span>
+            <span className="sm:hidden">Docs</span>
           </TabsTrigger>
-          <TabsTrigger value="media" className="flex items-center gap-2">
-            <ImageIcon className="h-4 w-4" />
-            Banque Médias
+          <TabsTrigger value="media" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-xs sm:text-sm">
+            <ImageIcon className="h-4 w-4 flex-shrink-0" />
+            <span className="hidden sm:inline">Banque Médias</span>
+            <span className="sm:hidden">Médias</span>
           </TabsTrigger>
-          <TabsTrigger value="notes" className="flex items-center gap-2">
-            <FileEdit className="h-4 w-4" />
-            Notes
+          <TabsTrigger value="notes" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-xs sm:text-sm">
+            <FileEdit className="h-4 w-4 flex-shrink-0" />
+            <span>Notes</span>
           </TabsTrigger>
-          <TabsTrigger value="setlists" className="flex items-center gap-2">
-            <Music className="h-4 w-4" />
-            Setlists
+          <TabsTrigger value="setlists" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-xs sm:text-sm">
+            <Music className="h-4 w-4 flex-shrink-0" />
+            <span className="hidden sm:inline">Setlists</span>
+            <span className="sm:hidden">Sets</span>
           </TabsTrigger>
         </TabsList>
 
