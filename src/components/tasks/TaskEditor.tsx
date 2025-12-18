@@ -77,7 +77,7 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
     setSelectedEvent(null);
   }, [task.id]); // Only reset when task ID changes
 
-  // Mettre à jour selectedContact quand les contacts sont chargés
+  // Mettre à jour selectedContact quand les contacts sont chargés ou la tâche change
   useEffect(() => {
     if (task.contact_id && contacts.length > 0 && !contactCleared) {
       const foundContact = contacts.find(c => c.id === task.contact_id);
@@ -85,9 +85,9 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
         setSelectedContact(foundContact);
       }
     }
-  }, [task.contact_id, contacts.length, contactCleared]);
+  }, [task.id, task.contact_id, contacts, contactCleared]);
 
-  // Mettre à jour selectedEvent quand les events sont chargés
+  // Mettre à jour selectedEvent quand les events sont chargés ou la tâche change
   useEffect(() => {
     if (task.event_id && events.length > 0 && !eventCleared) {
       const foundEvent = events.find(e => e.id === task.event_id);
@@ -95,7 +95,7 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
         setSelectedEvent(foundEvent);
       }
     }
-  }, [task.event_id, events.length, eventCleared]);
+  }, [task.id, task.event_id, events, eventCleared]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
