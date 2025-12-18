@@ -4089,7 +4089,6 @@ export type Database = {
         Returns: boolean
       }
       refresh_shop_stats: { Args: never; Returns: undefined }
-      send_password_reset_email: { Args: { user_email: string }; Returns: Json }
       update_campaign_stats: {
         Args: { campaign_id: string; event_type: string }
         Returns: undefined
