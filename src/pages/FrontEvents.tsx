@@ -184,12 +184,16 @@ export const FrontEvents: React.FC = () => {
           </div>
           
           <div className="flex flex-col items-end space-y-3 mt-4 lg:mt-0">
-            <div className="text-right">
-              <div className="text-2xl font-bold text-gray-900">
-                {formatPrice(event.budget_min, event.budget_max)}
+            {(event.budget_min || event.budget_max) && (
+              <div className="text-right">
+                <div className="text-2xl font-bold text-gray-900">
+                  {event.budget_min && event.budget_max && event.budget_min !== event.budget_max 
+                    ? `${event.budget_min}€ - ${event.budget_max}€` 
+                    : `${event.budget_min || event.budget_max}€`}
+                </div>
+                <div className="text-sm text-gray-500">par personne</div>
               </div>
-              <div className="text-sm text-gray-500">par personne</div>
-            </div>
+            )}
             {!isPast && event.booking_url && (
               <Button 
                 className="bg-purple-600 hover:bg-purple-700"
