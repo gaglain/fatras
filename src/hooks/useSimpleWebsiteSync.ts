@@ -1,35 +1,29 @@
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useWebsiteConfig } from '@/contexts/WebsiteConfigContext';
 
 export const useSimpleWebsiteSync = () => {
   const { reloadConfig } = useWebsiteConfig();
+  const hasLoaded = useRef(false);
 
   useEffect(() => {
-    // Force reload au montage
-    console.log('🔄 Force reload config on mount');
-    reloadConfig();
-
-    // Écouter les changements de localStorage
-    const handleStorageChange = () => {
-      console.log('📦 Storage changed, reloading...');
+    // Charger une seule fois au montage
+    if (!hasLoaded.current) {
+      hasLoaded.current = true;
       reloadConfig();
-    };
+    }
 
-    // Écouter les changements de focus de la fenêtre
-    const handleFocus = () => {
-      console.log('👁️ Window focused, reloading config...');
-      reloadConfig();
+    // Écouter uniquement les changements de localStorage explicites
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key && ['websiteConfig', 'websiteSettings', 'websiteDesign'].includes(event.key)) {
+        reloadConfig();
+      }
     };
 
     window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('focus', handleFocus);
-    window.addEventListener('websiteConfigChanged', handleStorageChange);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('focus', handleFocus);
-      window.removeEventListener('websiteConfigChanged', handleStorageChange);
     };
   }, [reloadConfig]);
 

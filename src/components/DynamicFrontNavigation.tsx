@@ -18,27 +18,13 @@ export const DynamicFrontNavigation: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [logoError, setLogoError] = useState(false);
   
-  // Reset l'état d'erreur quand le logo change et préparer un src avec version pour bust le cache
+  // Reset l'état d'erreur quand le logo change
   useEffect(() => {
     if (logo) setLogoError(false);
   }, [logo]);
 
-  const logoSrc = React.useMemo(() => {
-    if (!logo) return '';
-    // Ne pas ajouter de query aux Data URLs (base64)
-    if (logo.startsWith('data:')) return logo;
-    try {
-      // Ajout de version uniquement pour fichiers/URLs afin d'éviter le cache
-      if (/^(https?:)?\//.test(logo) || logo.startsWith('http')) {
-        const v = Math.random().toString(36).slice(2, 10);
-        const sep = logo.includes('?') ? '&' : '?';
-        return `${logo}${sep}v=${v}`;
-      }
-      return logo;
-    } catch {
-      return logo;
-    }
-  }, [logo]);
+  // Utiliser le logo directement sans cache-busting aléatoire pour éviter le clignotement
+  const logoSrc = logo || '';
   
   // Utiliser le hook de synchronisation front
   const { forceSync } = useFrontSync();
@@ -176,41 +162,13 @@ export const DynamicFrontNavigation: React.FC = () => {
     }
   }, []);
 
-  // Charger les données initiales
+  // Charger les données initiales une seule fois
   useEffect(() => {
-    console.log('🚀 Navigation mounted');
     loadAllData();
-    
-    // Pas de forceSync automatique pour éviter les re-renders inutiles
-  }, [loadAllData, forceSync]);
+  }, [loadAllData]);
 
-  // Écouter les événements de synchronisation
+  // Écouter uniquement les événements de storage (pas les custom events pour éviter les boucles)
   useEffect(() => {
-    const reload = () => {
-      console.log('🔁 Navigation - Reloading data after update');
-      setTimeout(loadAllData, 100);
-    };
-
-    const handleMenuUpdate = () => {
-      console.log('🔄 Navigation - Menu update received');
-      reload();
-    };
-
-    const handleSettingsUpdate = () => {
-      console.log('⚙️ Navigation - Settings update received');
-      reload();
-    };
-
-    const handleDesignUpdate = () => {
-      console.log('🎨 Navigation - Design update received');
-      reload();
-    };
-
-    const handleWebsiteConfigChanged = () => {
-      console.log('🧩 Navigation - websiteConfig change detected');
-      reload();
-    };
-
     const handleStorageChange = (event: StorageEvent) => {
       if ([
         'websiteMenu',
@@ -220,27 +178,13 @@ export const DynamicFrontNavigation: React.FC = () => {
         'websiteDesign',
         'websiteConfig'
       ].includes(event.key || '')) {
-        console.log('💾 Navigation - Storage change detected:', event.key);
         setTimeout(loadAllData, 200);
       }
     };
 
-    // Event listeners
-    window.addEventListener('websiteMenuUpdated', handleMenuUpdate as EventListener);
-    window.addEventListener('menuUpdated', handleMenuUpdate as EventListener);
-    window.addEventListener('websiteSettingsUpdated', handleSettingsUpdate as EventListener);
-    window.addEventListener('siteSettingsUpdated', handleSettingsUpdate as EventListener);
-    window.addEventListener('websiteDesignUpdated', handleDesignUpdate as EventListener);
-    window.addEventListener('websiteConfigChanged', handleWebsiteConfigChanged as EventListener);
     window.addEventListener('storage', handleStorageChange);
 
     return () => {
-      window.removeEventListener('websiteMenuUpdated', handleMenuUpdate as EventListener);
-      window.removeEventListener('menuUpdated', handleMenuUpdate as EventListener);
-      window.removeEventListener('websiteSettingsUpdated', handleSettingsUpdate as EventListener);
-      window.removeEventListener('siteSettingsUpdated', handleSettingsUpdate as EventListener);
-      window.removeEventListener('websiteDesignUpdated', handleDesignUpdate as EventListener);
-      window.removeEventListener('websiteConfigChanged', handleWebsiteConfigChanged as EventListener);
       window.removeEventListener('storage', handleStorageChange);
     };
   }, [loadAllData]);
