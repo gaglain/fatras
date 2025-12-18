@@ -27,7 +27,11 @@ export default {
 				'2xs': ['0.625rem', { lineHeight: '0.875rem' }],
 			},
 			colors: {
-				border: 'hsl(var(--border))',
+				border: {
+					DEFAULT: 'hsl(var(--border))',
+					subtle: 'hsl(var(--border-subtle))',
+					strong: 'hsl(var(--border-strong))',
+				},
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',
 				background: 'hsl(var(--background))',
@@ -86,6 +90,15 @@ export default {
 				xl: 'calc(var(--radius) + 4px)',
 				'2xl': 'calc(var(--radius) + 8px)',
 				'3xl': 'calc(var(--radius) + 16px)',
+				'pill': '9999px',
+			},
+			borderWidth: {
+				DEFAULT: 'var(--border-width)',
+				'0': '0',
+				'1': '1px',
+				'2': 'var(--border-width-thick)',
+				'3': 'var(--border-width-bold)',
+				'4': '4px',
 			},
 			boxShadow: {
 				'sm': 'var(--shadow-sm)',
