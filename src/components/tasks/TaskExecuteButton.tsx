@@ -1,4 +1,5 @@
 import React from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Mail, Phone, Calendar, PlayCircle } from 'lucide-react';
 import { toast } from 'sonner';
@@ -19,17 +20,51 @@ interface TaskExecuteButtonProps {
 export const TaskExecuteButton: React.FC<TaskExecuteButtonProps> = ({ task }) => {
   const { contacts } = useContacts();
   const navigate = useNavigate();
+  const [resolvedContact, setResolvedContact] = React.useState<any>(null);
+
+  React.useEffect(() => {
+    let cancelled = false;
+
+    const resolve = async () => {
+      if (!task.contact_id) {
+        setResolvedContact(null);
+        return;
+      }
+
+      const found = contacts.find(c => c.id === task.contact_id);
+      if (found) {
+        setResolvedContact(found);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('contacts')
+        .select('*')
+        .eq('id', task.contact_id)
+        .maybeSingle();
+
+      if (!cancelled && data && !error) {
+        setResolvedContact(data);
+      }
+    };
+
+    resolve();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [task.contact_id, contacts]);
 
   const getContactEmail = () => {
     if (!task.contact_id) return '';
-    const contact = contacts.find(c => c.id === task.contact_id);
+    const contact = resolvedContact || contacts.find(c => c.id === task.contact_id);
     console.log('Found contact for task:', contact, 'task contact_id:', task.contact_id);
     return contact?.email || '';
   };
 
   const getContactPhone = () => {
     if (!task.contact_id) return '';
-    const contact = contacts.find(c => c.id === task.contact_id);
+    const contact = resolvedContact || contacts.find(c => c.id === task.contact_id);
     return contact?.phone || '';
   };
   const handleExecute = () => {

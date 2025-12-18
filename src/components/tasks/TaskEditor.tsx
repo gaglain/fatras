@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -78,13 +79,36 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
   }, [task.id]); // Only reset when task ID changes
 
   // Mettre à jour selectedContact quand les contacts sont chargés ou la tâche change
+  // IMPORTANT: la liste contacts peut être limitée (pagination Supabase), donc on fetch aussi par ID si besoin.
   useEffect(() => {
-    if (task.contact_id && contacts.length > 0 && !contactCleared) {
+    let cancelled = false;
+
+    const resolveContact = async () => {
+      if (!task.contact_id || contactCleared) return;
+
       const foundContact = contacts.find(c => c.id === task.contact_id);
       if (foundContact) {
         setSelectedContact(foundContact);
+        return;
       }
-    }
+
+      // Fallback: récupérer le contact directement par ID
+      const { data, error } = await supabase
+        .from('contacts')
+        .select('*')
+        .eq('id', task.contact_id)
+        .maybeSingle();
+
+      if (!cancelled && data && !error) {
+        setSelectedContact(data);
+      }
+    };
+
+    resolveContact();
+
+    return () => {
+      cancelled = true;
+    };
   }, [task.id, task.contact_id, contacts, contactCleared]);
 
   // Mettre à jour selectedEvent quand les events sont chargés ou la tâche change
