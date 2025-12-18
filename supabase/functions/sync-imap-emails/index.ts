@@ -272,9 +272,19 @@ const handler = async (req: Request): Promise<Response> => {
       let currentMessage: any = null;
       let currentHeaders = '';
       let inHeaders = false;
+      let headerBytesRemaining = 0;
       
-      for (const line of messageLines) {
-        if (line.match(/^\* \d+ FETCH/)) {
+      for (let i = 0; i < messageLines.length; i++) {
+        const line = messageLines[i];
+        
+        // Détecter le début d'un nouveau message FETCH
+        const fetchMatch = line.match(/^\* (\d+) FETCH/);
+        if (fetchMatch) {
+          // Sauvegarder le message précédent s'il existe
+          if (currentMessage && currentMessage.message_id && currentMessage.from_email) {
+            emailsToInsert.push(currentMessage);
+          }
+          
           // Nouveau message
           currentMessage = {
             user_id: userId,
@@ -291,49 +301,85 @@ const handler = async (req: Request): Promise<Response> => {
           };
           currentHeaders = '';
           inHeaders = false;
-        } else if (line.includes('BODY[HEADER]')) {
-          inHeaders = true;
-        } else if (inHeaders && line === ')') {
-          inHeaders = false;
+          headerBytesRemaining = 0;
           
-          // Parser les en-têtes
-          if (currentMessage && currentHeaders) {
-            const messageIdMatch = currentHeaders.match(/Message-ID:\s*<([^>]+)>/i);
-            const fromMatch = currentHeaders.match(/From:\s*(.+)/i);
-            const toMatch = currentHeaders.match(/To:\s*(.+)/i);
-            const subjectMatch = currentHeaders.match(/Subject:\s*(.+)/i);
-            const dateMatch = currentHeaders.match(/Date:\s*(.+)/i);
-            
-            if (messageIdMatch) currentMessage.message_id = messageIdMatch[1];
-            if (fromMatch) {
-              const fromParts = fromMatch[1].match(/^(.*?)\s*<([^>]+)>$/);
-              if (fromParts) {
-                currentMessage.from_name = fromParts[1].trim().replace(/"/g, '');
-                currentMessage.from_email = fromParts[2];
-              } else {
-                currentMessage.from_email = fromMatch[1].trim();
-              }
-            }
-            if (toMatch) currentMessage.to_email = toMatch[1].trim();
-            if (subjectMatch) currentMessage.subject = subjectMatch[1].trim();
-            if (dateMatch) {
-              try {
-                currentMessage.received_at = new Date(dateMatch[1]).toISOString();
-              } catch (e) {
-                // Garder la date par défaut
-              }
-            }
-            
-            currentMessage.content = `Email reçu via IMAP le ${new Date().toLocaleString('fr-FR')}`;
-            
-            if (currentMessage.message_id && currentMessage.from_email) {
-              emailsToInsert.push(currentMessage);
-            }
+          // Chercher le début des headers dans cette ligne
+          const headerStartMatch = line.match(/BODY\[HEADER\]\s*\{(\d+)\}/);
+          if (headerStartMatch) {
+            headerBytesRemaining = parseInt(headerStartMatch[1]);
+            inHeaders = true;
           }
-        } else if (inHeaders) {
-          currentHeaders += line + '\n';
+          continue;
+        }
+        
+        // Détecter BODY[HEADER] sur une ligne séparée
+        if (!inHeaders && line.includes('BODY[HEADER]')) {
+          const headerMatch = line.match(/BODY\[HEADER\]\s*\{(\d+)\}/);
+          if (headerMatch) {
+            headerBytesRemaining = parseInt(headerMatch[1]);
+            inHeaders = true;
+          }
+          continue;
+        }
+        
+        // Collecter les headers
+        if (inHeaders) {
+          // Vérifier si on a atteint la fin des headers (ligne vide ou fin du bloc)
+          if (line === '' || line === ')' || line.match(/^A\d{3}\s/)) {
+            inHeaders = false;
+            
+            // Parser les en-têtes collectés
+            if (currentMessage && currentHeaders) {
+              // Message-ID peut avoir plusieurs formats
+              const messageIdMatch = currentHeaders.match(/Message-ID:\s*<?([^>\s\r\n]+)>?/i) ||
+                                    currentHeaders.match(/Message-Id:\s*<?([^>\s\r\n]+)>?/i);
+              const fromMatch = currentHeaders.match(/From:\s*(.+?)(?:\r?\n(?!\s)|$)/i);
+              const toMatch = currentHeaders.match(/To:\s*(.+?)(?:\r?\n(?!\s)|$)/i);
+              const subjectMatch = currentHeaders.match(/Subject:\s*(.+?)(?:\r?\n(?!\s)|$)/i);
+              const dateMatch = currentHeaders.match(/Date:\s*(.+?)(?:\r?\n(?!\s)|$)/i);
+              
+              if (messageIdMatch) {
+                currentMessage.message_id = messageIdMatch[1].trim();
+              }
+              
+              if (fromMatch) {
+                const fromValue = fromMatch[1].trim();
+                const fromParts = fromValue.match(/^"?(.+?)"?\s*<([^>]+)>$/);
+                if (fromParts) {
+                  currentMessage.from_name = fromParts[1].trim().replace(/"/g, '');
+                  currentMessage.from_email = fromParts[2].trim();
+                } else if (fromValue.includes('@')) {
+                  currentMessage.from_email = fromValue.replace(/[<>]/g, '').trim();
+                }
+              }
+              
+              if (toMatch) currentMessage.to_email = toMatch[1].trim().replace(/[<>]/g, '');
+              if (subjectMatch) currentMessage.subject = subjectMatch[1].trim();
+              if (dateMatch) {
+                try {
+                  const parsedDate = new Date(dateMatch[1].trim());
+                  if (!isNaN(parsedDate.getTime())) {
+                    currentMessage.received_at = parsedDate.toISOString();
+                  }
+                } catch (e) {
+                  // Garder la date par défaut
+                }
+              }
+              
+              currentMessage.content = `Email reçu via IMAP le ${new Date().toLocaleString('fr-FR')}`;
+            }
+          } else {
+            currentHeaders += line + '\n';
+          }
         }
       }
+      
+      // Ne pas oublier le dernier message
+      if (currentMessage && currentMessage.message_id && currentMessage.from_email) {
+        emailsToInsert.push(currentMessage);
+      }
+      
+      console.log(`📧 ${emailsToInsert.length} emails parsés sur les 50 récupérés`);
 
       // Vérifier les emails existants et insérer les nouveaux
       let syncedCount = 0;
