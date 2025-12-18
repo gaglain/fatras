@@ -229,162 +229,198 @@ const handler = async (req: Request): Promise<Response> => {
         });
       }
 
-      // SELECT INBOX
-      response = await sendCommand('SELECT INBOX');
-      if (!response.includes('OK')) {
-        throw new Error(`SELECT INBOX failed: ${response}`);
-      }
-
-      // Extraire le nombre de messages
-      const existsMatch = response.match(/\* (\d+) EXISTS/);
-      const totalMessages = existsMatch ? parseInt(existsMatch[1]) : 0;
-      
-      console.log(`📨 Total messages in INBOX: ${totalMessages}`);
-
-      if (totalMessages === 0) {
-        await sendCommand('LOGOUT');
-        return new Response(JSON.stringify({ 
-          success: true,
-          syncedCount: 0,
-          totalMessages: 0,
-          message: 'Aucun message à synchroniser'
-        }), {
-          status: 200,
-          headers: {
-            'Content-Type': 'application/json',
-            ...corsHeaders,
-          },
-        });
-      }
-
-      // Récupérer les 50 derniers messages pour une synchronisation plus complète
-      const startMsg = Math.max(1, totalMessages - 49);
-      const endMsg = totalMessages;
-      
-      console.log(`🔍 Fetching messages ${startMsg}:${endMsg} (${endMsg - startMsg + 1} emails)`);
-
-      // FETCH les en-têtes des messages
-      response = await sendCommand(`FETCH ${startMsg}:${endMsg} (FLAGS ENVELOPE BODY.PEEK[HEADER])`);
-      
-      const emailsToInsert: any[] = [];
-      const messageLines = response.split('\r\n');
-      
-      let currentMessage: any = null;
-      let currentHeaders = '';
-      let inHeaders = false;
-      let headerBytesRemaining = 0;
-      
-      for (let i = 0; i < messageLines.length; i++) {
-        const line = messageLines[i];
+      // Fonction pour parser les emails d'une réponse FETCH
+      const parseEmailsFromResponse = (fetchResponse: string, folder: string): any[] => {
+        const emails: any[] = [];
+        const messageLines = fetchResponse.split('\r\n');
         
-        // Détecter le début d'un nouveau message FETCH
-        const fetchMatch = line.match(/^\* (\d+) FETCH/);
-        if (fetchMatch) {
-          // Sauvegarder le message précédent s'il existe
-          if (currentMessage && currentMessage.message_id && currentMessage.from_email) {
-            emailsToInsert.push(currentMessage);
-          }
+        let currentMessage: any = null;
+        let currentHeaders = '';
+        let inHeaders = false;
+        let headerBytesRemaining = 0;
+        
+        for (let i = 0; i < messageLines.length; i++) {
+          const line = messageLines[i];
           
-          // Nouveau message
-          currentMessage = {
-            user_id: userId,
-            provider: 'imap',
-            message_id: '',
-            from_email: '',
-            from_name: '',
-            to_email: '',
-            subject: '',
-            content: '',
-            html_content: '',
-            received_at: new Date().toISOString(),
-            labels: ['INBOX']
-          };
-          currentHeaders = '';
-          inHeaders = false;
-          headerBytesRemaining = 0;
-          
-          // Chercher le début des headers dans cette ligne
-          const headerStartMatch = line.match(/BODY\[HEADER\]\s*\{(\d+)\}/);
-          if (headerStartMatch) {
-            headerBytesRemaining = parseInt(headerStartMatch[1]);
-            inHeaders = true;
-          }
-          continue;
-        }
-        
-        // Détecter BODY[HEADER] sur une ligne séparée
-        if (!inHeaders && line.includes('BODY[HEADER]')) {
-          const headerMatch = line.match(/BODY\[HEADER\]\s*\{(\d+)\}/);
-          if (headerMatch) {
-            headerBytesRemaining = parseInt(headerMatch[1]);
-            inHeaders = true;
-          }
-          continue;
-        }
-        
-        // Collecter les headers
-        if (inHeaders) {
-          // Vérifier si on a atteint la fin des headers (ligne vide ou fin du bloc)
-          if (line === '' || line === ')' || line.match(/^A\d{3}\s/)) {
-            inHeaders = false;
+          const fetchMatch = line.match(/^\* (\d+) FETCH/);
+          if (fetchMatch) {
+            if (currentMessage && currentMessage.message_id && currentMessage.from_email) {
+              emails.push(currentMessage);
+            }
             
-            // Parser les en-têtes collectés
-            if (currentMessage && currentHeaders) {
-              // Message-ID peut avoir plusieurs formats
-              const messageIdMatch = currentHeaders.match(/Message-ID:\s*<?([^>\s\r\n]+)>?/i) ||
-                                    currentHeaders.match(/Message-Id:\s*<?([^>\s\r\n]+)>?/i);
-              const fromMatch = currentHeaders.match(/From:\s*(.+?)(?:\r?\n(?!\s)|$)/i);
-              const toMatch = currentHeaders.match(/To:\s*(.+?)(?:\r?\n(?!\s)|$)/i);
-              const subjectMatch = currentHeaders.match(/Subject:\s*(.+?)(?:\r?\n(?!\s)|$)/i);
-              const dateMatch = currentHeaders.match(/Date:\s*(.+?)(?:\r?\n(?!\s)|$)/i);
+            const isSentFolder = folder.toLowerCase().includes('sent') || 
+                                 folder.toLowerCase().includes('envoy');
+            
+            currentMessage = {
+              user_id: userId,
+              provider: 'imap',
+              message_id: '',
+              from_email: '',
+              from_name: '',
+              to_email: '',
+              subject: '',
+              content: '',
+              html_content: '',
+              received_at: new Date().toISOString(),
+              direction: isSentFolder ? 'sent' : 'received',
+              labels: [folder]
+            };
+            currentHeaders = '';
+            inHeaders = false;
+            headerBytesRemaining = 0;
+            
+            const headerStartMatch = line.match(/BODY\[HEADER\]\s*\{(\d+)\}/);
+            if (headerStartMatch) {
+              headerBytesRemaining = parseInt(headerStartMatch[1]);
+              inHeaders = true;
+            }
+            continue;
+          }
+          
+          if (!inHeaders && line.includes('BODY[HEADER]')) {
+            const headerMatch = line.match(/BODY\[HEADER\]\s*\{(\d+)\}/);
+            if (headerMatch) {
+              headerBytesRemaining = parseInt(headerMatch[1]);
+              inHeaders = true;
+              continue;
+            }
+          }
+          
+          if (inHeaders && currentMessage) {
+            currentHeaders += line + '\r\n';
+            
+            const lineEndMatch = line.match(/\)$/);
+            const emptyLineAfterHeaders = line.trim() === '' && currentHeaders.includes('Message-ID');
+            
+            if (lineEndMatch || emptyLineAfterHeaders || currentHeaders.length > headerBytesRemaining + 200) {
+              const messageIdMatch = currentHeaders.match(/Message-ID:\s*<?([^>\s\r\n]+)>?/i);
+              const fromMatch = currentHeaders.match(/From:\s*(?:"?([^"<\r\n]*)"?\s*)?<?([^>\r\n\s]+@[^>\r\n\s]+)>?/i);
+              const toMatch = currentHeaders.match(/To:\s*(?:"?([^"<\r\n]*)"?\s*)?<?([^>\r\n\s]+@[^>\r\n\s]+)>?/i);
+              const subjectMatch = currentHeaders.match(/Subject:\s*([^\r\n]+(?:\r\n\s+[^\r\n]+)*)/i);
+              const dateMatch = currentHeaders.match(/Date:\s*([^\r\n]+)/i);
               
               if (messageIdMatch) {
                 currentMessage.message_id = messageIdMatch[1].trim();
               }
               
               if (fromMatch) {
-                const fromValue = fromMatch[1].trim();
-                const fromParts = fromValue.match(/^"?(.+?)"?\s*<([^>]+)>$/);
-                if (fromParts) {
-                  currentMessage.from_name = fromParts[1].trim().replace(/"/g, '');
-                  currentMessage.from_email = fromParts[2].trim();
-                } else if (fromValue.includes('@')) {
-                  currentMessage.from_email = fromValue.replace(/[<>]/g, '').trim();
-                }
+                currentMessage.from_name = fromMatch[1]?.trim() || '';
+                currentMessage.from_email = fromMatch[2]?.trim().toLowerCase() || '';
               }
               
-              if (toMatch) currentMessage.to_email = toMatch[1].trim().replace(/[<>]/g, '');
-              if (subjectMatch) currentMessage.subject = subjectMatch[1].trim();
+              if (toMatch) {
+                currentMessage.to_email = toMatch[2]?.trim().toLowerCase() || '';
+              }
+              
+              if (subjectMatch) {
+                let subject = subjectMatch[1].replace(/\r\n\s+/g, ' ').trim();
+                subject = subject.replace(/=\?[^?]+\?[BQ]\?[^?]+\?=/gi, (match) => {
+                  try {
+                    const parts = match.split('?');
+                    if (parts.length >= 4) {
+                      const encoding = parts[2].toUpperCase();
+                      const encoded = parts[3];
+                      if (encoding === 'B') {
+                        return atob(encoded);
+                      } else if (encoding === 'Q') {
+                        return encoded.replace(/_/g, ' ').replace(/=([0-9A-F]{2})/gi, (_, hex) => 
+                          String.fromCharCode(parseInt(hex, 16))
+                        );
+                      }
+                    }
+                  } catch (e) {}
+                  return match;
+                });
+                currentMessage.subject = subject;
+              }
+              
               if (dateMatch) {
                 try {
                   const parsedDate = new Date(dateMatch[1].trim());
                   if (!isNaN(parsedDate.getTime())) {
                     currentMessage.received_at = parsedDate.toISOString();
                   }
-                } catch (e) {
-                  // Garder la date par défaut
-                }
+                } catch (e) {}
               }
               
-              currentMessage.content = `Email reçu via IMAP le ${new Date().toLocaleString('fr-FR')}`;
+              inHeaders = false;
             }
-          } else {
-            currentHeaders += line + '\n';
           }
         }
-      }
-      
-      // Ne pas oublier le dernier message
-      if (currentMessage && currentMessage.message_id && currentMessage.from_email) {
-        emailsToInsert.push(currentMessage);
-      }
-      
-      console.log(`📧 ${emailsToInsert.length} emails parsés sur les 50 récupérés`);
+        
+        if (currentMessage && currentMessage.message_id && currentMessage.from_email) {
+          emails.push(currentMessage);
+        }
+        
+        return emails;
+      };
 
-      // Vérifier les emails existants et insérer les nouveaux
-      let syncedCount = 0;
+      // Fonction pour synchroniser un dossier
+      const syncFolder = async (folderName: string): Promise<{ syncedCount: number; totalMessages: number; emails: any[] }> => {
+        try {
+          response = await sendCommand(`SELECT "${folderName}"`);
+          if (!response.includes('OK')) {
+            console.log(`⚠️ Could not select folder ${folderName}`);
+            return { syncedCount: 0, totalMessages: 0, emails: [] };
+          }
+
+          const existsMatch = response.match(/\* (\d+) EXISTS/);
+          const totalMessages = existsMatch ? parseInt(existsMatch[1]) : 0;
+          
+          console.log(`📨 Total messages in ${folderName}: ${totalMessages}`);
+
+          if (totalMessages === 0) {
+            return { syncedCount: 0, totalMessages: 0, emails: [] };
+          }
+
+          const startMsg = Math.max(1, totalMessages - 49);
+          const endMsg = totalMessages;
+          
+          console.log(`🔍 Fetching messages ${startMsg}:${endMsg} from ${folderName}`);
+
+          response = await sendCommand(`FETCH ${startMsg}:${endMsg} (FLAGS ENVELOPE BODY.PEEK[HEADER])`);
+          
+          const emails = parseEmailsFromResponse(response, folderName);
+          console.log(`📧 ${emails.length} emails parsés depuis ${folderName}`);
+
+          return { syncedCount: 0, totalMessages, emails };
+        } catch (error) {
+          console.error(`❌ Error syncing folder ${folderName}:`, error);
+          return { syncedCount: 0, totalMessages: 0, emails: [] };
+        }
+      };
+
+      // Synchroniser INBOX (emails reçus)
+      console.log('📥 Synchronisation INBOX...');
+      const inboxResult = await syncFolder('INBOX');
+      const inboxEmails = inboxResult.emails;
+
+      // Synchroniser le dossier Envoyés
+      console.log('📤 Synchronisation dossier Envoyés...');
+      const sentFolderNames = [
+        '[Gmail]/Sent Mail',
+        '[Gmail]/Messages envoy&AOk-s',
+        'Sent',
+        'Sent Items',
+        'Sent Messages',
+        'INBOX.Sent',
+        'Envoy&AOk-s',
+        'Messages envoy&AOk-s'
+      ];
       
-      for (const email of emailsToInsert) {
+      let sentEmails: any[] = [];
+      for (const folderName of sentFolderNames) {
+        const sentResult = await syncFolder(folderName);
+        if (sentResult.emails.length > 0) {
+          sentEmails = sentResult.emails;
+          console.log(`✅ Found sent emails in folder: ${folderName}`);
+          break;
+        }
+      }
+
+      // Sauvegarder les emails reçus dans inbound_emails
+      let syncedInbox = 0;
+      for (const email of inboxEmails) {
         try {
           const { data: existing } = await supabase
             .from('inbound_emails')
@@ -399,9 +435,8 @@ const handler = async (req: Request): Promise<Response> => {
               .insert(email);
             
             if (!insertError) {
-              syncedCount++;
+              syncedInbox++;
               
-              // Créer une notification pour le nouvel email
               try {
                 await supabase
                   .from('email_notifications')
@@ -412,31 +447,80 @@ const handler = async (req: Request): Promise<Response> => {
                     message: `De: ${email.from_name || email.from_email}\nSujet: ${email.subject}`,
                     is_read: false
                   });
-                console.log('✅ Notification créée pour:', email.subject);
               } catch (notifError) {
                 console.error('⚠️ Erreur création notification:', notifError);
-                // Ne pas bloquer la sync si la notification échoue
               }
-            } else {
-              console.error('❌ Erreur insertion email:', insertError);
             }
           }
         } catch (error) {
-          console.error('❌ Erreur traitement email:', error);
+          console.error('❌ Erreur traitement email INBOX:', error);
+        }
+      }
+
+      // Sauvegarder les emails envoyés dans emails table
+      let syncedSent = 0;
+      for (const email of sentEmails) {
+        try {
+          // Vérifier si l'email existe déjà
+          const { data: existing } = await supabase
+            .from('emails')
+            .select('id')
+            .eq('message_id', email.message_id)
+            .eq('user_id', userId)
+            .single();
+          
+          if (!existing) {
+            // Trouver le contact correspondant au destinataire
+            const { data: contact } = await supabase
+              .from('contacts')
+              .select('id')
+              .ilike('email', email.to_email)
+              .single();
+
+            const { error: insertError } = await supabase
+              .from('emails')
+              .insert({
+                user_id: userId,
+                message_id: email.message_id,
+                from_email: email.from_email,
+                from_name: email.from_name,
+                to_email: email.to_email,
+                subject: email.subject,
+                content: email.content || '',
+                html_content: email.html_content || '',
+                direction: 'sent',
+                status: 'delivered',
+                provider: 'imap',
+                sent_at: email.received_at,
+                contact_id: contact?.id || null,
+                labels: email.labels
+              });
+            
+            if (!insertError) {
+              syncedSent++;
+            } else {
+              console.error('❌ Erreur insertion email envoyé:', insertError);
+            }
+          }
+        } catch (error) {
+          console.error('❌ Erreur traitement email envoyé:', error);
         }
       }
 
       // LOGOUT
       await sendCommand('LOGOUT');
 
-      console.log(`✅ ${syncedCount} nouveaux emails synchronisés sur ${emailsToInsert.length} traités`);
+      const totalSynced = syncedInbox + syncedSent;
+      console.log(`✅ Sync terminé: ${syncedInbox} reçus, ${syncedSent} envoyés`);
       
       return new Response(JSON.stringify({ 
         success: true,
-        syncedCount,
-        totalMessages,
-        totalProcessed: emailsToInsert.length,
-        message: `${syncedCount} nouveaux emails synchronisés`
+        syncedCount: totalSynced,
+        syncedInbox,
+        syncedSent,
+        totalInbox: inboxEmails.length,
+        totalSent: sentEmails.length,
+        message: `${syncedInbox} emails reçus et ${syncedSent} emails envoyés synchronisés`
       }), {
         status: 200,
         headers: {
