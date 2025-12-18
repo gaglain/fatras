@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CheckSquare, Search, Plus, Trash, Upload, LayoutGrid, List, Edit, X } from 'lucide-react';
+import { CheckSquare, Search, Plus, Trash, Upload, LayoutGrid, List, Edit, X, Filter, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { TaskCreator } from '@/components/tasks/TaskCreator';
 import { TaskCSVImporter } from '@/components/tasks/TaskCSVImporter';
@@ -43,6 +43,7 @@ export const Tasks: React.FC = () => {
   const [selectedTask, setSelectedTask] = useState<TaskType | null>(null);
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
   const [bulkEditorOpen, setBulkEditorOpen] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const [emailComposer, setEmailComposer] = useState<{
     isOpen: boolean;
     to: string;
@@ -211,11 +212,11 @@ export const Tasks: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 p-4 lg:p-0">
+    <div className="space-y-4 sm:space-y-6 p-4 lg:p-0">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold">Gestion des Tâches</h1>
-          <p className="text-muted-foreground mt-1 text-sm lg:text-base">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Gestion des Tâches</h1>
+          <p className="text-muted-foreground mt-1 text-xs sm:text-sm lg:text-base">
             {todoTasks.length} à faire • {inProgressTasks.length} en cours • {completedTasks.length} terminées
           </p>
         </div>
@@ -226,25 +227,28 @@ export const Tasks: React.FC = () => {
                 variant="outline"
                 size="sm"
                 onClick={() => setSelectedTaskIds([])}
+                className="text-xs"
               >
-                <X className="h-4 w-4 mr-2" />
-                Annuler ({selectedTaskIds.length})
+                <X className="h-3 w-3 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Annuler</span> ({selectedTaskIds.length})
               </Button>
               <Button
                 variant="default"
                 size="sm"
                 onClick={() => setBulkEditorOpen(true)}
+                className="text-xs"
               >
-                <Edit className="h-4 w-4 mr-2" />
-                Modifier
+                <Edit className="h-3 w-3 sm:mr-2" />
+                <span className="hidden sm:inline">Modifier</span>
               </Button>
               <Button
                 variant="destructive"
                 size="sm"
                 onClick={handleBulkDelete}
+                className="text-xs"
               >
-                <Trash className="h-4 w-4 mr-2" />
-                Supprimer
+                <Trash className="h-3 w-3 sm:mr-2" />
+                <span className="hidden sm:inline">Supprimer</span>
               </Button>
             </>
           )}
@@ -252,39 +256,55 @@ export const Tasks: React.FC = () => {
             variant={viewMode === 'compact' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setViewMode('compact')}
+            className="text-xs"
           >
-            <LayoutGrid className="h-4 w-4 mr-2" />
-            Compact
+            <LayoutGrid className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Compact</span>
           </Button>
           <Button
             variant={viewMode === 'list' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setViewMode('list')}
+            className="text-xs"
           >
-            <List className="h-4 w-4 mr-2" />
-            Liste
+            <List className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Liste</span>
           </Button>
           <TaskCreator onTaskCreated={handleTaskCreated} />
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-        <div className="relative w-full sm:flex-1 sm:max-w-md">
+      {/* Search + Filter toggle for mobile */}
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
             placeholder="Rechercher des tâches..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className="pl-10 text-sm"
           />
         </div>
-        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShowFilters(!showFilters)}
+          className="sm:hidden flex items-center gap-1"
+        >
+          <Filter className="h-4 w-4" />
+          {showFilters ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+        </Button>
+      </div>
+
+      {/* Filters - collapsible on mobile */}
+      <div className={`${showFilters ? 'block' : 'hidden'} sm:block`}>
+        <div className="grid grid-cols-2 sm:flex sm:flex-row gap-2">
           <Select value={selectedUser} onValueChange={setSelectedUser}>
-            <SelectTrigger className="w-full sm:w-48">
-              <SelectValue placeholder="Filtrer par utilisateur" />
+            <SelectTrigger className="text-xs sm:text-sm sm:w-44">
+              <SelectValue placeholder="Utilisateur" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Tous les utilisateurs</SelectItem>
+              <SelectItem value="all">Tous</SelectItem>
               {users.filter(user => user.isActive).map((user) => (
                 <SelectItem key={user.id} value={user.id}>
                   {user.name}
@@ -293,49 +313,49 @@ export const Tasks: React.FC = () => {
             </SelectContent>
           </Select>
           <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger className="w-full sm:w-48">
-              <SelectValue placeholder="Filtrer par catégorie" />
+            <SelectTrigger className="text-xs sm:text-sm sm:w-44">
+              <SelectValue placeholder="Catégorie" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Toutes les catégories</SelectItem>
+              <SelectItem value="all">Toutes</SelectItem>
               <SelectItem value="follow_up">Suivi Client</SelectItem>
               <SelectItem value="contract">Contrat</SelectItem>
-              <SelectItem value="event_prep">Préparation Événement</SelectItem>
+              <SelectItem value="event_prep">Préparation</SelectItem>
               <SelectItem value="marketing">Marketing</SelectItem>
-              <SelectItem value="admin">Administration</SelectItem>
+              <SelectItem value="admin">Admin</SelectItem>
             </SelectContent>
           </Select>
           <Select value={selectedDate} onValueChange={setSelectedDate}>
-            <SelectTrigger className="w-full sm:w-48">
-              <SelectValue placeholder="Filtrer par échéance" />
+            <SelectTrigger className="text-xs sm:text-sm sm:w-40">
+              <SelectValue placeholder="Échéance" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Toutes les échéances</SelectItem>
+              <SelectItem value="all">Toutes</SelectItem>
               <SelectItem value="overdue">En retard</SelectItem>
               <SelectItem value="today">Aujourd'hui</SelectItem>
               <SelectItem value="tomorrow">Demain</SelectItem>
-              <SelectItem value="this_week">Cette semaine</SelectItem>
+              <SelectItem value="this_week">Semaine</SelectItem>
               <SelectItem value="no_date">Sans date</SelectItem>
             </SelectContent>
           </Select>
           <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-            <SelectTrigger className="w-full sm:w-48">
-              <SelectValue placeholder="Trier par" />
+            <SelectTrigger className="text-xs sm:text-sm sm:w-40">
+              <SelectValue placeholder="Trier" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="dueDate">Date d'échéance</SelectItem>
+              <SelectItem value="dueDate">Échéance</SelectItem>
               <SelectItem value="priority">Priorité</SelectItem>
               <SelectItem value="status">Statut</SelectItem>
-              <SelectItem value="createdAt">Date de création</SelectItem>
+              <SelectItem value="createdAt">Création</SelectItem>
             </SelectContent>
           </Select>
           <Select value={sortOrder} onValueChange={(value: any) => setSortOrder(value)}>
-            <SelectTrigger className="w-full sm:w-32">
+            <SelectTrigger className="text-xs sm:text-sm sm:w-28 col-span-2 sm:col-span-1">
               <SelectValue placeholder="Ordre" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="asc">Croissant</SelectItem>
-              <SelectItem value="desc">Décroissant</SelectItem>
+              <SelectItem value="asc">↑ Croissant</SelectItem>
+              <SelectItem value="desc">↓ Décroissant</SelectItem>
             </SelectContent>
           </Select>
         </div>
