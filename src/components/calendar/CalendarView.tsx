@@ -218,14 +218,56 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     const days = eachDayOfInterval({ start, end });
 
     return (
-      <div className="space-y-4">
+      <div className="space-y-2 sm:space-y-4">
         <div className="text-center">
-          <h3 className="text-lg font-semibold">
-            Semaine du {format(start, 'd', { locale: fr })} au {format(end, 'd MMMM yyyy', { locale: fr })}
+          <h3 className="text-sm sm:text-lg font-semibold">
+            Semaine du {format(start, 'd', { locale: fr })} au {format(end, 'd MMM yyyy', { locale: fr })}
           </h3>
         </div>
         
-        <div className="grid grid-cols-7 gap-2">
+        {/* Mobile: vertical list */}
+        <div className="sm:hidden space-y-2">
+          {days.map(day => {
+            const dayEvents = getEventsForDate(day);
+            const isToday = isSameDay(day, new Date());
+            
+            return (
+              <Card key={day.toISOString()} className={`${isToday ? 'ring-2 ring-primary' : ''}`}>
+                <CardHeader className="p-3 pb-2">
+                  <div className="flex items-center justify-between">
+                    <span className={`font-medium ${isToday ? 'text-primary' : ''}`}>
+                      {format(day, 'EEEE d', { locale: fr })}
+                    </span>
+                    {dayEvents.length > 0 && (
+                      <Badge variant="secondary" className="text-xs">{dayEvents.length}</Badge>
+                    )}
+                  </div>
+                </CardHeader>
+                {dayEvents.length > 0 && (
+                  <CardContent className="p-3 pt-0 space-y-2">
+                    {dayEvents.map(event => (
+                      <div
+                        key={event.id}
+                        className="p-2 rounded text-sm cursor-pointer hover:opacity-80 border-l-2 bg-background/50"
+                        style={{ borderLeftColor: getCalendarColor(event.calendar_id) }}
+                        onClick={() => onEventClick?.(event)}
+                      >
+                        <div className="font-medium truncate">{event.title}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {format(parseDate(event.start_time), 'HH:mm')}
+                          {event.location && ` · ${event.location}`}
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                )}
+              </Card>
+            );
+          })}
+        </div>
+
+        {/* Desktop grid */}
+        <div className="hidden sm:grid grid-cols-7 gap-2">
           {days.map(day => {
             const dayEvents = getEventsForDate(day);
             const isToday = isSameDay(day, new Date());
@@ -283,43 +325,60 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
     return (
-      <div className="space-y-4">
+      <div className="space-y-2 sm:space-y-4">
         <div className="text-center">
-          <h3 className="text-lg font-semibold">
+          <h3 className="text-base sm:text-lg font-semibold">
             {format(currentDate, 'MMMM yyyy', { locale: fr })}
           </h3>
         </div>
         
         {/* En-têtes des jours */}
-        <div className="grid grid-cols-7 gap-2">
-          {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map(day => (
-            <div key={day} className="text-center text-sm font-medium text-muted-foreground p-2">
-              {day}
+        <div className="grid grid-cols-7 gap-0.5 sm:gap-2">
+          {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((day, idx) => (
+            <div key={idx} className="text-center text-[10px] sm:text-sm font-medium text-muted-foreground p-1 sm:p-2">
+              <span className="sm:hidden">{day}</span>
+              <span className="hidden sm:inline">{['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'][idx]}</span>
             </div>
           ))}
         </div>
         
         {/* Grille du calendrier */}
-        <div className="grid grid-cols-7 gap-2">
+        <div className="grid grid-cols-7 gap-0.5 sm:gap-2">
           {days.map(day => {
             const dayEvents = getEventsForDate(day);
             const isToday = isSameDay(day, new Date());
             const isCurrentMonth = isSameMonth(day, currentDate);
             
             return (
-              <Card 
+              <div 
                 key={day.toISOString()} 
-                className={`min-h-24 ${isToday ? 'ring-2 ring-primary' : ''} ${!isCurrentMonth ? 'opacity-50' : ''}`}
+                className={`min-h-16 sm:min-h-24 p-0.5 sm:p-2 rounded-md border bg-card ${isToday ? 'ring-2 ring-primary' : ''} ${!isCurrentMonth ? 'opacity-50' : ''}`}
               >
-                <CardContent className="p-2">
-                  <div className={`text-sm font-medium mb-1 ${isToday ? 'text-primary' : ''}`}>
-                    {format(day, 'd')}
+                <div className={`text-xs sm:text-sm font-medium mb-0.5 sm:mb-1 ${isToday ? 'text-primary' : ''}`}>
+                  {format(day, 'd')}
+                </div>
+                <div className="space-y-0.5">
+                  {/* Mobile: show only colored dots, Desktop: show event details */}
+                  <div className="sm:hidden flex flex-wrap gap-0.5">
+                    {dayEvents.slice(0, 4).map(event => (
+                      <div
+                        key={event.id}
+                        className="w-2 h-2 rounded-full cursor-pointer"
+                        style={{ backgroundColor: getCalendarColor(event.calendar_id) }}
+                        onClick={() => onEventClick?.(event)}
+                        title={event.title}
+                      />
+                    ))}
+                    {dayEvents.length > 4 && (
+                      <span className="text-[8px] text-muted-foreground">+{dayEvents.length - 4}</span>
+                    )}
                   </div>
-                  <div className="space-y-1">
+                  {/* Desktop: full event display */}
+                  <div className="hidden sm:block space-y-1">
                     {dayEvents.slice(0, 3).map(event => (
                       <div
                         key={event.id}
-                        className="text-xs p-1 rounded cursor-pointer hover:opacity-80 border-l-2 bg-background/50 mb-1"
+                        className="text-xs p-1 rounded cursor-pointer hover:opacity-80 border-l-2 bg-background/50"
                         style={{ borderLeftColor: getCalendarColor(event.calendar_id) }}
                         onClick={() => onEventClick?.(event)}
                         title={`${event.title} - ${formatEventTime(event.start_time, event.end_time)}`}
@@ -336,8 +395,8 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                       </div>
                     )}
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             );
           })}
         </div>
@@ -354,22 +413,41 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3 sm:space-y-6">
       {/* Contrôles de navigation et vue */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={navigatePrev}>
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())}>
-            Aujourd'hui
-          </Button>
-          <Button variant="outline" size="sm" onClick={navigateNext}>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+        <div className="flex items-center justify-between sm:justify-start gap-2">
+          <div className="flex items-center gap-1">
+            <Button variant="outline" size="sm" onClick={navigatePrev} className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3">
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())} className="text-xs sm:text-sm h-8 px-2 sm:h-9 sm:px-3">
+              <span className="hidden sm:inline">Aujourd'hui</span>
+              <span className="sm:hidden">Auj.</span>
+            </Button>
+            <Button variant="outline" size="sm" onClick={navigateNext} className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3">
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+          
+          {/* View buttons on same row for mobile */}
+          <div className="flex gap-1 sm:hidden">
+            {(['day', 'week', 'month'] as ViewType[]).map(view => (
+              <Button
+                key={view}
+                variant={viewType === view ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewType(view)}
+                className="text-xs h-8 px-2"
+              >
+                {view === 'day' ? 'J' : view === 'week' ? 'S' : 'M'}
+              </Button>
+            ))}
+          </div>
         </div>
         
-        <div className="flex gap-2">
+        {/* Desktop view buttons */}
+        <div className="hidden sm:flex gap-2">
           {(['day', 'week', 'month'] as ViewType[]).map(view => (
             <Button
               key={view}
@@ -383,22 +461,22 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
         </div>
       </div>
 
-      {/* Filtres des calendriers en haut */}
+      {/* Filtres des calendriers - collapsible sur mobile */}
       <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Calendar className="h-5 w-5" />
+        <CardHeader className="p-3 sm:pb-3 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+            <CardTitle className="flex items-center gap-2 text-sm sm:text-lg">
+              <Calendar className="h-4 w-4 sm:h-5 sm:w-5" />
               Calendriers
             </CardTitle>
             <div className="flex items-center gap-2">
-              <div className="relative">
-                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <div className="relative flex-1 sm:flex-none">
+                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Rechercher un agenda..."
+                  placeholder="Rechercher..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8 h-8 w-[200px]"
+                  className="pl-7 sm:pl-8 h-8 text-xs sm:text-sm w-full sm:w-[200px]"
                 />
               </div>
               {onToggleAll && (
@@ -406,32 +484,34 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                   variant="ghost"
                   size="sm"
                   onClick={onToggleAll}
-                  className="text-xs"
+                  className="text-xs whitespace-nowrap"
                 >
-                  {calendars.every(cal => cal.visible) ? 'Tout masquer' : 'Tout afficher'}
+                  <span className="hidden sm:inline">{calendars.every(cal => cal.visible) ? 'Tout masquer' : 'Tout afficher'}</span>
+                  <span className="sm:hidden">{calendars.every(cal => cal.visible) ? 'Masquer' : 'Afficher'}</span>
                 </Button>
               )}
             </div>
           </div>
         </CardHeader>
-        <CardContent className="pt-0">
-          <div className="flex flex-wrap gap-3">
+        <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+          <div className="flex flex-wrap gap-2 sm:gap-3">
             {filteredCalendars.map(calendar => (
-              <div key={calendar.id} className="flex items-center space-x-2">
+              <div key={calendar.id} className="flex items-center space-x-1 sm:space-x-2">
                 <Checkbox
                   id={calendar.id}
                   checked={calendar.visible}
                   onCheckedChange={() => onCalendarToggle(calendar.id)}
+                  className="h-3.5 w-3.5 sm:h-4 sm:w-4"
                 />
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 sm:gap-2">
                   <div 
-                    className="w-3 h-3 rounded-full"
+                    className="w-2 h-2 sm:w-3 sm:h-3 rounded-full flex-shrink-0"
                     style={{ backgroundColor: calendar.color }}
                   />
-                  <label htmlFor={calendar.id} className="text-sm font-medium cursor-pointer">
+                  <label htmlFor={calendar.id} className="text-xs sm:text-sm font-medium cursor-pointer truncate max-w-[80px] sm:max-w-none">
                     {calendar.name}
                   </label>
-                  <Badge variant="secondary" className="text-xs">
+                  <Badge variant="secondary" className="text-[10px] sm:text-xs hidden sm:inline-flex">
                     {calendar.provider}
                   </Badge>
                 </div>
@@ -443,7 +523,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 
       {/* Vue du calendrier pleine largeur */}
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="p-2 sm:p-6">
           {renderCurrentView()}
         </CardContent>
       </Card>
