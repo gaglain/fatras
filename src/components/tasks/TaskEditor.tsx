@@ -49,34 +49,12 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
   });
 
   // États pour les éléments sélectionnés via recherche
-  // Conserver les IDs originaux pour éviter la perte de données si les contacts/events ne sont pas encore chargés
-  const [originalContactId] = useState(task.contact_id);
-  const [originalEventId] = useState(task.event_id);
   const [selectedContact, setSelectedContact] = useState<any>(null);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [contactCleared, setContactCleared] = useState(false);
   const [eventCleared, setEventCleared] = useState(false);
 
-  // Mettre à jour selectedContact quand les contacts sont chargés
-  useEffect(() => {
-    if (task.contact_id && contacts.length > 0 && !contactCleared) {
-      const foundContact = contacts.find(c => c.id === task.contact_id);
-      if (foundContact) {
-        setSelectedContact(foundContact);
-      }
-    }
-  }, [task.contact_id, contacts, contactCleared]);
-
-  // Mettre à jour selectedEvent quand les events sont chargés
-  useEffect(() => {
-    if (task.event_id && events.length > 0 && !eventCleared) {
-      const foundEvent = events.find(e => e.id === task.event_id);
-      if (foundEvent) {
-        setSelectedEvent(foundEvent);
-      }
-    }
-  }, [task.event_id, events, eventCleared]);
-
+  // Réinitialiser les états quand la tâche change
   useEffect(() => {
     setFormData({
       title: task.title,
@@ -92,10 +70,32 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
       tags: task.tags || []
     });
     
-    // Reset cleared flags when task changes
+    // Reset states when task changes
     setContactCleared(false);
     setEventCleared(false);
-  }, [task]);
+    setSelectedContact(null);
+    setSelectedEvent(null);
+  }, [task.id]); // Only reset when task ID changes
+
+  // Mettre à jour selectedContact quand les contacts sont chargés
+  useEffect(() => {
+    if (task.contact_id && contacts.length > 0 && !contactCleared) {
+      const foundContact = contacts.find(c => c.id === task.contact_id);
+      if (foundContact) {
+        setSelectedContact(foundContact);
+      }
+    }
+  }, [task.contact_id, contacts.length, contactCleared]);
+
+  // Mettre à jour selectedEvent quand les events sont chargés
+  useEffect(() => {
+    if (task.event_id && events.length > 0 && !eventCleared) {
+      const foundEvent = events.find(e => e.id === task.event_id);
+      if (foundEvent) {
+        setSelectedEvent(foundEvent);
+      }
+    }
+  }, [task.event_id, events.length, eventCleared]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,8 +117,8 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
         finalContactId = null;
       } else if (selectedContact) {
         finalContactId = selectedContact.id;
-      } else if (originalContactId) {
-        finalContactId = originalContactId;
+      } else if (task.contact_id) {
+        finalContactId = task.contact_id;
       }
 
       // Même logique pour event_id
@@ -127,8 +127,8 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
         finalEventId = null;
       } else if (selectedEvent) {
         finalEventId = selectedEvent.id;
-      } else if (originalEventId) {
-        finalEventId = originalEventId;
+      } else if (task.event_id) {
+        finalEventId = task.event_id;
       }
 
       const updates = {
@@ -287,7 +287,7 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
                 setContactCleared(false);
               }}
               placeholder="Rechercher un contact..."
-              triggerText={selectedContact ? `${selectedContact.external_id || ''} ${selectedContact.first_name} ${selectedContact.last_name}`.trim() : (originalContactId && !contactCleared ? "Contact lié (chargement...)" : "Rechercher un contact...")}
+              triggerText={selectedContact ? `${selectedContact.external_id || ''} ${selectedContact.first_name} ${selectedContact.last_name}`.trim() : (task.contact_id && !contactCleared ? "Contact lié (chargement...)" : "Rechercher un contact...")}
             />
             {selectedContact && (
               <div className="text-sm text-muted-foreground mt-1">
@@ -316,7 +316,7 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
                 setEventCleared(false);
               }}
               placeholder="Rechercher un événement..."
-              triggerText={selectedEvent ? `${selectedEvent.external_id || ''} ${selectedEvent.title}`.trim() : (originalEventId && !eventCleared ? "Événement lié (chargement...)" : "Rechercher un événement...")}
+              triggerText={selectedEvent ? `${selectedEvent.external_id || ''} ${selectedEvent.title}`.trim() : (task.event_id && !eventCleared ? "Événement lié (chargement...)" : "Rechercher un événement...")}
             />
             {selectedEvent && (
               <div className="text-sm text-muted-foreground mt-1">
