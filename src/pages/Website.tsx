@@ -56,63 +56,67 @@ export const Website: React.FC = () => {
   };
   return (
     <WebsiteWithSidebar>
-      <div className="space-y-6 p-4 lg:p-6">
-        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
+      <div className="space-y-4 sm:space-y-6 p-3 sm:p-4 lg:p-6">
+        <div className="space-y-3">
           <div>
-            <h1 className="text-3xl font-bold">Gestion du Site Web</h1>
-            <p className="mt-2 text-gray-600">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Gestion du Site Web</h1>
+            <p className="mt-1 text-sm sm:text-base text-muted-foreground">
               Configurez et personnalisez votre site web public
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+          <div className="grid grid-cols-2 sm:flex sm:flex-row gap-2">
             <Button 
               onClick={handlePreviewSite}
               variant="outline"
-              className="flex items-center justify-center space-x-2"
+              size="sm"
+              className="flex items-center justify-center gap-1 text-xs sm:text-sm"
             >
-              <ExternalLink className="h-4 w-4" />
-              <span className="hidden sm:inline">Aperçu du site</span>
-              <span className="sm:hidden">Aperçu</span>
+              <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span>Aperçu</span>
             </Button>
             <Button 
               onClick={handleOpenEditor}
-              className="flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white"
+              size="sm"
+              className="flex items-center justify-center gap-1 text-xs sm:text-sm bg-blue-600 hover:bg-blue-700 text-white"
             >
-              <Edit className="h-4 w-4" />
-              <span className="hidden sm:inline">Éditeur de pages</span>
-              <span className="sm:hidden">Éditeur</span>
+              <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span>Éditeur</span>
             </Button>
             <Button 
               onClick={handleForceSync}
               variant="outline"
-              className="flex items-center justify-center"
+              size="sm"
+              className="flex items-center justify-center text-xs sm:text-sm"
             >
-              Forcer la synchro
+              <span className="hidden sm:inline">Forcer la synchro</span>
+              <span className="sm:hidden">Synchro</span>
             </Button>
             <Button 
               onClick={handleClearCache}
               variant="outline"
-              className="flex items-center justify-center"
+              size="sm"
+              className="flex items-center justify-center text-xs sm:text-sm"
             >
-              Vider le cache
+              <span className="hidden sm:inline">Vider le cache</span>
+              <span className="sm:hidden">Cache</span>
             </Button>
           </div>
         </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 gap-1">
-          <TabsTrigger value="config" className="flex items-center justify-center">
-            <Settings className="h-4 w-4 mr-2" />
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-3 sm:space-y-4">
+        <TabsList className="grid w-full grid-cols-3 h-auto">
+          <TabsTrigger value="config" className="flex items-center justify-center gap-1 px-2 py-2 text-xs sm:text-sm">
+            <Settings className="h-3 w-3 sm:h-4 sm:w-4" />
             <span className="hidden sm:inline">Configuration</span>
             <span className="sm:hidden">Config</span>
           </TabsTrigger>
-          <TabsTrigger value="advanced" className="flex items-center justify-center">
-            <Globe className="h-4 w-4 mr-2" />
+          <TabsTrigger value="advanced" className="flex items-center justify-center gap-1 px-2 py-2 text-xs sm:text-sm">
+            <Globe className="h-3 w-3 sm:h-4 sm:w-4" />
             <span className="hidden sm:inline">Gestion avancée</span>
             <span className="sm:hidden">Avancé</span>
           </TabsTrigger>
-          <TabsTrigger value="preview" className="flex items-center justify-center">
-            <Eye className="h-4 w-4 mr-2" />
+          <TabsTrigger value="preview" className="flex items-center justify-center gap-1 px-2 py-2 text-xs sm:text-sm">
+            <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
             <span>Aperçu</span>
           </TabsTrigger>
         </TabsList>
