@@ -87,9 +87,9 @@ export const CSVEventExporter: React.FC<CSVEventExporterProps> = ({ events }) =>
   };
 
   return (
-    <Button onClick={exportToCSV} variant="outline" size="sm">
-      <Download className="h-4 w-4 mr-2" />
-      Exporter CSV
+    <Button onClick={exportToCSV} variant="outline" size="sm" className="text-xs sm:text-sm">
+      <Download className="h-4 w-4 sm:mr-2" />
+      <span className="hidden sm:inline">Export</span>
     </Button>
   );
 };
