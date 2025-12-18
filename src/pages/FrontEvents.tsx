@@ -190,13 +190,15 @@ export const FrontEvents: React.FC = () => {
               </div>
               <div className="text-sm text-gray-500">par personne</div>
             </div>
-            {!isPast && (
+            {!isPast && event.booking_url && (
               <Button 
                 className="bg-purple-600 hover:bg-purple-700"
-                disabled={event.status !== 'confirmed' && event.status !== 'option'}
+                asChild
               >
-                <Ticket className="h-4 w-4 mr-2" />
-                {event.status === 'confirmed' || event.status === 'option' ? 'Réserver' : 'Indisponible'}
+                <a href={event.booking_url} target="_blank" rel="noopener noreferrer">
+                  <Ticket className="h-4 w-4 mr-2" />
+                  Réserver
+                </a>
               </Button>
             )}
           </div>

@@ -20,6 +20,7 @@ interface EventFormData {
   notes: string;
   contact_id: string;
   artist_id: string;
+  booking_url: string;
 }
 
 interface EventDraftManagerProps {

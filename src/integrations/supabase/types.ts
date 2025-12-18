@@ -1485,6 +1485,7 @@ export type Database = {
           address: string | null
           artist_id: string | null
           attendees_count: number | null
+          booking_url: string | null
           budget_max: number | null
           budget_min: number | null
           city: string | null
@@ -1510,6 +1511,7 @@ export type Database = {
           address?: string | null
           artist_id?: string | null
           attendees_count?: number | null
+          booking_url?: string | null
           budget_max?: number | null
           budget_min?: number | null
           city?: string | null
@@ -1535,6 +1537,7 @@ export type Database = {
           address?: string | null
           artist_id?: string | null
           attendees_count?: number | null
+          booking_url?: string | null
           budget_max?: number | null
           budget_min?: number | null
           city?: string | null
