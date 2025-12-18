@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useFrontSync } from '@/hooks/useFrontSync';
+import { Menu, X } from 'lucide-react';
 
 interface MenuItem {
   id: string;
@@ -17,6 +18,7 @@ export const DynamicFrontNavigation: React.FC = () => {
   const [logo, setLogo] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [logoError, setLogoError] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   // Reset l'état d'erreur quand le logo change
   useEffect(() => {
@@ -278,32 +280,57 @@ export const DynamicFrontNavigation: React.FC = () => {
             {menuItems.map(renderMenuItem)}
           </nav>
 
-          {/* Menu mobile avec sync */}
+          {/* Menu mobile */}
           <div className="md:hidden">
             <button 
-              className="p-2 hover:bg-gray-100 rounded"
-              onClick={() => {
-                console.log('🔄 Navigation - Manual sync requested');
-                forceSync();
-              }}
-              title="Synchroniser et actualiser"
+              className="p-2 hover:bg-gray-100 rounded relative z-50"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label={isMobileMenuOpen ? "Fermer le menu" : "Ouvrir le menu"}
             >
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
+              {isMobileMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
             </button>
           </div>
         </div>
+
+        {/* Menu mobile déroulant */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden border-t bg-background py-4">
+            <nav className="flex flex-col space-y-1">
+              {menuItems.map((item) => {
+                const urlCandidate = (item.path || (item as any).url || '') as string;
+                const isExternal = urlCandidate.startsWith('http') || urlCandidate.startsWith('//');
+
+                return isExternal ? (
+                  <a
+                    key={item.id}
+                    href={urlCandidate}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="front-link px-4 py-3 text-base font-medium transition-colors hover:bg-muted rounded-md"
+                    style={{ color: 'var(--site-link-color, #3b82f6)' }}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {item.label}
+                  </a>
+                ) : (
+                  <Link
+                    key={item.id}
+                    to={urlCandidate || '/'}
+                    className="front-link px-4 py-3 text-base font-medium transition-colors hover:bg-muted rounded-md"
+                    style={{ color: 'var(--site-link-color, #3b82f6)' }}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
+        )}
       </div>
     </header>
   );
