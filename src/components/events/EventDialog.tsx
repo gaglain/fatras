@@ -56,7 +56,8 @@ export const EventDialog: React.FC<EventDialogProps> = ({
     requirements: '',
     notes: '',
     contact_id: '',
-    artist_id: ''
+    artist_id: '',
+    booking_url: ''
   });
   const [loading, setLoading] = useState(false);
   const { clearDraft } = useEventDraft(event?.id);
@@ -91,7 +92,8 @@ export const EventDialog: React.FC<EventDialogProps> = ({
           requirements: event.requirements || '',
           notes: event.notes || '',
           contact_id: event.contact_id || '',
-          artist_id: (event as any).artist_id || ''
+          artist_id: (event as any).artist_id || '',
+          booking_url: (event as any).booking_url || ''
         });
       } else {
         // Mode création - réinitialiser le formulaire
@@ -113,7 +115,8 @@ export const EventDialog: React.FC<EventDialogProps> = ({
           requirements: '',
           notes: '',
           contact_id: '',
-          artist_id: ''
+          artist_id: '',
+          booking_url: ''
         });
       }
     }
@@ -194,7 +197,8 @@ export const EventDialog: React.FC<EventDialogProps> = ({
         requirements: formData.requirements || '',
         notes: formData.notes || '',
         contact_id: formData.contact_id && formData.contact_id !== 'none' && formData.contact_id !== '' ? formData.contact_id : null,
-        artist_id: formData.artist_id && formData.artist_id !== 'none' && formData.artist_id !== '' ? formData.artist_id : null
+        artist_id: formData.artist_id && formData.artist_id !== 'none' && formData.artist_id !== '' ? formData.artist_id : null,
+        booking_url: formData.booking_url || null
       };
 
       console.log('Saving event with data:', eventData);
@@ -449,6 +453,17 @@ export const EventDialog: React.FC<EventDialogProps> = ({
               value={formData.notes}
               onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
               rows={3}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="booking_url">Lien de réservation</Label>
+            <Input
+              id="booking_url"
+              type="url"
+              placeholder="https://..."
+              value={formData.booking_url}
+              onChange={(e) => setFormData(prev => ({ ...prev, booking_url: e.target.value }))}
             />
           </div>
 
