@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ViewToggle } from '@/components/ui/view-toggle';
-import { Plus, Music, Calendar, MapPin, Clock, Bed, BookOpen, Trash2, Upload, Image, Search, Edit2, Plane } from 'lucide-react';
+import { Plus, Music, Calendar, MapPin, Clock, Bed, BookOpen, Trash2, Upload, Image, Search, Edit2, Plane, Star, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCentralizedData, CentralizedArtist as Artist } from '@/hooks/useCentralizedData';
 import { useOpportunities } from '@/hooks/useOpportunities';
@@ -62,8 +62,37 @@ export const Artists: React.FC = () => {
     image: ''
   });
   const [uploading, setUploading] = useState(false);
+  const [upcomingShowsCounts, setUpcomingShowsCounts] = useState<Record<string, number>>({});
 
   console.log('🎭 Artists page - Current artists:', artists.length);
+
+  // Fetch real upcoming shows count for each artist
+  useEffect(() => {
+    const fetchUpcomingShows = async () => {
+      if (artists.length === 0) return;
+      
+      const { data, error } = await supabase
+        .from('events')
+        .select('artist_id')
+        .gte('start_date', new Date().toISOString())
+        .not('artist_id', 'is', null);
+      
+      if (error) {
+        console.error('Error fetching upcoming shows:', error);
+        return;
+      }
+
+      const counts: Record<string, number> = {};
+      data?.forEach(event => {
+        if (event.artist_id) {
+          counts[event.artist_id] = (counts[event.artist_id] || 0) + 1;
+        }
+      });
+      setUpcomingShowsCounts(counts);
+    };
+
+    fetchUpcomingShows();
+  }, [artists]);
 
   const filteredArtists = artists.filter(artist =>
     artist.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -224,84 +253,137 @@ export const Artists: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
         {/* Artists List */}
         <div className="lg:col-span-1">
-          <h2 className="text-lg lg:text-xl font-semibold mb-4">Spectacles</h2>
-          <div className="space-y-3">
-            {artists.map((artist) => (
-              <Card 
-                key={artist.id} 
-                className={`cursor-pointer hover:shadow-md transition-shadow ${
-                  selectedArtist === artist.id ? 'ring-2 ring-purple-500' : ''
-                }`}
-                onClick={() => navigate(`/artists/${artist.id}`)}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                      <Music className="h-5 w-5 text-purple-600" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-900">{artist.name}</h3>
-                      <p className="text-sm text-gray-500">{artist.genre}</p>
-                    </div>
-                    <div className="flex items-center flex-wrap gap-1">
-                      <Badge variant={artist.status === 'active' ? 'default' : 'secondary'}>
-                        {artist.status === 'active' ? 'Actif' : 'Inactif'}
-                      </Badge>
-                      {(artist as any).is_touring && (
-                        <Badge className="bg-green-100 text-green-800 border-green-200">
-                          <Plane className="h-3 w-3 mr-1" />
-                          Tournée
-                        </Badge>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg lg:text-xl font-semibold">Spectacles</h2>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Rechercher..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 w-48"
+              />
+            </div>
+          </div>
+          <div className="grid gap-4">
+            {filteredArtists.map((artist) => {
+              const upcomingCount = upcomingShowsCounts[artist.id] || 0;
+              return (
+                <Card 
+                  key={artist.id} 
+                  className={`group cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-1 ${
+                    selectedArtist === artist.id ? 'ring-2 ring-primary' : ''
+                  }`}
+                  onClick={() => navigate(`/artists/${artist.id}`)}
+                >
+                  <CardContent className="p-0">
+                    {/* Image header */}
+                    <div className="relative h-32 bg-gradient-to-br from-primary/20 to-primary/5 overflow-hidden">
+                      {artist.image ? (
+                        <img 
+                          src={artist.image} 
+                          alt={artist.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <Music className="h-12 w-12 text-primary/30" />
+                        </div>
                       )}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEditArtist(artist);
-                        }}
-                        className="p-1 h-6 w-6 text-blue-600 hover:text-blue-800 hover:bg-blue-50"
-                      >
-                        <Edit2 className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteArtist(artist.id);
-                        }}
-                        className="p-1 h-6 w-6 text-red-600 hover:text-red-800 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
+                      <div className="absolute top-2 right-2 flex gap-1">
+                        <Badge variant={artist.status === 'active' ? 'default' : 'secondary'} className="text-xs">
+                          {artist.status === 'active' ? 'Actif' : 'Inactif'}
+                        </Badge>
+                        {(artist as any).is_touring && (
+                          <Badge className="bg-green-500 text-white text-xs">
+                            <Plane className="h-3 w-3 mr-1" />
+                            Tournée
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3">
+                        <h3 className="font-semibold text-white text-lg">{artist.name}</h3>
+                        <p className="text-white/80 text-sm">{artist.genre}</p>
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div className="text-sm text-gray-600">
-                    <p>{artist.upcoming_shows} spectacles à venir</p>
-                    {artist.current_tour && (
-                      <p className="text-purple-600 font-medium">{artist.current_tour}</p>
-                    )}
-                  </div>
-                  
-                  <div className="mt-3">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="w-full"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate('/show-bible');
-                      }}
-                    >
-                      <BookOpen className="h-3 w-3 mr-1" />
-                      Voir Bible
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                    
+                    {/* Content */}
+                    <div className="p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-primary" />
+                          <span className="text-sm font-medium">
+                            {upcomingCount} spectacle{upcomingCount !== 1 ? 's' : ''} à venir
+                          </span>
+                        </div>
+                        {artist.rating && (
+                          <div className="flex items-center gap-1">
+                            <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                            <span className="text-sm font-medium">{artist.rating}</span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {artist.current_tour && (
+                        <p className="text-sm text-primary font-medium mb-3 flex items-center gap-2">
+                          <MapPin className="h-3 w-3" />
+                          {artist.current_tour}
+                        </p>
+                      )}
+                      
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="flex-1"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/artists/${artist.id}`);
+                          }}
+                        >
+                          <Eye className="h-3 w-3 mr-1" />
+                          Voir
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="flex-1"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate('/show-bible');
+                          }}
+                        >
+                          <BookOpen className="h-3 w-3 mr-1" />
+                          Bible
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditArtist(artist);
+                          }}
+                          className="px-2"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteArtist(artist.id);
+                          }}
+                          className="px-2 text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
 
           {/* Tour Schedule */}
