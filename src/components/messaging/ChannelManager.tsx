@@ -71,11 +71,11 @@ export const ChannelManager: React.FC<ChannelManagerProps> = ({ onChannelCreated
   };
 
   return (
-    <div className="space-y-2">
+    <>
       {/* Create Channel */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
         <DialogTrigger asChild>
-          <Button variant="outline" className="w-full justify-start h-8">
+          <Button variant="outline" className="justify-start h-8 shrink-0">
             <Plus className="h-3 w-3 mr-2" />
             Créer un canal
           </Button>
@@ -171,39 +171,6 @@ export const ChannelManager: React.FC<ChannelManagerProps> = ({ onChannelCreated
         </DialogContent>
       </Dialog>
 
-      {/* Messages directs uniquement */}
-      <div className="space-y-2">
-        <Label className="text-sm font-medium text-muted-foreground">Messages Directs</Label>
-        <ScrollArea className="h-48">
-          {availableUsers.length > 0 ? (
-            availableUsers.map((user) => (
-              <Button
-                key={user.user_id}
-                variant="ghost"
-                className="w-full justify-start p-2 h-auto mb-1"
-                onClick={() => handleCreateDM(user.user_id)}
-              >
-                <div className="flex items-center space-x-2">
-                  <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
-                    <span className="text-xs font-medium">
-                      {(user.first_name?.[0] || user.username?.[0] || user.email[0]).toUpperCase()}
-                    </span>
-                  </div>
-                  <span className="text-sm">
-                    {user.first_name && user.last_name 
-                      ? `${user.first_name} ${user.last_name}`
-                      : user.username || user.email
-                    }
-                  </span>
-                </div>
-              </Button>
-            ))
-          ) : (
-            <p className="text-sm text-muted-foreground p-2">Aucun utilisateur disponible</p>
-          )}
-        </ScrollArea>
-      </div>
-
       {/* Delete Channel Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent className="sm:max-w-md">
@@ -227,6 +194,6 @@ export const ChannelManager: React.FC<ChannelManagerProps> = ({ onChannelCreated
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 };
