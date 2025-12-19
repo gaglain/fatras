@@ -153,7 +153,7 @@ export const ChatWidget: React.FC = () => {
     <div className={cn(
       "fixed z-50",
       isMobile && isOpen 
-        ? "inset-0" 
+        ? "inset-0 p-2" 
         : isMobile 
           ? "bottom-20 right-4"
           : "bottom-6 right-6"
@@ -163,76 +163,50 @@ export const ChatWidget: React.FC = () => {
           className={cn(
             "shadow-2xl overflow-hidden border bg-card text-card-foreground flex flex-col",
             isMobile 
-              ? "h-full w-full rounded-none" 
+              ? "h-full w-full rounded-lg" 
               : "mb-4 rounded-xl"
           )}
           style={!isMobile ? { width: '420px', height: '600px' } : undefined}
         >
-          <div className={cn("border-b bg-primary text-primary-foreground", isMobile ? "p-3" : "p-4")}>
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center space-x-2">
-                  <MessageSquare className="h-5 w-5" />
-                  <span className="font-medium">Chat Interne</span>
-                </div>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => setIsOpen(false)} 
-                  className="text-primary-foreground hover:bg-primary-foreground/20"
-                >
-                  {isMobile ? "Masquer" : <X className="h-4 w-4" />}
-                </Button>
+          <div className={cn("border-b bg-primary text-primary-foreground shrink-0", isMobile ? "p-2" : "p-4")}>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center space-x-2">
+                <MessageSquare className="h-5 w-5" />
+                <span className="font-medium">Chat Interne</span>
               </div>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setIsOpen(false)} 
+                className="text-primary-foreground hover:bg-primary-foreground/20"
+              >
+                Masquer
+              </Button>
+            </div>
             
             <div className="space-y-2">
               <Select value={selectedChannel} onValueChange={(v) => { setSelectedChannel(v); }}>
-                <SelectTrigger className="flex-1 h-8 text-xs bg-background text-foreground">
+                <SelectTrigger className="w-full h-9 text-sm bg-background text-foreground">
                   <SelectValue placeholder="Sélectionner un canal" />
                 </SelectTrigger>
-                <SelectContent className="bg-card text-card-foreground">
-                  {channels.filter(c => c.type !== 'direct').length > 0 && (
-                    <>
-                      <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-                        CHANNELS
+                <SelectContent className="bg-card text-card-foreground max-h-60">
+                  {channels.map((channel) => (
+                    <SelectItem key={channel.id} value={channel.id}>
+                      <div className="flex items-center">
+                        {getChannelIcon(channel)}
+                        <span className="ml-2">{getChannelDisplayName(channel)}</span>
                       </div>
-                      {channels
-                        .filter(c => c.type !== 'direct')
-                        .map((channel) => (
-                          <SelectItem key={channel.id} value={channel.id}>
-                            <div className="flex items-center">
-                              {getChannelIcon(channel)}
-                              <span className="ml-2">{getChannelDisplayName(channel)}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                    </>
-                  )}
-                  {channels.filter(c => c.type === 'direct').length > 0 && (
-                    <>
-                      <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground mt-2">
-                        MESSAGES DIRECTS
-                      </div>
-                      {channels
-                        .filter(c => c.type === 'direct')
-                        .map((channel) => (
-                          <SelectItem key={channel.id} value={channel.id}>
-                            <div className="flex items-center">
-                              {getChannelIcon(channel)}
-                              <span className="ml-2">{getChannelDisplayName(channel)}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                    </>
-                  )}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               
-              <div className="flex gap-2">
+              <div className="flex gap-1 overflow-x-auto pb-1">
                 <ChannelManager onChannelCreated={(channelId) => setSelectedChannel(channelId)} />
                 <DirectMessageManager
                   onChannelCreated={(channelId) => setSelectedChannel(channelId)}
                   trigger={
-                    <Button size="sm" variant="secondary" className="flex-1">
+                    <Button size="sm" variant="secondary" className="shrink-0 h-8 px-2 text-xs">
                       <MessageSquare className="h-3 w-3 mr-1" />
                       DM
                     </Button>
@@ -240,7 +214,7 @@ export const ChatWidget: React.FC = () => {
                 />
                 <ChannelBrowser
                   trigger={
-                    <Button size="sm" variant="secondary" className="flex-1">
+                    <Button size="sm" variant="secondary" className="shrink-0 h-8 px-2 text-xs">
                       <Plus className="h-3 w-3 mr-1" />
                       Parcourir
                     </Button>
