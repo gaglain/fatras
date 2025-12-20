@@ -117,6 +117,7 @@ export async function generatePWAIcons(file: File): Promise<{
 
 /**
  * Met à jour le manifest PWA avec les nouvelles URLs d'icônes
+ * Crée un manifest dynamique avec les vraies URLs des icônes
  */
 export function updatePWAManifest(config: {
   name: string;
@@ -127,29 +128,63 @@ export function updatePWAManifest(config: {
   themeColor?: string;
   backgroundColor?: string;
 }) {
-  console.log('📝 Mise à jour des meta tags PWA...');
+  console.log('📝 Mise à jour du manifest PWA dynamique...');
 
-  // Ne PAS utiliser blob URLs pour le manifest (ne fonctionne pas sur mobile)
-  // Le manifest.json statique dans /public sera utilisé à la place
-  
-  // Stocker les URLs dans localStorage et la DB pour référence
-  const pwaConfig = {
+  const themeColor = config.themeColor || '#8b5cf6';
+  const backgroundColor = config.backgroundColor || '#ffffff';
+
+  // Créer le manifest dynamique avec les vraies URLs des icônes
+  const manifest = {
+    name: config.name,
+    short_name: config.shortName,
+    description: `${config.name} - Application de gestion professionnelle`,
+    start_url: "/",
+    display: "standalone",
+    background_color: backgroundColor,
+    theme_color: themeColor,
+    orientation: "any",
+    scope: "/",
+    icons: [
+      {
+        src: config.icon192Url,
+        sizes: "192x192",
+        type: "image/png",
+        purpose: "any maskable"
+      },
+      {
+        src: config.icon512Url,
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "any maskable"
+      }
+    ],
+    categories: ["business", "productivity"]
+  };
+
+  // Convertir en blob et créer une URL dynamique
+  const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+  const manifestURL = URL.createObjectURL(manifestBlob);
+
+  // Mettre à jour le lien du manifest
+  let manifestLink = document.querySelector('link[rel="manifest"]') as HTMLLinkElement;
+  if (!manifestLink) {
+    manifestLink = document.createElement('link');
+    manifestLink.rel = 'manifest';
+    document.head.appendChild(manifestLink);
+  }
+  manifestLink.href = manifestURL;
+
+  // Sauvegarder dans localStorage pour persistance
+  localStorage.setItem('pwaManifest', JSON.stringify(manifest));
+  localStorage.setItem('pwaConfig', JSON.stringify({
     name: config.name,
     shortName: config.shortName,
     icon192: config.icon192Url,
     icon512: config.icon512Url,
     appleIcon: config.appleIconUrl,
-    themeColor: config.themeColor || "#8b5cf6",
-    backgroundColor: config.backgroundColor || "#ffffff"
-  };
-  localStorage.setItem('pwaConfig', JSON.stringify(pwaConfig));
-  
-  // Mettre à jour le lien du manifest vers l'edge function
-  let manifestLink = document.querySelector('link[rel="manifest"]') as HTMLLinkElement;
-  if (manifestLink) {
-    // Utiliser l'edge function pour servir un manifest dynamique
-    manifestLink.href = 'https://nhoemjarkxqwruupqgyd.supabase.co/functions/v1/pwa-manifest';
-  }
+    themeColor,
+    backgroundColor
+  }));
 
   // Mettre à jour le favicon
   let faviconLink = document.querySelector("link[rel*='icon']") as HTMLLinkElement;
@@ -162,7 +197,7 @@ export function updatePWAManifest(config: {
   faviconLink.type = 'image/png';
 
   // Ajouter les meta tags pour iOS
-  updateIOSMetaTags(config.appleIconUrl, config.name, config.themeColor);
+  updateIOSMetaTags(config.appleIconUrl, config.name, themeColor);
 
   // Mettre à jour le titre
   document.title = config.name;
@@ -174,11 +209,10 @@ export function updatePWAManifest(config: {
     themeColorMeta.name = 'theme-color';
     document.head.appendChild(themeColorMeta);
   }
-  themeColorMeta.content = config.themeColor || "#8b5cf6";
+  themeColorMeta.content = themeColor;
 
-  console.log('✅ PWA configuré avec succès');
-  console.log('📱 iOS: Supprimez l\'ancienne app de l\'écran d\'accueil et rajoutez-la');
-  console.log('🤖 Android: Désinstallez l\'app et réinstallez-la depuis Chrome');
+  console.log('✅ PWA configuré avec succès:', config.name);
+  console.log('📱 Pour voir les changements: supprimez l\'app de l\'écran d\'accueil et rajoutez-la');
 }
 
 /**
