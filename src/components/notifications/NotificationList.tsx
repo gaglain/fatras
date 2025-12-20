@@ -190,8 +190,8 @@ export const NotificationList: React.FC = () => {
     }
 
     return (
-      <div className="max-h-[400px] overflow-y-auto">
-        <div className="space-y-2">
+      <div className="overflow-y-auto">
+        <div className="space-y-2 pb-4">
           {notifications.map((notification) => (
             <div
               key={notification.id}
