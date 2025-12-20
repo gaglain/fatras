@@ -1,21 +1,17 @@
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
 import { updatePWAManifest } from '@/utils/pwaIconGenerator';
 
 /**
  * Composant qui synchronise automatiquement les meta tags PWA avec les paramètres de l'app
  * Ce composant doit être monté au niveau racine de l'application
+ * Il charge les paramètres PWA sans nécessiter d'authentification
  */
 export const PWAManifestSync: React.FC = () => {
-  const { user } = useAuth();
-
   useEffect(() => {
     const syncPWASettings = async () => {
-      if (!user?.id) return;
-
       try {
-        // Charger les paramètres PWA depuis la base de données
+        // Charger les paramètres PWA depuis la base de données (sans filtre user_id pour l'app partagée)
         const { data, error } = await supabase
           .from('app_settings')
           .select('setting_key, setting_value')
@@ -26,7 +22,8 @@ export const PWAManifestSync: React.FC = () => {
             'pwa_apple_icon',
             'theme_color',
             'background_color'
-          ]);
+          ])
+          .limit(10);
 
         if (error) {
           console.error('Erreur lors du chargement des paramètres PWA:', error);
@@ -73,7 +70,7 @@ export const PWAManifestSync: React.FC = () => {
     return () => {
       window.removeEventListener('companySettingsChanged', handleSettingsChange);
     };
-  }, [user]);
+  }, []);
 
   return null;
 };

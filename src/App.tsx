@@ -130,8 +130,8 @@ const App = () => {
       }}
     >
       <QueryClientProvider client={queryClient}>
-      <AuthProvider>
       <PWAManifestSync />
+      <AuthProvider>
       <HelmetProvider>
       <ThemeProvider 
         attribute="class"
