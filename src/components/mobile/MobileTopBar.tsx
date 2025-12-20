@@ -246,10 +246,13 @@ export const MobileTopBar: React.FC = () => {
         </>
       )}
 
-      {/* Notification Center Sheet */}
+      {/* Notification Center Sheet - Full height on mobile */}
       <Sheet open={notificationsOpen} onOpenChange={setNotificationsOpen}>
-        <SheetContent side="right" className="w-full sm:w-96">
-          <div className="h-full overflow-y-auto">
+        <SheetContent 
+          side="bottom" 
+          className="h-[calc(100vh-env(safe-area-inset-top))] rounded-t-xl"
+        >
+          <div className="h-full overflow-y-auto pt-2 pb-safe">
             <NotificationList />
           </div>
         </SheetContent>
