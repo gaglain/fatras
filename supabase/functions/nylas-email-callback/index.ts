@@ -93,7 +93,7 @@ serve(async (req: Request): Promise<Response> => {
         user_id: userId,
         provider,
         email,
-        access_token: grantId,
+        grant_id: grantId,
         is_active: true,
         last_sync_at: null,
       }, { onConflict: 'user_id,email' })

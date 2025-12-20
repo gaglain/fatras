@@ -55,9 +55,10 @@ export const NylasCalendarIntegration: React.FC = () => {
 
       if (error) throw error;
       
-      const accountsWithGrants = data?.map(account => ({
+      // Cast to work around outdated types after migration
+      const accountsWithGrants = (data as any[])?.map(account => ({
         ...account,
-        grant_id: account.access_token || account.id,
+        grant_id: account.grant_id || account.id,
         sync_status: account.is_active ? 'active' : 'inactive'
       })) || [];
       setAccounts(accountsWithGrants);

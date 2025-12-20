@@ -4006,16 +4006,15 @@ export type Database = {
       get_email_accounts_secure: {
         Args: never
         Returns: {
-          access_token: string
           created_at: string
           email: string
+          grant_id: string
           id: string
           imap_config: Json
           is_active: boolean
           is_organization_shared: boolean
           last_sync_at: string
           provider: string
-          refresh_token: string
           token_expires_at: string
           updated_at: string
           user_id: string
@@ -4132,11 +4131,10 @@ export type Database = {
       }
       upsert_email_account: {
         Args: {
-          p_access_token?: string
           p_email: string
+          p_grant_id?: string
           p_imap_config?: Json
           p_provider: string
-          p_refresh_token?: string
           p_token_expires_at?: string
         }
         Returns: string

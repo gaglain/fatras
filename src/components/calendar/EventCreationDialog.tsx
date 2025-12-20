@@ -31,7 +31,7 @@ interface EmailAccount {
   id: string;
   email: string;
   provider: string;
-  access_token: string;
+  grant_id: string;
 }
 
 export const EventCreationDialog: React.FC<EventCreationDialogProps> = ({
@@ -79,12 +79,13 @@ export const EventCreationDialog: React.FC<EventCreationDialogProps> = ({
     try {
       const { data, error } = await supabase
         .from('email_accounts')
-        .select('id, email, provider, access_token')
+        .select('id, email, provider, grant_id')
         .eq('is_active', true)
         .in('provider', ['gmail', 'google']);
 
       if (error) throw error;
-      setEmailAccounts(data || []);
+      // Cast to EmailAccount[] since types may be out of sync after migration
+      setEmailAccounts((data || []) as unknown as EmailAccount[]);
     } catch (error) {
       console.error('Erreur lors du chargement des comptes email:', error);
     }
@@ -110,13 +111,13 @@ export const EventCreationDialog: React.FC<EventCreationDialogProps> = ({
       if (formData.sync_to_google && formData.target_calendar_id) {
         const targetAccount = emailAccounts.find(acc => acc.email === formData.target_calendar_id);
         
-        if (targetAccount?.access_token) {
+        if (targetAccount?.grant_id) {
           try {
             const { data, error } = await supabase.functions.invoke('nylas-calendar-sync', {
               body: {
                 action: 'create_event',
                 user_id: user.id,
-                grant_id: targetAccount.access_token,
+                grant_id: targetAccount.grant_id,
                 event: {
                   title: formData.title,
                   description: formData.description,

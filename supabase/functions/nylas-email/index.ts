@@ -326,7 +326,7 @@ async function connectEmailAccount(baseUrl: string, apiKey: string, clientId: st
           user_id: userId,
           provider: provider,
           email: config.email,
-          access_token: grantData.data?.id || grantData.data?.grant_id || grantData.grant_id, // grant id
+          grant_id: grantData.data?.id || grantData.data?.grant_id || grantData.grant_id,
           imap_config: { ...config, imap_port, smtp_host, smtp_port },
           is_active: true,
           last_sync_at: new Date().toISOString(),
@@ -342,7 +342,7 @@ async function connectEmailAccount(baseUrl: string, apiKey: string, clientId: st
         JSON.stringify({
           success: true,
           account: account,
-          grant_id: account?.access_token,
+          grant_id: account?.grant_id,
           message: 'IMAP account connected successfully'
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -410,7 +410,7 @@ async function syncEmails(baseUrl: string, apiKey: string, supabase: any, userId
     }
 
     // Fetch emails from Nylas
-    const emailsResponse = await fetch(`${baseUrl}/grants/${account.access_token}/messages?limit=50`, {
+    const emailsResponse = await fetch(`${baseUrl}/grants/${account.grant_id}/messages?limit=50`, {
       headers: {
         'Authorization': `Bearer ${apiKey}`,
       },
@@ -581,7 +581,7 @@ async function sendEmail(baseUrl: string, apiKey: string, supabase: any, userId:
 
         console.log('📝 Updating grant with SMTP credentials:', { smtp_host, smtp_port, smtp_username: username });
 
-        const updateGrantResp = await fetch(`${baseUrl}/grants/${account.access_token}`, {
+        const updateGrantResp = await fetch(`${baseUrl}/grants/${account.grant_id}`, {
           method: 'PATCH',
           headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({ settings: grantSettings }),
@@ -597,7 +597,7 @@ async function sendEmail(baseUrl: string, apiKey: string, supabase: any, userId:
     }
 
     // For IMAP providers, ensure the Nylas grant has full SMTP/IMAP settings before sending
-    if (account.provider === 'imap' && account.access_token && account.imap_config) {
+    if (account.provider === 'imap' && account.grant_id && account.imap_config) {
       try {
         const cfg = account.imap_config as any;
         const imap_host = cfg.imap_host ?? cfg.host;
@@ -619,7 +619,7 @@ async function sendEmail(baseUrl: string, apiKey: string, supabase: any, userId:
         };
 
         console.log('🛠 Ensuring IMAP grant settings (no secrets logged)', { imap_host, imap_port, smtp_host, smtp_port });
-        const ensureResp = await fetch(`${baseUrl}/grants/${account.access_token}`, {
+        const ensureResp = await fetch(`${baseUrl}/grants/${account.grant_id}`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${apiKey}`,
@@ -640,7 +640,7 @@ async function sendEmail(baseUrl: string, apiKey: string, supabase: any, userId:
     }
 
     // Send email via Nylas
-    const sendResponse = await fetch(`${baseUrl}/grants/${account.access_token}/messages/send`, {
+    const sendResponse = await fetch(`${baseUrl}/grants/${account.grant_id}/messages/send`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -686,7 +686,7 @@ async function sendEmail(baseUrl: string, apiKey: string, supabase: any, userId:
             smtp_security,
           };
 
-          const ensureResp2 = await fetch(`${baseUrl}/grants/${account.access_token}`, {
+          const ensureResp2 = await fetch(`${baseUrl}/grants/${account.grant_id}`, {
             method: 'PUT',
             headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({ settings }),
@@ -698,7 +698,7 @@ async function sendEmail(baseUrl: string, apiKey: string, supabase: any, userId:
             console.log('✅ Grant settings updated with security flags, retrying send...');
           }
 
-          const retryResp = await fetch(`${baseUrl}/grants/${account.access_token}/messages/send`, {
+          const retryResp = await fetch(`${baseUrl}/grants/${account.grant_id}/messages/send`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -732,12 +732,12 @@ async function sendEmail(baseUrl: string, apiKey: string, supabase: any, userId:
               smtp_password: password2,
               smtp_security: 'ssl',
             };
-            await fetch(`${baseUrl}/grants/${account.access_token}`, {
+            await fetch(`${baseUrl}/grants/${account.grant_id}`, {
               method: 'PUT',
               headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
               body: JSON.stringify({ settings: settings2 }),
             });
-            const finalResp = await fetch(`${baseUrl}/grants/${account.access_token}/messages/send`, {
+            const finalResp = await fetch(`${baseUrl}/grants/${account.grant_id}/messages/send`, {
               method: 'POST',
               headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -1018,7 +1018,7 @@ Si vous recevez ce message, cela signifie que:
 Détails techniques:
 - Compte: ${account.email}
 - Provider: ${account.provider}
-- Grant ID: ${account.access_token}
+- Grant ID: ${account.grant_id}
 - Date/heure: ${new Date().toLocaleString('fr-FR')}
 
 Cordialement,
@@ -1038,7 +1038,7 @@ L'équipe Fatras Booking`,
           <ul style="margin: 0;">
             <li><strong>Compte:</strong> ${account.email}</li>
             <li><strong>Provider:</strong> ${account.provider}</li>
-            <li><strong>Grant ID:</strong> ${account.access_token}</li>
+            <li><strong>Grant ID:</strong> ${account.grant_id}</li>
             <li><strong>Date/heure:</strong> ${new Date().toLocaleString('fr-FR')}</li>
           </ul>
         </div>
@@ -1047,7 +1047,7 @@ L'équipe Fatras Booking`,
     };
 
     // Send email via Nylas
-    const sendResponse = await fetch(`${baseUrl}/grants/${account.access_token}/messages/send`, {
+    const sendResponse = await fetch(`${baseUrl}/grants/${account.grant_id}/messages/send`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -1096,7 +1096,7 @@ L'équipe Fatras Booking`,
           from: account.email,
           to: testEmail,
           provider: account.provider,
-          grant_id: account.access_token
+          grant_id: account.grant_id
         }
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
