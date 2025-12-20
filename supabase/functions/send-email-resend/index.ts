@@ -29,45 +29,81 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Authentication check - require valid authorization header
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      console.error('❌ Missing Authorization header');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Authentication required' }),
+        { status: 401, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
+
+    // Initialize Supabase with service role for data access
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    
+    // Verify user authentication
+    const userSupabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+    
+    const { data: { user }, error: authError } = await userSupabase.auth.getUser();
+    if (authError || !user) {
+      console.error('❌ Invalid authentication:', authError?.message);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid authentication' }),
+        { status: 401, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
+
     const { to, subject, html, fromName = 'Application', from, userId, attachments }: EmailRequest = await req.json();
 
-    console.log('🔄 Tentative d\'envoi email pour userId:', userId);
+    // Validate that userId matches authenticated user (if provided)
+    if (userId && userId !== user.id) {
+      console.error('❌ User ID mismatch - forbidden');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Forbidden - user ID mismatch' }),
+        { status: 403, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
 
-    // Initialiser Supabase
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    // Use authenticated user's ID for config lookup
+    const effectiveUserId = userId || user.id;
+    console.log('🔄 Tentative d\'envoi email pour userId:', effectiveUserId);
+
+    // Initialize Supabase with service role for data access
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Récupérer la configuration email de l'utilisateur
     let fromEmail = 'noreply@fatras-booking.com';
     let resendApiKey = Deno.env.get('RESEND_API_KEY');
     
-    if (userId) {
-      console.log('📧 Récupération de la config email pour l\'utilisateur:', userId);
-      
-      const { data: emailConfig, error } = await supabase
-        .from('app_settings')
-        .select('setting_key, setting_value')
-        .eq('user_id', userId)
-        .in('setting_key', ['from_email', 'resend_api_key']);
+    console.log('📧 Récupération de la config email pour l\'utilisateur:', effectiveUserId);
+    
+    const { data: emailConfig, error } = await supabase
+      .from('app_settings')
+      .select('setting_key, setting_value')
+      .eq('user_id', effectiveUserId)
+      .in('setting_key', ['from_email', 'resend_api_key']);
 
-      if (error) {
-        console.error('❌ Erreur récupération config:', error);
-      } else if (emailConfig && emailConfig.length > 0) {
-        const configMap = emailConfig.reduce((acc: any, setting) => {
-          acc[setting.setting_key] = setting.setting_value;
-          return acc;
-        }, {});
-        
-        if (configMap.from_email) {
-          fromEmail = configMap.from_email;
-          console.log('✅ Email expéditeur configuré:', fromEmail);
-        }
-        
-        if (configMap.resend_api_key) {
-          resendApiKey = configMap.resend_api_key;
-          console.log('✅ Clé API Resend personnalisée trouvée');
-        }
+    if (error) {
+      console.error('❌ Erreur récupération config:', error);
+    } else if (emailConfig && emailConfig.length > 0) {
+      const configMap = emailConfig.reduce((acc: Record<string, string>, setting) => {
+        acc[setting.setting_key] = setting.setting_value;
+        return acc;
+      }, {});
+      
+      if (configMap.from_email) {
+        fromEmail = configMap.from_email;
+        console.log('✅ Email expéditeur configuré:', fromEmail);
+      }
+      
+      if (configMap.resend_api_key) {
+        resendApiKey = configMap.resend_api_key;
+        console.log('✅ Clé API Resend personnalisée trouvée');
       }
     }
 
@@ -134,12 +170,13 @@ const handler = async (req: Request): Promise<Response> => {
       },
     });
 
-  } catch (error: any) {
-    console.error('❌ Erreur lors de l\'envoi email:', error);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Erreur lors de l\'envoi de l\'email';
+    console.error('❌ Erreur lors de l\'envoi email:', errorMessage);
     
     return new Response(JSON.stringify({
       success: false,
-      error: error.message || 'Erreur lors de l\'envoi de l\'email'
+      error: errorMessage
     }), {
       status: 500,
       headers: {
