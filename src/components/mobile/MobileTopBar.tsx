@@ -91,8 +91,14 @@ export const MobileTopBar: React.FC = () => {
 
   return (
     <>
-      {/* Top Bar - with safe area for PWA standalone mode */}
-      <header className="fixed top-0 left-0 right-0 bg-background border-b z-40 flex items-center justify-between px-4 pt-[env(safe-area-inset-top,0px)] h-[calc(3.5rem+env(safe-area-inset-top,0px))]">
+      {/* Top Bar - safe area for PWA standalone mode */}
+      <header
+        className="fixed top-0 left-0 right-0 h-14 bg-background border-b z-40 flex items-center justify-between px-4"
+        style={{
+          paddingTop: 'env(safe-area-inset-top)',
+          height: 'calc(3.5rem + env(safe-area-inset-top))',
+        }}
+      >
         <div className="flex items-center gap-2">
           {appLogo ? (
             <img 
@@ -150,17 +156,17 @@ export const MobileTopBar: React.FC = () => {
       {/* Slide-in Menu */}
       {menuOpen && (
         <>
-          <div 
+          <div
             className="fixed inset-0 bg-black/50 z-40 animate-fade-in"
-            style={{ top: 'calc(3.5rem + env(safe-area-inset-top, 0px))' }}
+            style={{ top: 'calc(3.5rem + env(safe-area-inset-top))' }}
             onClick={() => setMenuOpen(false)}
           />
           
-          <div 
+          <div
             className="fixed right-0 w-80 bg-background border-l z-50 animate-slide-in-right overflow-y-auto"
-            style={{ 
-              top: 'calc(3.5rem + env(safe-area-inset-top, 0px))',
-              height: 'calc(100vh - 3.5rem - env(safe-area-inset-top, 0px))'
+            style={{
+              top: 'calc(3.5rem + env(safe-area-inset-top))',
+              height: 'calc(100vh - 3.5rem - env(safe-area-inset-top))'
             }}
           >
             <div className="p-4">

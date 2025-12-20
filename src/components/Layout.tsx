@@ -59,7 +59,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   // Mobile Admin Layout
   if (isMobile) {
     return (
-      <div className="flex flex-col min-h-screen min-h-[100dvh] w-full max-w-full overflow-x-hidden pb-16" style={{ paddingTop: 'calc(3.5rem + env(safe-area-inset-top, 0px))' }}>
+      <div
+        className="flex flex-col min-h-screen min-h-[100dvh] w-full max-w-full overflow-x-hidden pb-16"
+        style={{ paddingTop: 'calc(3.5rem + env(safe-area-inset-top))' }}
+      >
         <MobileTopBar />
         
         <main className="flex-1 overflow-y-auto overflow-x-hidden p-3 pb-safe">
