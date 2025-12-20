@@ -59,10 +59,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   // Mobile Admin Layout
   if (isMobile) {
     return (
-      <div className="flex flex-col h-screen w-full pb-16 pt-14">
+      <div className="flex flex-col min-h-screen min-h-[100dvh] w-full max-w-full overflow-x-hidden pb-16 pt-14">
         <MobileTopBar />
         
-        <main className="flex-1 overflow-auto p-3">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden p-3 pb-safe">
           <TaskNotificationBanner className="mb-3" />
           {children}
         </main>
