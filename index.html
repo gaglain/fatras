@@ -40,6 +40,41 @@
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
     
+    <!-- PWA Manifest dynamique - charge les icônes depuis localStorage avant React -->
+    <script>
+      (function() {
+        try {
+          // Charger le manifest depuis localStorage
+          var storedManifest = localStorage.getItem('pwaManifest');
+          if (storedManifest) {
+            var manifest = JSON.parse(storedManifest);
+            // Créer un blob URL pour le manifest
+            var blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+            var url = URL.createObjectURL(blob);
+            // Mettre à jour le lien manifest
+            var link = document.querySelector('link[rel="manifest"]');
+            if (link) {
+              link.href = url;
+            }
+            // Mettre à jour le titre
+            if (manifest.name) {
+              document.title = manifest.name;
+            }
+            // Mettre à jour le favicon
+            if (manifest.icons && manifest.icons[0]) {
+              var favicon = document.querySelector("link[rel*='icon']");
+              if (favicon) {
+                favicon.href = manifest.icons[0].src;
+              }
+            }
+            console.log('✅ PWA Manifest chargé depuis localStorage');
+          }
+        } catch (e) {
+          console.log('PWA Manifest: utilisation du manifest par défaut');
+        }
+      })();
+    </script>
+    
     <!-- PWA Service Worker -->
     <script>
       if ('serviceWorker' in navigator) {
