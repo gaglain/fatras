@@ -3946,54 +3946,7 @@ export type Database = {
       }
     }
     Views: {
-      email_accounts_secure: {
-        Row: {
-          access_token: string | null
-          created_at: string | null
-          email: string | null
-          id: string | null
-          imap_config: Json | null
-          is_active: boolean | null
-          is_organization_shared: boolean | null
-          last_sync_at: string | null
-          provider: string | null
-          refresh_token: string | null
-          token_expires_at: string | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          access_token?: never
-          created_at?: string | null
-          email?: string | null
-          id?: string | null
-          imap_config?: Json | null
-          is_active?: boolean | null
-          is_organization_shared?: boolean | null
-          last_sync_at?: string | null
-          provider?: string | null
-          refresh_token?: never
-          token_expires_at?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          access_token?: never
-          created_at?: string | null
-          email?: string | null
-          id?: string | null
-          imap_config?: Json | null
-          is_active?: boolean | null
-          is_organization_shared?: boolean | null
-          last_sync_at?: string | null
-          provider?: string | null
-          refresh_token?: never
-          token_expires_at?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       check_channel_access: {
@@ -4048,6 +4001,24 @@ export type Database = {
           role: string
           user_id: string
           username: string
+        }[]
+      }
+      get_email_accounts_secure: {
+        Args: never
+        Returns: {
+          access_token: string
+          created_at: string
+          email: string
+          id: string
+          imap_config: Json
+          is_active: boolean
+          is_organization_shared: boolean
+          last_sync_at: string
+          provider: string
+          refresh_token: string
+          token_expires_at: string
+          updated_at: string
+          user_id: string
         }[]
       }
       get_event_contacts: {
