@@ -21,6 +21,63 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Authentication check - this endpoint should only be called by cron jobs with service role key
+    // or by authenticated admin users
+    const authHeader = req.headers.get('Authorization');
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const expectedServiceAuth = `Bearer ${serviceRoleKey}`;
+    
+    // Check if called with service role key (cron job)
+    const isServiceRoleAuth = authHeader === expectedServiceAuth;
+    
+    // If not service role, verify it's an authenticated admin user
+    if (!isServiceRoleAuth) {
+      if (!authHeader) {
+        console.error('❌ Missing Authorization header');
+        return new Response(
+          JSON.stringify({ success: false, error: 'Unauthorized - authentication required' }),
+          { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+      
+      // Verify user is an admin
+      const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+      const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+      
+      const userSupabase = createClient(supabaseUrl, anonKey, {
+        global: { headers: { Authorization: authHeader } }
+      });
+      
+      const { data: { user }, error: authError } = await userSupabase.auth.getUser();
+      if (authError || !user) {
+        console.error('❌ Invalid authentication:', authError?.message);
+        return new Response(
+          JSON.stringify({ success: false, error: 'Unauthorized - invalid authentication' }),
+          { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+      
+      // Check if user is admin using service role
+      const adminSupabase = createClient(supabaseUrl, serviceRoleKey ?? "");
+      const { data: userProfile } = await adminSupabase
+        .from('user_profiles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (!userProfile || !['admin', 'super_admin'].includes(userProfile.role)) {
+        console.error('❌ User is not an admin');
+        return new Response(
+          JSON.stringify({ success: false, error: 'Forbidden - admin access required' }),
+          { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+      
+      console.log('✅ Admin user authenticated:', user.id);
+    } else {
+      console.log('✅ Service role authentication verified (cron job)');
+    }
+
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
@@ -117,7 +174,8 @@ const handler = async (req: Request): Promise<Response> => {
 
         console.log(`✅ ${task.sync_type} sync completed for user ${task.user_id}`);
         
-      } catch (syncError) {
+      } catch (syncError: unknown) {
+        const errorMessage = syncError instanceof Error ? syncError.message : 'Erreur inconnue lors de la synchronisation';
         console.error(`❌ Error syncing ${task.sync_type} for user ${task.user_id}:`, syncError);
         
         // Create error notification
@@ -128,8 +186,8 @@ const handler = async (req: Request): Promise<Response> => {
             sync_type: task.sync_type,
             notification_type: 'error',
             title: `Erreur de synchronisation ${task.sync_type}`,
-            message: syncError.message || 'Erreur inconnue lors de la synchronisation',
-            details: { error: syncError.message, timestamp: now }
+            message: errorMessage,
+            details: { error: errorMessage, timestamp: now }
           });
 
         // Still update next sync time to avoid repeated failures
@@ -157,12 +215,13 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
 
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error("❌ Auto-sync scheduler error:", error);
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error.message,
+        error: errorMessage,
         message: "Auto-sync scheduler failed"
       }),
       {
