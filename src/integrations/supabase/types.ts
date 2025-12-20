@@ -1034,6 +1034,7 @@ export type Database = {
       email_accounts: {
         Row: {
           access_token: string | null
+          access_token_encrypted: string | null
           created_at: string | null
           email: string
           id: string
@@ -1043,12 +1044,14 @@ export type Database = {
           last_sync_at: string | null
           provider: string
           refresh_token: string | null
+          refresh_token_encrypted: string | null
           token_expires_at: string | null
           updated_at: string | null
           user_id: string | null
         }
         Insert: {
           access_token?: string | null
+          access_token_encrypted?: string | null
           created_at?: string | null
           email: string
           id?: string
@@ -1058,12 +1061,14 @@ export type Database = {
           last_sync_at?: string | null
           provider: string
           refresh_token?: string | null
+          refresh_token_encrypted?: string | null
           token_expires_at?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
         Update: {
           access_token?: string | null
+          access_token_encrypted?: string | null
           created_at?: string | null
           email?: string
           id?: string
@@ -1073,6 +1078,7 @@ export type Database = {
           last_sync_at?: string | null
           provider?: string
           refresh_token?: string | null
+          refresh_token_encrypted?: string | null
           token_expires_at?: string | null
           updated_at?: string | null
           user_id?: string | null
@@ -3940,7 +3946,54 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      email_accounts_secure: {
+        Row: {
+          access_token: string | null
+          created_at: string | null
+          email: string | null
+          id: string | null
+          imap_config: Json | null
+          is_active: boolean | null
+          is_organization_shared: boolean | null
+          last_sync_at: string | null
+          provider: string | null
+          refresh_token: string | null
+          token_expires_at: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          access_token?: never
+          created_at?: string | null
+          email?: string | null
+          id?: string | null
+          imap_config?: Json | null
+          is_active?: boolean | null
+          is_organization_shared?: boolean | null
+          last_sync_at?: string | null
+          provider?: string | null
+          refresh_token?: never
+          token_expires_at?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          access_token?: never
+          created_at?: string | null
+          email?: string | null
+          id?: string | null
+          imap_config?: Json | null
+          is_active?: boolean | null
+          is_organization_shared?: boolean | null
+          last_sync_at?: string | null
+          provider?: string | null
+          refresh_token?: never
+          token_expires_at?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       check_channel_access: {
@@ -3978,10 +4031,12 @@ export type Database = {
         Args: { profile_data: Json; user_email: string; user_password: string }
         Returns: Json
       }
+      decrypt_token: { Args: { encrypted_text: string }; Returns: string }
       delete_user_completely: {
         Args: { target_user_id: string }
         Returns: Json
       }
+      encrypt_token: { Args: { plain_text: string }; Returns: string }
       get_active_users_basic: {
         Args: never
         Returns: {
@@ -4103,6 +4158,17 @@ export type Database = {
       update_user_profile_data: {
         Args: { profile_data: Json; profile_user_id: string }
         Returns: Json
+      }
+      upsert_email_account: {
+        Args: {
+          p_access_token?: string
+          p_email: string
+          p_imap_config?: Json
+          p_provider: string
+          p_refresh_token?: string
+          p_token_expires_at?: string
+        }
+        Returns: string
       }
     }
     Enums: {
