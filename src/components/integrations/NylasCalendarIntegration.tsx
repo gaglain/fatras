@@ -47,9 +47,10 @@ export const NylasCalendarIntegration: React.FC = () => {
     if (!user) return;
     
     try {
+      // Sélectionner uniquement les colonnes non-sensibles (exclure tokens)
       const { data, error } = await supabase
         .from('email_accounts')
-        .select('*')
+        .select('id, email, provider, is_active, last_sync_at, user_id')
         .eq('user_id', user.id)
         .eq('is_active', true);
 
