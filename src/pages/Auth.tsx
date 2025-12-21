@@ -35,7 +35,7 @@ const Auth: React.FC = () => {
   // Rediriger si déjà connecté
   useEffect(() => {
     if (user) {
-      navigate('/');
+      navigate('/dashboard');
     }
   }, [user, navigate]);
 
@@ -62,7 +62,7 @@ const Auth: React.FC = () => {
 
       if (data.user) {
         toast.success('Connexion réussie !');
-        navigate('/');
+        navigate('/dashboard');
       }
     } catch (error: any) {
       console.error('Erreur de connexion:', error);

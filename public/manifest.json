@@ -2,7 +2,7 @@
   "name": "Fatras",
   "short_name": "Fatras",
   "description": "Site officiel de Fatras - Découvrez notre univers musical",
-  "start_url": "/",
+  "start_url": "/auth",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#8b5cf6",
