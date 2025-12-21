@@ -27,3 +27,6 @@ verify_jwt = false
 
 [functions.send-contact-form]
 verify_jwt = false
+
+[functions.get-vapid-key]
+verify_jwt = false
