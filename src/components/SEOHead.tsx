@@ -11,19 +11,136 @@ interface SEOHeadProps {
   type?: string;
   siteName?: string;
   locale?: string;
+  // For artist/event pages
+  artistData?: {
+    name: string;
+    description?: string;
+    image?: string;
+    genre?: string;
+    sameAs?: string[];
+  };
+  eventData?: {
+    name: string;
+    description?: string;
+    startDate?: string;
+    endDate?: string;
+    location?: string;
+    image?: string;
+    performer?: string;
+  };
 }
 
+// Structured data for the organization (Fatras as PerformingArtsOrganization)
+const getOrganizationSchema = (siteName: string, description: string, url: string, image: string) => ({
+  "@context": "https://schema.org",
+  "@type": "PerformingArtsOrganization",
+  "name": siteName,
+  "alternateName": "Fatras - Spectacle de rue & de scène",
+  "description": description,
+  "url": url,
+  "logo": image,
+  "foundingDate": "2024",
+  "areaServed": "France",
+  "performerIn": {
+    "@type": "EventSeries",
+    "name": "Spectacles Fatras"
+  },
+  "sameAs": [
+    "https://www.facebook.com/fatras",
+    "https://www.instagram.com/fatras"
+  ],
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "contactType": "booking",
+    "availableLanguage": ["French"]
+  }
+});
+
+// Structured data for a music group / performing group
+const getMusicGroupSchema = (artistData: SEOHeadProps['artistData']) => {
+  if (!artistData) return null;
+  
+  return {
+    "@context": "https://schema.org",
+    "@type": "MusicGroup",
+    "name": artistData.name,
+    "description": artistData.description || "",
+    "image": artistData.image,
+    "genre": artistData.genre || "Spectacle de rue",
+    "sameAs": artistData.sameAs || []
+  };
+};
+
+// Structured data for an event
+const getEventSchema = (eventData: SEOHeadProps['eventData']) => {
+  if (!eventData) return null;
+  
+  return {
+    "@context": "https://schema.org",
+    "@type": "Event",
+    "name": eventData.name,
+    "description": eventData.description,
+    "startDate": eventData.startDate,
+    "endDate": eventData.endDate,
+    "location": {
+      "@type": "Place",
+      "name": eventData.location
+    },
+    "image": eventData.image,
+    "performer": eventData.performer ? {
+      "@type": "PerformingGroup",
+      "name": eventData.performer
+    } : undefined,
+    "organizer": {
+      "@type": "Organization",
+      "name": "Fatras"
+    },
+    "eventStatus": "https://schema.org/EventScheduled",
+    "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode"
+  };
+};
+
+// BreadcrumbList schema
+const getBreadcrumbSchema = (items: { name: string; url: string }[]) => ({
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": items.map((item, index) => ({
+    "@type": "ListItem",
+    "position": index + 1,
+    "name": item.name,
+    "item": item.url
+  }))
+});
+
 export const SEOHead: React.FC<SEOHeadProps> = ({
-  title = "MusiConnect - Plateforme de booking d'artistes",
-  description = "Découvrez notre plateforme de booking d'artistes et créons ensemble des expériences musicales exceptionnelles pour vos événements.",
-  keywords = "booking, artistes, musique, événements, concerts, spectacles",
-  image = "/placeholder.svg",
-  url = window.location.href,
+  title = "Fatras - Spectacle de rue & de scène",
+  description = "Fatras, compagnie de spectacle de rue et de scène. Découvrez nos créations artistiques uniques et réservez nos spectacles pour vos événements.",
+  keywords = "spectacle de rue, spectacle de scène, compagnie artistique, Fatras, événements, festivals, arts de la rue",
+  image = "https://fatras.net/og-image.jpg",
+  url = typeof window !== 'undefined' ? window.location.href : "https://fatras.net",
   type = "website",
-  siteName = "MusiConnect",
-  locale = "fr_FR"
+  siteName = "Fatras",
+  locale = "fr_FR",
+  artistData,
+  eventData
 }) => {
   const fullTitle = title.includes(siteName) ? title : `${title} | ${siteName}`;
+  const baseUrl = "https://fatras.net";
+
+  // Build structured data array
+  const structuredDataItems: Record<string, unknown>[] = [
+    getOrganizationSchema(siteName, description, baseUrl, image)
+  ];
+
+  if (artistData) {
+    const musicGroupSchema = getMusicGroupSchema(artistData);
+    if (musicGroupSchema) structuredDataItems.push(musicGroupSchema);
+  }
+
+  if (eventData) {
+    const eventSchema = getEventSchema(eventData);
+    if (eventSchema) structuredDataItems.push(eventSchema);
+  }
 
   return (
     <Helmet>
@@ -31,10 +148,12 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
       <meta name="keywords" content={keywords} />
-      <meta name="robots" content="index, follow" />
+      <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <meta name="language" content="fr" />
       <meta name="author" content={siteName} />
+      <meta name="geo.region" content="FR" />
+      <meta name="geo.placename" content="France" />
 
       {/* Open Graph / Facebook */}
       <meta property="og:type" content={type} />
@@ -42,6 +161,8 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={description} />
       <meta property="og:image" content={image} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
       <meta property="og:site_name" content={siteName} />
       <meta property="og:locale" content={locale} />
 
@@ -53,25 +174,78 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
       <meta name="twitter:image" content={image} />
 
       {/* Additional SEO tags */}
-      <meta name="theme-color" content="#1632f4" />
+      <meta name="theme-color" content="#b45309" />
       <link rel="canonical" href={url} />
       
       {/* JSON-LD structured data */}
-      <script type="application/ld+json">
-        {JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "Organization",
-          "name": siteName,
-          "description": description,
-          "url": url,
-          "logo": image,
-          "sameAs": [
-            "https://www.facebook.com/musiconnect",
-            "https://www.twitter.com/musiconnect",
-            "https://www.instagram.com/musiconnect"
-          ]
-        })}
-      </script>
+      {structuredDataItems.map((schema, index) => (
+        <script key={index} type="application/ld+json">
+          {JSON.stringify(schema)}
+        </script>
+      ))}
     </Helmet>
+  );
+};
+
+// Specialized component for artist pages
+export const ArtistSEOHead: React.FC<{
+  artist: {
+    name: string;
+    bio?: string;
+    image?: string;
+    genre?: string;
+    slug?: string;
+  };
+}> = ({ artist }) => {
+  return (
+    <SEOHead
+      title={`${artist.name} - Spectacle`}
+      description={artist.bio || `Découvrez ${artist.name}, spectacle de la compagnie Fatras.`}
+      keywords={`${artist.name}, spectacle, ${artist.genre || 'arts de la rue'}, Fatras, compagnie`}
+      image={artist.image}
+      url={`https://fatras.net/artistes/${artist.slug || artist.name.toLowerCase().replace(/\s+/g, '-')}`}
+      type="profile"
+      artistData={{
+        name: artist.name,
+        description: artist.bio,
+        image: artist.image,
+        genre: artist.genre
+      }}
+    />
+  );
+};
+
+// Specialized component for event pages
+export const EventSEOHead: React.FC<{
+  event: {
+    title: string;
+    description?: string;
+    start_date?: string;
+    end_date?: string;
+    venue?: string;
+    city?: string;
+    image?: string;
+    artistName?: string;
+  };
+}> = ({ event }) => {
+  const location = [event.venue, event.city].filter(Boolean).join(', ');
+  
+  return (
+    <SEOHead
+      title={event.title}
+      description={event.description || `${event.title} - Spectacle Fatras${location ? ` à ${location}` : ''}`}
+      keywords={`${event.title}, spectacle, événement, ${event.city || ''}, Fatras`}
+      image={event.image}
+      type="event"
+      eventData={{
+        name: event.title,
+        description: event.description,
+        startDate: event.start_date,
+        endDate: event.end_date,
+        location: location,
+        image: event.image,
+        performer: event.artistName
+      }}
+    />
   );
 };
