@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, MapPin, Clock, Users, ArrowRight } from 'lucide-react';
 import { useFrontDataSync } from '@/hooks/useFrontDataSync';
 import { Button } from '@/components/ui/button';
+import { SEOHead } from '@/components/SEOHead';
 
 // Composant Hero avec effet hover
 const HeroBlock: React.FC<{ content: any; siteSettings: any }> = ({ content, siteSettings }) => {
@@ -412,6 +413,12 @@ export const FrontHome: React.FC = () => {
 
   return (
     <FrontLayout>
+      <SEOHead 
+        title="Fatras - Spectacle de rue & de scène"
+        description="Fatras, compagnie de spectacle de rue et de scène. Découvrez nos créations artistiques uniques, nos dates de tournée et réservez nos spectacles pour vos événements."
+        keywords="spectacle de rue, spectacle de scène, compagnie artistique, Fatras, festivals, arts de la rue, événements culturels"
+        url="https://fatras.net/"
+      />
       <div className="min-h-screen">
         {Array.isArray(homePageBlocks) && homePageBlocks.length > 0 ? homePageBlocks.map((block, index) => (
           <div key={block.id || index} className="block-container">

@@ -1,9 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Users, Plane } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { SEOHead } from '@/components/SEOHead';
 
 export const FrontArtists: React.FC = () => {
   const [artists, setArtists] = useState<any[]>([]);
@@ -61,16 +61,23 @@ export const FrontArtists: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen py-12 px-4 bg-background">
-      <div className="container mx-auto">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-            Nos Spectacles
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Découvrez notre sélection d'artistes exceptionnels et leurs spectacles uniques.
-          </p>
-        </div>
+    <>
+      <SEOHead 
+        title="Nos Spectacles - Fatras"
+        description="Découvrez les spectacles de la compagnie Fatras. Spectacles de rue et de scène uniques pour vos festivals et événements culturels."
+        keywords="spectacles Fatras, spectacle de rue, spectacle de scène, compagnie artistique, festival"
+        url="https://fatras.net/artistes"
+      />
+      <div className="min-h-screen py-12 px-4 bg-background">
+        <div className="container mx-auto">
+          <div className="text-center mb-12">
+            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
+              Nos Spectacles
+            </h1>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Découvrez notre sélection d'artistes exceptionnels et leurs spectacles uniques.
+            </p>
+          </div>
         
         {artists.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -120,7 +127,8 @@ export const FrontArtists: React.FC = () => {
             <p>Nos spectacles seront bientôt disponibles. Revenez nous voir !</p>
           </div>
         )}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
