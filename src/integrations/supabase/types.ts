@@ -3946,7 +3946,45 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      email_accounts_safe: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          id: string | null
+          imap_config: Json | null
+          is_active: boolean | null
+          is_organization_shared: boolean | null
+          last_sync_at: string | null
+          provider: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          id?: string | null
+          imap_config?: never
+          is_active?: boolean | null
+          is_organization_shared?: boolean | null
+          last_sync_at?: string | null
+          provider?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          id?: string | null
+          imap_config?: never
+          is_active?: boolean | null
+          is_organization_shared?: boolean | null
+          last_sync_at?: string | null
+          provider?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       check_channel_access: {
@@ -4001,6 +4039,21 @@ export type Database = {
           role: string
           user_id: string
           username: string
+        }[]
+      }
+      get_email_accounts_safe: {
+        Args: never
+        Returns: {
+          created_at: string
+          email: string
+          id: string
+          imap_config: Json
+          is_active: boolean
+          is_organization_shared: boolean
+          last_sync_at: string
+          provider: string
+          updated_at: string
+          user_id: string
         }[]
       }
       get_email_accounts_secure: {
