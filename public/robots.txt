@@ -1,3 +1,5 @@
+# Robots.txt for fatras.net
+
 User-agent: Googlebot
 Allow: /
 
@@ -12,3 +14,22 @@ Allow: /
 
 User-agent: *
 Allow: /
+
+# Disallow admin/dashboard routes
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /auth
+Disallow: /artists/
+Disallow: /events/
+Disallow: /contacts
+Disallow: /preferences
+Disallow: /tasks
+Disallow: /email
+Disallow: /opportunities
+Disallow: /forms
+Disallow: /quotes
+Disallow: /merchandise-backoffice
+Disallow: /website-backoffice
+
+# Sitemap location
+Sitemap: https://fatras.net/sitemap.xml
