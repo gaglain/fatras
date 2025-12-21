@@ -46,6 +46,25 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
   useEffect(() => {
     console.log('🎯 FrontLayout mounted - Starting sync');
     
+    const applyMetaDescription = (description: string) => {
+      let metaDescription = document.querySelector('meta[name="description"]');
+      if (!metaDescription) {
+        metaDescription = document.createElement('meta');
+        metaDescription.setAttribute('name', 'description');
+        document.head.appendChild(metaDescription);
+      }
+      metaDescription.setAttribute('content', description);
+      
+      // Also update OG description
+      let ogDescription = document.querySelector('meta[property="og:description"]');
+      if (!ogDescription) {
+        ogDescription = document.createElement('meta');
+        ogDescription.setAttribute('property', 'og:description');
+        document.head.appendChild(ogDescription);
+      }
+      ogDescription.setAttribute('content', description);
+    };
+    
     const loadSettings = async () => {
       try {
         // Identifier l'utilisateur courant (si connecté) afin de charger LES bons paramètres
@@ -57,6 +76,12 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
         const { data: designData } = userId
           ? await designQuery.eq('user_id', userId).maybeSingle()
           : await designQuery.maybeSingle();
+        
+        // Charger les paramètres SEO
+        const { data: seoData } = await supabase
+          .from('website_seo')
+          .select('site_description')
+          .maybeSingle();
         
         // Charger websiteConfig qui contient toutes les infos y compris socialLinks
         const settingsQuery = supabase
@@ -77,8 +102,13 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
         
         if (designData) {
           merged.siteName = designData.site_name || merged.siteName;
-          merged.siteDescription = merged.siteDescription;
           console.log('📦 Loaded site name from Supabase:', designData.site_name);
+        }
+        
+        // Appliquer la meta description depuis SEO ou websiteConfig
+        if (seoData?.site_description) {
+          merged.siteDescription = seoData.site_description;
+          console.log('📦 Loaded site description from SEO:', seoData.site_description);
         }
         
         if (appSettings) {
@@ -95,6 +125,10 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
               merged.address = config.address || merged.address;
               merged.googleAnalyticsId = config.googleAnalyticsId || merged.googleAnalyticsId;
               merged.socialLinks = config.socialLinks || merged.socialLinks;
+              // Fallback description from config if not in SEO
+              if (!merged.siteDescription && config.siteDescription) {
+                merged.siteDescription = config.siteDescription;
+              }
               console.log('📦 Loaded settings from websiteConfig:', config.socialLinks);
             } catch (e) {
               console.error('❌ Error parsing websiteConfig:', e);
@@ -119,6 +153,7 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
 
         setSettings(merged);
         if (merged.siteName) document.title = merged.siteName;
+        if (merged.siteDescription) applyMetaDescription(merged.siteDescription);
       } catch (error) {
         console.error('❌ FrontLayout - Error loading settings:', error);
       }
