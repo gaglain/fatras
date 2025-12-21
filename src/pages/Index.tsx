@@ -1,13 +1,16 @@
-
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useDomainRouting } from '@/hooks/useDomainRouting';
+import { FrontHome } from './FrontHome';
 
 const Index = () => {
   const { user, loading } = useAuth();
+  const { type: domainType, isPublicSite, isBookingSite } = useDomainRouting();
 
-  // Si l'utilisateur est connecté, rediriger vers le dashboard
-  // Sinon, rediriger vers le site public
+  console.log('🏠 Index - Domain type:', domainType, 'User:', user?.email || 'none');
+
+  // Loading state
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/20">
@@ -19,11 +22,27 @@ const Index = () => {
     );
   }
 
+  // fatras.net → Show public site directly at /
+  if (isPublicSite) {
+    console.log('🌍 Rendering public site at root');
+    return <FrontHome />;
+  }
+
+  // booking.fatras.net → Redirect to auth or dashboard
+  if (isBookingSite) {
+    if (user) {
+      console.log('🎫 Booking domain with user → dashboard');
+      return <Navigate to="/dashboard" replace />;
+    }
+    console.log('🎫 Booking domain without user → auth');
+    return <Navigate to="/auth" replace />;
+  }
+
+  // Preview mode (lovable.app, localhost) → current behavior
   if (user) {
     return <Navigate to="/dashboard" replace />;
   }
 
-  // Rediriger vers le site public front
   return <Navigate to="/front" replace />;
 };
 
