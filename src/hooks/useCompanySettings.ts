@@ -13,8 +13,21 @@ export function useCompanySettings() {
   const [settings, setSettings] = useState<CompanySettings>({
     name: "Fatras",
     logo: "/logo.svg",
-    favicon: ""
+    favicon: "/favicon.png"
   });
+
+
+  const normalizeFavicon = (value?: string) => {
+    const fallback = '/favicon.png?v=20251222';
+    if (!value) return fallback;
+    const v = String(value).trim();
+    if (!v) return fallback;
+    // Keep data URLs / absolute URLs intact
+    if (v.startsWith('data:') || v.startsWith('http://') || v.startsWith('https://')) return v;
+    // Migrate legacy ico reference
+    if (v.includes('favicon.ico')) return fallback;
+    return v;
+  };
 
   // Charger les paramètres depuis Supabase quand l'utilisateur change
   useEffect(() => {
@@ -59,7 +72,7 @@ export function useCompanySettings() {
         }, {
           name: "Fatras",
           logo: "/logo.svg",
-          favicon: ""
+          favicon: "/favicon.png"
         });
 
         if (loadedSettings) {
@@ -78,24 +91,31 @@ export function useCompanySettings() {
   const applySettings = (newSettings: CompanySettings) => {
     // Appliquer le favicon (prioritaire)
     if (newSettings.favicon) {
+      const normalizedFavicon = normalizeFavicon(newSettings.favicon);
+
       let link = document.querySelector('link[rel="icon"]') as HTMLLinkElement | null;
       if (!link) {
         link = document.createElement('link');
         link.rel = 'icon';
         document.head.appendChild(link);
       }
-      link.href = newSettings.favicon;
+      link.href = normalizedFavicon;
+
       // Sauvegarder dans localStorage pour le chargement initial (index.html)
-      try { 
-        localStorage.setItem('customFavicon', newSettings.favicon);
-        // Mettre à jour companySettings dans localStorage aussi
+      try {
+        localStorage.setItem('customFavicon', normalizedFavicon);
+
         const stored = localStorage.getItem('companySettings');
         const parsed = stored ? JSON.parse(stored) : {};
-        parsed.favicon = newSettings.favicon;
+        parsed.favicon = normalizedFavicon;
         localStorage.setItem('companySettings', JSON.stringify(parsed));
-      } catch {}
-      console.log('✅ Favicon appliqué:', newSettings.favicon);
+      } catch {
+        // ignore
+      }
+
+      console.log('✅ Favicon appliqué:', normalizedFavicon);
     }
+
     if (newSettings.name) {
       document.title = newSettings.name;
     }

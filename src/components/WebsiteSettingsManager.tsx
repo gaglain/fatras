@@ -36,7 +36,7 @@ const defaultSettings: WebsiteSettings = {
   siteName: 'Fatras',
   siteDescription: 'Chansons de rue et de Scène',
   metaKeywords: 'fatras, musique, spectacle, rue, scène',
-  favicon: '/favicon.ico',
+  favicon: '/favicon.png?v=20251222',
   googleAnalyticsId: '',
   facebookPixelId: '',
   enableCookieConsent: true,
@@ -107,10 +107,10 @@ export const WebsiteSettingsManager: React.FC = () => {
         let link = document.querySelector("link[rel*='icon']") as HTMLLinkElement;
         if (!link) {
           link = document.createElement('link');
-          link.rel = 'shortcut icon';
+          link.rel = 'icon';
           document.getElementsByTagName('head')[0].appendChild(link);
         }
-        link.type = 'image/x-icon';
+        link.type = file.type || 'image/png';
         link.href = result;
         
         toast.success('Favicon chargé avec succès');
