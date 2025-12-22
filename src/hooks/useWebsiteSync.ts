@@ -163,7 +163,7 @@ export const useWebsiteSync = () => {
     console.log('🔄 Starting frontend website sync');
     const { settings, design } = loadData();
     
-    const finalSiteName = design?.siteName || settings?.siteName || 'MusiConnect';
+    const finalSiteName = design?.siteName || settings?.siteName || 'Fatras';
     
     // Appliquer les styles
     if (design) {

@@ -17,7 +17,7 @@ interface HeroBlockProps {
 
 export const HeroBlock: React.FC<HeroBlockProps> = ({ content, isEditing, onChange }) => {
   const [isEditingHero, setIsEditingHero] = useState(false);
-  const [siteName, setSiteName] = useState('MusiConnect');
+  const [siteName, setSiteName] = useState('Fatras');
 
   // Charger le nom du site dynamiquement
   useEffect(() => {
@@ -25,7 +25,7 @@ export const HeroBlock: React.FC<HeroBlockProps> = ({ content, isEditing, onChan
       const savedDesign = localStorage.getItem('websiteDesign');
       const savedSettings = localStorage.getItem('websiteSettings');
       
-      let finalSiteName = 'MusiConnect';
+      let finalSiteName = 'Fatras';
       
       if (savedDesign) {
         try {

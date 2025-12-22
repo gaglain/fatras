@@ -21,7 +21,7 @@ export interface WebsiteDesign {
 
 const defaultDesign: WebsiteDesign = {
   logo: '/logo.svg',
-  site_name: 'MusiConnect',
+  site_name: 'Fatras',
   primary_color: '#1632f4',
   secondary_color: '#ec5f65',
   accent_color: '#f19e9c',

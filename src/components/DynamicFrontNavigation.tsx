@@ -14,7 +14,7 @@ interface MenuItem {
 
 export const DynamicFrontNavigation: React.FC = () => {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
-  const [siteName, setSiteName] = useState('MusiConnect');
+  const [siteName, setSiteName] = useState('Fatras');
   const [logo, setLogo] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [logoError, setLogoError] = useState(false);

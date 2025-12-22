@@ -31,11 +31,11 @@ interface WebsiteSettings {
 
 export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
   const [settings, setSettings] = useState<WebsiteSettings>({
-    siteName: 'MusiConnect',
-    siteDescription: 'Plateforme de gestion artistique',
-    contactEmail: 'contact@musiconnect.com',
-    contactPhone: '+33 1 23 45 67 89',
-    address: '123 Rue de la Musique, 75001 Paris',
+    siteName: 'Fatras',
+    siteDescription: 'Chansons de rue et de Scène',
+    contactEmail: 'contact@fatras.net',
+    contactPhone: '',
+    address: '',
     socialLinks: {
       facebook: '',
       instagram: '',
