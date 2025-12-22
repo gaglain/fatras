@@ -1,6 +1,10 @@
-
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+
+const getDefaultOgImage = () => {
+  if (typeof window === 'undefined') return 'https://fatras.net/og-image.jpg';
+  return `${window.location.origin}/og-image.jpg`;
+};
 
 interface SEOSettings {
   id?: string;
@@ -26,8 +30,18 @@ export const useWebsiteSEO = () => {
         .single();
 
       if (error && error.code !== 'PGRST116') throw error;
-      
-      setSeoSettings(data || {});
+
+      const existingOgFromHead =
+        typeof document !== 'undefined'
+          ? (document.querySelector('meta[property="og:image"]') as HTMLMetaElement | null)?.content
+          : undefined;
+
+      const normalized = {
+        ...(data || {}),
+        og_image: (data || {}).og_image || existingOgFromHead || getDefaultOgImage(),
+      } as SEOSettings;
+
+      setSeoSettings(normalized);
     } catch (error) {
       console.error('Erreur lors du chargement des paramètres SEO:', error);
     } finally {
@@ -148,15 +162,14 @@ export const useWebsiteSEO = () => {
     metaKeywords.setAttribute('content', seo.site_keywords || '');
 
     // Open Graph
-    if (seo.og_image) {
-      let ogImage = document.querySelector('meta[property="og:image"]');
-      if (!ogImage) {
-        ogImage = document.createElement('meta');
-        ogImage.setAttribute('property', 'og:image');
-        document.head.appendChild(ogImage);
-      }
-      ogImage.setAttribute('content', seo.og_image);
+    const ogImageToApply = seo.og_image || getDefaultOgImage();
+    let ogImage = document.querySelector('meta[property="og:image"]');
+    if (!ogImage) {
+      ogImage = document.createElement('meta');
+      ogImage.setAttribute('property', 'og:image');
+      document.head.appendChild(ogImage);
     }
+    ogImage.setAttribute('content', ogImageToApply);
   };
 
   useEffect(() => {
