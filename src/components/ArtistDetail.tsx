@@ -402,31 +402,28 @@ export const ArtistDetail: React.FC<ArtistDetailProps> = ({ artist, setCurrentPa
                       </p>
                     )}
                   </div>
+
+                  {/* Numéro de programme SACEM - Information interne */}
+                  <div>
+                    <Label>Numéro de programme SACEM (interne)</Label>
+                    {isEditing ? (
+                      <Input
+                        value={artistData.sacem_program_number || ''}
+                        onChange={(e) => setArtistData({...artistData, sacem_program_number: e.target.value})}
+                        placeholder="Ex: 123456789"
+                      />
+                    ) : (
+                      <p className="text-gray-700">
+                        {artistData.sacem_program_number || 'Non défini'}
+                      </p>
+                    )}
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Information interne - non affichée sur le site public.
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
-
-            {/* Section Informations SACEM - Visible uniquement en mode édition (admin) */}
-            {isEditing && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Informations SACEM (interne)</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div>
-                    <Label>Numéro de programme SACEM</Label>
-                    <Input
-                      value={artistData.sacem_program_number || ''}
-                      onChange={(e) => setArtistData({...artistData, sacem_program_number: e.target.value})}
-                      placeholder="Ex: 123456789"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Cette information est interne et ne sera pas affichée sur le site public.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
 
             {isEditing && (
               <div className="flex justify-end">
