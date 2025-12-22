@@ -45,7 +45,7 @@ const defaultSEOSettings: SEOSettings = {
   siteName: 'Fatras',
   siteDescription: 'Site officiel de Fatras - Découvrez notre univers musical',
   keywords: 'fatras, musique, artistes, événements, booking',
-  ogImage: '',
+  ogImage: `${window.location.origin}/og-image.jpg`,
   twitterCard: 'summary_large_image',
   googleAnalyticsId: '',
   googleSearchConsoleId: '',
@@ -70,7 +70,7 @@ export const SEOManager: React.FC = () => {
         siteName: dbSettings.site_title || '',
         siteDescription: dbSettings.site_description || '',
         keywords: dbSettings.site_keywords || '',
-        ogImage: dbSettings.og_image || '',
+        ogImage: dbSettings.og_image || `${window.location.origin}/og-image.jpg`,
         twitterCard: (dbSettings.twitter_card_type as any) || 'summary_large_image',
         googleAnalyticsId: dbSettings.google_analytics_id || '',
         googleSearchConsoleId: dbSettings.google_search_console_id || '',
@@ -289,24 +289,41 @@ export const SEOManager: React.FC = () => {
                 <div>
                   <label className="block text-sm font-medium mb-2">Image Open Graph</label>
                   <div className="space-y-2">
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      onChange={async (e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          try {
-                            const reader = new FileReader();
-                            reader.onloadend = () => {
-                              setSeoSettings(prev => ({ ...prev, ogImage: reader.result as string }));
-                            };
-                            reader.readAsDataURL(file);
-                          } catch (error) {
-                            console.error('Erreur upload image:', error);
-                          }
+                    <div className="flex flex-col gap-2">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() =>
+                          setSeoSettings((prev) => ({
+                            ...prev,
+                            ogImage: `${window.location.origin}/og-image.jpg`,
+                          }))
                         }
-                      }}
-                    />
+                      >
+                        Utiliser l’image OG générée (og-image.jpg)
+                      </Button>
+
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            try {
+                              const reader = new FileReader();
+                              reader.onloadend = () => {
+                                setSeoSettings(prev => ({ ...prev, ogImage: reader.result as string }));
+                              };
+                              reader.readAsDataURL(file);
+                            } catch (error) {
+                              console.error('Erreur upload image:', error);
+                            }
+                          }
+                        }}
+                      />
+                    </div>
+
                     {seoSettings.ogImage && (
                       <div className="relative w-full max-w-md">
                         <img 
