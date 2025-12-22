@@ -1,8 +1,8 @@
 // Smarter Service Worker with network-first for pages and cache-busting support
-const CACHE_NAME = 'artistcrm-v6';
+const CACHE_NAME = 'artistcrm-v7';
 const urlsToCache = [
   // Keep minimal precache
-  '/favicon.ico'
+  '/favicon.png'
 ];
 
 self.addEventListener('install', (event) => {
@@ -44,8 +44,8 @@ self.addEventListener('push', (event) => {
   let notificationData = {
     title: 'Nouvelle notification',
     body: 'Vous avez une nouvelle notification',
-    badge: '/favicon.ico',
-    icon: '/favicon.ico',
+    badge: '/favicon.png',
+    icon: '/favicon.png',
     tag: 'notification',
     data: {}
   };
