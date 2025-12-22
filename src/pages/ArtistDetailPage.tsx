@@ -367,6 +367,20 @@ export const ArtistDetailPage: React.FC = () => {
                 </p>
               </CardContent>
             </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Informations internes</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <p className="text-sm text-muted-foreground">Numéro de programme SACEM</p>
+                  <p className="font-medium">
+                    {(artist as any).sacem_program_number || 'Non renseigné'}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </TabsContent>
       </Tabs>
