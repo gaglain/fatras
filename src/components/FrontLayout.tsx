@@ -4,6 +4,7 @@ import { DynamicFrontNavigation } from './DynamicFrontNavigation';
 import { PublicChatWidget } from './PublicChatWidget';
 import { RGPDModule } from './RGPDModule';
 import { GoogleAnalytics } from './GoogleAnalytics';
+import { FacebookPixel } from './FacebookPixel';
 import { Facebook, Instagram, Twitter, Youtube, Linkedin } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -25,6 +26,7 @@ interface WebsiteSettings {
     linkedin: string;
   };
   googleAnalyticsId?: string;
+  facebookPixelId?: string;
 }
 
 export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
@@ -92,7 +94,8 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
             'contact_email',
             'contact_phone',
             'address',
-            'google_analytics_id'
+            'google_analytics_id',
+            'facebook_pixel_id'
           ]);
         const { data: appSettings } = userId
           ? await settingsQuery.eq('user_id', userId)
@@ -124,6 +127,7 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
               merged.contactPhone = config.contactPhone || merged.contactPhone;
               merged.address = config.address || merged.address;
               merged.googleAnalyticsId = config.googleAnalyticsId || merged.googleAnalyticsId;
+              merged.facebookPixelId = config.facebookPixelId || merged.facebookPixelId;
               merged.socialLinks = config.socialLinks || merged.socialLinks;
               // Fallback description from config if not in SEO
               if (!merged.siteDescription && config.siteDescription) {
@@ -139,6 +143,7 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
             merged.contactPhone = settingsMap['contact_phone'] || merged.contactPhone;
             merged.address = settingsMap['address'] || merged.address;
             merged.googleAnalyticsId = settingsMap['google_analytics_id'];
+            merged.facebookPixelId = settingsMap['facebook_pixel_id'];
           }
         }
 
@@ -197,6 +202,9 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
     <div className="min-h-screen flex flex-col" data-theme-element="page">
       {/* Google Analytics */}
       <GoogleAnalytics measurementId={settings.googleAnalyticsId} />
+      
+      {/* Facebook Pixel */}
+      <FacebookPixel pixelId={settings.facebookPixelId} />
       
       {/* Navigation dynamique synchronisée */}
       <DynamicFrontNavigation />
