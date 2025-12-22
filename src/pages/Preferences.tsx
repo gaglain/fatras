@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Globe, Palette, Bell, Smartphone, Calendar, Mail, Settings, MapPin } from 'lucide-react';
+import { Globe, Palette, Bell, Smartphone, Calendar, Mail, Settings, MapPin, User } from 'lucide-react';
 import { CustomColorsForm } from "./preferences/CustomColorsForm";
 import { GoogleCalendarTab } from "./preferences/GoogleCalendarTab";
 import { GmailTab } from "./preferences/GmailTab";
@@ -16,12 +15,13 @@ import {
   EmailTab,
   SmtpTab,
 } from "./preferences";
+import { AccountTab } from "./preferences/AccountTab";
 import { ContactSettingsTab } from '@/components/preferences/ContactSettingsTab';
 import { useSearchParams } from 'react-router-dom';
 
 export const Preferences: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const defaultTab = searchParams.get('tab') || 'company';
+  const defaultTab = searchParams.get('tab') || 'account';
 
   return (
     <div className="space-y-4 lg:space-y-6">
@@ -34,6 +34,10 @@ export const Preferences: React.FC = () => {
       <Tabs defaultValue={defaultTab} className="w-full">
         <div className="overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
           <TabsList className="inline-flex h-auto gap-1 p-1 bg-muted/50 min-w-max sm:flex sm:flex-wrap sm:min-w-0 sm:w-full">
+            <TabsTrigger value="account" className="text-xs sm:text-sm px-2 sm:px-3 py-1.5 data-[state=active]:bg-background whitespace-nowrap">
+              <User className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <span>Compte</span>
+            </TabsTrigger>
             <TabsTrigger value="company" className="text-xs sm:text-sm px-2 sm:px-3 py-1.5 data-[state=active]:bg-background whitespace-nowrap">
               <Globe className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
               <span className="hidden xs:inline sm:inline">Entreprise</span>
@@ -79,6 +83,9 @@ export const Preferences: React.FC = () => {
             </TabsTrigger>
           </TabsList>
         </div>
+        <TabsContent value="account" className="space-y-4">
+          <AccountTab />
+        </TabsContent>
         <TabsContent value="company" className="space-y-4">
           <CompanyTab />
         </TabsContent>
