@@ -66,8 +66,8 @@ serve(async (req) => {
     const pushPayload = JSON.stringify({
       title: notification.title,
       body: notification.body,
-      icon: notification.icon || '/favicon.ico',
-      badge: notification.badge || '/favicon.ico',
+      icon: notification.icon || '/favicon.png',
+      badge: notification.badge || '/favicon.png',
       tag: notification.tag || 'notification',
       data: notification.data || {}
     });

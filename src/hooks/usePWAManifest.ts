@@ -22,13 +22,13 @@ export const usePWAManifest = () => {
         theme_color: data.themeColor || "#8b5cf6",
         icons: [
           {
-            src: data.iconUrl || "/favicon.ico",
+            src: data.iconUrl || "/favicon.png?v=20251222",
             sizes: "192x192",
             type: "image/png",
             purpose: "any maskable"
           },
           {
-            src: data.iconUrl || "/favicon.ico",
+            src: data.iconUrl || "/favicon.png?v=20251222",
             sizes: "512x512",
             type: "image/png",
             purpose: "any maskable"
