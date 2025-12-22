@@ -20,7 +20,7 @@ interface SiteDesign {
 
 const defaultDesign: SiteDesign = {
   logo: '/logo.svg',
-  siteName: 'MusiConnect',
+  siteName: 'Fatras',
   primaryColor: '#1632f4',
   secondaryColor: '#ec5f65',
   accentColor: '#f19e9c',
@@ -32,7 +32,7 @@ const defaultDesign: SiteDesign = {
 
 export const FrontNavigation: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [siteName, setSiteName] = useState('MusiConnect');
+  const [siteName, setSiteName] = useState('Fatras');
   const [design, setDesign] = useState<SiteDesign>(defaultDesign);
   const location = useLocation();
 

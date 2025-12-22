@@ -33,17 +33,17 @@ interface WebsiteSettings {
 }
 
 const defaultSettings: WebsiteSettings = {
-  siteName: 'MusiConnect',
-  siteDescription: 'Votre plateforme de gestion musicale complète',
-  metaKeywords: 'musique, artistes, événements, booking',
+  siteName: 'Fatras',
+  siteDescription: 'Chansons de rue et de Scène',
+  metaKeywords: 'fatras, musique, spectacle, rue, scène',
   favicon: '/favicon.ico',
   googleAnalyticsId: '',
   facebookPixelId: '',
   enableCookieConsent: true,
   cookieConsentText: 'Nous utilisons des cookies pour améliorer votre expérience sur notre site.',
-  contactEmail: 'contact@musiconnect.com',
-  contactPhone: '+33 1 23 45 67 89',
-  address: '123 Rue de la Musique, 75001 Paris',
+  contactEmail: 'contact@fatras.net',
+  contactPhone: '',
+  address: '',
   socialLinks: {
     facebook: '',
     instagram: '',

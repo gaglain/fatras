@@ -70,7 +70,7 @@ const defaultMenuItems: MenuItem[] = [
 ];
 
 const defaultConfig: WebsiteConfig = {
-  siteName: 'MusiConnect',
+  siteName: 'Fatras',
   logo: '/logo.svg',
   primaryColor: '#1632f4',
   secondaryColor: '#ec5f65',
@@ -79,12 +79,12 @@ const defaultConfig: WebsiteConfig = {
   footerBg: 'linear-gradient(to right, #1a1f2e, #222c45)',
   textColor: '#ffffff',
   linkColor: '#60a5fa',
-  siteDescription: 'Votre plateforme musicale professionnelle',
-  metaKeywords: 'musique, artistes, événements',
+  siteDescription: 'Chansons de rue et de Scène',
+  metaKeywords: 'fatras, musique, spectacle, rue, scène',
   favicon: '/favicon.ico',
-  contactEmail: 'contact@musiconnect.com',
-  contactPhone: '+33 1 23 45 67 89',
-  address: '123 Rue de la Musique, 75001 Paris',
+  contactEmail: 'contact@fatras.net',
+  contactPhone: '',
+  address: '',
   socialLinks: {
     facebook: '',
     instagram: '',

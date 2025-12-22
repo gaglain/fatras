@@ -40,7 +40,7 @@ export const useWebsiteUnifiedSync = () => {
       lastDataHash.current = currentDataHash;
       
       // Déterminer le nom du site
-      const finalSiteName = design?.siteName || settings?.siteName || 'MusiConnect';
+      const finalSiteName = design?.siteName || settings?.siteName || 'Fatras';
       console.log('🏷️ Final site name:', finalSiteName);
       
       // Mettre à jour le titre de la page

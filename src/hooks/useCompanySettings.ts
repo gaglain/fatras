@@ -11,7 +11,7 @@ export interface CompanySettings {
 export function useCompanySettings() {
   const { user } = useAuth();
   const [settings, setSettings] = useState<CompanySettings>({
-    name: "MusiConnect",
+    name: "Fatras",
     logo: "/logo.svg",
     favicon: ""
   });
@@ -57,7 +57,7 @@ export function useCompanySettings() {
           }
           return acc;
         }, {
-          name: "MusiConnect",
+          name: "Fatras",
           logo: "/logo.svg",
           favicon: ""
         });
