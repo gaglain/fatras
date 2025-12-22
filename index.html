@@ -85,14 +85,20 @@
             if (manifest.name) {
               document.title = manifest.name;
             }
-            // Mettre à jour le favicon
-            if (manifest.icons && manifest.icons[0]) {
+            console.log('✅ PWA Manifest chargé depuis localStorage');
+          }
+          
+          // Charger le favicon depuis companySettings (prioritaire sur le manifest PWA)
+          var companySettings = localStorage.getItem('companySettings');
+          if (companySettings) {
+            var settings = JSON.parse(companySettings);
+            if (settings.favicon) {
               var favicon = document.querySelector("link[rel*='icon']");
               if (favicon) {
-                favicon.href = manifest.icons[0].src;
+                favicon.href = settings.favicon;
               }
+              console.log('✅ Favicon chargé depuis companySettings');
             }
-            console.log('✅ PWA Manifest chargé depuis localStorage');
           }
         } catch (e) {
           console.log('PWA Manifest: utilisation du manifest par défaut');
