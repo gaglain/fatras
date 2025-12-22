@@ -32,7 +32,8 @@ export const ArtistDetailPage: React.FC = () => {
     website: '',
     instagram: '',
     facebook: '',
-    current_tour: ''
+    current_tour: '',
+    sacem_program_number: ''
   });
 
   useEffect(() => {
@@ -48,7 +49,8 @@ export const ArtistDetailPage: React.FC = () => {
         website: foundArtist.website || '',
         instagram: foundArtist.instagram || '',
         facebook: foundArtist.facebook || '',
-        current_tour: foundArtist.current_tour || ''
+        current_tour: foundArtist.current_tour || '',
+        sacem_program_number: (foundArtist as any).sacem_program_number || ''
       });
     }
   }, [id, artists]);
@@ -210,6 +212,18 @@ export const ArtistDetailPage: React.FC = () => {
                   value={editForm.current_tour}
                   onChange={(e) => setEditForm({ ...editForm, current_tour: e.target.value })}
                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="sacem_program_number">Numéro de programme SACEM (interne)</Label>
+                <Input
+                  id="sacem_program_number"
+                  value={editForm.sacem_program_number}
+                  onChange={(e) => setEditForm({ ...editForm, sacem_program_number: e.target.value })}
+                  placeholder="Ex: 123456789"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Information interne - non affichée sur le site public.
+                </p>
               </div>
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
