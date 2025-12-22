@@ -75,19 +75,29 @@ export function useCompanySettings() {
     loadFromSupabase();
   }, [user?.id]);
 
-  const applySettings = (settings: CompanySettings) => {
-    if (settings.favicon) {
+  const applySettings = (newSettings: CompanySettings) => {
+    // Appliquer le favicon (prioritaire)
+    if (newSettings.favicon) {
       let link = document.querySelector('link[rel="icon"]') as HTMLLinkElement | null;
       if (!link) {
         link = document.createElement('link');
         link.rel = 'icon';
         document.head.appendChild(link);
       }
-      link.href = settings.favicon;
-      try { localStorage.setItem('customFavicon', settings.favicon); } catch {}
+      link.href = newSettings.favicon;
+      // Sauvegarder dans localStorage pour le chargement initial (index.html)
+      try { 
+        localStorage.setItem('customFavicon', newSettings.favicon);
+        // Mettre à jour companySettings dans localStorage aussi
+        const stored = localStorage.getItem('companySettings');
+        const parsed = stored ? JSON.parse(stored) : {};
+        parsed.favicon = newSettings.favicon;
+        localStorage.setItem('companySettings', JSON.stringify(parsed));
+      } catch {}
+      console.log('✅ Favicon appliqué:', newSettings.favicon);
     }
-    if (settings.name) {
-      document.title = settings.name;
+    if (newSettings.name) {
+      document.title = newSettings.name;
     }
   };
 
