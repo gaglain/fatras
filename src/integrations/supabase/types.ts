@@ -490,6 +490,7 @@ export type Database = {
           press_kit_url: string | null
           quote_template_id: string | null
           rating: number | null
+          sacem_program_number: string | null
           short_description: string | null
           slug: string | null
           status: string
@@ -527,6 +528,7 @@ export type Database = {
           press_kit_url?: string | null
           quote_template_id?: string | null
           rating?: number | null
+          sacem_program_number?: string | null
           short_description?: string | null
           slug?: string | null
           status?: string
@@ -564,6 +566,7 @@ export type Database = {
           press_kit_url?: string | null
           quote_template_id?: string | null
           rating?: number | null
+          sacem_program_number?: string | null
           short_description?: string | null
           slug?: string | null
           status?: string
