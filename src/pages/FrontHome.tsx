@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { FrontLayout } from '@/components/FrontLayout';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,8 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, MapPin, Clock, Users, ArrowRight } from 'lucide-react';
 import { useFrontDataSync } from '@/hooks/useFrontDataSync';
+import { useFrontDataCache, CACHE_KEYS } from '@/hooks/useFrontDataCache';
 import { Button } from '@/components/ui/button';
 import { SEOHead } from '@/components/SEOHead';
+import { OptimizedImage } from '@/components/OptimizedImage';
 
 // Composant Hero avec effet hover
 const HeroBlock: React.FC<{ content: any; siteSettings: any }> = ({ content, siteSettings }) => {
@@ -26,12 +28,19 @@ const HeroBlock: React.FC<{ content: any; siteSettings: any }> = ({ content, sit
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Background image or gradient */}
+      {/* Background image optimisée avec fetchpriority="high" pour LCP */}
       {backgroundImage ? (
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-700 group-hover:scale-105"
-          style={{ backgroundImage: `url(${backgroundImage})` }}
-        />
+        <>
+          <img
+            src={backgroundImage}
+            alt="Hero background"
+            loading="eager"
+            decoding="sync"
+            // @ts-ignore - fetchpriority est supporté mais pas typé
+            fetchpriority="high"
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+          />
+        </>
       ) : (
         <div className="absolute inset-0 bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900" />
       )}
@@ -92,8 +101,9 @@ export const FrontHome: React.FC = () => {
   const [siteSettings, setSiteSettings] = useState<any>({});
   const [loading, setLoading] = useState(true);
   
-  // Hook de synchronisation pour le front
+  // Hook de synchronisation et de cache pour le front
   const { forceSync } = useFrontDataSync();
+  const { fetchWithCache, clearCache } = useFrontDataCache();
 
   useEffect(() => {
     loadAllData({ silent: false });
@@ -171,12 +181,19 @@ export const FrontHome: React.FC = () => {
         console.warn('⚠️ FrontHome auth.getUser failed (public mode continues):', e);
       }
 
-      // 2) Settings (best-effort)
+      // 2) Settings (avec cache)
       try {
-        const designQuery = supabase.from('website_designs').select('*').limit(1);
-        const { data: designData } = userId
-          ? await withTimeout(designQuery.eq('user_id', userId).maybeSingle(), 6000, 'loading website_designs (by user_id)')
-          : await withTimeout(designQuery.maybeSingle(), 6000, 'loading website_designs (public)');
+        const designData = await fetchWithCache(
+          CACHE_KEYS.WEBSITE_DESIGN,
+          async () => {
+            const designQuery = supabase.from('website_designs').select('*').limit(1);
+            const { data } = userId
+              ? await withTimeout(designQuery.eq('user_id', userId).maybeSingle(), 6000, 'loading website_designs (by user_id)')
+              : await withTimeout(designQuery.maybeSingle(), 6000, 'loading website_designs (public)');
+            return data;
+          },
+          { forceRefresh: opts?.silent === false }
+        );
 
         if (designData) {
           setSiteSettings({
@@ -186,75 +203,80 @@ export const FrontHome: React.FC = () => {
             primaryColor: designData.primary_color,
             secondaryColor: designData.secondary_color,
           });
-          console.log('⚙️ Site settings loaded from Supabase:', designData.site_name);
+          console.log('⚙️ Site settings loaded:', designData.site_name);
         } else {
           const savedSettings = localStorage.getItem('websiteSettings');
           if (savedSettings) {
             const settings = JSON.parse(savedSettings);
             setSiteSettings(settings);
-            console.log('⚙️ Site settings loaded from localStorage:', settings.siteName);
           }
         }
       } catch (e) {
         console.warn('⚠️ FrontHome settings load failed:', e);
       }
 
-      // 3) Events (best-effort) - Only future events with artist data
+      // 3) Events (avec cache) - Only future events with artist data
       try {
         const now = new Date().toISOString();
-        const { data: eventsData, error: eventsError } = await withTimeout(
-          supabase
-            .from('events')
-            .select(`
-              *,
-              artist:centralized_artists(id, name, image)
-            `)
-            .eq('status', 'confirmed')
-            .gte('start_date', now)
-            .order('start_date', { ascending: true })
-            .limit(6),
-          8000,
-          'loading events'
+        const eventsData = await fetchWithCache(
+          CACHE_KEYS.EVENTS,
+          async () => {
+            const { data, error } = await withTimeout(
+              supabase
+                .from('events')
+                .select(`
+                  *,
+                  artist:centralized_artists(id, name, image)
+                `)
+                .eq('status', 'confirmed')
+                .gte('start_date', now)
+                .order('start_date', { ascending: true })
+                .limit(6),
+              8000,
+              'loading events'
+            );
+            if (error) throw error;
+            return data || [];
+          },
+          { forceRefresh: opts?.silent === false }
         );
-
-        if (eventsError) {
-          console.error('❌ Error loading events:', eventsError);
-          setEvents([]);
-        } else {
-          setEvents(eventsData || []);
-          console.log('🎭 Events loaded:', eventsData?.length);
-        }
+        
+        setEvents(eventsData);
+        console.log('🎭 Events loaded:', eventsData.length);
       } catch (e) {
         console.warn('⚠️ FrontHome events load failed:', e);
         setEvents([]);
       }
 
-      // 4) Artists (best-effort) - Only touring artists
+      // 4) Artists (avec cache) - Only touring artists
       try {
-        const { data: artistsData, error: artistsError } = await withTimeout(
-          supabase
-            .from('centralized_artists')
-            .select('*')
-            .eq('is_touring', true)
-            .limit(6),
-          8000,
-          'loading artists'
+        const artistsData = await fetchWithCache(
+          CACHE_KEYS.ARTISTS,
+          async () => {
+            const { data, error } = await withTimeout(
+              supabase
+                .from('centralized_artists')
+                .select('*')
+                .eq('is_touring', true)
+                .limit(6),
+              8000,
+              'loading artists'
+            );
+            if (error) throw error;
+            return data || [];
+          },
+          { forceRefresh: opts?.silent === false }
         );
 
-        if (!artistsError && artistsData?.length) {
+        if (artistsData.length) {
           setArtists(artistsData);
-          console.log('🎤 Artists loaded from Supabase:', artistsData.length);
+          console.log('🎤 Artists loaded:', artistsData.length);
         } else {
-          try {
-            const savedArtists = localStorage.getItem('backoffice_artists');
-            if (savedArtists) {
-              const parsedArtists = JSON.parse(savedArtists);
-              setArtists(parsedArtists.slice(0, 6) || []);
-            } else {
-              setArtists([]);
-            }
-          } catch (error) {
-            console.error('❌ Error loading artists:', error);
+          const savedArtists = localStorage.getItem('backoffice_artists');
+          if (savedArtists) {
+            const parsedArtists = JSON.parse(savedArtists);
+            setArtists(parsedArtists.slice(0, 6) || []);
+          } else {
             setArtists([]);
           }
         }
@@ -443,13 +465,14 @@ export const FrontHome: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {events.map((event) => (
                         <Card key={event.id} className="hover:shadow-lg transition-shadow overflow-hidden">
-                          {/* Image de couverture de l'artiste */}
+                          {/* Image de couverture de l'artiste - lazy loading */}
                           {event.artist?.image && (
                             <div className="relative h-48 w-full">
-                              <img 
+                              <OptimizedImage 
                                 src={event.artist.image} 
                                 alt={event.artist.name || event.title}
-                                className="w-full h-full object-cover"
+                                className="w-full h-full"
+                                objectFit="cover"
                               />
                               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                               <div className="absolute bottom-3 left-3 right-3">
@@ -535,10 +558,11 @@ export const FrontHome: React.FC = () => {
                           {/* Image de couverture complète sans recadrage */}
                           {artist.image && (
                             <div className="relative w-full bg-muted">
-                              <img 
+                              <OptimizedImage 
                                 src={artist.image} 
                                 alt={artist.name}
-                                className="w-full h-auto object-contain"
+                                className="w-full h-auto"
+                                objectFit="contain"
                               />
                               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
                                 <h3 className="text-xl font-bold text-white mb-1">{artist.name}</h3>
@@ -597,7 +621,7 @@ export const FrontHome: React.FC = () => {
               <div className="py-8 px-4 bg-background">
                 <div className="container mx-auto">
                   <div className={`text-${block.content?.alignment || 'center'}`}>
-                    <img
+                    <OptimizedImage
                       src={block.content.src}
                       alt={block.content.alt || ''}
                       className="max-w-full h-auto mx-auto rounded-lg shadow-md"
