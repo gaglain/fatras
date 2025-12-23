@@ -3,9 +3,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Upload, X, Image, Play, Folder } from 'lucide-react';
+import { Upload, X, Image, Play, Folder, Zap } from 'lucide-react';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { ImageGalleryPicker } from '@/components/website/ImageGalleryPicker';
+import { optimizeImage, createOptimizedFile, shouldOptimize } from '@/utils/imageOptimizer';
 
 interface MediaUploadProps {
   onMediaUploaded: (url: string, type: 'image' | 'video') => void;
@@ -20,6 +21,7 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
 }) => {
   const { uploadFile, isUploading } = useFileUpload();
   const [dragOver, setDragOver] = useState(false);
+  const [isOptimizing, setIsOptimizing] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentMedia || null);
   
   // Détecter automatiquement le type de média
@@ -45,9 +47,33 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
     try {
       const fileType: 'image' | 'video' = file.type.startsWith('image/') ? 'image' : 'video';
 
+      let fileToUpload = file;
+      let savedBytes = 0;
+
+      // Optimiser automatiquement les images
+      if (fileType === 'image' && shouldOptimize(file, 100)) {
+        setIsOptimizing(true);
+        console.log('🖼️ Optimisation automatique de l\'image...');
+        
+        const result = await optimizeImage(file, {
+          maxWidth: 1920,
+          maxHeight: 1080,
+          quality: 0.85,
+          format: 'webp',
+          maxSizeKB: 300
+        });
+
+        if (result.compressionRatio > 1.1) {
+          fileToUpload = createOptimizedFile(result.blob, file.name, result.format);
+          savedBytes = file.size - result.optimizedSize;
+          console.log(`✅ Image optimisée: ${(file.size / 1024).toFixed(0)}KB → ${(result.optimizedSize / 1024).toFixed(0)}KB`);
+        }
+        setIsOptimizing(false);
+      }
+
       // Upload vers Supabase Storage (bucket public publication-media)
       const result = await uploadFile(
-        file,
+        fileToUpload,
         'publication-media',
         fileType === 'image' ? 'images' : 'videos'
       );
@@ -57,9 +83,15 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
       setMediaType(fileType);
 
       onMediaUploaded(result.url, fileType);
-      toast.success(`${fileType === 'image' ? 'Image' : 'Vidéo'} téléchargée avec succès !`);
+      
+      if (savedBytes > 0) {
+        toast.success(`Image optimisée ! ${(savedBytes / 1024).toFixed(0)}KB économisés`);
+      } else {
+        toast.success(`${fileType === 'image' ? 'Image' : 'Vidéo'} téléchargée avec succès !`);
+      }
     } catch (error) {
       console.error('❌ Upload error:', error);
+      setIsOptimizing(false);
       toast.error('Erreur lors du téléchargement');
     }
   };
@@ -177,19 +209,19 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
               type="file"
               accept="image/*,video/*"
               onChange={handleFileSelect}
-              disabled={isUploading}
+              disabled={isUploading || isOptimizing}
               className="hidden"
               id="media-replace"
             />
             <Button
               type="button"
               variant="outline"
-              disabled={isUploading}
+              disabled={isUploading || isOptimizing}
               onClick={() => document.getElementById('media-replace')?.click()}
               className="w-full"
             >
               <Upload className="h-4 w-4 mr-2" />
-              {isUploading ? 'Téléchargement...' : 'Remplacer par un autre fichier'}
+              {isOptimizing ? 'Optimisation...' : isUploading ? 'Téléchargement...' : 'Remplacer par un autre fichier'}
             </Button>
             
             <ImageGalleryPicker
@@ -214,14 +246,18 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
           onDrop={handleDrop}
         >
           <Upload className="h-8 w-8 mx-auto mb-4 text-gray-400" />
-          <p className="text-gray-600 mb-4">
+          <p className="text-gray-600 mb-2">
             Glissez-déposez votre média ici ou cliquez pour sélectionner
+          </p>
+          <p className="text-xs text-green-600 flex items-center justify-center gap-1 mb-4">
+            <Zap className="h-3 w-3" />
+            Optimisation automatique des images
           </p>
           <Input
             type="file"
             accept="image/*,video/*"
             onChange={handleFileSelect}
-            disabled={isUploading}
+            disabled={isUploading || isOptimizing}
             className="hidden"
             id="media-upload"
           />
@@ -229,12 +265,12 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
             <Button
               type="button"
               variant="outline"
-              disabled={isUploading}
+              disabled={isUploading || isOptimizing}
               onClick={() => document.getElementById('media-upload')?.click()}
               className="w-full"
             >
               <Upload className="h-4 w-4 mr-2" />
-              {isUploading ? 'Téléchargement...' : 'Depuis l\'ordinateur'}
+              {isOptimizing ? 'Optimisation...' : isUploading ? 'Téléchargement...' : 'Depuis l\'ordinateur'}
             </Button>
             
             <ImageGalleryPicker
