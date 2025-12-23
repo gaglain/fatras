@@ -60,6 +60,21 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
     none: 'object-none'
   }[objectFit];
 
+  // Si pas de src, afficher un placeholder
+  if (!src) {
+    return (
+      <div 
+        className={cn(
+          'flex items-center justify-center bg-muted text-muted-foreground',
+          className
+        )}
+        style={{ width, height, minHeight: height || 200 }}
+      >
+        <span className="text-sm">Aucune image</span>
+      </div>
+    );
+  }
+
   if (hasError) {
     return (
       <div 
@@ -67,9 +82,45 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
           'flex items-center justify-center bg-muted text-muted-foreground',
           className
         )}
-        style={{ width, height }}
+        style={{ width, height, minHeight: height || 200 }}
       >
         <span className="text-sm">Image indisponible</span>
+      </div>
+    );
+  }
+
+  // Pour les images sans hauteur définie (h-auto), on utilise un layout différent
+  const hasAutoHeight = className?.includes('h-auto');
+
+  if (hasAutoHeight) {
+    return (
+      <div className={cn('relative', className)}>
+        {/* Placeholder pendant le chargement */}
+        {!isLoaded && placeholder === 'blur' && (
+          <div 
+            className="absolute inset-0 bg-gradient-to-br from-muted to-muted-foreground/20 animate-pulse min-h-[200px]"
+            aria-hidden="true"
+          />
+        )}
+        
+        <img
+          ref={imgRef}
+          src={src}
+          alt={alt}
+          width={width}
+          height={height}
+          loading={priority ? 'eager' : 'lazy'}
+          decoding={priority ? 'sync' : 'async'}
+          // @ts-ignore - fetchpriority est supporté mais pas encore typé
+          fetchpriority={priority ? 'high' : 'auto'}
+          onLoad={handleLoad}
+          onError={handleError}
+          className={cn(
+            'w-full h-auto transition-opacity duration-300',
+            objectFitClass,
+            isLoaded ? 'opacity-100' : 'opacity-0'
+          )}
+        />
       </div>
     );
   }
