@@ -30,3 +30,9 @@ verify_jwt = false
 
 [functions.get-vapid-key]
 verify_jwt = false
+
+[functions.sync-imap-emails]
+verify_jwt = false
+
+[functions.nylas-email]
+verify_jwt = false
