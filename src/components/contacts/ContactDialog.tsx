@@ -202,10 +202,13 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
           await updateContactArtistLink(data[0].id);
         }
         
-        // Proposer la suite de création
+        // Proposer la suite de création - NE PAS fermer le dialog principal
         if (data && data[0]) {
           setCreatedContactId(data[0].id);
+          onSave(); // Rafraîchir la liste
           setShowCreationSuite(true);
+          setLoading(false);
+          return; // Ne pas fermer, laisser ContactCreationSuite s'afficher
         }
       }
 
