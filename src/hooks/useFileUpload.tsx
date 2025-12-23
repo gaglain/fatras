@@ -2,11 +2,15 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { optimizeImage, createOptimizedFile, shouldOptimize, OptimizationOptions } from '@/utils/imageOptimizer';
 
 interface UploadResult {
   url: string;
   path: string;
   name: string;
+  optimized?: boolean;
+  originalSize?: number;
+  finalSize?: number;
 }
 
 export const useFileUpload = () => {
@@ -43,7 +47,8 @@ export const useFileUpload = () => {
   const uploadFile = async (
     file: File,
     bucketName: string = 'app-files',
-    folder: string = 'uploads'
+    folder: string = 'uploads',
+    optimizationOptions?: OptimizationOptions
   ): Promise<UploadResult> => {
     if (!file) {
       throw new Error('Aucun fichier fourni');
@@ -56,8 +61,35 @@ export const useFileUpload = () => {
       // Créer le bucket si nécessaire
       await createBucketIfNotExists(bucketName);
 
+      let fileToUpload: File = file;
+      let wasOptimized = false;
+      let originalSize = file.size;
+
+      // Optimiser automatiquement les images si nécessaire
+      if (file.type.startsWith('image/') && shouldOptimize(file, 100)) {
+        console.log('🖼️ Optimisation automatique de l\'image...');
+        setUploadProgress(10);
+        
+        const result = await optimizeImage(file, {
+          maxWidth: 1920,
+          maxHeight: 1080,
+          quality: 0.85,
+          format: 'webp',
+          maxSizeKB: 300,
+          ...optimizationOptions
+        });
+
+        if (result.compressionRatio > 1.1) {
+          fileToUpload = createOptimizedFile(result.blob, file.name, result.format);
+          wasOptimized = true;
+          console.log(`✅ Image optimisée: ${(originalSize / 1024).toFixed(0)}KB → ${(result.optimizedSize / 1024).toFixed(0)}KB`);
+        }
+        
+        setUploadProgress(30);
+      }
+
       // Générer un nom de fichier unique
-      const fileExt = file.name.split('.').pop();
+      const fileExt = fileToUpload.name.split('.').pop();
       const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
 
       console.log(`🔄 Uploading file: ${fileName} to bucket: ${bucketName}`);
@@ -70,7 +102,7 @@ export const useFileUpload = () => {
       // Upload le fichier
       const { data, error } = await supabase.storage
         .from(bucketName)
-        .upload(fileName, file, {
+        .upload(fileName, fileToUpload, {
           cacheControl: '3600',
           upsert: false
         });
@@ -92,11 +124,20 @@ export const useFileUpload = () => {
       const result: UploadResult = {
         url: urlData.publicUrl,
         path: fileName,
-        name: file.name
+        name: file.name,
+        optimized: wasOptimized,
+        originalSize: originalSize,
+        finalSize: fileToUpload.size
       };
 
       console.log('✅ File uploaded successfully:', result);
-      toast.success(`Fichier "${file.name}" uploadé avec succès`);
+      
+      if (wasOptimized) {
+        const savedKB = ((originalSize - fileToUpload.size) / 1024).toFixed(0);
+        toast.success(`Image optimisée ! ${savedKB}KB économisés`);
+      } else {
+        toast.success(`Fichier "${file.name}" uploadé avec succès`);
+      }
 
       return result;
 
