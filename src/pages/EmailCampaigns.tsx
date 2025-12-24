@@ -299,26 +299,27 @@ export const EmailCampaigns: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 p-4 lg:p-0">
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+    <div className="space-y-4 md:space-y-6 p-4 lg:p-0">
+      <div className="flex flex-col gap-3 md:gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Campagnes Email</h1>
-          <p className="text-muted-foreground mt-2">
-            Créez et gérez vos campagnes de marketing par email
+          <h1 className="text-xl md:text-3xl font-bold">Campagnes Email</h1>
+          <p className="text-muted-foreground text-sm md:text-base mt-1">
+            Créez et gérez vos campagnes
           </p>
         </div>
-        <div className="flex gap-2 w-full lg:w-auto">
+        <div className="flex gap-2">
           <Button 
             variant="outline" 
             onClick={() => setShowAnalytics(true)} 
-            className="flex-1 lg:flex-initial"
+            className="flex-1 md:flex-initial"
+            size="sm"
           >
-            <Eye className="h-4 w-4 mr-2" />
+            <Eye className="h-4 w-4 mr-1.5" />
             <span className="hidden sm:inline">Statistiques</span>
             <span className="sm:hidden">Stats</span>
           </Button>
-          <Button onClick={handleCreateCampaign} className="flex-1 lg:flex-initial">
-            <Plus className="h-4 w-4 mr-2" />
+          <Button onClick={handleCreateCampaign} className="flex-1 md:flex-initial" size="sm">
+            <Plus className="h-4 w-4 mr-1.5" />
             <span className="hidden sm:inline">Nouvelle Campagne</span>
             <span className="sm:hidden">Nouvelle</span>
           </Button>
@@ -326,54 +327,54 @@ export const EmailCampaigns: React.FC = () => {
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Total</p>
-                <p className="text-2xl font-bold">{campaigns.length}</p>
+          <CardContent className="p-3 md:p-6">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-xs md:text-sm font-medium text-muted-foreground">Total</p>
+                <p className="text-xl md:text-2xl font-bold">{campaigns.length}</p>
               </div>
-              <Mail className="h-8 w-8 text-muted-foreground" />
+              <Mail className="h-6 w-6 md:h-8 md:w-8 text-muted-foreground shrink-0" />
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Brouillons</p>
-                <p className="text-2xl font-bold">
+          <CardContent className="p-3 md:p-6">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-xs md:text-sm font-medium text-muted-foreground">Brouillons</p>
+                <p className="text-xl md:text-2xl font-bold">
                   {campaigns.filter(c => c.status === 'draft').length}
                 </p>
               </div>
-              <Edit className="h-8 w-8 text-muted-foreground" />
+              <Edit className="h-6 w-6 md:h-8 md:w-8 text-muted-foreground shrink-0" />
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Programmées</p>
-                <p className="text-2xl font-bold">
+          <CardContent className="p-3 md:p-6">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-xs md:text-sm font-medium text-muted-foreground">Programmées</p>
+                <p className="text-xl md:text-2xl font-bold">
                   {campaigns.filter(c => c.status === 'scheduled').length}
                 </p>
               </div>
-              <Calendar className="h-8 w-8 text-muted-foreground" />
+              <Calendar className="h-6 w-6 md:h-8 md:w-8 text-muted-foreground shrink-0" />
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Envoyées</p>
-                <p className="text-2xl font-bold">
+          <CardContent className="p-3 md:p-6">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-xs md:text-sm font-medium text-muted-foreground">Envoyées</p>
+                <p className="text-xl md:text-2xl font-bold">
                   {campaigns.filter(c => c.status === 'sent').length}
                 </p>
               </div>
-              <Send className="h-8 w-8 text-muted-foreground" />
+              <Send className="h-6 w-6 md:h-8 md:w-8 text-muted-foreground shrink-0" />
             </div>
           </CardContent>
         </Card>
@@ -391,90 +392,93 @@ export const EmailCampaigns: React.FC = () => {
       </div>
 
       {/* Campaigns List */}
-      <div className="grid gap-6">
+      <div className="grid gap-4 md:gap-6">
         {filteredCampaigns.map((campaign: any) => (
           <Card key={campaign.id} className="hover:shadow-lg transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <h3 className="text-lg font-semibold">{campaign.name}</h3>
-                    <Badge className={getStatusColor(campaign.status)}>
-                      {getStatusLabel(campaign.status)}
-                    </Badge>
-                  </div>
-                  {campaign.subject && (
-                    <p className="text-muted-foreground mb-2">
-                      Sujet: {campaign.subject}
-                    </p>
-                  )}
-                  {campaign.status === 'sent' && (
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      <Badge variant="secondary" className="flex items-center gap-1">
-                        <Mail className="h-3 w-3" />
-                        {campaign.sent_count || 0} envoyés
+            <CardContent className="p-4 md:p-6">
+              <div className="flex flex-col gap-3">
+                {/* Header: Title + Badge + Actions */}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center flex-wrap gap-2 mb-1">
+                      <h3 className="text-base md:text-lg font-semibold truncate">{campaign.name}</h3>
+                      <Badge className={`${getStatusColor(campaign.status)} shrink-0 text-xs`}>
+                        {getStatusLabel(campaign.status)}
                       </Badge>
-                      {campaign.open_rate !== null && (
-                        <Badge variant="outline" className="flex items-center gap-1">
-                          <Eye className="h-3 w-3" />
-                          {campaign.open_rate?.toFixed(1) || 0}% ouverture
-                        </Badge>
-                      )}
-                      {campaign.click_rate !== null && (
-                        <Badge variant="outline" className="flex items-center gap-1">
-                          <MousePointer className="h-3 w-3" />
-                          {campaign.click_rate?.toFixed(1) || 0}% clic
-                        </Badge>
-                      )}
-                      {campaign.bounced_count > 0 && (
-                        <Badge variant="destructive" className="flex items-center gap-1">
-                          <TrendingDown className="h-3 w-3" />
-                          {campaign.bounced_count} rebonds
-                        </Badge>
-                      )}
                     </div>
-                  )}
-                  <p className="text-sm text-muted-foreground">
-                    Créée le {new Date(campaign.created_at).toLocaleDateString('fr-FR')}
-                    {campaign.sent_at && ` • Envoyée le ${new Date(campaign.sent_at).toLocaleDateString('fr-FR')}`}
-                  </p>
-                </div>
-                <div className="flex space-x-2">
-                  {campaign.status === 'sent' && (
+                    {campaign.subject && (
+                      <p className="text-muted-foreground text-sm truncate">
+                        Sujet: {campaign.subject}
+                      </p>
+                    )}
+                  </div>
+                  {/* Actions buttons */}
+                  <div className="flex gap-1 shrink-0">
+                    {campaign.status === 'sent' && (
+                      <Button 
+                        variant="outline" 
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => {
+                          setSelectedCampaign(campaign);
+                          setShowAnalytics(true);
+                        }}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    )}
                     <Button 
                       variant="outline" 
-                      size="sm" 
-                      onClick={() => {
-                        setSelectedCampaign(campaign);
-                        setShowAnalytics(true);
-                      }}
-                      className="text-blue-600 hover:text-blue-700"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => handleEditCampaign(campaign)}
                     >
-                      <Eye className="h-4 w-4" />
+                      <Edit className="h-4 w-4" />
                     </Button>
-                  )}
-                  {campaign.status === 'draft' && (
                     <Button 
                       variant="outline" 
-                      size="sm" 
-                      onClick={() => handleSendCampaign(campaign.id)}
-                      className="text-green-600 hover:text-green-700"
+                      size="icon"
+                      className="h-8 w-8 text-destructive hover:text-destructive"
+                      onClick={() => handleDeleteCampaign(campaign.id)}
                     >
-                      <Send className="h-4 w-4" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
-                  )}
-                  <Button variant="outline" size="sm" onClick={() => handleEditCampaign(campaign)}>
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => handleDeleteCampaign(campaign.id)}
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  </div>
                 </div>
+                
+                {/* Stats badges for sent campaigns */}
+                {campaign.status === 'sent' && (
+                  <div className="flex flex-wrap gap-1.5">
+                    <Badge variant="secondary" className="flex items-center gap-1 text-xs">
+                      <Mail className="h-3 w-3" />
+                      {campaign.sent_count || 0} envoyés
+                    </Badge>
+                    {campaign.open_rate !== null && (
+                      <Badge variant="outline" className="flex items-center gap-1 text-xs">
+                        <Eye className="h-3 w-3" />
+                        {campaign.open_rate?.toFixed(1) || 0}%
+                      </Badge>
+                    )}
+                    {campaign.click_rate !== null && (
+                      <Badge variant="outline" className="flex items-center gap-1 text-xs">
+                        <MousePointer className="h-3 w-3" />
+                        {campaign.click_rate?.toFixed(1) || 0}%
+                      </Badge>
+                    )}
+                    {campaign.bounced_count > 0 && (
+                      <Badge variant="destructive" className="flex items-center gap-1 text-xs">
+                        <TrendingDown className="h-3 w-3" />
+                        {campaign.bounced_count}
+                      </Badge>
+                    )}
+                  </div>
+                )}
+                
+                {/* Date info */}
+                <p className="text-xs text-muted-foreground">
+                  Créée le {new Date(campaign.created_at).toLocaleDateString('fr-FR')}
+                  {campaign.sent_at && ` • Envoyée le ${new Date(campaign.sent_at).toLocaleDateString('fr-FR')}`}
+                </p>
               </div>
             </CardContent>
           </Card>
