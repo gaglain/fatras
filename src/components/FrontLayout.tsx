@@ -3,8 +3,7 @@ import { Outlet, Link } from 'react-router-dom';
 import { DynamicFrontNavigation } from './DynamicFrontNavigation';
 import { PublicChatWidget } from './PublicChatWidget';
 import { RGPDModule } from './RGPDModule';
-import { GoogleAnalytics } from './GoogleAnalytics';
-import { FacebookPixel } from './FacebookPixel';
+import { DeferredAnalytics } from './DeferredAnalytics';
 import { Facebook, Instagram, Twitter, Youtube, Linkedin } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -200,11 +199,11 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen flex flex-col" data-theme-element="page">
-      {/* Google Analytics */}
-      <GoogleAnalytics measurementId={settings.googleAnalyticsId} />
-      
-      {/* Facebook Pixel */}
-      <FacebookPixel pixelId={settings.facebookPixelId} />
+      {/* Analytics différés pour améliorer le FCP/LCP */}
+      <DeferredAnalytics 
+        googleAnalyticsId={settings.googleAnalyticsId}
+        facebookPixelId={settings.facebookPixelId}
+      />
       
       {/* Navigation dynamique synchronisée */}
       <DynamicFrontNavigation />

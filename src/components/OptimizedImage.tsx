@@ -7,6 +7,10 @@ interface OptimizedImageProps {
   className?: string;
   width?: number;
   height?: number;
+  /** Largeur intrinsèque de l'image pour éviter les CLS */
+  intrinsicWidth?: number;
+  /** Hauteur intrinsèque de l'image pour éviter les CLS */
+  intrinsicHeight?: number;
   priority?: boolean;
   objectFit?: 'cover' | 'contain' | 'fill' | 'none';
   placeholder?: 'blur' | 'empty';
@@ -27,6 +31,8 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   className,
   width,
   height,
+  intrinsicWidth,
+  intrinsicHeight,
   priority = false,
   objectFit = 'cover',
   placeholder = 'blur',
@@ -107,8 +113,8 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
           ref={imgRef}
           src={src}
           alt={alt}
-          width={width}
-          height={height}
+          width={intrinsicWidth || width}
+          height={intrinsicHeight || height}
           loading={priority ? 'eager' : 'lazy'}
           decoding={priority ? 'sync' : 'async'}
           // @ts-ignore - fetchpriority est supporté mais pas encore typé
@@ -139,8 +145,8 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
         ref={imgRef}
         src={src}
         alt={alt}
-        width={width}
-        height={height}
+        width={intrinsicWidth || width}
+        height={intrinsicHeight || height}
         loading={priority ? 'eager' : 'lazy'}
         decoding={priority ? 'sync' : 'async'}
         // @ts-ignore - fetchpriority est supporté mais pas encore typé
