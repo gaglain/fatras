@@ -34,6 +34,8 @@ const HeroBlock: React.FC<{ content: any; siteSettings: any }> = ({ content, sit
           <img
             src={backgroundImage}
             alt="Hero background"
+            width={1920}
+            height={1080}
             loading="eager"
             decoding="sync"
             // @ts-ignore - fetchpriority est supporté mais pas typé
@@ -473,6 +475,8 @@ export const FrontHome: React.FC = () => {
                                 alt={event.artist.name || event.title}
                                 className="w-full h-full"
                                 objectFit="cover"
+                                intrinsicWidth={400}
+                                intrinsicHeight={300}
                               />
                               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                               <div className="absolute bottom-3 left-3 right-3">
@@ -563,6 +567,8 @@ export const FrontHome: React.FC = () => {
                                 alt={artist.name}
                                 className="w-full h-auto"
                                 objectFit="contain"
+                                intrinsicWidth={600}
+                                intrinsicHeight={400}
                               />
                               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
                                 <h3 className="text-xl font-bold text-white mb-1">{artist.name}</h3>
