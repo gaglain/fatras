@@ -72,17 +72,17 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
   return (
     <>
       <Card className="hover:shadow-lg transition-shadow">
-        <CardHeader className="pb-2 sm:pb-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <CardTitle className="flex items-center space-x-2 text-base sm:text-lg">
-              <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600 flex-shrink-0" />
-              <span className="truncate">{stop.city} - {stop.venue}</span>
-            </CardTitle>
-            <Badge className={`${getStatusColor(stop.status)} w-fit`}>
-              {getStatusLabel(stop.status)}
-            </Badge>
-          </div>
-        </CardHeader>
+          <CardHeader className="pb-2 sm:pb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <CardTitle className="flex min-w-0 items-center gap-2 text-base sm:text-lg">
+                <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600 flex-shrink-0" />
+                <span className="min-w-0 truncate">{stop.city} - {stop.venue}</span>
+              </CardTitle>
+              <Badge className={`${getStatusColor(stop.status)} w-fit`}>
+                {getStatusLabel(stop.status)}
+              </Badge>
+            </div>
+          </CardHeader>
         <CardContent className="pt-2">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4 mb-4">
             <div className="flex items-center space-x-2">
@@ -133,32 +133,70 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
             </div>
           )}
 
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-4 border-t">
+          <div className="flex flex-col gap-3 pt-4 border-t sm:flex-row sm:items-center sm:justify-between">
             <div className="text-xs sm:text-sm text-muted-foreground">
               Créé par: {creator?.name || 'Utilisateur inconnu'}
             </div>
-            
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" onClick={handlePreview} className="flex-1 sm:flex-none">
-                <Eye className="h-3 w-3 mr-1" />
-                <span className="hidden xs:inline">Aperçu</span>
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleDownloadPDF} className="flex-1 sm:flex-none">
-                <Download className="h-3 w-3 mr-1" />
-                <span className="hidden xs:inline">PDF</span>
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => onEdit(stop)} className="flex-1 sm:flex-none">
-                <Edit className="h-3 w-3 mr-1" />
-                <span className="hidden xs:inline">Modifier</span>
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => onDelete(stop.id)}
-                className="text-red-600 hover:text-red-700 hover:bg-red-50 flex-1 sm:flex-none"
+
+            {/* Mobile: icônes compactes */}
+            <div className="sm:hidden grid grid-cols-4 gap-2">
+              <Button
+                variant="outline-subtle"
+                size="icon-sm"
+                onClick={handlePreview}
+                aria-label="Aperçu"
               >
-                <Trash2 className="h-3 w-3 mr-1" />
-                <span className="hidden xs:inline">Supprimer</span>
+                <Eye className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline-subtle"
+                size="icon-sm"
+                onClick={handleDownloadPDF}
+                aria-label="Télécharger PDF"
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline-subtle"
+                size="icon-sm"
+                onClick={() => onEdit(stop)}
+                aria-label="Modifier"
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline-subtle"
+                size="icon-sm"
+                onClick={() => onDelete(stop.id)}
+                aria-label="Supprimer"
+                className="text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive hover:border-destructive"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Desktop: icône + libellé */}
+            <div className="hidden sm:flex flex-wrap gap-2">
+              <Button variant="outline-subtle" size="sm" onClick={handlePreview}>
+                <Eye className="h-4 w-4" />
+                Aperçu
+              </Button>
+              <Button variant="outline-subtle" size="sm" onClick={handleDownloadPDF}>
+                <Download className="h-4 w-4" />
+                PDF
+              </Button>
+              <Button variant="outline-subtle" size="sm" onClick={() => onEdit(stop)}>
+                <Edit className="h-4 w-4" />
+                Modifier
+              </Button>
+              <Button
+                variant="outline-subtle"
+                size="sm"
+                onClick={() => onDelete(stop.id)}
+                className="text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive hover:border-destructive"
+              >
+                <Trash2 className="h-4 w-4" />
+                Supprimer
               </Button>
             </div>
           </div>
