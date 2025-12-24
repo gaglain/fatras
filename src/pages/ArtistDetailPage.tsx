@@ -306,90 +306,96 @@ export const ArtistDetailPage: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="info">
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2">
             <Card>
-              <CardHeader>
-                <CardTitle>Biographie</CardTitle>
+              <CardHeader className="p-4 md:p-6">
+                <CardTitle className="text-base md:text-lg">Biographie</CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground whitespace-pre-wrap">
+              <CardContent className="p-4 pt-0 md:p-6 md:pt-0">
+                <p className="text-sm md:text-base text-muted-foreground whitespace-pre-wrap">
                   {artist.bio || 'Aucune biographie disponible'}
                 </p>
               </CardContent>
             </Card>
 
             <Card>
-              <CardHeader>
-                <CardTitle>Informations de contact</CardTitle>
+              <CardHeader className="p-4 md:p-6">
+                <CardTitle className="text-base md:text-lg">Informations de contact</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="p-4 pt-0 md:p-6 md:pt-0 space-y-3">
                 {artist.contact_email && (
                   <div>
-                    <p className="text-sm text-muted-foreground">Email</p>
-                    <p className="font-medium">{artist.contact_email}</p>
+                    <p className="text-xs md:text-sm text-muted-foreground">Email</p>
+                    <p className="text-sm md:text-base font-medium break-all">{artist.contact_email}</p>
                   </div>
                 )}
                 {artist.contact_phone && (
                   <div>
-                    <p className="text-sm text-muted-foreground">Téléphone</p>
-                    <p className="font-medium">{artist.contact_phone}</p>
+                    <p className="text-xs md:text-sm text-muted-foreground">Téléphone</p>
+                    <p className="text-sm md:text-base font-medium">{artist.contact_phone}</p>
                   </div>
                 )}
                 {artist.website && (
                   <div>
-                    <p className="text-sm text-muted-foreground">Site web</p>
+                    <p className="text-xs md:text-sm text-muted-foreground">Site web</p>
                     <a
                       href={artist.website}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="font-medium text-primary hover:underline"
+                      className="text-sm md:text-base font-medium text-primary hover:underline break-all"
                     >
                       {artist.website}
                     </a>
                   </div>
                 )}
+                {!artist.contact_email && !artist.contact_phone && !artist.website && (
+                  <p className="text-sm text-muted-foreground">Aucune information de contact</p>
+                )}
               </CardContent>
             </Card>
 
             <Card>
-              <CardHeader>
-                <CardTitle>Réseaux sociaux</CardTitle>
+              <CardHeader className="p-4 md:p-6">
+                <CardTitle className="text-base md:text-lg">Réseaux sociaux</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="p-4 pt-0 md:p-6 md:pt-0 space-y-3">
                 {artist.instagram && (
                   <div>
-                    <p className="text-sm text-muted-foreground">Instagram</p>
-                    <p className="font-medium">{artist.instagram}</p>
+                    <p className="text-xs md:text-sm text-muted-foreground">Instagram</p>
+                    <p className="text-sm md:text-base font-medium break-all">{artist.instagram}</p>
                   </div>
                 )}
                 {artist.facebook && (
                   <div>
-                    <p className="text-sm text-muted-foreground">Facebook</p>
-                    <p className="font-medium">{artist.facebook}</p>
+                    <p className="text-xs md:text-sm text-muted-foreground">Facebook</p>
+                    <p className="text-sm md:text-base font-medium break-all">{artist.facebook}</p>
                   </div>
+                )}
+                {!artist.instagram && !artist.facebook && (
+                  <p className="text-sm text-muted-foreground">Aucun réseau social</p>
                 )}
               </CardContent>
             </Card>
 
             <Card>
-              <CardHeader>
-                <CardTitle>Tournée en cours</CardTitle>
+              <CardHeader className="p-4 md:p-6">
+                <CardTitle className="text-base md:text-lg">Tournée en cours</CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="font-medium">
+              <CardContent className="p-4 pt-0 md:p-6 md:pt-0">
+                <p className="text-sm md:text-base font-medium">
                   {artist.current_tour || 'Aucune tournée en cours'}
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Informations internes</CardTitle>
+            <Card className="md:col-span-2">
+              <CardHeader className="p-4 md:p-6">
+                <CardTitle className="text-base md:text-lg">Informations internes</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="p-4 pt-0 md:p-6 md:pt-0 space-y-3">
                 <div>
-                  <p className="text-sm text-muted-foreground">Numéro de programme SACEM</p>
-                  <p className="font-medium">
+                  <p className="text-xs md:text-sm text-muted-foreground">Numéro de programme SACEM</p>
+                  <p className="text-sm md:text-base font-medium">
                     {(artist as any).sacem_program_number || 'Non renseigné'}
                   </p>
                 </div>
