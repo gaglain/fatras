@@ -296,59 +296,60 @@ export const ContactLists: React.FC = () => {
         />
       </div>
 
-      <div className="grid gap-6">
+      <div className="grid gap-4 md:gap-6">
         {filteredLists.map((list) => (
           <Card key={list.id} className="hover:shadow-lg transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <Users className="h-5 w-5 text-primary" />
-                    <h3 className="text-lg font-semibold">{list.name}</h3>
-                    <Badge variant="outline">
+            <CardContent className="p-4 md:p-6">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2 flex-wrap flex-1 min-w-0">
+                    <Users className="h-4 w-4 md:h-5 md:w-5 text-primary flex-shrink-0" />
+                    <h3 className="text-base md:text-lg font-semibold truncate">{list.name}</h3>
+                    <Badge variant="outline" className="text-xs flex-shrink-0">
                       {list.contactCount || 0} contacts
                     </Badge>
                   </div>
-                  {list.description && (
-                    <p className="text-muted-foreground mb-3">{list.description}</p>
-                  )}
                   
-                  {(list.centralized_artists || list.events) && (
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {list.centralized_artists && (
-                        <Badge variant="secondary" className="flex items-center gap-1">
-                          <Users className="h-3 w-3" />
-                          {list.centralized_artists.name}
-                        </Badge>
-                      )}
-                      {list.events && (
-                        <Badge variant="secondary" className="flex items-center gap-1">
-                          📅 {list.events.title}
-                        </Badge>
-                      )}
-                    </div>
-                  )}
-                  
-                  <div className="text-sm text-muted-foreground mt-3">
-                    Créée le {new Date(list.created_at).toLocaleDateString('fr-FR')}
+                  <div className="flex gap-1 md:gap-2 flex-shrink-0">
+                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleManageMembers(list)}>
+                      <UserPlus className="h-4 w-4" />
+                    </Button>
+                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleEditList(list)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="icon"
+                      className="h-8 w-8 text-destructive hover:text-destructive"
+                      onClick={() => handleDeleteList(list.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
                 
-                <div className="flex space-x-2">
-                  <Button variant="outline" size="sm" onClick={() => handleManageMembers(list)}>
-                    <UserPlus className="h-4 w-4" />
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => handleEditList(list)}>
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => handleDeleteList(list.id)}
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                {list.description && (
+                  <p className="text-sm text-muted-foreground">{list.description}</p>
+                )}
+                
+                {(list.centralized_artists || list.events) && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {list.centralized_artists && (
+                      <Badge variant="secondary" className="flex items-center gap-1 text-xs">
+                        <Users className="h-3 w-3" />
+                        {list.centralized_artists.name}
+                      </Badge>
+                    )}
+                    {list.events && (
+                      <Badge variant="secondary" className="flex items-center gap-1 text-xs">
+                        📅 {list.events.title}
+                      </Badge>
+                    )}
+                  </div>
+                )}
+                
+                <div className="text-xs text-muted-foreground">
+                  Créée le {new Date(list.created_at).toLocaleDateString('fr-FR')}
                 </div>
               </div>
             </CardContent>

@@ -31,8 +31,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   users 
 }) => {
   return (
-    <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-4">
-      <div className="relative w-full sm:flex-1 sm:max-w-md">
+    <div className="flex flex-col gap-3 sm:gap-4">
+      <div className="relative w-full">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
         <Input
           placeholder="Rechercher par ville ou lieu..."
@@ -42,7 +42,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         />
       </div>
       
-      <div className="grid grid-cols-2 sm:flex gap-2 sm:gap-4">
+      <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-4">
         <Select value={filterArtist} onValueChange={setFilterArtist}>
           <SelectTrigger className="w-full sm:w-40">
             <SelectValue placeholder="Artiste" />
@@ -72,7 +72,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         </Select>
 
         <Select value={sortBy} onValueChange={setSortBy}>
-          <SelectTrigger className="w-full sm:w-44 col-span-2 sm:col-span-1">
+          <SelectTrigger className="w-full col-span-2 sm:col-span-1 sm:w-48">
             <ArrowUpDown className="h-4 w-4 mr-2 flex-shrink-0" />
             <SelectValue placeholder="Trier par" />
           </SelectTrigger>
