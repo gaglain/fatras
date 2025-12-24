@@ -4,12 +4,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Bell, BellOff, Check, Mail, Clock, CheckSquare, Calendar, User, MessageSquare, AlertTriangle } from 'lucide-react';
 import { useEmailNotifications } from '@/hooks/useEmailNotifications';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useTaskNotifications } from '@/hooks/useTaskNotifications';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 
 interface UnifiedNotification {
@@ -27,6 +29,7 @@ interface UnifiedNotification {
 export const UnifiedNotificationCenter: React.FC = () => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
+  const isMobile = useIsMobile();
   const { 
     notifications: emailNotifications, 
     isLoading: emailLoading, 
@@ -259,82 +262,115 @@ export const UnifiedNotificationCenter: React.FC = () => {
     );
   };
 
+  const NotificationTriggerButton = (
+    <Button variant="ghost" size="icon" className="relative">
+      {totalUnreadCount > 0 ? (
+        <Bell className="h-5 w-5" />
+      ) : (
+        <BellOff className="h-5 w-5" />
+      )}
+      {totalUnreadCount > 0 && (
+        <Badge 
+          variant="destructive" 
+          className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+        >
+          {totalUnreadCount > 99 ? '99+' : totalUnreadCount}
+        </Badge>
+      )}
+    </Button>
+  );
+
+  const NotificationContent = (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h4 className="font-semibold text-lg">Notifications</h4>
+        {totalUnreadCount > 0 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleMarkAllAsRead}
+            className="text-xs h-8"
+          >
+            <Check className="h-3 w-3 mr-1" />
+            Tout marquer comme lu
+          </Button>
+        )}
+      </div>
+      
+      <Separator />
+      
+      <Tabs defaultValue="all" className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="all" className="text-xs">
+            Tout
+            {totalUnreadCount > 0 && (
+              <Badge variant="secondary" className="ml-1 h-4 px-1 text-[10px]">
+                {totalUnreadCount}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="email" className="text-xs">
+            <Mail className="h-3 w-3" />
+          </TabsTrigger>
+          <TabsTrigger value="task" className="text-xs">
+            <CheckSquare className="h-3 w-3" />
+          </TabsTrigger>
+          <TabsTrigger value="event" className="text-xs">
+            <Calendar className="h-3 w-3" />
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="all" className="mt-4">
+          {renderNotificationList(allNotifications)}
+        </TabsContent>
+        
+        <TabsContent value="email" className="mt-4">
+          {renderNotificationList(filterNotificationsByType('email'))}
+        </TabsContent>
+        
+        <TabsContent value="task" className="mt-4">
+          {renderNotificationList(filterNotificationsByType('task'))}
+        </TabsContent>
+        
+        <TabsContent value="event" className="mt-4">
+          {renderNotificationList(filterNotificationsByType('event'))}
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+
+  // Mobile: Use Sheet (bottom drawer) for better UX
+  if (isMobile) {
+    return (
+      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+        <SheetTrigger asChild>
+          {NotificationTriggerButton}
+        </SheetTrigger>
+        <SheetContent 
+          side="bottom" 
+          className="max-h-[85vh] h-auto rounded-t-xl flex flex-col"
+        >
+          <SheetHeader className="flex-shrink-0 pb-2">
+            <SheetTitle className="sr-only">Notifications</SheetTitle>
+            {/* Drag indicator */}
+            <div className="mx-auto w-12 h-1.5 rounded-full bg-muted mb-2" />
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto px-1 pb-4 min-h-0">
+            {NotificationContent}
+          </div>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  // Desktop: Use Popover
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
-          {totalUnreadCount > 0 ? (
-            <Bell className="h-5 w-5" />
-          ) : (
-            <BellOff className="h-5 w-5" />
-          )}
-          {totalUnreadCount > 0 && (
-            <Badge 
-              variant="destructive" 
-              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
-            >
-              {totalUnreadCount > 99 ? '99+' : totalUnreadCount}
-            </Badge>
-          )}
-        </Button>
+        {NotificationTriggerButton}
       </PopoverTrigger>
       <PopoverContent className="w-[90vw] max-w-96" align="end">
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h4 className="font-semibold text-lg">Notifications</h4>
-            {totalUnreadCount > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleMarkAllAsRead}
-                className="text-xs h-8"
-              >
-                <Check className="h-3 w-3 mr-1" />
-                Tout marquer comme lu
-              </Button>
-            )}
-          </div>
-          
-          <Separator />
-          
-          <Tabs defaultValue="all" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="all" className="text-xs">
-                Tout
-                {totalUnreadCount > 0 && (
-                  <Badge variant="secondary" className="ml-1 h-4 px-1 text-[10px]">
-                    {totalUnreadCount}
-                  </Badge>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="email" className="text-xs">
-                <Mail className="h-3 w-3" />
-              </TabsTrigger>
-              <TabsTrigger value="task" className="text-xs">
-                <CheckSquare className="h-3 w-3" />
-              </TabsTrigger>
-              <TabsTrigger value="event" className="text-xs">
-                <Calendar className="h-3 w-3" />
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="all" className="mt-4">
-              {renderNotificationList(allNotifications)}
-            </TabsContent>
-            
-            <TabsContent value="email" className="mt-4">
-              {renderNotificationList(filterNotificationsByType('email'))}
-            </TabsContent>
-            
-            <TabsContent value="task" className="mt-4">
-              {renderNotificationList(filterNotificationsByType('task'))}
-            </TabsContent>
-            
-            <TabsContent value="event" className="mt-4">
-              {renderNotificationList(filterNotificationsByType('event'))}
-            </TabsContent>
-          </Tabs>
-        </div>
+        {NotificationContent}
       </PopoverContent>
     </Popover>
   );
