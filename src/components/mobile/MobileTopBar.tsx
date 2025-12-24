@@ -246,13 +246,18 @@ export const MobileTopBar: React.FC = () => {
         </>
       )}
 
-      {/* Notification Center Sheet - Full height on mobile */}
+      {/* Notification Center Sheet - Optimized height for mobile */}
       <Sheet open={notificationsOpen} onOpenChange={setNotificationsOpen}>
         <SheetContent 
           side="bottom" 
-          className="h-[calc(100vh-env(safe-area-inset-top))] rounded-t-xl"
+          className="max-h-[85vh] h-auto rounded-t-xl flex flex-col"
         >
-          <div className="h-full overflow-y-auto pt-2 pb-safe">
+          <SheetHeader className="flex-shrink-0 pb-2">
+            <SheetTitle className="sr-only">Notifications</SheetTitle>
+            {/* Drag indicator for swipe-to-close */}
+            <div className="mx-auto w-12 h-1.5 rounded-full bg-muted mb-2" />
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto px-1 pb-safe min-h-0">
             <NotificationList />
           </div>
         </SheetContent>

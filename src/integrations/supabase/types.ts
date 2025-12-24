@@ -1036,7 +1036,6 @@ export type Database = {
       }
       email_accounts: {
         Row: {
-          access_token: string | null
           access_token_encrypted: string | null
           created_at: string | null
           email: string
@@ -1046,14 +1045,12 @@ export type Database = {
           is_organization_shared: boolean | null
           last_sync_at: string | null
           provider: string
-          refresh_token: string | null
           refresh_token_encrypted: string | null
           token_expires_at: string | null
           updated_at: string | null
           user_id: string | null
         }
         Insert: {
-          access_token?: string | null
           access_token_encrypted?: string | null
           created_at?: string | null
           email: string
@@ -1063,14 +1060,12 @@ export type Database = {
           is_organization_shared?: boolean | null
           last_sync_at?: string | null
           provider: string
-          refresh_token?: string | null
           refresh_token_encrypted?: string | null
           token_expires_at?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
         Update: {
-          access_token?: string | null
           access_token_encrypted?: string | null
           created_at?: string | null
           email?: string
@@ -1080,7 +1075,6 @@ export type Database = {
           is_organization_shared?: boolean | null
           last_sync_at?: string | null
           provider?: string
-          refresh_token?: string | null
           refresh_token_encrypted?: string | null
           token_expires_at?: string | null
           updated_at?: string | null
