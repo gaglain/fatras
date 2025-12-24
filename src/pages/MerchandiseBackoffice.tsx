@@ -46,17 +46,18 @@ export const MerchandiseBackoffice: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Gestion Merchandise</h1>
-          <p className="text-muted-foreground mt-2">
+          <h1 className="text-xl md:text-3xl font-bold text-foreground">Gestion Merchandise</h1>
+          <p className="text-muted-foreground text-sm md:text-base mt-1 md:mt-2">
             Gérez votre catalogue de produits ({products.length} produits)
           </p>
         </div>
-        <Button onClick={() => setShowForm(true)}>
+        <Button onClick={() => setShowForm(true)} size="sm" className="w-full md:w-auto md:size-default">
           <Plus className="h-4 w-4 mr-2" />
-          Nouveau produit
+          <span className="sm:hidden">Nouveau</span>
+          <span className="hidden sm:inline">Nouveau produit</span>
         </Button>
       </div>
 
