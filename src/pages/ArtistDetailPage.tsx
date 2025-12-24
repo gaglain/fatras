@@ -80,25 +80,26 @@ export const ArtistDetailPage: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="container mx-auto py-4 md:py-6 px-4 md:px-6 space-y-4 md:space-y-6">
       {/* Header */}
-        <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={() => navigate('/artists')}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Retour
+        <div className="flex flex-col gap-4">
+        <div className="flex items-start gap-3 md:gap-4">
+          <Button variant="ghost" size="sm" onClick={() => navigate('/artists')} className="flex-shrink-0">
+            <ArrowLeft className="h-4 w-4 mr-1 md:mr-2" />
+            <span className="hidden sm:inline">Retour</span>
           </Button>
-          <div>
-            <h1 className="text-3xl font-bold">{artist.name}</h1>
-            <div className="flex items-center gap-2 mt-2">
-              <Badge>{artist.genre}</Badge>
-              <Badge variant={artist.status === 'active' ? 'default' : 'secondary'}>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl md:text-3xl font-bold truncate">{artist.name}</h1>
+            <div className="flex flex-wrap items-center gap-1.5 md:gap-2 mt-2">
+              <Badge className="text-xs md:text-sm">{artist.genre}</Badge>
+              <Badge variant={artist.status === 'active' ? 'default' : 'secondary'} className="text-xs md:text-sm">
                 {artist.status === 'active' ? 'Actif' : 'Inactif'}
               </Badge>
               {(artist as any).is_touring && (
-                <Badge className="bg-green-100 text-green-800 border-green-200">
+                <Badge className="bg-green-100 text-green-800 border-green-200 text-xs md:text-sm">
                   <Plane className="h-3 w-3 mr-1" />
-                  En tournée
+                  <span className="hidden sm:inline">En tournée</span>
+                  <span className="sm:hidden">Tour</span>
                 </Badge>
               )}
             </div>
@@ -106,12 +107,15 @@ export const ArtistDetailPage: React.FC = () => {
         </div>
         
         {/* Toggle disponible en tournée */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 bg-muted/50 px-4 py-2 rounded-lg">
-            <Plane className="h-4 w-4 text-muted-foreground" />
-            <Label htmlFor="touring-toggle" className="text-sm font-medium cursor-pointer">
-              Disponible en tournée
-            </Label>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4">
+          <div className="flex items-center justify-between sm:justify-start gap-2 bg-muted/50 px-3 py-2 rounded-lg">
+            <div className="flex items-center gap-2">
+              <Plane className="h-4 w-4 text-muted-foreground" />
+              <Label htmlFor="touring-toggle" className="text-xs sm:text-sm font-medium cursor-pointer">
+                <span className="hidden sm:inline">Disponible en tournée</span>
+                <span className="sm:hidden">En tournée</span>
+              </Label>
+            </div>
             <Switch
               id="touring-toggle"
               checked={(artist as any).is_touring || false}
@@ -123,9 +127,10 @@ export const ArtistDetailPage: React.FC = () => {
           </div>
           <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline">
+              <Button variant="outline" size="sm" className="w-full sm:w-auto">
                 <Edit2 className="h-4 w-4 mr-2" />
-                Modifier les infos générales
+                <span className="hidden sm:inline">Modifier les infos générales</span>
+                <span className="sm:hidden">Modifier</span>
               </Button>
             </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
@@ -261,13 +266,22 @@ export const ArtistDetailPage: React.FC = () => {
       )}
 
       {/* Tabs */}
-      <Tabs defaultValue="dashboard" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="dashboard">Tableau de bord</TabsTrigger>
-          <TabsTrigger value="media">Médias & Docs</TabsTrigger>
-          <TabsTrigger value="users">Utilisateurs</TabsTrigger>
-          <TabsTrigger value="templates">Modèles</TabsTrigger>
-          <TabsTrigger value="info">Infos</TabsTrigger>
+      <Tabs defaultValue="dashboard" className="space-y-4 md:space-y-6">
+        <TabsList className="w-full h-auto flex overflow-x-auto">
+          <TabsTrigger value="dashboard" className="flex-1 min-w-0 px-2 md:px-4 text-xs md:text-sm">
+            <span className="hidden sm:inline">Tableau de bord</span>
+            <span className="sm:hidden">Tableau</span>
+          </TabsTrigger>
+          <TabsTrigger value="media" className="flex-1 min-w-0 px-2 md:px-4 text-xs md:text-sm">
+            <span className="hidden sm:inline">Médias & Docs</span>
+            <span className="sm:hidden">Médias</span>
+          </TabsTrigger>
+          <TabsTrigger value="users" className="flex-1 min-w-0 px-2 md:px-4 text-xs md:text-sm">
+            <span className="hidden sm:inline">Utilisateurs</span>
+            <span className="sm:hidden">Users</span>
+          </TabsTrigger>
+          <TabsTrigger value="templates" className="flex-1 min-w-0 px-2 md:px-4 text-xs md:text-sm">Modèles</TabsTrigger>
+          <TabsTrigger value="info" className="flex-1 min-w-0 px-2 md:px-4 text-xs md:text-sm">Infos</TabsTrigger>
         </TabsList>
 
         <TabsContent value="dashboard">
