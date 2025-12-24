@@ -401,15 +401,27 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
       </div>
 
       <Tabs defaultValue="contacts" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="contacts">Contacts</TabsTrigger>
-          <TabsTrigger value="opportunities">Opportunités</TabsTrigger>
-          <TabsTrigger value="quotes">Devis</TabsTrigger>
-          <TabsTrigger value="events">Événements</TabsTrigger>
-          <TabsTrigger value="tasks">Tâches</TabsTrigger>
-          <TabsTrigger value="publications">Publications</TabsTrigger>
-          <TabsTrigger value="lists">Listes</TabsTrigger>
-          <TabsTrigger value="campaigns">Campagnes</TabsTrigger>
+        <TabsList className="w-full h-auto flex flex-wrap gap-1 bg-muted/50 p-1">
+          <TabsTrigger value="contacts" className="flex-1 min-w-[80px] text-xs sm:text-sm px-2 py-1.5">Contacts</TabsTrigger>
+          <TabsTrigger value="opportunities" className="flex-1 min-w-[80px] text-xs sm:text-sm px-2 py-1.5">
+            <span className="hidden sm:inline">Opportunités</span>
+            <span className="sm:hidden">Opport.</span>
+          </TabsTrigger>
+          <TabsTrigger value="quotes" className="flex-1 min-w-[80px] text-xs sm:text-sm px-2 py-1.5">Devis</TabsTrigger>
+          <TabsTrigger value="events" className="flex-1 min-w-[80px] text-xs sm:text-sm px-2 py-1.5">
+            <span className="hidden sm:inline">Événements</span>
+            <span className="sm:hidden">Événem.</span>
+          </TabsTrigger>
+          <TabsTrigger value="tasks" className="flex-1 min-w-[80px] text-xs sm:text-sm px-2 py-1.5">Tâches</TabsTrigger>
+          <TabsTrigger value="publications" className="flex-1 min-w-[80px] text-xs sm:text-sm px-2 py-1.5">
+            <span className="hidden sm:inline">Publications</span>
+            <span className="sm:hidden">Publi.</span>
+          </TabsTrigger>
+          <TabsTrigger value="lists" className="flex-1 min-w-[80px] text-xs sm:text-sm px-2 py-1.5">Listes</TabsTrigger>
+          <TabsTrigger value="campaigns" className="flex-1 min-w-[80px] text-xs sm:text-sm px-2 py-1.5">
+            <span className="hidden sm:inline">Campagnes</span>
+            <span className="sm:hidden">Camp.</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="contacts" className="space-y-4">
