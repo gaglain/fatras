@@ -42,13 +42,15 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         />
       </div>
       
-      <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-4">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-4">
         <Select value={filterArtist} onValueChange={setFilterArtist}>
-          <SelectTrigger className="w-full sm:w-40">
-            <SelectValue placeholder="Artiste" />
+          <SelectTrigger className="w-full sm:w-44">
+            <SelectValue placeholder="Spectacle">
+              {filterArtist === 'all' ? 'Tous les spectacles' : artists.find(a => a.id === filterArtist)?.name || 'Spectacle'}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Tous les artistes</SelectItem>
+            <SelectItem value="all">Tous les spectacles</SelectItem>
             {artists.map((artist) => (
               <SelectItem key={artist.id} value={artist.id}>
                 {artist.name}
@@ -58,11 +60,13 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         </Select>
 
         <Select value={filterUser} onValueChange={setFilterUser}>
-          <SelectTrigger className="w-full sm:w-40">
-            <SelectValue placeholder="Créateur" />
+          <SelectTrigger className="w-full sm:w-44">
+            <SelectValue placeholder="Créateur">
+              {filterUser === 'all' ? 'Tous les créateurs' : users.find(u => u.id === filterUser)?.name || 'Créateur'}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Tous les utilisateurs</SelectItem>
+            <SelectItem value="all">Tous les créateurs</SelectItem>
             {users.filter(user => user.isActive).map((user) => (
               <SelectItem key={user.id} value={user.id}>
                 {user.name}
@@ -72,7 +76,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         </Select>
 
         <Select value={sortBy} onValueChange={setSortBy}>
-          <SelectTrigger className="w-full col-span-2 sm:col-span-1 sm:w-48">
+          <SelectTrigger className="w-full sm:w-48">
             <ArrowUpDown className="h-4 w-4 mr-2 flex-shrink-0" />
             <SelectValue placeholder="Trier par" />
           </SelectTrigger>
