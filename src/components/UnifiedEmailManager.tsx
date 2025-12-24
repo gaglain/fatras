@@ -314,54 +314,53 @@ export const UnifiedEmailManager: React.FC = () => {
 
   return (
     <Card className="h-full">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Mail className="h-5 w-5" />
-            Gestionnaire Email Unifié
+      <CardHeader className="pb-3 px-3 sm:px-6">
+        <div className="flex items-center justify-between gap-2">
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Mail className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+            <span className="truncate">Emails</span>
             {getUnreadCount() > 0 && (
-              <Badge variant="destructive" className="ml-2">
+              <Badge variant="destructive" className="h-5 px-1.5 text-xs">
                 {getUnreadCount()}
               </Badge>
             )}
           </CardTitle>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={markAllAsRead}
-              disabled={getNotificationUnreadCount() === 0}
-            >
-              {getNotificationUnreadCount() > 0 ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
-              {getNotificationUnreadCount() > 0 && (
-                <Badge variant="destructive" className="ml-1">
-                  {getNotificationUnreadCount()}
-                </Badge>
-              )}
-            </Button>
-          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={markAllAsRead}
+            disabled={getNotificationUnreadCount() === 0}
+            className="shrink-0"
+          >
+            {getNotificationUnreadCount() > 0 ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
+            {getNotificationUnreadCount() > 0 && (
+              <Badge variant="destructive" className="ml-1 h-5 px-1.5 text-xs">
+                {getNotificationUnreadCount()}
+              </Badge>
+            )}
+          </Button>
         </div>
       </CardHeader>
       <Separator />
       <CardContent className="p-0">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="inbox" className="flex items-center gap-2">
-              <Inbox className="h-4 w-4" />
-              Boîte de réception
+          <TabsList className="grid w-full grid-cols-3 h-auto">
+            <TabsTrigger value="inbox" className="flex items-center gap-1 px-2 py-2 text-xs sm:text-sm sm:gap-2 sm:px-3">
+              <Inbox className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+              <span className="truncate">Réception</span>
               {getEmailsByDirection('received').filter(e => !e.read_at).length > 0 && (
-                <Badge variant="destructive" className="ml-1">
+                <Badge variant="destructive" className="ml-1 h-5 px-1.5 text-xs">
                   {getEmailsByDirection('received').filter(e => !e.read_at).length}
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="sent" className="flex items-center gap-2">
-              <Send className="h-4 w-4" />
-              Envoyés
+            <TabsTrigger value="sent" className="flex items-center gap-1 px-2 py-2 text-xs sm:text-sm sm:gap-2 sm:px-3">
+              <Send className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+              <span className="truncate">Envoyés</span>
             </TabsTrigger>
-            <TabsTrigger value="all" className="flex items-center gap-2">
-              <Mail className="h-4 w-4" />
-              Tous
+            <TabsTrigger value="all" className="flex items-center gap-1 px-2 py-2 text-xs sm:text-sm sm:gap-2 sm:px-3">
+              <Mail className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+              <span className="truncate">Tous</span>
             </TabsTrigger>
           </TabsList>
           

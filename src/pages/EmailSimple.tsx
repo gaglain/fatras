@@ -16,50 +16,50 @@ const Email: React.FC = () => {
   const [activeTab, setActiveTab] = useState('inbox');
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-primary/10 text-primary">
-            <Mail className="h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Gestion des emails</h1>
-            <p className="text-muted-foreground">Centre de communication email professionnel</p>
-          </div>
+    <div className="container mx-auto p-4 md:p-6 space-y-4 md:space-y-6">
+      <div className="flex items-center gap-3">
+        <div className="p-2 rounded-xl bg-primary/10 text-primary shrink-0">
+          <Mail className="h-5 w-5 md:h-6 md:w-6" />
+        </div>
+        <div className="min-w-0">
+          <h1 className="text-xl md:text-3xl font-bold tracking-tight">Gestion des emails</h1>
+          <p className="text-muted-foreground text-sm md:text-base truncate">Centre de communication email</p>
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-7">
-          <TabsTrigger value="inbox" className="flex items-center gap-2">
-            <Inbox className="h-4 w-4" />
-            Boîte
-          </TabsTrigger>
-          <TabsTrigger value="send" className="flex items-center gap-2">
-            <Send className="h-4 w-4" />
-            Envoyer
-          </TabsTrigger>
-          <TabsTrigger value="sync" className="flex items-center gap-2">
-            <RefreshCw className="h-4 w-4" />
-            Sync
-          </TabsTrigger>
-          <TabsTrigger value="analytics" className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4" />
-            Analytics
-          </TabsTrigger>
-          <TabsTrigger value="diagnostic" className="flex items-center gap-2">
-            <Gauge className="h-4 w-4" />
-            Diagnostic
-          </TabsTrigger>
-          <TabsTrigger value="templates" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            Modèles
-          </TabsTrigger>
-          <TabsTrigger value="config" className="flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            Config
-          </TabsTrigger>
-        </TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
+        <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+          <TabsList className="inline-flex w-auto min-w-full md:grid md:w-full md:grid-cols-7 gap-1">
+            <TabsTrigger value="inbox" className="flex items-center gap-1.5 px-3 shrink-0">
+              <Inbox className="h-4 w-4" />
+              <span className="hidden sm:inline">Boîte</span>
+            </TabsTrigger>
+            <TabsTrigger value="send" className="flex items-center gap-1.5 px-3 shrink-0">
+              <Send className="h-4 w-4" />
+              <span className="hidden sm:inline">Envoyer</span>
+            </TabsTrigger>
+            <TabsTrigger value="sync" className="flex items-center gap-1.5 px-3 shrink-0">
+              <RefreshCw className="h-4 w-4" />
+              <span className="hidden sm:inline">Sync</span>
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="flex items-center gap-1.5 px-3 shrink-0">
+              <TrendingUp className="h-4 w-4" />
+              <span className="hidden sm:inline">Stats</span>
+            </TabsTrigger>
+            <TabsTrigger value="diagnostic" className="flex items-center gap-1.5 px-3 shrink-0">
+              <Gauge className="h-4 w-4" />
+              <span className="hidden sm:inline">Diag</span>
+            </TabsTrigger>
+            <TabsTrigger value="templates" className="flex items-center gap-1.5 px-3 shrink-0">
+              <FileText className="h-4 w-4" />
+              <span className="hidden sm:inline">Modèles</span>
+            </TabsTrigger>
+            <TabsTrigger value="config" className="flex items-center gap-1.5 px-3 shrink-0">
+              <Settings className="h-4 w-4" />
+              <span className="hidden sm:inline">Config</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="inbox" className="space-y-6">
           <Card>
