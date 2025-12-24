@@ -162,15 +162,16 @@ export const ShowBibleNotesEditor: React.FC<{ artistId?: string }> = ({ artistId
 
   return (
     <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            Notes Collaboratives
+      <CardHeader className="px-4 md:px-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+            <FileText className="h-4 w-4 md:h-5 md:w-5 shrink-0" />
+            <span className="truncate">Notes Collaboratives</span>
           </CardTitle>
-          <Button onClick={() => setShowNoteDialog(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nouvelle Note
+          <Button onClick={() => setShowNoteDialog(true)} size="sm" className="w-full sm:w-auto">
+            <Plus className="h-4 w-4 mr-1.5" />
+            <span className="hidden sm:inline">Nouvelle Note</span>
+            <span className="sm:hidden">Nouvelle</span>
           </Button>
         </div>
       </CardHeader>
