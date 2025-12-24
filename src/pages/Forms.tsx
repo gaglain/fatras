@@ -130,11 +130,11 @@ export const Forms: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-4 md:space-y-6 p-4 lg:p-0">
+      <div className="flex flex-col gap-3 md:flex-row md:justify-between md:items-center">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Formulaires</h1>
-          <p className="text-muted-foreground mt-2">
+          <h1 className="text-xl md:text-3xl font-bold text-foreground">Formulaires</h1>
+          <p className="text-muted-foreground text-sm md:text-base mt-1">
             Créez des formulaires personnalisés style TypeForm
           </p>
         </div>
@@ -143,23 +143,27 @@ export const Forms: React.FC = () => {
             setEditingForm(null);
             setShowBuilder(true);
           }}
-          className="bg-primary hover:bg-primary/90"
+          className="bg-primary hover:bg-primary/90 w-full md:w-auto"
+          size="sm"
         >
-          <Plus className="h-4 w-4 mr-2" />
-          Nouveau formulaire
+          <Plus className="h-4 w-4 mr-1.5" />
+          <span className="hidden sm:inline">Nouveau formulaire</span>
+          <span className="sm:hidden">Nouveau</span>
         </Button>
       </div>
 
-      <Tabs defaultValue="forms" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="forms" className="gap-2">
+      <Tabs defaultValue="forms" className="space-y-4 md:space-y-6">
+        <TabsList className="w-full md:w-auto">
+          <TabsTrigger value="forms" className="gap-1.5 flex-1 md:flex-initial text-sm">
             <FileText className="h-4 w-4" />
-            Formulaires
-            <Badge variant="secondary" className="ml-1">{forms.length}</Badge>
+            <span className="hidden sm:inline">Formulaires</span>
+            <span className="sm:hidden">Forms</span>
+            <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">{forms.length}</Badge>
           </TabsTrigger>
-          <TabsTrigger value="submissions" className="gap-2">
+          <TabsTrigger value="submissions" className="gap-1.5 flex-1 md:flex-initial text-sm">
             <BarChart3 className="h-4 w-4" />
-            Soumissions
+            <span className="hidden sm:inline">Soumissions</span>
+            <span className="sm:hidden">Stats</span>
           </TabsTrigger>
         </TabsList>
 

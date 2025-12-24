@@ -410,57 +410,87 @@ export const PublicationCalendar: React.FC = () => {
                   )}
                 </div>
                 
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-2 border-t">
-                  <div className="flex items-center space-x-2">
+                <div className="flex flex-col gap-2 pt-2 border-t">
+                  {/* Status change buttons - visible on mobile */}
+                  <div className="flex flex-wrap gap-1 md:hidden">
                     <Button
-                      variant="ghost"
+                      variant={publication.status === 'draft' ? 'secondary' : 'ghost'}
                       size="sm"
-                      onClick={() => setShowComments(showComments === publication.id ? null : publication.id)}
+                      className="text-xs h-7 px-2"
+                      onClick={() => changeStatus(publication.id, 'draft')}
                     >
-                      <MessageSquare className="h-4 w-4 mr-1" />
-                      <span className="hidden sm:inline">{publication.comments.length}</span>
-                      <span className="sm:hidden">{publication.comments.length}</span>
+                      Brouillon
+                    </Button>
+                    <Button
+                      variant={publication.status === 'scheduled' ? 'secondary' : 'ghost'}
+                      size="sm"
+                      className="text-xs h-7 px-2"
+                      onClick={() => changeStatus(publication.id, 'scheduled')}
+                    >
+                      Programmé
+                    </Button>
+                    <Button
+                      variant={publication.status === 'published' ? 'secondary' : 'ghost'}
+                      size="sm"
+                      className="text-xs h-7 px-2"
+                      onClick={() => changeStatus(publication.id, 'published')}
+                    >
+                      Publié
                     </Button>
                   </div>
                   
-                  <div className="flex items-center justify-end flex-wrap gap-1">
-                    {publication.status === 'pending_approval' && (
-                      <>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => changeStatus(publication.id, 'scheduled')}
-                          className="text-green-600 hover:text-green-700"
-                        >
-                          <CheckCircle className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => changeStatus(publication.id, 'draft')}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <XCircle className="h-4 w-4" />
-                        </Button>
-                      </>
-                    )}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowComments(showComments === publication.id ? null : publication.id)}
+                      >
+                        <MessageSquare className="h-4 w-4 mr-1" />
+                        <span>{publication.comments.length}</span>
+                      </Button>
+                    </div>
                     
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleEdit(publication)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDelete(publication.id)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      {/* Desktop status buttons */}
+                      {publication.status === 'pending_approval' && (
+                        <div className="hidden md:flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => changeStatus(publication.id, 'scheduled')}
+                            className="text-green-600 hover:text-green-700"
+                          >
+                            <CheckCircle className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => changeStatus(publication.id, 'draft')}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <XCircle className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
+                      
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit(publication)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(publication.id)}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
 

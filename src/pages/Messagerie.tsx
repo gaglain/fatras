@@ -131,16 +131,20 @@ export const Messagerie: React.FC = () => {
   return (
     <div className="p-4 lg:p-6 space-y-4">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-4">
-          <TabsTrigger value="internal" className="flex items-center gap-2">
-            <MessageSquare className="h-4 w-4" />
-            Messagerie Interne
-          </TabsTrigger>
-          <TabsTrigger value="public" className="flex items-center gap-2">
-            <Globe className="h-4 w-4" />
-            Chat Public (Site Web)
-          </TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 mb-4">
+          <TabsList className="inline-flex w-auto min-w-full md:w-auto">
+            <TabsTrigger value="internal" className="flex items-center gap-1.5 px-3 shrink-0 text-sm">
+              <MessageSquare className="h-4 w-4" />
+              <span className="hidden sm:inline">Messagerie Interne</span>
+              <span className="sm:hidden">Interne</span>
+            </TabsTrigger>
+            <TabsTrigger value="public" className="flex items-center gap-1.5 px-3 shrink-0 text-sm">
+              <Globe className="h-4 w-4" />
+              <span className="hidden sm:inline">Chat Public (Site Web)</span>
+              <span className="sm:hidden">Chat Public</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="internal" className="mt-0">
           <div className="flex h-[calc(100vh-12rem)] flex-col lg:flex-row border rounded-lg overflow-hidden">
