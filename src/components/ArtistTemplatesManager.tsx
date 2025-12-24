@@ -72,16 +72,16 @@ export const ArtistTemplatesManager: React.FC<ArtistTemplatesManagerProps> = ({
   return (
     <div className="space-y-4">
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
+        <CardHeader className="p-4 md:p-6">
+          <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+            <FileText className="h-4 w-4 md:h-5 md:w-5" />
             Modèle de devis par défaut
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="flex gap-2">
+        <CardContent className="p-4 pt-0 md:p-6 md:pt-0">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <Select value={selectedQuoteTemplate || undefined} onValueChange={setSelectedQuoteTemplate}>
-              <SelectTrigger className="flex-1">
+              <SelectTrigger className="w-full sm:flex-1">
                 <SelectValue placeholder="Sélectionner un modèle de devis" />
               </SelectTrigger>
               <SelectContent>
@@ -92,30 +92,32 @@ export const ArtistTemplatesManager: React.FC<ArtistTemplatesManagerProps> = ({
                 ))}
               </SelectContent>
             </Select>
-            {selectedQuoteTemplate && (
-              <Button variant="outline" onClick={() => setSelectedQuoteTemplate('')}>
-                Retirer
-              </Button>
-            )}
-            <Button onClick={handleSaveQuoteTemplate}>Enregistrer</Button>
+            <div className="flex gap-2">
+              {selectedQuoteTemplate && (
+                <Button variant="outline" size="sm" className="flex-1 sm:flex-initial" onClick={() => setSelectedQuoteTemplate('')}>
+                  Retirer
+                </Button>
+              )}
+              <Button size="sm" className="flex-1 sm:flex-initial" onClick={handleSaveQuoteTemplate}>Enregistrer</Button>
+            </div>
           </div>
-          <p className="text-sm text-muted-foreground mt-2">
+          <p className="text-xs md:text-sm text-muted-foreground mt-2">
             Ce modèle sera utilisé par défaut pour les nouveaux devis de ce spectacle
           </p>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Mail className="h-5 w-5" />
+        <CardHeader className="p-4 md:p-6">
+          <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+            <Mail className="h-4 w-4 md:h-5 md:w-5" />
             Modèle d'email par défaut
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="flex gap-2">
+        <CardContent className="p-4 pt-0 md:p-6 md:pt-0">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <Select value={selectedEmailTemplate || undefined} onValueChange={setSelectedEmailTemplate}>
-              <SelectTrigger className="flex-1">
+              <SelectTrigger className="w-full sm:flex-1">
                 <SelectValue placeholder="Sélectionner un modèle d'email" />
               </SelectTrigger>
               <SelectContent>
@@ -126,14 +128,16 @@ export const ArtistTemplatesManager: React.FC<ArtistTemplatesManagerProps> = ({
                 ))}
               </SelectContent>
             </Select>
-            {selectedEmailTemplate && (
-              <Button variant="outline" onClick={() => setSelectedEmailTemplate('')}>
-                Retirer
-              </Button>
-            )}
-            <Button onClick={handleSaveEmailTemplate}>Enregistrer</Button>
+            <div className="flex gap-2">
+              {selectedEmailTemplate && (
+                <Button variant="outline" size="sm" className="flex-1 sm:flex-initial" onClick={() => setSelectedEmailTemplate('')}>
+                  Retirer
+                </Button>
+              )}
+              <Button size="sm" className="flex-1 sm:flex-initial" onClick={handleSaveEmailTemplate}>Enregistrer</Button>
+            </div>
           </div>
-          <p className="text-sm text-muted-foreground mt-2">
+          <p className="text-xs md:text-sm text-muted-foreground mt-2">
             Ce modèle sera utilisé par défaut pour les nouveaux emails concernant ce spectacle
           </p>
         </CardContent>

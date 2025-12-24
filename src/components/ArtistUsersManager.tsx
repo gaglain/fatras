@@ -160,18 +160,18 @@ export const ArtistUsersManager: React.FC<ArtistUsersManagerProps> = ({ artistId
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Users className="h-5 w-5" />
+      <CardHeader className="p-4 md:p-6">
+        <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+          <Users className="h-4 w-4 md:h-5 md:w-5" />
           Utilisateurs liés au spectacle
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-6">
+      <CardContent className="p-4 pt-0 md:p-6 md:pt-0">
+        <div className="space-y-4 md:space-y-6">
           {/* Add new user */}
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <Select value={selectedUserId} onValueChange={setSelectedUserId}>
-              <SelectTrigger className="flex-1">
+              <SelectTrigger className="w-full sm:flex-1">
                 <SelectValue placeholder="Sélectionner un utilisateur" />
               </SelectTrigger>
               <SelectContent>
@@ -183,22 +183,24 @@ export const ArtistUsersManager: React.FC<ArtistUsersManagerProps> = ({ artistId
               </SelectContent>
             </Select>
 
-            <Select value={selectedRole} onValueChange={(value: any) => setSelectedRole(value)}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="artist">Artiste</SelectItem>
-                <SelectItem value="booker">Booker</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="super_admin">Super Admin</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex gap-2">
+              <Select value={selectedRole} onValueChange={(value: any) => setSelectedRole(value)}>
+                <SelectTrigger className="flex-1 sm:w-[140px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="artist">Artiste</SelectItem>
+                  <SelectItem value="booker">Booker</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="super_admin">Super Admin</SelectItem>
+                </SelectContent>
+              </Select>
 
-            <Button onClick={handleAddUser}>
-              <Plus className="h-4 w-4 mr-2" />
-              Ajouter
-            </Button>
+              <Button onClick={handleAddUser} size="sm" className="flex-shrink-0">
+                <Plus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Ajouter</span>
+              </Button>
+            </div>
           </div>
 
           {/* List of users */}
@@ -209,25 +211,26 @@ export const ArtistUsersManager: React.FC<ArtistUsersManagerProps> = ({ artistId
               artistUsers.map((artistUser) => (
                 <div
                   key={artistUser.id}
-                  className="flex items-center justify-between p-3 border rounded-lg"
+                  className="flex items-center justify-between gap-2 p-2 md:p-3 border rounded-lg"
                 >
-                  <div className="flex items-center gap-3">
-                    <div>
-                      <p className="font-medium">
+                  <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm md:text-base font-medium truncate">
                         {artistUser.user_profile?.first_name} {artistUser.user_profile?.last_name}
                       </p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs md:text-sm text-muted-foreground truncate">
                         {artistUser.user_profile?.email}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge className={roleColors[artistUser.role]}>
+                  <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
+                    <Badge className={`${roleColors[artistUser.role]} text-xs`}>
                       {roleLabels[artistUser.role]}
                     </Badge>
                     <Button
                       size="icon"
                       variant="ghost"
+                      className="h-7 w-7 md:h-8 md:w-8"
                       onClick={() => handleRemoveUser(artistUser.id)}
                     >
                       <X className="h-4 w-4" />
