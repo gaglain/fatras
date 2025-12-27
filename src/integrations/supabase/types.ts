@@ -4038,6 +4038,18 @@ export type Database = {
           username: string
         }[]
       }
+      get_email_account_tokens: {
+        Args: { account_id: string }
+        Returns: {
+          access_token_encrypted: string
+          email: string
+          grant_id: string
+          id: string
+          imap_config: Json
+          provider: string
+          refresh_token_encrypted: string
+        }[]
+      }
       get_email_accounts_safe: {
         Args: never
         Returns: {
@@ -4054,6 +4066,23 @@ export type Database = {
         }[]
       }
       get_email_accounts_secure: {
+        Args: never
+        Returns: {
+          created_at: string
+          email: string
+          grant_id: string
+          id: string
+          imap_config: Json
+          is_active: boolean
+          is_organization_shared: boolean
+          last_sync_at: string
+          provider: string
+          token_expires_at: string
+          updated_at: string
+          user_id: string
+        }[]
+      }
+      get_email_accounts_without_tokens: {
         Args: never
         Returns: {
           created_at: string
