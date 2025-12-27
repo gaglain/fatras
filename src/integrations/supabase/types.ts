@@ -3629,9 +3629,6 @@ export type Database = {
           associated_artists: string[] | null
           availability: Json | null
           avatar_url: string | null
-          bank_details: Json | null
-          birth_date: string | null
-          birth_place: string | null
           city: string | null
           contracts_fees: Json | null
           created_at: string
@@ -3641,18 +3638,14 @@ export type Database = {
           entertainment_leave_number: string | null
           first_name: string | null
           function_title: string | null
-          guso_id: string | null
           id: string
-          identity_documents: Json | null
           is_active: boolean | null
           last_name: string | null
-          nationality: string | null
           phone: string | null
           postal_code: string | null
           role: string
           show_name: string | null
           skills: string[] | null
-          social_security_number: string | null
           tax_reduction: boolean | null
           updated_at: string
           user_id: string | null
@@ -3663,9 +3656,6 @@ export type Database = {
           associated_artists?: string[] | null
           availability?: Json | null
           avatar_url?: string | null
-          bank_details?: Json | null
-          birth_date?: string | null
-          birth_place?: string | null
           city?: string | null
           contracts_fees?: Json | null
           created_at?: string
@@ -3675,18 +3665,14 @@ export type Database = {
           entertainment_leave_number?: string | null
           first_name?: string | null
           function_title?: string | null
-          guso_id?: string | null
           id?: string
-          identity_documents?: Json | null
           is_active?: boolean | null
           last_name?: string | null
-          nationality?: string | null
           phone?: string | null
           postal_code?: string | null
           role?: string
           show_name?: string | null
           skills?: string[] | null
-          social_security_number?: string | null
           tax_reduction?: boolean | null
           updated_at?: string
           user_id?: string | null
@@ -3697,9 +3683,6 @@ export type Database = {
           associated_artists?: string[] | null
           availability?: Json | null
           avatar_url?: string | null
-          bank_details?: Json | null
-          birth_date?: string | null
-          birth_place?: string | null
           city?: string | null
           contracts_fees?: Json | null
           created_at?: string
@@ -3709,18 +3692,14 @@ export type Database = {
           entertainment_leave_number?: string | null
           first_name?: string | null
           function_title?: string | null
-          guso_id?: string | null
           id?: string
-          identity_documents?: Json | null
           is_active?: boolean | null
           last_name?: string | null
-          nationality?: string | null
           phone?: string | null
           postal_code?: string | null
           role?: string
           show_name?: string | null
           skills?: string[] | null
-          social_security_number?: string | null
           tax_reduction?: boolean | null
           updated_at?: string
           user_id?: string | null
@@ -3745,6 +3724,48 @@ export type Database = {
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_sensitive_data: {
+        Row: {
+          bank_details_encrypted: string | null
+          birth_date: string | null
+          birth_place: string | null
+          created_at: string | null
+          guso_id: string | null
+          id: string
+          identity_documents_encrypted: string | null
+          nationality: string | null
+          social_security_number_encrypted: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          bank_details_encrypted?: string | null
+          birth_date?: string | null
+          birth_place?: string | null
+          created_at?: string | null
+          guso_id?: string | null
+          id?: string
+          identity_documents_encrypted?: string | null
+          nationality?: string | null
+          social_security_number_encrypted?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          bank_details_encrypted?: string | null
+          birth_date?: string | null
+          birth_place?: string | null
+          created_at?: string | null
+          guso_id?: string | null
+          id?: string
+          identity_documents_encrypted?: string | null
+          nationality?: string | null
+          social_security_number_encrypted?: string | null
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -4124,6 +4145,18 @@ export type Database = {
           total_amount: number
         }[]
       }
+      get_my_sensitive_data: {
+        Args: never
+        Returns: {
+          bank_details: Json
+          birth_date: string
+          birth_place: string
+          guso_id: string
+          identity_documents: Json
+          nationality: string
+          social_security_number: string
+        }[]
+      }
       get_my_shop_stats: {
         Args: never
         Returns: {
@@ -4204,6 +4237,18 @@ export type Database = {
         Returns: undefined
       }
       update_email_contact_links: { Args: never; Returns: undefined }
+      update_my_sensitive_data: {
+        Args: {
+          p_bank_details?: Json
+          p_birth_date?: string
+          p_birth_place?: string
+          p_guso_id?: string
+          p_identity_documents?: Json
+          p_nationality?: string
+          p_social_security_number?: string
+        }
+        Returns: boolean
+      }
       update_user_profile_data: {
         Args: { profile_data: Json; profile_user_id: string }
         Returns: Json
