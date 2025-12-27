@@ -130,7 +130,6 @@ const App = () => {
       }}
     >
       <QueryClientProvider client={queryClient}>
-      <PWAManifestSync />
       <AuthProvider>
       <HelmetProvider>
       <ThemeProvider 
@@ -144,6 +143,7 @@ const App = () => {
           <BrowserRouter>
             <UserProvider>
               <WebsiteConfigProvider>
+                <PWAManifestSync />
                 <Toaster />
                 <WebsiteMenuSyncBridge />
                 <Routes>
