@@ -144,10 +144,14 @@ export const ArtistUsersManager: React.FC<ArtistUsersManagerProps> = ({ artistId
       fetchArtistUsers();
     } catch (error: any) {
       console.error('Error adding user:', error);
-      if (error.code === '23505') {
-        toast.error('Cet utilisateur a déjà ce rôle pour ce spectacle');
+      const message = String(error?.message || '');
+
+      if (error?.code === '23505') {
+        toast.error('Cet utilisateur est déjà lié (doublon)');
+      } else if (/row-level security|permission denied|not allowed/i.test(message)) {
+        toast.error("Droits insuffisants : seul le propriétaire de l'artiste peut ajouter des utilisateurs.");
       } else {
-        toast.error('Erreur lors de l\'ajout de l\'utilisateur');
+        toast.error(`Erreur lors de l'ajout : ${message || 'inconnue'}`);
       }
     }
   };
