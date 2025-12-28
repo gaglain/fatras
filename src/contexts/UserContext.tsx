@@ -19,16 +19,11 @@ export interface User {
   bio?: string;
   googleCalendarConnected?: boolean;
   gmailConnected?: boolean;
-  // Nouvelles propriétés étendues
+  // Propriétés étendues
   address?: string;
   postal_code?: string;
   city?: string;
-  birth_date?: string;
-  birth_place?: string;
-  social_security_number?: string;
-  guso_id?: string;
   function_title?: string;
-  nationality?: string;
   show_name?: string;
 }
 
@@ -86,24 +81,19 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         if (profiles && isMounted) {
           console.log('✅ Successfully fetched profiles:', profiles.length);
           const usersData: User[] = profiles.map(profile => ({
-            id: profile.user_id,
+            id: profile.user_id || profile.id,
             name: profile.first_name || '',
             lastName: profile.last_name || '',
             email: profile.email || '',
             role: profile.role as UserRole,
-            isActive: true,
+            isActive: profile.is_active !== false,
             username: profile.username || '',
             phone: profile.phone || '',
             avatar: profile.avatar_url || '',
             address: profile.address || '',
             postal_code: profile.postal_code || '',
             city: profile.city || '',
-            birth_date: profile.birth_date || '',
-            birth_place: profile.birth_place || '',
-            social_security_number: profile.social_security_number || '',
-            guso_id: profile.guso_id || '',
             function_title: profile.function_title || '',
-            nationality: profile.nationality || '',
             show_name: profile.show_name || ''
           }));
           setUsers(usersData);
@@ -155,19 +145,14 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               lastName: profile.last_name || '',
               email: profile.email || '',
               role: profile.role as UserRole,
-              isActive: true,
+              isActive: profile.is_active !== false,
               username: profile.username || '',
               phone: profile.phone || '',
               avatar: profile.avatar_url || '',
               address: profile.address || '',
               postal_code: profile.postal_code || '',
               city: profile.city || '',
-              birth_date: profile.birth_date || '',
-              birth_place: profile.birth_place || '',
-              social_security_number: profile.social_security_number || '',
-              guso_id: profile.guso_id || '',
               function_title: profile.function_title || '',
-              nationality: profile.nationality || '',
               show_name: profile.show_name || ''
             };
             setCurrentUser(userData);
@@ -302,12 +287,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         address: userData.address || '',
         postal_code: userData.postal_code || '',
         city: userData.city || '',
-        birth_date: userData.birth_date || '',
-        birth_place: userData.birth_place || '',
-        social_security_number: userData.social_security_number || '',
-        guso_id: userData.guso_id || '',
         function_title: userData.function_title || '',
-        nationality: userData.nationality || '',
         show_name: userData.show_name || ''
       })
       .select()
@@ -320,18 +300,13 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         lastName: newProfile.last_name || '',
         email: newProfile.email || '',
         role: newProfile.role as UserRole,
-        isActive: true,
+        isActive: newProfile.is_active !== false,
         username: newProfile.username || '',
         phone: newProfile.phone || '',
         address: newProfile.address || '',
         postal_code: newProfile.postal_code || '',
         city: newProfile.city || '',
-        birth_date: newProfile.birth_date || '',
-        birth_place: newProfile.birth_place || '',
-        social_security_number: newProfile.social_security_number || '',
-        guso_id: newProfile.guso_id || '',
         function_title: newProfile.function_title || '',
-        nationality: newProfile.nationality || '',
         show_name: newProfile.show_name || ''
       };
       setUsers(prev => [...prev, newUser]);
@@ -352,12 +327,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         address: updates.address,
         postal_code: updates.postal_code,
         city: updates.city,
-        birth_date: updates.birth_date,
-        birth_place: updates.birth_place,
-        social_security_number: updates.social_security_number,
-        guso_id: updates.guso_id,
         function_title: updates.function_title,
-        nationality: updates.nationality,
         show_name: updates.show_name
       })
       .eq('user_id', id);

@@ -65,19 +65,25 @@ export const ArtistUsersManager: React.FC<ArtistUsersManagerProps> = ({ artistId
 
       if (error) throw error;
 
-      // Fetch user profiles separately
+      // Fetch user profiles separately - by user_id OR by id (for users without auth)
       if (data && data.length > 0) {
         const userIds = data.map(au => au.user_id);
+        
+        // Get profiles - user_id in artist_users can now be the profile id
         const { data: profiles } = await supabase
           .from('user_profiles')
-          .select('user_id, username, email, first_name, last_name')
-          .in('user_id', userIds);
+          .select('id, user_id, username, email, first_name, last_name')
+          .or(`user_id.in.(${userIds.join(',')}),id.in.(${userIds.join(',')})`);
 
-        const enrichedData = data.map(au => ({
-          ...au,
-          role: au.role as 'artist' | 'booker' | 'admin' | 'super_admin',
-          user_profile: profiles?.find(p => p.user_id === au.user_id)
-        }));
+        const enrichedData = data.map(au => {
+          // Match by user_id first, then by id
+          const profile = profiles?.find(p => p.user_id === au.user_id || p.id === au.user_id);
+          return {
+            ...au,
+            role: au.role as 'artist' | 'booker' | 'admin' | 'super_admin',
+            user_profile: profile
+          };
+        });
 
         setArtistUsers(enrichedData);
       } else {
@@ -93,13 +99,15 @@ export const ArtistUsersManager: React.FC<ArtistUsersManagerProps> = ({ artistId
 
   const fetchAvailableUsers = async () => {
     try {
+      // Fetch all active users, including those without auth user_id
       const { data, error } = await supabase
         .from('user_profiles')
-        .select('user_id, username, email, first_name, last_name')
+        .select('id, user_id, username, email, first_name, last_name')
         .eq('is_active', true);
 
       if (error) throw error;
-      setAvailableUsers(data || []);
+      // Filter out users without valid identifiers
+      setAvailableUsers(data?.filter(u => u.id) || []);
     } catch (error) {
       console.error('Error fetching available users:', error);
     }
@@ -111,12 +119,21 @@ export const ArtistUsersManager: React.FC<ArtistUsersManagerProps> = ({ artistId
       return;
     }
 
+    // Find the selected user to get either user_id (if auth) or id (if no auth)
+    const selectedUser = availableUsers.find(u => u.id === selectedUserId);
+    const userIdToInsert = selectedUser?.user_id || selectedUser?.id;
+
+    if (!userIdToInsert) {
+      toast.error('Utilisateur invalide');
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('artist_users')
         .insert({
           artist_id: artistId,
-          user_id: selectedUserId,
+          user_id: userIdToInsert,
           role: selectedRole
         });
 
@@ -176,7 +193,7 @@ export const ArtistUsersManager: React.FC<ArtistUsersManagerProps> = ({ artistId
               </SelectTrigger>
               <SelectContent>
                 {availableUsers.map((user) => (
-                  <SelectItem key={user.user_id} value={user.user_id}>
+                  <SelectItem key={user.id} value={user.id}>
                     {user.first_name} {user.last_name} ({user.email})
                   </SelectItem>
                 ))}

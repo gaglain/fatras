@@ -13,7 +13,6 @@ export interface Artist {
   phone?: string;
   address?: string;
   city?: string;
-  nationality?: string;
   function_title?: string;
   created_at: string;
   updated_at: string;
@@ -46,7 +45,6 @@ export const useArtists = () => {
           phone: profile.phone || '',
           address: profile.address || '',
           city: profile.city || '',
-          nationality: profile.nationality || '',
           function_title: profile.function_title || '',
           created_at: profile.created_at,
           updated_at: profile.updated_at
@@ -73,7 +71,6 @@ export const useArtists = () => {
         phone: artistData.phone,
         address: artistData.address,
         city: artistData.city,
-        nationality: artistData.nationality,
         function_title: artistData.function_title
       })
       .select()
@@ -91,7 +88,6 @@ export const useArtists = () => {
         phone: data.phone || '',
         address: data.address || '',
         city: data.city || '',
-        nationality: data.nationality || '',
         function_title: data.function_title || '',
         created_at: data.created_at,
         updated_at: data.updated_at
@@ -114,7 +110,6 @@ export const useArtists = () => {
         phone: updates.phone,
         address: updates.address,
         city: updates.city,
-        nationality: updates.nationality,
         function_title: updates.function_title
       })
       .eq('id', id)
