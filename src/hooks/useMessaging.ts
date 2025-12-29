@@ -310,10 +310,15 @@ export const useMessaging = () => {
           user_id: uid,
           role: uid === user.id ? 'admin' : 'member',
         }));
-        const { error: membersErr } = await supabase
-          .from('messaging_channel_members')
-          .upsert(membersPayload, { onConflict: 'channel_id,user_id', ignoreDuplicates: true });
-        if (membersErr) console.warn('Members insert warning:', membersErr);
+        // Insert members - ignore duplicate errors
+        for (const payload of membersPayload) {
+          await supabase
+            .from('messaging_channel_members')
+            .insert(payload)
+            .then(({ error }) => {
+              if (error && error.code !== '23505') console.warn('Member insert warning:', error);
+            });
+        }
       }
 
       await fetchChannels();
@@ -357,13 +362,13 @@ export const useMessaging = () => {
 
       if (insertErr || !channelRow) throw insertErr;
 
-      const { error: membersErr } = await supabase
+      // Insert DM members - ignore duplicate errors
+      await supabase
         .from('messaging_channel_members')
-        .upsert([
-          { channel_id: channelRow.id, user_id: user.id, role: 'admin' },
-          { channel_id: channelRow.id, user_id: otherUserId, role: 'member' },
-        ], { onConflict: 'channel_id,user_id', ignoreDuplicates: true });
-      if (membersErr) console.warn('DM members insert warning:', membersErr);
+        .insert({ channel_id: channelRow.id, user_id: user.id, role: 'admin' });
+      await supabase
+        .from('messaging_channel_members')
+        .insert({ channel_id: channelRow.id, user_id: otherUserId, role: 'member' });
 
       setTimeout(() => { fetchChannels(); }, 100);
       return channelRow.id as string;
@@ -378,28 +383,17 @@ export const useMessaging = () => {
     if (!user) return null;
 
     try {
-      // Ensure current user is a member of the channel (RLS requires membership to send)
-      const { data: existingMember, error: memberCheckErr } = await supabase
+      // First, ensure membership (ignore duplicate errors - member might already exist)
+      const { error: memberErr } = await supabase
         .from('messaging_channel_members')
-        .select('id')
-        .eq('channel_id', channelId)
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (memberCheckErr) {
-        console.warn('Membership check warning:', memberCheckErr);
+        .insert({ channel_id: channelId, user_id: user.id, role: 'member' });
+      
+      // Ignore duplicate key errors (23505) - it means user is already a member
+      if (memberErr && !memberErr.code?.includes('23505') && !memberErr.message?.includes('duplicate')) {
+        console.debug('Member insert note:', memberErr);
       }
 
-      if (!existingMember) {
-        const { error: joinErr } = await supabase
-          .from('messaging_channel_members')
-          .upsert({ channel_id: channelId, user_id: user.id, role: 'member' }, { onConflict: 'channel_id,user_id', ignoreDuplicates: true });
-        if (joinErr) {
-          // Not fatal for sender if they were already member or policy restricts; continue sending anyway
-          console.warn('Join channel (self) warning:', joinErr);
-        }
-      }
-
+      // Now send the message
       const { data, error } = await supabase
         .from('messaging_messages')
         .insert({
@@ -430,15 +424,11 @@ export const useMessaging = () => {
         [channelId]: [...(prev[channelId] || []), transformedMessage],
       }));
 
-      // Best-effort: update channel ordering; may fail for non-owners due to RLS, so ignore errors
-      try {
-        await supabase
-          .from('messaging_channels')
-          .update({ updated_at: new Date().toISOString() })
-          .eq('id', channelId);
-      } catch (e) {
-        console.debug('Non-owner channel update ignored:', e);
-      }
+      // Best-effort: update channel ordering (fire and forget)
+      void supabase
+        .from('messaging_channels')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', channelId);
 
       return transformedMessage;
     } catch (error) {
@@ -494,17 +484,17 @@ export const useMessaging = () => {
     if (!user) return false;
 
     try {
-      const members = userIds.map(userId => ({
-        channel_id: channelId,
-        user_id: userId,
-        role: 'member'
-      }));
-
-      const { error } = await supabase
-        .from('messaging_channel_members')
-        .upsert(members, { onConflict: 'channel_id,user_id', ignoreDuplicates: true });
-
-      if (error) throw error;
+      // Insert members one by one to handle duplicates gracefully
+      for (const userId of userIds) {
+        const { error } = await supabase
+          .from('messaging_channel_members')
+          .insert({ channel_id: channelId, user_id: userId, role: 'member' });
+        
+        // Ignore duplicate key errors
+        if (error && error.code !== '23505' && !error.message?.includes('duplicate')) {
+          console.warn('Error adding member:', error);
+        }
+      }
 
       await fetchChannels();
       return true;
@@ -518,18 +508,30 @@ export const useMessaging = () => {
   const ensureMembership = async (channelId: string): Promise<boolean> => {
     if (!user) return false;
     try {
+      // First check if already a member
       const { data: existing, error: checkErr } = await supabase
         .from('messaging_channel_members')
         .select('id')
         .eq('channel_id', channelId)
         .eq('user_id', user.id)
         .maybeSingle();
-      if (checkErr) console.warn('ensureMembership check warning:', checkErr);
+      
+      if (checkErr) {
+        console.warn('ensureMembership check warning:', checkErr);
+      }
+      
       if (existing) return true;
+      
+      // Try to insert - ignore duplicate key errors (23505)
       const { error: insertErr } = await supabase
         .from('messaging_channel_members')
-        .upsert({ channel_id: channelId, user_id: user.id, role: 'member' }, { onConflict: 'channel_id,user_id', ignoreDuplicates: true });
+        .insert({ channel_id: channelId, user_id: user.id, role: 'member' });
+      
       if (insertErr) {
+        // Duplicate key = already a member = success
+        if (insertErr.code === '23505' || insertErr.message?.includes('duplicate')) {
+          return true;
+        }
         console.warn('ensureMembership insert warning:', insertErr);
         return false;
       }
@@ -590,9 +592,10 @@ export const useMessaging = () => {
         .maybeSingle();
 
       if (!existing) {
+        // Ignore duplicate errors
         await supabase
           .from('messaging_channel_members')
-          .upsert({ channel_id: channelId, user_id: user.id, role: 'member' }, { onConflict: 'channel_id,user_id', ignoreDuplicates: true });
+          .insert({ channel_id: channelId, user_id: user.id, role: 'member' });
       }
 
       // Optional cleanup: leave other "general" duplicates for this user
@@ -811,9 +814,12 @@ export const useMessaging = () => {
     try {
       const { error } = await supabase
         .from('messaging_channel_members')
-        .upsert({ channel_id: channelId, user_id: user.id, role: 'member' }, { onConflict: 'channel_id,user_id', ignoreDuplicates: true });
+        .insert({ channel_id: channelId, user_id: user.id, role: 'member' });
 
-      if (error) throw error;
+      // Duplicate key = already a member = success
+      if (error && error.code !== '23505' && !error.message?.includes('duplicate')) {
+        throw error;
+      }
 
       await fetchChannels();
       return true;
