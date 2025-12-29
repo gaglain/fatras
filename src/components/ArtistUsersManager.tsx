@@ -99,15 +99,16 @@ export const ArtistUsersManager: React.FC<ArtistUsersManagerProps> = ({ artistId
 
   const fetchAvailableUsers = async () => {
     try {
-      // Fetch all active users, including those without auth user_id
+      // Only fetch users who have authenticated (have a user_id in auth.users)
+      // because artist_users.user_id has a foreign key to auth.users
       const { data, error } = await supabase
         .from('user_profiles')
         .select('id, user_id, username, email, first_name, last_name')
-        .eq('is_active', true);
+        .eq('is_active', true)
+        .not('user_id', 'is', null);
 
       if (error) throw error;
-      // Filter out users without valid identifiers
-      setAvailableUsers(data?.filter(u => u.id) || []);
+      setAvailableUsers(data || []);
     } catch (error) {
       console.error('Error fetching available users:', error);
     }
@@ -119,12 +120,11 @@ export const ArtistUsersManager: React.FC<ArtistUsersManagerProps> = ({ artistId
       return;
     }
 
-    // Find the selected user to get either user_id (if auth) or id (if no auth)
+    // Find the selected user - use user_id (auth.users id) for the FK
     const selectedUser = availableUsers.find(u => u.id === selectedUserId);
-    const userIdToInsert = selectedUser?.user_id || selectedUser?.id;
-
-    if (!userIdToInsert) {
-      toast.error('Utilisateur invalide');
+    
+    if (!selectedUser?.user_id) {
+      toast.error("Cet utilisateur doit se connecter au moins une fois avant d'être ajouté");
       return;
     }
 
@@ -133,7 +133,7 @@ export const ArtistUsersManager: React.FC<ArtistUsersManagerProps> = ({ artistId
         .from('artist_users')
         .insert({
           artist_id: artistId,
-          user_id: userIdToInsert,
+          user_id: selectedUser.user_id,
           role: selectedRole
         });
 
