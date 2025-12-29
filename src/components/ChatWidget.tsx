@@ -83,12 +83,13 @@ export const ChatWidget: React.FC = () => {
       // Marquer les notifications de ce canal comme lues
       const markNotificationsAsRead = async () => {
         try {
+          // Use data column (not metadata) and proper JSONB filter syntax
           const { error } = await supabase
             .from('notifications')
             .update({ read: true })
             .eq('user_id', user.id)
             .eq('type', 'message')
-            .eq('metadata->>channel_id', selectedChannel);
+            .filter('data->>channel_id', 'eq', selectedChannel);
           
           if (error) console.error('Error marking notifications as read:', error);
         } catch (err) {
