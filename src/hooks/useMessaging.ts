@@ -312,7 +312,7 @@ export const useMessaging = () => {
         }));
         const { error: membersErr } = await supabase
           .from('messaging_channel_members')
-          .insert(membersPayload);
+          .upsert(membersPayload, { onConflict: 'channel_id,user_id', ignoreDuplicates: true });
         if (membersErr) console.warn('Members insert warning:', membersErr);
       }
 
@@ -359,10 +359,10 @@ export const useMessaging = () => {
 
       const { error: membersErr } = await supabase
         .from('messaging_channel_members')
-        .insert([
+        .upsert([
           { channel_id: channelRow.id, user_id: user.id, role: 'admin' },
           { channel_id: channelRow.id, user_id: otherUserId, role: 'member' },
-        ]);
+        ], { onConflict: 'channel_id,user_id', ignoreDuplicates: true });
       if (membersErr) console.warn('DM members insert warning:', membersErr);
 
       setTimeout(() => { fetchChannels(); }, 100);
@@ -393,7 +393,7 @@ export const useMessaging = () => {
       if (!existingMember) {
         const { error: joinErr } = await supabase
           .from('messaging_channel_members')
-          .insert({ channel_id: channelId, user_id: user.id, role: 'member' });
+          .upsert({ channel_id: channelId, user_id: user.id, role: 'member' }, { onConflict: 'channel_id,user_id', ignoreDuplicates: true });
         if (joinErr) {
           // Not fatal for sender if they were already member or policy restricts; continue sending anyway
           console.warn('Join channel (self) warning:', joinErr);
@@ -502,7 +502,7 @@ export const useMessaging = () => {
 
       const { error } = await supabase
         .from('messaging_channel_members')
-        .insert(members);
+        .upsert(members, { onConflict: 'channel_id,user_id', ignoreDuplicates: true });
 
       if (error) throw error;
 
@@ -528,7 +528,7 @@ export const useMessaging = () => {
       if (existing) return true;
       const { error: insertErr } = await supabase
         .from('messaging_channel_members')
-        .insert({ channel_id: channelId, user_id: user.id, role: 'member' });
+        .upsert({ channel_id: channelId, user_id: user.id, role: 'member' }, { onConflict: 'channel_id,user_id', ignoreDuplicates: true });
       if (insertErr) {
         console.warn('ensureMembership insert warning:', insertErr);
         return false;
@@ -592,7 +592,7 @@ export const useMessaging = () => {
       if (!existing) {
         await supabase
           .from('messaging_channel_members')
-          .insert({ channel_id: channelId, user_id: user.id, role: 'member' });
+          .upsert({ channel_id: channelId, user_id: user.id, role: 'member' }, { onConflict: 'channel_id,user_id', ignoreDuplicates: true });
       }
 
       // Optional cleanup: leave other "general" duplicates for this user
@@ -811,7 +811,7 @@ export const useMessaging = () => {
     try {
       const { error } = await supabase
         .from('messaging_channel_members')
-        .insert({ channel_id: channelId, user_id: user.id, role: 'member' });
+        .upsert({ channel_id: channelId, user_id: user.id, role: 'member' }, { onConflict: 'channel_id,user_id', ignoreDuplicates: true });
 
       if (error) throw error;
 
