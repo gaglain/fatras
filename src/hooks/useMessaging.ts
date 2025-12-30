@@ -381,17 +381,22 @@ export const useMessaging = () => {
 
   // Send a message (auto-join channel if not a member)
   const sendMessage = async (channelId: string, content: string) => {
-    if (!user) return null;
+    if (!user) {
+      setLastError('Utilisateur non connecté');
+      toast.error('Vous devez être connecté pour envoyer un message');
+      return null;
+    }
+
+    setLastError(null);
 
     try {
       // First, ensure membership (ignore duplicate errors - member might already exist)
-      const { error: memberErr } = await supabase
-        .from('messaging_channel_members')
-        .insert({ channel_id: channelId, user_id: user.id, role: 'member' });
-      
-      // Ignore duplicate key errors (23505) - it means user is already a member
-      if (memberErr && !memberErr.code?.includes('23505') && !memberErr.message?.includes('duplicate')) {
-        console.debug('Member insert note:', memberErr);
+      try {
+        await supabase
+          .from('messaging_channel_members')
+          .insert({ channel_id: channelId, user_id: user.id, role: 'member' });
+      } catch {
+        // Ignore membership errors
       }
 
       // Now send the message
@@ -406,7 +411,13 @@ export const useMessaging = () => {
         .select('*')
         .single();
 
-      if (error) throw error;
+      if (error) {
+        const errorMsg = error.message || 'Erreur inconnue';
+        setLastError(errorMsg);
+        toast.error(`Erreur: ${errorMsg}`);
+        console.error('Error sending message:', error);
+        return null;
+      }
 
       const transformedMessage: Message = {
         id: data.id,
@@ -432,29 +443,59 @@ export const useMessaging = () => {
         .eq('id', channelId);
 
       return transformedMessage;
-    } catch (error) {
+    } catch (error: any) {
+      const errorMsg = error?.message || 'Erreur réseau';
+      setLastError(errorMsg);
+      toast.error(`Échec de l'envoi: ${errorMsg}`);
       console.error('Error sending message:', error);
       return null;
     }
   };
 
-  // Delete a channel
+  // Delete a channel (owner or admin member can delete)
   const deleteChannel = async (channelId: string) => {
     if (!user) return false;
 
     try {
-      const { error } = await supabase
+      // First try as owner
+      const { data: updatedData, error: ownerError } = await supabase
         .from('messaging_channels')
         .update({ is_active: false })
         .eq('id', channelId)
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .select('id');
 
-      if (error) throw error;
+      if (!ownerError && updatedData && updatedData.length > 0) {
+        await fetchChannels();
+        toast.success('Canal supprimé');
+        return true;
+      }
 
-      await fetchChannels();
-      return true;
-    } catch (error) {
+      // If not owner, check if admin member
+      const { data: memberData } = await supabase
+        .from('messaging_channel_members')
+        .select('role')
+        .eq('channel_id', channelId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (memberData?.role === 'admin') {
+        const { error } = await supabase
+          .from('messaging_channels')
+          .update({ is_active: false })
+          .eq('id', channelId);
+
+        if (error) throw error;
+        await fetchChannels();
+        toast.success('Canal supprimé');
+        return true;
+      }
+
+      toast.error('Vous n\'avez pas les droits pour supprimer ce canal');
+      return false;
+    } catch (error: any) {
       console.error('Error deleting channel:', error);
+      toast.error(`Erreur: ${error?.message || 'Impossible de supprimer'}`);
       return false;
     }
   };
