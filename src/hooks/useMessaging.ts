@@ -54,6 +54,7 @@ export const useMessaging = () => {
   const [messages, setMessages] = useState<Record<string, Message[]>>({});
   const [availableUsers, setAvailableUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [lastError, setLastError] = useState<string | null>(null);
 
   // Fetch user channels (joined channels)
   const fetchChannels = async () => {
