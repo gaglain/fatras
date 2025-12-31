@@ -149,20 +149,20 @@ export const Messagerie: React.FC = () => {
         <TabsContent value="internal" className="mt-0">
           <div className="flex h-[calc(100vh-12rem)] flex-col lg:flex-row border rounded-lg overflow-hidden">
             {/* Sidebar */}
-            <div className="w-full lg:w-80 border-r lg:border-b-0 border-b bg-card">
-              <div className="p-4 border-b border-border">
+            <div className="w-full lg:w-80 lg:min-w-[20rem] border-b lg:border-b-0 lg:border-r bg-card flex-shrink-0">
+              <div className="p-3 lg:p-4 border-b border-border">
                 <div className="flex flex-col gap-2">
-                  <h2 className="font-semibold text-lg text-card-foreground">
+                  <h2 className="font-semibold text-base lg:text-lg text-card-foreground">
                     Canaux & DMs
                   </h2>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-1.5 lg:gap-2">
                     <ChannelManager onChannelCreated={handleChannelCreated} />
                     <DirectMessageManager />
                     <ChannelBrowser 
                       trigger={
-                        <Button variant="outline" size="sm">
-                          <Plus className="h-4 w-4 mr-2" />
-                          Parcourir
+                        <Button variant="outline" size="sm" className="text-xs lg:text-sm">
+                          <Plus className="h-3 w-3 lg:h-4 lg:w-4 lg:mr-2" />
+                          <span className="hidden sm:inline">Parcourir</span>
                         </Button>
                       }
                       onChannelJoined={handleChannelCreated}
