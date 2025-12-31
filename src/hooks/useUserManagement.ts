@@ -87,67 +87,24 @@ export const useUserManagement = () => {
     availability?: any;
     skills?: string[];
     identity_documents?: any[];
-  }) => {
+  }): Promise<{ success: boolean; authCreated: boolean; profileCreated: boolean; emailSent: boolean; errors: string[] }> => {
+    const result = {
+      success: false,
+      authCreated: false,
+      profileCreated: false,
+      emailSent: false,
+      errors: [] as string[]
+    };
+
     try {
       setLoading(true);
-      console.log('🔄 Création utilisateur avec les données:', {
-        email: userData.email,
-        first_name: userData.first_name,
-        last_name: userData.last_name,
-        role: userData.role
-      });
+      console.log('🔄 Création utilisateur:', { email: userData.email, role: userData.role });
+
+      // ÉTAPE 1: Créer le compte Auth via Edge Function d'abord
+      console.log('📍 Étape 1: Création du compte Auth...');
+      let authUserId: string | undefined;
       
-      // Utiliser la fonction de base de données pour créer l'utilisateur directement
-      const { data, error } = await supabase.rpc('create_user_with_profile', {
-        user_email: userData.email,
-        user_password: userData.password,
-        profile_data: {
-          first_name: userData.first_name,
-          last_name: userData.last_name,
-          username: userData.username || userData.email.split('@')[0],
-          phone: userData.phone,
-          role: userData.role || 'utilisateur',
-          address: userData.address,
-          city: userData.city,
-          function_title: userData.function_title,
-          show_name: userData.show_name,
-          birth_date: userData.birth_date,
-          birth_place: userData.birth_place,
-          social_security_number: userData.social_security_number,
-          guso_id: userData.guso_id,
-          nationality: userData.nationality,
-          entertainment_leave_number: userData.entertainment_leave_number,
-          tax_reduction: userData.tax_reduction,
-          bank_details: userData.bank_details,
-          contracts_fees: userData.contracts_fees || [],
-          availability: userData.availability,
-          skills: userData.skills || [],
-          identity_documents: userData.identity_documents || []
-        }
-      });
-
-      console.log('📊 Résultat create_user_with_profile:', data);
-
-      if (error) {
-        console.error('❌ Erreur RPC create_user_with_profile:', error);
-        toast.error(`Erreur lors de la création: ${error.message}`);
-        return false;
-      }
-
-      const result = data as { success: boolean; error?: string; user_id?: string; email?: string };
-      if (!result?.success) {
-        console.error('❌ Échec création:', result?.error);
-        toast.error(`Erreur: ${result?.error}`);
-        return false;
-      }
-
-      console.log('✅ Profil utilisateur créé dans la base:', result);
-
-      // Si la RPC a déjà créé l'utilisateur Auth, on évite l'appel Edge Function
-      let authUserId: string | undefined = result?.user_id as string | undefined;
-
-      if (!authUserId) {
-        // Création via l'Edge Function admin (email confirmé)
+      try {
         const { data: createData, error: createError } = await supabase.functions.invoke('admin-create-user', {
           body: {
             action: 'create',
@@ -162,90 +119,200 @@ export const useUserManagement = () => {
           }
         });
 
-        if (createError || !createData?.success) {
-          console.error('❌ Erreur création utilisateur (admin):', createError || createData?.error);
-          toast.error(`Erreur création auth: ${createError?.message || createData?.error || 'inconnue'}`);
-        }
+        console.log('📊 Réponse admin-create-user:', createData);
 
-        authUserId = createData?.user?.id as string | undefined;
-      }
-
-      if (authUserId) {
-        console.log('🔄 Mise à jour du profil avec user_id auth:', authUserId);
-        const { error: updateError } = await supabase
-          .from('user_profiles')
-          .update({ user_id: authUserId })
-          .eq('email', userData.email);
-        if (updateError) {
-          console.error('❌ Erreur mise à jour user_id:', updateError);
+        if (createError) {
+          console.error('❌ Erreur Edge Function:', createError);
+          result.errors.push(`Erreur création auth: ${createError.message}`);
+        } else if (!createData?.success) {
+          console.error('❌ Échec création auth:', createData?.error);
+          result.errors.push(`Échec création auth: ${createData?.error || 'erreur inconnue'}`);
         } else {
-          console.log('✅ Profil mis à jour avec user_id auth');
+          authUserId = createData?.user?.id;
+          result.authCreated = true;
+          console.log('✅ Compte Auth créé:', authUserId);
         }
+      } catch (authError: any) {
+        console.error('❌ Exception création auth:', authError);
+        result.errors.push(`Exception auth: ${authError?.message || 'erreur inconnue'}`);
       }
 
-      // Envoyer l'email de bienvenue via Nylas ou Resend (fallback)
+      // ÉTAPE 2: Créer ou mettre à jour le profil
+      console.log('📍 Étape 2: Création/mise à jour du profil...');
+      
       try {
-        let emailSent = false;
-        
-        if (accounts.length > 0) {
-          try {
-            const activeAccount = accounts.find(acc => acc.is_active) || accounts[0];
-            
-            await sendEmailViaNylas(activeAccount.id, {
-              to: userData.email,
-              subject: 'Bienvenue - Votre accès a été créé',
-              content: `Bonjour ${userData.first_name} ${userData.last_name},
+        // Vérifier si un profil existe déjà pour cet email
+        const { data: existingProfile } = await supabase
+          .from('user_profiles')
+          .select('id, user_id')
+          .eq('email', userData.email)
+          .maybeSingle();
 
-Votre compte a été créé avec succès !
+        if (existingProfile) {
+          // Mettre à jour le profil existant
+          const { error: updateError } = await supabase
+            .from('user_profiles')
+            .update({
+              user_id: authUserId || existingProfile.user_id,
+              first_name: userData.first_name,
+              last_name: userData.last_name,
+              username: userData.username || userData.email.split('@')[0],
+              phone: userData.phone,
+              role: userData.role || 'utilisateur',
+              address: userData.address,
+              city: userData.city,
+              function_title: userData.function_title,
+              show_name: userData.show_name,
+              is_active: true,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', existingProfile.id);
 
-Voici vos informations de connexion :
-- Email : ${userData.email}
-- Mot de passe temporaire : ${userData.password}
-
-Veuillez vous connecter et changer votre mot de passe lors de votre première connexion.
-
-Cordialement,
-L'équipe`,
-              html: `
-                <h2>Bienvenue ${userData.first_name} ${userData.last_name} !</h2>
-                <p>Votre compte a été créé avec succès.</p>
-                <h3>Informations de connexion :</h3>
-                <ul>
-                  <li><strong>Email :</strong> ${userData.email}</li>
-                  <li><strong>Mot de passe temporaire :</strong> <code>${userData.password}</code></li>
-                </ul>
-                <p>Veuillez vous connecter et changer votre mot de passe lors de votre première connexion.</p>
-                <p>Cordialement,<br>L'équipe</p>
-              `
+          if (updateError) {
+            console.error('❌ Erreur mise à jour profil:', updateError);
+            result.errors.push(`Erreur mise à jour profil: ${updateError.message}`);
+          } else {
+            result.profileCreated = true;
+            console.log('✅ Profil mis à jour');
+          }
+        } else {
+          // Créer un nouveau profil
+          const { error: insertError } = await supabase
+            .from('user_profiles')
+            .insert({
+              user_id: authUserId,
+              email: userData.email,
+              first_name: userData.first_name,
+              last_name: userData.last_name,
+              username: userData.username || userData.email.split('@')[0],
+              phone: userData.phone,
+              role: userData.role || 'utilisateur',
+              address: userData.address,
+              city: userData.city,
+              function_title: userData.function_title,
+              show_name: userData.show_name,
+              is_active: true
             });
-            console.log('✅ Email de bienvenue envoyé via Nylas');
-            emailSent = true;
-          } catch (nylasError) {
-            console.warn('⚠️ Échec envoi via Nylas, tentative via Resend...', nylasError);
+
+          if (insertError) {
+            console.error('❌ Erreur création profil:', insertError);
+            result.errors.push(`Erreur création profil: ${insertError.message}`);
+          } else {
+            result.profileCreated = true;
+            console.log('✅ Profil créé');
           }
         }
-        
-        // Fallback Resend si Nylas indisponible ou échoué
-        if (!emailSent) {
-          await sendUserWelcomeEmail(
-            userData.email,
-            `${userData.first_name} ${userData.last_name}`,
-            userData.password
-          );
-          console.log('✅ Email de bienvenue envoyé via Resend (fallback)');
-        }
-      } catch (emailError) {
-        console.error('❌ Erreur envoi email (tous canaux):', emailError);
-        toast.error('Utilisateur créé mais erreur envoi email');
+      } catch (profileError: any) {
+        console.error('❌ Exception profil:', profileError);
+        result.errors.push(`Exception profil: ${profileError?.message || 'erreur inconnue'}`);
       }
 
-      toast.success('Utilisateur créé avec succès !');
-      await fetchUsers(); // Recharger la liste
-      return true;
+      // ÉTAPE 3: Envoyer l'email de bienvenue (seulement si auth créé)
+      if (result.authCreated) {
+        console.log('📍 Étape 3: Envoi email de bienvenue...');
+        
+        try {
+          let emailSent = false;
+          
+          if (accounts.length > 0) {
+            try {
+              const activeAccount = accounts.find(acc => acc.is_active) || accounts[0];
+              
+              await sendEmailViaNylas(activeAccount.id, {
+                to: userData.email,
+                subject: 'Bienvenue - Votre accès a été créé',
+                content: `Bonjour ${userData.first_name} ${userData.last_name},\n\nVotre compte a été créé.\n\nIdentifiants:\n- Email: ${userData.email}\n- Mot de passe: ${userData.password}\n\nCordialement`,
+                html: `<h2>Bienvenue ${userData.first_name} ${userData.last_name}!</h2><p>Votre compte a été créé.</p><p><strong>Email:</strong> ${userData.email}<br><strong>Mot de passe:</strong> <code>${userData.password}</code></p>`
+              });
+              emailSent = true;
+              console.log('✅ Email envoyé via Nylas');
+            } catch (nylasError) {
+              console.warn('⚠️ Échec Nylas, tentative Resend...');
+            }
+          }
+          
+          if (!emailSent) {
+            await sendUserWelcomeEmail(userData.email, `${userData.first_name} ${userData.last_name}`, userData.password);
+            emailSent = true;
+            console.log('✅ Email envoyé via Resend');
+          }
+          
+          result.emailSent = emailSent;
+        } catch (emailError: any) {
+          console.error('❌ Erreur envoi email:', emailError);
+          result.errors.push(`Erreur email: ${emailError?.message || 'envoi échoué'}`);
+        }
+      } else {
+        result.errors.push('Email non envoyé car le compte auth n\'a pas été créé');
+      }
 
-    } catch (error) {
+      // Résultat final
+      result.success = result.authCreated && result.profileCreated;
+
+      // Afficher le résumé
+      if (result.success) {
+        if (result.emailSent) {
+          toast.success('✅ Utilisateur créé et email envoyé !');
+        } else {
+          toast.warning('⚠️ Utilisateur créé mais email non envoyé');
+        }
+      } else {
+        const errorSummary = result.errors.join(' | ');
+        if (result.profileCreated && !result.authCreated) {
+          toast.error(`❌ Profil créé mais compte auth échoué: ${errorSummary}`);
+        } else if (result.authCreated && !result.profileCreated) {
+          toast.error(`❌ Auth créé mais profil échoué: ${errorSummary}`);
+        } else {
+          toast.error(`❌ Création échouée: ${errorSummary}`);
+        }
+      }
+
+      console.log('📊 Résultat création:', result);
+      await fetchUsers();
+      return result;
+
+    } catch (error: any) {
       console.error('❌ Erreur générale:', error);
+      result.errors.push(`Erreur générale: ${error?.message || 'inconnue'}`);
       toast.error('Erreur lors de la création de l\'utilisateur');
+      return result;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fonction pour réessayer la création auth pour un profil existant sans user_id
+  const retryAuthCreation = async (email: string, password: string): Promise<boolean> => {
+    try {
+      setLoading(true);
+      console.log('🔄 Réessai création auth pour:', email);
+
+      const { data: createData, error: createError } = await supabase.functions.invoke('admin-create-user', {
+        body: { email, password }
+      });
+
+      if (createError || !createData?.success) {
+        console.error('❌ Échec réessai:', createError || createData?.error);
+        toast.error(`Échec: ${createError?.message || createData?.error}`);
+        return false;
+      }
+
+      const authUserId = createData?.user?.id;
+      if (authUserId) {
+        await supabase
+          .from('user_profiles')
+          .update({ user_id: authUserId })
+          .eq('email', email);
+        
+        toast.success('✅ Compte auth créé et lié !');
+        await fetchUsers();
+        return true;
+      }
+
+      return false;
+    } catch (error: any) {
+      console.error('❌ Erreur réessai:', error);
+      toast.error(`Erreur: ${error?.message}`);
       return false;
     } finally {
       setLoading(false);
@@ -350,6 +417,7 @@ L'équipe`,
     createUser,
     updateUserProfile,
     deactivateUser,
-    deleteUser
+    deleteUser,
+    retryAuthCreation
   };
 };
