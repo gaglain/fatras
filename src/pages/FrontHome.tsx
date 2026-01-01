@@ -515,11 +515,12 @@ export const FrontHome: React.FC = () => {
                               </div>
                             )}
                             
-                            {event.venue && (
+                            {(event.venue || event.city) && (
                               <div className="flex items-center gap-2 text-sm">
                                 <MapPin className="h-4 w-4 text-muted-foreground" />
                                 {event.venue}
-                                {event.city && `, ${event.city}`}
+                                {event.postal_code && ` - ${event.postal_code}`}
+                                {event.city && ` ${event.city}`}
                               </div>
                             )}
                             

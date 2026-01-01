@@ -167,7 +167,7 @@ export const FrontEvents: React.FC = () => {
               </div>
               <div className="flex items-center">
                 <MapPin className="h-4 w-4 mr-2" />
-                {event.venue && `${event.venue}, `}{event.city}
+                {event.venue && `${event.venue}, `}{event.postal_code && `${event.postal_code} `}{event.city}
               </div>
             </div>
 
