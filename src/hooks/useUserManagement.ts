@@ -5,7 +5,7 @@ import { useNylasEmail } from './useNylasEmail';
 import { useEmailSender } from './useEmailSender';
 export interface ExtendedUserProfile {
   id: string;
-  user_id: string;
+  user_id: string | null;
   username: string;
   first_name: string;
   last_name: string;
@@ -375,29 +375,57 @@ export const useUserManagement = () => {
     try {
       setLoading(true);
       console.log('🗑️ Suppression utilisateur:', userId);
-      
-      // Utiliser la fonction de suppression sécurisée
+
+      const target = users.find(u => u.user_id === userId || u.id === userId);
+      const email = target?.email;
+
+      // 1) Supprimer aussi l'utilisateur dans Supabase Auth (si existant)
+      if (email) {
+        const { data: delAuthData, error: delAuthError } = await supabase.functions.invoke('admin-delete-user', {
+          body: { userId, email },
+        });
+
+        if (delAuthError) {
+          console.error('❌ Erreur suppression Auth:', delAuthError);
+          toast.error(`Erreur suppression Auth: ${delAuthError.message}`);
+          return false;
+        }
+
+        if (delAuthData?.success === false) {
+          console.error('❌ Échec suppression Auth:', delAuthData?.error);
+          toast.error(`Erreur suppression Auth: ${delAuthData?.error || 'inconnue'}`);
+          return false;
+        }
+
+        if (delAuthData?.deletedAuth) {
+          console.log('✅ Utilisateur supprimé dans Auth');
+        } else {
+          console.log('ℹ️ Aucun utilisateur Auth trouvé (probablement profil sans compte)');
+        }
+      }
+
+      // 2) Supprimer le profil applicatif (table public.user_profiles)
       const { data, error } = await supabase.rpc('delete_user_completely', {
-        target_user_id: userId
+        target_user_id: userId,
       });
 
       if (error) {
-        console.error('❌ Erreur suppression:', error);
-        toast.error('Erreur lors de la suppression');
+        console.error('❌ Erreur suppression profil:', error);
+        toast.error('Erreur lors de la suppression du profil');
         return false;
       }
 
       if (data && typeof data === 'object' && 'success' in data && !data.success) {
-        console.error('❌ Erreur suppression:', data.error);
+        console.error('❌ Erreur suppression profil:', data.error);
         toast.error(String(data.error || 'Erreur inconnue'));
         return false;
       }
 
       // Mettre à jour immédiatement la liste locale
-      setUsers(prev => prev.filter(user => user.user_id !== userId));
+      setUsers(prev => prev.filter(user => user.user_id !== userId && user.id !== userId));
       console.log('✅ Utilisateur supprimé avec succès');
       toast.success('Utilisateur supprimé définitivement');
-      await fetchUsers(); // Recharger la liste
+      await fetchUsers();
       return true;
     } catch (error) {
       console.error('❌ Erreur suppression:', error);
