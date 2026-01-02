@@ -13,6 +13,7 @@ import { UserProfile } from './UserProfile';
 import { UnifiedNotificationCenter } from './UnifiedNotificationCenter';
 import { AppSidebar } from '@/components/AppSidebar';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { SidebarProvider } from '@/components/ui/sidebar';
 
 export const BackOfficeHeader: React.FC = () => {
   const { theme } = useTheme();
