@@ -72,7 +72,11 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
                         {item.children.filter(child => child.visible !== false).map((child) => (
                           <SidebarMenuItem key={child.href}>
                              <SidebarMenuButton asChild isActive={isActive(child.href)}>
-                               <Link to={child.href} className="flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+                               <Link 
+                                 to={child.href} 
+                                 className="flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                                 onClick={(e) => e.stopPropagation()}
+                               >
                                  <child.icon className="h-5 w-5" />
                                  <span className="font-medium">{child.name}</span>
                                </Link>
@@ -93,7 +97,11 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
                   <SidebarMenu>
                     <SidebarMenuItem>
                        <SidebarMenuButton asChild isActive={isActive(item.href)}>
-                         <Link to={item.href} className="flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+                         <Link 
+                           to={item.href} 
+                           className="flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                           onClick={(e) => e.stopPropagation()}
+                         >
                            <item.icon className="h-5 w-5" />
                            <span className="font-medium">{item.name}</span>
                          </Link>
