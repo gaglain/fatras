@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { X, User, Edit2 } from 'lucide-react';
@@ -14,6 +15,7 @@ interface UserProfileProps {
 import { LogoutButton } from '@/components/ui/logout-button';
  
 export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
+  const navigate = useNavigate();
   const { currentUser } = useUser();
   const { user: authUser } = useAuth();
   const { updateUserProfile, loading, fetchUsers } = useUserManagement();
@@ -157,7 +159,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
       className="w-full text-muted-foreground"
       onClick={() => {
         onClose();
-        window.location.href = '/user-management';
+        navigate('/user-management');
       }}
     >
       Aller à la gestion des utilisateurs
