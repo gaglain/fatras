@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -23,6 +24,7 @@ interface GoogleCalendarEvent {
 }
 
 export const GoogleCalendarDisplay: React.FC = () => {
+  const navigate = useNavigate();
   const [events, setEvents] = useState<GoogleCalendarEvent[]>([]);
   const [loading, setLoading] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
@@ -175,7 +177,7 @@ export const GoogleCalendarDisplay: React.FC = () => {
           <p className="text-muted-foreground mb-4">
             Connectez votre Google Calendar pour voir vos événements ici
           </p>
-          <Button onClick={() => window.location.href = '/preferences?tab=calendar'}>
+          <Button onClick={() => navigate('/preferences?tab=calendar')}>
             Configurer Google Calendar
           </Button>
         </CardContent>

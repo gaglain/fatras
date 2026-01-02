@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -58,6 +59,7 @@ Sitemap: ${window.location.origin}/sitemap.xml`
 };
 
 export const SEOManager: React.FC = () => {
+  const navigate = useNavigate();
   const { seoSettings: dbSettings, loading, saveSEOSettings: saveToDb } = useWebsiteSEO();
   const [seoSettings, setSeoSettings] = useState<SEOSettings>(defaultSEOSettings);
   const [pagesSEO, setPagesSEO] = useState<PageSEO[]>([]);
@@ -446,7 +448,7 @@ export const SEOManager: React.FC = () => {
                           size="sm"
                           onClick={() => {
                             // Ouvrir l'éditeur de page
-                            window.location.href = `/website/pages/${page.pageId}`;
+                            navigate(`/website/pages/${page.pageId}`);
                           }}
                         >
                           Optimiser
