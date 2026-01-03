@@ -29,29 +29,29 @@ export function useCompanySettings() {
     return v;
   };
 
-  // Charger les paramètres depuis Supabase quand l'utilisateur change
+  // Charger les paramètres depuis Supabase (globaux ou par utilisateur)
   useEffect(() => {
     const loadFromSupabase = async () => {
-      if (!user?.id) {
-        // Si pas d'utilisateur, charger depuis localStorage
-        try {
-          const stored = localStorage.getItem("companySettings");
-          if (stored) {
-            const parsed = JSON.parse(stored);
+      // D'abord essayer de charger depuis localStorage pour un affichage immédiat
+      try {
+        const stored = localStorage.getItem("companySettings");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed.logo || parsed.name) {
             setSettings((old) => ({ ...old, ...parsed }));
             applySettings(parsed);
           }
-        } catch (err) {
-          console.error("Error loading from localStorage:", err);
         }
-        return;
+      } catch (err) {
+        console.error("Error loading from localStorage:", err);
       }
 
+      // Ensuite charger depuis Supabase (les paramètres globaux sont prioritaires)
       try {
+        // Charger les paramètres globaux de l'app (sans filtre user_id)
         const { data, error } = await supabase
           .from('app_settings')
           .select('setting_key, setting_value')
-          .eq('user_id', user.id)
           .in('setting_key', ['company_name', 'company_logo', 'company_favicon']);
 
         if (error) throw error;
@@ -75,7 +75,7 @@ export function useCompanySettings() {
           favicon: "/favicon.png"
         });
 
-        if (loadedSettings) {
+        if (loadedSettings && (loadedSettings.name !== "Fatras" || loadedSettings.logo !== "/logo.svg")) {
           setSettings(loadedSettings);
           localStorage.setItem('companySettings', JSON.stringify(loadedSettings));
           applySettings(loadedSettings);
