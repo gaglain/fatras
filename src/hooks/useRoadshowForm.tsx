@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { TourStop, FormData } from '@/types/roadshow.types';
 import { useMessaging } from '@/hooks/useMessaging';
+import { supabase } from '@/integrations/supabase/client';
 
 const initialFormData: FormData = {
   city: '',
@@ -66,6 +67,11 @@ export const useRoadshowForm = (
       const newStop = await createStop(stopData);
       
       if (newStop) {
+        // Get user IDs from the artistLineup members
+        const memberIds: string[] = formData.artistLineup
+          .map(a => a.userId)
+          .filter(Boolean);
+
         // Try to create a messaging channel for this roadshow stop
         if (createChannel) {
           try {
@@ -73,9 +79,6 @@ export const useRoadshowForm = (
             const timestamp = Date.now();
             const channelName = `${formData.city} - ${formData.venue} - ${timestamp}`;
             const description = `Canal pour l'étape de tournée à ${formData.city}`;
-            
-            // Get user IDs from the team members
-            const memberIds: string[] = [];
             
             await createChannel(
               channelName,
@@ -87,6 +90,27 @@ export const useRoadshowForm = (
           } catch (channelError) {
             console.error('Error creating channel:', channelError);
             // Don't fail the whole operation if channel creation fails
+          }
+        }
+
+        // Send notifications to all added members
+        for (const member of formData.artistLineup) {
+          try {
+            await supabase
+              .from('notifications')
+              .insert({
+                user_id: member.userId,
+                type: 'roadshow_assignment',
+                title: 'Assignation à une feuille de route',
+                message: `Vous avez été ajouté à la feuille de route "${formData.city} - ${formData.venue}". Veuillez confirmer votre disponibilité.`,
+                read: false,
+                data: {
+                  roadshow_stop_id: newStop.id,
+                  action: 'confirm_availability'
+                }
+              });
+          } catch (notifError) {
+            console.error('Error sending notification:', notifError);
           }
         }
         
