@@ -2,7 +2,12 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { TourStop } from '@/types/roadshow.types';
+import { toast } from 'sonner';
 
+interface ArtistLineupItem {
+  userId: string;
+  confirmed: boolean;
+}
 export interface RoadshowStop {
   id: string;
   user_id: string;
@@ -164,11 +169,98 @@ export const useRoadshowStops = () => {
     }
   };
 
+  // Sync artist lineup with messaging channel members and send notifications
+  const syncLineupWithChannel = async (
+    stopId: string, 
+    newLineup: ArtistLineupItem[], 
+    oldLineup: ArtistLineupItem[],
+    stopInfo: { city: string; venue: string }
+  ) => {
+    try {
+      // Find the messaging channel for this roadshow stop
+      const { data: channel } = await supabase
+        .from('messaging_channels')
+        .select('id, name')
+        .eq('roadshow_id', stopId)
+        .maybeSingle();
+
+      if (!channel) {
+        console.log('No messaging channel found for roadshow stop:', stopId);
+        return;
+      }
+
+      // Find newly added users (in new but not in old)
+      const oldUserIds = new Set(oldLineup.map(a => a.userId));
+      const newlyAdded = newLineup.filter(a => !oldUserIds.has(a.userId));
+
+      // Find removed users (in old but not in new)
+      const newUserIds = new Set(newLineup.map(a => a.userId));
+      const removed = oldLineup.filter(a => !newUserIds.has(a.userId));
+
+      // Add new members to the channel
+      for (const artist of newlyAdded) {
+        // Check if already a member
+        const { data: existingMember } = await supabase
+          .from('messaging_channel_members')
+          .select('id')
+          .eq('channel_id', channel.id)
+          .eq('user_id', artist.userId)
+          .maybeSingle();
+
+        if (!existingMember) {
+          // Add to channel
+          await supabase
+            .from('messaging_channel_members')
+            .insert({
+              channel_id: channel.id,
+              user_id: artist.userId,
+              role: 'member'
+            });
+          console.log('✅ Added user to channel:', artist.userId);
+        }
+
+        // Create notification for the added user
+        await supabase
+          .from('notifications')
+          .insert({
+            user_id: artist.userId,
+            type: 'roadshow_assignment',
+            title: 'Assignation à une feuille de route',
+            message: `Vous avez été ajouté à la feuille de route "${stopInfo.city} - ${stopInfo.venue}". Veuillez confirmer votre disponibilité.`,
+            read: false,
+            data: {
+              roadshow_stop_id: stopId,
+              channel_id: channel.id,
+              action: 'confirm_availability'
+            }
+          });
+        console.log('✅ Notification sent to:', artist.userId);
+      }
+
+      // Remove members from channel (optional - you might want to keep them)
+      for (const artist of removed) {
+        await supabase
+          .from('messaging_channel_members')
+          .delete()
+          .eq('channel_id', channel.id)
+          .eq('user_id', artist.userId);
+        console.log('🗑️ Removed user from channel:', artist.userId);
+      }
+
+    } catch (error) {
+      console.error('Error syncing lineup with channel:', error);
+    }
+  };
+
   // Update a roadshow stop
   const updateStop = async (stopId: string, stopData: Partial<RoadshowStop>) => {
     if (!user) return null;
 
     try {
+      // Get the current stop to compare artist_lineup
+      const currentStop = stops.find(s => s.id === stopId);
+      const oldLineup = currentStop?.artist_lineup || [];
+
       console.log('📍 Updating roadshow stop:', stopId, stopData);
       const { data, error } = await supabase
         .from('roadshow_stops')
@@ -231,6 +323,17 @@ export const useRoadshowStops = () => {
         created_at: data.created_at,
         updated_at: data.updated_at
       };
+
+      // Sync lineup changes with messaging channel and notifications
+      const newLineup = stopData.artist_lineup || [];
+      if (JSON.stringify(newLineup) !== JSON.stringify(oldLineup)) {
+        await syncLineupWithChannel(
+          stopId, 
+          newLineup, 
+          oldLineup,
+          { city: data.city, venue: data.venue }
+        );
+      }
 
       setStops(prev => prev.map(stop => stop.id === stopId ? transformedStop : stop));
       return transformedStop;
