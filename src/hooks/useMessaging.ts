@@ -56,7 +56,7 @@ export const useMessaging = () => {
   const [loading, setLoading] = useState(true);
   const [lastError, setLastError] = useState<string | null>(null);
 
-  // Fetch user channels (joined channels)
+  // Fetch user channels (joined channels + all public channels)
   const fetchChannels = async () => {
     if (!user) return;
 
@@ -68,28 +68,41 @@ export const useMessaging = () => {
         .eq('user_id', user.id);
 
       if (memberErr) throw memberErr;
-      const channelIds = (memberRows || []).map((r: any) => r.channel_id);
+      const memberChannelIds = (memberRows || []).map((r: any) => r.channel_id);
 
-      if (channelIds.length === 0) {
+      // 2) Récupérer aussi TOUS les canaux publics actifs
+      const { data: publicChannels, error: publicErr } = await supabase
+        .from('messaging_channels')
+        .select('id')
+        .eq('type', 'public')
+        .eq('is_active', true);
+
+      if (publicErr) throw publicErr;
+      const publicChannelIds = (publicChannels || []).map((c: any) => c.id);
+
+      // 3) Fusionner les IDs (membres + publics) sans doublons
+      const allChannelIds = [...new Set([...memberChannelIds, ...publicChannelIds])];
+
+      if (allChannelIds.length === 0) {
         setChannels([]);
         return;
       }
 
-      // 2) Charger les canaux
+      // 4) Charger les canaux
       const { data: channelRows, error: channelsErr } = await supabase
         .from('messaging_channels')
         .select('*')
-        .in('id', channelIds)
+        .in('id', allChannelIds)
         .eq('is_active', true)
         .order('updated_at', { ascending: false });
 
       if (channelsErr) throw channelsErr;
 
-      // 3) Charger tous les membres de ces canaux
+      // 5) Charger tous les membres de ces canaux
       const { data: allMembers, error: membersErr } = await supabase
         .from('messaging_channel_members')
         .select('id, channel_id, user_id, role, joined_at, last_read_at')
-        .in('channel_id', channelIds);
+        .in('channel_id', allChannelIds);
 
       if (membersErr) throw membersErr;
 
