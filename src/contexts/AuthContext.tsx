@@ -1,32 +1,14 @@
-import { createContext, useContext, type ReactNode } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { useAuth } from '@/hooks/useAuth';
+/**
+ * @deprecated Use UnifiedAuthContext instead
+ * This file is kept for backward compatibility
+ */
+export { 
+  useAuthContext,
+  type UserRole,
+  type UserProfile as User,
+  type UserPermissions
+} from './UnifiedAuthContext';
 
-interface AuthContextType {
-  user: User | null;
-  session: Session | null;
-  loading: boolean;
-  signIn: (email: string, password: string) => Promise<any>;
-  signUp: (email: string, password: string, metadata?: any) => Promise<any>;
-  signOut: () => Promise<any>;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const auth = useAuth();
-  
-  return (
-    <AuthContext.Provider value={auth}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
-
-export const useAuthContext = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuthContext must be used within an AuthProvider');
-  }
-  return context;
-};
+// Re-export the provider for backward compatibility (not needed if using UnifiedAuthProvider)
+import { UnifiedAuthProvider } from './UnifiedAuthContext';
+export const AuthProvider = UnifiedAuthProvider;

@@ -1,65 +1,79 @@
+import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
-import Index from "./pages/Index";
-import Install from "./pages/Install";
-import Auth from "./pages/Auth";
 import { HelmetProvider } from "react-helmet-async";
-import { FrontHome } from "./pages/FrontHome";
-import { FrontArtists } from "./pages/FrontArtists";
-import { FrontArtistDetail } from "./pages/FrontArtistDetail";
-import { FrontEvents } from "./pages/FrontEvents";
-import { FrontTour } from "./pages/FrontTour";
-import { FrontContact } from "./pages/FrontContact";
-import { FrontShop } from "./pages/FrontShop";
-import { FrontDynamicPage } from "./pages/FrontDynamicPage";
-import Dashboard from "./pages/Dashboard";
-import { Artists } from "./pages/Artists";
-import { ArtistDetail } from "./pages/ArtistDetail";
-import { ArtistDetailPage } from "./pages/ArtistDetailPage";
-import { Events } from "./pages/Events";
-import { EventDetail } from "./pages/EventDetail";
-import { Contacts } from "./pages/Contacts";
-import { Preferences } from "./pages/Preferences";
-import { Tasks } from "./pages/Tasks";
-import { NotFound } from "./pages/NotFound";
-import { RoadShow } from "./pages/RoadShow";
-import { Messagerie } from "./pages/Messagerie";
-import { ShowBible } from "./pages/ShowBible";
-import { Contracts } from "./pages/Contracts";
-import Email from "./pages/EmailSimple";
-import { EmailCampaigns } from "./pages/EmailCampaigns";
-import { ContactLists } from "./pages/ContactLists";
-import { ContactDetail } from "./pages/ContactDetail";
-import { Opportunities } from "./pages/Opportunities";
-import { EventTypes } from "./pages/EventTypes";
-import { PublicationCalendar } from "./pages/PublicationCalendar";
-import { Forms } from "./pages/Forms";
-import { UserManagement } from "./pages/UserManagement";
-import { FrontArtistShowcase } from "./pages/FrontArtistShowcase";
-import { Agenda } from "./pages/Agenda";
-import { Merchandise } from "./pages/Merchandise";
-import { MerchandiseBackoffice } from "./pages/MerchandiseBackoffice";
-import { Website } from "./pages/Website";
-import { WebsiteManager } from "./pages/WebsiteManager";
-import { WebsiteBackoffice } from "./pages/WebsiteBackoffice";
-import { Application } from "./pages/Application";
-import { Quotes } from "./pages/Quotes";
-import { RolePermissions } from "./pages/RolePermissions";
-import ContactTypes from "./pages/ContactTypes";
-import Assignments from "./pages/Assignments";
-import { Layout } from "./components/Layout";
-import { FontManager } from "./components/website/FontManager";
-import { ProtectedRoute } from "./components/ProtectedRoute";
-import { UserProvider } from "./contexts/UserContext";
-import { AuthProvider } from "./contexts/AuthContext";
-import { FrontLayout } from "./components/FrontLayout";
-import { WebsiteConfigProvider } from "./contexts/WebsiteConfigContext";
-import { WebsiteMenuSyncBridge } from "./components/WebsiteMenuSyncBridge";
 import { ErrorBoundary } from "react-error-boundary";
+
+import { UnifiedAuthProvider } from "./contexts/UnifiedAuthContext";
+import { WebsiteConfigProvider } from "./contexts/WebsiteConfigContext";
 import { PWAManifestSync } from "./components/PWAManifestSync";
+import { WebsiteMenuSyncBridge } from "./components/WebsiteMenuSyncBridge";
+import { Layout } from "./components/Layout";
+import { ProtectedRoute } from "./components/ProtectedRoute";
+import { FrontLayout } from "./components/FrontLayout";
+import { logger } from "./lib/logger";
+
+// Loading fallback component
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+  </div>
+);
+
+// Lazy loaded pages - PUBLIC
+const Index = lazy(() => import("./pages/Index"));
+const Auth = lazy(() => import("./pages/Auth"));
+const Install = lazy(() => import("./pages/Install"));
+const NotFound = lazy(() => import("./pages/NotFound").then(m => ({ default: m.NotFound })));
+
+// Lazy loaded pages - FRONT (public website)
+const FrontHome = lazy(() => import("./pages/FrontHome").then(m => ({ default: m.FrontHome })));
+const FrontArtists = lazy(() => import("./pages/FrontArtists").then(m => ({ default: m.FrontArtists })));
+const FrontArtistDetail = lazy(() => import("./pages/FrontArtistDetail").then(m => ({ default: m.FrontArtistDetail })));
+const FrontEvents = lazy(() => import("./pages/FrontEvents").then(m => ({ default: m.FrontEvents })));
+const FrontTour = lazy(() => import("./pages/FrontTour").then(m => ({ default: m.FrontTour })));
+const FrontContact = lazy(() => import("./pages/FrontContact").then(m => ({ default: m.FrontContact })));
+const FrontShop = lazy(() => import("./pages/FrontShop").then(m => ({ default: m.FrontShop })));
+const FrontDynamicPage = lazy(() => import("./pages/FrontDynamicPage").then(m => ({ default: m.FrontDynamicPage })));
+const FrontArtistShowcase = lazy(() => import("./pages/FrontArtistShowcase").then(m => ({ default: m.FrontArtistShowcase })));
+
+// Lazy loaded pages - BACK-OFFICE (protected)
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Artists = lazy(() => import("./pages/Artists").then(m => ({ default: m.Artists })));
+const ArtistDetailPage = lazy(() => import("./pages/ArtistDetailPage").then(m => ({ default: m.ArtistDetailPage })));
+const Events = lazy(() => import("./pages/Events").then(m => ({ default: m.Events })));
+const EventDetail = lazy(() => import("./pages/EventDetail").then(m => ({ default: m.EventDetail })));
+const Contacts = lazy(() => import("./pages/Contacts").then(m => ({ default: m.Contacts })));
+const ContactDetail = lazy(() => import("./pages/ContactDetail").then(m => ({ default: m.ContactDetail })));
+const ContactTypes = lazy(() => import("./pages/ContactTypes"));
+const ContactLists = lazy(() => import("./pages/ContactLists").then(m => ({ default: m.ContactLists })));
+const Tasks = lazy(() => import("./pages/Tasks").then(m => ({ default: m.Tasks })));
+const RoadShow = lazy(() => import("./pages/RoadShow").then(m => ({ default: m.RoadShow })));
+const Messagerie = lazy(() => import("./pages/Messagerie").then(m => ({ default: m.Messagerie })));
+const ShowBible = lazy(() => import("./pages/ShowBible").then(m => ({ default: m.ShowBible })));
+const Contracts = lazy(() => import("./pages/Contracts").then(m => ({ default: m.Contracts })));
+const Email = lazy(() => import("./pages/EmailSimple"));
+const EmailCampaigns = lazy(() => import("./pages/EmailCampaigns").then(m => ({ default: m.EmailCampaigns })));
+const Opportunities = lazy(() => import("./pages/Opportunities").then(m => ({ default: m.Opportunities })));
+const EventTypes = lazy(() => import("./pages/EventTypes").then(m => ({ default: m.EventTypes })));
+const PublicationCalendar = lazy(() => import("./pages/PublicationCalendar").then(m => ({ default: m.PublicationCalendar })));
+const Forms = lazy(() => import("./pages/Forms").then(m => ({ default: m.Forms })));
+const UserManagement = lazy(() => import("./pages/UserManagement").then(m => ({ default: m.UserManagement })));
+const RolePermissions = lazy(() => import("./pages/RolePermissions").then(m => ({ default: m.RolePermissions })));
+const Agenda = lazy(() => import("./pages/Agenda").then(m => ({ default: m.Agenda })));
+const Merchandise = lazy(() => import("./pages/Merchandise").then(m => ({ default: m.Merchandise })));
+const MerchandiseBackoffice = lazy(() => import("./pages/MerchandiseBackoffice").then(m => ({ default: m.MerchandiseBackoffice })));
+const Website = lazy(() => import("./pages/Website").then(m => ({ default: m.Website })));
+const WebsiteManager = lazy(() => import("./pages/WebsiteManager").then(m => ({ default: m.WebsiteManager })));
+const WebsiteBackoffice = lazy(() => import("./pages/WebsiteBackoffice").then(m => ({ default: m.WebsiteBackoffice })));
+const Application = lazy(() => import("./pages/Application").then(m => ({ default: m.Application })));
+const Quotes = lazy(() => import("./pages/Quotes").then(m => ({ default: m.Quotes })));
+const Preferences = lazy(() => import("./pages/Preferences").then(m => ({ default: m.Preferences })));
+const Assignments = lazy(() => import("./pages/Assignments"));
+const FontManager = lazy(() => import("./components/website/FontManager").then(m => ({ default: m.FontManager })));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -72,7 +86,7 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
-  console.log('🚀 App starting - WITH ALL ROUTES...');
+  logger.log('🚀 App starting...');
   
   return (
     <ErrorBoundary
@@ -92,7 +106,6 @@ const App = () => {
             <button
               onClick={() => {
                 try {
-                  // Conserver l'auth Supabase et le thème, nettoyer le reste
                   const preserved: Record<string, string> = {};
                   for (let i = 0; i < localStorage.length; i++) {
                     const key = localStorage.key(i)!;
@@ -104,7 +117,7 @@ const App = () => {
                   Object.entries(preserved).forEach(([k, v]) => localStorage.setItem(k, v));
                   sessionStorage.clear();
                 } catch (e) {
-                  console.warn('Cache reset failed:', e);
+                  logger.warn('Cache reset failed:', e);
                 }
                 resetErrorBoundary();
                 window.location.reload();
@@ -115,7 +128,7 @@ const App = () => {
             </button>
           </div>
 
-          {import.meta.env.MODE !== 'production' && (
+          {import.meta.env.DEV && (
             <pre style={{ marginTop: 16, fontSize: 12, color: '#6b7280', whiteSpace: 'pre-wrap' }}>
               {String(error?.message || '')}
             </pre>
@@ -123,103 +136,103 @@ const App = () => {
         </div>
       )}
       onError={(error) => {
-        console.error('💥 React Error Boundary caught error:', error);
+        logger.error('💥 React Error Boundary caught error:', error);
         try {
           localStorage.setItem('last_app_error', JSON.stringify({ message: String(error?.message || error), time: new Date().toISOString() }));
         } catch {}
       }}
     >
       <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-      <HelmetProvider>
-      <ThemeProvider 
-        attribute="class"
-        defaultTheme="light"
-        enableSystem={false}
-        disableTransitionOnChange
-        storageKey="lovable-theme"
-      >
-        <TooltipProvider>
-          <BrowserRouter>
-            <UserProvider>
-              <WebsiteConfigProvider>
-                <PWAManifestSync />
-                <Toaster />
-                <WebsiteMenuSyncBridge />
-                <Routes>
-                <Route path="/" element={<Index />} />
-                
-                {/* Routes du front-end - PUBLIC */}
-                <Route path="/front" element={<FrontHome />} />
-                <Route path="/front/artists" element={<FrontLayout><FrontArtists /></FrontLayout>} />
-                <Route path="/front/events" element={<FrontLayout><FrontEvents /></FrontLayout>} />
-                <Route path="/front/contact" element={<FrontLayout><FrontContact /></FrontLayout>} />
-                <Route path="/front/shop" element={<FrontLayout><FrontShop /></FrontLayout>} />
-                {/* Route dynamique pour les pages personnalisées */}
-                <Route path="/front/*" element={<FrontDynamicPage />} />
-                
-                {/* Routes publiques pour les artistes et tournées */}
-                <Route path="/artistes" element={<FrontLayout><FrontArtists /></FrontLayout>} />
-                <Route path="/artistes/:id" element={<FrontLayout><FrontArtistDetail /></FrontLayout>} />
-                <Route path="/tournee" element={<FrontLayout><FrontTour /></FrontLayout>} />
-                <Route path="/spectacles" element={<FrontLayout><FrontArtists /></FrontLayout>} />
-                
-                <Route path="/artist-showcase" element={<FrontArtistShowcase />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/install" element={<Install />} />
-                
-                {/* Routes du back-office - PROTÉGÉES */}
-                <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
-                <Route path="/assignments" element={<ProtectedRoute><Layout><Assignments /></Layout></ProtectedRoute>} />
-                <Route path="/artists" element={<ProtectedRoute><Layout><Artists /></Layout></ProtectedRoute>} />
-                <Route path="/artists/:id" element={<ProtectedRoute><Layout><ArtistDetailPage /></Layout></ProtectedRoute>} />
-                <Route path="/events" element={<ProtectedRoute><Layout><Events /></Layout></ProtectedRoute>} />
-                <Route path="/events/:id" element={<ProtectedRoute><Layout><EventDetail /></Layout></ProtectedRoute>} />
-<Route path="/contacts" element={<ProtectedRoute><Layout><Contacts /></Layout></ProtectedRoute>} />
-<Route path="/contacts/:id" element={<ProtectedRoute><Layout><ContactDetail /></Layout></ProtectedRoute>} />
-<Route path="/contact-types" element={<ProtectedRoute><Layout><ContactTypes /></Layout></ProtectedRoute>} />
-<Route path="/tasks" element={<ProtectedRoute><Layout><Tasks /></Layout></ProtectedRoute>} />
-                <Route path="/roadshow" element={<ProtectedRoute><Layout><RoadShow /></Layout></ProtectedRoute>} />
-                <Route path="/messagerie" element={<ProtectedRoute><Layout><Messagerie /></Layout></ProtectedRoute>} />
-<Route path="/show-bible" element={<ProtectedRoute><Layout><ShowBible /></Layout></ProtectedRoute>} />
-<Route path="/contracts" element={<ProtectedRoute><Layout><Contracts /></Layout></ProtectedRoute>} />
-<Route path="/email" element={<ProtectedRoute><Layout><Email /></Layout></ProtectedRoute>} />
-<Route path="/email-campaigns" element={<ProtectedRoute><Layout><EmailCampaigns /></Layout></ProtectedRoute>} />
-<Route path="/contact-lists" element={<ProtectedRoute><Layout><ContactLists /></Layout></ProtectedRoute>} />
-<Route path="/opportunities" element={<ProtectedRoute><Layout><Opportunities /></Layout></ProtectedRoute>} />
-<Route path="/event-types" element={<ProtectedRoute><Layout><EventTypes /></Layout></ProtectedRoute>} />
-<Route path="/publication-calendar" element={<ProtectedRoute><Layout><PublicationCalendar /></Layout></ProtectedRoute>} />
-<Route path="/forms" element={<ProtectedRoute><Layout><Forms /></Layout></ProtectedRoute>} />
-<Route path="/user-management" element={<ProtectedRoute><Layout><UserManagement /></Layout></ProtectedRoute>} />
-<Route path="/role-permissions" element={<ProtectedRoute><Layout><RolePermissions /></Layout></ProtectedRoute>} />
-<Route path="/agenda" element={<ProtectedRoute><Layout><Agenda /></Layout></ProtectedRoute>} />
-<Route path="/merchandise" element={<ProtectedRoute><Layout><Merchandise /></Layout></ProtectedRoute>} />
-<Route path="/merchandise-backoffice" element={<ProtectedRoute><Layout><MerchandiseBackoffice /></Layout></ProtectedRoute>} />
-                <Route path="/website" element={<ProtectedRoute><Website /></ProtectedRoute>} />
-                <Route path="/website-manager" element={<ProtectedRoute><WebsiteManager /></ProtectedRoute>} />
-                <Route path="/website-backoffice" element={<ProtectedRoute><WebsiteBackoffice /></ProtectedRoute>} />
-                <Route path="/website/fonts" element={<ProtectedRoute><Layout><FontManager /></Layout></ProtectedRoute>} />
-<Route path="/application" element={<ProtectedRoute><Layout><Application /></Layout></ProtectedRoute>} />
-<Route path="/quotes" element={<ProtectedRoute><Layout><Quotes /></Layout></ProtectedRoute>} />
-                <Route path="/preferences" element={<ProtectedRoute><Layout><Preferences /></Layout></ProtectedRoute>} />
-                {/* Admin aliases */}
-                <Route path="/admin" element={<Navigate to="/dashboard" replace />} />
-                <Route path="/Admin" element={<Navigate to="/dashboard" replace />} />
-                
-                {/* Pages dynamiques du site web - doit être avant le catch-all */}
-                <Route path="/:slug" element={<FrontDynamicPage />} />
-                
-                <Route path="*" element={<NotFound />} />
-                </Routes>
-              </WebsiteConfigProvider>
-            </UserProvider>
-          </BrowserRouter>
-        </TooltipProvider>
-      </ThemeProvider>
-      </HelmetProvider>
-      </AuthProvider>
-    </QueryClientProvider>
-  </ErrorBoundary>
+        <UnifiedAuthProvider>
+          <HelmetProvider>
+            <ThemeProvider 
+              attribute="class"
+              defaultTheme="light"
+              enableSystem={false}
+              disableTransitionOnChange
+              storageKey="lovable-theme"
+            >
+              <TooltipProvider>
+                <BrowserRouter>
+                  <WebsiteConfigProvider>
+                    <PWAManifestSync />
+                    <Toaster />
+                    <WebsiteMenuSyncBridge />
+                    <Suspense fallback={<PageLoader />}>
+                      <Routes>
+                        <Route path="/" element={<Index />} />
+                        
+                        {/* Routes du front-end - PUBLIC */}
+                        <Route path="/front" element={<FrontHome />} />
+                        <Route path="/front/artists" element={<FrontLayout><FrontArtists /></FrontLayout>} />
+                        <Route path="/front/events" element={<FrontLayout><FrontEvents /></FrontLayout>} />
+                        <Route path="/front/contact" element={<FrontLayout><FrontContact /></FrontLayout>} />
+                        <Route path="/front/shop" element={<FrontLayout><FrontShop /></FrontLayout>} />
+                        <Route path="/front/*" element={<FrontDynamicPage />} />
+                        
+                        {/* Routes publiques pour les artistes et tournées */}
+                        <Route path="/artistes" element={<FrontLayout><FrontArtists /></FrontLayout>} />
+                        <Route path="/artistes/:id" element={<FrontLayout><FrontArtistDetail /></FrontLayout>} />
+                        <Route path="/tournee" element={<FrontLayout><FrontTour /></FrontLayout>} />
+                        <Route path="/spectacles" element={<FrontLayout><FrontArtists /></FrontLayout>} />
+                        
+                        <Route path="/artist-showcase" element={<FrontArtistShowcase />} />
+                        <Route path="/auth" element={<Auth />} />
+                        <Route path="/install" element={<Install />} />
+                        
+                        {/* Routes du back-office - PROTÉGÉES */}
+                        <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
+                        <Route path="/assignments" element={<ProtectedRoute><Layout><Assignments /></Layout></ProtectedRoute>} />
+                        <Route path="/artists" element={<ProtectedRoute><Layout><Artists /></Layout></ProtectedRoute>} />
+                        <Route path="/artists/:id" element={<ProtectedRoute><Layout><ArtistDetailPage /></Layout></ProtectedRoute>} />
+                        <Route path="/events" element={<ProtectedRoute><Layout><Events /></Layout></ProtectedRoute>} />
+                        <Route path="/events/:id" element={<ProtectedRoute><Layout><EventDetail /></Layout></ProtectedRoute>} />
+                        <Route path="/contacts" element={<ProtectedRoute><Layout><Contacts /></Layout></ProtectedRoute>} />
+                        <Route path="/contacts/:id" element={<ProtectedRoute><Layout><ContactDetail /></Layout></ProtectedRoute>} />
+                        <Route path="/contact-types" element={<ProtectedRoute><Layout><ContactTypes /></Layout></ProtectedRoute>} />
+                        <Route path="/tasks" element={<ProtectedRoute><Layout><Tasks /></Layout></ProtectedRoute>} />
+                        <Route path="/roadshow" element={<ProtectedRoute><Layout><RoadShow /></Layout></ProtectedRoute>} />
+                        <Route path="/messagerie" element={<ProtectedRoute><Layout><Messagerie /></Layout></ProtectedRoute>} />
+                        <Route path="/show-bible" element={<ProtectedRoute><Layout><ShowBible /></Layout></ProtectedRoute>} />
+                        <Route path="/contracts" element={<ProtectedRoute><Layout><Contracts /></Layout></ProtectedRoute>} />
+                        <Route path="/email" element={<ProtectedRoute><Layout><Email /></Layout></ProtectedRoute>} />
+                        <Route path="/email-campaigns" element={<ProtectedRoute><Layout><EmailCampaigns /></Layout></ProtectedRoute>} />
+                        <Route path="/contact-lists" element={<ProtectedRoute><Layout><ContactLists /></Layout></ProtectedRoute>} />
+                        <Route path="/opportunities" element={<ProtectedRoute><Layout><Opportunities /></Layout></ProtectedRoute>} />
+                        <Route path="/event-types" element={<ProtectedRoute><Layout><EventTypes /></Layout></ProtectedRoute>} />
+                        <Route path="/publication-calendar" element={<ProtectedRoute><Layout><PublicationCalendar /></Layout></ProtectedRoute>} />
+                        <Route path="/forms" element={<ProtectedRoute><Layout><Forms /></Layout></ProtectedRoute>} />
+                        <Route path="/user-management" element={<ProtectedRoute><Layout><UserManagement /></Layout></ProtectedRoute>} />
+                        <Route path="/role-permissions" element={<ProtectedRoute><Layout><RolePermissions /></Layout></ProtectedRoute>} />
+                        <Route path="/agenda" element={<ProtectedRoute><Layout><Agenda /></Layout></ProtectedRoute>} />
+                        <Route path="/merchandise" element={<ProtectedRoute><Layout><Merchandise /></Layout></ProtectedRoute>} />
+                        <Route path="/merchandise-backoffice" element={<ProtectedRoute><Layout><MerchandiseBackoffice /></Layout></ProtectedRoute>} />
+                        <Route path="/website" element={<ProtectedRoute><Website /></ProtectedRoute>} />
+                        <Route path="/website-manager" element={<ProtectedRoute><WebsiteManager /></ProtectedRoute>} />
+                        <Route path="/website-backoffice" element={<ProtectedRoute><WebsiteBackoffice /></ProtectedRoute>} />
+                        <Route path="/website/fonts" element={<ProtectedRoute><Layout><FontManager /></Layout></ProtectedRoute>} />
+                        <Route path="/application" element={<ProtectedRoute><Layout><Application /></Layout></ProtectedRoute>} />
+                        <Route path="/quotes" element={<ProtectedRoute><Layout><Quotes /></Layout></ProtectedRoute>} />
+                        <Route path="/preferences" element={<ProtectedRoute><Layout><Preferences /></Layout></ProtectedRoute>} />
+                        
+                        {/* Admin aliases */}
+                        <Route path="/admin" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/Admin" element={<Navigate to="/dashboard" replace />} />
+                        
+                        {/* Pages dynamiques du site web */}
+                        <Route path="/:slug" element={<FrontDynamicPage />} />
+                        
+                        <Route path="*" element={<NotFound />} />
+                      </Routes>
+                    </Suspense>
+                  </WebsiteConfigProvider>
+                </BrowserRouter>
+              </TooltipProvider>
+            </ThemeProvider>
+          </HelmetProvider>
+        </UnifiedAuthProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 };
 
