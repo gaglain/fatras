@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -8,43 +9,41 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log('🔐 useAuth - Setting up auth state listener...');
+    logger.log('🔐 useAuth - Setting up auth state listener...');
     
-    // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log('🔐 Auth state changed:', event, session?.user?.email || 'No user');
+        logger.log('🔐 Auth state changed:', event, session?.user?.email || 'No user');
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
       }
     );
 
-    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('🔐 Initial session:', session?.user?.email || 'No session');
+      logger.log('🔐 Initial session:', session?.user?.email || 'No session');
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
     return () => {
-      console.log('🔐 Cleaning up auth listener');
+      logger.log('🔐 Cleaning up auth listener');
       subscription.unsubscribe();
     };
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    console.log('🔑 Attempting sign in for:', email);
+    logger.log('🔑 Attempting sign in for:', email);
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
     
     if (data.user && !error) {
-      console.log('✅ Sign in successful');
+      logger.log('✅ Sign in successful');
     } else if (error) {
-      console.error('❌ Sign in error:', error);
+      logger.error('❌ Sign in error:', error);
     }
     
     return { data, error };
@@ -63,7 +62,7 @@ export const useAuth = () => {
   };
 
   const signOut = async () => {
-    console.log('👋 Signing out...');
+    logger.log('👋 Signing out...');
     const { error } = await supabase.auth.signOut();
     return { error };
   };

@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthContext } from '@/contexts/UnifiedAuthContext';
+import { logger } from '@/lib/logger';
 
 export interface Artist {
   id: string;
@@ -18,115 +19,119 @@ export interface Artist {
   updated_at: string;
 }
 
+const mapDbToArtist = (profile: any): Artist => ({
+  id: profile.id,
+  user_id: profile.user_id,
+  first_name: profile.first_name || '',
+  last_name: profile.last_name || '',
+  email: profile.email || '',
+  show_name: profile.show_name || '',
+  role: profile.role,
+  phone: profile.phone || '',
+  address: profile.address || '',
+  city: profile.city || '',
+  function_title: profile.function_title || '',
+  created_at: profile.created_at,
+  updated_at: profile.updated_at
+});
+
+const fetchArtists = async (): Promise<Artist[]> => {
+  const { data, error } = await supabase
+    .from('user_profiles')
+    .select('*')
+    .in('role', ['artiste', 'admin', 'super_admin', 'manager']);
+
+  if (error) {
+    logger.error('Error fetching artists:', error);
+    throw error;
+  }
+
+  return (data || []).map(mapDbToArtist);
+};
+
 export const useArtists = () => {
-  const [artists, setArtists] = useState<Artist[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const { user } = useAuthContext();
 
-  useEffect(() => {
-    if (!user) return;
+  const { 
+    data: artists = [], 
+    isLoading: loading,
+    refetch 
+  } = useQuery({
+    queryKey: ['artists'],
+    queryFn: fetchArtists,
+    enabled: !!user,
+    staleTime: 60000,
+  });
 
-    const fetchArtists = async () => {
-      setLoading(true);
+  const addArtistMutation = useMutation({
+    mutationFn: async (artistData: Omit<Artist, 'id' | 'created_at' | 'updated_at'>) => {
       const { data, error } = await supabase
         .from('user_profiles')
-        .select('*')
-        .in('role', ['artiste', 'admin', 'super_admin', 'manager']);
+        .insert({
+          user_id: artistData.user_id,
+          username: artistData.email?.split('@')[0] || 'artist',
+          first_name: artistData.first_name,
+          last_name: artistData.last_name,
+          email: artistData.email,
+          show_name: artistData.show_name,
+          role: artistData.role,
+          phone: artistData.phone,
+          address: artistData.address,
+          city: artistData.city,
+          function_title: artistData.function_title
+        })
+        .select()
+        .single();
 
-      if (data && !error) {
-        const artistsData: Artist[] = data.map(profile => ({
-          id: profile.id,
-          user_id: profile.user_id,
-          first_name: profile.first_name || '',
-          last_name: profile.last_name || '',
-          email: profile.email || '',
-          show_name: profile.show_name || '',
-          role: profile.role,
-          phone: profile.phone || '',
-          address: profile.address || '',
-          city: profile.city || '',
-          function_title: profile.function_title || '',
-          created_at: profile.created_at,
-          updated_at: profile.updated_at
-        }));
-        setArtists(artistsData);
-      }
-      setLoading(false);
-    };
+      if (error) throw error;
+      return mapDbToArtist(data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['artists'] });
+    }
+  });
 
-    fetchArtists();
-  }, [user]);
+  const updateArtistMutation = useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<Artist> }) => {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .update({
+          first_name: updates.first_name,
+          last_name: updates.last_name,
+          email: updates.email,
+          show_name: updates.show_name,
+          role: updates.role,
+          phone: updates.phone,
+          address: updates.address,
+          city: updates.city,
+          function_title: updates.function_title
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return mapDbToArtist(data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['artists'] });
+    }
+  });
 
   const addArtist = async (artistData: Omit<Artist, 'id' | 'created_at' | 'updated_at'>) => {
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .insert({
-        user_id: artistData.user_id,
-        username: artistData.email?.split('@')[0] || 'artist',
-        first_name: artistData.first_name,
-        last_name: artistData.last_name,
-        email: artistData.email,
-        show_name: artistData.show_name,
-        role: artistData.role,
-        phone: artistData.phone,
-        address: artistData.address,
-        city: artistData.city,
-        function_title: artistData.function_title
-      })
-      .select()
-      .single();
-
-    if (data && !error) {
-      const newArtist: Artist = {
-        id: data.id,
-        user_id: data.user_id,
-        first_name: data.first_name || '',
-        last_name: data.last_name || '',
-        email: data.email || '',
-        show_name: data.show_name || '',
-        role: data.role,
-        phone: data.phone || '',
-        address: data.address || '',
-        city: data.city || '',
-        function_title: data.function_title || '',
-        created_at: data.created_at,
-        updated_at: data.updated_at
-      };
-      setArtists(prev => [...prev, newArtist]);
-      return newArtist;
-    }
-    return null;
+    return addArtistMutation.mutateAsync(artistData);
   };
 
   const updateArtist = async (id: string, updates: Partial<Artist>) => {
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .update({
-        first_name: updates.first_name,
-        last_name: updates.last_name,
-        email: updates.email,
-        show_name: updates.show_name,
-        role: updates.role,
-        phone: updates.phone,
-        address: updates.address,
-        city: updates.city,
-        function_title: updates.function_title
-      })
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (data && !error) {
-      setArtists(prev => prev.map(artist => 
-        artist.id === id ? { ...artist, ...updates } : artist
-      ));
-    }
+    return updateArtistMutation.mutateAsync({ id, updates });
   };
 
   return {
     artists,
     loading,
     addArtist,
-    updateArtist
+    updateArtist,
+    refetch
   };
 };

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { SidebarProvider } from '@/components/ui/sidebar';
@@ -6,7 +5,6 @@ import { AppSidebar } from '@/components/AppSidebar';
 import { BackOfficeHeader } from '@/components/BackOfficeHeader';
 import { ChatWidget } from '@/components/ChatWidget';
 import { TaskNotificationBanner } from '@/components/TaskNotificationBanner';
-import { UnifiedNotificationCenter } from '@/components/UnifiedNotificationCenter';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileBottomNav } from '@/components/mobile/MobileBottomNav';
 import { MobileTopBar } from '@/components/mobile/MobileTopBar';
@@ -15,6 +13,7 @@ import { useEmailNotifications } from '@/hooks/useEmailNotifications';
 import { usePWABadge } from '@/hooks/usePWABadge';
 import { useMessagingUnreadCount } from '@/hooks/useMessagingUnreadCount';
 import { PushNotificationPrompt } from '@/components/notifications/PushNotificationPrompt';
+import { logger } from '@/lib/logger';
 
 const adminRoutes = [
   '/admin', '/dashboard', '/artists', '/events', '/agenda', '/contacts',
@@ -44,7 +43,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     location.pathname === route || location.pathname.startsWith(route + '/')
   );
   
-  console.log('🏗️ Layout - WITH CHAT - Path:', location.pathname, 'isAdmin:', isAdminRoute, 'isMobile:', isMobile);
+  logger.log('🏗️ Layout - Path:', location.pathname, 'isAdmin:', isAdminRoute, 'isMobile:', isMobile);
   
   if (!isAdminRoute) {
     return (
