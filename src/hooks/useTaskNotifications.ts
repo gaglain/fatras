@@ -76,44 +76,51 @@ export const useTaskNotifications = () => {
         .lt('due_date', new Date().toISOString());
 
       if (error) throw error;
+      if (!tasks?.length) return;
 
-      for (const task of tasks || []) {
-        const key = `overdue:${task.id}`;
-        const targetUserId = task.assigned_to || task.user_id;
-        
-        // Vérifier d'abord en base si notification existe déjà
-        const { data: existing } = await supabase
+      // Récupérer les notifications existantes en une seule requête
+      const taskIds = tasks.map(t => t.id);
+      const { data: existingNotifs } = await supabase
+        .from('notifications')
+        .select('data')
+        .eq('user_id', user.id)
+        .eq('type', 'task_overdue')
+        .in('data->>task_id', taskIds);
+
+      const existingTaskIds = new Set(
+        (existingNotifs || []).map((n: any) => n.data?.task_id)
+      );
+
+      // Filtrer les tâches qui n'ont pas encore de notification
+      const newTasks = tasks.filter(t => !existingTaskIds.has(t.id));
+
+      // Batch insert des nouvelles notifications (pour user.id uniquement = RLS OK)
+      if (newTasks.length > 0) {
+        const notificationsToInsert = newTasks.map(task => ({
+          user_id: user.id, // ✅ Toujours l'utilisateur actuel = RLS respecté
+          type: 'task_overdue',
+          title: 'Tâche en retard',
+          message: `La tâche "${task.title}" était due le ${new Date(task.due_date).toLocaleDateString('fr-FR')}`,
+          data: {
+            task_id: task.id,
+            task_title: task.title,
+            due_date: task.due_date,
+            priority: task.priority
+          },
+          read: false
+        }));
+
+        await supabase
           .from('notifications')
-          .select('id')
-          .eq('user_id', targetUserId)
-          .eq('type', 'task_overdue')
-          .filter('data->>task_id', 'eq', task.id)
-          .limit(1);
+          .upsert(notificationsToInsert, { 
+            onConflict: 'user_id,type,data->>task_id',
+            ignoreDuplicates: true 
+          });
+      }
 
-        // Ne créer que si elle n'existe pas déjà
-        if (!existing || existing.length === 0) {
-          const { error: insertError } = await supabase
-            .from('notifications')
-            .insert({
-              user_id: targetUserId,
-              type: 'task_overdue',
-              title: 'Tâche en retard',
-              message: `La tâche "${task.title}" était due le ${new Date(task.due_date).toLocaleDateString('fr-FR')}`,
-              data: {
-                task_id: task.id,
-                task_title: task.title,
-                due_date: task.due_date,
-                priority: task.priority
-              },
-              read: false
-            });
-          
-          if (insertError) {
-            console.error('❌ Erreur création notification overdue:', insertError);
-          }
-        }
-
-        // Afficher le toast seulement s'il n'a pas déjà été montré
+      // Afficher les toasts (côté client uniquement)
+      for (const task of tasks) {
+        const key = `overdue:${task.id}`;
         if (!hasShownToast(key)) {
           toast.error(`Tâche en retard: ${task.title}`, {
             description: `Due le ${new Date(task.due_date).toLocaleDateString('fr-FR')}`,
@@ -134,6 +141,7 @@ export const useTaskNotifications = () => {
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       tomorrow.setHours(23, 59, 59, 999);
+      const today = new Date().toISOString().split('T')[0];
 
       const { data: tasks, error } = await supabase
         .from('tasks')
@@ -145,59 +153,72 @@ export const useTaskNotifications = () => {
         .lt('due_date', tomorrow.toISOString());
 
       if (error) throw error;
+      if (!tasks?.length) return;
 
-      for (const task of tasks || []) {
-        const today = new Date().toISOString().split('T')[0];
-        const key = `due_soon:${task.id}:${today}`;
-        const targetUserId = task.assigned_to || task.user_id;
-        
-        // Vérifier d'abord en base
-        const { data: existing } = await supabase
-          .from('notifications')
-          .select('id')
-          .eq('user_id', targetUserId)
-          .eq('type', 'task_due_soon')
-          .filter('data->>task_id', 'eq', task.id)
-          .gte('created_at', `${today}T00:00:00Z`)
-          .limit(1);
+      // Récupérer les notifications existantes pour aujourd'hui en une seule requête
+      const taskIds = tasks.map(t => t.id);
+      const { data: existingNotifs } = await supabase
+        .from('notifications')
+        .select('data')
+        .eq('user_id', user.id)
+        .eq('type', 'task_due_soon')
+        .in('data->>task_id', taskIds)
+        .gte('created_at', `${today}T00:00:00Z`);
 
-        const dueDate = new Date(task.due_date);
-        const now = new Date();
-        const hoursUntilDue = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60));
+      const existingTaskIds = new Set(
+        (existingNotifs || []).map((n: any) => n.data?.task_id)
+      );
 
-        let message = '';
-        if (hoursUntilDue <= 1) {
-          message = `La tâche "${task.title}" est due dans moins d'une heure`;
-        } else if (hoursUntilDue <= 24) {
-          message = `La tâche "${task.title}" est due dans ${hoursUntilDue} heures`;
-        }
+      // Préparer les nouvelles notifications
+      const now = new Date();
+      const newTasks = tasks.filter(t => !existingTaskIds.has(t.id));
 
-        // Ne créer que si elle n'existe pas déjà
-        if (!existing || existing.length === 0) {
-          const { error: insertError } = await supabase
-            .from('notifications')
-            .insert({
-              user_id: targetUserId,
-              type: 'task_due_soon',
-              title: 'Tâche bientôt due',
-              message: message || `La tâche "${task.title}" est bientôt due`,
-              data: {
-                task_id: task.id,
-                task_title: task.title,
-                due_date: task.due_date,
-                priority: task.priority,
-                hours_until_due: hoursUntilDue
-              },
-              read: false
-            });
+      if (newTasks.length > 0) {
+        const notificationsToInsert = newTasks.map(task => {
+          const dueDate = new Date(task.due_date);
+          const hoursUntilDue = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60));
           
-          if (insertError) {
-            console.error('❌ Erreur création notification due_soon:', insertError);
+          let message = '';
+          if (hoursUntilDue <= 1) {
+            message = `La tâche "${task.title}" est due dans moins d'une heure`;
+          } else if (hoursUntilDue <= 24) {
+            message = `La tâche "${task.title}" est due dans ${hoursUntilDue} heures`;
           }
-        }
 
-        // Afficher le toast seulement s'il n'a pas été montré et si c'est urgent
-        if (!hasShownToast(key) && hoursUntilDue <= 2 && message) {
+          return {
+            user_id: user.id, // ✅ Toujours l'utilisateur actuel = RLS respecté
+            type: 'task_due_soon',
+            title: 'Tâche bientôt due',
+            message: message || `La tâche "${task.title}" est bientôt due`,
+            data: {
+              task_id: task.id,
+              task_title: task.title,
+              due_date: task.due_date,
+              priority: task.priority,
+              hours_until_due: hoursUntilDue
+            },
+            read: false
+          };
+        });
+
+        await supabase
+          .from('notifications')
+          .upsert(notificationsToInsert, { 
+            onConflict: 'user_id,type,data->>task_id',
+            ignoreDuplicates: true 
+          });
+      }
+
+      // Afficher les toasts urgents (côté client uniquement)
+      for (const task of tasks) {
+        const dueDate = new Date(task.due_date);
+        const hoursUntilDue = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60));
+        const key = `due_soon:${task.id}:${today}`;
+        
+        if (!hasShownToast(key) && hoursUntilDue <= 2) {
+          const message = hoursUntilDue <= 1 
+            ? `Due dans moins d'une heure` 
+            : `Due dans ${hoursUntilDue} heures`;
           toast.warning(`Tâche urgente: ${task.title}`, {
             description: message,
             duration: 6000,
