@@ -1,7 +1,15 @@
 import React from 'react';
+import DOMPurify from 'dompurify';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Send } from 'lucide-react';
+
+const sanitizeHtml = (html: string): string => {
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li', 'span', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
+    ALLOWED_ATTR: ['href', 'target', 'style', 'class'],
+  });
+};
 
 interface EmailPreviewProps {
   blocks: any[];
@@ -16,7 +24,7 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({ blocks, onClose, onS
         return (
           <div
             style={{ margin: '10px 0' }}
-            dangerouslySetInnerHTML={{ __html: block.content.html || '' }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(block.content.html || '') }}
           />
         );
       case 'heading':

@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import DOMPurify from 'dompurify';
 import { Card, CardContent } from '@/components/ui/card';
+
+const sanitizeHtml = (html: string): string => {
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li', 'span', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
+    ALLOWED_ATTR: ['href', 'target', 'style', 'class'],
+  });
+};
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
@@ -638,7 +646,7 @@ export const ModernEmailEditor: React.FC<ModernEmailEditorProps> = ({
 
                           <div className="p-4">
                             {block.type === 'text' && (
-                              <div dangerouslySetInnerHTML={{ __html: block.content.html || '<p>Texte vide</p>' }} />
+                              <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(block.content.html || '<p>Texte vide</p>') }} />
                             )}
                             {block.type === 'heading' && (
                               <div style={{ color: block.content.color, textAlign: block.content.align }}>
@@ -745,7 +753,7 @@ export const ModernEmailEditor: React.FC<ModernEmailEditorProps> = ({
                               <div className="grid grid-cols-2 gap-4">
                                 {block.content.columns?.map((col: any, idx: number) => (
                                   <div key={idx} className="border-l-2 border-muted pl-4">
-                                    <div dangerouslySetInnerHTML={{ __html: col.html || '<p>Colonne vide</p>' }} />
+                                    <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(col.html || '<p>Colonne vide</p>') }} />
                                   </div>
                                 ))}
                               </div>
