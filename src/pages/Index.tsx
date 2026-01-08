@@ -3,12 +3,13 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useDomainRouting } from '@/hooks/useDomainRouting';
 import { FrontHome } from './FrontHome';
+import { logger } from '@/lib/logger';
 
 const Index = () => {
   const { user, loading } = useAuth();
   const { type: domainType, isPublicSite, isBookingSite } = useDomainRouting();
 
-  console.log('🏠 Index - Domain type:', domainType, 'User:', user?.email || 'none');
+  logger.log('🏠 Index - Domain type:', domainType, 'User:', user?.email || 'none');
 
   // Loading state
   if (loading) {
@@ -24,17 +25,17 @@ const Index = () => {
 
   // fatras.net → Show public site directly at /
   if (isPublicSite) {
-    console.log('🌍 Rendering public site at root');
+    logger.log('🌍 Rendering public site at root');
     return <FrontHome />;
   }
 
   // booking.fatras.net → Redirect to auth or dashboard
   if (isBookingSite) {
     if (user) {
-      console.log('🎫 Booking domain with user → dashboard');
+      logger.log('🎫 Booking domain with user → dashboard');
       return <Navigate to="/dashboard" replace />;
     }
-    console.log('🎫 Booking domain without user → auth');
+    logger.log('🎫 Booking domain without user → auth');
     return <Navigate to="/auth" replace />;
   }
 

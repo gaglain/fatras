@@ -4,6 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useTheme } from 'next-themes';
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { logger } from '@/lib/logger';
 
 import {
   Sidebar,
@@ -27,7 +28,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const { theme } = useTheme();
   const { navigation, openSections, toggleSection } = useNavigation();
   
-  console.log('🎨 AppSidebar - Current theme:', theme);
+  logger.log('🎨 AppSidebar - Current theme:', theme);
 
   const isActive = (path: string) => {
     return location.pathname === path || location.pathname.startsWith(path + '/');
