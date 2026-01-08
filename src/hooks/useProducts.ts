@@ -1,41 +1,32 @@
-import React, { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 
+const PRODUCTS_QUERY_KEY = ['products'];
+
 export const useProducts = () => {
-  const [products, setProducts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    fetchProducts();
-  }, [user]);
-
-  const fetchProducts = async () => {
-    if (!user) return;
-    
-    setLoading(true);
-    try {
+  const { data: products = [], isLoading: loading } = useQuery({
+    queryKey: PRODUCTS_QUERY_KEY,
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('products')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setProducts(data || []);
-    } catch (error: any) {
-      console.error('Erreur lors du chargement des produits:', error);
-      toast.error('Erreur lors du chargement des produits');
-    } finally {
-      setLoading(false);
-    }
-  };
+      return data || [];
+    },
+    enabled: !!user,
+  });
 
-  const createProduct = async (productData: any) => {
-    if (!user) return;
-
-    try {
+  const createMutation = useMutation({
+    mutationFn: async (productData: any) => {
+      if (!user) throw new Error('User not authenticated');
+      
       const { data, error } = await supabase
         .from('products')
         .insert({
@@ -46,21 +37,22 @@ export const useProducts = () => {
         .single();
 
       if (error) throw error;
-      
-      setProducts(prev => [data, ...prev]);
-      toast.success('Produit créé avec succès');
       return data;
-    } catch (error: any) {
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: PRODUCTS_QUERY_KEY });
+      toast.success('Produit créé avec succès');
+    },
+    onError: (error: any) => {
       console.error('Erreur lors de la création du produit:', error);
       toast.error('Erreur lors de la création du produit');
-      throw error;
-    }
-  };
+    },
+  });
 
-  const updateProduct = async (id: string, productData: any) => {
-    if (!user) return;
-
-    try {
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, productData }: { id: string; productData: any }) => {
+      if (!user) throw new Error('User not authenticated');
+      
       const { data, error } = await supabase
         .from('products')
         .update(productData)
@@ -69,43 +61,46 @@ export const useProducts = () => {
         .single();
 
       if (error) throw error;
-      
-      setProducts(prev => prev.map(p => p.id === id ? data : p));
-      toast.success('Produit modifié avec succès');
       return data;
-    } catch (error: any) {
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: PRODUCTS_QUERY_KEY });
+      toast.success('Produit modifié avec succès');
+    },
+    onError: (error: any) => {
       console.error('Erreur lors de la modification du produit:', error);
       toast.error('Erreur lors de la modification du produit');
-      throw error;
-    }
-  };
+    },
+  });
 
-  const deleteProduct = async (id: string) => {
-    if (!user) return;
-
-    try {
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      if (!user) throw new Error('User not authenticated');
+      
       const { error } = await supabase
         .from('products')
         .delete()
         .eq('id', id);
 
       if (error) throw error;
-      
-      setProducts(prev => prev.filter(p => p.id !== id));
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: PRODUCTS_QUERY_KEY });
       toast.success('Produit supprimé avec succès');
-    } catch (error: any) {
+    },
+    onError: (error: any) => {
       console.error('Erreur lors de la suppression du produit:', error);
       toast.error('Erreur lors de la suppression du produit');
-      throw error;
-    }
-  };
+    },
+  });
 
   return {
     products,
     loading,
-    createProduct,
-    updateProduct,
-    deleteProduct,
-    refetch: fetchProducts
+    createProduct: createMutation.mutateAsync,
+    updateProduct: (id: string, productData: any) => 
+      updateMutation.mutateAsync({ id, productData }),
+    deleteProduct: deleteMutation.mutateAsync,
+    refetch: () => queryClient.invalidateQueries({ queryKey: PRODUCTS_QUERY_KEY }),
   };
 };
