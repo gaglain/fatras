@@ -114,7 +114,7 @@ export const useMessaging = () => {
         .select('user_id, first_name, last_name, username, email')
         .in('user_id', allUserIds);
 
-      if (profilesErr) console.warn('Error fetching profiles:', profilesErr);
+      if (profilesErr) logger.warn('Error fetching profiles:', profilesErr);
 
       const profilesByUserId: Record<string, any> = {};
       (profiles || []).forEach((p: any) => {
@@ -153,7 +153,7 @@ export const useMessaging = () => {
 
       setChannels(transformedChannels);
     } catch (error) {
-      console.error('Error fetching channels:', error);
+      logger.error('Error fetching channels:', error);
     }
   };
 
@@ -189,7 +189,7 @@ export const useMessaging = () => {
         member_count: undefined
       }));
     } catch (error) {
-      console.error('Error fetching available channels:', error);
+      logger.error('Error fetching available channels:', error);
       return [];
     }
   };
@@ -214,7 +214,7 @@ export const useMessaging = () => {
         .select('user_id, first_name, last_name, username')
         .in('user_id', userIds);
 
-      if (profilesErr) console.warn('Error fetching message author profiles:', profilesErr);
+      if (profilesErr) logger.warn('Error fetching message author profiles:', profilesErr);
 
       const profilesByUserId: Record<string, any> = {};
       (profiles || []).forEach((p: any) => {
@@ -240,7 +240,7 @@ export const useMessaging = () => {
         [channelId]: transformedMessages
       }));
     } catch (error) {
-      console.error('Error fetching messages:', error);
+      logger.error('Error fetching messages:', error);
     }
   };
 
@@ -260,7 +260,7 @@ export const useMessaging = () => {
       }
 
       // Fallback: fetch from user_profiles directly
-      console.warn('RPC get_active_users_basic not available, using fallback', rpcError);
+      logger.warn('RPC get_active_users_basic not available, using fallback', rpcError);
       const { data: profiles, error: profilesError } = await supabase
         .from('user_profiles')
         .select('user_id, first_name, last_name, username, email, is_active')
@@ -270,7 +270,7 @@ export const useMessaging = () => {
       if (profilesError) throw profilesError;
       setAvailableUsers(profiles || []);
     } catch (error) {
-      console.error('Error fetching available users:', error);
+      logger.error('Error fetching available users:', error);
       setAvailableUsers([]);
     }
   };
@@ -301,7 +301,7 @@ export const useMessaging = () => {
       }
 
       // Fallback: manual creation if RPC is unavailable
-      console.warn('RPC create_messaging_channel not available, falling back to manual insert', error);
+      logger.warn('RPC create_messaging_channel not available, falling back to manual insert', error);
 
       const { data: channelRow, error: insertErr } = await supabase
         .from('messaging_channels')
@@ -331,7 +331,7 @@ export const useMessaging = () => {
             .from('messaging_channel_members')
             .insert(payload)
             .then(({ error }) => {
-              if (error && error.code !== '23505') console.warn('Member insert warning:', error);
+              if (error && error.code !== '23505') logger.warn('Member insert warning:', error);
             });
         }
       }
@@ -339,7 +339,7 @@ export const useMessaging = () => {
       await fetchChannels();
       return channelRow.id as string;
     } catch (error) {
-      console.error('Error creating channel (RPC + fallback failed):', error);
+      logger.error('Error creating channel (RPC + fallback failed):', error);
       return null;
     }
   };
@@ -361,7 +361,7 @@ export const useMessaging = () => {
       }
 
       // Fallback: manual creation
-      console.warn('RPC create_direct_message_channel not available, falling back to manual insert', rpcErr);
+      logger.warn('RPC create_direct_message_channel not available, falling back to manual insert', rpcErr);
 
       const dmName = `DM-${user.id}-${otherUserId}`;
       const { data: channelRow, error: insertErr } = await supabase
@@ -388,7 +388,7 @@ export const useMessaging = () => {
       setTimeout(() => { fetchChannels(); }, 100);
       return channelRow.id as string;
     } catch (error) {
-      console.error('Error creating DM (RPC + fallback failed):', error);
+      logger.error('Error creating DM (RPC + fallback failed):', error);
       return null;
     }
   };
@@ -429,7 +429,7 @@ export const useMessaging = () => {
         const errorMsg = error.message || 'Erreur inconnue';
         setLastError(errorMsg);
         toast.error(`Erreur: ${errorMsg}`);
-        console.error('Error sending message:', error);
+        logger.error('Error sending message:', error);
         return null;
       }
 
@@ -461,7 +461,7 @@ export const useMessaging = () => {
       const errorMsg = error?.message || 'Erreur réseau';
       setLastError(errorMsg);
       toast.error(`Échec de l'envoi: ${errorMsg}`);
-      console.error('Error sending message:', error);
+      logger.error('Error sending message:', error);
       return null;
     }
   };
@@ -508,7 +508,7 @@ export const useMessaging = () => {
       toast.error('Vous n\'avez pas les droits pour supprimer ce canal');
       return false;
     } catch (error: any) {
-      console.error('Error deleting channel:', error);
+      logger.error('Error deleting channel:', error);
       toast.error(`Erreur: ${error?.message || 'Impossible de supprimer'}`);
       return false;
     }
@@ -530,7 +530,7 @@ export const useMessaging = () => {
       await fetchChannels();
       return true;
     } catch (error) {
-      console.error('Error deleting roadshow channels:', error);
+      logger.error('Error deleting roadshow channels:', error);
       return false;
     }
   };
@@ -548,14 +548,14 @@ export const useMessaging = () => {
         
         // Ignore duplicate key errors
         if (error && error.code !== '23505' && !error.message?.includes('duplicate')) {
-          console.warn('Error adding member:', error);
+          logger.warn('Error adding member:', error);
         }
       }
 
       await fetchChannels();
       return true;
     } catch (error) {
-      console.error('Error adding members:', error);
+      logger.error('Error adding members:', error);
       return false;
     }
   };
@@ -573,7 +573,7 @@ export const useMessaging = () => {
         .maybeSingle();
       
       if (checkErr) {
-        console.warn('ensureMembership check warning:', checkErr);
+        logger.warn('ensureMembership check warning:', checkErr);
       }
       
       if (existing) return true;
@@ -588,12 +588,12 @@ export const useMessaging = () => {
         if (insertErr.code === '23505' || insertErr.message?.includes('duplicate')) {
           return true;
         }
-        console.warn('ensureMembership insert warning:', insertErr);
+        logger.warn('ensureMembership insert warning:', insertErr);
         return false;
       }
       return true;
     } catch (e) {
-      console.error('ensureMembership error:', e);
+      logger.error('ensureMembership error:', e);
       return false;
     }
   };
@@ -678,7 +678,7 @@ export const useMessaging = () => {
       // Refresh channels list to include the default if it was just created
       await fetchChannels();
     } catch (e) {
-      console.warn('ensureDefaultGeneralMembership error:', e);
+      logger.warn('ensureDefaultGeneralMembership error:', e);
     }
   };
 
@@ -698,7 +698,7 @@ export const useMessaging = () => {
       await fetchChannels();
       return true;
     } catch (error) {
-      console.error('Error removing member:', error);
+      logger.error('Error removing member:', error);
       return false;
     }
   };
@@ -726,7 +726,7 @@ export const useMessaging = () => {
         return { ...ch, members: updatedMembers } as Channel;
       }));
     } catch (error) {
-      console.error('Error marking channel as read:', error);
+      logger.error('Error marking channel as read:', error);
     }
   };
 
@@ -736,7 +736,7 @@ export const useMessaging = () => {
       return;
     }
 
-    console.log('🔄 Fetching messaging data for user:', user.id);
+    logger.log('🔄 Fetching messaging data for user:', user.id);
     fetchChannels();
     fetchAvailableUsers();
     ensureDefaultGeneralMembership();
@@ -747,7 +747,7 @@ export const useMessaging = () => {
   useEffect(() => {
     if (!user?.id) return;
 
-    console.log('📡 Setting up real-time subscription for messaging');
+    logger.log('📡 Setting up real-time subscription for messaging');
     
     // Audio notification helper
     const playNotificationSound = () => {
@@ -768,7 +768,7 @@ export const useMessaging = () => {
         oscillator.start(audioContext.currentTime);
         oscillator.stop(audioContext.currentTime + 0.3);
       } catch (error) {
-        console.warn('Could not play notification sound:', error);
+        logger.warn('Could not play notification sound:', error);
       }
     };
     
@@ -825,7 +825,7 @@ export const useMessaging = () => {
           table: 'messaging_channels'
         },
         (payload) => {
-          console.log('📢 New channel created:', payload.new);
+          logger.log('📢 New channel created:', payload.new);
           fetchChannels();
         }
       )
@@ -838,26 +838,26 @@ export const useMessaging = () => {
           filter: `user_id=eq.${user.id}`
         },
         () => {
-          console.log('👤 You were added to a channel, refreshing channels');
+          logger.log('👤 You were added to a channel, refreshing channels');
           fetchChannels();
         }
       );
 
     try {
       channel.subscribe((status) => {
-        console.log('📡 Messaging subscription status:', status);
+        logger.log('📡 Messaging subscription status:', status);
       });
     } catch (err) {
-      console.error('❌ Messaging realtime subscribe error:', err);
+      logger.error('❌ Messaging realtime subscribe error:', err);
     }
 
     return () => {
-      console.log('🧹 Cleaning up messaging subscription');
+      logger.log('🧹 Cleaning up messaging subscription');
       setTimeout(() => {
         try {
           supabase.removeChannel(channel);
         } catch (err) {
-          console.warn('⚠️ Warning during messaging cleanup:', err);
+          logger.warn('⚠️ Warning during messaging cleanup:', err);
         }
       }, 100);
     };
@@ -880,7 +880,7 @@ export const useMessaging = () => {
       await fetchChannels();
       return true;
     } catch (error) {
-      console.error('Error joining channel:', error);
+      logger.error('Error joining channel:', error);
       return false;
     }
   };
