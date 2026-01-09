@@ -5,6 +5,7 @@ import { Upload, Download, X, FileText, AlertCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 interface CSVImporterProps {
   isOpen: boolean;
@@ -15,7 +16,7 @@ interface CSVImporterProps {
 }
 
 export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImport, contactLists = [], onCreateList }) => {
-  console.log('🔄 CSVImporter component loaded');
+  logger.log('🔄 CSVImporter component loaded');
   
   const [dragActive, setDragActive] = useState(false);
   const [csvData, setCsvData] = useState<any[]>([]);
@@ -45,7 +46,7 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
   ];
 
   const generateTemplate = () => {
-    console.log('📥 Generating CSV template');
+    logger.log('📥 Generating CSV template');
     const csvContent = [
       expectedFields.map(field => field.label.replace(' *', '')).join(','),
       'Jean,Dupont,jean.dupont@example.com,06 12 34 56 78,Directeur,"123 rue Example",Paris,75001,France,prospect,Site web,"Notes sur ce contact"',
@@ -81,20 +82,20 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
     setDragActive(false);
     
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      console.log('📁 File dropped:', e.dataTransfer.files[0].name);
+      logger.log('📁 File dropped:', e.dataTransfer.files[0].name);
       handleFile(e.dataTransfer.files[0]);
     }
   };
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      console.log('📁 File selected:', e.target.files[0].name);
+      logger.log('📁 File selected:', e.target.files[0].name);
       handleFile(e.target.files[0]);
     }
   };
 
   const handleFile = (file: File) => {
-    console.log('📄 Processing file:', file.name);
+    logger.log('📄 Processing file:', file.name);
     const reader = new FileReader();
     reader.onload = (e) => {
       const text = e.target?.result as string;
@@ -104,7 +105,7 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
   };
 
   const parseCSV = (text: string) => {
-    console.log('🔍 Parsing CSV data');
+    logger.log('🔍 Parsing CSV data');
     const lines = text.split('\n').filter(line => line.trim());
     if (lines.length < 2) {
       toast.error('Le fichier CSV doit contenir au moins une ligne d\'en-tête et une ligne de données');
@@ -141,7 +142,7 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
       return row;
     });
 
-    console.log('📊 Parsed CSV:', { headers, rowCount: rows.length });
+    logger.log('📊 Parsed CSV:', { headers, rowCount: rows.length });
     setHeaders(headers);
     setCsvData(rows);
     setStep('mapping');
@@ -167,13 +168,13 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
       }
     });
     setMapping(autoMapping);
-    console.log('🔧 Auto-mapping applied:', autoMapping);
+    logger.log('🔧 Auto-mapping applied:', autoMapping);
   };
 
   const handleImport = async () => {
     if (importing) return;
     
-    console.log('💾 Starting import process');
+    logger.log('💾 Starting import process');
     setImporting(true);
     
     try {
@@ -222,7 +223,7 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
         return mappedRow;
       });
 
-      console.log('📤 Mapped data ready for import:', mappedData.length, 'contacts');
+      logger.log('📤 Mapped data ready for import:', mappedData.length, 'contacts');
       
       // Import par lots pour éviter les timeouts
       const batchSize = 50;
@@ -238,13 +239,13 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
           .insert(batch);
 
         if (error) {
-          console.error('Error inserting batch:', error);
+          logger.error('Error inserting batch:', error);
           toast.error(`Erreur lors de l'import du lot (${totalImported}/${mappedData.length})`);
           break;
         }
         
         totalImported += batch.length;
-        console.log(`✅ Batch imported: ${totalImported}/${mappedData.length}`);
+        logger.log(`✅ Batch imported: ${totalImported}/${mappedData.length}`);
       }
 
       if (totalImported === mappedData.length) {
@@ -254,7 +255,7 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
         setStep('assign-list');
       }
     } catch (error) {
-      console.error('Import error:', error);
+      logger.error('Import error:', error);
       toast.error('Erreur lors de l\'import');
     } finally {
       setImporting(false);
@@ -262,7 +263,7 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
   };
 
   const resetImporter = () => {
-    console.log('🔄 Resetting importer');
+    logger.log('🔄 Resetting importer');
     setCsvData([]);
     setHeaders([]);
     setMapping({});
@@ -321,7 +322,7 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
       resetImporter();
       onClose();
     } catch (error) {
-      console.error('Erreur lors de l\'assignation à la liste:', error);
+      logger.error('Erreur lors de l\'assignation à la liste:', error);
       toast.error('Erreur lors de l\'assignation à la liste');
     }
   };
@@ -329,13 +330,13 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
   const isValid = () => {
     const requiredFields = expectedFields.filter(f => f.required);
     const isValidMapping = requiredFields.every(field => mapping[field.key]);
-    console.log('✅ Validation check:', { isValidMapping, mapping });
+    logger.log('✅ Validation check:', { isValidMapping, mapping });
     return isValidMapping;
   };
 
   if (!isOpen) return null;
 
-  console.log('🎨 Rendering CSVImporter - Step:', step);
+  logger.log('🎨 Rendering CSVImporter - Step:', step);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -455,16 +456,12 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
               ))}
             </div>
 
-            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
-              <Button onClick={() => setStep('upload')} variant="outline" className="flex-1">
-                Retour
+            <div className="flex justify-between pt-4 border-t">
+              <Button variant="outline" onClick={resetImporter}>
+                Annuler
               </Button>
-              <Button 
-                onClick={() => setStep('preview')} 
-                disabled={!isValid()}
-                className="flex-1"
-              >
-                Aperçu
+              <Button onClick={() => setStep('preview')} disabled={!isValid()}>
+                Continuer vers l'aperçu
               </Button>
             </div>
           </div>
@@ -473,28 +470,28 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
         {step === 'preview' && (
           <div className="space-y-6">
             <div>
-              <h3 className="text-lg font-medium">Aperçu des données</h3>
+              <h3 className="text-lg font-medium">Aperçu de l'import</h3>
               <p className="text-sm text-gray-600">
-                Vérifiez que les données sont correctement importées ({csvData.length} contacts)
+                Vérifiez les données avant l'import ({csvData.length} contacts)
               </p>
             </div>
 
-            <div className="max-h-96 overflow-auto border rounded-lg">
-              <table className="w-full text-sm">
+            <div className="max-h-80 overflow-auto border rounded-lg">
+              <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50 sticky top-0">
                   <tr>
                     {expectedFields.filter(f => mapping[f.key]).map(field => (
-                      <th key={field.key} className="px-4 py-2 text-left font-medium border-r">
-                        {field.label}
+                      <th key={field.key} className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                        {field.label.replace(' *', '')}
                       </th>
                     ))}
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="bg-white divide-y divide-gray-200">
                   {csvData.slice(0, 5).map((row, index) => (
-                    <tr key={index} className="border-t">
+                    <tr key={index}>
                       {expectedFields.filter(f => mapping[f.key]).map(field => (
-                        <td key={field.key} className="px-4 py-2 border-r">
+                        <td key={field.key} className="px-3 py-2 text-sm text-gray-900 whitespace-nowrap">
                           {row[mapping[field.key]] || '-'}
                         </td>
                       ))}
@@ -503,23 +500,87 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
                 </tbody>
               </table>
             </div>
-
+            
             {csvData.length > 5 && (
-              <p className="text-sm text-gray-500">
-                ... et {csvData.length - 5} contacts supplémentaires
+              <p className="text-sm text-gray-500 text-center">
+                ... et {csvData.length - 5} autres contacts
               </p>
             )}
 
-            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
-              <Button onClick={() => setStep('mapping')} variant="outline" className="flex-1">
+            <div className="flex justify-between pt-4 border-t">
+              <Button variant="outline" onClick={() => setStep('mapping')}>
                 Retour
               </Button>
-              <Button 
-                onClick={handleImport} 
-                disabled={importing}
-                className="flex-1 bg-green-600 hover:bg-green-700"
-              >
+              <Button onClick={handleImport} disabled={importing}>
                 {importing ? 'Import en cours...' : `Importer ${csvData.length} contacts`}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {step === 'assign-list' && (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-medium">Assigner à une liste (optionnel)</h3>
+              <p className="text-sm text-gray-600">
+                Vous pouvez ajouter les contacts importés à une liste existante ou en créer une nouvelle
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Ajouter à une liste existante
+                </label>
+                <select
+                  value={selectedListId}
+                  onChange={(e) => {
+                    setSelectedListId(e.target.value);
+                    if (e.target.value) setNewListName('');
+                  }}
+                  className="w-full p-2 border rounded-md"
+                  disabled={!!newListName.trim()}
+                >
+                  <option value="">-- Sélectionner une liste --</option>
+                  {contactLists.map(list => (
+                    <option key={list.id} value={list.id}>{list.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex items-center">
+                <div className="flex-grow border-t border-gray-300"></div>
+                <span className="px-3 text-sm text-gray-500">ou</span>
+                <div className="flex-grow border-t border-gray-300"></div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Créer une nouvelle liste
+                </label>
+                <input
+                  type="text"
+                  value={newListName}
+                  onChange={(e) => {
+                    setNewListName(e.target.value);
+                    if (e.target.value) setSelectedListId('');
+                  }}
+                  placeholder="Nom de la nouvelle liste..."
+                  className="w-full p-2 border rounded-md"
+                  disabled={!!selectedListId}
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-between pt-4 border-t">
+              <Button variant="outline" onClick={() => { resetImporter(); onClose(); }}>
+                Passer cette étape
+              </Button>
+              <Button 
+                onClick={handleAssignToList} 
+                disabled={!selectedListId && !newListName.trim()}
+              >
+                {newListName.trim() ? 'Créer la liste et assigner' : 'Assigner à la liste'}
               </Button>
             </div>
           </div>

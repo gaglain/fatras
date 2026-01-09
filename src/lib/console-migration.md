@@ -36,9 +36,9 @@ Remplacer: `logger.$1(`
 - [x] `src/components/Layout.tsx`
 - [x] `src/pages/Index.tsx`
 - [x] `src/components/AppSidebar.tsx`
-- [ ] `src/hooks/useMessaging.ts` (167 occurrences)
-- [ ] `src/hooks/useWebsitePagesSync.ts` (104 occurrences)
-- [ ] `src/components/CSVImporter.tsx`
+- [x] `src/hooks/useMessaging.ts` ✅ migré
+- [x] `src/hooks/useWebsitePagesSync.ts` ✅ migré
+- [x] `src/components/CSVImporter.tsx` ✅ migré
 - [ ] Autres hooks dans `src/hooks/`
 
 ## Fichiers déjà migrés
