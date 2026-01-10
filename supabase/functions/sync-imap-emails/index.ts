@@ -418,25 +418,73 @@ const handler = async (req: Request): Promise<Response> => {
         }
       }
 
-      // Sauvegarder les emails reçus dans inbound_emails
+      // Sauvegarder les emails reçus dans inbound_emails ET emails (pour le realtime)
       let syncedInbox = 0;
       for (const email of inboxEmails) {
         try {
-          const { data: existing } = await supabase
+          // Vérifier si l'email existe déjà dans inbound_emails
+          const { data: existingInbound } = await supabase
             .from('inbound_emails')
             .select('id')
             .eq('message_id', email.message_id)
             .eq('user_id', userId)
-            .single();
+            .maybeSingle();
           
-          if (!existing) {
+          // Vérifier si l'email existe déjà dans emails
+          const { data: existingEmail } = await supabase
+            .from('emails')
+            .select('id')
+            .eq('message_id', email.message_id)
+            .eq('user_id', userId)
+            .maybeSingle();
+          
+          let inserted = false;
+          
+          // Insérer dans inbound_emails si pas encore présent
+          if (!existingInbound) {
             const { error: insertError } = await supabase
               .from('inbound_emails')
               .insert(email);
             
-            if (!insertError) {
+            if (insertError) {
+              console.error('⚠️ Erreur insertion inbound_email:', insertError);
+            }
+          }
+          
+          // AUSSI insérer dans la table emails pour déclencher le realtime et le trigger de notification
+          if (!existingEmail) {
+            // Trouver le contact correspondant à l'expéditeur
+            const { data: contact } = await supabase
+              .from('contacts')
+              .select('id')
+              .ilike('email', email.from_email)
+              .maybeSingle();
+
+            const { error: emailInsertError } = await supabase
+              .from('emails')
+              .insert({
+                user_id: userId,
+                message_id: email.message_id,
+                from_email: email.from_email,
+                from_name: email.from_name,
+                to_email: email.to_email,
+                subject: email.subject,
+                content: email.content || '',
+                html_content: email.html_content || '',
+                direction: 'received',
+                status: 'delivered',
+                provider: 'imap',
+                received_at: email.received_at,
+                contact_id: contact?.id || null,
+                labels: email.labels,
+                is_read: false
+              });
+            
+            if (!emailInsertError) {
               syncedInbox++;
+              inserted = true;
               
+              // Créer une notification pour cet email
               try {
                 await supabase
                   .from('email_notifications')
@@ -448,8 +496,30 @@ const handler = async (req: Request): Promise<Response> => {
                     is_read: false
                   });
               } catch (notifError) {
-                console.error('⚠️ Erreur création notification:', notifError);
+                console.error('⚠️ Erreur création notification email_notifications:', notifError);
               }
+              
+              // AUSSI créer dans la table notifications principale (pour le UnifiedNotificationCenter)
+              try {
+                await supabase
+                  .from('notifications')
+                  .insert({
+                    user_id: userId,
+                    type: 'new_email',
+                    title: 'Nouveau email reçu',
+                    message: `De: ${email.from_name || email.from_email} - ${email.subject || 'Sans objet'}`,
+                    data: {
+                      from_email: email.from_email,
+                      from_name: email.from_name,
+                      subject: email.subject
+                    },
+                    read: false
+                  });
+              } catch (notifError) {
+                console.error('⚠️ Erreur création notification principale:', notifError);
+              }
+            } else {
+              console.error('❌ Erreur insertion email:', emailInsertError);
             }
           }
         } catch (error) {
