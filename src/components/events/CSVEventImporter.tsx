@@ -1,11 +1,15 @@
 
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Upload, Download, X, FileText, AlertCircle } from 'lucide-react';
+import { Upload, Download, FileText, AlertCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
+
+interface CSVRow {
+  [key: string]: string;
+}
 
 interface CSVEventImporterProps {
   isOpen: boolean;
@@ -14,10 +18,8 @@ interface CSVEventImporterProps {
 }
 
 export const CSVEventImporter: React.FC<CSVEventImporterProps> = ({ isOpen, onClose, onImport }) => {
-  console.log('🔄 CSVEventImporter component loaded');
-  
   const [dragActive, setDragActive] = useState(false);
-  const [csvData, setCsvData] = useState<any[]>([]);
+  const [csvData, setCsvData] = useState<CSVRow[]>([]);
   const [headers, setHeaders] = useState<string[]>([]);
   const [mapping, setMapping] = useState<Record<string, string>>({});
   const [step, setStep] = useState<'upload' | 'mapping' | 'preview'>('upload');
@@ -44,7 +46,7 @@ export const CSVEventImporter: React.FC<CSVEventImporterProps> = ({ isOpen, onCl
   ];
 
   const generateTemplate = () => {
-    console.log('📥 Generating CSV template for events');
+    logger.debug('Generating CSV template for events');
     const csvContent = [
       expectedFields.map(field => field.label.replace(' *', '')).join(','),
       'Concert Rock,Concert de rock en plein air,Concert,"Stade Municipal","123 rue du Stade",Paris,75001,France,2024-08-15 20:00,2024-08-15 23:30,confirmed,5000,8000,2000,"Sonorisation professionnelle","Concert attendu"',
@@ -80,20 +82,20 @@ export const CSVEventImporter: React.FC<CSVEventImporterProps> = ({ isOpen, onCl
     setDragActive(false);
     
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      console.log('📁 File dropped:', e.dataTransfer.files[0].name);
+      logger.debug('File dropped:', e.dataTransfer.files[0].name);
       handleFile(e.dataTransfer.files[0]);
     }
   };
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      console.log('📁 File selected:', e.target.files[0].name);
+      logger.debug('File selected:', e.target.files[0].name);
       handleFile(e.target.files[0]);
     }
   };
 
   const handleFile = (file: File) => {
-    console.log('📄 Processing file:', file.name);
+    logger.debug('Processing file:', file.name);
     const reader = new FileReader();
     reader.onload = (e) => {
       const text = e.target?.result as string;
@@ -103,7 +105,7 @@ export const CSVEventImporter: React.FC<CSVEventImporterProps> = ({ isOpen, onCl
   };
 
   const parseCSV = (text: string) => {
-    console.log('🔍 Parsing CSV data');
+    logger.debug('Parsing CSV data');
     const lines = text.split('\n').filter(line => line.trim());
     if (lines.length < 2) {
       toast.error('Le fichier CSV doit contenir au moins une ligne d\'en-tête et une ligne de données');
@@ -133,14 +135,14 @@ export const CSVEventImporter: React.FC<CSVEventImporterProps> = ({ isOpen, onCl
     const headers = parseCSVLine(lines[0]);
     const rows = lines.slice(1).map(line => {
       const values = parseCSVLine(line);
-      const row: any = {};
+      const row: CSVRow = {};
       headers.forEach((header, index) => {
         row[header] = values[index] || '';
       });
       return row;
     });
 
-    console.log('📊 Parsed CSV:', { headers, rowCount: rows.length });
+    logger.debug('Parsed CSV:', { headers: headers.length, rowCount: rows.length });
     setHeaders(headers);
     setCsvData(rows);
     setStep('mapping');
@@ -167,13 +169,13 @@ export const CSVEventImporter: React.FC<CSVEventImporterProps> = ({ isOpen, onCl
       }
     });
     setMapping(autoMapping);
-    console.log('🔧 Auto-mapping applied:', autoMapping);
+    logger.debug('Auto-mapping applied');
   };
 
   const handleImport = async () => {
     if (importing) return;
     
-    console.log('💾 Starting import process');
+    logger.debug('Starting import process');
     setImporting(true);
     
     try {
@@ -184,7 +186,7 @@ export const CSVEventImporter: React.FC<CSVEventImporterProps> = ({ isOpen, onCl
       }
 
       const mappedData = csvData.map(row => {
-        const mappedRow: any = {
+        const mappedRow: Record<string, unknown> = {
           user_id: user.id,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
@@ -227,7 +229,7 @@ export const CSVEventImporter: React.FC<CSVEventImporterProps> = ({ isOpen, onCl
         return mappedRow;
       });
 
-      console.log('📤 Mapped data ready for import:', mappedData.length, 'events');
+      logger.debug('Mapped data ready for import:', mappedData.length, 'events');
       
       // Import par lots
       const batchSize = 50;
@@ -243,13 +245,13 @@ export const CSVEventImporter: React.FC<CSVEventImporterProps> = ({ isOpen, onCl
           .insert(batch);
 
         if (error) {
-          console.error('Error inserting batch:', error);
+          logger.error('Error inserting batch:', error);
           toast.error(`Erreur lors de l'import du lot (${totalImported}/${mappedData.length})`);
           break;
         }
         
         totalImported += batch.length;
-        console.log(`✅ Batch imported: ${totalImported}/${mappedData.length}`);
+        logger.debug(`Batch imported: ${totalImported}/${mappedData.length}`);
       }
 
       if (totalImported === mappedData.length) {
@@ -259,7 +261,7 @@ export const CSVEventImporter: React.FC<CSVEventImporterProps> = ({ isOpen, onCl
         onClose();
       }
     } catch (error) {
-      console.error('Import error:', error);
+      logger.error('Import error:', error);
       toast.error('Erreur lors de l\'import');
     } finally {
       setImporting(false);
@@ -267,7 +269,6 @@ export const CSVEventImporter: React.FC<CSVEventImporterProps> = ({ isOpen, onCl
   };
 
   const resetImporter = () => {
-    console.log('🔄 Resetting importer');
     setCsvData([]);
     setHeaders([]);
     setMapping({});
@@ -277,14 +278,10 @@ export const CSVEventImporter: React.FC<CSVEventImporterProps> = ({ isOpen, onCl
 
   const isValid = () => {
     const requiredFields = expectedFields.filter(f => f.required);
-    const isValidMapping = requiredFields.every(field => mapping[field.key]);
-    console.log('✅ Validation check:', { isValidMapping, mapping });
-    return isValidMapping;
+    return requiredFields.every(field => mapping[field.key]);
   };
 
   if (!isOpen) return null;
-
-  console.log('🎨 Rendering CSVEventImporter - Step:', step);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

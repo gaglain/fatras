@@ -1,8 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Settings, Eye, Edit3 } from 'lucide-react';
+import { Plus, Eye, Edit3 } from 'lucide-react';
 import { Block, BlockType } from './types';
 import { BlockToolbar } from './BlockToolbar';
 import { TextBlock } from './blocks/TextBlock';
@@ -10,6 +9,7 @@ import { ImageBlock } from './blocks/ImageBlock';
 import { HeroBlock } from './blocks/HeroBlock';
 import { ArtistGridBlock } from './blocks/ArtistGridBlock';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 interface BlockEditorProps {
   initialBlocks: Block[];
@@ -25,7 +25,7 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({ initialBlocks, onSave 
   useEffect(() => {
     if (initialBlocks && initialBlocks.length > 0) {
       setBlocks(initialBlocks);
-      console.log('BlockEditor: Received initial blocks', initialBlocks);
+      logger.debug('BlockEditor: Received initial blocks', initialBlocks);
     }
   }, [initialBlocks]);
 
@@ -38,21 +38,21 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({ initialBlocks, onSave 
     };
     setBlocks([...blocks, newBlock]);
     toast.success(`Bloc ${type} ajouté`);
-    console.log('Added new block:', newBlock);
+    logger.debug('Added new block:', newBlock);
   };
 
-  const updateBlock = (id: string, content: any) => {
+  const updateBlock = (id: string, content: Record<string, unknown>) => {
     setBlocks(blocks.map(block => 
       block.id === id ? { ...block, content } : block
     ));
-    console.log('Updated block:', id, content);
+    logger.debug('Updated block:', id);
   };
 
   const deleteBlock = (id: string) => {
     setBlocks(blocks.filter(block => block.id !== id));
     setSelectedBlockId(null);
     toast.success('Bloc supprimé');
-    console.log('Deleted block:', id);
+    logger.debug('Deleted block:', id);
   };
 
   const moveBlock = (id: string, direction: 'up' | 'down') => {
@@ -66,7 +66,7 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({ initialBlocks, onSave 
       [newBlocks[blockIndex], newBlocks[targetIndex]] = [newBlocks[targetIndex], newBlocks[blockIndex]];
       setBlocks(newBlocks);
       toast.success(`Bloc déplacé ${direction === 'up' ? 'vers le haut' : 'vers le bas'}`);
-      console.log('Moved block:', id, direction);
+      logger.debug('Moved block:', id, direction);
     }
   };
 
@@ -88,7 +88,7 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({ initialBlocks, onSave 
         BlockComponent = ArtistGridBlock;
         break;
       default:
-        console.error('Unknown block type:', block.type);
+        logger.error('Unknown block type:', block.type);
         return null;
     }
 
@@ -119,7 +119,7 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({ initialBlocks, onSave 
   const handleSave = () => {
     onSave(blocks);
     toast.success('Page sauvegardée avec succès');
-    console.log('Saving blocks:', blocks);
+    logger.debug('Saving blocks:', blocks.length, 'blocks');
   };
 
   return (
