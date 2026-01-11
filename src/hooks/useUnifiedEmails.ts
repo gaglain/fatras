@@ -38,9 +38,9 @@ export const useUnifiedEmails = () => {
     loadEmails();
     const cleanup = setupRealtimeSubscription();
 
-    // Auto-sync toutes les 30 secondes pour une synchronisation plus réactive
-    syncAllAccounts();
-    const interval = setInterval(syncAllAccounts, 30000);
+    // Auto-sync toutes les 5 minutes (pas besoin de plus fréquent car le realtime gère les nouveaux emails)
+    // On ne lance PAS de sync au montage pour éviter les appels excessifs
+    const interval = setInterval(syncAllAccounts, 5 * 60 * 1000);
 
     return () => {
       cleanup?.();
