@@ -401,7 +401,7 @@ export const EmailCampaignEditor: React.FC<EmailCampaignEditorProps> = ({
           <EmailEditor
             initialBlocks={editedCampaign.blocks}
             onSave={handleBlocksChange}
-            onPreview={(blocks) => console.log('Preview blocks:', blocks)}
+            onPreview={() => {}}
           />
         </div>
       </div>
