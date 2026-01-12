@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { logger } from "@/lib/logger";
 
 export interface CompanySettings {
   name: string;
@@ -43,7 +44,7 @@ export function useCompanySettings() {
           }
         }
       } catch (err) {
-        console.error("Error loading from localStorage:", err);
+        logger.error("Error loading from localStorage:", err);
       }
 
       // Ensuite charger depuis Supabase (les paramètres globaux sont prioritaires)
@@ -81,7 +82,7 @@ export function useCompanySettings() {
           applySettings(loadedSettings);
         }
       } catch (error) {
-        console.error('Error loading company settings:', error);
+        logger.error('Error loading company settings:', error);
       }
     };
 
@@ -113,7 +114,7 @@ export function useCompanySettings() {
         // ignore
       }
 
-      console.log('✅ Favicon appliqué:', normalizedFavicon);
+      logger.debug('Favicon appliqué:', normalizedFavicon);
     }
 
     if (newSettings.name) {

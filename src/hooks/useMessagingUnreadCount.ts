@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { logger } from '@/lib/logger';
 
 export const useMessagingUnreadCount = () => {
   const [unreadCount, setUnreadCount] = useState(0);
@@ -52,7 +53,7 @@ export const useMessagingUnreadCount = () => {
           filter: `user_id=eq.${user.id}`
         },
         (payload) => {
-          console.log('📬 Messaging notification change:', payload.eventType);
+          logger.debug('Messaging notification change:', payload.eventType);
           // Refetch count on any change
           fetchUnreadCount();
         }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 
 const getDefaultOgImage = () => {
   if (typeof window === 'undefined') return 'https://fatras.net/og-image.jpg';
@@ -43,7 +44,7 @@ export const useWebsiteSEO = () => {
 
       setSeoSettings(normalized);
     } catch (error) {
-      console.error('Erreur lors du chargement des paramètres SEO:', error);
+      logger.error('Erreur lors du chargement des paramètres SEO:', error);
     } finally {
       setLoading(false);
     }
@@ -51,17 +52,17 @@ export const useWebsiteSEO = () => {
 
   const saveSEOSettings = async (settings: SEOSettings) => {
     try {
-      console.log('🔍 Sauvegarde SEO - Paramètres reçus:', settings);
+      logger.debug('Sauvegarde SEO - Paramètres reçus:', settings);
       
       const user = await supabase.auth.getUser();
       if (!user.data.user) throw new Error('Non authentifié');
 
-      console.log('✅ Utilisateur authentifié:', user.data.user.id);
+      logger.debug('Utilisateur authentifié:', user.data.user.id);
 
       // Upload image to storage if it's a base64
       let ogImageUrl = settings.og_image;
       if (ogImageUrl && ogImageUrl.startsWith('data:image')) {
-        console.log('📤 Upload image OG en cours...');
+        logger.debug('Upload image OG en cours...');
         const base64Data = ogImageUrl.split(',')[1];
         const buffer = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
         const fileName = `og-image-${Date.now()}.png`;
@@ -74,7 +75,7 @@ export const useWebsiteSEO = () => {
           });
 
         if (uploadError) {
-          console.error('❌ Erreur upload image:', uploadError);
+          logger.error('Erreur upload image:', uploadError);
           throw uploadError;
         }
         
@@ -83,11 +84,11 @@ export const useWebsiteSEO = () => {
           .getPublicUrl(fileName);
         
         ogImageUrl = publicUrl;
-        console.log('✅ Image OG uploadée:', ogImageUrl);
+        logger.debug('Image OG uploadée:', ogImageUrl);
       }
 
       const settingsToSave = { ...settings, og_image: ogImageUrl };
-      console.log('💾 Paramètres à sauvegarder:', settingsToSave);
+      logger.debug('Paramètres à sauvegarder:', settingsToSave);
 
       const { data: existing, error: existingError } = await supabase
         .from('website_seo')
@@ -95,15 +96,15 @@ export const useWebsiteSEO = () => {
         .maybeSingle();
 
       if (existingError) {
-        console.error('❌ Erreur vérification existant:', existingError);
+        logger.error('Erreur vérification existant:', existingError);
         throw existingError;
       }
 
-      console.log('🔍 Enregistrement existant:', existing ? 'Oui (id: ' + existing.id + ')' : 'Non');
+      logger.debug('Enregistrement existant:', existing ? 'Oui' : 'Non');
 
       let result;
       if (existing) {
-        console.log('♻️ Mise à jour de l\'enregistrement existant...');
+        logger.debug('Mise à jour de l\'enregistrement existant...');
         result = await supabase
           .from('website_seo')
           .update(settingsToSave)
@@ -111,7 +112,7 @@ export const useWebsiteSEO = () => {
           .select()
           .single();
       } else {
-        console.log('✨ Création d\'un nouvel enregistrement...');
+        logger.debug('Création d\'un nouvel enregistrement...');
         result = await supabase
           .from('website_seo')
           .insert([{ ...settingsToSave, user_id: user.data.user.id }])
@@ -120,11 +121,11 @@ export const useWebsiteSEO = () => {
       }
 
       if (result.error) {
-        console.error('❌ Erreur sauvegarde:', result.error);
+        logger.error('Erreur sauvegarde:', result.error);
         throw result.error;
       }
 
-      console.log('✅ SEO sauvegardé avec succès:', result.data);
+      logger.debug('SEO sauvegardé avec succès');
       
       setSeoSettings(result.data);
       
@@ -133,7 +134,7 @@ export const useWebsiteSEO = () => {
       
       return result.data;
     } catch (error) {
-      console.error('Erreur lors de la sauvegarde SEO:', error);
+      logger.error('Erreur lors de la sauvegarde SEO:', error);
       throw error;
     }
   };
