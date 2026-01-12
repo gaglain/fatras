@@ -1,4 +1,5 @@
 import { useCallback, useRef } from 'react';
+import { logger } from '@/lib/logger';
 
 interface CacheEntry<T> {
   data: T;
@@ -8,10 +9,10 @@ interface CacheEntry<T> {
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 // Cache en mémoire pour éviter les requêtes répétées
-const memoryCache = new Map<string, CacheEntry<any>>();
+const memoryCache = new Map<string, CacheEntry<unknown>>();
 
 export const useFrontDataCache = () => {
-  const pendingRequests = useRef<Map<string, Promise<any>>>(new Map());
+  const pendingRequests = useRef<Map<string, Promise<unknown>>>(new Map());
 
   const getCached = useCallback(<T>(key: string): T | null => {
     // 1. Vérifier le cache mémoire
@@ -52,7 +53,7 @@ export const useFrontDataCache = () => {
       sessionStorage.setItem(`front_cache_${key}`, JSON.stringify(entry));
     } catch (e) {
       // sessionStorage peut être plein ou désactivé
-      console.warn('Cache sessionStorage failed:', e);
+      logger.warn('Cache sessionStorage failed:', e);
     }
   }, []);
 
@@ -65,7 +66,7 @@ export const useFrontDataCache = () => {
     if (!options?.forceRefresh) {
       const cached = getCached<T>(key);
       if (cached !== null) {
-        console.log(`📦 Cache hit for: ${key}`);
+        logger.debug(`Cache hit for: ${key}`);
         return cached;
       }
     }
@@ -73,11 +74,11 @@ export const useFrontDataCache = () => {
     // Éviter les requêtes en double
     const pending = pendingRequests.current.get(key);
     if (pending) {
-      console.log(`⏳ Waiting for pending request: ${key}`);
-      return pending;
+      logger.debug(`Waiting for pending request: ${key}`);
+      return pending as Promise<T>;
     }
 
-    console.log(`🔄 Fetching: ${key}`);
+    logger.debug(`Fetching: ${key}`);
     const promise = fetcher()
       .then(data => {
         setCache(key, data);

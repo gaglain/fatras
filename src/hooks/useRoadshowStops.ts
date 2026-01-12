@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { TourStop } from '@/types/roadshow.types';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 interface ArtistLineupItem {
   userId: string;
@@ -45,7 +46,7 @@ export const useRoadshowStops = () => {
     if (!user) return;
 
     try {
-      console.log('📍 Fetching roadshow stops for user:', user.id);
+      logger.debug('Fetching roadshow stops for user:', user.id);
       const { data, error } = await supabase
         .from('roadshow_stops')
         .select('*')
@@ -53,7 +54,7 @@ export const useRoadshowStops = () => {
 
       if (error) throw error;
 
-      console.log('📍 Fetched stops:', data?.length || 0);
+      logger.debug('Fetched stops:', data?.length || 0);
       // Transform data to match our RoadshowStop interface
       const transformedStops: RoadshowStop[] = (data || []).map(stop => ({
         id: stop.id,
@@ -87,7 +88,7 @@ export const useRoadshowStops = () => {
 
       setStops(transformedStops);
     } catch (error) {
-      console.error('Error fetching roadshow stops:', error);
+      logger.error('Error fetching roadshow stops:', error);
     } finally {
       setLoading(false);
     }
@@ -98,7 +99,7 @@ export const useRoadshowStops = () => {
     if (!user) return null;
 
     try {
-      console.log('📍 Creating new roadshow stop:', stopData);
+      logger.debug('Creating new roadshow stop');
       const { data, error } = await supabase
         .from('roadshow_stops')
         .insert({
@@ -129,7 +130,7 @@ export const useRoadshowStops = () => {
 
       if (error) throw error;
 
-      console.log('✅ Roadshow stop created:', data);
+      logger.debug('Roadshow stop created');
       // Transform the returned data to match our interface
       const transformedStop: RoadshowStop = {
         id: data.id,
@@ -164,7 +165,7 @@ export const useRoadshowStops = () => {
       setStops(prev => [...prev, transformedStop]);
       return transformedStop;
     } catch (error) {
-      console.error('Error creating roadshow stop:', error);
+      logger.error('Error creating roadshow stop:', error);
       return null;
     }
   };
@@ -185,7 +186,7 @@ export const useRoadshowStops = () => {
         .maybeSingle();
 
       if (!channel) {
-        console.log('No messaging channel found for roadshow stop:', stopId);
+        logger.debug('No messaging channel found for roadshow stop:', stopId);
         return;
       }
 
@@ -216,7 +217,7 @@ export const useRoadshowStops = () => {
               user_id: artist.userId,
               role: 'member'
             });
-          console.log('✅ Added user to channel:', artist.userId);
+          logger.debug('Added user to channel:', artist.userId);
         }
 
         // Create notification for the added user
@@ -234,7 +235,7 @@ export const useRoadshowStops = () => {
               action: 'confirm_availability'
             }
           });
-        console.log('✅ Notification sent to:', artist.userId);
+        logger.debug('Notification sent to:', artist.userId);
       }
 
       // Remove members from channel (optional - you might want to keep them)
@@ -244,11 +245,11 @@ export const useRoadshowStops = () => {
           .delete()
           .eq('channel_id', channel.id)
           .eq('user_id', artist.userId);
-        console.log('🗑️ Removed user from channel:', artist.userId);
+        logger.debug('Removed user from channel:', artist.userId);
       }
 
     } catch (error) {
-      console.error('Error syncing lineup with channel:', error);
+      logger.error('Error syncing lineup with channel:', error);
     }
   };
 
@@ -261,7 +262,7 @@ export const useRoadshowStops = () => {
       const currentStop = stops.find(s => s.id === stopId);
       const oldLineup = currentStop?.artist_lineup || [];
 
-      console.log('📍 Updating roadshow stop:', stopId, stopData);
+      logger.debug('Updating roadshow stop:', stopId);
       const { data, error } = await supabase
         .from('roadshow_stops')
         .update({
@@ -292,7 +293,7 @@ export const useRoadshowStops = () => {
 
       if (error) throw error;
 
-      console.log('✅ Roadshow stop updated:', data);
+      logger.debug('Roadshow stop updated');
       // Transform the returned data to match our interface
       const transformedStop: RoadshowStop = {
         id: data.id,
@@ -338,7 +339,7 @@ export const useRoadshowStops = () => {
       setStops(prev => prev.map(stop => stop.id === stopId ? transformedStop : stop));
       return transformedStop;
     } catch (error) {
-      console.error('Error updating roadshow stop:', error);
+      logger.error('Error updating roadshow stop:', error);
       return null;
     }
   };
@@ -348,7 +349,7 @@ export const useRoadshowStops = () => {
     if (!user) return false;
 
     try {
-      console.log('📍 Deleting roadshow stop:', stopId);
+      logger.debug('Deleting roadshow stop:', stopId);
       const { error } = await supabase
         .from('roadshow_stops')
         .delete()
@@ -356,11 +357,11 @@ export const useRoadshowStops = () => {
 
       if (error) throw error;
 
-      console.log('✅ Roadshow stop deleted');
+      logger.debug('Roadshow stop deleted');
       setStops(prev => prev.filter(stop => stop.id !== stopId));
       return true;
     } catch (error) {
-      console.error('Error deleting roadshow stop:', error);
+      logger.error('Error deleting roadshow stop:', error);
       return false;
     }
   };

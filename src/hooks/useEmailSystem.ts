@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 export interface EmailMessage {
   to: string[];
@@ -91,7 +92,7 @@ export const useEmailSystem = () => {
         if (preferred) selectedProvider = preferred;
       }
 
-      console.log('📧 Envoi email via:', selectedProvider.name);
+      logger.debug('Envoi email via:', selectedProvider.name);
 
       // Préparer les données de l'email
       const emailData = {

@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { logger } from '@/lib/logger';
 
 interface MenuItem {
   id: string;
@@ -114,22 +115,22 @@ export const WebsiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({
   const { user } = useAuth();
   const loadConfig = useCallback(async () => {
     try {
-      console.log('🔄 Loading website config...');
+      logger.debug('Loading website config...');
       
-      const safeParse = (key: string, fallback: any = null) => {
+      const safeParse = <T,>(key: string, fallback: T): T => {
         try {
           const raw = localStorage.getItem(key);
           if (!raw) return fallback;
-          return JSON.parse(raw);
+          return JSON.parse(raw) as T;
         } catch (err) {
-          console.error(`❌ WebsiteConfig - Parse error for ${key}, auto-clearing:`, err);
+          logger.error(`WebsiteConfig - Parse error for ${key}, auto-clearing:`, err);
           localStorage.removeItem(key);
           return fallback;
         }
       };
 
       // 1) Charger depuis localStorage (fallback immédiat)
-      const parsedLocal = safeParse('websiteConfig');
+      const parsedLocal = safeParse<Partial<WebsiteConfig>>('websiteConfig', {});
       let mergedConfig: WebsiteConfig = { ...defaultConfig, ...parsedLocal };
 
       // 2) Si connecté, tenter de charger depuis Supabase (source de vérité)
@@ -140,7 +141,7 @@ export const WebsiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({
           .in('setting_key', ['websiteConfig', 'websiteSettings', 'websiteDesign', 'company_name', 'company_logo', 'favicon']);
 
         if (error) {
-          console.warn('⚠️ Chargement Supabase (website config) échoué, fallback localStorage:', error.message);
+          logger.warn('Chargement Supabase (website config) échoué, fallback localStorage:', error.message);
         } else if (data && data.length > 0) {
           const map = Object.fromEntries(
             data.map((r) => [r.setting_key, r.setting_value])
@@ -240,7 +241,7 @@ export const WebsiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [user]);
 
   const updateConfig = useCallback((newConfig: Partial<WebsiteConfig>) => {
-    console.log('💾 Updating config:', newConfig);
+    logger.debug('Updating config');
     
     const updatedConfig = { ...config, ...newConfig };
     setConfig(updatedConfig);
@@ -286,8 +287,8 @@ export const WebsiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({
           const { error } = await supabase
             .from('app_settings')
             .upsert(payload, { onConflict: 'user_id,setting_key' });
-          if (error) console.error('❌ Persist website config failed:', error);
-          else console.log('✅ Website config persisted to Supabase');
+          if (error) logger.error('Persist website config failed:', error);
+          else logger.debug('Website config persisted to Supabase');
 
           // 2) website_designs (consommé par plusieurs composants du front)
           const designRow = {
@@ -305,10 +306,10 @@ export const WebsiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({
           const { error: designError } = await supabase
             .from('website_designs')
             .upsert([designRow], { onConflict: 'user_id' });
-          if (designError) console.error('❌ Persist website_designs failed:', designError);
-          else console.log('✅ website_designs updated');
+          if (designError) logger.error('Persist website_designs failed:', designError);
+          else logger.debug('website_designs updated');
         } catch (e) {
-          console.error('❌ Persist website config exception:', e);
+          logger.error('Persist website config exception:', e);
         }
       })();
     }
@@ -323,13 +324,13 @@ export const WebsiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({
         newValue: JSON.stringify(updatedConfig),
         storageArea: localStorage
       }));
-      console.log('🚀 Config events dispatched');
+      logger.debug('Config events dispatched');
     }, 100);
     
   }, [config, user]);
 
   const reloadConfig = useCallback(() => {
-    console.log('🔄 Force reload config');
+    logger.debug('Force reload config');
     loadConfig();
   }, [loadConfig]);
 
