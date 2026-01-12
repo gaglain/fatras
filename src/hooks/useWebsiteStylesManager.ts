@@ -1,5 +1,5 @@
-
 import { useRef, useCallback } from 'react';
+import { logger } from '@/lib/logger';
 
 interface SiteDesign {
   logo: string;
@@ -17,7 +17,7 @@ export const useWebsiteStylesManager = () => {
   const styleElementRef = useRef<HTMLStyleElement | null>(null);
 
   const applyStyles = useCallback((design: SiteDesign) => {
-    console.log('🎨 Applying CSS styles for:', design.siteName);
+    logger.debug('Applying CSS styles for:', design.siteName);
     
     // Nettoyer les anciens styles
     if (styleElementRef.current) {
@@ -85,7 +85,7 @@ export const useWebsiteStylesManager = () => {
     `;
     
     document.head.appendChild(style);
-    console.log('✅ CSS styles applied successfully');
+    logger.debug('CSS styles applied successfully');
   }, []);
 
   const cleanup = useCallback(() => {

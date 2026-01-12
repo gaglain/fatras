@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { notifyTaskAssignment } from '@/utils/notificationHelpers';
-
+import { logger } from '@/lib/logger';
 export interface Task {
   id: string;
   user_id: string;
@@ -84,7 +84,7 @@ export const useTasks = () => {
       }, handleTaskRealtime)
       .subscribe();
 
-    function handleTaskRealtime(payload: any) {
+    function handleTaskRealtime(payload: { eventType: string; new: Record<string, unknown>; old: Record<string, unknown> }) {
       if (payload.eventType === 'INSERT') {
         const newTask = payload.new;
         setTasks(prev => {
@@ -99,7 +99,7 @@ export const useTasks = () => {
       }
     }
 
-    function mapRowToTask(row: any) {
+    function mapRowToTask(row: Record<string, unknown>) {
       return {
         id: row.id,
         user_id: row.user_id,
@@ -125,7 +125,7 @@ export const useTasks = () => {
         try {
           supabase.removeChannel(channel);
         } catch (err) {
-          console.warn('⚠️ Warning during tasks cleanup:', err);
+          logger.warn('Warning during tasks cleanup:', err);
         }
       }, 100);
     };
@@ -288,21 +288,21 @@ export const useTasks = () => {
       await createSimpleTaskNotification(newTask);
       
       return newTask;
-    } catch (error) {
-      console.error('Erreur lors de la création de la tâche:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur lors de la création de la tâche:', error);
       throw error;
     }
   };
 
   const updateTask = async (id: string, updates: Partial<Task>) => {
     try {
-      console.log('🔄 Updating task:', id, updates);
+      logger.debug('Updating task:', id, updates);
       
       // Récupérer la tâche actuelle pour comparer assigned_to
       const currentTask = tasks.find(t => t.id === id);
       
       // Préparer les données pour la mise à jour en filtrant les valeurs undefined
-      const updateData: any = {};
+      const updateData: Record<string, unknown> = {};
       
       if (updates.assigned_to !== undefined) updateData.assigned_to = updates.assigned_to;
       if (updates.contact_id !== undefined) updateData.contact_id = updates.contact_id;
@@ -328,12 +328,12 @@ export const useTasks = () => {
         .single();
 
       if (error) {
-        console.error('❌ Error updating task:', error);
+        logger.error('Error updating task:', error);
         throw error;
       }
 
       if (data) {
-        console.log('✅ Task updated successfully:', data);
+        logger.debug('Task updated successfully:', data);
         // Construire l'objet task complet pour la mise à jour locale
         const updatedTask: Task = {
           id: data.id,
@@ -373,8 +373,8 @@ export const useTasks = () => {
         
         return updatedTask;
       }
-    } catch (error) {
-      console.error('Error updating task:', error);
+    } catch (error: unknown) {
+      logger.error('Error updating task:', error);
       throw error;
     }
   };
@@ -396,8 +396,8 @@ export const useTasks = () => {
       if (!error) {
         setTasks(prev => prev.filter(task => task.id !== id));
       }
-    } catch (error) {
-      console.error('Erreur lors de la suppression de la tâche:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur lors de la suppression de la tâche:', error);
       throw error;
     }
   };
@@ -416,8 +416,8 @@ export const useTasks = () => {
           read: false, // Explicitement non lue
           data: { task_id: task.id, due_date: task.due_date }
         });
-    } catch (error) {
-      console.error('Erreur lors de la création de la notification:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur lors de la création de la notification:', error);
     }
   };
 
@@ -436,8 +436,8 @@ export const useTasks = () => {
           read: false, // Explicitement non lue
           data: { task_id: task.id, task_title: task.title }
         });
-    } catch (error) {
-      console.error('Erreur lors de la création de la notification:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur lors de la création de la notification:', error);
     }
   };
 
@@ -454,8 +454,8 @@ export const useTasks = () => {
       
       if (error) throw error;
       return data || [];
-    } catch (error) {
-      console.error('Erreur lors de la récupération des notifications:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur lors de la récupération des notifications:', error);
       return [];
     }
   };
@@ -475,8 +475,8 @@ export const useTasks = () => {
           read: false, // Explicitement non lue
           data: { test: true }
         });
-    } catch (error) {
-      console.error('Erreur lors de la création de la notification de test:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur lors de la création de la notification de test:', error);
     }
   };
 
