@@ -1,7 +1,47 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { logger } from '@/lib/logger';
 
+interface ContactLink {
+  id: string;
+  contact_id: string;
+  role?: string;
+  contacts: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    email?: string;
+    company?: string;
+  } | null;
+}
+
+interface EventLink {
+  id: string;
+  event_id: string;
+  events: {
+    id: string;
+    title: string;
+    start_date?: string;
+    venue?: string;
+  } | null;
+}
+
+interface QuoteLink {
+  id: string;
+  quote_id: string;
+  quotes: {
+    id: string;
+    quote_number: string;
+    total_amount: number;
+    status?: string;
+  } | null;
+}
+
+interface ContractLink {
+  id: string;
+  contract_id: string;
+}
 export interface RoadshowEntityConnection {
   id: string;
   entityId: string;
@@ -37,9 +77,9 @@ export const useRoadshowEntityConnections = () => {
         `)
         .eq('roadshow_stop_id', roadshowStopId);
 
-      const contactLinks = contactLinksRaw || [];
+      const contactLinks = (contactLinksRaw || []) as ContactLink[];
       if (contactError) {
-        console.warn('roadshow_stop_contacts select error:', contactError.message || contactError);
+        logger.warn('roadshow_stop_contacts select error:', contactError.message || contactError);
       }
 
       // Fetch connected events (non-bloquant)
@@ -57,9 +97,9 @@ export const useRoadshowEntityConnections = () => {
         `)
         .eq('roadshow_stop_id', roadshowStopId);
 
-      const eventLinks = eventLinksRaw || [];
+      const eventLinks = (eventLinksRaw || []) as EventLink[];
       if (eventError) {
-        console.warn('roadshow_stop_events select error:', eventError.message || eventError);
+        logger.warn('roadshow_stop_events select error:', eventError.message || eventError);
       }
 
       // Fetch connected quotes (non-bloquant)
@@ -77,9 +117,9 @@ export const useRoadshowEntityConnections = () => {
         `)
         .eq('roadshow_stop_id', roadshowStopId);
 
-      const quoteLinks = quoteLinksRaw || [];
+      const quoteLinks = (quoteLinksRaw || []) as QuoteLink[];
       if (quoteError) {
-        console.warn('roadshow_stop_quotes select error:', quoteError.message || quoteError);
+        logger.warn('roadshow_stop_quotes select error:', quoteError.message || quoteError);
       }
 
       // Fetch connected contracts (non-bloquant)
@@ -91,13 +131,13 @@ export const useRoadshowEntityConnections = () => {
         `)
         .eq('roadshow_stop_id', roadshowStopId);
 
-      const contractLinks = contractLinksRaw || [];
+      const contractLinks = (contractLinksRaw || []) as ContractLink[];
       if (contractError) {
-        console.warn('roadshow_stop_contracts select error:', contractError.message || contractError);
+        logger.warn('roadshow_stop_contracts select error:', contractError.message || contractError);
       }
 
       // Start building result arrays from direct roadshow_stop_* tables
-      let contacts: RoadshowEntityConnection[] = (contactLinks || []).map((link: any) => ({
+      let contacts: RoadshowEntityConnection[] = contactLinks.map((link) => ({
         id: link.id,
         entityId: link.contact_id,
         entityType: 'contact' as const,
@@ -107,14 +147,14 @@ export const useRoadshowEntityConnections = () => {
         role: link.role
       }));
 
-      let events: RoadshowEntityConnection[] = (eventLinks || []).map((link: any) => ({
+      let events: RoadshowEntityConnection[] = eventLinks.map((link) => ({
         id: link.id,
         entityId: link.event_id,
         entityType: 'event' as const,
         title: link.events?.title || 'Événement inconnu'
       }));
 
-      let quotes: RoadshowEntityConnection[] = (quoteLinks || []).map((link: any) => ({
+      let quotes: RoadshowEntityConnection[] = quoteLinks.map((link) => ({
         id: link.id,
         entityId: link.quote_id,
         entityType: 'quote' as const,
@@ -123,7 +163,7 @@ export const useRoadshowEntityConnections = () => {
           : 'Devis inconnu'
       }));
 
-      const contracts: RoadshowEntityConnection[] = (contractLinks || []).map((link: any) => ({
+      const contracts: RoadshowEntityConnection[] = contractLinks.map((link) => ({
         id: link.id,
         entityId: link.contract_id,
         entityType: 'contract' as const,
@@ -180,14 +220,15 @@ export const useRoadshowEntityConnections = () => {
           .select(`role, contacts (id, first_name, last_name, company)`) 
           .eq('opportunity_id', opportunityId);
         if (oppContacts) {
+          type OppContact = { role?: string; contacts: { id: string; first_name: string; last_name: string; company?: string } | null };
           contacts.push(
-            ...oppContacts
-              .filter((c: any) => c.contacts)
-              .map((c: any) => ({
-                id: `opc_${c.contacts.id}`,
-                entityId: c.contacts.id,
+            ...(oppContacts as OppContact[])
+              .filter((c) => c.contacts)
+              .map((c) => ({
+                id: `opc_${c.contacts!.id}`,
+                entityId: c.contacts!.id,
                 entityType: 'contact' as const,
-                title: `${c.contacts.first_name} ${c.contacts.last_name}${c.contacts.company ? ` (${c.contacts.company})` : ''}`,
+                title: `${c.contacts!.first_name} ${c.contacts!.last_name}${c.contacts!.company ? ` (${c.contacts!.company})` : ''}`,
                 role: c.role || undefined,
               }))
           );
@@ -198,19 +239,20 @@ export const useRoadshowEntityConnections = () => {
           .from('opportunity_events')
           .select(`events (id, title)`) 
           .eq('opportunity_id', opportunityId);
-        const oppEventIds = (oppEvents || [])
-          .map((e: any) => e.events?.id)
+        type OppEvent = { events: { id: string; title: string } | null };
+        const oppEventIds = ((oppEvents || []) as OppEvent[])
+          .map((e) => e.events?.id)
           .filter(Boolean);
         if (oppEvents) {
           events.push(
-            ...oppEvents
-              .filter((e: any) => e.events)
-              .map((e: any) => ({
-                id: `ope_${e.events.id}`,
-                entityId: e.events.id,
+            ...((oppEvents as OppEvent[])
+              .filter((e) => e.events)
+              .map((e) => ({
+                id: `ope_${e.events!.id}`,
+                entityId: e.events!.id,
                 entityType: 'event' as const,
-                title: e.events.title || 'Événement'
-              }))
+                title: e.events!.title || 'Événement'
+              })))
           );
         }
 
@@ -219,27 +261,29 @@ export const useRoadshowEntityConnections = () => {
           .from('quote_opportunities')
           .select(`quotes (id, quote_number, total_amount)`) 
           .eq('opportunity_id', opportunityId);
+        type OppQuote = { quotes: { id: string; quote_number: string; total_amount: number } | null };
         if (oppQuotes && oppQuotes.length > 0) {
+          const quoteData = (oppQuotes as OppQuote[])
+            .map((q) => q.quotes)
+            .filter((q): q is NonNullable<typeof q> => q !== null);
           quotes.push(
-            ...oppQuotes
-              .map((q: any) => q.quotes)
-              .filter(Boolean)
-              .map((q: any) => ({
-                id: `opq_${q.id}`,
-                entityId: q.id,
-                entityType: 'quote' as const,
-                title: `Devis ${q.quote_number} - ${q.total_amount}€`
-              }))
+            ...quoteData.map((q) => ({
+              id: `opq_${q.id}`,
+              entityId: q.id,
+              entityType: 'quote' as const,
+              title: `Devis ${q.quote_number} - ${q.total_amount}€`
+            }))
           );
         } else if (oppEventIds.length > 0) {
           // Fallback: quotes linked to collected event ids
-          const { data: evQuotes } = await (supabase
+          type EventQuote = { id: string; quote_number: string; total_amount: number; event_id: string };
+          const { data: evQuotes } = await supabase
             .from('quotes')
-            .select('id, quote_number, total_amount, event_id') as any)
+            .select('id, quote_number, total_amount, event_id')
             .in('event_id', oppEventIds);
           if (evQuotes) {
             quotes.push(
-              ...evQuotes.map((q: any) => ({
+              ...(evQuotes as EventQuote[]).map((q) => ({
                 id: `evq_${q.id}`,
                 entityId: q.id,
                 entityType: 'quote' as const,
@@ -258,10 +302,10 @@ export const useRoadshowEntityConnections = () => {
       events = uniqBy(events);
       quotes = uniqBy(quotes);
 
-      console.debug('Roadshow connections for stop', roadshowStopId, { contacts: contacts.length, events: events.length, quotes: quotes.length, contracts: contracts.length });
+      logger.debug('Roadshow connections for stop', roadshowStopId, { contacts: contacts.length, events: events.length, quotes: quotes.length, contracts: contracts.length });
       return { contacts, events, quotes, contracts };
     } catch (error) {
-      console.error('Error fetching roadshow connections:', error);
+      logger.error('Error fetching roadshow connections:', error);
       return { contacts: [], events: [], quotes: [], contracts: [] };
     } finally {
       setLoading(false);
@@ -278,7 +322,7 @@ export const useRoadshowEntityConnections = () => {
       if (error) throw error;
       return true;
     } catch (error) {
-      console.error('Error linking contact:', error);
+      logger.error('Error linking contact:', error);
       return false;
     }
   };
@@ -293,7 +337,7 @@ export const useRoadshowEntityConnections = () => {
       if (error) throw error;
       return true;
     } catch (error) {
-      console.error('Error linking event:', error);
+      logger.error('Error linking event:', error);
       return false;
     }
   };
@@ -308,7 +352,7 @@ export const useRoadshowEntityConnections = () => {
       if (error) throw error;
       return true;
     } catch (error) {
-      console.error('Error linking quote:', error);
+      logger.error('Error linking quote:', error);
       return false;
     }
   };
@@ -323,7 +367,7 @@ export const useRoadshowEntityConnections = () => {
       if (error) throw error;
       return true;
     } catch (error) {
-      console.error('Error linking contract:', error);
+      logger.error('Error linking contract:', error);
       return false;
     }
   };
@@ -350,7 +394,7 @@ export const useRoadshowEntityConnections = () => {
       if (error) throw error;
       return true;
     } catch (error) {
-      console.error('Error unlinking entity:', error);
+      logger.error('Error unlinking entity:', error);
       return false;
     }
   };
@@ -387,7 +431,7 @@ export const useRoadshowEntityConnections = () => {
 
       return true;
     } catch (error) {
-      console.error('Error linking opportunity entities:', error);
+      logger.error('Error linking opportunity entities:', error);
       return false;
     }
   };

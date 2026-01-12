@@ -1,7 +1,7 @@
-
 import { useEffect, useRef, useCallback } from 'react';
 import { useWebsiteSettingsSync } from './useWebsiteSettingsSync';
 import { useWebsiteUnifiedSync } from './useWebsiteUnifiedSync';
+import { logger } from '@/lib/logger';
 
 export const useWebsiteRealTimeSync = () => {
   const { syncSettingsChanges } = useWebsiteSettingsSync();
@@ -17,7 +17,7 @@ export const useWebsiteRealTimeSync = () => {
     
     // Prevent simultaneous synchronizations but reduce throttle
     if (syncInProgress.current || (now - lastSyncTime.current) < SYNC_THROTTLE) {
-      console.log('🔄 Sync skipped - throttled or in progress');
+      logger.debug('🔄 Sync skipped - throttled or in progress');
       return;
     }
     
@@ -25,7 +25,7 @@ export const useWebsiteRealTimeSync = () => {
     lastSyncTime.current = now;
     
     try {
-      console.log('🔄 Performing comprehensive website sync');
+      logger.debug('🔄 Performing comprehensive website sync');
       
       // Synchronization with both settings and unified design sync
       const results = await Promise.allSettled([
@@ -37,15 +37,15 @@ export const useWebsiteRealTimeSync = () => {
       results.forEach((result, index) => {
         const type = index === 0 ? 'Settings' : 'Design';
         if (result.status === 'rejected') {
-          console.error(`❌ ${type} sync failed:`, result.reason);
+          logger.error(`❌ ${type} sync failed:`, result.reason);
         } else {
-          console.log(`✅ ${type} sync completed`);
+          logger.debug(`✅ ${type} sync completed`);
         }
       });
       
-      console.log('✅ Website sync completed successfully');
+      logger.debug('✅ Website sync completed successfully');
     } catch (error) {
-      console.error('❌ Critical sync error:', error);
+      logger.error('❌ Critical sync error:', error);
     } finally {
       syncInProgress.current = false;
     }
@@ -53,12 +53,12 @@ export const useWebsiteRealTimeSync = () => {
 
   const initializeSync = useCallback(async () => {
     if (isInitialized.current || syncInProgress.current) {
-      console.log('🔄 Init sync skipped - already initialized or in progress');
+      logger.debug('🔄 Init sync skipped - already initialized or in progress');
       return;
     }
     
     isInitialized.current = true;
-    console.log('🚀 Initializing enhanced website sync system');
+    logger.debug('🚀 Initializing enhanced website sync system');
     
     // Short delay to ensure DOM is ready
     setTimeout(() => {
@@ -67,7 +67,7 @@ export const useWebsiteRealTimeSync = () => {
   }, [performSafeSync]);
 
   useEffect(() => {
-    console.log('🎯 WebsiteRealTimeSync hook mounted');
+    logger.debug('🎯 WebsiteRealTimeSync hook mounted');
     
     // Immediate initialization
     initializeSync();
@@ -75,14 +75,14 @@ export const useWebsiteRealTimeSync = () => {
     // More frequent periodic synchronization for preview
     const syncInterval = setInterval(() => {
       if (!syncInProgress.current && isInitialized.current) {
-        console.log('⏰ Periodic sync triggered');
+        logger.debug('⏰ Periodic sync triggered');
         performSafeSync();
       }
     }, 10000); // 10 seconds instead of 2 minutes
 
     // Cleanup on unmount
     return () => {
-      console.log('🧹 Cleaning up WebsiteRealTimeSync');
+      logger.debug('🧹 Cleaning up WebsiteRealTimeSync');
       clearInterval(syncInterval);
       isInitialized.current = false;
     };
@@ -91,16 +91,16 @@ export const useWebsiteRealTimeSync = () => {
   // Force sync public with better error handling
   const forceSync = useCallback(async () => {
     if (syncInProgress.current) {
-      console.log('🔄 Force sync already in progress');
+      logger.debug('🔄 Force sync already in progress');
       return false;
     }
     
     try {
-      console.log('🔄 Force sync requested by user');
+      logger.debug('🔄 Force sync requested by user');
       await performSafeSync();
       return true;
     } catch (error) {
-      console.error('❌ Force sync failed:', error);
+      logger.error('❌ Force sync failed:', error);
       return false;
     }
   }, [performSafeSync]);

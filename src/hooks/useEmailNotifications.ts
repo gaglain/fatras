@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 export interface EmailNotification {
   id: string;
@@ -45,7 +46,7 @@ export const useEmailNotifications = () => {
       
       setNotifications(data as EmailNotification[] || []);
     } catch (error) {
-      console.error('Erreur lors du chargement des notifications:', error);
+      logger.error('Erreur lors du chargement des notifications:', error);
     } finally {
       setIsLoading(false);
     }
@@ -53,8 +54,6 @@ export const useEmailNotifications = () => {
 
   const setupRealtimeSubscription = () => {
     if (!user) return;
-
-    let cleanupTimeout: NodeJS.Timeout | null = null;
 
     const channel = supabase
       .channel(`email-notifs-${user.id}-${Date.now()}-${Math.random().toString(36).slice(2)}`)
@@ -79,11 +78,11 @@ export const useEmailNotifications = () => {
       .subscribe();
 
     return () => {
-      cleanupTimeout = setTimeout(() => {
+      setTimeout(() => {
         try {
           supabase.removeChannel(channel);
         } catch (err) {
-          console.warn('⚠️ Warning during email notifications cleanup:', err);
+          logger.warn('⚠️ Warning during email notifications cleanup:', err);
         }
       }, 100);
     };
@@ -104,7 +103,7 @@ export const useEmailNotifications = () => {
           : notification
       ));
     } catch (error) {
-      console.error('Erreur lors du marquage comme lu:', error);
+      logger.error('Erreur lors du marquage comme lu:', error);
     }
   };
 
@@ -122,7 +121,7 @@ export const useEmailNotifications = () => {
         ({ ...notification, is_read: true })
       ));
     } catch (error) {
-      console.error('Erreur lors du marquage de toutes les notifications comme lues:', error);
+      logger.error('Erreur lors du marquage de toutes les notifications comme lues:', error);
     }
   };
 
