@@ -2,6 +2,7 @@
 import { useEffect, useCallback, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
+import { logger } from '@/lib/logger';
 
 type WebsiteMenuItem = Tables<'website_menu'>;
 
@@ -18,7 +19,7 @@ export const useWebsiteMenuSync = () => {
     setLoading(true);
     
     try {
-      console.log('🔗 Loading menu from Supabase...');
+      logger.debug('Loading menu from Supabase...');
       
       const { data: menuData, error } = await supabase
         .from('website_menu')
@@ -26,13 +27,13 @@ export const useWebsiteMenuSync = () => {
         .order('menu_order', { ascending: true });
 
       if (error) {
-        console.error('❌ Erreur lors du chargement du menu:', error);
+        logger.error('Erreur lors du chargement du menu:', error);
         
         // Fallback vers localStorage
         const savedMenu = localStorage.getItem('websiteMenu');
         if (savedMenu) {
           const localMenu = JSON.parse(savedMenu);
-          console.log('🔗 Utilisation du menu en cache:', localMenu.length);
+          logger.debug('Utilisation du menu en cache:', localMenu.length);
           setMenu(localMenu);
           return;
         }
@@ -55,7 +56,7 @@ export const useWebsiteMenuSync = () => {
         
         localStorage.setItem('websiteMenu', JSON.stringify(defaultMenu));
         setMenu(defaultMenu);
-        console.log('🔗 Menu par défaut créé');
+        logger.debug('Menu par défaut créé');
         return;
       }
 

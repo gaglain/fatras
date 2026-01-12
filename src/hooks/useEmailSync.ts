@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 export const useEmailSync = () => {
   const { user } = useAuth();
@@ -14,7 +15,7 @@ export const useEmailSync = () => {
 
     setIsLoading(true);
     try {
-      console.log('🔄 Starting email sync...');
+      logger.debug('Starting email sync...');
       
       const { data, error } = await supabase.functions.invoke('sync-imap-emails', {
         body: {
@@ -24,11 +25,11 @@ export const useEmailSync = () => {
       });
 
       if (error) {
-        console.error('❌ Email sync error:', error);
+        logger.error('Email sync error:', error);
         throw error;
       }
 
-      console.log('✅ Email sync result:', data);
+      logger.debug('Email sync result:', data);
       
       if (data.success) {
         toast.success(`${data.syncedCount} nouveaux emails synchronisés`);
@@ -36,9 +37,10 @@ export const useEmailSync = () => {
       } else {
         throw new Error(data.error || 'Échec de la synchronisation');
       }
-    } catch (error: any) {
-      console.error('❌ Error in email sync:', error);
-      toast.error(`Erreur lors de la synchronisation: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Erreur inconnue';
+      logger.error('Error in email sync:', error);
+      toast.error(`Erreur lors de la synchronisation: ${message}`);
       throw error;
     } finally {
       setIsLoading(false);
@@ -52,7 +54,7 @@ export const useEmailSync = () => {
 
     setIsLoading(true);
     try {
-      console.log('🔧 Testing IMAP connection...');
+      logger.debug('Testing IMAP connection...');
       
       const { data, error } = await supabase.functions.invoke('sync-imap-emails', {
         body: {
@@ -62,11 +64,11 @@ export const useEmailSync = () => {
       });
 
       if (error) {
-        console.error('❌ IMAP test error:', error);
+        logger.error('IMAP test error:', error);
         throw error;
       }
 
-      console.log('✅ IMAP test result:', data);
+      logger.debug('IMAP test result:', data);
       
       if (data.success) {
         toast.success('Connexion IMAP réussie !');
@@ -74,9 +76,10 @@ export const useEmailSync = () => {
       } else {
         throw new Error(data.error || 'Test de connexion échoué');
       }
-    } catch (error: any) {
-      console.error('❌ Error in IMAP test:', error);
-      toast.error(`Erreur de connexion IMAP: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Erreur inconnue';
+      logger.error('Error in IMAP test:', error);
+      toast.error(`Erreur de connexion IMAP: ${message}`);
       throw error;
     } finally {
       setIsLoading(false);

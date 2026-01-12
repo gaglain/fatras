@@ -1,5 +1,5 @@
 import { useEffect, useCallback } from 'react';
-
+import { logger } from '@/lib/logger';
 interface ManifestData {
   name: string;
   shortName: string;
@@ -78,19 +78,19 @@ export const usePWAManifest = () => {
       // Sauvegarder dans localStorage pour persistance
       localStorage.setItem('pwaManifest', JSON.stringify(manifest));
 
-      console.log('✅ Manifest PWA mis à jour:', data.name);
+      logger.debug('Manifest PWA mis à jour:', data.name);
       
       // Forcer une mise à jour du service worker si possible
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistrations().then(registrations => {
           registrations.forEach(registration => {
-            registration.update().catch(err => console.log('SW update skipped:', err));
+            registration.update().catch(err => logger.debug('SW update skipped:', err));
           });
         });
       }
 
     } catch (error) {
-      console.error('❌ Erreur lors de la mise à jour du manifest:', error);
+      logger.error('Erreur lors de la mise à jour du manifest:', error);
     }
   }, []);
 

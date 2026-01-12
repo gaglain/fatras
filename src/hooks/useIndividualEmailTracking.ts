@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 
 export const useIndividualEmailTracking = () => {
   // Generate tracking pixel for individual emails
@@ -56,17 +57,16 @@ export const useIndividualEmailTracking = () => {
 
       if (error) throw error;
     } catch (error) {
-      console.error('Error marking email as opened:', error);
+      logger.error('Error marking email as opened:', error);
     }
   };
 
   // Track email click
   const trackEmailClick = async (emailId: string, url: string) => {
     try {
-      // You could store click analytics in a separate table if needed
-      console.log(`Email ${emailId} link clicked: ${url}`);
+      logger.debug(`Email ${emailId} link clicked: ${url}`);
     } catch (error) {
-      console.error('Error tracking email click:', error);
+      logger.error('Error tracking email click:', error);
     }
   };
 
