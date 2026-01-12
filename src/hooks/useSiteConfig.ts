@@ -1,5 +1,5 @@
-
 import { useState, useEffect } from 'react';
+import { logger } from '@/lib/logger';
 
 interface SiteConfig {
   siteName: string;
@@ -19,12 +19,12 @@ export const useSiteConfig = () => {
       // Utiliser websiteConfig comme source principale
       const configData = localStorage.getItem('websiteConfig');
       if (configData) {
-        const parsed = JSON.parse(configData);
+        const parsed = JSON.parse(configData) as Record<string, unknown>;
         const newConfig = {
-          siteName: parsed.siteName || DEFAULT_CONFIG.siteName,
-          logo: parsed.logo || DEFAULT_CONFIG.logo
+          siteName: (typeof parsed.siteName === 'string' ? parsed.siteName : null) || DEFAULT_CONFIG.siteName,
+          logo: (typeof parsed.logo === 'string' ? parsed.logo : null) || DEFAULT_CONFIG.logo
         };
-        console.log('✅ useSiteConfig - Loaded from websiteConfig:', newConfig);
+        logger.debug('✅ useSiteConfig - Loaded from websiteConfig:', newConfig);
         setConfig(newConfig);
         document.title = newConfig.siteName;
         return;
@@ -33,13 +33,13 @@ export const useSiteConfig = () => {
       // Fallback vers websiteDesign
       const designData = localStorage.getItem('websiteDesign');
       if (designData) {
-        const design = JSON.parse(designData);
-        if (design.siteName) {
+        const design = JSON.parse(designData) as Record<string, unknown>;
+        if (design.siteName && typeof design.siteName === 'string') {
           const newConfig = {
             siteName: design.siteName,
-            logo: design.logo || ''
+            logo: (typeof design.logo === 'string' ? design.logo : null) || ''
           };
-          console.log('✅ useSiteConfig - Loaded from design:', newConfig);
+          logger.debug('✅ useSiteConfig - Loaded from design:', newConfig);
           setConfig(newConfig);
           document.title = newConfig.siteName;
           return;
@@ -49,22 +49,22 @@ export const useSiteConfig = () => {
       // Fallback vers websiteSettings
       const settingsData = localStorage.getItem('websiteSettings');
       if (settingsData) {
-        const settings = JSON.parse(settingsData);
-        if (settings.siteName) {
+        const settings = JSON.parse(settingsData) as Record<string, unknown>;
+        if (settings.siteName && typeof settings.siteName === 'string') {
           const newConfig = {
             siteName: settings.siteName,
-            logo: settings.logo || ''
+            logo: (typeof settings.logo === 'string' ? settings.logo : null) || ''
           };
-          console.log('✅ useSiteConfig - Loaded from settings:', newConfig);
+          logger.debug('✅ useSiteConfig - Loaded from settings:', newConfig);
           setConfig(newConfig);
           document.title = newConfig.siteName;
           return;
         }
       }
 
-      console.log('⚠️ useSiteConfig - Using default config');
+      logger.debug('⚠️ useSiteConfig - Using default config');
     } catch (error) {
-      console.error('❌ useSiteConfig - Error:', error);
+      logger.error('❌ useSiteConfig - Error:', error);
     }
   };
 
@@ -74,13 +74,13 @@ export const useSiteConfig = () => {
 
     // Écouter les changements de storage
     const handleStorageChange = () => {
-      console.log('🔄 useSiteConfig - Storage changed');
+      logger.debug('🔄 useSiteConfig - Storage changed');
       setTimeout(loadConfig, 100);
     };
 
     // Écouter les événements personnalisés
     const handleCustomEvent = (event: CustomEvent) => {
-      console.log('🔄 useSiteConfig - Custom event received:', event.type, event.detail);
+      logger.debug('🔄 useSiteConfig - Custom event received:', event.type, event.detail);
       setTimeout(loadConfig, 100);
     };
 
