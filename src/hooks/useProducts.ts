@@ -2,6 +2,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
+import type { Database } from '@/integrations/supabase/types';
+
+type DbProduct = Database['public']['Tables']['products']['Row'];
+type ProductInsert = Database['public']['Tables']['products']['Insert'];
+type ProductUpdate = Database['public']['Tables']['products']['Update'];
 
 const PRODUCTS_QUERY_KEY = ['products'];
 
@@ -24,7 +30,7 @@ export const useProducts = () => {
   });
 
   const createMutation = useMutation({
-    mutationFn: async (productData: any) => {
+    mutationFn: async (productData: Omit<ProductInsert, 'user_id'>) => {
       if (!user) throw new Error('User not authenticated');
       
       const { data, error } = await supabase
@@ -43,14 +49,14 @@ export const useProducts = () => {
       queryClient.invalidateQueries({ queryKey: PRODUCTS_QUERY_KEY });
       toast.success('Produit créé avec succès');
     },
-    onError: (error: any) => {
-      console.error('Erreur lors de la création du produit:', error);
+    onError: (error: unknown) => {
+      logger.error('Erreur lors de la création du produit:', error);
       toast.error('Erreur lors de la création du produit');
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, productData }: { id: string; productData: any }) => {
+    mutationFn: async ({ id, productData }: { id: string; productData: ProductUpdate }) => {
       if (!user) throw new Error('User not authenticated');
       
       const { data, error } = await supabase
@@ -67,8 +73,8 @@ export const useProducts = () => {
       queryClient.invalidateQueries({ queryKey: PRODUCTS_QUERY_KEY });
       toast.success('Produit modifié avec succès');
     },
-    onError: (error: any) => {
-      console.error('Erreur lors de la modification du produit:', error);
+    onError: (error: unknown) => {
+      logger.error('Erreur lors de la modification du produit:', error);
       toast.error('Erreur lors de la modification du produit');
     },
   });
@@ -88,8 +94,8 @@ export const useProducts = () => {
       queryClient.invalidateQueries({ queryKey: PRODUCTS_QUERY_KEY });
       toast.success('Produit supprimé avec succès');
     },
-    onError: (error: any) => {
-      console.error('Erreur lors de la suppression du produit:', error);
+    onError: (error: unknown) => {
+      logger.error('Erreur lors de la suppression du produit:', error);
       toast.error('Erreur lors de la suppression du produit');
     },
   });
@@ -98,7 +104,7 @@ export const useProducts = () => {
     products,
     loading,
     createProduct: createMutation.mutateAsync,
-    updateProduct: (id: string, productData: any) => 
+    updateProduct: (id: string, productData: ProductUpdate) => 
       updateMutation.mutateAsync({ id, productData }),
     deleteProduct: deleteMutation.mutateAsync,
     refetch: () => queryClient.invalidateQueries({ queryKey: PRODUCTS_QUERY_KEY }),

@@ -6,13 +6,13 @@ import { MessageSquare, User } from 'lucide-react';
 
 interface UserWithAvatar {
   user_id: string;
-  username: string;
-  first_name: string;
-  last_name: string;
-  email: string;
+  username?: string;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
   avatar_url?: string;
-  role: string;
-  is_active: boolean;
+  role?: string;
+  is_active?: boolean;
 }
 
 interface UserAvatarProps {
