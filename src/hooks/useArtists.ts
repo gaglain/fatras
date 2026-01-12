@@ -2,6 +2,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/UnifiedAuthContext';
 import { logger } from '@/lib/logger';
+import type { Database } from '@/integrations/supabase/types';
+
+type DbUserProfile = Database['public']['Tables']['user_profiles']['Row'];
 
 export interface Artist {
   id: string;
@@ -19,7 +22,7 @@ export interface Artist {
   updated_at: string;
 }
 
-const mapDbToArtist = (profile: any): Artist => ({
+const mapDbToArtist = (profile: DbUserProfile): Artist => ({
   id: profile.id,
   user_id: profile.user_id,
   first_name: profile.first_name || '',

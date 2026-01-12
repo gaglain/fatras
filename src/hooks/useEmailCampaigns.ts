@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { logger } from '@/lib/logger';
+import type { Json } from '@/integrations/supabase/types';
 
 interface EmailCampaign {
   id: string;
@@ -32,7 +34,7 @@ interface EmailTemplate {
   category: string;
   subject: string;
   content: string;
-  variables: any;
+  variables: Json;
   is_system: boolean;
   created_at: string;
   updated_at: string;
@@ -53,8 +55,8 @@ interface Email {
   opened_at?: string;
   is_read: boolean;
   is_starred: boolean;
-  attachments: any;
-  metadata: any;
+  attachments: Json;
+  metadata: Json;
   created_at: string;
   updated_at: string;
 }
@@ -84,7 +86,7 @@ export const useEmailCampaigns = () => {
       if (error) throw error;
       setCampaigns(data || []);
     } catch (err) {
-      console.error('Erreur lors du chargement des campagnes:', err);
+      logger.error('Erreur lors du chargement des campagnes:', err);
       setError(err instanceof Error ? err.message : 'Erreur inconnue');
     } finally {
       setLoading(false);
@@ -105,7 +107,7 @@ export const useEmailCampaigns = () => {
       if (error) throw error;
       setTemplates(data || []);
     } catch (err) {
-      console.error('Erreur lors du chargement des templates:', err);
+      logger.error('Erreur lors du chargement des templates:', err);
       setError(err instanceof Error ? err.message : 'Erreur inconnue');
     }
   };
@@ -124,13 +126,13 @@ export const useEmailCampaigns = () => {
       if (error) throw error;
       setEmails(data || []);
     } catch (err) {
-      console.error('Erreur lors du chargement des emails:', err);
+      logger.error('Erreur lors du chargement des emails:', err);
       setError(err instanceof Error ? err.message : 'Erreur inconnue');
     }
   };
 
   // Créer une campagne
-  const createCampaign = async (campaignData: Partial<EmailCampaign> & { name: string; subject: string; content: string }) => {
+  const createCampaign = async (campaignData: Partial<EmailCampaign> & { name: string; subject: string; content: string; artist_id?: string; event_id?: string }) => {
     if (!user) throw new Error('Utilisateur non connecté');
     
     try {
@@ -144,8 +146,8 @@ export const useEmailCampaigns = () => {
           template_id: campaignData.template_id,
           user_id: user.id,
           status: 'draft',
-          artist_id: (campaignData as any).artist_id || null,
-          event_id: (campaignData as any).event_id || null
+          artist_id: campaignData.artist_id || null,
+          event_id: campaignData.event_id || null
         })
         .select()
         .single();
@@ -155,7 +157,7 @@ export const useEmailCampaigns = () => {
       setCampaigns(prev => [data as EmailCampaign, ...prev]);
       return data;
     } catch (err) {
-      console.error('Erreur lors de la création de la campagne:', err);
+      logger.error('Erreur lors de la création de la campagne:', err);
       throw err;
     } finally {
       setLoading(false);
@@ -181,7 +183,7 @@ export const useEmailCampaigns = () => {
       setCampaigns(prev => prev.map(c => c.id === id ? data : c));
       return data;
     } catch (err) {
-      console.error('Erreur lors de la mise à jour de la campagne:', err);
+      logger.error('Erreur lors de la mise à jour de la campagne:', err);
       throw err;
     } finally {
       setLoading(false);
@@ -204,7 +206,7 @@ export const useEmailCampaigns = () => {
       
       setCampaigns(prev => prev.filter(c => c.id !== id));
     } catch (err) {
-      console.error('Erreur lors de la suppression de la campagne:', err);
+      logger.error('Erreur lors de la suppression de la campagne:', err);
       throw err;
     } finally {
       setLoading(false);
@@ -236,7 +238,7 @@ export const useEmailCampaigns = () => {
       setTemplates(prev => [data as EmailTemplate, ...prev]);
       return data;
     } catch (err) {
-      console.error('Erreur lors de la création du template:', err);
+      logger.error('Erreur lors de la création du template:', err);
       throw err;
     } finally {
       setLoading(false);
@@ -269,7 +271,7 @@ export const useEmailCampaigns = () => {
       setEmails(prev => [data as Email, ...prev]);
       return data;
     } catch (err) {
-      console.error('Erreur lors de la création de l\'email:', err);
+      logger.error('Erreur lors de la création de l\'email:', err);
       throw err;
     } finally {
       setLoading(false);
@@ -291,7 +293,7 @@ export const useEmailCampaigns = () => {
       
       setEmails(prev => prev.map(e => e.id === id ? { ...e, is_read: true } : e));
     } catch (err) {
-      console.error('Erreur lors du marquage comme lu:', err);
+      logger.error('Erreur lors du marquage comme lu:', err);
       throw err;
     }
   };
@@ -316,7 +318,7 @@ export const useEmailCampaigns = () => {
         e.id === id ? { ...e, is_starred: !e.is_starred } : e
       ));
     } catch (err) {
-      console.error('Erreur lors du basculement étoilé:', err);
+      logger.error('Erreur lors du basculement étoilé:', err);
       throw err;
     }
   };

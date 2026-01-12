@@ -41,7 +41,7 @@ export interface Message {
   created_at: string;
   edited_at?: string;
   reply_to_id?: string;
-  metadata?: any;
+  metadata?: unknown;
   user_profile?: {
     first_name?: string;
     last_name?: string;
@@ -53,9 +53,19 @@ export const useMessaging = () => {
   const { user } = useAuth();
   const [channels, setChannels] = useState<Channel[]>([]);
   const [messages, setMessages] = useState<Record<string, Message[]>>({});
-  const [availableUsers, setAvailableUsers] = useState<any[]>([]);
+  const [availableUsers, setAvailableUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastError, setLastError] = useState<string | null>(null);
+
+  interface UserProfile {
+    user_id: string;
+    first_name?: string;
+    last_name?: string;
+    username?: string;
+    email?: string;
+    is_active?: boolean;
+    role?: string;
+  }
 
   // Fetch user channels (joined channels + all public channels)
   const fetchChannels = async () => {
@@ -69,7 +79,7 @@ export const useMessaging = () => {
         .eq('user_id', user.id);
 
       if (memberErr) throw memberErr;
-      const memberChannelIds = (memberRows || []).map((r: any) => r.channel_id);
+      const memberChannelIds = (memberRows || []).map((r: { channel_id: string }) => r.channel_id);
 
       // 2) Récupérer aussi TOUS les canaux publics actifs
       const { data: publicChannels, error: publicErr } = await supabase
@@ -79,7 +89,7 @@ export const useMessaging = () => {
         .eq('is_active', true);
 
       if (publicErr) throw publicErr;
-      const publicChannelIds = (publicChannels || []).map((c: any) => c.id);
+      const publicChannelIds = (publicChannels || []).map((c: { id: string }) => c.id);
 
       // 3) Fusionner les IDs (membres + publics) sans doublons
       const allChannelIds = [...new Set([...memberChannelIds, ...publicChannelIds])];
@@ -108,7 +118,8 @@ export const useMessaging = () => {
       if (membersErr) throw membersErr;
 
       // 4) Récupérer les profils utilisateurs pour tous les membres
-      const allUserIds = [...new Set((allMembers || []).map((m: any) => m.user_id))];
+      interface MemberRow { id: string; channel_id: string; user_id: string; role: string; joined_at: string; last_read_at?: string }
+      const allUserIds = [...new Set((allMembers || []).map((m: MemberRow) => m.user_id))];
       const { data: profiles, error: profilesErr } = await supabase
         .from('user_profiles')
         .select('user_id, first_name, last_name, username, email')
@@ -116,21 +127,22 @@ export const useMessaging = () => {
 
       if (profilesErr) logger.warn('Error fetching profiles:', profilesErr);
 
-      const profilesByUserId: Record<string, any> = {};
-      (profiles || []).forEach((p: any) => {
+      const profilesByUserId: Record<string, UserProfile> = {};
+      (profiles || []).forEach((p) => {
         profilesByUserId[p.user_id] = p;
       });
 
       // 5) Transformer
-      const membersByChannel: Record<string, any[]> = {};
-      (allMembers || []).forEach((m: any) => {
+      interface MemberWithProfile extends MemberRow { user_profile?: UserProfile }
+      const membersByChannel: Record<string, MemberWithProfile[]> = {};
+      (allMembers || []).forEach((m: MemberRow) => {
         (membersByChannel[m.channel_id] ||= []).push({
           ...m,
           user_profile: profilesByUserId[m.user_id]
         });
       });
 
-      const transformedChannels: Channel[] = (channelRows || []).map((ch: any) => ({
+      const transformedChannels: Channel[] = (channelRows || []).map((ch) => ({
         id: ch.id,
         name: ch.name,
         description: ch.description,
@@ -171,8 +183,8 @@ export const useMessaging = () => {
 
       if (pubErr) throw pubErr;
 
-      const ids = (publicChannels || []).map((c: any) => c.id);
-      let membershipById: Record<string, boolean> = {};
+      const ids = (publicChannels || []).map((c) => c.id);
+      const membershipById: Record<string, boolean> = {};
 
       if (ids.length > 0) {
         const { data: myMemberships } = await supabase
@@ -180,10 +192,10 @@ export const useMessaging = () => {
           .select('channel_id')
           .eq('user_id', user.id)
           .in('channel_id', ids);
-        (myMemberships || []).forEach((m: any) => { membershipById[m.channel_id] = true; });
+        (myMemberships || []).forEach((m) => { membershipById[m.channel_id] = true; });
       }
 
-      return (publicChannels || []).map((ch: any) => ({
+      return (publicChannels || []).map((ch) => ({
         ...ch,
         is_member: !!membershipById[ch.id],
         member_count: undefined
@@ -216,8 +228,8 @@ export const useMessaging = () => {
 
       if (profilesErr) logger.warn('Error fetching message author profiles:', profilesErr);
 
-      const profilesByUserId: Record<string, any> = {};
-      (profiles || []).forEach((p: any) => {
+      const profilesByUserId: Record<string, UserProfile> = {};
+      (profiles || []).forEach((p) => {
         profilesByUserId[p.user_id] = p;
       });
 
@@ -263,7 +275,7 @@ export const useMessaging = () => {
       logger.warn('RPC get_active_users_basic not available, using fallback', rpcError);
       const { data: profiles, error: profilesError } = await supabase
         .from('user_profiles')
-        .select('user_id, first_name, last_name, username, email, is_active')
+        .select('user_id, first_name, last_name, username, email, is_active, role')
         .eq('is_active', true)
         .neq('user_id', user.id);
 
@@ -457,8 +469,8 @@ export const useMessaging = () => {
         .eq('id', channelId);
 
       return transformedMessage;
-    } catch (error: any) {
-      const errorMsg = error?.message || 'Erreur réseau';
+    } catch (error: unknown) {
+      const errorMsg = error instanceof Error ? error.message : 'Erreur réseau';
       setLastError(errorMsg);
       toast.error(`Échec de l'envoi: ${errorMsg}`);
       logger.error('Error sending message:', error);
@@ -507,9 +519,9 @@ export const useMessaging = () => {
 
       toast.error('Vous n\'avez pas les droits pour supprimer ce canal');
       return false;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error deleting channel:', error);
-      toast.error(`Erreur: ${error?.message || 'Impossible de supprimer'}`);
+      toast.error(`Erreur: ${error instanceof Error ? error.message : 'Impossible de supprimer'}`);
       return false;
     }
   };
@@ -663,7 +675,7 @@ export const useMessaging = () => {
           .eq('is_active', true)
           .or('name.eq.general,name.eq.General,name.eq.général,name.eq.Général')
           .neq('id', channelId);
-        const otherIds = (others || []).map((c: any) => c.id);
+        const otherIds = (others || []).map((c: { id: string }) => c.id);
         if (otherIds.length > 0) {
           await supabase
             .from('messaging_channel_members')
