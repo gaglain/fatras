@@ -3,6 +3,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/UnifiedAuthContext';
 import { notifyContactAssignment } from '@/utils/notificationHelpers';
 import { logger } from '@/lib/logger';
+import type { Database } from '@/integrations/supabase/types';
+
+type DbContact = Database['public']['Tables']['contacts']['Row'];
 
 export interface Contact {
   id: string;
@@ -31,7 +34,7 @@ export interface Contact {
 }
 
 // Helper to map DB data to Contact type
-const mapDbToContact = (data: any): Contact => ({
+const mapDbToContact = (data: DbContact): Contact => ({
   id: data.id,
   user_id: data.user_id,
   external_id: data.external_id || '',
