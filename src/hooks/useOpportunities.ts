@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { logger } from '@/lib/logger';
 
 export interface Opportunity {
   id: string;
@@ -119,8 +120,8 @@ export const useOpportunities = () => {
       };
       setOpportunities(prev => [newOpportunity, ...prev]);
       return newOpportunity;
-    } catch (error) {
-      console.error('Erreur lors de la création de l\'opportunité:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur lors de la création de l\'opportunité:', error);
       throw error;
     }
   };

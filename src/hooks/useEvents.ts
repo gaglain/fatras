@@ -2,6 +2,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/UnifiedAuthContext';
 import { logger } from '@/lib/logger';
+import type { Database } from '@/integrations/supabase/types';
+
+type DbEvent = Database['public']['Tables']['events']['Row'];
 
 export interface Event {
   id: string;
@@ -29,7 +32,7 @@ export interface Event {
   updated_at: string;
 }
 
-const mapDbToEvent = (event: any): Event => ({
+const mapDbToEvent = (event: DbEvent): Event => ({
   id: event.id,
   user_id: event.user_id,
   external_id: event.external_id || '',
