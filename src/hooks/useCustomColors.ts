@@ -1,9 +1,9 @@
-
 import { useEffect } from 'react';
+import { logger } from '@/lib/logger';
 
 export const useCustomColors = () => {
   useEffect(() => {
-    console.log('🎨 Custom colors hook started');
+    logger.debug('Custom colors hook started');
     
     const applyColors = () => {
       try {
@@ -23,14 +23,14 @@ export const useCustomColors = () => {
           try {
             const parsed = JSON.parse(savedColors);
             colors = { ...defaultColors, ...parsed };
-          } catch (e) {
-            console.warn('Error parsing saved colors, using defaults');
+          } catch {
+            logger.warn('Error parsing saved colors, using defaults');
           }
         }
 
         // Détecter le thème
         const isDark = document.documentElement.classList.contains('dark');
-        console.log('🎨 Theme detected:', isDark ? 'dark' : 'light');
+        logger.debug('Theme detected:', isDark ? 'dark' : 'light');
         
         // Appliquer les couleurs selon le thème
         const activeColors = {
@@ -61,9 +61,9 @@ export const useCustomColors = () => {
         
         document.head.appendChild(style);
 
-        console.log('✅ Colors applied successfully:', activeColors);
-      } catch (error) {
-        console.error('❌ Error applying colors:', error);
+        logger.debug('Colors applied successfully:', activeColors);
+      } catch (error: unknown) {
+        logger.error('Error applying colors:', error);
       }
     };
 
@@ -72,7 +72,7 @@ export const useCustomColors = () => {
 
     // Écouter les changements de thème
     const handleThemeChange = () => {
-      console.log('🎨 Theme change detected, reapplying colors');
+      logger.debug('Theme change detected, reapplying colors');
       setTimeout(applyColors, 50);
     };
 

@@ -1,6 +1,7 @@
-
 import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 
 interface Contact {
   id: string;
@@ -35,7 +36,7 @@ export const useContactsRealtime = ({
   onContactDeleted,
   enabled = true
 }: UseContactsRealtimeProps) => {
-  const channelRef = useRef<any>(null);
+  const channelRef = useRef<RealtimeChannel | null>(null);
   const cleanupTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   useEffect(() => {
@@ -43,11 +44,11 @@ export const useContactsRealtime = ({
 
     // Nettoyer l'ancien canal s'il existe avec délai
     if (channelRef.current) {
-      console.log('🔌 Cleaning up previous contacts channel');
+      logger.debug('Cleaning up previous contacts channel');
       try {
         supabase.removeChannel(channelRef.current);
       } catch (err) {
-        console.warn('⚠️ Warning during channel cleanup:', err);
+        logger.warn('Warning during channel cleanup:', err);
       }
       channelRef.current = null;
     }
@@ -58,7 +59,7 @@ export const useContactsRealtime = ({
       cleanupTimeoutRef.current = null;
     }
 
-    console.log('🔄 Setting up contacts real-time sync');
+    logger.debug('Setting up contacts real-time sync');
 
     const channel = supabase
       .channel(`contacts-rt-${Date.now()}-${Math.random().toString(36).slice(2)}`)
@@ -67,7 +68,7 @@ export const useContactsRealtime = ({
         schema: 'public',
         table: 'contacts'
       }, (payload) => {
-        console.log('✅ Contact added via real-time:', payload.new);
+        logger.debug('Contact added via real-time:', payload.new);
         if (onContactAdded && payload.new) {
           const newContact = {
             ...payload.new,
@@ -82,7 +83,7 @@ export const useContactsRealtime = ({
         schema: 'public',
         table: 'contacts'
       }, (payload) => {
-        console.log('📝 Contact updated via real-time:', payload.new);
+        logger.debug('Contact updated via real-time:', payload.new);
         if (onContactUpdated && payload.new) {
           const updatedContact = {
             ...payload.new,
@@ -97,24 +98,24 @@ export const useContactsRealtime = ({
         schema: 'public',
         table: 'contacts'
       }, (payload) => {
-        console.log('🗑️ Contact deleted via real-time:', payload.old?.id);
+        logger.debug('Contact deleted via real-time:', payload.old?.id);
         if (onContactDeleted && payload.old?.id) {
           onContactDeleted(payload.old.id);
         }
       })
       .subscribe((status) => {
-        console.log('📡 Contacts real-time subscription status:', status);
+        logger.debug('Contacts real-time subscription status:', status);
         if (status === 'SUBSCRIBED') {
-          console.log('✅ Contacts real-time active');
+          logger.debug('Contacts real-time active');
         } else if (status === 'CHANNEL_ERROR') {
-          console.error('❌ Contacts real-time channel error');
+          logger.error('Contacts real-time channel error');
         }
       });
 
     channelRef.current = channel;
 
     return () => {
-      console.log('🔌 Cleaning up contacts real-time sync');
+      logger.debug('Cleaning up contacts real-time sync');
       
       // Use timeout to avoid immediate cleanup during strict mode
       cleanupTimeoutRef.current = setTimeout(() => {
@@ -122,7 +123,7 @@ export const useContactsRealtime = ({
           try {
             supabase.removeChannel(channelRef.current);
           } catch (err) {
-            console.warn('⚠️ Warning during cleanup:', err);
+            logger.warn('Warning during cleanup:', err);
           }
           channelRef.current = null;
         }

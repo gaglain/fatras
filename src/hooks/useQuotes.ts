@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-
+import { logger } from '@/lib/logger';
 export interface Quote {
   id: string;
   user_id: string;
@@ -62,7 +62,7 @@ export const useQuotes = () => {
           status: quote.status as 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired',
           total_amount: quote.total_amount,
           tax_amount: quote.tax_amount || 0,
-          vat_rate: (quote as any).vat_rate ?? 0,
+          vat_rate: (quote as Record<string, unknown>).vat_rate as number ?? 0,
           discount_amount: quote.discount_amount || 0,
           valid_until: quote.valid_until || '',
           terms: quote.terms || '',
@@ -93,7 +93,7 @@ export const useQuotes = () => {
           status: quoteData.status,
           total_amount: quoteData.total_amount,
           tax_amount: quoteData.tax_amount,
-          vat_rate: (quoteData as any).vat_rate ?? 0,
+          vat_rate: (quoteData as Record<string, unknown>).vat_rate as number ?? 0,
           discount_amount: quoteData.discount_amount,
           valid_until: quoteData.valid_until,
           terms: quoteData.terms,
@@ -116,7 +116,7 @@ export const useQuotes = () => {
         status: data.status as 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired',
         total_amount: data.total_amount,
         tax_amount: data.tax_amount || 0,
-        vat_rate: (data as any).vat_rate ?? 0,
+        vat_rate: (data as Record<string, unknown>).vat_rate as number ?? 0,
         discount_amount: data.discount_amount || 0,
         valid_until: data.valid_until || '',
         terms: data.terms || '',
@@ -126,8 +126,8 @@ export const useQuotes = () => {
       };
       setQuotes(prev => [newQuote, ...prev]);
       return newQuote;
-    } catch (error) {
-      console.error('Erreur lors de la création du devis:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur lors de la création du devis:', error);
       throw error;
     }
   };
@@ -145,7 +145,7 @@ export const useQuotes = () => {
           status: updates.status,
           total_amount: updates.total_amount,
           tax_amount: updates.tax_amount,
-          vat_rate: (updates as any).vat_rate,
+          vat_rate: (updates as Record<string, unknown>).vat_rate as number,
           discount_amount: updates.discount_amount,
           valid_until: updates.valid_until,
           terms: updates.terms,
@@ -170,7 +170,7 @@ export const useQuotes = () => {
           status: data.status as 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired',
           total_amount: data.total_amount,
           tax_amount: data.tax_amount || 0,
-          vat_rate: (data as any).vat_rate ?? 0,
+          vat_rate: (data as Record<string, unknown>).vat_rate as number ?? 0,
           discount_amount: data.discount_amount || 0,
           valid_until: data.valid_until || '',
           terms: data.terms || '',
@@ -185,8 +185,8 @@ export const useQuotes = () => {
         
         return updatedQuote;
       }
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour du devis:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur lors de la mise à jour du devis:', error);
       throw error;
     }
   };
@@ -220,10 +220,10 @@ export const useQuotes = () => {
 
       if (error) throw error;
       
-      console.log('✅ Quote item added successfully:', data);
+      logger.debug('Quote item added successfully:', data);
       return data;
-    } catch (error) {
-      console.error('❌ Error adding quote item:', error);
+    } catch (error: unknown) {
+      logger.error('Error adding quote item:', error);
       throw error;
     }
   };
@@ -238,8 +238,8 @@ export const useQuotes = () => {
 
       if (error) throw error;
       return data || [];
-    } catch (error) {
-      console.error('❌ Error fetching quote items:', error);
+    } catch (error: unknown) {
+      logger.error('Error fetching quote items:', error);
       return [];
     }
   };
@@ -261,8 +261,8 @@ export const useQuotes = () => {
 
       if (error) throw error;
       return data;
-    } catch (error) {
-      console.error('❌ Error updating quote item:', error);
+    } catch (error: unknown) {
+      logger.error('Error updating quote item:', error);
       throw error;
     }
   };
@@ -275,8 +275,8 @@ export const useQuotes = () => {
         .eq('id', itemId);
 
       if (error) throw error;
-    } catch (error) {
-      console.error('❌ Error deleting quote item:', error);
+    } catch (error: unknown) {
+      logger.error('Error deleting quote item:', error);
       throw error;
     }
   };

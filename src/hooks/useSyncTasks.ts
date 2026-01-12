@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 export interface SyncTask {
   id: string;
@@ -22,7 +23,7 @@ export interface SyncNotification {
   notification_type: 'success' | 'error' | 'warning';
   title: string;
   message: string;
-  details: any;
+  details: unknown;
   is_read: boolean;
   created_at: string;
 }
@@ -44,14 +45,14 @@ export const useSyncTasks = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error loading sync tasks:', error);
+        logger.error('Error loading sync tasks:', error);
         toast.error('Erreur lors du chargement des tâches de synchronisation');
         return;
       }
 
       setTasks((data || []) as SyncTask[]);
-    } catch (error: any) {
-      console.error('Error loading sync tasks:', error);
+    } catch (error: unknown) {
+      logger.error('Error loading sync tasks:', error);
       toast.error('Erreur lors du chargement des tâches de synchronisation');
     }
   };
@@ -68,13 +69,13 @@ export const useSyncTasks = () => {
         .limit(50);
 
       if (error) {
-        console.error('Error loading sync notifications:', error);
+        logger.error('Error loading sync notifications:', error);
         return;
       }
 
       setNotifications((data || []) as SyncNotification[]);
-    } catch (error: any) {
-      console.error('Error loading sync notifications:', error);
+    } catch (error: unknown) {
+      logger.error('Error loading sync notifications:', error);
     }
   };
 
@@ -105,7 +106,7 @@ export const useSyncTasks = () => {
           .eq('id', existingTask.id);
 
         if (error) {
-          console.error('Error updating sync task:', error);
+          logger.error('Error updating sync task:', error);
           toast.error('Erreur lors de la mise à jour de la tâche');
           return;
         }
@@ -122,7 +123,7 @@ export const useSyncTasks = () => {
           });
 
         if (error) {
-          console.error('Error creating sync task:', error);
+          logger.error('Error creating sync task:', error);
           toast.error('Erreur lors de la création de la tâche');
           return;
         }
@@ -130,8 +131,8 @@ export const useSyncTasks = () => {
 
       await loadTasks();
       toast.success(`Synchronisation ${syncType} ${isEnabled ? 'activée' : 'désactivée'}`);
-    } catch (error: any) {
-      console.error('Error creating/updating sync task:', error);
+    } catch (error: unknown) {
+      logger.error('Error creating/updating sync task:', error);
       toast.error('Erreur lors de la configuration de la synchronisation');
     }
   };
@@ -147,7 +148,7 @@ export const useSyncTasks = () => {
         .eq('user_id', user.id);
 
       if (error) {
-        console.error('Error marking notification as read:', error);
+        logger.error('Error marking notification as read:', error);
         return;
       }
 
@@ -158,8 +159,8 @@ export const useSyncTasks = () => {
             : notif
         )
       );
-    } catch (error: any) {
-      console.error('Error marking notification as read:', error);
+    } catch (error: unknown) {
+      logger.error('Error marking notification as read:', error);
     }
   };
 
@@ -192,7 +193,7 @@ export const useSyncTasks = () => {
           filter: `user_id=eq.${user.id}`
         },
         (payload) => {
-          console.log('New sync notification:', payload);
+          logger.debug('New sync notification:', payload);
           setNotifications(prev => [payload.new as SyncNotification, ...prev]);
           
           // Show toast notification
@@ -219,7 +220,7 @@ export const useSyncTasks = () => {
         try {
           supabase.removeChannel(channel);
         } catch (err) {
-          console.warn('⚠️ Warning during sync tasks cleanup:', err);
+          logger.warn('Warning during sync tasks cleanup:', err);
         }
       }, 100);
     };
