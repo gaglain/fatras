@@ -1,6 +1,6 @@
-
 import { useEffect, useCallback, useRef } from 'react';
 import { useWebsiteConfig } from '@/contexts/WebsiteConfigContext';
+import { logger } from '@/lib/logger';
 
 export const useUnifiedWebsiteSync = () => {
   const { reloadConfig } = useWebsiteConfig();
@@ -18,7 +18,7 @@ export const useUnifiedWebsiteSync = () => {
     syncInProgress.current = true;
     lastSyncTime.current = now;
     
-    console.log('🔄 Unified sync triggered');
+    logger.debug('Unified sync triggered');
     
     setTimeout(() => {
       reloadConfig();
@@ -27,7 +27,7 @@ export const useUnifiedWebsiteSync = () => {
   }, [reloadConfig]);
 
   useEffect(() => {
-    console.log('🚀 Unified website sync initialized');
+    logger.debug('Unified website sync initialized');
     
     // Sync initial
     performSync();
@@ -35,20 +35,20 @@ export const useUnifiedWebsiteSync = () => {
     // Écouter les changements de localStorage
     const handleStorageChange = (event: StorageEvent) => {
       if (['websiteConfig', 'websiteSettings', 'websiteDesign'].includes(event.key || '')) {
-        console.log('📦 Storage change detected:', event.key);
+        logger.debug('Storage change detected:', event.key);
         performSync();
       }
     };
 
     // Écouter les événements personnalisés
     const handleCustomEvents = () => {
-      console.log('⚡ Custom config event detected');
+      logger.debug('Custom config event detected');
       performSync();
     };
 
     // Écouter le focus de la fenêtre
     const handleFocus = () => {
-      console.log('👁️ Window focus detected');
+      logger.debug('Window focus detected');
       performSync();
     };
 
@@ -67,7 +67,7 @@ export const useUnifiedWebsiteSync = () => {
   }, [performSync]);
 
   const forceSync = useCallback(() => {
-    console.log('🔄 Force sync requested');
+    logger.debug('Force sync requested');
     syncInProgress.current = false;
     lastSyncTime.current = 0;
     performSync();

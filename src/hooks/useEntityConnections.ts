@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { notifyOpportunityAssignment, notifyQuoteAssignment } from '@/utils/notificationHelpers';
+import { logger } from '@/lib/logger';
 
 export interface EntityConnection {
   id: string;
@@ -22,6 +23,41 @@ export interface ConnectedEntities {
   tasks: EntityConnection[];
   artists: EntityConnection[];
   roadshow_stops: EntityConnection[];
+}
+
+interface CentralizedEvent {
+  id: string;
+  title: string;
+  status: string;
+  start_date: string | null;
+}
+
+interface Opportunity {
+  id: string;
+  title: string;
+  status: string;
+  date: string | null;
+}
+
+interface Quote {
+  id: string;
+  title: string;
+  status: string;
+  created_at: string;
+}
+
+interface Task {
+  id: string;
+  title: string;
+  status: string;
+  due_date: string | null;
+}
+
+interface RoadshowStop {
+  id: string;
+  city: string;
+  status: string;
+  event_date: string | null;
 }
 
 export const useEntityConnections = () => {
@@ -44,7 +80,7 @@ export const useEntityConnections = () => {
 
     setLoading(true);
     try {
-      console.log('🔍 Recherche des connexions pour contact:', contactId, 'user:', user.id);
+      logger.debug('Recherche des connexions pour contact:', contactId, 'user:', user.id);
       
       const [
         eventsRes,
@@ -116,21 +152,12 @@ export const useEntityConnections = () => {
           .eq('contact_id', contactId)
       ]);
 
-      console.log('📦 Résultats bruts des requêtes:', {
-        eventsRes: { data: eventsRes.data, error: eventsRes.error },
-        opportunitiesRes: { data: opportunitiesRes.data, error: opportunitiesRes.error },
-        quotesRes: { data: quotesRes.data, error: quotesRes.error },
-        tasksRes: { 
-          data: tasksRes.data, 
-          error: tasksRes.error,
-          count: tasksRes.data?.length,
-          sample: tasksRes.data?.[0]
-        },
-        taskEntitiesRes: { 
-          data: taskEntitiesRes.data, 
-          error: taskEntitiesRes.error,
-          count: taskEntitiesRes.data?.length 
-        }
+      logger.debug('Résultats bruts des requêtes:', {
+        events: eventsRes.data?.length,
+        opportunities: opportunitiesRes.data?.length,
+        quotes: quotesRes.data?.length,
+        tasks: tasksRes.data?.length,
+        taskEntities: taskEntitiesRes.data?.length
       });
 
       const connections: ConnectedEntities = {
@@ -144,10 +171,10 @@ export const useEntityConnections = () => {
       };
 
       // Map pour éviter les doublons
-      const eventMap = new Map();
-      const opportunityMap = new Map();
-      const quoteMap = new Map();
-      const taskMap = new Map();
+      const eventMap = new Map<string, EntityConnection>();
+      const opportunityMap = new Map<string, EntityConnection>();
+      const quoteMap = new Map<string, EntityConnection>();
+      const taskMap = new Map<string, EntityConnection>();
 
       // Traiter les événements directs
       if (eventsRes.data) {
@@ -158,18 +185,18 @@ export const useEntityConnections = () => {
             entity_id: event.id,
             title: event.title,
             status: event.status,
-            date: event.start_date
+            date: event.start_date || undefined
           });
         });
       }
 
       // Traiter les événements via liaison (supporte centralized_events)
       if (eventsMapRes.data && !eventsMapRes.error) {
-        eventsMapRes.data.forEach((item: any) => {
+        eventsMapRes.data.forEach((item: { event_id: string; centralized_events: CentralizedEvent | CentralizedEvent[] }) => {
           // Normaliser l'événement joint (peut être centralized_events ou events selon la relation)
           const ev = Array.isArray(item.centralized_events)
             ? item.centralized_events[0]
-            : (item.centralized_events || (Array.isArray(item.events) ? item.events[0] : item.events));
+            : item.centralized_events;
 
           if (ev && !eventMap.has(ev.id)) {
             eventMap.set(ev.id, {
@@ -178,7 +205,7 @@ export const useEntityConnections = () => {
               entity_id: ev.id,
               title: ev.title,
               status: ev.status,
-              date: ev.start_date
+              date: ev.start_date || undefined
             });
           }
         });
@@ -193,14 +220,14 @@ export const useEntityConnections = () => {
             entity_id: opp.id,
             title: opp.title,
             status: opp.status,
-            date: opp.date
+            date: opp.date || undefined
           });
         });
       }
 
       // Traiter les opportunités via liaison
       if (opportunitiesMapRes.data) {
-        opportunitiesMapRes.data.forEach(item => {
+        opportunitiesMapRes.data.forEach((item: { opportunity_id: string; role: string | null; opportunities: Opportunity | null }) => {
           if (item.opportunities && !opportunityMap.has(item.opportunities.id)) {
             opportunityMap.set(item.opportunities.id, {
               id: item.opportunities.id,
@@ -208,8 +235,8 @@ export const useEntityConnections = () => {
               entity_id: item.opportunities.id,
               title: item.opportunities.title,
               status: item.opportunities.status,
-              date: item.opportunities.date,
-              role: item.role
+              date: item.opportunities.date || undefined,
+              role: item.role || undefined
             });
           }
         });
@@ -231,7 +258,7 @@ export const useEntityConnections = () => {
 
       // Traiter les devis via liaison
       if (quotesMapRes.data) {
-        quotesMapRes.data.forEach(item => {
+        quotesMapRes.data.forEach((item: { quote_id: string; role: string | null; quotes: Quote | null }) => {
           if (item.quotes && !quoteMap.has(item.quotes.id)) {
             quoteMap.set(item.quotes.id, {
               id: item.quotes.id,
@@ -240,7 +267,7 @@ export const useEntityConnections = () => {
               title: item.quotes.title,
               status: item.quotes.status,
               date: item.quotes.created_at,
-              role: item.role
+              role: item.role || undefined
             });
           }
         });
@@ -248,7 +275,7 @@ export const useEntityConnections = () => {
 
       // Traiter les tâches directes
       if (tasksRes.data) {
-        console.log('📋 Tâches directes trouvées:', tasksRes.data);
+        logger.debug('Tâches directes trouvées:', tasksRes.data.length);
         tasksRes.data.forEach(task => {
           taskMap.set(task.id, {
             id: task.id,
@@ -256,15 +283,15 @@ export const useEntityConnections = () => {
             entity_id: task.id,
             title: task.title,
             status: task.status,
-            date: task.due_date
+            date: task.due_date || undefined
           });
         });
       }
 
       // Traiter les tâches via task_entities
       if (taskEntitiesRes.data) {
-        console.log('📋 Tâches via task_entities trouvées:', taskEntitiesRes.data);
-        taskEntitiesRes.data.forEach(item => {
+        logger.debug('Tâches via task_entities trouvées:', taskEntitiesRes.data.length);
+        taskEntitiesRes.data.forEach((item: { task_id: string; tasks: Task | null }) => {
           if (item.tasks && !taskMap.has(item.tasks.id)) {
             taskMap.set(item.tasks.id, {
               id: item.tasks.id,
@@ -272,17 +299,17 @@ export const useEntityConnections = () => {
               entity_id: item.tasks.id,
               title: item.tasks.title,
               status: item.tasks.status,
-              date: item.tasks.due_date
+              date: item.tasks.due_date || undefined
             });
           }
         });
       }
       
-      console.log('📊 Total tâches dans taskMap:', taskMap.size);
+      logger.debug('Total tâches dans taskMap:', taskMap.size);
 
       // Traiter les roadshow stops
       if (roadshowRes.data) {
-        roadshowRes.data.forEach(item => {
+        roadshowRes.data.forEach((item: { roadshow_stop_id: string; role: string | null; roadshow_stops: RoadshowStop | null }) => {
           if (item.roadshow_stops) {
             connections.roadshow_stops.push({
               id: item.roadshow_stops.id,
@@ -290,8 +317,8 @@ export const useEntityConnections = () => {
               entity_id: item.roadshow_stops.id,
               title: `${item.roadshow_stops.city}`,
               status: item.roadshow_stops.status,
-              date: item.roadshow_stops.event_date,
-              role: item.role
+              date: item.roadshow_stops.event_date || undefined,
+              role: item.role || undefined
             });
           }
         });
@@ -303,7 +330,7 @@ export const useEntityConnections = () => {
       connections.quotes = Array.from(quoteMap.values());
       connections.tasks = Array.from(taskMap.values());
 
-      console.log('✅ Connexions finales pour le contact:', {
+      logger.debug('Connexions finales pour le contact:', {
         events: connections.events.length,
         opportunities: connections.opportunities.length,
         quotes: connections.quotes.length,
@@ -313,7 +340,7 @@ export const useEntityConnections = () => {
 
       return connections;
     } catch (error) {
-      console.error('Erreur lors du chargement des connexions:', error);
+      logger.error('Erreur lors du chargement des connexions:', error);
       toast.error('Erreur lors du chargement des éléments liés');
       return {} as ConnectedEntities;
     } finally {
@@ -352,26 +379,29 @@ export const useEntityConnections = () => {
         return true;
       }
 
-      const insertData: any = {
-        contact_id: contactId
-      };
-
+      let error = null;
+      
       if (entityType === 'event') {
-        insertData.event_id = entityId;
+        const res = await supabase
+          .from('contact_events')
+          .insert({ contact_id: contactId, event_id: entityId });
+        error = res.error;
       } else if (entityType === 'opportunity') {
-        insertData.opportunity_id = entityId;
-        insertData.role = role;
+        const res = await supabase
+          .from('contact_opportunities')
+          .insert({ contact_id: contactId, opportunity_id: entityId, role });
+        error = res.error;
       } else if (entityType === 'quote') {
-        insertData.quote_id = entityId;
-        insertData.role = role;
+        const res = await supabase
+          .from('contact_quotes')
+          .insert({ contact_id: contactId, quote_id: entityId, role });
+        error = res.error;
       } else if (entityType === 'roadshow_stop') {
-        insertData.roadshow_stop_id = entityId;
-        insertData.role = role;
+        const res = await supabase
+          .from('roadshow_contacts')
+          .insert({ contact_id: contactId, roadshow_stop_id: entityId, role });
+        error = res.error;
       }
-
-      const { error } = await supabase
-        .from(table as any)
-        .insert(insertData);
 
       if (error) throw error;
 
@@ -392,8 +422,6 @@ export const useEntityConnections = () => {
           .single();
 
         if (contactData?.user_id && assignerData?.email) {
-          const contactName = `${contactData.first_name} ${contactData.last_name}`.trim();
-
           if (entityType === 'opportunity') {
             // Récupérer le titre de l'opportunité
             const { data: opportunityData } = await supabase
@@ -433,7 +461,7 @@ export const useEntityConnections = () => {
       toast.success('Liaison créée avec succès');
       return true;
     } catch (error) {
-      console.error('Erreur lors de la création de la liaison:', error);
+      logger.error('Erreur lors de la création de la liaison:', error);
       toast.error('Erreur lors de la création de la liaison');
       return false;
     }
@@ -468,17 +496,43 @@ export const useEntityConnections = () => {
         return true;
       }
 
-      const { error } = await supabase
-        .from(mapping.table as any)
-        .delete()
-        .eq('contact_id', contactId)
-        .eq(mapping.field, entityId);
+      let error = null;
+      
+      if (entityType === 'event') {
+        const res = await supabase
+          .from('contact_events')
+          .delete()
+          .eq('contact_id', contactId)
+          .eq('event_id', entityId);
+        error = res.error;
+      } else if (entityType === 'opportunity') {
+        const res = await supabase
+          .from('contact_opportunities')
+          .delete()
+          .eq('contact_id', contactId)
+          .eq('opportunity_id', entityId);
+        error = res.error;
+      } else if (entityType === 'quote') {
+        const res = await supabase
+          .from('contact_quotes')
+          .delete()
+          .eq('contact_id', contactId)
+          .eq('quote_id', entityId);
+        error = res.error;
+      } else if (entityType === 'roadshow_stop') {
+        const res = await supabase
+          .from('roadshow_contacts')
+          .delete()
+          .eq('contact_id', contactId)
+          .eq('roadshow_stop_id', entityId);
+        error = res.error;
+      }
 
       if (error) throw error;
       toast.success('Liaison supprimée avec succès');
       return true;
     } catch (error) {
-      console.error('Erreur lors de la suppression de la liaison:', error);
+      logger.error('Erreur lors de la suppression de la liaison:', error);
       toast.error('Erreur lors de la suppression de la liaison');
       return false;
     }

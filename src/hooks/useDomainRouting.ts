@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { logger } from '@/lib/logger';
 
 export type DomainType = 'public' | 'booking' | 'preview';
 
@@ -19,11 +20,11 @@ export const useDomainRouting = (): DomainConfig => {
   return useMemo(() => {
     const hostname = window.location.hostname;
     
-    console.log('🌐 Domain routing - hostname:', hostname);
+    logger.debug('Domain routing - hostname:', hostname);
     
     // Check for booking subdomain first
     if (hostname === 'booking.fatras.net' || hostname.startsWith('booking.')) {
-      console.log('🎫 Detected booking domain');
+      logger.debug('Detected booking domain');
       return {
         type: 'booking',
         isPublicSite: false,
@@ -34,7 +35,7 @@ export const useDomainRouting = (): DomainConfig => {
     
     // Check for main public domain (fatras.net without subdomain)
     if (hostname === 'fatras.net' || hostname === 'www.fatras.net') {
-      console.log('🌍 Detected public domain');
+      logger.debug('Detected public domain');
       return {
         type: 'public',
         isPublicSite: true,
@@ -44,7 +45,7 @@ export const useDomainRouting = (): DomainConfig => {
     }
     
     // Preview/development mode (lovable.app or localhost)
-    console.log('🔧 Detected preview/development domain');
+    logger.debug('Detected preview/development domain');
     return {
       type: 'preview',
       isPublicSite: false,
