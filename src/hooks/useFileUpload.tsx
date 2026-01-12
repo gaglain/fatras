@@ -1,8 +1,8 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { optimizeImage, createOptimizedFile, shouldOptimize, OptimizationOptions } from '@/utils/imageOptimizer';
+import { logger } from '@/lib/logger';
 
 interface UploadResult {
   url: string;
@@ -24,7 +24,7 @@ export const useFileUpload = () => {
       const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
       
       if (!bucketExists) {
-        console.log(`Creating bucket: ${bucketName}`);
+        logger.debug(`Creating bucket: ${bucketName}`);
         const { error } = await supabase.storage.createBucket(bucketName, {
           public: true,
           allowedMimeTypes: ['image/*', 'application/pdf', 'text/*', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
@@ -32,14 +32,14 @@ export const useFileUpload = () => {
         });
         
         if (error) {
-          console.error(`Error creating bucket ${bucketName}:`, error);
+          logger.error(`Error creating bucket ${bucketName}:`, error);
           throw error;
         }
         
-        console.log(`✅ Bucket ${bucketName} created successfully`);
+        logger.debug(`Bucket ${bucketName} created successfully`);
       }
     } catch (error) {
-      console.error(`Error managing bucket ${bucketName}:`, error);
+      logger.error(`Error managing bucket ${bucketName}:`, error);
       // Continue même si la création du bucket échoue
     }
   };
@@ -67,7 +67,7 @@ export const useFileUpload = () => {
 
       // Optimiser automatiquement les images si nécessaire
       if (file.type.startsWith('image/') && shouldOptimize(file, 100)) {
-        console.log('🖼️ Optimisation automatique de l\'image...');
+        logger.debug('Optimisation automatique de l\'image...');
         setUploadProgress(10);
         
         const result = await optimizeImage(file, {
@@ -82,7 +82,7 @@ export const useFileUpload = () => {
         if (result.compressionRatio > 1.1) {
           fileToUpload = createOptimizedFile(result.blob, file.name, result.format);
           wasOptimized = true;
-          console.log(`✅ Image optimisée: ${(originalSize / 1024).toFixed(0)}KB → ${(result.optimizedSize / 1024).toFixed(0)}KB`);
+          logger.debug(`Image optimisée: ${(originalSize / 1024).toFixed(0)}KB → ${(result.optimizedSize / 1024).toFixed(0)}KB`);
         }
         
         setUploadProgress(30);
@@ -92,7 +92,7 @@ export const useFileUpload = () => {
       const fileExt = fileToUpload.name.split('.').pop();
       const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
 
-      console.log(`🔄 Uploading file: ${fileName} to bucket: ${bucketName}`);
+      logger.debug(`Uploading file: ${fileName} to bucket: ${bucketName}`);
 
       // Simuler le progrès
       const progressInterval = setInterval(() => {
@@ -110,7 +110,7 @@ export const useFileUpload = () => {
       clearInterval(progressInterval);
 
       if (error) {
-        console.error('Upload error:', error);
+        logger.error('Upload error:', error);
         throw error;
       }
 
@@ -130,7 +130,7 @@ export const useFileUpload = () => {
         finalSize: fileToUpload.size
       };
 
-      console.log('✅ File uploaded successfully:', result);
+      logger.debug('File uploaded successfully:', result.path);
       
       if (wasOptimized) {
         const savedKB = ((originalSize - fileToUpload.size) / 1024).toFixed(0);
@@ -141,9 +141,10 @@ export const useFileUpload = () => {
 
       return result;
 
-    } catch (error: any) {
-      console.error('❌ Upload failed:', error);
-      toast.error(`Erreur lors de l'upload: ${error.message}`);
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'Erreur inconnue';
+      logger.error('Upload failed:', error);
+      toast.error(`Erreur lors de l'upload: ${msg}`);
       throw error;
     } finally {
       setIsUploading(false);
@@ -188,11 +189,12 @@ export const useFileUpload = () => {
 
       if (error) throw error;
       
-      console.log('✅ File deleted successfully:', filePath);
+      logger.debug('File deleted successfully:', filePath);
       toast.success('Fichier supprimé');
-    } catch (error: any) {
-      console.error('❌ Delete failed:', error);
-      toast.error(`Erreur lors de la suppression: ${error.message}`);
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'Erreur inconnue';
+      logger.error('Delete failed:', error);
+      toast.error(`Erreur lors de la suppression: ${msg}`);
       throw error;
     }
   };
