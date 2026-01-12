@@ -1,5 +1,5 @@
-
 import { useCallback } from 'react';
+import { logger } from '@/lib/logger';
 
 interface WebsiteSettings {
   siteName: string;
@@ -35,7 +35,7 @@ export const useWebsiteDataManager = () => {
       try {
         return JSON.parse(savedSettings);
       } catch (error) {
-        console.error('❌ Error loading settings:', error);
+        logger.error('Error loading settings:', error);
       }
     }
     return null;
@@ -47,7 +47,7 @@ export const useWebsiteDataManager = () => {
       try {
         return JSON.parse(savedDesign);
       } catch (error) {
-        console.error('❌ Error loading design:', error);
+        logger.error('Error loading design:', error);
       }
     }
     return null;
@@ -56,7 +56,7 @@ export const useWebsiteDataManager = () => {
   const updatePageTitle = useCallback((siteName: string) => {
     if (document.title !== siteName) {
       document.title = siteName;
-      console.log('📄 Page title updated to:', siteName);
+      logger.debug('Page title updated to:', siteName);
     }
   }, []);
 
@@ -68,7 +68,7 @@ export const useWebsiteDataManager = () => {
       document.head.appendChild(metaDescription);
     }
     metaDescription.setAttribute('content', description);
-    console.log('📝 Meta description updated');
+    logger.debug('Meta description updated');
   }, []);
 
   const updateDOMElements = useCallback((siteName: string, logo?: string) => {
@@ -77,7 +77,6 @@ export const useWebsiteDataManager = () => {
     siteNameElements.forEach((el) => {
       if (el.textContent !== siteName) {
         el.textContent = siteName;
-        console.log('📝 Site name element updated');
       }
     });
     
@@ -89,7 +88,6 @@ export const useWebsiteDataManager = () => {
         if (imgEl.src !== logo) {
           imgEl.src = logo;
           imgEl.style.display = 'block';
-          console.log('🖼️ Logo element updated');
         }
       });
     }

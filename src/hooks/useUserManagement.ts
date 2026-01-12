@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useNylasEmail } from './useNylasEmail';
 import { useEmailSender } from './useEmailSender';
+import { logger } from '@/lib/logger';
 export interface ExtendedUserProfile {
   id: string;
   user_id: string | null;
@@ -49,14 +50,14 @@ export const useUserManagement = () => {
         .order('created_at', { ascending: false });
       
       if (error) {
-        console.error('Erreur lors du chargement des utilisateurs:', error);
+        logger.error('Erreur lors du chargement des utilisateurs:', error);
         toast.error('Erreur lors du chargement des utilisateurs');
         return;
       }
 
       setUsers((data || []) as ExtendedUserProfile[]);
     } catch (error) {
-      console.error('Erreur:', error);
+      logger.error('Erreur:', error);
       toast.error('Erreur lors du chargement des utilisateurs');
     } finally {
       setLoading(false);
@@ -98,10 +99,10 @@ export const useUserManagement = () => {
 
     try {
       setLoading(true);
-      console.log('🔄 Création utilisateur:', { email: userData.email, role: userData.role });
+      logger.debug('Création utilisateur:', { email: userData.email, role: userData.role });
 
       // ÉTAPE 1: Créer le compte Auth via Edge Function d'abord
-      console.log('📍 Étape 1: Création du compte Auth...');
+      logger.debug('Étape 1: Création du compte Auth...');
       let authUserId: string | undefined;
       
       try {
@@ -119,26 +120,27 @@ export const useUserManagement = () => {
           }
         });
 
-        console.log('📊 Réponse admin-create-user:', createData);
+        logger.debug('Réponse admin-create-user:', createData);
 
         if (createError) {
-          console.error('❌ Erreur Edge Function:', createError);
+          logger.error('Erreur Edge Function:', createError);
           result.errors.push(`Erreur création auth: ${createError.message}`);
         } else if (!createData?.success) {
-          console.error('❌ Échec création auth:', createData?.error);
+          logger.error('Échec création auth:', createData?.error);
           result.errors.push(`Échec création auth: ${createData?.error || 'erreur inconnue'}`);
         } else {
           authUserId = createData?.user?.id;
           result.authCreated = true;
-          console.log('✅ Compte Auth créé:', authUserId);
+          logger.debug('Compte Auth créé:', authUserId);
         }
-      } catch (authError: any) {
-        console.error('❌ Exception création auth:', authError);
-        result.errors.push(`Exception auth: ${authError?.message || 'erreur inconnue'}`);
+      } catch (authError: unknown) {
+        const msg = authError instanceof Error ? authError.message : 'erreur inconnue';
+        logger.error('Exception création auth:', authError);
+        result.errors.push(`Exception auth: ${msg}`);
       }
 
       // ÉTAPE 2: Créer ou mettre à jour le profil
-      console.log('📍 Étape 2: Création/mise à jour du profil...');
+      logger.debug('Étape 2: Création/mise à jour du profil...');
       
       try {
         // Vérifier si un profil existe déjà pour cet email
@@ -169,11 +171,11 @@ export const useUserManagement = () => {
             .eq('id', existingProfile.id);
 
           if (updateError) {
-            console.error('❌ Erreur mise à jour profil:', updateError);
+            logger.error('Erreur mise à jour profil:', updateError);
             result.errors.push(`Erreur mise à jour profil: ${updateError.message}`);
           } else {
             result.profileCreated = true;
-            console.log('✅ Profil mis à jour');
+            logger.debug('Profil mis à jour');
           }
         } else {
           // Créer un nouveau profil
@@ -195,21 +197,22 @@ export const useUserManagement = () => {
             });
 
           if (insertError) {
-            console.error('❌ Erreur création profil:', insertError);
+            logger.error('Erreur création profil:', insertError);
             result.errors.push(`Erreur création profil: ${insertError.message}`);
           } else {
             result.profileCreated = true;
-            console.log('✅ Profil créé');
+            logger.debug('Profil créé');
           }
         }
-      } catch (profileError: any) {
-        console.error('❌ Exception profil:', profileError);
-        result.errors.push(`Exception profil: ${profileError?.message || 'erreur inconnue'}`);
+      } catch (profileError: unknown) {
+        const msg = profileError instanceof Error ? profileError.message : 'erreur inconnue';
+        logger.error('Exception profil:', profileError);
+        result.errors.push(`Exception profil: ${msg}`);
       }
 
       // ÉTAPE 3: Envoyer l'email de bienvenue (seulement si auth créé)
       if (result.authCreated) {
-        console.log('📍 Étape 3: Envoi email de bienvenue...');
+        logger.debug('Étape 3: Envoi email de bienvenue...');
         
         try {
           let emailSent = false;
@@ -225,22 +228,23 @@ export const useUserManagement = () => {
                 html: `<h2>Bienvenue ${userData.first_name} ${userData.last_name}!</h2><p>Votre compte a été créé.</p><p><strong>Email:</strong> ${userData.email}<br><strong>Mot de passe:</strong> <code>${userData.password}</code></p>`
               });
               emailSent = true;
-              console.log('✅ Email envoyé via Nylas');
+              logger.debug('Email envoyé via Nylas');
             } catch (nylasError) {
-              console.warn('⚠️ Échec Nylas, tentative Resend...');
+              logger.warn('Échec Nylas, tentative Resend...');
             }
           }
           
           if (!emailSent) {
             await sendUserWelcomeEmail(userData.email, `${userData.first_name} ${userData.last_name}`, userData.password);
             emailSent = true;
-            console.log('✅ Email envoyé via Resend');
+            logger.debug('Email envoyé via Resend');
           }
           
           result.emailSent = emailSent;
-        } catch (emailError: any) {
-          console.error('❌ Erreur envoi email:', emailError);
-          result.errors.push(`Erreur email: ${emailError?.message || 'envoi échoué'}`);
+        } catch (emailError: unknown) {
+          const msg = emailError instanceof Error ? emailError.message : 'envoi échoué';
+          logger.error('Erreur envoi email:', emailError);
+          result.errors.push(`Erreur email: ${msg}`);
         }
       } else {
         result.errors.push('Email non envoyé car le compte auth n\'a pas été créé');
@@ -267,13 +271,14 @@ export const useUserManagement = () => {
         }
       }
 
-      console.log('📊 Résultat création:', result);
+      logger.debug('Résultat création:', result);
       await fetchUsers();
       return result;
 
-    } catch (error: any) {
-      console.error('❌ Erreur générale:', error);
-      result.errors.push(`Erreur générale: ${error?.message || 'inconnue'}`);
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'inconnue';
+      logger.error('Erreur générale:', error);
+      result.errors.push(`Erreur générale: ${msg}`);
       toast.error('Erreur lors de la création de l\'utilisateur');
       return result;
     } finally {
@@ -285,14 +290,14 @@ export const useUserManagement = () => {
   const retryAuthCreation = async (email: string, password: string): Promise<boolean> => {
     try {
       setLoading(true);
-      console.log('🔄 Réessai création auth pour:', email);
+      logger.debug('Réessai création auth pour:', email);
 
       const { data: createData, error: createError } = await supabase.functions.invoke('admin-create-user', {
         body: { email, password }
       });
 
       if (createError || !createData?.success) {
-        console.error('❌ Échec réessai:', createError || createData?.error);
+        logger.error('Échec réessai:', createError || createData?.error);
         toast.error(`Échec: ${createError?.message || createData?.error}`);
         return false;
       }
@@ -310,9 +315,10 @@ export const useUserManagement = () => {
       }
 
       return false;
-    } catch (error: any) {
-      console.error('❌ Erreur réessai:', error);
-      toast.error(`Erreur: ${error?.message}`);
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'inconnue';
+      logger.error('Erreur réessai:', error);
+      toast.error(`Erreur: ${msg}`);
       return false;
     } finally {
       setLoading(false);
@@ -331,7 +337,7 @@ export const useUserManagement = () => {
           last_name: userData.last_name,
           username: userData.username,
           phone: userData.phone,
-          role: userData.role, // Assurer que le rôle est bien mis à jour
+          role: userData.role,
           address: userData.address,
           city: userData.city,
           function_title: userData.function_title,
@@ -354,7 +360,7 @@ export const useUserManagement = () => {
         .eq('user_id', userId);
 
       if (error) {
-        console.error('Erreur mise à jour:', error);
+        logger.error('Erreur mise à jour:', error);
         toast.error('Erreur lors de la mise à jour');
         return false;
       }
@@ -363,7 +369,7 @@ export const useUserManagement = () => {
       await fetchUsers();
       return true;
     } catch (error) {
-      console.error('Erreur:', error);
+      logger.error('Erreur:', error);
       toast.error('Erreur lors de la mise à jour');
       return false;
     } finally {
@@ -374,7 +380,7 @@ export const useUserManagement = () => {
   const deactivateUser = async (userId: string) => {
     try {
       setLoading(true);
-      console.log('🗑️ Suppression utilisateur:', userId);
+      logger.debug('Suppression utilisateur:', userId);
 
       const target = users.find(u => u.user_id === userId || u.id === userId);
       const email = target?.email;
@@ -386,21 +392,21 @@ export const useUserManagement = () => {
         });
 
         if (delAuthError) {
-          console.error('❌ Erreur suppression Auth:', delAuthError);
+          logger.error('Erreur suppression Auth:', delAuthError);
           toast.error(`Erreur suppression Auth: ${delAuthError.message}`);
           return false;
         }
 
         if (delAuthData?.success === false) {
-          console.error('❌ Échec suppression Auth:', delAuthData?.error);
+          logger.error('Échec suppression Auth:', delAuthData?.error);
           toast.error(`Erreur suppression Auth: ${delAuthData?.error || 'inconnue'}`);
           return false;
         }
 
         if (delAuthData?.deletedAuth) {
-          console.log('✅ Utilisateur supprimé dans Auth');
+          logger.debug('Utilisateur supprimé dans Auth');
         } else {
-          console.log('ℹ️ Aucun utilisateur Auth trouvé (probablement profil sans compte)');
+          logger.debug('Aucun utilisateur Auth trouvé (probablement profil sans compte)');
         }
       }
 
@@ -410,25 +416,25 @@ export const useUserManagement = () => {
       });
 
       if (error) {
-        console.error('❌ Erreur suppression profil:', error);
+        logger.error('Erreur suppression profil:', error);
         toast.error('Erreur lors de la suppression du profil');
         return false;
       }
 
       if (data && typeof data === 'object' && 'success' in data && !data.success) {
-        console.error('❌ Erreur suppression profil:', data.error);
+        logger.error('Erreur suppression profil:', data.error);
         toast.error(String(data.error || 'Erreur inconnue'));
         return false;
       }
 
       // Mettre à jour immédiatement la liste locale
       setUsers(prev => prev.filter(user => user.user_id !== userId && user.id !== userId));
-      console.log('✅ Utilisateur supprimé avec succès');
+      logger.debug('Utilisateur supprimé avec succès');
       toast.success('Utilisateur supprimé définitivement');
       await fetchUsers();
       return true;
     } catch (error) {
-      console.error('❌ Erreur suppression:', error);
+      logger.error('Erreur suppression:', error);
       toast.error('Erreur lors de la suppression');
       return false;
     } finally {
