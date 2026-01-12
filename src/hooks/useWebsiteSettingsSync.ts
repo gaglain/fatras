@@ -1,5 +1,5 @@
-
 import { useEffect, useCallback, useRef } from 'react';
+import { logger } from '@/lib/logger';
 
 interface WebsiteSettings {
   siteName: string;
@@ -34,7 +34,7 @@ export const useWebsiteSettingsSync = () => {
     try {
       const settings: WebsiteSettings = JSON.parse(savedSettings);
       
-      console.log('⚙️ Applying website settings');
+      logger.debug('Applying website settings');
       
       // Update title only if changed
       if (settings.siteName && document.title !== settings.siteName) {
@@ -64,9 +64,9 @@ export const useWebsiteSettingsSync = () => {
       
       lastSyncHash.current = savedSettings;
       
-      console.log('⚙️ Settings synchronized successfully');
+      logger.debug('Settings synchronized successfully');
     } catch (error) {
-      console.error('❌ Settings sync error:', error);
+      logger.error('Settings sync error:', error);
     } finally {
       syncInProgress.current = false;
     }

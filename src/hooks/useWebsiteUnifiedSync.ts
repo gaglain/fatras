@@ -1,7 +1,7 @@
-
 import { useEffect, useCallback, useRef } from 'react';
 import { useWebsiteStylesManager } from './useWebsiteStylesManager';
 import { useWebsiteDataManager } from './useWebsiteDataManager';
+import { logger } from '@/lib/logger';
 
 export const useWebsiteUnifiedSync = () => {
   const lastSyncTime = useRef(0);
@@ -23,25 +23,25 @@ export const useWebsiteUnifiedSync = () => {
     lastSyncTime.current = now;
     
     try {
-      console.log('🚀 Starting unified website sync');
+      logger.debug('Starting unified website sync');
       
       const settings = loadSettings();
       const design = loadDesign();
       
       // DEBUG: Log des données chargées
-      console.log('📊 Settings loaded:', settings?.siteName);
-      console.log('🎨 Design loaded:', design?.siteName);
+      logger.debug('Settings loaded:', settings?.siteName);
+      logger.debug('Design loaded:', design?.siteName);
       
       // Créer un hash simplifié pour détecter les vrais changements
       const currentDataHash = `${design?.siteName || 'default'}-${design?.primaryColor || 'default'}`;
-      console.log('🔄 Current hash:', currentDataHash, 'Last hash:', lastDataHash.current);
+      logger.debug('Current hash:', currentDataHash, 'Last hash:', lastDataHash.current);
       
       // Toujours appliquer les changements pour garantir la synchronisation
       lastDataHash.current = currentDataHash;
       
       // Déterminer le nom du site
       const finalSiteName = design?.siteName || settings?.siteName || 'Fatras';
-      console.log('🏷️ Final site name:', finalSiteName);
+      logger.debug('Final site name:', finalSiteName);
       
       // Mettre à jour le titre de la page
       updatePageTitle(finalSiteName);
@@ -66,17 +66,17 @@ export const useWebsiteUnifiedSync = () => {
       setTimeout(updateElements, 100);
       setTimeout(updateElements, 500);
       
-      console.log('✅ Unified sync completed successfully');
+      logger.debug('Unified sync completed successfully');
       
     } catch (error) {
-      console.error('❌ Unified sync error:', error);
+      logger.error('Unified sync error:', error);
     } finally {
       syncInProgress.current = false;
     }
   }, [applyStyles, loadSettings, loadDesign, updatePageTitle, updateMetaDescription, updateDOMElements]);
 
   useEffect(() => {
-    console.log('🚀 Unified website sync hook initialized');
+    logger.debug('Unified website sync hook initialized');
     
     // Sync initial
     applyAllChanges();
@@ -84,13 +84,13 @@ export const useWebsiteUnifiedSync = () => {
     // Écouter les changements de localStorage
     const handleStorageChange = (event: StorageEvent) => {
       if (['websiteSettings', 'websiteDesign'].includes(event.key || '')) {
-        console.log('💾 Storage change detected for:', event.key);
+        logger.debug('Storage change detected for:', event.key);
         setTimeout(applyAllChanges, 100);
       }
     };
 
     const handleCustomEvents = () => {
-      console.log('🎉 Custom event detected, forcing sync');
+      logger.debug('Custom event detected, forcing sync');
       setTimeout(applyAllChanges, 100);
     };
 
@@ -117,7 +117,7 @@ export const useWebsiteUnifiedSync = () => {
   }, [applyAllChanges, cleanup]);
 
   const forceSync = useCallback(() => {
-    console.log('🔄 Force sync requested');
+    logger.debug('Force sync requested');
     lastDataHash.current = '';
     syncInProgress.current = false;
     lastSyncTime.current = 0;

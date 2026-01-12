@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { toast } from 'sonner';
 import { useIndividualEmailTracking } from './useIndividualEmailTracking';
+import { logger } from '@/lib/logger';
 
 interface EmailAccount {
   id: string;
@@ -40,7 +41,7 @@ export const useNylasEmail = () => {
 
     setIsLoading(true);
     try {
-      console.log(`🔗 Connecting ${provider} account...`);
+      logger.debug(`Connecting ${provider} account...`);
 
       const { data, error } = await supabase.functions.invoke('nylas-email', {
         body: {
@@ -51,11 +52,11 @@ export const useNylasEmail = () => {
       });
 
       if (error) {
-        console.error('❌ Connection error:', error);
+        logger.error('Connection error:', error);
         throw error;
       }
 
-      console.log('✅ Connection result:', data);
+      logger.debug('Connection result:', data);
 
       if (data.success) {
         if (data.authorization_url) {
@@ -70,9 +71,10 @@ export const useNylasEmail = () => {
       } else {
         throw new Error(data.error || 'Failed to connect account');
       }
-    } catch (error: any) {
-      console.error('❌ Error connecting account:', error);
-      toast.error(`Connection failed: ${error.message}`);
+    } catch (error: unknown) {
+      const err = error as Error;
+      logger.error('Error connecting account:', err);
+      toast.error(`Connection failed: ${err.message}`);
       throw error;
     } finally {
       setIsLoading(false);
@@ -83,7 +85,7 @@ export const useNylasEmail = () => {
     if (!user) return;
 
     try {
-      console.log('📋 Loading Nylas accounts...');
+      logger.debug('Loading Nylas accounts...');
       
       // Récupérer les comptes via l'Edge Function Nylas
       const { data, error } = await supabase.functions.invoke('nylas-email', {
@@ -93,20 +95,21 @@ export const useNylasEmail = () => {
       });
 
       if (error) {
-        console.error('❌ Edge Function error:', error);
+        logger.error('Edge Function error:', error);
         throw error;
       }
 
-      console.log('✅ Loaded accounts from Nylas:', data);
+      logger.debug('Loaded accounts from Nylas:', data);
       
       if (data.success && data.accounts) {
         setAccounts(data.accounts);
       } else {
         setAccounts([]);
       }
-    } catch (error: any) {
-      console.error('❌ Error loading accounts:', error);
-      toast.error(`Failed to load accounts: ${error.message}`);
+    } catch (error: unknown) {
+      const err = error as Error;
+      logger.error('Error loading accounts:', err);
+      toast.error(`Failed to load accounts: ${err.message}`);
     }
   };
 
@@ -117,7 +120,7 @@ export const useNylasEmail = () => {
 
     setIsLoading(true);
     try {
-      console.log('🔄 Starting email sync...');
+      logger.debug('Starting email sync...');
 
       const { data, error } = await supabase.functions.invoke('nylas-email', {
         body: {
@@ -127,11 +130,11 @@ export const useNylasEmail = () => {
       });
 
       if (error) {
-        console.error('❌ Sync error:', error);
+        logger.error('Sync error:', error);
         throw error;
       }
 
-      console.log('✅ Sync result:', data);
+      logger.debug('Sync result:', data);
 
       if (data.success) {
         toast.success(`${data.syncedCount} nouveaux emails synchronisés`);
@@ -139,9 +142,10 @@ export const useNylasEmail = () => {
       } else {
         throw new Error(data.error || 'Sync failed');
       }
-    } catch (error: any) {
-      console.error('❌ Error in email sync:', error);
-      toast.error(`Sync failed: ${error.message}`);
+    } catch (error: unknown) {
+      const err = error as Error;
+      logger.error('Error in email sync:', err);
+      toast.error(`Sync failed: ${err.message}`);
       throw error;
     } finally {
       setIsLoading(false);
@@ -162,7 +166,7 @@ export const useNylasEmail = () => {
 
     setIsLoading(true);
     try {
-      console.log('📤 Sending email via Resend...');
+      logger.debug('Sending email via Resend...');
 
       // Trouver le contact correspondant à l'email destinataire
       const { data: contact } = await supabase
@@ -188,7 +192,7 @@ export const useNylasEmail = () => {
         .single();
 
       if (emailError || !emailRecord) {
-        console.error('Erreur création enregistrement email:', emailError);
+        logger.error('Erreur création enregistrement email:', emailError);
       }
 
       // Charger la signature de l'utilisateur
@@ -245,9 +249,10 @@ export const useNylasEmail = () => {
       }
       
       throw new Error(resendData?.error || 'Échec de l\'envoi');
-    } catch (error: any) {
-      console.error('❌ Error sending email:', error);
-      toast.error(`Échec de l'envoi: ${error?.message || 'Erreur inconnue'}`);
+    } catch (error: unknown) {
+      const err = error as Error;
+      logger.error('Error sending email:', err);
+      toast.error(`Échec de l'envoi: ${err?.message || 'Erreur inconnue'}`);
       throw error;
     } finally {
       setIsLoading(false);
@@ -260,7 +265,7 @@ export const useNylasEmail = () => {
 
     setIsLoading(true);
     try {
-      console.log('🔧 Testing connection...');
+      logger.debug('Testing connection...');
 
       const { data, error } = await supabase.functions.invoke('nylas-email', {
         body: {
@@ -270,11 +275,11 @@ export const useNylasEmail = () => {
       });
 
       if (error) {
-        console.error('❌ Test error:', error);
+        logger.error('Test error:', error);
         throw error;
       }
 
-      console.log('✅ Test result:', data);
+      logger.debug('Test result:', data);
 
       if (data.success) {
         toast.success('Connection test successful!');
@@ -282,9 +287,10 @@ export const useNylasEmail = () => {
       } else {
         throw new Error(data.message || 'Connection test failed');
       }
-    } catch (error: any) {
-      console.error('❌ Error testing connection:', error);
-      toast.error(`Test failed: ${error.message}`);
+    } catch (error: unknown) {
+      const err = error as Error;
+      logger.error('Error testing connection:', err);
+      toast.error(`Test failed: ${err.message}`);
       throw error;
     } finally {
       setIsLoading(false);
