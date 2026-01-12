@@ -1,43 +1,43 @@
-
 import { useEffect, useCallback } from 'react';
 import { useWebsiteConfig } from '@/contexts/WebsiteConfigContext';
+import { logger } from '@/lib/logger';
 
 export const useWebsiteConfigSync = () => {
   const { reloadConfig } = useWebsiteConfig();
 
   const forceSync = useCallback(() => {
-    console.log('🔄 Force sync requested');
+    logger.debug('Force sync requested');
     reloadConfig();
   }, [reloadConfig]);
 
   useEffect(() => {
-    console.log('🎯 WebsiteConfigSync hook mounted');
+    logger.debug('WebsiteConfigSync hook mounted');
     
     // Force reload au montage
     reloadConfig();
 
     const handleStorageChange = (event: StorageEvent) => {
-      console.log('📦 Storage event detected:', event.key);
+      logger.debug('Storage event detected:', event.key);
       if (event.key === 'websiteConfig' || event.key === 'websiteSettings' || event.key === 'websiteDesign') {
-        console.log('📦 Website config storage changed, reloading');
+        logger.debug('Website config storage changed, reloading');
         setTimeout(() => reloadConfig(), 100);
       }
     };
 
-    const handleConfigChange = (event?: CustomEvent) => {
-      console.log('⚡ Custom config change event detected');
+    const handleConfigChange = () => {
+      logger.debug('Custom config change event detected');
       setTimeout(() => reloadConfig(), 100);
     };
 
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        console.log('👁️ Page became visible, reloading config');
+        logger.debug('Page became visible, reloading config');
         setTimeout(() => reloadConfig(), 200);
       }
     };
 
     const handleFocus = () => {
-      console.log('🎯 Window focused, reloading config');
+      logger.debug('Window focused, reloading config');
       setTimeout(() => reloadConfig(), 100);
     };
 

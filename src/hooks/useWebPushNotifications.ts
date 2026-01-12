@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 interface PushSubscriptionData {
   endpoint: string;
@@ -36,7 +37,7 @@ export const useWebPushNotifications = () => {
       const existingSubscription = await registration.pushManager.getSubscription();
       setSubscription(existingSubscription);
     } catch (error) {
-      console.error('Error loading existing subscription:', error);
+      logger.error('Error loading existing subscription:', error);
     }
   };
 
@@ -63,7 +64,7 @@ export const useWebPushNotifications = () => {
       
       return false;
     } catch (error) {
-      console.error('Error requesting permission:', error);
+      logger.error('Error requesting permission:', error);
       toast.error('Erreur lors de la demande de permission');
       return false;
     } finally {
@@ -73,7 +74,7 @@ export const useWebPushNotifications = () => {
 
   const subscribeToPush = async () => {
     try {
-      console.log('🔔 Attempting to subscribe to push notifications...');
+      logger.debug('Attempting to subscribe to push notifications...');
       
       // Check if service worker is registered
       if (!('serviceWorker' in navigator)) {
@@ -81,7 +82,7 @@ export const useWebPushNotifications = () => {
       }
 
       const registration = await navigator.serviceWorker.ready;
-      console.log('✅ Service Worker ready:', registration);
+      logger.debug('Service Worker ready');
       
       // Check if PushManager is available
       if (!('pushManager' in registration)) {
@@ -90,29 +91,29 @@ export const useWebPushNotifications = () => {
 
       // For iOS, check if standalone mode (PWA installed)
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-      console.log('📱 Standalone mode (PWA):', isStandalone);
+      logger.debug('Standalone mode (PWA):', isStandalone);
 
       // Fetch VAPID public key from Edge Function
-      console.log('🔑 Fetching VAPID public key...');
+      logger.debug('Fetching VAPID public key...');
       const { data: vapidData, error: vapidError } = await supabase.functions.invoke('get-vapid-key');
       
       if (vapidError || !vapidData?.success || !vapidData?.publicKey) {
-        console.error('❌ Failed to fetch VAPID key:', vapidError || vapidData?.error);
+        logger.error('Failed to fetch VAPID key:', vapidError || vapidData?.error);
         throw new Error('Clé VAPID non configurée. Contactez l\'administrateur.');
       }
       
       const vapidPublicKey = vapidData.publicKey;
-      console.log('✅ VAPID key received');
+      logger.debug('VAPID key received');
       
       const convertedKey = urlBase64ToUint8Array(vapidPublicKey);
-      console.log('🔑 VAPID key converted successfully');
+      logger.debug('VAPID key converted successfully');
       
       const pushSubscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: convertedKey as BufferSource
       });
 
-      console.log('✅ Push subscription created:', pushSubscription);
+      logger.debug('Push subscription created');
       setSubscription(pushSubscription);
       
       // Save subscription to database
@@ -137,16 +138,16 @@ export const useWebPushNotifications = () => {
           });
 
         if (dbError) {
-          console.error('❌ Error saving subscription to database:', dbError);
+          logger.error('Error saving subscription to database:', dbError);
           throw dbError;
         }
 
-        console.log('✅ Subscription saved to database');
+        logger.debug('Subscription saved to database');
       }
 
       return pushSubscription;
     } catch (error) {
-      console.error('❌ Error subscribing to push:', error);
+      logger.error('Error subscribing to push:', error);
       
       // Provide more specific error messages
       if (error instanceof Error) {
@@ -184,7 +185,7 @@ export const useWebPushNotifications = () => {
       
       toast.success('Notifications désactivées');
     } catch (error) {
-      console.error('Error unsubscribing:', error);
+      logger.error('Error unsubscribing:', error);
       toast.error('Erreur lors de la désactivation des notifications');
     }
   };

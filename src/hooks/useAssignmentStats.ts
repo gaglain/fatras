@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { logger } from '@/lib/logger';
 
 export interface AssignmentStats {
   totalAssignments: number;
@@ -41,7 +42,7 @@ export const useAssignmentStats = () => {
       setLoading(true);
       
       try {
-        console.log('📊 Fetching assignment stats...');
+        logger.debug('Fetching assignment stats...');
         
         // Récupérer uniquement les tâches assignées (seul type avec assigned_to)
         const { data: tasks, error: tasksError } = await supabase
@@ -57,11 +58,11 @@ export const useAssignmentStats = () => {
           .order('created_at', { ascending: false });
 
         if (tasksError) {
-          console.error('❌ Error fetching tasks:', tasksError);
+          logger.error('Error fetching tasks:', tasksError);
           throw tasksError;
         }
 
-        console.log('✅ Tasks fetched:', tasks?.length || 0);
+        logger.debug('Tasks fetched:', tasks?.length || 0);
 
         // Récupérer tous les profiles nécessaires
         const userIds = new Set<string>();
@@ -76,13 +77,13 @@ export const useAssignmentStats = () => {
           .in('id', Array.from(userIds));
 
         if (profilesError) {
-          console.error('❌ Error fetching profiles:', profilesError);
+          logger.error('Error fetching profiles:', profilesError);
         }
 
         const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
 
         // Mapper uniquement les tâches assignées
-        const allAssignments = (tasks || []).map((t: any) => {
+        const allAssignments = (tasks || []).map((t) => {
           const assignedUser = profilesMap.get(t.assigned_to);
           const creator = profilesMap.get(t.user_id);
           
@@ -132,13 +133,13 @@ export const useAssignmentStats = () => {
           recentAssignments: allAssignments.slice(0, 20)
         });
         
-        console.log('✅ Assignment stats updated:', {
+        logger.debug('Assignment stats updated:', {
           total: allAssignments.length,
           assigners: assignerMap.size,
           assignees: assigneeMap.size
         });
       } catch (error) {
-        console.error('Error fetching assignment stats:', error);
+        logger.error('Error fetching assignment stats:', error);
       } finally {
         setLoading(false);
       }
