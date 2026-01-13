@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { MessageCircle, Eye, Reply } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 interface ChatNotification {
   id: string;
@@ -35,8 +36,8 @@ export const AdminChatNotifications: React.FC = () => {
       if (saved) {
         try {
           setNotifications(JSON.parse(saved));
-        } catch (error) {
-          console.error('Erreur chargement notifications:', error);
+        } catch (error: unknown) {
+          logger.error('Erreur chargement notifications:', error);
         }
       }
     };

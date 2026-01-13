@@ -6,15 +6,16 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Download, FileSpreadsheet } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
+import { Contact } from '@/types/contact.types';
 
 interface CSVExporterProps {
   isOpen: boolean;
   onClose: () => void;
-  contacts: any[];
+  contacts: Contact[];
 }
 
 export const CSVExporter: React.FC<CSVExporterProps> = ({ isOpen, onClose, contacts }) => {
-  console.log('📤 CSVExporter component loaded with', contacts.length, 'contacts');
   
   const [selectedFields, setSelectedFields] = useState<string[]>([
     'first_name', 'last_name', 'email', 'phone', 'status'
@@ -47,7 +48,7 @@ export const CSVExporter: React.FC<CSVExporterProps> = ({ isOpen, onClose, conta
   };
 
   const exportToCSV = async () => {
-    console.log('📥 Starting CSV export');
+    logger.debug('📥 Starting CSV export');
     
     try {
       let dataToExport = contacts;
@@ -60,7 +61,7 @@ export const CSVExporter: React.FC<CSVExporterProps> = ({ isOpen, onClose, conta
           .order('created_at', { ascending: false });
 
         if (error) {
-          console.error('Error fetching all contacts:', error);
+          logger.error('Error fetching all contacts:', error);
           toast.error('Erreur lors de la récupération des contacts');
           return;
         }
@@ -114,19 +115,17 @@ export const CSVExporter: React.FC<CSVExporterProps> = ({ isOpen, onClose, conta
       link.click();
       document.body.removeChild(link);
       
-      console.log('✅ CSV export completed:', dataToExport.length, 'contacts exported');
+      logger.debug('✅ CSV export completed:', dataToExport.length, 'contacts exported');
       toast.success(`${dataToExport.length} contacts exportés avec succès !`);
       onClose();
       
-    } catch (error) {
-      console.error('Export error:', error);
+    } catch (error: unknown) {
+      logger.error('Export error:', error);
       toast.error('Erreur lors de l\'export');
     }
   };
 
   if (!isOpen) return null;
-
-  console.log('🎨 Rendering CSVExporter');
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

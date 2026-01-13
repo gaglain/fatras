@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { GripVertical, Eye, EyeOff, Upload, Edit } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 interface MenuItem {
   id: string;
@@ -122,8 +123,8 @@ export const MenuManager: React.FC = () => {
         if (config.companyName) setCompanyName(config.companyName);
         if (config.companyLogo) setCompanyLogo(config.companyLogo);
         if (config.appIcon) setAppIcon(config.appIcon);
-      } catch (error) {
-        console.error('Erreur lors du chargement de la configuration:', error);
+      } catch (error: unknown) {
+        logger.error('Erreur lors du chargement de la configuration:', error);
       }
     }
   }, []);

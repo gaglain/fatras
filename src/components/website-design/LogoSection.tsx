@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 interface LogoSectionProps {
   siteName: string;
@@ -25,7 +26,7 @@ export const LogoSection: React.FC<LogoSectionProps> = ({
       const reader = new FileReader();
       reader.onload = (e) => {
         const result = e.target?.result as string;
-        console.log('📸 Logo uploaded');
+        logger.debug('📸 Logo uploaded');
         onLogoChange(result);
         toast.success('Logo chargé avec succès');
       };
@@ -67,7 +68,7 @@ export const LogoSection: React.FC<LogoSectionProps> = ({
                   alt="Logo"
                   className="h-12 w-12 object-contain border rounded"
                   onError={(e) => { 
-                    console.error('❌ Logo loading error');
+                    logger.warn('❌ Logo loading error');
                     (e.currentTarget as HTMLImageElement).style.display = 'none'; 
                   }}
                 />

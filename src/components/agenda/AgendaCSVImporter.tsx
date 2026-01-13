@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Upload, FileText } from 'lucide-react';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 interface AgendaEvent {
   id: string;
@@ -87,8 +88,8 @@ export const AgendaCSVImporter: React.FC<AgendaCSVImporterProps> = ({
       toast.success(`${events.length} événements importés avec succès`);
       onClose();
 
-    } catch (error) {
-      console.error('Erreur lors de l\'import:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur lors de l\'import:', error);
       toast.error('Erreur lors de l\'import du fichier CSV');
     } finally {
       setIsProcessing(false);

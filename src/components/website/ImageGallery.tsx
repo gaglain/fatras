@@ -7,6 +7,7 @@ import { Upload, X, Search, ImageIcon, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 interface ImageGalleryProps {
   onImageSelect: (imageUrl: string) => void;
@@ -56,8 +57,8 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({ onImageSelect, selec
         }));
 
       setImages(imageList);
-    } catch (error) {
-      console.error('Erreur lors du chargement des images:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur lors du chargement des images:', error);
       toast.error('Erreur lors du chargement des images');
     }
   };
@@ -92,8 +93,8 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({ onImageSelect, selec
 
       toast.success('Image uploadée avec succès !');
       loadImages();
-    } catch (error: any) {
-      console.error('Erreur upload:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur upload:', error);
       toast.error('Erreur lors de l\'upload de l\'image');
     } finally {
       setIsUploading(false);
@@ -117,8 +118,8 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({ onImageSelect, selec
 
       toast.success('Image supprimée');
       loadImages();
-    } catch (error) {
-      console.error('Erreur suppression:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur suppression:', error);
       toast.error('Erreur lors de la suppression');
     }
   };
