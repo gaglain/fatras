@@ -70,8 +70,8 @@ export const EmailTab: React.FC = () => {
         if (setting.setting_key === 'from_name') config.from_name = setting.setting_value;
       });
       setEmailConfig(config);
-    } catch (error) {
-      console.error('Erreur lors du chargement de la config email:', error);
+    } catch {
+      // Silent error - config will use defaults
     }
   };
 
@@ -130,8 +130,7 @@ export const EmailTab: React.FC = () => {
       }
 
       toast.success('Configuration email sauvegardée');
-    } catch (error) {
-      console.error('Erreur lors de la sauvegarde:', error);
+    } catch {
       toast.error('Erreur lors de la sauvegarde');
     } finally {
       setIsLoading(false);
@@ -157,8 +156,7 @@ export const EmailTab: React.FC = () => {
         `
       });
       toast.success('Email de test envoyé avec succès !');
-    } catch (error) {
-      console.error('Erreur lors du test email:', error);
+    } catch {
       toast.error('Erreur lors de l\'envoi du test email');
     } finally {
       setIsTesting(false);
