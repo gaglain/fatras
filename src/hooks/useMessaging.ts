@@ -69,31 +69,29 @@ export const useMessaging = () => {
     role?: string;
   }
 
-  // Fetch user channels (joined channels + all public channels)
+  // Fetch user channels (joined channels + all public channels) - OPTIMIZED
   const fetchChannels = async () => {
     if (!user) return;
 
     try {
-      // 1) Récupérer les IDs des canaux dont l'utilisateur est membre
-      const { data: memberRows, error: memberErr } = await supabase
-        .from('messaging_channel_members')
-        .select('channel_id')
-        .eq('user_id', user.id);
+      // Paralléliser les 2 premières requêtes
+      const [memberResult, publicResult] = await Promise.all([
+        supabase
+          .from('messaging_channel_members')
+          .select('channel_id')
+          .eq('user_id', user.id),
+        supabase
+          .from('messaging_channels')
+          .select('id')
+          .eq('type', 'public')
+          .eq('is_active', true)
+      ]);
 
-      if (memberErr) throw memberErr;
-      const memberChannelIds = (memberRows || []).map((r: { channel_id: string }) => r.channel_id);
+      if (memberResult.error) throw memberResult.error;
+      if (publicResult.error) throw publicResult.error;
 
-      // 2) Récupérer aussi TOUS les canaux publics actifs
-      const { data: publicChannels, error: publicErr } = await supabase
-        .from('messaging_channels')
-        .select('id')
-        .eq('type', 'public')
-        .eq('is_active', true);
-
-      if (publicErr) throw publicErr;
-      const publicChannelIds = (publicChannels || []).map((c: { id: string }) => c.id);
-
-      // 3) Fusionner les IDs (membres + publics) sans doublons
+      const memberChannelIds = (memberResult.data || []).map((r: { channel_id: string }) => r.channel_id);
+      const publicChannelIds = (publicResult.data || []).map((c: { id: string }) => c.id);
       const allChannelIds = [...new Set([...memberChannelIds, ...publicChannelIds])];
 
       if (allChannelIds.length === 0) {
@@ -101,50 +99,53 @@ export const useMessaging = () => {
         return;
       }
 
-      // 4) Charger les canaux
-      const { data: channelRows, error: channelsErr } = await supabase
-        .from('messaging_channels')
-        .select('*')
-        .in('id', allChannelIds)
-        .eq('is_active', true)
-        .order('updated_at', { ascending: false });
+      // Paralléliser les requêtes pour canaux et membres
+      const [channelResult, membersResult] = await Promise.all([
+        supabase
+          .from('messaging_channels')
+          .select('id, name, description, type, user_id, roadshow_id, created_at, updated_at, is_active')
+          .in('id', allChannelIds)
+          .eq('is_active', true)
+          .order('updated_at', { ascending: false }),
+        supabase
+          .from('messaging_channel_members')
+          .select('id, channel_id, user_id, role, joined_at, last_read_at')
+          .in('channel_id', allChannelIds)
+      ]);
 
-      if (channelsErr) throw channelsErr;
+      if (channelResult.error) throw channelResult.error;
+      if (membersResult.error) throw membersResult.error;
 
-      // 5) Charger tous les membres de ces canaux
-      const { data: allMembers, error: membersErr } = await supabase
-        .from('messaging_channel_members')
-        .select('id, channel_id, user_id, role, joined_at, last_read_at')
-        .in('channel_id', allChannelIds);
+      const channelRows = channelResult.data || [];
+      const allMembers = membersResult.data || [];
 
-      if (membersErr) throw membersErr;
-
-      // 4) Récupérer les profils utilisateurs pour tous les membres
+      // Récupérer les profils en une seule requête
       interface MemberRow { id: string; channel_id: string; user_id: string; role: string; joined_at: string; last_read_at?: string }
-      const allUserIds = [...new Set((allMembers || []).map((m: MemberRow) => m.user_id))];
-      const { data: profiles, error: profilesErr } = await supabase
-        .from('user_profiles')
-        .select('user_id, first_name, last_name, username, email')
-        .in('user_id', allUserIds);
-
-      if (profilesErr) logger.warn('Error fetching profiles:', profilesErr);
-
+      const allUserIds = [...new Set(allMembers.map((m: MemberRow) => m.user_id))];
+      
       const profilesByUserId: Record<string, UserProfile> = {};
-      (profiles || []).forEach((p) => {
-        profilesByUserId[p.user_id] = p;
-      });
+      if (allUserIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('user_profiles')
+          .select('user_id, first_name, last_name, username, email, avatar_url')
+          .in('user_id', allUserIds);
 
-      // 5) Transformer
+        (profiles || []).forEach((p) => {
+          profilesByUserId[p.user_id] = p;
+        });
+      }
+
+      // Transformer les données
       interface MemberWithProfile extends MemberRow { user_profile?: UserProfile }
       const membersByChannel: Record<string, MemberWithProfile[]> = {};
-      (allMembers || []).forEach((m: MemberRow) => {
+      allMembers.forEach((m: MemberRow) => {
         (membersByChannel[m.channel_id] ||= []).push({
           ...m,
           user_profile: profilesByUserId[m.user_id]
         });
       });
 
-      const transformedChannels: Channel[] = (channelRows || []).map((ch) => ({
+      const transformedChannels: Channel[] = channelRows.map((ch) => ({
         id: ch.id,
         name: ch.name,
         description: ch.description,
@@ -208,35 +209,40 @@ export const useMessaging = () => {
     }
   };
 
-  // Fetch messages for a channel
+  // Fetch messages for a channel - OPTIMIZED (limit to 100 recent messages)
   const fetchMessages = async (channelId: string) => {
     if (!user) return;
 
     try {
+      // Sélectionner uniquement les champs nécessaires et limiter
       const { data: msgRows, error: msgErr } = await supabase
         .from('messaging_messages')
-        .select('*')
+        .select('id, channel_id, user_id, content, message_type, created_at, edited_at, reply_to_id')
         .eq('channel_id', channelId)
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: false })
+        .limit(100);
 
       if (msgErr) throw msgErr;
 
-      // Récupérer les profils des auteurs
-      const userIds = [...new Set((msgRows || []).map((m: any) => m.user_id))];
-      const { data: profiles, error: profilesErr } = await supabase
-        .from('user_profiles')
-        .select('user_id, first_name, last_name, username, avatar_url')
-        .in('user_id', userIds);
+      // Inverser pour avoir l'ordre chronologique
+      const orderedMsgs = (msgRows || []).reverse();
 
-      if (profilesErr) logger.warn('Error fetching message author profiles:', profilesErr);
-
+      // Récupérer les profils en une seule requête
+      const userIds = [...new Set(orderedMsgs.map((m: any) => m.user_id))];
+      
       const profilesByUserId: Record<string, UserProfile> = {};
-      (profiles || []).forEach((p) => {
-        profilesByUserId[p.user_id] = p;
-      });
+      if (userIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('user_profiles')
+          .select('user_id, first_name, last_name, username, avatar_url')
+          .in('user_id', userIds);
 
-      // Transform data to match our Message interface
-      const transformedMessages: Message[] = (msgRows || []).map(msg => ({
+        (profiles || []).forEach((p) => {
+          profilesByUserId[p.user_id] = p;
+        });
+      }
+
+      const transformedMessages: Message[] = orderedMsgs.map(msg => ({
         id: msg.id,
         channel_id: msg.channel_id,
         user_id: msg.user_id,
@@ -245,7 +251,7 @@ export const useMessaging = () => {
         created_at: msg.created_at,
         edited_at: msg.edited_at,
         reply_to_id: msg.reply_to_id,
-        metadata: msg.metadata,
+        metadata: undefined,
         user_profile: profilesByUserId[msg.user_id]
       }));
 
