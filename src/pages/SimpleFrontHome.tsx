@@ -7,7 +7,6 @@ export const SimpleFrontHome: React.FC = () => {
   const { config } = useWebsiteConfig();
   const { forceSync } = useUnifiedWebsiteSync();
 
-  console.log('🏠 Home rendering with:', config.siteName);
 
   return (
     <div className="space-y-8 lg:space-y-16">

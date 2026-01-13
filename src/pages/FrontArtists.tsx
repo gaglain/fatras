@@ -40,9 +40,7 @@ export const FrontArtists: React.FC = () => {
       }));
       
       setArtists(mappedArtists);
-      console.log('✅ Artists loaded from Supabase:', mappedArtists.length);
-    } catch (error) {
-      console.error('❌ Error loading artists:', error);
+    } catch {
       setArtists([]);
     } finally {
       setLoading(false);
