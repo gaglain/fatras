@@ -159,8 +159,8 @@ export const EntityLinksForm: React.FC<EntityLinksFormProps> = ({ roadshowStopId
         quotesData = (qoResp?.data || [])
           .map((row: any) => row.quotes)
           .filter(Boolean);
-      } catch (qErr) {
-        console.warn('quote_opportunities fetch error:', qErr);
+      } catch {
+        // quote_opportunities fetch failed, continue
       }
 
       if (quotesData.length === 0) {
@@ -173,17 +173,11 @@ export const EntityLinksForm: React.FC<EntityLinksFormProps> = ({ roadshowStopId
               .in('event_id', eventIds);
             quotesData = quotesResp.data || [];
           }
-        } catch (qErr) {
-          console.warn('Quotes fetch via events failed:', qErr);
+        } catch {
+          // Quotes fetch via events failed, continue
         }
       }
 
-      // Debug info
-      console.debug('[EntityLinksForm] opportunityId', opportunityId, {
-        contacts: contactsCombined.length,
-        events: eventsCombined.length,
-        quotes: quotesData.length,
-      });
 
       setOpportunityEntities({
         contacts: contactsCombined,
@@ -194,8 +188,7 @@ export const EntityLinksForm: React.FC<EntityLinksFormProps> = ({ roadshowStopId
           total_amount: quote.total_amount,
         })),
       });
-    } catch (error) {
-      console.error('Error loading opportunity entities:', error);
+    } catch {
       setOpportunityEntities(null);
     } finally {
       setLoading(false);

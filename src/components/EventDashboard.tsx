@@ -83,8 +83,7 @@ export const EventDashboard: React.FC<EventDashboardProps> = ({ eventId, eventNa
       });
       setContactLists(lists || []);
       setCampaigns(emailCampaigns || []);
-    } catch (error: any) {
-      console.error('Error fetching event dashboard data:', error);
+    } catch {
       toast.error('Erreur lors du chargement des données');
     } finally {
       setLoading(false);
