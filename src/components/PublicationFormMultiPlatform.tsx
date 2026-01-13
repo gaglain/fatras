@@ -72,7 +72,6 @@ export const PublicationFormMultiPlatform: React.FC<PublicationFormMultiPlatform
   useEffect(() => {
     const loadData = async () => {
       if (isOpen) {
-        console.log('📝 Loading form with initialData:', initialData);
         setFormData({
           title: initialData.title || '',
           content: initialData.content || '',
@@ -202,8 +201,7 @@ export const PublicationFormMultiPlatform: React.FC<PublicationFormMultiPlatform
       setSelectedEvent(null);
       
       toast.success(isEditing ? 'Publication modifiée avec succès' : 'Publication créée avec succès');
-    } catch (error) {
-      console.error('❌ Error in form submission:', error);
+    } catch {
       toast.error('Erreur lors de la sauvegarde de la publication');
     } finally {
       setIsSubmitting(false);

@@ -46,10 +46,6 @@ export const TaskNotificationBanner: React.FC<TaskNotificationBannerProps> = ({ 
         .limit(5);
 
       if (error) {
-        // Ne pas loguer les erreurs réseau temporaires pour éviter le spam console
-        if (!error.message?.includes('fetch') && !error.message?.includes('network')) {
-          console.error('Erreur notifications:', error.message);
-        }
         return;
       }
 
@@ -59,12 +55,8 @@ export const TaskNotificationBanner: React.FC<TaskNotificationBannerProps> = ({ 
       );
 
       setUrgentNotifications(visibleNotifications);
-    } catch (error: any) {
-      // Ignorer silencieusement les erreurs réseau temporaires
-      if (error?.message?.includes('fetch') || error?.message?.includes('network') || error?.name === 'TypeError') {
-        return;
-      }
-      console.error('Erreur notifications:', error);
+    } catch {
+      // Ignorer silencieusement les erreurs
     }
   };
 
@@ -78,8 +70,8 @@ export const TaskNotificationBanner: React.FC<TaskNotificationBannerProps> = ({ 
         .from('notifications')
         .update({ read: true })
         .eq('id', notificationId);
-    } catch (error) {
-      console.error('Erreur lors du marquage de la notification:', error);
+    } catch {
+      // Erreur silencieuse
     }
     
     // Recharger les notifications
