@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 
 interface IconSize {
   width: number;
@@ -87,21 +88,20 @@ export async function generatePWAIcons(file: File): Promise<{
   icon512: string;
   appleIcon: string;
 }> {
-  console.log('🎨 Génération des icônes PWA...');
+  logger.debug('🎨 Génération des icônes PWA...');
 
   try {
     const urls: Record<string, string> = {};
 
     // Générer chaque taille d'icône
     for (const size of ICON_SIZES) {
-      console.log(`📐 Redimensionnement ${size.width}x${size.height}...`);
+      logger.debug(`📐 Redimensionnement ${size.width}x${size.height}...`);
       const resizedBlob = await resizeImage(file, size.width, size.height);
       
-      console.log(`⬆️ Upload ${size.name}...`);
       const url = await uploadIcon(resizedBlob, size.name);
       urls[size.name] = url;
       
-      console.log(`✅ ${size.name}: ${url}`);
+      logger.debug(`✅ ${size.name}: ${url}`);
     }
 
     return {
@@ -109,8 +109,8 @@ export async function generatePWAIcons(file: File): Promise<{
       icon512: urls['icon-512.png'],
       appleIcon: urls['apple-touch-icon.png']
     };
-  } catch (error) {
-    console.error('❌ Erreur lors de la génération des icônes PWA:', error);
+  } catch (error: unknown) {
+    logger.error('❌ Erreur lors de la génération des icônes PWA:', error);
     throw error;
   }
 }
@@ -211,8 +211,7 @@ export function updatePWAManifest(config: {
   }
   themeColorMeta.content = themeColor;
 
-  console.log('✅ PWA configuré avec succès:', config.name);
-  console.log('📱 Pour voir les changements: supprimez l\'app de l\'écran d\'accueil et rajoutez-la');
+  logger.debug('✅ PWA configuré avec succès:', config.name);
 }
 
 /**
@@ -254,6 +253,4 @@ function updateIOSMetaTags(appleIconUrl: string, appName: string, themeColor?: s
     document.head.appendChild(appleTitle);
   }
   appleTitle.content = appName;
-
-  console.log('✅ Meta tags iOS mis à jour');
 }

@@ -3,6 +3,8 @@
  * Similaire à Imagify - compresse et redimensionne automatiquement les images
  */
 
+import { logger } from '@/lib/logger';
+
 export interface OptimizationOptions {
   maxWidth?: number;
   maxHeight?: number;
@@ -115,12 +117,12 @@ const optimizeWithTargetSize = async (
     quality -= 0.1;
     blob = await canvasToBlob(canvas, format, quality);
     attempts++;
-    console.log(`🔄 Optimisation: qualité=${(quality * 100).toFixed(0)}%, taille=${(blob.size / 1024).toFixed(0)}KB`);
+    logger.debug(`🔄 Optimisation: qualité=${(quality * 100).toFixed(0)}%, taille=${(blob.size / 1024).toFixed(0)}KB`);
   }
   
   // Si toujours trop grand et format est webp, essayer jpeg
   if (blob.size > maxBytes && format === 'webp') {
-    console.log('📦 Tentative avec format JPEG...');
+    logger.debug('📦 Tentative avec format JPEG...');
     blob = await canvasToBlob(canvas, 'jpeg', quality);
   }
   
@@ -140,7 +142,7 @@ export const optimizeImage = async (
   const opts = { ...DEFAULT_OPTIONS, ...options };
   const originalSize = file.size;
 
-  console.log(`🖼️ Optimisation de l'image: ${file.name} (${(originalSize / 1024).toFixed(0)}KB)`);
+  logger.debug(`🖼️ Optimisation de l'image: ${file.name} (${(originalSize / 1024).toFixed(0)}KB)`);
 
   // Vérifier si c'est une image
   if (!file.type.startsWith('image/')) {
@@ -149,7 +151,7 @@ export const optimizeImage = async (
 
   // Ne pas optimiser les GIFs (perte d'animation) ni les SVGs
   if (file.type === 'image/gif' || file.type === 'image/svg+xml') {
-    console.log('⏭️ Format non optimisable (GIF/SVG), retour de l\'original');
+    logger.debug('⏭️ Format non optimisable (GIF/SVG), retour de l\'original');
     return {
       blob: file,
       originalSize,
@@ -201,10 +203,7 @@ export const optimizeImage = async (
     const optimizedSize = optimizedBlob.size;
     const compressionRatio = originalSize / optimizedSize;
 
-    console.log(`✅ Optimisation terminée:`);
-    console.log(`   📊 Taille: ${(originalSize / 1024).toFixed(0)}KB → ${(optimizedSize / 1024).toFixed(0)}KB`);
-    console.log(`   📐 Dimensions: ${img.naturalWidth}x${img.naturalHeight} → ${width}x${height}`);
-    console.log(`   🎯 Compression: ${compressionRatio.toFixed(1)}x`);
+    logger.debug(`✅ Optimisation terminée: ${(originalSize / 1024).toFixed(0)}KB → ${(optimizedSize / 1024).toFixed(0)}KB, ${compressionRatio.toFixed(1)}x`);
 
     return {
       blob: optimizedBlob,
@@ -215,8 +214,8 @@ export const optimizeImage = async (
       height,
       format: opts.format!
     };
-  } catch (error) {
-    console.error('❌ Erreur lors de l\'optimisation:', error);
+  } catch (error: unknown) {
+    logger.error('❌ Erreur lors de l\'optimisation:', error);
     // En cas d'erreur, retourner le fichier original
     return {
       blob: file,

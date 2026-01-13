@@ -234,8 +234,8 @@ export const WebsiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({
         faviconLink.href = mergedConfig.favicon;
       }
 
-    } catch (error) {
-      console.error('❌ Error loading config:', error);
+    } catch (error: unknown) {
+      logger.error('❌ Error loading config:', error);
       setConfig(defaultConfig);
     }
   }, [user]);
