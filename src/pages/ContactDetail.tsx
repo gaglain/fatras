@@ -561,6 +561,58 @@ export const ContactDetail: React.FC = () => {
               </CardContent>
             </Card>
           </div>
+
+          {/* Événements liés - section dédiée avec cartes */}
+          {connections.events && connections.events.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5" />
+                  Événements liés ({connections.events.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {connections.events.map((event: any) => (
+                    <Card 
+                      key={event.id} 
+                      className="cursor-pointer hover:shadow-md transition-all hover:border-primary/50"
+                      onClick={() => navigate(`/events/${event.id}`)}
+                    >
+                      <CardContent className="p-4">
+                        <div className="space-y-3">
+                          <div className="flex items-start justify-between">
+                            <h4 className="font-semibold text-sm line-clamp-2">{event.title}</h4>
+                            <Badge className={getStatusColor(event.status)} >
+                              {event.status}
+                            </Badge>
+                          </div>
+                          {event.date && (
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <Calendar className="h-3.5 w-3.5" />
+                              <span>{formatDate(event.date)}</span>
+                            </div>
+                          )}
+                          {event.venue && (
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <MapPin className="h-3.5 w-3.5" />
+                              <span className="truncate">{event.venue}</span>
+                            </div>
+                          )}
+                          {event.role && (
+                            <div className="flex items-center gap-2 text-sm">
+                              <User className="h-3.5 w-3.5 text-muted-foreground" />
+                              <Badge variant="outline" className="text-xs">{event.role}</Badge>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="activity" className="space-y-4">
