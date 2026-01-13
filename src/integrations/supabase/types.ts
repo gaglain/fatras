@@ -946,6 +946,7 @@ export type Database = {
           last_name: string
           lead_score: number | null
           notes: string | null
+          owner_id: string | null
           phone: string | null
           position: string | null
           postal_code: string | null
@@ -973,6 +974,7 @@ export type Database = {
           last_name: string
           lead_score?: number | null
           notes?: string | null
+          owner_id?: string | null
           phone?: string | null
           position?: string | null
           postal_code?: string | null
@@ -1000,6 +1002,7 @@ export type Database = {
           last_name?: string
           lead_score?: number | null
           notes?: string | null
+          owner_id?: string | null
           phone?: string | null
           position?: string | null
           postal_code?: string | null
@@ -1501,6 +1504,7 @@ export type Database = {
           external_id: string | null
           id: string
           notes: string | null
+          owner_id: string | null
           postal_code: string | null
           requirements: string | null
           start_date: string | null
@@ -1527,6 +1531,7 @@ export type Database = {
           external_id?: string | null
           id?: string
           notes?: string | null
+          owner_id?: string | null
           postal_code?: string | null
           requirements?: string | null
           start_date?: string | null
@@ -1553,6 +1558,7 @@ export type Database = {
           external_id?: string | null
           id?: string
           notes?: string | null
+          owner_id?: string | null
           postal_code?: string | null
           requirements?: string | null
           start_date?: string | null
@@ -1994,6 +2000,7 @@ export type Database = {
           event_id: string | null
           id: string
           location: string | null
+          owner_id: string | null
           probability_percentage: number | null
           requirements: string | null
           status: string | null
@@ -2015,6 +2022,7 @@ export type Database = {
           event_id?: string | null
           id?: string
           location?: string | null
+          owner_id?: string | null
           probability_percentage?: number | null
           requirements?: string | null
           status?: string | null
@@ -2036,6 +2044,7 @@ export type Database = {
           event_id?: string | null
           id?: string
           location?: string | null
+          owner_id?: string | null
           probability_percentage?: number | null
           requirements?: string | null
           status?: string | null

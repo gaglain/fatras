@@ -5,8 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useActiveUsers } from '@/hooks/useActiveUsers';
 import { toast } from 'sonner';
 import { Event } from '@/types/event.types';
 import { Contact } from '@/types/contact.types';
@@ -34,6 +36,7 @@ export const EventDialog: React.FC<EventDialogProps> = ({
   onSave
 }) => {
   const { user } = useAuth();
+  const { users: activeUsers } = useActiveUsers();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [eventTypes, setEventTypes] = useState<EventType[]>([]);
   const [formData, setFormData] = useState({
@@ -55,7 +58,8 @@ export const EventDialog: React.FC<EventDialogProps> = ({
     notes: '',
     contact_id: '',
     artist_id: '',
-    booking_url: ''
+    booking_url: '',
+    owner_id: ''
   });
   const [loading, setLoading] = useState(false);
   const { clearDraft } = useEventDraft(event?.id);
@@ -90,7 +94,8 @@ export const EventDialog: React.FC<EventDialogProps> = ({
           notes: event.notes || '',
           contact_id: event.contact_id || '',
           artist_id: (event as any).artist_id || '',
-          booking_url: (event as any).booking_url || ''
+          booking_url: (event as any).booking_url || '',
+          owner_id: (event as any).owner_id || ''
         });
       } else {
         // Mode création - réinitialiser le formulaire
@@ -113,7 +118,8 @@ export const EventDialog: React.FC<EventDialogProps> = ({
           notes: '',
           contact_id: '',
           artist_id: '',
-          booking_url: ''
+          booking_url: '',
+          owner_id: ''
         });
       }
     }

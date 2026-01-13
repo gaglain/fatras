@@ -6,9 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { X, Plus } from 'lucide-react';
+import { X, Plus, User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useActiveUsers } from '@/hooks/useActiveUsers';
 import { toast } from 'sonner';
 import { Contact } from '@/types/contact.types';
 import { ContactRelatedEntities } from './ContactRelatedEntities';
@@ -35,9 +36,11 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
   onSave
 }) => {
   const { user } = useAuth();
+  const { users: activeUsers } = useActiveUsers();
   const [spectacles, setSpectacles] = useState<Spectacle[]>([]);
   const [contactTypes, setContactTypes] = useState<Array<{ id: string; name: string; color: string }>>([]);
   const [selectedArtistId, setSelectedArtistId] = useState<string>('');
+  const [selectedOwnerId, setSelectedOwnerId] = useState<string>('');
   const [formData, setFormData] = useState<Contact>({
     first_name: '',
     last_name: '',
@@ -100,6 +103,8 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
       if (contact.id) {
         loadContactArtist(contact.id);
       }
+      // Load owner_id from contact
+      setSelectedOwnerId((contact as any).owner_id || '');
     } else {
       setFormData({
         first_name: '',
@@ -119,6 +124,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
         role: 'contact'
       });
       setSelectedArtistId('');
+      setSelectedOwnerId('');
     }
     fetchSpectacles();
     fetchContactTypes();
@@ -161,7 +167,8 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
         tags: formData.tags || [],
         role: formData.role || 'contact',
         contact_type_id: formData.contact_type_id && formData.contact_type_id !== 'none' ? formData.contact_type_id : null,
-        accepts_marketing_emails: true
+        accepts_marketing_emails: true,
+        owner_id: selectedOwnerId && selectedOwnerId !== 'none' ? selectedOwnerId : null
       };
 
       if (contact?.id) {
@@ -385,6 +392,36 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
                 placeholder="Référence, réseau social..."
               />
             </div>
+          </div>
+
+          <div>
+            <Label htmlFor="owner_id">Propriétaire</Label>
+            <Select 
+              value={selectedOwnerId || 'none'} 
+              onValueChange={(value) => setSelectedOwnerId(value === 'none' ? '' : value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner un propriétaire" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    Aucun propriétaire
+                  </div>
+                </SelectItem>
+                {activeUsers.map(u => (
+                  <SelectItem key={u.user_id} value={u.user_id}>
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      {u.first_name || u.last_name 
+                        ? `${u.first_name || ''} ${u.last_name || ''}`.trim() 
+                        : u.username || u.email}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
