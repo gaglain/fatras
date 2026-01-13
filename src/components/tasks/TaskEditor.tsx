@@ -177,8 +177,7 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
       
       toast.success('Tâche mise à jour avec succès');
       onClose();
-    } catch (error) {
-      console.error('Error updating task:', error);
+    } catch {
       toast.error('Erreur lors de la mise à jour de la tâche');
     } finally {
       setLoading(false);

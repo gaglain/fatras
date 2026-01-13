@@ -37,8 +37,7 @@ export const DynamicFrontNavigation: React.FC = () => {
       const raw = localStorage.getItem(key);
       if (!raw) return fallback;
       return JSON.parse(raw);
-    } catch (err) {
-      console.error(`❌ Navigation - Parse error for ${key}, auto-clearing:`, err);
+    } catch {
       localStorage.removeItem(key);
       return fallback;
     }
@@ -111,8 +110,7 @@ export const DynamicFrontNavigation: React.FC = () => {
         // Fallback vers localStorage
         loadFromLocalStorage();
       }
-    } catch (err) {
-      console.error('❌ Navigation - Error loading from Supabase:', err);
+    } catch {
       loadFromLocalStorage();
     }
     

@@ -110,8 +110,7 @@ export const SecureShoppingCart: React.FC<SecureShoppingCartProps> = ({
         });
         onClose();
       }
-    } catch (error) {
-      console.error('Erreur lors de la commande:', error);
+    } catch {
       toast.error('Erreur lors de la création de la commande');
     } finally {
       setIsProcessingOrder(false);
