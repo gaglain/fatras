@@ -74,8 +74,8 @@ export const FrontArtistDetail: React.FC = () => {
         .order('start_date', { ascending: true });
 
       setTourDates(eventsData || []);
-    } catch (error) {
-      console.error('Error loading artist:', error);
+    } catch {
+      // Silent error - artist not found
     } finally {
       setLoading(false);
     }

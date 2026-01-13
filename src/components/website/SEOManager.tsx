@@ -84,27 +84,15 @@ export const SEOManager: React.FC = () => {
 
     // Analyser les pages existantes
     const savedPages = localStorage.getItem('website_pages');
-    console.log('🔍 [SEO] Pages brutes depuis localStorage:', savedPages);
     
     if (savedPages) {
       try {
         const pages = JSON.parse(savedPages);
-        console.log('🔍 [SEO] Pages parsées:', pages);
-        console.log('🔍 [SEO] Nombre de pages:', pages.length);
-        
-        const analyzedPages = pages.map((page: any) => {
-          console.log('🔍 [SEO] Analyse de la page:', page.title);
-          console.log('🔍 [SEO] Structure SEO de la page:', page.seo);
-          return analyzePage(page);
-        });
-        
-        console.log('✅ [SEO] Pages analysées:', analyzedPages);
+        const analyzedPages = pages.map((page: any) => analyzePage(page));
         setPagesSEO(analyzedPages);
-      } catch (error) {
-        console.error('❌ [SEO] Erreur analyse pages:', error);
+      } catch {
+        // Silent error - pages analysis failed
       }
-    } else {
-      console.log('⚠️ [SEO] Aucune page trouvée dans localStorage');
     }
   }, [dbSettings]);
 
@@ -112,12 +100,8 @@ export const SEOManager: React.FC = () => {
     const issues: string[] = [];
     let score = 100;
 
-    console.log('📊 [SEO] Analyse détaillée de:', page.title);
-    console.log('📊 [SEO] page.seo:', page.seo);
-
     // Analyse du titre
     const seoTitle = page.seo?.title || page.title || '';
-    console.log('📊 [SEO] Titre trouvé:', seoTitle, 'Longueur:', seoTitle.length);
     
     if (!seoTitle || seoTitle.length === 0) {
       issues.push('Titre SEO manquant');
@@ -132,7 +116,6 @@ export const SEOManager: React.FC = () => {
 
     // Analyse de la description
     const seoDescription = page.seo?.description || '';
-    console.log('📊 [SEO] Description trouvée:', seoDescription, 'Longueur:', seoDescription.length);
     
     if (!seoDescription || seoDescription.length === 0) {
       issues.push('Description SEO manquante');
@@ -147,7 +130,6 @@ export const SEOManager: React.FC = () => {
 
     // Analyse des mots-clés
     const seoKeywords = page.seo?.keywords || '';
-    console.log('📊 [SEO] Mots-clés trouvés:', seoKeywords);
     
     if (!seoKeywords || seoKeywords.length === 0) {
       issues.push('Mots-clés manquants');
@@ -156,14 +138,13 @@ export const SEOManager: React.FC = () => {
 
     // Analyse du contenu
     const hasContent = page.blocks && page.blocks.length > 0;
-    console.log('📊 [SEO] Contenu présent:', hasContent, 'Blocs:', page.blocks?.length);
     
     if (!hasContent) {
       issues.push('Contenu de page vide');
       score -= 25;
     }
 
-    const result = {
+    return {
       pageId: page.id,
       title: page.title,
       description: seoDescription,
@@ -171,9 +152,6 @@ export const SEOManager: React.FC = () => {
       score: Math.max(0, score),
       issues
     };
-
-    console.log('📊 [SEO] Résultat analyse:', result);
-    return result;
   };
 
   const saveSEOSettings = async () => {
@@ -193,8 +171,7 @@ export const SEOManager: React.FC = () => {
       localStorage.setItem('website_seo', JSON.stringify(seoSettings));
       
       toast.success('Paramètres SEO sauvegardés');
-    } catch (error) {
-      console.error('Erreur sauvegarde SEO:', error);
+    } catch {
       toast.error('Erreur lors de la sauvegarde');
     }
   };
@@ -318,8 +295,8 @@ export const SEOManager: React.FC = () => {
                                 setSeoSettings(prev => ({ ...prev, ogImage: reader.result as string }));
                               };
                               reader.readAsDataURL(file);
-                            } catch (error) {
-                              console.error('Erreur upload image:', error);
+                            } catch {
+                              // Silent error - image upload failed
                             }
                           }
                         }}
