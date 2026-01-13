@@ -15,7 +15,8 @@ import {
   Phone,
   User,
   Save,
-  FileDown
+  FileDown,
+  Link2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useUser, UserRole } from '@/contexts/UserContext';
@@ -335,8 +336,12 @@ export const UserManagement: React.FC = () => {
 
       if (error) throw error;
 
+      if (data?.success === false) {
+        toast.error(data.error || 'Utilisateur non trouvé');
+        return;
+      }
+
       if (data?.resetLink) {
-        // Copier le lien dans le presse-papiers
         await navigator.clipboard.writeText(data.resetLink);
         toast.success('Lien de réinitialisation copié dans le presse-papiers !');
       } else {
@@ -344,6 +349,32 @@ export const UserManagement: React.FC = () => {
       }
     } catch {
       toast.error('Erreur lors de la réinitialisation du mot de passe');
+    }
+  };
+
+  const handleSendMagicLink = async (email: string, userName: string) => {
+    if (!email) return;
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('send-magic-link', {
+        body: { email, userName }
+      });
+
+      if (error) throw error;
+
+      if (data?.success === false) {
+        toast.error(data.error || 'Utilisateur non trouvé');
+        return;
+      }
+
+      if (data?.magicLink) {
+        await navigator.clipboard.writeText(data.magicLink);
+        toast.success('Lien de connexion copié dans le presse-papiers !');
+      } else {
+        toast.success('Lien de connexion envoyé par email !');
+      }
+    } catch {
+      toast.error('Erreur lors de l\'envoi du lien de connexion');
     }
   };
 
@@ -475,6 +506,15 @@ export const UserManagement: React.FC = () => {
                     <FileDown className="h-3 w-3" />
                   </Button>
                 )}
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => handleSendMagicLink(user.email, `${user.first_name || ''} ${user.last_name || ''}`)}
+                  title="Envoyer un lien de connexion"
+                  className="text-primary"
+                >
+                  <Link2 className="h-3 w-3" />
+                </Button>
                 <Button 
                   variant="outline" 
                   size="sm" 
