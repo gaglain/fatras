@@ -10,8 +10,6 @@ export const QuickActionsCard: React.FC = () => {
   const navigate = useNavigate();
 
   const handleQuickAction = (action: string) => {
-    console.log(`Action rapide: ${action}`);
-    
     switch (action) {
       case 'nouveau-contact':
         navigate('/contacts');
