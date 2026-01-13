@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { logger } from '@/lib/logger';
 
 export interface OpportunityStats {
   totalOpportunities: number;
@@ -78,8 +79,8 @@ export const useOpportunityStats = () => {
             byStatus
           });
         }
-      } catch (error) {
-        console.error('Erreur lors du chargement des stats d\'opportunités:', error);
+      } catch (error: unknown) {
+        logger.error('Erreur lors du chargement des stats d\'opportunités:', error);
       } finally {
         setLoading(false);
       }
