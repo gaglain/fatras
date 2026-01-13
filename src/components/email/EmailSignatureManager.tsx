@@ -45,8 +45,8 @@ export const EmailSignatureManager: React.FC<EmailSignatureManagerProps> = ({
         setSignature(data.email_signature || '');
         setTrackingEnabled(data.email_tracking_enabled ?? true);
       }
-    } catch (error) {
-      console.error('Erreur lors du chargement de la signature:', error);
+    } catch {
+      // Silent error - signature not loaded
     }
   };
 
@@ -67,8 +67,7 @@ export const EmailSignatureManager: React.FC<EmailSignatureManagerProps> = ({
 
       toast.success('Signature email sauvegardée');
       onClose();
-    } catch (error) {
-      console.error('Erreur lors de la sauvegarde:', error);
+    } catch {
       toast.error('Erreur lors de la sauvegarde de la signature');
     } finally {
       setLoading(false);

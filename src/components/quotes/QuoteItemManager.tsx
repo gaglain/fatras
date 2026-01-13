@@ -47,8 +47,8 @@ export const QuoteItemManager: React.FC<QuoteItemManagerProps> = ({
       if (onItemsChange) {
         onItemsChange(fetchedItems);
       }
-    } catch (error) {
-      console.error('Erreur lors du chargement des items:', error);
+    } catch {
+      // Silent error - items not loaded
     }
   };
 
@@ -90,8 +90,7 @@ export const QuoteItemManager: React.FC<QuoteItemManagerProps> = ({
         
         toast.success('Élément ajouté avec succès');
       }
-    } catch (error) {
-      console.error('Erreur lors de l\'ajout de l\'élément:', error);
+    } catch {
       toast.error('Erreur lors de l\'ajout de l\'élément');
     } finally {
       setLoading(false);
@@ -117,8 +116,8 @@ export const QuoteItemManager: React.FC<QuoteItemManagerProps> = ({
       if (onItemsChange) {
         onItemsChange(items);
       }
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour du total:', error);
+    } catch {
+      // Silent error - total update failed
     }
   };
 
@@ -129,8 +128,7 @@ export const QuoteItemManager: React.FC<QuoteItemManagerProps> = ({
       await updateQuoteTotal();
       setEditingItem(null);
       toast.success('Élément mis à jour');
-    } catch (error) {
-      console.error('Error updating item:', error);
+    } catch {
       toast.error('Erreur lors de la mise à jour');
     }
   };
@@ -140,8 +138,7 @@ export const QuoteItemManager: React.FC<QuoteItemManagerProps> = ({
       await deleteQuoteItem(itemId);
       await loadItems();
       toast.success('Élément supprimé');
-    } catch (error) {
-      console.error('Error deleting item:', error);
+    } catch {
       toast.error('Erreur lors de la suppression');
     }
   };
@@ -167,8 +164,7 @@ export const QuoteItemManager: React.FC<QuoteItemManagerProps> = ({
       const doc = generateQuotePDF(quote, items);
       doc.save(`devis-${quote.quote_number || quote.id}.pdf`);
       toast.success('PDF exporté avec succès');
-    } catch (error) {
-      console.error('Erreur export PDF:', error);
+    } catch {
       toast.error('Erreur lors de l\'export PDF');
     }
   };

@@ -41,8 +41,7 @@ export const FaviconManager: React.FC = () => {
       setFaviconUrl(localUrl);
       
       toast.success('Favicon uploadé avec succès');
-    } catch (error) {
-      console.error('Erreur upload favicon:', error);
+    } catch {
       toast.error('Erreur lors de l\'upload');
     } finally {
       setUploading(false);

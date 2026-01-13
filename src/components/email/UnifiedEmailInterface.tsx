@@ -171,8 +171,7 @@ const [accountEmails, setAccountEmails] = useState<string[]>([]);
       });
 
       setInboundEmails(filtered);
-    } catch (error) {
-      console.error('Erreur chargement emails:', error);
+    } catch {
       toast.error('Erreur lors du chargement des emails');
     } finally {
       setLoading(false);
@@ -219,8 +218,7 @@ const [accountEmails, setAccountEmails] = useState<string[]>([]);
       } else {
         throw new Error(data.error);
       }
-    } catch (error) {
-      console.error('Erreur sync Gmail:', error);
+    } catch {
       toast.error('Erreur lors de la synchronisation Gmail');
     } finally {
       setLoading(false);
@@ -263,8 +261,7 @@ const [accountEmails, setAccountEmails] = useState<string[]>([]);
       } else {
         toast.error(result.error || 'Erreur lors de l\'envoi');
       }
-    } catch (error) {
-      console.error('Erreur envoi email:', error);
+    } catch {
       toast.error('Erreur lors de l\'envoi de l\'email');
     }
   };
@@ -288,8 +285,8 @@ const [accountEmails, setAccountEmails] = useState<string[]>([]);
       );
 
       await syncReadStatusWithProvider(email);
-    } catch (error) {
-      console.error('Erreur marquage lu:', error);
+    } catch {
+      // Silent error - mark as read failed
     }
   };
 
@@ -303,8 +300,8 @@ const [accountEmails, setAccountEmails] = useState<string[]>([]);
           messageId: email.message_id,
         }
       });
-    } catch (error) {
-      console.log('Sync read status failed (non-critical):', error);
+    } catch {
+      // Silent error - sync read status failed (non-critical)
     }
   };
 
@@ -332,8 +329,7 @@ const [accountEmails, setAccountEmails] = useState<string[]>([]);
 
       setInboundEmails(prev => prev.filter(e => e.id !== email.id));
       toast.success('Email supprimé');
-    } catch (error) {
-      console.error('Erreur suppression email:', error);
+    } catch {
       toast.error('Erreur lors de la suppression');
     }
   };
