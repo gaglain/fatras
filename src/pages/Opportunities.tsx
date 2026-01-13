@@ -92,11 +92,9 @@ export const Opportunities: React.FC = () => {
             roadshow_ref_id: roadshow.id
           });
 
-        if (channelError) {
-          logger.error('Erreur lors de la création du canal:', channelError);
-        } else {
-          toast.success('Feuille de route et canal de messagerie créés avec succès !');
-        }
+      if (!channelError) {
+        toast.success('Feuille de route et canal de messagerie créés avec succès !');
+      }
       }
     } catch (error: unknown) {
       logger.error('Erreur lors de la création de la feuille de route:', error);
