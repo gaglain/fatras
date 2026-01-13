@@ -33,7 +33,6 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
   };
 
   const handleSaveProfile = async (formData: any) => {
-    console.log('🚀 handleSaveProfile called with:', formData);
     try {
       if (authUser?.id) {
         const success = await updateUserProfile(authUser.id, {
@@ -71,8 +70,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
       } else {
         toast.error('Impossible de sauvegarder : utilisateur non connecté');
       }
-    } catch (error) {
-      console.error('Erreur lors de la sauvegarde:', error);
+    } catch {
       toast.error('Erreur lors de la sauvegarde du profil');
     }
   };

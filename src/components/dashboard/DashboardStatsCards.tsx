@@ -18,7 +18,6 @@ export const DashboardStatsCards: React.FC = () => {
         .select('*');
       
       if (error) {
-        console.error('Erreur lors du chargement des contacts:', error);
         return [];
       }
       return data || [];
@@ -34,7 +33,6 @@ export const DashboardStatsCards: React.FC = () => {
         .select('*');
       
       if (error) {
-        console.error('Erreur lors du chargement des événements:', error);
         return [];
       }
       return data || [];
@@ -50,7 +48,6 @@ export const DashboardStatsCards: React.FC = () => {
         .select('*');
       
       if (error) {
-        console.error('Erreur lors du chargement des campagnes:', error);
         return [];
       }
       return data || [];
@@ -66,7 +63,6 @@ export const DashboardStatsCards: React.FC = () => {
         .select('*');
       
       if (error) {
-        console.error('Erreur lors du chargement des devis:', error);
         return [];
       }
       return data || [];

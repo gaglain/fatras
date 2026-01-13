@@ -35,7 +35,6 @@ export const DirectMessageManager: React.FC<DirectMessageManagerProps> = ({ trig
 
     setIsLoading(true);
     try {
-      console.log('🔄 Création DM avec utilisateur:', selectedUserId);
       const channelId = await createDirectMessage(selectedUserId);
       
       if (channelId) {
@@ -46,8 +45,7 @@ export const DirectMessageManager: React.FC<DirectMessageManagerProps> = ({ trig
       } else {
         toast.error('Erreur lors de la création de la conversation');
       }
-    } catch (error) {
-      console.error('❌ Erreur création DM:', error);
+    } catch {
       toast.error('Erreur lors de la création de la conversation');
     } finally {
       setIsLoading(false);
