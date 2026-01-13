@@ -46,7 +46,6 @@ export const DynamicFrontNavigation: React.FC = () => {
 
   // Fonction de chargement des données depuis Supabase puis localStorage fallback
   const loadAllData = React.useCallback(async () => {
-    console.log('📄 Navigation - Loading data...');
     setIsLoading(true);
     
     try {
@@ -64,7 +63,6 @@ export const DynamicFrontNavigation: React.FC = () => {
       if (designData) {
         if (designData.site_name) {
           setSiteName(designData.site_name);
-          console.log('✅ Navigation - Site name from Supabase:', designData.site_name);
         }
         if (designData.logo) {
           setLogo(designData.logo);
@@ -107,7 +105,6 @@ export const DynamicFrontNavigation: React.FC = () => {
           order: item.menu_order ?? 0
         }));
         
-        console.log('✅ Navigation - Menu loaded from Supabase:', normalized.length, 'items');
         setMenuItems(normalized);
         localStorage.setItem('websiteMenu', JSON.stringify(menuData));
       } else {
@@ -167,7 +164,6 @@ export const DynamicFrontNavigation: React.FC = () => {
       });
 
       setMenuItems(deduped);
-      console.log('✅ Navigation - Menu loaded from localStorage:', deduped.length, 'items');
     } else {
       setMenuItems([]);
     }
@@ -263,10 +259,7 @@ export const DynamicFrontNavigation: React.FC = () => {
                 style={{ maxHeight: '32px' }}
                 loading="lazy"
                 decoding="async"
-                onError={() => {
-                  console.log('❌ Navigation - Logo loading error');
-                  setLogoError(true);
-                }}
+                onError={() => setLogoError(true)}
               />
             ) : (
               <div className="h-8 w-8 rounded bg-blue-600 flex items-center justify-center" aria-label={`${siteName} logo fallback`}>

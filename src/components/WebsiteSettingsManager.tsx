@@ -74,21 +74,18 @@ export const WebsiteSettingsManager: React.FC = () => {
           }
         };
         setSettings(mergedSettings);
-        console.log('⚙️ Loaded saved settings:', mergedSettings);
-      } catch (error) {
-        console.error('❌ Error loading settings:', error);
+      } catch {
+        // Ignore parse errors, use defaults
         setSettings(defaultSettings);
       }
     }
   }, []);
 
   const handleInputChange = (field: keyof WebsiteSettings, value: string | boolean) => {
-    console.log(`🔧 Changing ${field} to:`, value);
     setSettings(prev => ({ ...prev, [field]: value }));
   };
 
   const handleSocialLinkChange = (platform: keyof WebsiteSettings['socialLinks'], value: string) => {
-    console.log(`🔗 Changing ${platform} to:`, value);
     setSettings(prev => ({
       ...prev,
       socialLinks: { ...prev.socialLinks, [platform]: value }
@@ -120,15 +117,12 @@ export const WebsiteSettingsManager: React.FC = () => {
   };
 
   const saveSettings = () => {
-    console.log('💾 Saving settings:', settings);
-    
     // Sauvegarder dans localStorage
     localStorage.setItem('websiteSettings', JSON.stringify(settings));
     
     // Mettre à jour le titre de la page immédiatement
     if (settings.siteName) {
       document.title = settings.siteName;
-      console.log('📝 Updated page title to:', settings.siteName);
     }
     
     // Mettre à jour les meta tags
@@ -148,9 +142,7 @@ export const WebsiteSettingsManager: React.FC = () => {
     }
     metaKeywords.setAttribute('content', settings.metaKeywords);
     
-    // Déclencher les événements de synchronisation IMMÉDIATEMENT
-    console.log('🚀 Triggering settings sync events...');
-    
+    // Déclencher les événements de synchronisation
     window.dispatchEvent(new CustomEvent('websiteSettingsUpdated', { detail: settings }));
     window.dispatchEvent(new CustomEvent('websiteSettingsSaved', { detail: settings }));
     
@@ -170,7 +162,6 @@ export const WebsiteSettingsManager: React.FC = () => {
     }, 500);
     
     toast.success('Paramètres sauvegardés avec succès ! La synchronisation peut prendre quelques secondes.');
-    console.log('✅ Settings saved and events triggered');
   };
 
   // S'assurer que socialLinks existe avant de l'utiliser

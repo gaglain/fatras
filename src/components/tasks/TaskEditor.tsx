@@ -169,8 +169,6 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
         tags: formData.tags
       };
 
-      console.log('📝 Updating task with:', updates);
-
       await updateTask(task.id, updates);
       
       if (onTaskUpdated) {
