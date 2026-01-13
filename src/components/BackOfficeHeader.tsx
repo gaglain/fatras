@@ -24,8 +24,7 @@ export const BackOfficeHeader: React.FC = () => {
   try {
     const userContext = useUser();
     currentUser = userContext?.currentUser;
-  } catch (error) {
-    console.warn('⚠️ UserContext not available yet, using fallback');
+  } catch {
     currentUser = null;
   }
   

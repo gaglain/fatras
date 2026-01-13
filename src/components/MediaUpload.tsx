@@ -53,7 +53,6 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
       // Optimiser automatiquement les images
       if (fileType === 'image' && shouldOptimize(file, 100)) {
         setIsOptimizing(true);
-        console.log('🖼️ Optimisation automatique de l\'image...');
         
         const result = await optimizeImage(file, {
           maxWidth: 1920,
@@ -66,7 +65,6 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
         if (result.compressionRatio > 1.1) {
           fileToUpload = createOptimizedFile(result.blob, file.name, result.format);
           savedBytes = file.size - result.optimizedSize;
-          console.log(`✅ Image optimisée: ${(file.size / 1024).toFixed(0)}KB → ${(result.optimizedSize / 1024).toFixed(0)}KB`);
         }
         setIsOptimizing(false);
       }
@@ -78,7 +76,6 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
         fileType === 'image' ? 'images' : 'videos'
       );
 
-      console.log('✅ Upload success, public URL:', result.url);
       setPreviewUrl(result.url);
       setMediaType(fileType);
 
@@ -89,8 +86,7 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
       } else {
         toast.success(`${fileType === 'image' ? 'Image' : 'Vidéo'} téléchargée avec succès !`);
       }
-    } catch (error) {
-      console.error('❌ Upload error:', error);
+    } catch {
       setIsOptimizing(false);
       toast.error('Erreur lors du téléchargement');
     }
@@ -145,8 +141,6 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
                       src={previewUrl || currentMedia} 
                       alt="Aperçu" 
                       className="max-w-full max-h-48 object-contain rounded"
-                      onLoad={() => console.log('✅ Image chargée avec succès')}
-                      onError={() => console.warn('⚠️ Erreur de chargement image (URL ancienne ou expirée)')}
                     />
                   ) : (
                     <div className="flex flex-col items-center justify-center text-sm text-muted-foreground space-y-2">
@@ -160,7 +154,6 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
                       src={previewUrl || currentMedia}
                       className="max-w-full max-h-48 rounded"
                       controls
-                      onError={() => console.warn('⚠️ Erreur de chargement vidéo (URL ancienne ou expirée)')}
                     />
                   ) : (
                     <div className="flex flex-col items-center justify-center text-sm text-muted-foreground space-y-2">

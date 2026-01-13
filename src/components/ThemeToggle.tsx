@@ -11,7 +11,6 @@ export const ThemeToggle: React.FC = () => {
     const checkTheme = () => {
       const isDarkMode = document.documentElement.classList.contains('dark');
       setIsDark(isDarkMode);
-      console.log('🌓 Current theme:', isDarkMode ? 'dark' : 'light');
     };
     
     checkTheme();
@@ -39,7 +38,6 @@ export const ThemeToggle: React.FC = () => {
     localStorage.setItem('theme', newTheme);
     
     setIsDark(!isDark);
-    console.log('🌓 Theme toggled to:', newTheme);
     
     // Déclencher un événement pour forcer la re-application des couleurs
     window.dispatchEvent(new CustomEvent('themeChanged', { detail: newTheme }));

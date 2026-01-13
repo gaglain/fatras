@@ -38,7 +38,6 @@ export const GlobalFileUpload: React.FC<GlobalFileUploadProps> = ({
       }
 
       try {
-        console.log('📤 Uploading file:', file.name);
         const result = await uploadFile(file, 'app-files', 'uploads');
         
         const uploadedFile = {
@@ -52,10 +51,7 @@ export const GlobalFileUpload: React.FC<GlobalFileUploadProps> = ({
         if (onFileUploaded) {
           onFileUploaded(uploadedFile);
         }
-        
-        console.log('✅ File uploaded successfully:', uploadedFile);
-      } catch (error) {
-        console.error('❌ Upload error:', error);
+      } catch {
         toast.error(`Erreur lors de l'upload de ${file.name}`);
       }
     }
