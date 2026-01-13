@@ -695,14 +695,14 @@ setNewOpportunity({
               <div>
                 <label className="block text-sm font-medium mb-1">Propriétaire</label>
                 <Select
-                  value={newOpportunity.owner_id}
-                  onValueChange={(value) => setNewOpportunity({ ...newOpportunity, owner_id: value })}
+                  value={newOpportunity.owner_id || '_none'}
+                  onValueChange={(value) => setNewOpportunity({ ...newOpportunity, owner_id: value === '_none' ? '' : value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionner un propriétaire" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Aucun</SelectItem>
+                    <SelectItem value="_none">Aucun</SelectItem>
                     {users.map((u) => (
                       <SelectItem key={u.user_id} value={u.user_id}>
                         {u.first_name || u.last_name 
