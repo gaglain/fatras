@@ -154,23 +154,15 @@ export const Contracts: React.FC = () => {
     if (!currentUser) return;
 
     try {
-      logger.debug('📍 Début création feuille de route depuis devis', quoteId);
-      
       const event = events.find(e => e.id === quoteData.event_id);
       const contact = contacts.find(c => c.id === quoteData.contact_id);
       const artist = artists.find(a => a.id === quoteData.artist_id);
-
-      logger.debug('📍 Event trouvé:', event);
-      logger.debug('📍 Contact trouvé:', contact);
-      logger.debug('📍 Artist trouvé:', artist);
 
       if (!event) {
         toast.error('Un événement doit être associé au devis pour créer une feuille de route');
         return;
       }
 
-      // Créer la feuille de route
-      logger.debug('📍 Création de la feuille de route...');
       const { data: roadshow, error: roadshowError } = await supabase
         .from('roadshow_stops')
         .insert({
@@ -193,15 +185,10 @@ export const Contracts: React.FC = () => {
         .single();
 
       if (roadshowError) {
-        logger.error('❌ Erreur création roadshow:', roadshowError);
         throw roadshowError;
       }
 
-      logger.debug('✅ Feuille de route créée:', roadshow);
-
-      // Créer le canal de messagerie privé
       if (roadshow) {
-        logger.debug('📍 Création du canal de messagerie...');
         
         // Créer les membres du canal (utilisateur actuel + contact si présent)
         const memberIds: string[] = [];
@@ -219,11 +206,8 @@ export const Contracts: React.FC = () => {
           });
 
         if (channelError) {
-          logger.error('❌ Erreur création canal:', channelError);
-          logger.error('❌ Détails erreur:', JSON.stringify(channelError, null, 2));
           toast.error('Feuille de route créée mais erreur lors de la création du canal de messagerie: ' + channelError.message);
         } else {
-          logger.debug('✅ Canal créé:', channel);
           toast.success('Feuille de route et canal de messagerie créés avec succès !');
         }
       }
@@ -269,9 +253,7 @@ export const Contracts: React.FC = () => {
           vat_rate: formData.vat_rate
         });
 
-        // Si le statut passe à "accepted", créer automatiquement une feuille de route
         if (formData.status === 'accepted' && previousStatus !== 'accepted') {
-          logger.debug('✅ Déclenchement de la création de feuille de route pour le devis accepté');
           await createRoadshowFromQuote(editingQuote.id, formData);
         }
 
@@ -309,9 +291,7 @@ export const Contracts: React.FC = () => {
           }
         }
         
-        // Si le devis est créé directement avec le statut "accepted", créer la feuille de route
         if (createdQuote && formData.status === 'accepted') {
-          logger.debug('✅ Déclenchement de la création de feuille de route pour le nouveau devis accepté');
           await createRoadshowFromQuote(createdQuote.id, formData);
         }
         
@@ -364,7 +344,6 @@ export const Contracts: React.FC = () => {
   };
 
   const handleEdit = (quote: typeof quotes[number]) => {
-    logger.debug('[Contracts] Edit clicked for quote', quote?.id);
     setEditingQuote(quote);
     setFormData({
       title: quote.title,
