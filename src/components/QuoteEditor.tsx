@@ -68,8 +68,7 @@ export const QuoteEditor: React.FC<QuoteEditorProps> = ({
       toast.success('Devis mis à jour');
       onSave();
       onClose();
-    } catch (error: any) {
-      console.error('Error updating quote:', error);
+    } catch {
       toast.error('Erreur lors de la mise à jour');
     } finally {
       setLoading(false);

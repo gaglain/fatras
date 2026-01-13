@@ -132,9 +132,9 @@ export const EmailSender: React.FC = () => {
       setContent('');
       setAttachments([]);
 
-    } catch (error: any) {
-      console.error('Error sending email:', error);
-      toast.error('Erreur lors de l\'envoi: ' + error.message);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Erreur inconnue';
+      toast.error('Erreur lors de l\'envoi: ' + message);
     } finally {
       setSending(false);
       setUploading(false);

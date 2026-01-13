@@ -58,15 +58,13 @@ export const useSecureShopOrders = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Erreur lors du chargement des commandes:', error);
         setError('Erreur lors du chargement des commandes');
         toast.error('Erreur lors du chargement des commandes');
       } else {
         setOrders((data || []) as ShopOrder[]);
         setError(null);
       }
-    } catch (err) {
-      console.error('Erreur:', err);
+    } catch {
       setError('Erreur lors du chargement des commandes');
     } finally {
       setLoading(false);
@@ -81,10 +79,8 @@ export const useSecureShopOrders = () => {
       const { data, error } = await supabase.rpc('get_my_shop_stats');
       
       if (error) {
-        console.error('Erreur lors du chargement des statistiques:', error);
         toast.error('Erreur lors du chargement des statistiques');
       } else {
-        // Le résultat est un tableau, prenons le premier élément
         setStats(data?.[0] || {
           total_orders: 0,
           completed_orders: 0,
@@ -92,8 +88,8 @@ export const useSecureShopOrders = () => {
           total_revenue: 0
         });
       }
-    } catch (err) {
-      console.error('Erreur:', err);
+    } catch {
+      // Silent fail for stats loading
     }
   };
 
@@ -117,20 +113,17 @@ export const useSecureShopOrders = () => {
       });
 
       if (error) {
-        console.error('Erreur lors de la création de la commande:', error);
         toast.error('Erreur lors de la création de la commande');
         return null;
       }
 
       toast.success('Commande créée avec succès');
       
-      // Rafraîchir les données
       await fetchMyOrders();
       await fetchMyStats();
       
       return data;
-    } catch (err) {
-      console.error('Erreur:', err);
+    } catch {
       toast.error('Erreur lors de la création de la commande');
       return null;
     }
@@ -145,14 +138,12 @@ export const useSecureShopOrders = () => {
       });
 
       if (error) {
-        console.error('Erreur lors de la recherche de commande:', error);
         toast.error('Commande non trouvée');
         return null;
       }
 
       return (data?.[0] as ShopOrder) || null;
-    } catch (err) {
-      console.error('Erreur:', err);
+    } catch {
       toast.error('Erreur lors de la recherche de commande');
       return null;
     }
@@ -172,7 +163,6 @@ export const useSecureShopOrders = () => {
         .eq('id', orderId);
 
       if (error) {
-        console.error('Erreur lors de la mise à jour:', error);
         toast.error('Erreur lors de la mise à jour du statut');
         return false;
       }
@@ -181,8 +171,7 @@ export const useSecureShopOrders = () => {
       await fetchMyOrders();
       await fetchMyStats();
       return true;
-    } catch (err) {
-      console.error('Erreur:', err);
+    } catch {
       toast.error('Erreur lors de la mise à jour');
       return false;
     }
@@ -202,7 +191,6 @@ export const useSecureShopOrders = () => {
         .eq('id', orderId);
 
       if (error) {
-        console.error('Erreur lors de la suppression:', error);
         toast.error('Erreur lors de la suppression');
         return false;
       }
@@ -211,8 +199,7 @@ export const useSecureShopOrders = () => {
       await fetchMyOrders();
       await fetchMyStats();
       return true;
-    } catch (err) {
-      console.error('Erreur:', err);
+    } catch {
       toast.error('Erreur lors de la suppression');
       return false;
     }

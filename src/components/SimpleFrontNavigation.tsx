@@ -8,8 +8,6 @@ export const SimpleFrontNavigation: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { config } = useWebsiteConfig();
 
-  console.log('🎯 SimpleFrontNavigation - Current siteName:', config.siteName);
-
   return (
     <nav 
       className="sticky top-0 z-50 w-full shadow-md"
