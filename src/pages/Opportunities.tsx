@@ -425,67 +425,69 @@ setNewOpportunity({
           viewMode === 'compact' ? (
             <Card key={opportunity.id} className="hover:shadow-md transition-shadow">
               <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="text-lg mb-2">{opportunity.title}</CardTitle>
+                <div className="space-y-3">
+                  <div>
+                    <CardTitle className="text-lg mb-2 line-clamp-2">{opportunity.title}</CardTitle>
                     <Badge className={getStatusColor(opportunity.status)}>
                       {getStatusLabel(opportunity.status)}
                     </Badge>
                   </div>
-                  <div className="flex flex-col sm:flex-row gap-1">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleEditOpportunity(opportunity)}
-                      className="w-full sm:w-auto"
-                    >
-                      <Edit className="h-4 w-4 sm:mr-1" />
-                      <span className="hidden sm:inline">Modifier</span>
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button size="sm" variant="outline" className="w-full sm:w-auto">
-                          <Trash2 className="h-4 w-4 text-red-500 sm:mr-1" />
-                          <span className="hidden sm:inline text-red-500">Supprimer</span>
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Supprimer l'opportunité</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Êtes-vous sûr de vouloir supprimer cette opportunité ? Cette action ne peut pas être annulée.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Annuler</AlertDialogCancel>
-                          <AlertDialogAction 
-                            onClick={() => handleDeleteOpportunity(opportunity.id)}
-                            className="bg-red-600 hover:bg-red-700"
-                          >
-                            Supprimer
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                <p className="text-sm text-gray-600">{opportunity.description}</p>
+                <p className="text-sm text-gray-600 line-clamp-2">{opportunity.description}</p>
                 
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center text-gray-600">
-                    <MapPin className="h-4 w-4 mr-2" />
-                    {opportunity.venue} - {opportunity.location}
+                    <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
+                    <span className="truncate">{opportunity.venue} - {opportunity.location}</span>
                   </div>
                   <div className="flex items-center text-gray-600">
-                    <Calendar className="h-4 w-4 mr-2" />
-                    {new Date(opportunity.date).toLocaleDateString('fr-FR')}
+                    <Calendar className="h-4 w-4 mr-2 flex-shrink-0" />
+                    {opportunity.date ? new Date(opportunity.date).toLocaleDateString('fr-FR') : 'Non définie'}
                   </div>
                   <div className="flex items-center text-gray-600">
-                    <DollarSign className="h-4 w-4 mr-2" />
+                    <DollarSign className="h-4 w-4 mr-2 flex-shrink-0" />
                     {opportunity.budget}€
                   </div>
+                </div>
+
+                {/* Actions en bas de carte */}
+                <div className="flex gap-2 pt-2 border-t">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleEditOpportunity(opportunity)}
+                    className="flex-1"
+                  >
+                    <Edit className="h-4 w-4 mr-1" />
+                    Modifier
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button size="sm" variant="outline" className="flex-1 text-red-500 border-red-200 hover:bg-red-50">
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Supprimer
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Supprimer l'opportunité</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Êtes-vous sûr de vouloir supprimer cette opportunité ? Cette action ne peut pas être annulée.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Annuler</AlertDialogCancel>
+                        <AlertDialogAction 
+                          onClick={() => handleDeleteOpportunity(opportunity.id)}
+                          className="bg-red-600 hover:bg-red-700"
+                        >
+                          Supprimer
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </CardContent>
             </Card>
