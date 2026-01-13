@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useIndividualEmailTracking } from './useIndividualEmailTracking';
+import { logger } from '@/lib/logger';
 
 export interface EmailData {
   to: string[];
@@ -67,7 +68,7 @@ export const useEmailSender = () => {
 
       if (smtpConfig) {
         // Utiliser SMTP si configuré
-        console.log('📧 Envoi via SMTP configuré');
+        logger.debug('📧 Envoi via SMTP configuré');
         const { data, error } = await supabase.functions.invoke('send-email-smtp', {
           body: {
             to: emailData.to,
@@ -79,7 +80,7 @@ export const useEmailSender = () => {
         });
         
         if (error) {
-          console.warn('⚠️ Échec SMTP, fallback sur Resend:', error);
+          logger.warn('⚠️ Échec SMTP, fallback sur Resend:', error);
           // Fallback sur Resend si SMTP échoue
           const resendResult = await supabase.functions.invoke('send-email-resend', {
             body: {
@@ -98,7 +99,7 @@ export const useEmailSender = () => {
         }
       } else {
         // Utiliser Resend par défaut
-        console.log('📧 Envoi via Resend (pas de SMTP configuré)');
+        logger.debug('📧 Envoi via Resend (pas de SMTP configuré)');
         const { data, error } = await supabase.functions.invoke('send-email-resend', {
           body: {
             to: emailData.to,
@@ -127,8 +128,8 @@ export const useEmailSender = () => {
         .eq('id', emailRecord.id);
 
       return result;
-    } catch (error) {
-      console.error('Error sending email:', error);
+    } catch (error: unknown) {
+      logger.error('Error sending email:', error);
       throw error;
     } finally {
       setSending(false);
@@ -157,9 +158,9 @@ export const useEmailSender = () => {
         subject: 'Bienvenue sur Fatras - Vos informations de connexion',
         html
       });
-      console.log('✅ Email de bienvenue envoyé et enregistré');
-    } catch (error) {
-      console.error('❌ Erreur envoi email de bienvenue:', error);
+      logger.debug('✅ Email de bienvenue envoyé et enregistré');
+    } catch (error: unknown) {
+      logger.error('❌ Erreur envoi email de bienvenue:', error);
       throw error;
     }
   };

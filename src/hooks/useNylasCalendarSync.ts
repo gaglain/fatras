@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 interface CalendarEvent {
   id: string;
@@ -19,7 +20,7 @@ interface CalendarEvent {
 export const useNylasCalendarSync = () => {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const [calendars, setCalendars] = useState<any[]>([]);
+  const [calendars, setCalendars] = useState<{ id: string; name: string; description?: string; read_only?: boolean }[]>([]);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
 
   const syncCalendars = async (grantId: string) => {
@@ -43,8 +44,8 @@ export const useNylasCalendarSync = () => {
       } else {
         throw new Error(data.error);
       }
-    } catch (error) {
-      console.error('Erreur sync calendriers:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur sync calendriers:', error);
       toast.error('Erreur lors de la synchronisation des calendriers');
     } finally {
       setIsLoading(false);
@@ -71,8 +72,8 @@ export const useNylasCalendarSync = () => {
       } else {
         throw new Error(data.error);
       }
-    } catch (error) {
-      console.error('Erreur liste calendriers:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur liste calendriers:', error);
       toast.error('Erreur lors de la récupération des calendriers');
       return [];
     }
@@ -89,8 +90,8 @@ export const useNylasCalendarSync = () => {
 
       if (error) throw error;
       setEvents(data || []);
-    } catch (error) {
-      console.error('Erreur chargement événements:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur chargement événements:', error);
       toast.error('Erreur lors du chargement des événements');
     }
   };
