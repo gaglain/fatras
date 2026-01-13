@@ -54,8 +54,7 @@ const Auth: React.FC = () => {
         toast.success('Connexion réussie !');
         navigate('/dashboard');
       }
-    } catch (error: any) {
-      console.error('Erreur de connexion:', error);
+    } catch {
       toast.error('Erreur lors de la connexion');
     } finally {
       setIsLoading(false);

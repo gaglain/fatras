@@ -197,8 +197,8 @@ export const Agenda: React.FC = () => {
       const { data, error } = await query;
       if (error) throw error;
       setCalendarEvents(data || []);
-    } catch (error) {
-      console.error('Erreur lors du chargement des événements calendrier:', error);
+    } catch {
+      // Erreur silencieuse
     }
   };
 
@@ -210,8 +210,8 @@ export const Agenda: React.FC = () => {
       
       if (error) throw error;
       setArtists(data || []);
-    } catch (error) {
-      console.error('Erreur lors du chargement des artistes:', error);
+    } catch {
+      // Erreur silencieuse
     }
   };
 

@@ -62,8 +62,8 @@ export const ArtistShowcase: React.FC = () => {
 
       setArtists(artistsData || []);
       setEvents(eventsData || []);
-    } catch (error) {
-      console.error('Erreur lors du chargement des données:', error);
+    } catch {
+      // Erreur silencieuse
     } finally {
       setLoading(false);
     }

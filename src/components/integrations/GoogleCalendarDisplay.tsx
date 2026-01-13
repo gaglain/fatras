@@ -54,8 +54,7 @@ export const GoogleCalendarDisplay: React.FC = () => {
         setIsConnected(true);
         await fetchEvents();
       }
-    } catch (error) {
-      console.error('Erreur lors de la vérification de la connexion:', error);
+    } catch {
       // En cas d'erreur, charger quand même les événements locaux
       setIsConnected(true);
       await fetchEvents();
@@ -123,8 +122,7 @@ export const GoogleCalendarDisplay: React.FC = () => {
       if (integration) {
         toast.success(`${calendarEvents.length} événements affichés (fallback)`);
       }
-    } catch (error) {
-      console.error('Erreur lors de la récupération des événements:', error);
+    } catch {
       toast.error('Erreur lors de la synchronisation');
     } finally {
       setLoading(false);
