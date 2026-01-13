@@ -21,7 +21,7 @@ interface EventFormData {
   contact_id: string;
   artist_id: string;
   booking_url: string;
-  owner_id?: string;
+  owner_id: string;
 }
 
 interface EventDraftManagerProps {
