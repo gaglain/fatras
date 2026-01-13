@@ -90,8 +90,7 @@ export const OpportunityEditor: React.FC<OpportunityEditorProps> = ({
       toast.success('Opportunité mise à jour');
       onSave();
       onClose();
-    } catch (error: unknown) {
-      console.error('Erreur mise à jour opportunité:', error);
+    } catch {
       toast.error('Erreur lors de la mise à jour');
     } finally {
       setLoading(false);

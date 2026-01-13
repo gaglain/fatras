@@ -47,8 +47,8 @@ export const EmailSmtpConfig = () => {
         smtp_username: configMap.smtp_username || '',
         smtp_password: configMap.smtp_password || ''
       });
-    } catch (error) {
-      console.error('Error loading SMTP config:', error);
+    } catch {
+      // Silent - SMTP config loading failed
     }
   };
 
@@ -78,8 +78,7 @@ export const EmailSmtpConfig = () => {
       if (error) throw error;
 
       toast.success('Configuration SMTP sauvegardée');
-    } catch (error) {
-      console.error('Error saving SMTP config:', error);
+    } catch {
       toast.error('Erreur lors de la sauvegarde');
     } finally {
       setLoading(false);
@@ -109,7 +108,6 @@ export const EmailSmtpConfig = () => {
 
       toast.success('Email de test envoyé ! Vérifiez votre boîte mail.');
     } catch (error: any) {
-      console.error('Error sending test email:', error);
       toast.error(`Erreur lors de l'envoi : ${error.message}`);
     } finally {
       setTestLoading(false);

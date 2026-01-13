@@ -111,8 +111,7 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
       setSelectedContact(null);
       setSelectedEvent(null);
       setOpen(false);
-    } catch (error) {
-      console.error('Error creating task:', error);
+    } catch {
       toast.error('Erreur lors de la création de la tâche');
     } finally {
       setLoading(false);

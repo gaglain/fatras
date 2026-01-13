@@ -91,8 +91,7 @@ export const EmailProviderConfig: React.FC = () => {
         });
 
         setConfigs(configsByProvider);
-      } catch (error) {
-        console.error('Erreur lors du chargement des configurations:', error);
+      } catch {
         toast.error('Erreur lors du chargement des configurations');
       } finally {
         setLoading(false);
@@ -153,8 +152,7 @@ export const EmailProviderConfig: React.FC = () => {
       if (error) throw error;
 
       toast.success(`Configuration ${EMAIL_PROVIDERS.find(p => p.id === providerId)?.name} sauvegardée`);
-    } catch (error) {
-      console.error('Erreur lors de la sauvegarde:', error);
+    } catch {
       toast.error('Erreur lors de la sauvegarde de la configuration');
     } finally {
       setSaving(false);
@@ -189,7 +187,6 @@ export const EmailProviderConfig: React.FC = () => {
 
       toast.success(`Email de test envoyé avec succès via ${EMAIL_PROVIDERS.find(p => p.id === providerId)?.name}`);
     } catch (error) {
-      console.error('Erreur lors du test:', error);
       toast.error(`Erreur lors du test : ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
     } finally {
       setTestingProvider(null);

@@ -35,8 +35,7 @@ if (typeof window !== 'undefined') {
       localStorage.setItem('website_menu', JSON.stringify(normalized));
       // Emit a secondary normalized event for consumers
       window.dispatchEvent(new CustomEvent('menuUpdated', { detail: normalized }));
-    } catch (err) {
-      console.error('❌ Global menu normalization failed, clearing corrupted data:', err);
+    } catch {
       localStorage.removeItem('websiteMenu');
       localStorage.removeItem('website_menu');
     }
