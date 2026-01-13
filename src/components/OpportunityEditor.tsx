@@ -41,7 +41,6 @@ export const OpportunityEditor: React.FC<OpportunityEditorProps> = ({
 
   useEffect(() => {
     if (opportunity) {
-      console.debug('OpportunityEditor received opportunity', opportunity);
       setFormData({
         title: opportunity.title || '',
         description: opportunity.description || '',
@@ -91,8 +90,8 @@ export const OpportunityEditor: React.FC<OpportunityEditorProps> = ({
       toast.success('Opportunité mise à jour');
       onSave();
       onClose();
-    } catch (error: any) {
-      console.error('Error updating opportunity:', error);
+    } catch (error: unknown) {
+      console.error('Erreur mise à jour opportunité:', error);
       toast.error('Erreur lors de la mise à jour');
     } finally {
       setLoading(false);
