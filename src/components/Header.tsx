@@ -20,11 +20,6 @@ export const Header: React.FC = () => {
   const { signOut } = useAuth();
   const { unreadCount } = useNotifications();
   
-  // Debug du badge
-  useEffect(() => {
-    console.log('🎯 Header - unreadCount:', unreadCount);
-    console.log('🔴 Badge devrait être visible:', unreadCount > 0);
-  }, [unreadCount]);
   const [showUserProfile, setShowUserProfile] = useState(false);
   const [showNotificationCenter, setShowNotificationCenter] = useState(false);
   const [companySettings, setCompanySettings] = useState({
@@ -40,8 +35,8 @@ export const Header: React.FC = () => {
         try {
           const settings = JSON.parse(saved);
           setCompanySettings(settings);
-        } catch (error) {
-          console.error('Erreur lors du chargement des paramètres de l\'entreprise:', error);
+        } catch {
+          // Silent fail for settings loading
         }
       }
     };
@@ -68,8 +63,7 @@ export const Header: React.FC = () => {
       const { error } = await signOut();
       if (error) throw error;
       toast.success('Déconnexion réussie');
-    } catch (error: any) {
-      console.error('❌ Sign out error:', error);
+    } catch {
       toast.error('Erreur lors de la déconnexion');
     }
   };

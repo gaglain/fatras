@@ -92,8 +92,6 @@ export const WebsiteConfigManager: React.FC = () => {
   };
 
   const saveConfig = () => {
-    console.log('💾 SAVING CONFIG:', localConfig.siteName);
-    
     // Sauvegarder dans le contexte principal
     updateConfig(localConfig);
     // Nettoyer le brouillon local après sauvegarde
@@ -121,17 +119,12 @@ export const WebsiteConfigManager: React.FC = () => {
     localStorage.setItem('websiteDesign', JSON.stringify(legacyDesign));
     localStorage.setItem('websiteSettings', JSON.stringify(legacySettings));
     
-    console.log('✅ Saved websiteDesign:', legacyDesign);
-    console.log('✅ Saved websiteSettings:', legacySettings);
-    
     // Mettre à jour le titre immédiatement
     document.title = localConfig.siteName;
     
     // Déclencher tous les événements de synchronisation
      window.dispatchEvent(new CustomEvent('websiteConfigChanged', { detail: localConfig }));
     window.dispatchEvent(new CustomEvent('siteConfigChanged', { detail: legacyDesign }));
-    
-    console.log('🚀 Events dispatched for:', localConfig.siteName);
     
     toast.success(`Configuration sauvegardée ! Site: "${localConfig.siteName}"`);
   };

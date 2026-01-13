@@ -29,8 +29,7 @@ export const ChannelBrowser: React.FC<ChannelBrowserProps> = ({
     try {
       const channels = await fetchAvailableChannels();
       setAvailableChannels(channels);
-    } catch (error) {
-      console.error('Error loading channels:', error);
+    } catch {
       toast.error('Erreur lors du chargement des canaux');
     } finally {
       setLoading(false);
