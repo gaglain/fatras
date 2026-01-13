@@ -59,6 +59,7 @@ export const FrontContact: React.FC = () => {
         ]);
 
       if (error) {
+        console.error('Erreur chargement infos contact:', error);
         return;
       }
 
@@ -75,8 +76,8 @@ export const FrontContact: React.FC = () => {
           city: configMap.contact_city || ''
         });
       }
-    } catch {
-      // Erreur silencieuse
+    } catch (error) {
+      console.error('Erreur chargement infos contact:', error);
     }
   };
 
@@ -125,6 +126,7 @@ export const FrontContact: React.FC = () => {
         throw new Error(data?.error || 'Erreur lors de l\'envoi');
       }
     } catch (error: any) {
+      console.error('Erreur envoi formulaire:', error);
       toast.error(error.message || 'Erreur lors de l\'envoi du message. Veuillez réessayer.');
     } finally {
       setIsSubmitting(false);

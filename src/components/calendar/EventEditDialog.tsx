@@ -63,8 +63,8 @@ export const EventEditDialog: React.FC<EventEditDialogProps> = ({
 
       if (error) throw error;
       setAppUsers(data || []);
-    } catch {
-      // Silent error - empty users list will be shown
+    } catch (error) {
+      console.error('Erreur lors du chargement des utilisateurs:', error);
     }
   };
 
@@ -88,7 +88,8 @@ export const EventEditDialog: React.FC<EventEditDialogProps> = ({
           attendees: data.attendees || [],
         });
       }
-    } catch {
+    } catch (error) {
+      console.error('Erreur lors du chargement de l\'événement:', error);
       toast.error('Erreur lors du chargement de l\'événement');
     }
   };
@@ -178,8 +179,8 @@ export const EventEditDialog: React.FC<EventEditDialogProps> = ({
               },
             },
           });
-        } catch {
-          // Silent error - Nylas sync failed but local update succeeded
+        } catch (nylasError) {
+          console.error('Erreur Nylas update:', nylasError);
         }
       }
 
@@ -196,6 +197,7 @@ export const EventEditDialog: React.FC<EventEditDialogProps> = ({
         attendees: [],
       });
     } catch (error: any) {
+      console.error('Erreur lors de la modification:', error);
       toast.error(`Erreur: ${error.message}`);
     } finally {
       setLoading(false);

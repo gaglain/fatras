@@ -49,7 +49,7 @@ export const FrontArtistShowcase: React.FC = () => {
           .order('rating', { ascending: false });
 
         if (artistsError) {
-          // Erreur silencieuse
+          console.error('Erreur lors du chargement des artistes:', artistsError);
         } else {
           setArtists(artistsData || []);
         }
@@ -63,12 +63,12 @@ export const FrontArtistShowcase: React.FC = () => {
           .order('start_date', { ascending: true });
 
         if (eventsError) {
-          // Erreur silencieuse
+          console.error('Erreur lors du chargement des événements:', eventsError);
         } else {
           setEvents(eventsData || []);
         }
-      } catch {
-        // Erreur silencieuse
+      } catch (error) {
+        console.error('Erreur générale:', error);
       } finally {
         setLoading(false);
       }

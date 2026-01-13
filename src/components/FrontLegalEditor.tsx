@@ -78,7 +78,8 @@ export const FrontLegalEditor: React.FC<FrontLegalEditorProps> = ({
         const merged = { ...defaultContent, ...parsed };
         setContent(merged);
         setCurrentValue(merged[type]);
-      } catch {
+      } catch (error) {
+        console.error('Erreur lors du chargement du contenu légal:', error);
         setCurrentValue(content[type]);
       }
     } else {

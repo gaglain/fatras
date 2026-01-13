@@ -31,6 +31,7 @@ export const Resources: React.FC = () => {
     } as any);
 
     if (error) {
+      console.error('Erreur listage bucket', bucket, error);
       return [] as MediaItem[];
     }
 
@@ -61,7 +62,8 @@ export const Resources: React.FC = () => {
       const images = all.filter((m) => m.url.match(/\.(png|jpe?g|gif|webp|svg)$/i));
       const others = all.filter((m) => !m.url.match(/\.(png|jpe?g|gif|webp|svg)$/i));
       setMedia([...images, ...others]);
-    } catch {
+    } catch (e) {
+      console.error(e);
       toast.error('Erreur lors du chargement des médias');
     } finally {
       setLoading(false);

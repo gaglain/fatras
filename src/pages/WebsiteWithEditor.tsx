@@ -34,6 +34,7 @@ export const WebsiteWithEditor: React.FC = () => {
 
   const handleSave = (newBlocks: Block[]) => {
     setBlocks(newBlocks);
+    console.log('Blocs sauvegardés:', newBlocks);
     // Ici vous pourriez sauvegarder en base de données
   };
 

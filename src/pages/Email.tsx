@@ -290,6 +290,12 @@ export const Email: React.FC = () => {
     }
 
     try {
+      console.log('Tentative d\'envoi d\'email via handleSendEmail...', { 
+        to: composeData.to, 
+        subject: composeData.subject, 
+        content: composeData.content 
+      });
+      
       // Utiliser le vrai service d'envoi d'emails
       await sendEmail({
         to: [composeData.to],
@@ -324,6 +330,8 @@ export const Email: React.FC = () => {
       setShowCompose(false);
       toast.success('✅ Email envoyé avec succès !');
     } catch (error) {
+      console.error('Erreur lors de l\'envoi de l\'email:', error);
+      
       // Gestion d'erreurs améliorée
       if (error instanceof Error) {
         if (error.message.includes('RESEND_API_KEY')) {

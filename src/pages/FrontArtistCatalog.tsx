@@ -39,8 +39,8 @@ export const FrontArtistCatalog: React.FC = () => {
 
       if (error) throw error;
       setArtists(data || []);
-    } catch {
-      // Erreur silencieuse
+    } catch (error) {
+      console.error('Erreur lors du chargement des artistes:', error);
     } finally {
       setLoading(false);
     }

@@ -28,6 +28,7 @@ export const GoogleCalendarIntegration: React.FC = () => {
         .maybeSingle();
 
       if (error) {
+        console.error('Error loading Google Calendar integration:', error);
         return;
       }
 
@@ -35,8 +36,8 @@ export const GoogleCalendarIntegration: React.FC = () => {
         setIsConnected(data.is_active || false);
         setSettings(data.settings);
       }
-    } catch {
-      // Erreur silencieuse
+    } catch (error) {
+      console.error('Exception loading Google Calendar integration:', error);
     }
   };
 
@@ -71,6 +72,7 @@ export const GoogleCalendarIntegration: React.FC = () => {
         });
 
       if (error) {
+        console.error('Error saving Google Calendar integration:', error);
         toast.error('Erreur lors de la connexion à Google Calendar');
         return;
       }
@@ -79,7 +81,8 @@ export const GoogleCalendarIntegration: React.FC = () => {
       setSettings(integrationData.settings);
       toast.success('Google Calendar connecté avec succès !');
       
-    } catch {
+    } catch (error) {
+      console.error('Exception connecting Google Calendar:', error);
       toast.error('Erreur lors de la connexion');
     } finally {
       setLoading(false);
@@ -99,6 +102,7 @@ export const GoogleCalendarIntegration: React.FC = () => {
         .eq('service', 'google_calendar');
 
       if (error) {
+        console.error('Error disconnecting Google Calendar:', error);
         toast.error('Erreur lors de la déconnexion');
         return;
       }
@@ -106,7 +110,8 @@ export const GoogleCalendarIntegration: React.FC = () => {
       setIsConnected(false);
       toast.success('Google Calendar déconnecté');
       
-    } catch {
+    } catch (error) {
+      console.error('Exception disconnecting Google Calendar:', error);
       toast.error('Erreur lors de la déconnexion');
     } finally {
       setLoading(false);

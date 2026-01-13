@@ -128,7 +128,8 @@ export const PublicationForm: React.FC<PublicationFormProps> = ({
       });
       
       toast.success(isEditing ? 'Publication modifiée avec succès' : 'Publication créée avec succès');
-    } catch {
+    } catch (error: unknown) {
+      console.error('Erreur lors de la sauvegarde:', error);
       toast.error('Erreur lors de la sauvegarde de la publication');
     } finally {
       setIsSubmitting(false);

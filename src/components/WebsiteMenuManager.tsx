@@ -48,8 +48,8 @@ export const WebsiteMenuManager: React.FC = () => {
       try {
         const parsedMenu = JSON.parse(savedMenu);
         setMenuItems(parsedMenu);
-      } catch {
-        // Erreur silencieuse
+      } catch (error) {
+        console.error('Erreur lors du chargement du menu:', error);
       }
     }
 
@@ -74,8 +74,8 @@ export const WebsiteMenuManager: React.FC = () => {
       try {
         const pages = JSON.parse(savedPages);
         setAvailablePages(pages.filter((page: WebsitePage) => page.status === 'published' || page.status === 'draft'));
-      } catch {
-        // Erreur silencieuse
+      } catch (error) {
+        console.error('Erreur chargement pages:', error);
       }
     }
   };
@@ -218,7 +218,8 @@ export const WebsiteMenuManager: React.FC = () => {
         title: "Succès",
         description: "Menu du site sauvegardé et mis à jour"
       });
-    } catch {
+    } catch (error) {
+      console.error('Erreur sauvegarde menu:', error);
       toast({
         title: "Erreur",
         description: "Erreur lors de la sauvegarde du menu",

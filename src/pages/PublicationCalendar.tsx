@@ -44,8 +44,8 @@ export const PublicationCalendar: React.FC = () => {
     if (saved) {
       try {
         return JSON.parse(saved);
-      } catch {
-        // Erreur silencieuse
+      } catch (e) {
+        console.error('Erreur lors du chargement du brouillon:', e);
       }
     }
     return {
@@ -85,7 +85,7 @@ export const PublicationCalendar: React.FC = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        // Erreur silencieuse - toast géré par l'UI
+        console.error('Erreur lors du chargement des publications:', error);
       } else {
         const formattedPublications: Publication[] = data.map(pub => ({
           id: pub.id,
@@ -212,7 +212,8 @@ export const PublicationCalendar: React.FC = () => {
       setEditingPublication(null);
       setShowForm(false);
       setFormData(loadSavedFormData());
-    } catch {
+    } catch (error: unknown) {
+      console.error('Erreur lors de la sauvegarde de la publication:', error);
       toast.error('Erreur lors de la sauvegarde de la publication');
     } finally {
       setIsLoading(false);
@@ -237,7 +238,8 @@ export const PublicationCalendar: React.FC = () => {
 
         setRealPublications(prev => prev.filter(pub => pub.id !== id));
         toast.success('Publication supprimée');
-      } catch {
+      } catch (error) {
+        console.error('Erreur lors de la suppression:', error);
         toast.error('Erreur lors de la suppression');
       }
     }
@@ -257,7 +259,8 @@ export const PublicationCalendar: React.FC = () => {
         pub.id === id ? { ...pub, status: newStatus } : pub
       ));
       toast.success('Statut mis à jour');
-    } catch {
+    } catch (error: unknown) {
+      console.error('Erreur lors de la mise à jour du statut:', error);
       toast.error('Erreur lors de la mise à jour');
     }
   };

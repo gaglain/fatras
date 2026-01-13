@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 import { Calendar, Users, FileText, DollarSign, CheckSquare, Mail } from 'lucide-react';
 import { CentralizedArtist } from '@/hooks/useCentralizedData';
 import { ContactDialog } from '@/components/contacts/ContactDialog';
@@ -720,8 +719,8 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
 
               if (error) throw error;
               handleDialogClose();
-            } catch {
-              toast.error('Erreur lors de la mise à jour de la publication');
+            } catch (error) {
+              console.error('Error updating publication:', error);
             }
           }}
           initialData={selectedPublication ? {

@@ -137,8 +137,8 @@ export const TeamEmailDashboard: React.FC = () => {
 
       setTimeSeriesData(timeData);
 
-    } catch {
-      // Erreur silencieuse
+    } catch (error) {
+      console.error('Erreur lors du chargement des statistiques:', error);
     } finally {
       setLoading(false);
     }

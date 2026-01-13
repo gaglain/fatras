@@ -49,7 +49,8 @@ export const AccountTab: React.FC = () => {
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-    } catch {
+    } catch (error: any) {
+      console.error('Erreur changement mot de passe:', error);
       toast.error('Erreur lors du changement de mot de passe');
     } finally {
       setIsLoading(false);
