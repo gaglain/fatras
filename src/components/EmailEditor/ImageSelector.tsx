@@ -41,8 +41,7 @@ export const ImageSelector: React.FC<ImageSelectorProps> = ({ value, onChange, c
         setOpen(false);
         toast.success('Image téléchargée');
       }
-    } catch (error) {
-      console.error('Erreur upload:', error);
+    } catch {
       toast.error('Erreur lors du téléchargement');
     } finally {
       setUploading(false);

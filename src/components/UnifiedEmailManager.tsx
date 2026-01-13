@@ -75,8 +75,8 @@ export const UnifiedEmailManager: React.FC = () => {
       try {
         await syncEmails(accounts[0].id);
         await loadEmails();
-      } catch (error) {
-        console.error('Erreur lors de la synchronisation:', error);
+      } catch {
+        // Silent - sync error
       }
     }
   };
@@ -118,8 +118,8 @@ export const UnifiedEmailManager: React.FC = () => {
         await supabase.from('emails').delete().eq('id', email.id);
       }
       await loadEmails();
-    } catch (error) {
-      console.error('Erreur lors de la suppression:', error);
+    } catch {
+      // Silent - delete error
     }
   };
 

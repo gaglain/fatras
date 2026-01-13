@@ -72,8 +72,8 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
 
       if (error) throw error;
       setSpectacles(data || []);
-    } catch (error: any) {
-      console.error('Erreur lors du chargement des spectacles:', error);
+    } catch {
+      // Silent - spectacles loading failed
     }
   };
 
@@ -88,8 +88,8 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
 
       if (error) throw error;
       setContactTypes(data || []);
-    } catch (error: any) {
-      console.error('Erreur lors du chargement des types de contact:', error);
+    } catch {
+      // Silent - contact types loading failed
     }
   };
 
@@ -132,8 +132,8 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
         .eq('contact_id', contactId)
         .single();
       if (data) setSelectedArtistId(data.artist_id);
-    } catch (error) {
-      console.log('No artist linked to this contact');
+    } catch {
+      // No artist linked to this contact - expected case
     }
   };
 
@@ -164,20 +164,16 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
         accepts_marketing_emails: true
       };
 
-      console.log('Saving contact with data:', contactData);
-
       if (contact?.id) {
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from('contacts')
           .update(contactData)
           .eq('id', contact.id)
           .select();
         
         if (error) {
-          console.error('Contact update error:', error);
           throw error;
         }
-        console.log('Contact updated successfully:', data);
         toast.success('Contact mis à jour avec succès');
         
         // Mettre à jour le lien avec l'artiste
@@ -191,10 +187,8 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
           .select();
         
         if (error) {
-          console.error('Contact insert error:', error);
           throw error;
         }
-        console.log('Contact created successfully:', data);
         toast.success('Contact créé avec succès');
         
         // Lier au spectacle si sélectionné
@@ -214,8 +208,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
 
       onSave();
       onClose();
-    } catch (error: any) {
-      console.error('Erreur:', error);
+    } catch {
       toast.error('Erreur lors de la sauvegarde du contact');
     } finally {
       setLoading(false);
@@ -253,8 +246,8 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
           .from('contact_artists')
           .insert([{ contact_id: contactId, artist_id: selectedArtistId }]);
       }
-    } catch (error) {
-      console.error('Error updating contact-artist link:', error);
+    } catch {
+      // Silent - artist link update failed
     }
   };
 
