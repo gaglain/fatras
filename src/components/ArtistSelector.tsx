@@ -8,6 +8,7 @@ import { Plus, Music, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { logger } from '@/lib/logger';
 
 interface Artist {
   id: string;
@@ -45,13 +46,13 @@ export const ArtistSelector: React.FC<ArtistSelectorProps> = ({
           .eq('status', 'active');
 
         if (error) {
-          console.error('Erreur lors du chargement des artistes:', error);
+          logger.error('Erreur lors du chargement des artistes:', error);
           return;
         }
 
         setArtists(data || []);
-      } catch (error) {
-        console.error('Erreur lors du chargement des artistes:', error);
+      } catch (error: unknown) {
+        logger.error('Erreur lors du chargement des artistes:', error);
       }
     };
 
@@ -82,7 +83,7 @@ export const ArtistSelector: React.FC<ArtistSelectorProps> = ({
         .single();
 
       if (error) {
-        console.error('Erreur lors de l\'ajout de l\'artiste:', error);
+        logger.error('Erreur lors de l\'ajout de l\'artiste:', error);
         toast.error('Erreur lors de l\'ajout de l\'artiste');
         return;
       }
@@ -94,8 +95,8 @@ export const ArtistSelector: React.FC<ArtistSelectorProps> = ({
         setNewArtistGenre('');
         toast.success(`Artiste "${data.name}" ajouté avec succès`);
       }
-    } catch (error) {
-      console.error('Erreur lors de l\'ajout de l\'artiste:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur lors de l\'ajout de l\'artiste:', error);
       toast.error('Erreur lors de l\'ajout de l\'artiste');
     }
   };

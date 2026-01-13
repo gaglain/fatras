@@ -9,6 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 interface Contact {
   id?: string;
@@ -115,7 +116,7 @@ export const ContactForm: React.FC<ContactFormProps> = ({
           .eq('id', contact.id);
 
         if (error) {
-          console.error('Error updating contact:', error);
+          logger.error('Error updating contact:', error);
           toast.error('Erreur lors de la mise à jour du contact');
           return;
         }
@@ -127,7 +128,7 @@ export const ContactForm: React.FC<ContactFormProps> = ({
           .insert(contactData);
 
         if (error) {
-          console.error('Error creating contact:', error);
+          logger.error('Error creating contact:', error);
           toast.error('Erreur lors de la création du contact');
           return;
         }
@@ -136,8 +137,8 @@ export const ContactForm: React.FC<ContactFormProps> = ({
 
       onSave();
       onClose();
-    } catch (error) {
-      console.error('Exception in handleSubmit:', error);
+    } catch (error: unknown) {
+      logger.error('Exception in handleSubmit:', error);
       toast.error('Une erreur inattendue s\'est produite');
     } finally {
       setLoading(false);
