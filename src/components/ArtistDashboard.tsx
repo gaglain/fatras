@@ -75,8 +75,8 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
       
       if (error) throw error;
       setUserProfiles(data || []);
-    } catch (error) {
-      console.error('Error loading user profiles:', error);
+    } catch {
+      // Error loading user profiles - silently ignore
     }
   };
 
@@ -149,7 +149,7 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
           .in('id', allOppIds);
         opportunitiesData = data || [];
       }
-      console.log('Opportunities fetched:', opportunitiesData.length);
+      
 
       // 2) Events: union of mapping (artist_events) and events linked via opportunities.event_id
       const { data: mapEvents } = await supabase
@@ -172,7 +172,7 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
           .eq('user_id', user.id);
         eventsData = data || [];
       }
-      console.log('Events fetched:', eventsData.length);
+      
 
       // 3) Contacts: from junctions + direct fields on opportunities/events
       let contactIds: string[] = [];
@@ -204,7 +204,7 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
           .eq('user_id', user.id);
         contactsData = data || [];
       }
-      console.log('Contacts fetched:', contactsData.length);
+      
 
 
       // Fetch artist tasks safely (avoid non-existent JSON path)
@@ -216,9 +216,8 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
           .eq('user_id', user.id)
           .or(`artist_id.eq.${artist.id}`);
         tasksData = data || [];
-        console.log('Tasks fetched:', tasksData.length);
-      } catch (e) {
-        console.warn('Tasks fetch failed (no metadata column). Falling back to title search...', e);
+        
+      } catch {
         try {
           const { data } = await supabase
             .from('tasks')
@@ -226,9 +225,7 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
             .eq('user_id', user.id)
             .ilike('title', `%${artist.name}%`);
           tasksData = data || [];
-          console.log('Tasks fetched (fallback):', tasksData.length);
-        } catch (e2) {
-          console.error('Tasks fetch error:', e2);
+        } catch {
           tasksData = [];
         }
       }
@@ -240,7 +237,7 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
         .eq('user_id', user.id)
         .eq('artist_id', artist.id);
 
-      console.log('Publications fetched:', publicationsData?.length);
+      
 
       // Fetch contact lists linked to artist
       const { data: contactListsData } = await supabase
@@ -249,7 +246,7 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
         .eq('user_id', user.id)
         .eq('artist_id', artist.id);
       
-      console.log('Contact lists fetched:', contactListsData?.length);
+      
 
       // Fetch email campaigns linked to artist
       const { data: campaignsData } = await supabase
@@ -258,7 +255,7 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
         .eq('user_id', user.id)
         .eq('artist_id', artist.id);
       
-      console.log('Campaigns fetched:', campaignsData?.length);
+      
 
       // Fetch quotes linked via artist_id
       const { data: quotesData } = await supabase
@@ -266,7 +263,7 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
         .select('*')
         .eq('user_id', user.id)
         .eq('artist_id', artist.id);
-      console.log('Quotes fetched:', quotesData?.length);
+      
 
       setContacts(contactsData || []);
       setOpportunities(opportunitiesData);
@@ -287,8 +284,8 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artist }) => {
         contactLists: contactListsData?.length || 0,
         campaigns: campaignsData?.length || 0
       });
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
+    } catch {
+      // Error fetching dashboard data - silently ignore
     }
   };
 
