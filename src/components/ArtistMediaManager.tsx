@@ -8,6 +8,7 @@ import { Upload, X, Image as ImageIcon, FileText, Video } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { CentralizedArtist } from '@/hooks/useCentralizedData';
+import { logger } from '@/lib/logger';
 
 interface ArtistMediaManagerProps {
   artist: CentralizedArtist & {
@@ -61,8 +62,8 @@ export const ArtistMediaManager: React.FC<ArtistMediaManagerProps> = ({ artist, 
       }
 
       toast.success('Fichier uploadé avec succès');
-    } catch (error) {
-      console.error('Error uploading file:', error);
+    } catch (error: unknown) {
+      logger.error('Error uploading file:', error);
       toast.error('Erreur lors de l\'upload du fichier');
     } finally {
       setUploading(false);
@@ -354,8 +355,8 @@ export const ArtistMediaManager: React.FC<ArtistMediaManagerProps> = ({ artist, 
                       } as any);
 
                       toast.success('Fichier audio uploadé avec succès');
-                    } catch (error) {
-                      console.error('Error uploading audio:', error);
+                    } catch (error: unknown) {
+                      logger.error('Error uploading audio:', error);
                       toast.error('Erreur lors de l\'upload du fichier audio');
                     } finally {
                       setUploading(false);

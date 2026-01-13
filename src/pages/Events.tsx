@@ -13,6 +13,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useEventTypes } from '@/hooks/useEventTypes';
 import { toast } from 'sonner';
 import { Event } from '@/types/event.types';
+import { logger } from '@/lib/logger';
 
 export const Events: React.FC = () => {
   const { user } = useAuth();
@@ -33,11 +34,11 @@ export const Events: React.FC = () => {
   // Fetch events from Supabase
   const fetchEvents = async () => {
     if (!user) {
-      console.log('❌ No user for fetchEvents');
+      logger.debug('❌ No user for fetchEvents');
       return;
     }
     
-    console.log('📅 Fetching events for user:', user.id);
+    logger.debug('📅 Fetching events for user:', user.id);
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -46,13 +47,13 @@ export const Events: React.FC = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('❌ Events fetch error:', error);
+        logger.error('❌ Events fetch error:', error);
         throw error;
       }
-      console.log('✅ Events loaded:', data?.length || 0, 'events');
+      logger.debug('✅ Events loaded:', data?.length || 0, 'events');
       setEvents(data || []);
-    } catch (error: any) {
-      console.error('Erreur lors du chargement des événements:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur lors du chargement des événements:', error);
       toast.error('Erreur lors du chargement des événements');
     } finally {
       setLoading(false);
@@ -102,8 +103,8 @@ export const Events: React.FC = () => {
 
       setEvents(prev => prev.filter(event => event.id !== id));
       toast.success('Événement supprimé avec succès');
-    } catch (error: any) {
-      console.error('Erreur lors de la suppression:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur lors de la suppression:', error);
       toast.error('Erreur lors de la suppression de l\'événement');
     }
   };
@@ -186,7 +187,7 @@ export const Events: React.FC = () => {
         unlock();
         setTimeout(unlock, 0);
       } catch (e) {
-        console.warn('Scroll lock cleanup error', e);
+        logger.warn('Scroll lock cleanup error', e);
       }
     }
 
