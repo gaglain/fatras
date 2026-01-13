@@ -38,14 +38,13 @@ export const CMSPageManager: React.FC = () => {
         return;
       }
 
-      console.log('🚀 Creating page with data:', formData);
       await savePage(formData);
       toast.success('Page créée avec succès');
       setIsCreating(false);
       resetForm();
-    } catch (error: any) {
-      console.error('❌ Error creating page:', error);
-      toast.error('Erreur lors de la création de la page: ' + (error.message || 'Erreur inconnue'));
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Erreur inconnue';
+      toast.error('Erreur lors de la création de la page: ' + message);
     }
   };
 
@@ -56,7 +55,6 @@ export const CMSPageManager: React.FC = () => {
         return;
       }
 
-      console.log('🔄 Updating page:', editingPage.id, formData);
       await updatePage(editingPage.id, {
         title: formData.title,
         slug: formData.slug,
@@ -71,9 +69,9 @@ export const CMSPageManager: React.FC = () => {
       setEditingPage(null);
       setShowBlockEditor(false);
       resetForm();
-    } catch (error: any) {
-      console.error('❌ Error updating page:', error);
-      toast.error('Erreur lors de la mise à jour: ' + (error.message || 'Erreur inconnue'));
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Erreur inconnue';
+      toast.error('Erreur lors de la mise à jour: ' + message);
     }
   };
 
@@ -83,9 +81,9 @@ export const CMSPageManager: React.FC = () => {
     try {
       await deletePage(id);
       toast.success('Page supprimée avec succès');
-    } catch (error: any) {
-      console.error('❌ Error deleting page:', error);
-      toast.error('Erreur lors de la suppression: ' + (error.message || 'Erreur inconnue'));
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Erreur inconnue';
+      toast.error('Erreur lors de la suppression: ' + message);
     }
   };
 

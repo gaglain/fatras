@@ -89,8 +89,7 @@ export const ArtistUsersManager: React.FC<ArtistUsersManagerProps> = ({ artistId
       } else {
         setArtistUsers([]);
       }
-    } catch (error) {
-      console.error('Error fetching artist users:', error);
+    } catch {
       toast.error('Erreur lors du chargement des utilisateurs');
     } finally {
       setLoading(false);
@@ -109,8 +108,8 @@ export const ArtistUsersManager: React.FC<ArtistUsersManagerProps> = ({ artistId
 
       if (error) throw error;
       setAvailableUsers(data || []);
-    } catch (error) {
-      console.error('Error fetching available users:', error);
+    } catch {
+      // Silent fail for available users loading
     }
   };
 
@@ -142,11 +141,11 @@ export const ArtistUsersManager: React.FC<ArtistUsersManagerProps> = ({ artistId
       toast.success('Utilisateur ajouté avec succès');
       setSelectedUserId('');
       fetchArtistUsers();
-    } catch (error: any) {
-      console.error('Error adding user:', error);
-      const message = String(error?.message || '');
+    } catch (error: unknown) {
+      const err = error as { code?: string; message?: string };
+      const message = err?.message || '';
 
-      if (error?.code === '23505') {
+      if (err?.code === '23505') {
         toast.error('Cet utilisateur est déjà lié (doublon)');
       } else if (/row-level security|permission denied|not allowed/i.test(message)) {
         toast.error("Droits insuffisants : seul le propriétaire de l'artiste peut ajouter des utilisateurs.");
@@ -169,8 +168,7 @@ export const ArtistUsersManager: React.FC<ArtistUsersManagerProps> = ({ artistId
 
       toast.success('Utilisateur retiré avec succès');
       fetchArtistUsers();
-    } catch (error) {
-      console.error('Error removing user:', error);
+    } catch {
       toast.error('Erreur lors de la suppression de l\'utilisateur');
     }
   };

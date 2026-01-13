@@ -53,8 +53,7 @@ export const ArtistTemplatesManager: React.FC<ArtistTemplatesManagerProps> = ({
 
       setQuoteTemplates(quotesData || []);
       setEmailTemplates(emailsData || []);
-    } catch (error) {
-      console.error('Error fetching templates:', error);
+    } catch {
       toast.error('Erreur lors du chargement des modèles');
     }
   };
