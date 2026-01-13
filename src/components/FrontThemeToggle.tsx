@@ -19,7 +19,6 @@ export const FrontThemeToggle: React.FC<FrontThemeToggleProps> = ({
     const checkTheme = () => {
       const isDarkMode = document.documentElement.classList.contains('dark');
       setIsDark(isDarkMode);
-      console.log('🌓 Front theme check:', isDarkMode ? 'dark' : 'light');
     };
     
     checkTheme();
@@ -47,7 +46,6 @@ export const FrontThemeToggle: React.FC<FrontThemeToggleProps> = ({
     localStorage.setItem('theme', newTheme);
     
     setIsDark(!isDark);
-    console.log('🌓 Front theme toggled to:', newTheme);
     
     // Déclencher un événement pour forcer la re-application des couleurs
     window.dispatchEvent(new CustomEvent('themeChanged', { detail: newTheme }));

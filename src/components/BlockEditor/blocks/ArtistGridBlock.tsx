@@ -19,8 +19,6 @@ export const ArtistGridBlock: React.FC<ArtistGridBlockProps> = ({ content, isEdi
   const { artists } = useCentralizedData();
   const [isEditingGrid, setIsEditingGrid] = useState(false);
 
-  console.log('🎭 ArtistGridBlock - Using centralized artists:', artists.length);
-
   if (isEditing && isEditingGrid) {
     return (
       <Card className="m-4">
