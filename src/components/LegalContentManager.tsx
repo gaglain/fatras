@@ -64,8 +64,8 @@ export const LegalContentManager: React.FC = () => {
       try {
         const parsed = JSON.parse(savedContent);
         setContent({ ...defaultContent, ...parsed });
-      } catch (error) {
-        console.error('Erreur lors du chargement du contenu légal:', error);
+      } catch {
+        // Invalid JSON, use default content
       }
     }
   }, []);

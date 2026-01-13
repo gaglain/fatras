@@ -25,8 +25,6 @@ export const EmailSenderComponent: React.FC = () => {
     }
 
     try {
-      console.log('Tentative d\'envoi d\'email...', { to, subject, content });
-      
       // Utiliser directement la fonction Supabase send-email avec Resend
       const { data, error } = await supabase.functions.invoke('send-email', {
         body: {
@@ -49,7 +47,6 @@ export const EmailSenderComponent: React.FC = () => {
         throw error;
       }
       
-      console.log('Email envoyé avec succès:', data);
       toast.success('Email envoyé avec succès !');
       
       // Reset form
@@ -57,8 +54,7 @@ export const EmailSenderComponent: React.FC = () => {
       setSubject('');
       setContent('');
       setIsOpen(false);
-    } catch (error) {
-      console.error('Erreur envoi email:', error);
+    } catch (error: unknown) {
       toast.error(`Erreur lors de l'envoi de l'email: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
     }
   };
