@@ -94,8 +94,7 @@ export const BulkContactListAssignment: React.FC<BulkContactListAssignmentProps>
 
       onListCreated?.();
       handleClose();
-    } catch (error) {
-      console.error('Erreur:', error);
+    } catch {
       toast.error('Erreur lors de l\'assignation à la liste');
     } finally {
       setLoading(false);

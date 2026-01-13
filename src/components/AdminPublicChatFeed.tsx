@@ -49,17 +49,13 @@ export const AdminPublicChatFeed: React.FC<AdminPublicChatFeedProps> = ({ initia
   // Load all conversations
   const loadConversations = async () => {
     setIsLoading(true);
-    console.log('📨 Loading public chat messages...');
     
     const { data, error } = await supabase
       .from('public_chat_messages')
       .select('*')
       .order('created_at', { ascending: true });
 
-    console.log('📨 Public chat result:', { data, error, count: data?.length });
-
     if (error) {
-      console.error('❌ Error loading messages:', error);
       toast.error('Erreur lors du chargement des messages');
       setIsLoading(false);
       return;
@@ -119,7 +115,6 @@ export const AdminPublicChatFeed: React.FC<AdminPublicChatFeedProps> = ({ initia
   // Note: Notifications are created globally via usePublicChatNotifications hook in Layout
   useEffect(() => {
     const channelName = `admin-chat-feed-${Date.now()}`;
-    console.log('🔔 AdminPublicChatFeed: Setting up realtime subscription:', channelName);
     
     const channel = supabase
       .channel(channelName)
@@ -130,17 +125,13 @@ export const AdminPublicChatFeed: React.FC<AdminPublicChatFeedProps> = ({ initia
           schema: 'public',
           table: 'public_chat_messages'
         },
-        (payload) => {
-          console.log('🔔 AdminPublicChatFeed: Message change received:', payload);
+        () => {
           loadConversations();
         }
       )
-      .subscribe((status) => {
-        console.log('🔔 AdminPublicChatFeed: Subscription status:', status);
-      });
+      .subscribe();
 
     return () => {
-      console.log('🔔 AdminPublicChatFeed: Cleaning up subscription');
       supabase.removeChannel(channel);
     };
   }, []);
@@ -184,7 +175,6 @@ export const AdminPublicChatFeed: React.FC<AdminPublicChatFeedProps> = ({ initia
       });
 
     if (error) {
-      console.error('Error sending reply:', error);
       toast.error('Erreur lors de l\'envoi de la réponse');
     } else {
       setReplyMessage('');

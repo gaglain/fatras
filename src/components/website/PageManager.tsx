@@ -108,8 +108,8 @@ export const PageManager: React.FC = () => {
           blocks: page.blocks || page.content || []
         }));
         setLocalPages(pagesWithBlocks);
-      } catch (error) {
-        console.error('Error loading pages:', error);
+      } catch {
+        // Failed to load pages from localStorage
       }
     }
   };
@@ -171,8 +171,7 @@ export const PageManager: React.FC = () => {
       
       // Recharger les pages
       await loadPages();
-    } catch (error) {
-      console.error('Error creating page:', error);
+    } catch {
       toast.error('Erreur lors de la création de la page');
     } finally {
       setSaving(false);
@@ -201,8 +200,7 @@ export const PageManager: React.FC = () => {
       
       // Recharger les pages
       await loadPages();
-    } catch (error) {
-      console.error('Error saving page:', error);
+    } catch {
       toast.error('Erreur lors de la sauvegarde');
     } finally {
       setSaving(false);
@@ -214,8 +212,7 @@ export const PageManager: React.FC = () => {
       try {
         await deletePage(pageId);
         toast.success('Page supprimée');
-      } catch (error) {
-        console.error('Error deleting page:', error);
+      } catch {
         toast.error('Erreur lors de la suppression');
       }
     }
@@ -226,8 +223,7 @@ export const PageManager: React.FC = () => {
       await updatePage(pageId, { status: 'published' });
       toast.success('Page publiée');
       await loadPages();
-    } catch (error) {
-      console.error('Error publishing page:', error);
+    } catch {
       toast.error('Erreur lors de la publication');
     }
   };
