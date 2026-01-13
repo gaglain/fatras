@@ -122,8 +122,7 @@ export const RolePermissions: React.FC = () => {
 
       toast.success('Permissions mises à jour avec succès');
       fetchPermissions();
-    } catch (error) {
-      console.error('Erreur lors de la sauvegarde:', error);
+    } catch {
       toast.error('Erreur lors de la sauvegarde des permissions');
     } finally {
       setSaving(false);

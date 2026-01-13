@@ -122,8 +122,8 @@ export const CompanyTab: React.FC = () => {
         // Notify other components
         window.dispatchEvent(new CustomEvent('companySettingsChanged', { detail: settings }));
       }
-    } catch (error) {
-      console.error('Erreur lors du chargement des paramètres:', error);
+    } catch {
+      // Silently ignore loading errors
     }
   };
 
@@ -183,8 +183,7 @@ export const CompanyTab: React.FC = () => {
       // Déclencher l'événement pour les autres composants
       window.dispatchEvent(new CustomEvent('companySettingsChanged', { detail: companySettings }));
       toast.success("Paramètres de l'entreprise sauvegardés");
-    } catch (error) {
-      console.error('Erreur lors de la sauvegarde:', error);
+    } catch {
       toast.error("Erreur lors de la sauvegarde des paramètres");
     } finally {
       setLoading(false);
@@ -262,8 +261,7 @@ export const CompanyTab: React.FC = () => {
       }
 
       toast.success(`${type === "logo" ? "Logo" : type === "favicon" ? "Icône" : "Icône d'app"} chargé et enregistré avec succès`);
-    } catch (error) {
-      console.error('Erreur lors du chargement du fichier:', error);
+    } catch {
       toast.error("Erreur lors du chargement du fichier");
     } finally {
       setLoading(false);
@@ -338,8 +336,7 @@ export const CompanyTab: React.FC = () => {
       // Dispatch event
       window.dispatchEvent(new CustomEvent('companySettingsChanged', { detail: updatedSettings }));
       
-    } catch (error) {
-      console.error('❌ Erreur lors de la génération des icônes PWA:', error);
+    } catch {
       toast.error("Erreur lors de la génération des icônes PWA");
     } finally {
       setUploadingPWA(false);
@@ -444,7 +441,6 @@ export const CompanyTab: React.FC = () => {
                   alt="Icône d'app"
                   className="h-16 w-16 object-contain border rounded-lg shadow-sm"
                   onError={(e) => { 
-                    console.error('❌ Erreur de chargement de l\'icône d\'app');
                     (e.currentTarget as HTMLImageElement).style.display = 'none'; 
                   }}
                 />
