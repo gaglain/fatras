@@ -98,8 +98,10 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ selectedArtist }
   });
 
   // Calculs basés sur les vraies données avec opportunités
+  // Ne compter que les événements confirmés pour "Ce mois"
   const thisMonthEvents = events.filter(e => {
     if (!e.start_date) return false;
+    if (e.status !== 'confirmed') return false;
     const eventDate = new Date(e.start_date);
     const now = new Date();
     return eventDate.getMonth() === now.getMonth() && eventDate.getFullYear() === now.getFullYear();
