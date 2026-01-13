@@ -37,7 +37,19 @@ const handler = async (req: Request): Promise<Response> => {
     })
 
     if (error) {
-      console.error('Error generating reset link:', error)
+      // Handle user not found specifically
+      if (error.code === 'user_not_found') {
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            error: `Aucun utilisateur trouvé avec l'email: ${email}` 
+          }),
+          { 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 404
+          }
+        )
+      }
       throw error
     }
 
