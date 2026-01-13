@@ -58,6 +58,7 @@ const Contracts = lazy(() => import("./pages/Contracts").then(m => ({ default: m
 const Email = lazy(() => import("./pages/EmailSimple"));
 const EmailCampaigns = lazy(() => import("./pages/EmailCampaigns").then(m => ({ default: m.EmailCampaigns })));
 const Opportunities = lazy(() => import("./pages/Opportunities").then(m => ({ default: m.Opportunities })));
+const OpportunityDetail = lazy(() => import("./pages/OpportunityDetail").then(m => ({ default: m.OpportunityDetail })));
 const EventTypes = lazy(() => import("./pages/EventTypes").then(m => ({ default: m.EventTypes })));
 const PublicationCalendar = lazy(() => import("./pages/PublicationCalendar").then(m => ({ default: m.PublicationCalendar })));
 const Forms = lazy(() => import("./pages/Forms").then(m => ({ default: m.Forms })));
@@ -199,6 +200,7 @@ const App = () => {
                         <Route path="/email-campaigns" element={<ProtectedRoute><Layout><EmailCampaigns /></Layout></ProtectedRoute>} />
                         <Route path="/contact-lists" element={<ProtectedRoute><Layout><ContactLists /></Layout></ProtectedRoute>} />
                         <Route path="/opportunities" element={<ProtectedRoute><Layout><Opportunities /></Layout></ProtectedRoute>} />
+                        <Route path="/opportunities/:id" element={<ProtectedRoute><Layout><OpportunityDetail /></Layout></ProtectedRoute>} />
                         <Route path="/event-types" element={<ProtectedRoute><Layout><EventTypes /></Layout></ProtectedRoute>} />
                         <Route path="/publication-calendar" element={<ProtectedRoute><Layout><PublicationCalendar /></Layout></ProtectedRoute>} />
                         <Route path="/forms" element={<ProtectedRoute><Layout><Forms /></Layout></ProtectedRoute>} />
