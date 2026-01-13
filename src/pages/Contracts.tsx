@@ -20,6 +20,7 @@ import { QuoteItemManager } from '@/components/quotes/QuoteItemManager';
 import { QuoteTemplateManager } from '@/components/quotes/QuoteTemplateManager';
 import { UniversalSearch } from '@/components/UniversalSearch';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 
 interface QuoteFormData {
   title: string;
@@ -60,7 +61,7 @@ export const Contracts: React.FC = () => {
       const saved = localStorage.getItem('contractsQuoteDraft');
       if (saved) return JSON.parse(saved);
     } catch (e) {
-      console.error('Erreur parse brouillon devis (contracts):', e);
+      logger.warn('Erreur parse brouillon devis (contracts):', e);
       localStorage.removeItem('contractsQuoteDraft');
     }
     return {
@@ -108,7 +109,7 @@ export const Contracts: React.FC = () => {
         localStorage.setItem('contractsQuoteDraft', JSON.stringify(formData));
       }
     } catch (e) {
-      console.error('Erreur sauvegarde brouillon devis (contracts):', e);
+      logger.warn('Erreur sauvegarde brouillon devis (contracts):', e);
     }
   }, [formData, editingQuote]);
 
@@ -121,7 +122,7 @@ export const Contracts: React.FC = () => {
           setFormData(JSON.parse(saved));
         }
       } catch (e) {
-        console.error('Erreur restauration brouillon devis (contracts):', e);
+        logger.warn('Erreur restauration brouillon devis (contracts):', e);
       }
     }
   }, [showForm, editingQuote]);
@@ -153,15 +154,15 @@ export const Contracts: React.FC = () => {
     if (!currentUser) return;
 
     try {
-      console.log('📍 Début création feuille de route depuis devis', quoteId);
+      logger.debug('📍 Début création feuille de route depuis devis', quoteId);
       
       const event = events.find(e => e.id === quoteData.event_id);
       const contact = contacts.find(c => c.id === quoteData.contact_id);
       const artist = artists.find(a => a.id === quoteData.artist_id);
 
-      console.log('📍 Event trouvé:', event);
-      console.log('📍 Contact trouvé:', contact);
-      console.log('📍 Artist trouvé:', artist);
+      logger.debug('📍 Event trouvé:', event);
+      logger.debug('📍 Contact trouvé:', contact);
+      logger.debug('📍 Artist trouvé:', artist);
 
       if (!event) {
         toast.error('Un événement doit être associé au devis pour créer une feuille de route');
@@ -169,7 +170,7 @@ export const Contracts: React.FC = () => {
       }
 
       // Créer la feuille de route
-      console.log('📍 Création de la feuille de route...');
+      logger.debug('📍 Création de la feuille de route...');
       const { data: roadshow, error: roadshowError } = await supabase
         .from('roadshow_stops')
         .insert({
@@ -192,15 +193,15 @@ export const Contracts: React.FC = () => {
         .single();
 
       if (roadshowError) {
-        console.error('❌ Erreur création roadshow:', roadshowError);
+        logger.error('❌ Erreur création roadshow:', roadshowError);
         throw roadshowError;
       }
 
-      console.log('✅ Feuille de route créée:', roadshow);
+      logger.debug('✅ Feuille de route créée:', roadshow);
 
       // Créer le canal de messagerie privé
       if (roadshow) {
-        console.log('📍 Création du canal de messagerie...');
+        logger.debug('📍 Création du canal de messagerie...');
         
         // Créer les membres du canal (utilisateur actuel + contact si présent)
         const memberIds: string[] = [];
@@ -218,16 +219,16 @@ export const Contracts: React.FC = () => {
           });
 
         if (channelError) {
-          console.error('❌ Erreur création canal:', channelError);
-          console.error('❌ Détails erreur:', JSON.stringify(channelError, null, 2));
+          logger.error('❌ Erreur création canal:', channelError);
+          logger.error('❌ Détails erreur:', JSON.stringify(channelError, null, 2));
           toast.error('Feuille de route créée mais erreur lors de la création du canal de messagerie: ' + channelError.message);
         } else {
-          console.log('✅ Canal créé:', channel);
+          logger.debug('✅ Canal créé:', channel);
           toast.success('Feuille de route et canal de messagerie créés avec succès !');
         }
       }
-    } catch (error) {
-      console.error('❌ Erreur lors de la création de la feuille de route:', error);
+    } catch (error: unknown) {
+      logger.error('❌ Erreur lors de la création de la feuille de route:', error);
       toast.error('Erreur lors de la création de la feuille de route');
     }
   };
@@ -270,7 +271,7 @@ export const Contracts: React.FC = () => {
 
         // Si le statut passe à "accepted", créer automatiquement une feuille de route
         if (formData.status === 'accepted' && previousStatus !== 'accepted') {
-          console.log('✅ Déclenchement de la création de feuille de route pour le devis accepté');
+          logger.debug('✅ Déclenchement de la création de feuille de route pour le devis accepté');
           await createRoadshowFromQuote(editingQuote.id, formData);
         }
 
@@ -310,16 +311,16 @@ export const Contracts: React.FC = () => {
         
         // Si le devis est créé directement avec le statut "accepted", créer la feuille de route
         if (createdQuote && formData.status === 'accepted') {
-          console.log('✅ Déclenchement de la création de feuille de route pour le nouveau devis accepté');
+          logger.debug('✅ Déclenchement de la création de feuille de route pour le nouveau devis accepté');
           await createRoadshowFromQuote(createdQuote.id, formData);
         }
         
         toast.success('Devis créé avec succès');
       }
       resetForm();
-    } catch (error: any) {
-      console.error('Erreur lors de la sauvegarde du devis:', error);
-      const message = error?.message || (typeof error === 'string' ? error : 'Erreur lors de la sauvegarde');
+    } catch (error: unknown) {
+      logger.error('Erreur lors de la sauvegarde du devis:', error);
+      const message = error instanceof Error ? error.message : 'Erreur lors de la sauvegarde';
       toast.error(message);
     }
   };
@@ -362,8 +363,8 @@ export const Contracts: React.FC = () => {
     localStorage.removeItem('contractsQuoteDraft');
   };
 
-  const handleEdit = (quote: any) => {
-    console.info('[Contracts] Edit clicked for quote', quote?.id);
+  const handleEdit = (quote: typeof quotes[number]) => {
+    logger.debug('[Contracts] Edit clicked for quote', quote?.id);
     setEditingQuote(quote);
     setFormData({
       title: quote.title,
@@ -708,7 +709,7 @@ export const Contracts: React.FC = () => {
                               
                               toast.success('TVA mise à jour');
                             } catch (e) {
-                              console.error('Erreur mise à jour TVA:', e);
+                              logger.error('Erreur mise à jour TVA:', e);
                               toast.error('Erreur lors de la mise à jour de la TVA');
                             }
                           }

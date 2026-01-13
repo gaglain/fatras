@@ -5,6 +5,7 @@ import { useNylasCalendarSync } from '@/hooks/useNylasCalendarSync';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAppSettings } from '@/hooks/useAppSettings';
+import { logger } from '@/lib/logger';
 
 export const CalendarViewContainer: React.FC = () => {
   const { user } = useAuth();
@@ -34,8 +35,8 @@ export const CalendarViewContainer: React.FC = () => {
 
       if (error) throw error;
       setLocalEvents(data || []);
-    } catch (error) {
-      console.error('Erreur chargement événements locaux:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur chargement événements locaux:', error);
     }
   };
 
@@ -48,8 +49,8 @@ export const CalendarViewContainer: React.FC = () => {
         .order('start_time', { ascending: true });
       if (error) throw error;
       setFallbackNylas(data || []);
-    } catch (error) {
-      console.error('Erreur chargement événements Nylas (fallback):', error);
+    } catch (error: unknown) {
+      logger.error('Erreur chargement événements Nylas (fallback):', error);
     }
   };
 
@@ -110,8 +111,8 @@ export const CalendarViewContainer: React.FC = () => {
           addedIds.add(calId);
         });
       }
-    } catch (error) {
-      console.error('Erreur lors du chargement des calendriers:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur lors du chargement des calendriers:', error);
     }
 
     setCalendars(sources);

@@ -16,6 +16,7 @@ import { useEvents } from '@/hooks/useEvents';
 import { useTasks } from '@/hooks/useTasks';
 import { useCentralizedData } from '@/hooks/useCentralizedData';
 import { UniversalSearch } from '@/components/UniversalSearch';
+import { logger } from '@/lib/logger';
 
 interface Opportunity {
   id: string;
@@ -92,14 +93,15 @@ export const Opportunities: React.FC = () => {
           });
 
         if (channelError) {
-          console.error('Erreur lors de la création du canal:', channelError);
+          logger.error('Erreur lors de la création du canal:', channelError);
         } else {
           toast.success('Feuille de route et canal de messagerie créés avec succès !');
         }
       }
-    } catch (error) {
-      console.error('Erreur lors de la création de la feuille de route:', error);
-      toast.error(`Erreur lors de la création de la feuille de route: ${error?.message || ''}`);
+    } catch (error: unknown) {
+      logger.error('Erreur lors de la création de la feuille de route:', error);
+      const message = error instanceof Error ? error.message : '';
+      toast.error(`Erreur lors de la création de la feuille de route: ${message}`);
     }
   };
 const [newOpportunity, setNewOpportunity] = useState({
@@ -132,7 +134,7 @@ const [newOpportunity, setNewOpportunity] = useState({
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Erreur lors du chargement des opportunités:', error);
+        logger.error('Erreur lors du chargement des opportunités:', error);
         toast.error('Erreur lors du chargement des opportunités');
       } else {
 const formattedOpportunities = data.map(opp => ({
@@ -240,8 +242,8 @@ setNewOpportunity({
 });
       setShowAddForm(false);
       toast.success('Opportunité créée avec succès');
-    } catch (error) {
-      console.error('Erreur lors de la création:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur lors de la création:', error);
       toast.error('Erreur lors de la création de l\'opportunité');
     }
   };
@@ -327,8 +329,8 @@ setNewOpportunity({
   task_id: ''
 });
       toast.success('Opportunité mise à jour avec succès');
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur lors de la mise à jour:', error);
       toast.error('Erreur lors de la mise à jour de l\'opportunité');
     }
   };
@@ -346,8 +348,8 @@ setNewOpportunity({
 
       setOpportunities(prev => prev.filter(opp => opp.id !== id));
       toast.success('Opportunité supprimée avec succès');
-    } catch (error) {
-      console.error('Erreur lors de la suppression:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur lors de la suppression:', error);
       toast.error('Erreur lors de la suppression de l\'opportunité');
     }
   };
