@@ -46,6 +46,7 @@ export interface Message {
     first_name?: string;
     last_name?: string;
     username?: string;
+    avatar_url?: string;
   };
 }
 
@@ -63,6 +64,7 @@ export const useMessaging = () => {
     last_name?: string;
     username?: string;
     email?: string;
+    avatar_url?: string;
     is_active?: boolean;
     role?: string;
   }
@@ -223,7 +225,7 @@ export const useMessaging = () => {
       const userIds = [...new Set((msgRows || []).map((m: any) => m.user_id))];
       const { data: profiles, error: profilesErr } = await supabase
         .from('user_profiles')
-        .select('user_id, first_name, last_name, username')
+        .select('user_id, first_name, last_name, username, avatar_url')
         .in('user_id', userIds);
 
       if (profilesErr) logger.warn('Error fetching message author profiles:', profilesErr);

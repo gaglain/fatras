@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MessageSquare, X, Send, User, Hash, Plus } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useMessaging } from '@/hooks/useMessaging';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -254,11 +255,12 @@ export const ChatWidget: React.FC = () => {
                       className={`flex ${isMe ? 'justify-end' : 'justify-start'} animate-fade-in`}
                     >
                       <div className={`flex items-start space-x-2 max-w-[80%] ${isMe ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs text-white ${
-                          isMe ? 'bg-primary' : 'bg-muted-foreground'
-                        }`}>
-                          <User className="h-3 w-3" />
-                        </div>
+                        <Avatar className="w-6 h-6">
+                          <AvatarImage src={message.user_profile?.avatar_url || ''} />
+                          <AvatarFallback className={`text-xs text-white ${isMe ? 'bg-primary' : 'bg-muted-foreground'}`}>
+                            {(message.user_profile?.first_name?.[0] || 'U').toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
                         <div className={`px-3 py-2 rounded-lg text-sm transition-all duration-200 hover:shadow-md ${
                           isMe 
                             ? 'bg-primary text-primary-foreground' 
