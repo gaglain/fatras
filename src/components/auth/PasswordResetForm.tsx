@@ -35,9 +35,10 @@ export const PasswordResetForm: React.FC<PasswordResetFormProps> = ({ onBackToLo
         },
       });
 
-      if (error || (data && data.success === false)) {
-        const msg = (error as any)?.message || data?.error || "Erreur lors de l'envoi de l'email de réinitialisation";
-        toast.error(msg);
+      if (error) {
+        toast.error("Erreur lors de l'envoi de l'email de réinitialisation");
+      } else if (data && data.success === false) {
+        toast.error(data.error || "Aucun utilisateur trouvé avec cet email");
       } else {
         setEmailSent(true);
         toast.success('Email de réinitialisation envoyé !');
