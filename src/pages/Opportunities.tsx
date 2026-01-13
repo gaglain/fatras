@@ -46,7 +46,7 @@ export const Opportunities: React.FC = () => {
   const { events } = useEvents();
   const { tasks } = useTasks();
   const { artists } = useCentralizedData();
-  const { getUserDisplayName } = useActiveUsers();
+  const { users, getUserDisplayName } = useActiveUsers();
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
@@ -120,7 +120,8 @@ const [newOpportunity, setNewOpportunity] = useState({
   artist_id: '',
   contact_id: '',
   event_id: '',
-  task_id: ''
+  task_id: '',
+  owner_id: ''
 });
 
   // Charger les opportunités depuis Supabase
@@ -197,7 +198,8 @@ try {
       artist_id: newOpportunity.artist_id || null,
       contact_id: newOpportunity.contact_id || null,
       event_id: newOpportunity.event_id || null,
-      task_id: newOpportunity.task_id || null
+      task_id: newOpportunity.task_id || null,
+      owner_id: newOpportunity.owner_id || null
     })
     .select()
     .single();
@@ -240,7 +242,8 @@ setNewOpportunity({
   artist_id: '',
   contact_id: '',
   event_id: '',
-  task_id: ''
+  task_id: '',
+  owner_id: ''
 });
       setShowAddForm(false);
       toast.success('Opportunité créée avec succès');
@@ -267,7 +270,8 @@ setNewOpportunity({
   artist_id: opportunity.artist_id || '',
   contact_id: opportunity.contact_id || '',
   event_id: opportunity.event_id || '',
-  task_id: opportunity.task_id || ''
+  task_id: opportunity.task_id || '',
+  owner_id: opportunity.owner_id || ''
 });
   };
 
@@ -294,7 +298,8 @@ const { error } = await supabase
     artist_id: newOpportunity.artist_id || null,
     contact_id: newOpportunity.contact_id || null,
     event_id: newOpportunity.event_id || null,
-    task_id: newOpportunity.task_id || null
+    task_id: newOpportunity.task_id || null,
+    owner_id: newOpportunity.owner_id || null
   })
   .eq('id', editingOpportunity.id)
   .eq('user_id', user.id);
@@ -328,7 +333,8 @@ setNewOpportunity({
   artist_id: '',
   contact_id: '',
   event_id: '',
-  task_id: ''
+  task_id: '',
+  owner_id: ''
 });
       toast.success('Opportunité mise à jour avec succès');
     } catch (error: unknown) {
@@ -593,7 +599,8 @@ setNewOpportunity({
             artist_id: '',
             contact_id: '',
             event_id: '',
-            task_id: ''
+            task_id: '',
+            owner_id: ''
           });
         }
       }}>
@@ -681,6 +688,28 @@ setNewOpportunity({
                     <SelectItem value="applied">Candidaturé</SelectItem>
                     <SelectItem value="won">Remportée</SelectItem>
                     <SelectItem value="lost">Perdue</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Propriétaire</label>
+                <Select
+                  value={newOpportunity.owner_id}
+                  onValueChange={(value) => setNewOpportunity({ ...newOpportunity, owner_id: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un propriétaire" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Aucun</SelectItem>
+                    {users.map((u) => (
+                      <SelectItem key={u.user_id} value={u.user_id}>
+                        {u.first_name || u.last_name 
+                          ? `${u.first_name || ''} ${u.last_name || ''}`.trim() 
+                          : u.username || u.email}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
