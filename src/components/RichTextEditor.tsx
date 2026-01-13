@@ -121,8 +121,8 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         onChange(editorRef.current.innerHTML);
         makeImagesResizable();
       }
-    } catch (error) {
-      console.error('Image upload error:', error);
+    } catch {
+      // Image upload failed - toast already shown by hook
     } finally {
       setImageUploading(false);
     }

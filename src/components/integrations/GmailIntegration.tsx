@@ -27,17 +27,14 @@ export const GmailIntegration: React.FC = () => {
         .eq('service', 'gmail')
         .maybeSingle();
 
-      if (error) {
-        console.error('Error loading Gmail integration:', error);
-        return;
-      }
+      if (error) return;
 
       if (data) {
         setIsConnected(data.is_active || false);
         setSettings(data.settings);
       }
-    } catch (error) {
-      console.error('Exception loading Gmail integration:', error);
+    } catch {
+      // Loading failed silently
     }
   };
 
@@ -72,7 +69,6 @@ export const GmailIntegration: React.FC = () => {
         });
 
       if (error) {
-        console.error('Error saving Gmail integration:', error);
         toast.error('Erreur lors de la connexion à Gmail');
         return;
       }
@@ -81,8 +77,7 @@ export const GmailIntegration: React.FC = () => {
       setSettings(integrationData.settings);
       toast.success('Gmail connecté avec succès !');
       
-    } catch (error) {
-      console.error('Exception connecting Gmail:', error);
+    } catch {
       toast.error('Erreur lors de la connexion');
     } finally {
       setLoading(false);
@@ -102,7 +97,6 @@ export const GmailIntegration: React.FC = () => {
         .eq('service', 'gmail');
 
       if (error) {
-        console.error('Error disconnecting Gmail:', error);
         toast.error('Erreur lors de la déconnexion');
         return;
       }
@@ -110,8 +104,7 @@ export const GmailIntegration: React.FC = () => {
       setIsConnected(false);
       toast.success('Gmail déconnecté');
       
-    } catch (error) {
-      console.error('Exception disconnecting Gmail:', error);
+    } catch {
       toast.error('Erreur lors de la déconnexion');
     } finally {
       setLoading(false);

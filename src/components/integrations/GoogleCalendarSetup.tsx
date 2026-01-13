@@ -22,8 +22,8 @@ export const GoogleCalendarSetup: React.FC = () => {
       try {
         const parsed = JSON.parse(savedConfig);
         setConfig({ ...config, ...parsed });
-      } catch (error) {
-        console.error('Error loading Calendar config:', error);
+      } catch {
+        // Config parse error - use defaults
       }
     }
   }, []);

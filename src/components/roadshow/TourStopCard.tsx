@@ -55,7 +55,6 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
   const [showPreview, setShowPreview] = useState(false);
 
   const handlePreview = () => {
-    console.log('Ouverture aperçu pour:', stop);
     setShowPreview(true);
   };
 
@@ -63,8 +62,7 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
     try {
       generateTourStopPDF(stop, getUserById);
       toast.success(`Feuille de route PDF téléchargée: ${stop.city}`);
-    } catch (error) {
-      console.error('Erreur lors de la génération du PDF:', error);
+    } catch {
       toast.error('Erreur lors de la génération du PDF');
     }
   };

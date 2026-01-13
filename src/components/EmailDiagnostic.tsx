@@ -58,8 +58,8 @@ export const EmailDiagnostic: React.FC = () => {
         config[setting.setting_key] = setting.setting_value;
       });
       setEmailConfig(config);
-    } catch (error) {
-      console.error('Erreur lors du chargement de la config:', error);
+    } catch {
+      // Config loading failed silently
     }
   };
 

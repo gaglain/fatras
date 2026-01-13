@@ -115,8 +115,8 @@ export const LegalManager: React.FC = () => {
     if (savedDocs) {
       try {
         setDocuments(JSON.parse(savedDocs));
-      } catch (error) {
-        console.error('Erreur chargement documents légaux:', error);
+      } catch {
+        // Parse error - use defaults
       }
     }
 
@@ -124,8 +124,8 @@ export const LegalManager: React.FC = () => {
     if (savedCookieSettings) {
       try {
         setCookieSettings(JSON.parse(savedCookieSettings));
-      } catch (error) {
-        console.error('Erreur chargement paramètres cookies:', error);
+      } catch {
+        // Parse error - use defaults
       }
     }
   }, []);
