@@ -18,6 +18,7 @@ import {
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/AuthContext';
+import { logger } from '@/lib/logger';
 
 interface SiteSettings {
   siteName: string;
@@ -211,8 +212,8 @@ export const SiteSettings: React.FC = () => {
         
         // Synchroniser avec localStorage pour le front
         syncToLocalStorage(loadedSettings);
-      } catch (error) {
-        console.error('Erreur chargement paramètres:', error);
+      } catch (error: unknown) {
+        logger.error('Erreur chargement paramètres:', error);
       } finally {
         setLoading(false);
       }
@@ -285,7 +286,7 @@ export const SiteSettings: React.FC = () => {
           .upsert([setting], { onConflict: 'user_id,setting_key' });
         
         if (error) {
-          console.error('Erreur sauvegarde setting:', setting.setting_key, error);
+          logger.error('Erreur sauvegarde setting:', setting.setting_key, error);
         }
       }
 
@@ -293,8 +294,8 @@ export const SiteSettings: React.FC = () => {
       syncToLocalStorage(settings);
       
       toast.success('Paramètres sauvegardés avec succès');
-    } catch (error) {
-      console.error('Erreur sauvegarde:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur sauvegarde:', error);
       toast.error('Erreur lors de la sauvegarde');
     } finally {
       setSaving(false);

@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { ContactEventManager } from '@/components/contacts/ContactEventManager';
 import { useNavigate } from 'react-router-dom';
+import { logger } from '@/lib/logger';
 
 interface EventCardProps {
   event: Event;
@@ -48,8 +49,8 @@ export const EventCard: React.FC<EventCardProps> = ({
         .single();
       
       setContact(data);
-    } catch (error) {
-      console.error('Erreur lors du chargement du contact:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur lors du chargement du contact:', error);
     }
   };
 
@@ -72,8 +73,8 @@ export const EventCard: React.FC<EventCardProps> = ({
         }));
         setLinkedContacts(mappedContacts);
       }
-    } catch (error) {
-      console.error('Erreur lors du chargement des contacts liés:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur lors du chargement des contacts liés:', error);
     }
   };
 
