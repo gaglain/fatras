@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { logger } from '@/lib/logger';
 
 interface EventDraft {
   title: string;
@@ -30,9 +31,9 @@ export const useEventDraft = () => {
     const savedDraft = localStorage.getItem(DRAFT_KEY);
     if (savedDraft) {
       try {
-        setDraft(JSON.parse(savedDraft));
-      } catch (error) {
-        console.error('Erreur lors du chargement du brouillon:', error);
+        setDraft(JSON.parse(savedDraft) as EventDraft);
+      } catch (error: unknown) {
+        logger.error('Erreur lors du chargement du brouillon:', error);
         localStorage.removeItem(DRAFT_KEY);
       }
     }

@@ -1,17 +1,17 @@
-
 import { useEffect, useCallback } from 'react';
+import { logger } from '@/lib/logger';
 
 export const useLegalContentSync = () => {
   const syncLegalContent = useCallback(() => {
     const savedContent = localStorage.getItem('legalContent');
     if (savedContent) {
       try {
-        const content = JSON.parse(savedContent);
+        const content = JSON.parse(savedContent) as Record<string, unknown>;
         const event = new CustomEvent('legalContentUpdated', { detail: content });
         window.dispatchEvent(event);
-        console.log('📄 Contenu légal synchronisé:', content);
-      } catch (error) {
-        console.error('Erreur sync contenu légal:', error);
+        logger.debug('📄 Contenu légal synchronisé:', content);
+      } catch (error: unknown) {
+        logger.error('Erreur sync contenu légal:', error);
       }
     }
   }, []);
