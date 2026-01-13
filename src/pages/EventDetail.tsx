@@ -34,8 +34,7 @@ export const EventDetail: React.FC = () => {
       if (error) throw error;
 
       setEvent(data);
-    } catch (error: any) {
-      console.error('Error fetching event:', error);
+    } catch {
       toast.error('Erreur lors du chargement du spectacle');
       navigate('/events');
     } finally {

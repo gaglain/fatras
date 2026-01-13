@@ -69,8 +69,8 @@ export const NylasCalendarIntegration: React.FC = () => {
         const preferred = accountsWithGrants.find(a => a.provider !== 'imap') || accountsWithGrants[0];
         setSelectedAccount(preferred.grant_id || preferred.id);
       }
-    } catch (error) {
-      console.error('Erreur chargement comptes:', error);
+    } catch {
+      // Erreur silencieuse
     }
   };
 
@@ -82,8 +82,8 @@ export const NylasCalendarIntegration: React.FC = () => {
 
     try {
       await syncCalendars(selectedAccount);
-    } catch (error) {
-      console.error('Erreur sync calendriers:', error);
+    } catch {
+      // Erreur silencieuse
     }
   };
 
@@ -95,8 +95,8 @@ export const NylasCalendarIntegration: React.FC = () => {
 
     try {
       await listCalendars(selectedAccount);
-    } catch (error) {
-      console.error('Erreur liste calendriers:', error);
+    } catch {
+      // Erreur silencieuse
     }
   };
 

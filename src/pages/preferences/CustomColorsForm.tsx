@@ -102,8 +102,8 @@ export const CustomColorsForm: React.FC = () => {
       try {
         const parsed = JSON.parse(savedColors);
         setColors({ ...defaultColors, ...parsed });
-      } catch (error) {
-        console.error("Error loading colors:", error);
+      } catch {
+        // Erreur silencieuse
       }
     }
   }, []);
@@ -123,8 +123,7 @@ export const CustomColorsForm: React.FC = () => {
       localStorage.setItem("customColors", JSON.stringify(colors));
       window.dispatchEvent(new CustomEvent('customColorsChanged', { detail: colors }));
       toast.success("Couleurs sauvegardées !");
-    } catch (error) {
-      console.error("Error saving colors:", error);
+    } catch {
       toast.error("Erreur lors de la sauvegarde");
     }
   };
