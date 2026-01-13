@@ -51,27 +51,54 @@ export const TeamEmailDashboard: React.FC = () => {
     setLoading(true);
     try {
       const today = new Date();
-      const startOfDay = new Date(today.setHours(0, 0, 0, 0)).toISOString();
-      const startOfWeek = new Date(today.setDate(today.getDate() - 7)).toISOString();
+      today.setHours(0, 0, 0, 0);
+      const startOfDay = today.toISOString();
+      
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      weekAgo.setHours(0, 0, 0, 0);
+      const startOfWeek = weekAgo.toISOString();
 
-      // Statistiques globales d'emails envoyés
-      const { data: sentEmails } = await supabase
+      // Récupérer tous les emails de la table emails
+      const { data: allEmails, error } = await supabase
         .from('emails')
-        .select('*');
+        .select('id, user_id, direction, status, sent_at, received_at, opened_at, created_at');
 
-      // Statistiques d'emails reçus
-      const { data: receivedEmails } = await supabase
-        .from('inbound_emails')
-        .select('*');
+      if (error) {
+        console.error('Erreur requête emails:', error);
+      }
 
-      const totalSent = sentEmails?.length || 0;
-      const totalReceived = receivedEmails?.length || 0;
-      const totalOpened = sentEmails?.filter(e => e.opened_at).length || 0;
+      const emails = allEmails || [];
+      
+      // Filtrer par direction
+      const sentEmails = emails.filter(e => e.direction === 'sent');
+      const receivedEmails = emails.filter(e => e.direction === 'received');
 
-      const sentToday = sentEmails?.filter(e => e.sent_at && e.sent_at >= startOfDay).length || 0;
-      const receivedToday = receivedEmails?.filter(e => e.received_at && e.received_at >= startOfDay).length || 0;
-      const sentThisWeek = sentEmails?.filter(e => e.sent_at && e.sent_at >= startOfWeek).length || 0;
-      const receivedThisWeek = receivedEmails?.filter(e => e.received_at && e.received_at >= startOfWeek).length || 0;
+      const totalSent = sentEmails.length;
+      const totalReceived = receivedEmails.length;
+      const totalOpened = sentEmails.filter(e => e.opened_at).length;
+
+      // Stats aujourd'hui - utiliser created_at ou sent_at/received_at
+      const sentToday = sentEmails.filter(e => {
+        const date = e.sent_at || e.created_at;
+        return date && date >= startOfDay;
+      }).length;
+      
+      const receivedToday = receivedEmails.filter(e => {
+        const date = e.received_at || e.created_at;
+        return date && date >= startOfDay;
+      }).length;
+
+      // Stats cette semaine
+      const sentThisWeek = sentEmails.filter(e => {
+        const date = e.sent_at || e.created_at;
+        return date && date >= startOfWeek;
+      }).length;
+      
+      const receivedThisWeek = receivedEmails.filter(e => {
+        const date = e.received_at || e.created_at;
+        return date && date >= startOfWeek;
+      }).length;
 
       setStats({
         total_sent: totalSent,
@@ -84,23 +111,28 @@ export const TeamEmailDashboard: React.FC = () => {
         received_this_week: receivedThisWeek,
       });
 
-      // Statistiques par utilisateur
+      // Statistiques par utilisateur - utiliser user_profiles au lieu de user_roles
       const { data: users } = await supabase
-        .from('user_roles')
-        .select('user_id, users!inner(email)');
+        .from('user_profiles')
+        .select('user_id, email, first_name, last_name')
+        .not('user_id', 'is', null);
 
       const userStatsData: UserEmailStats[] = [];
       
       if (users) {
         for (const user of users) {
-          const sentCount = sentEmails?.filter(e => e.user_id === user.user_id).length || 0;
-          const receivedCount = receivedEmails?.filter(e => e.user_id === user.user_id).length || 0;
-          const openedCount = sentEmails?.filter(e => e.user_id === user.user_id && e.opened_at).length || 0;
+          const sentCount = sentEmails.filter(e => e.user_id === user.user_id).length;
+          const receivedCount = receivedEmails.filter(e => e.user_id === user.user_id).length;
+          const openedCount = sentEmails.filter(e => e.user_id === user.user_id && e.opened_at).length;
 
           if (sentCount > 0 || receivedCount > 0) {
+            const displayName = user.first_name && user.last_name 
+              ? `${user.first_name} ${user.last_name}` 
+              : user.email?.split('@')[0] || 'Utilisateur';
+            
             userStatsData.push({
               user_id: user.user_id,
-              user_name: (user.users as any)?.email?.split('@')[0] || 'Utilisateur',
+              user_name: displayName,
               sent_count: sentCount,
               received_count: receivedCount,
               opened_count: openedCount,
@@ -117,16 +149,21 @@ export const TeamEmailDashboard: React.FC = () => {
         const date = new Date();
         date.setDate(date.getDate() - i);
         const dateStr = date.toISOString().split('T')[0];
-        const startOfDate = new Date(date.setHours(0, 0, 0, 0)).toISOString();
-        const endOfDate = new Date(date.setHours(23, 59, 59, 999)).toISOString();
+        
+        const dayStart = new Date(date);
+        dayStart.setHours(0, 0, 0, 0);
+        const dayEnd = new Date(date);
+        dayEnd.setHours(23, 59, 59, 999);
 
-        const sentOnDate = sentEmails?.filter(e => 
-          e.sent_at && e.sent_at >= startOfDate && e.sent_at <= endOfDate
-        ).length || 0;
+        const sentOnDate = sentEmails.filter(e => {
+          const d = e.sent_at || e.created_at;
+          return d && d >= dayStart.toISOString() && d <= dayEnd.toISOString();
+        }).length;
 
-        const receivedOnDate = receivedEmails?.filter(e => 
-          e.received_at && e.received_at >= startOfDate && e.received_at <= endOfDate
-        ).length || 0;
+        const receivedOnDate = receivedEmails.filter(e => {
+          const d = e.received_at || e.created_at;
+          return d && d >= dayStart.toISOString() && d <= dayEnd.toISOString();
+        }).length;
 
         timeData.push({
           date: new Date(dateStr).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }),
