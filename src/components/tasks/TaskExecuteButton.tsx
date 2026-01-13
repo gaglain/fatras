@@ -5,6 +5,7 @@ import { Mail, Phone, Calendar, PlayCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useContacts } from '@/hooks/useContacts';
 import { useNavigate } from 'react-router-dom';
+import { logger } from '@/lib/logger';
 
 interface Task {
   id: string;
@@ -20,7 +21,7 @@ interface TaskExecuteButtonProps {
 export const TaskExecuteButton: React.FC<TaskExecuteButtonProps> = ({ task }) => {
   const { contacts } = useContacts();
   const navigate = useNavigate();
-  const [resolvedContact, setResolvedContact] = React.useState<any>(null);
+  const [resolvedContact, setResolvedContact] = React.useState<typeof contacts[number] | null>(null);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -58,8 +59,8 @@ export const TaskExecuteButton: React.FC<TaskExecuteButtonProps> = ({ task }) =>
   const getContactEmail = () => {
     if (!task.contact_id) return '';
     const contact = resolvedContact || contacts.find(c => c.id === task.contact_id);
-    console.log('Found contact for task:', contact, 'task contact_id:', task.contact_id);
-    return contact?.email || '';
+    logger.debug('Found contact for task:', contact, 'task contact_id:', task.contact_id);
+    return (contact?.email as string) || '';
   };
 
   const getContactPhone = () => {

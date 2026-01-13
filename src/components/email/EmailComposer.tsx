@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Mail, X, Paperclip, Search } from 'lucide-react';
 import { RichTextEditor } from '@/components/RichTextEditor';
-import { generateEmailSignature } from '@/utils/emailSignature';
 import { useUser } from '@/contexts/UserContext';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -14,7 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useIndividualEmailTracking } from '@/hooks/useIndividualEmailTracking';
 import { ImageGalleryPicker } from '@/components/website/ImageGalleryPicker';
 import { UniversalSearch } from '@/components/UniversalSearch';
-
+import { logger } from '@/lib/logger';
 interface EmailComposerProps {
   isOpen: boolean;
   onClose: () => void;
@@ -166,8 +165,8 @@ export const EmailComposer: React.FC<EmailComposerProps> = ({
       setEmailSubject('');
       setContent('');
       setAttachments([]);
-    } catch (error) {
-      console.error('Erreur envoi email:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur envoi email:', error);
       toast.error('Erreur lors de l\'envoi de l\'email');
     } finally {
       setSending(false);

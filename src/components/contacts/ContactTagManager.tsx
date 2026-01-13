@@ -8,6 +8,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '
 import { Check, Plus, X, Tag } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 interface ContactTagManagerProps {
   contactId: string;
@@ -40,15 +41,15 @@ export const ContactTagManager: React.FC<ContactTagManagerProps> = ({
         .eq('id', contactId);
 
       if (error) {
-        console.error('Error updating tags:', error);
+        logger.error('Error updating tags:', error);
         toast.error('Erreur lors de la mise à jour des tags');
         return;
       }
 
       onTagsUpdated(updatedTags);
-      console.log('✅ Tags updated for contact:', contactId, updatedTags);
-    } catch (error) {
-      console.error('Error in handleTagToggle:', error);
+      logger.debug('✅ Tags updated for contact:', contactId, updatedTags);
+    } catch (error: unknown) {
+      logger.error('Error in handleTagToggle:', error);
       toast.error('Erreur lors de la mise à jour des tags');
     }
   };
@@ -68,7 +69,7 @@ export const ContactTagManager: React.FC<ContactTagManagerProps> = ({
         .eq('id', contactId);
 
       if (error) {
-        console.error('Error adding new tag:', error);
+        logger.error('Error adding new tag:', error);
         toast.error('Erreur lors de l\'ajout du tag');
         return;
       }
@@ -78,9 +79,9 @@ export const ContactTagManager: React.FC<ContactTagManagerProps> = ({
       setNewTag('');
       setShowNewTagInput(false);
       toast.success(`Tag "${trimmedTag}" ajouté`);
-      console.log('✅ New tag added:', trimmedTag);
-    } catch (error) {
-      console.error('Error in handleNewTagAdd:', error);
+      logger.debug('✅ New tag added:', trimmedTag);
+    } catch (error: unknown) {
+      logger.error('Error in handleNewTagAdd:', error);
       toast.error('Erreur lors de l\'ajout du tag');
     }
   };
@@ -95,15 +96,15 @@ export const ContactTagManager: React.FC<ContactTagManagerProps> = ({
         .eq('id', contactId);
 
       if (error) {
-        console.error('Error removing tag:', error);
+        logger.error('Error removing tag:', error);
         toast.error('Erreur lors de la suppression du tag');
         return;
       }
 
       onTagsUpdated(updatedTags);
-      console.log('✅ Tag removed from contact:', tagToRemove);
-    } catch (error) {
-      console.error('Error in handleTagRemove:', error);
+      logger.debug('✅ Tag removed from contact:', tagToRemove);
+    } catch (error: unknown) {
+      logger.error('Error in handleTagRemove:', error);
       toast.error('Erreur lors de la suppression du tag');
     }
   };

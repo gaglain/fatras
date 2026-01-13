@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 export const LoginForm = () => {
   const navigate = useNavigate();
@@ -34,12 +35,13 @@ export const LoginForm = () => {
         toast.success('Connexion réussie !');
         
         // Redirection immédiate vers le dashboard
-        console.log('🔄 Redirecting to dashboard...');
+        logger.debug('🔄 Redirecting to dashboard...');
         navigate('/dashboard');
       }
-    } catch (error: any) {
-      console.error('❌ Auth error:', error);
-      toast.error(error.message);
+    } catch (error: unknown) {
+      logger.error('❌ Auth error:', error);
+      const message = error instanceof Error ? error.message : 'Erreur de connexion';
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
