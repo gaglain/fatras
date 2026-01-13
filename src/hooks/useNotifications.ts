@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { logger } from '@/lib/logger';
+import type { Json } from '@/integrations/supabase/types';
 
 export interface Notification {
   id: string;
@@ -8,7 +10,7 @@ export interface Notification {
   type: string;
   title: string;
   message: string;
-  data?: any;
+  data?: Json;
   read: boolean;
   created_at: string;
 }
@@ -35,7 +37,7 @@ export const useNotifications = () => {
       if (data && !error) {
         setNotifications(data);
       } else if (error) {
-        console.error('❌ Erreur lors de la récupération des notifications:', error);
+        logger.error('Erreur lors de la récupération des notifications:', error);
       }
       setLoading(false);
     };
@@ -86,8 +88,8 @@ export const useNotifications = () => {
       cleanupTimeout = setTimeout(() => {
         try {
           supabase.removeChannel(channel);
-        } catch (err) {
-          console.warn('⚠️ Warning during notifications cleanup:', err);
+        } catch (err: unknown) {
+          logger.warn('Warning during notifications cleanup:', err);
         }
       }, 100);
     };
@@ -108,8 +110,8 @@ export const useNotifications = () => {
           )
         );
       }
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour de la notification:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur lors de la mise à jour de la notification:', error);
     }
   }, [user]);
 
@@ -126,8 +128,8 @@ export const useNotifications = () => {
           prev.map(notif => ({ ...notif, read: true }))
         );
       }
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour des notifications:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur lors de la mise à jour des notifications:', error);
     }
   }, [user]);
 
@@ -135,21 +137,21 @@ export const useNotifications = () => {
     try {
       const { data, error } = await supabase
         .from('notifications')
-        .insert({
+        .insert([{
           user_id: notificationData.user_id,
           type: notificationData.type,
           title: notificationData.title,
           message: notificationData.message,
           read: notificationData.read,
-          data: notificationData.data
-        })
+          data: notificationData.data ?? null
+        }])
         .select()
         .single();
 
       if (error) throw error;
       return data;
-    } catch (error) {
-      console.error('Erreur lors de la création de la notification:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur lors de la création de la notification:', error);
       throw error;
     }
   }, []);

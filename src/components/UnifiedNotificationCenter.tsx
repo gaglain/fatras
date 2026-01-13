@@ -71,10 +71,10 @@ export const UnifiedNotificationCenter: React.FC = () => {
       // Déterminer si c'est une notification de tâche
       const isTaskNotif = notif.type === 'task_overdue' || notif.type === 'task_due_soon';
       
-      if (isTaskNotif && notif.data?.task_id) {
+      if (isTaskNotif && (notif.data as { task_id?: string })?.task_id) {
         // Notification de tâche avec task_id
         unified.push({
-          id: `task-${notif.id}-${notif.data.task_id}`, // Inclure l'ID de la notification ET du task
+          id: `task-${notif.id}-${(notif.data as { task_id: string }).task_id}`, // Inclure l'ID de la notification ET du task
           type: 'task',
           title: notif.title,
           message: notif.message,

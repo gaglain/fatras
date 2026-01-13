@@ -1,16 +1,17 @@
-
 import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
+import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
 interface RealtimeConfig {
   table: string;
-  onInsert?: (payload: any) => void;
-  onUpdate?: (payload: any) => void;
-  onDelete?: (payload: any) => void;
+  onInsert?: (payload: RealtimePostgresChangesPayload<Record<string, unknown>>) => void;
+  onUpdate?: (payload: RealtimePostgresChangesPayload<Record<string, unknown>>) => void;
+  onDelete?: (payload: RealtimePostgresChangesPayload<Record<string, unknown>>) => void;
 }
 
 export const useRealtimeUpdates = (configs: RealtimeConfig[]) => {
-  const channelsRef = useRef<Map<string, any>>(new Map());
+  const channelsRef = useRef<Map<string, ReturnType<typeof supabase.channel>>>(new Map());
   const configsStringRef = useRef<string>('');
 
   useEffect(() => {
@@ -32,8 +33,8 @@ export const useRealtimeUpdates = (configs: RealtimeConfig[]) => {
       for (const channel of oldChannels) {
         try {
           await supabase.removeChannel(channel);
-        } catch (error) {
-          console.warn('Erreur lors de la suppression du canal:', error);
+        } catch (error: unknown) {
+          logger.warn('Erreur lors de la suppression du canal:', error);
         }
       }
     };
@@ -70,8 +71,8 @@ export const useRealtimeUpdates = (configs: RealtimeConfig[]) => {
             .subscribe();
 
           channelsRef.current.set(channelName, channel);
-        } catch (error) {
-          console.error(`Erreur lors de la création du canal pour ${config.table}:`, error);
+        } catch (error: unknown) {
+          logger.error(`Erreur lors de la création du canal pour ${config.table}:`, error);
         }
       });
     });
@@ -85,8 +86,8 @@ export const useRealtimeUpdates = (configs: RealtimeConfig[]) => {
         setTimeout(() => {
           try {
             supabase.removeChannel(channel);
-          } catch (err) {
-            console.warn('⚠️ Warning during realtime cleanup:', err);
+          } catch (err: unknown) {
+            logger.warn('Warning during realtime cleanup:', err);
           }
         }, 100);
       });
