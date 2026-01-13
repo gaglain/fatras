@@ -48,8 +48,7 @@ export const FormBlock: React.FC<FormBlockProps> = ({ formId, customTitle }) => 
           };
           setForm(formData);
         }
-      } catch (error: any) {
-        console.error('Erreur lors du chargement du formulaire:', error);
+      } catch {
         setError('Impossible de charger le formulaire');
       } finally {
         setLoading(false);
@@ -69,9 +68,8 @@ export const FormBlock: React.FC<FormBlockProps> = ({ formId, customTitle }) => 
       });
 
       if (error) throw error;
-      console.log('Soumission enregistrée:', result);
-    } catch (error) {
-      console.error('Erreur lors de la soumission:', error);
+    } catch {
+      // Form submission handled by edge function
     }
   };
 
