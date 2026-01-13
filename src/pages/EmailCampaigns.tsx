@@ -41,8 +41,7 @@ export const EmailCampaigns: React.FC = () => {
 
       if (error) throw error;
       setCampaigns(data || []);
-    } catch (error) {
-      console.error('Error fetching campaigns:', error);
+    } catch {
       toast({
         title: "Erreur",
         description: "Impossible de charger les campagnes",
@@ -137,8 +136,7 @@ export const EmailCampaigns: React.FC = () => {
       await fetchCampaigns();
       setShowCampaignManager(false);
       setSelectedCampaign(null);
-    } catch (error) {
-      console.error('Error saving campaign:', error);
+    } catch {
       toast({
         title: "Erreur",
         description: "Impossible de sauvegarder la campagne",
@@ -160,8 +158,7 @@ export const EmailCampaigns: React.FC = () => {
         description: "Campagne envoyée avec succès"
       });
       await fetchCampaigns();
-    } catch (error: any) {
-      console.error('Error sending campaign:', error);
+    } catch {
       toast({
         title: "Erreur",
         description: "Erreur lors de l'envoi de la campagne",
@@ -186,8 +183,7 @@ export const EmailCampaigns: React.FC = () => {
         title: "Succès",
         description: "Campagne supprimée"
       });
-    } catch (error) {
-      console.error('Error deleting campaign:', error);
+    } catch {
       toast({
         title: "Erreur",
         description: "Impossible de supprimer la campagne",

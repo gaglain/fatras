@@ -101,8 +101,7 @@ export const EmailInbox: React.FC = () => {
       });
 
       setEmails(filtered);
-    } catch (error) {
-      console.error('Erreur lors du chargement des emails:', error);
+    } catch {
       toast.error('Erreur lors du chargement des emails');
     } finally {
       setIsLoading(false);
@@ -127,8 +126,8 @@ export const EmailInbox: React.FC = () => {
       setEmails(prev => prev.map(e => 
         e.id === email.id ? { ...e, read_at: new Date().toISOString() } : e
       ));
-    } catch (error) {
-      console.error('Erreur lors du marquage comme lu:', error);
+    } catch {
+      // Non-critical error
     }
   };
 
@@ -141,8 +140,8 @@ export const EmailInbox: React.FC = () => {
           messageId: email.message_id,
         }
       });
-    } catch (error) {
-      console.log('Sync read status failed (non-critical):', error);
+    } catch {
+      // Sync read status failed (non-critical)
     }
   };
 
@@ -160,8 +159,7 @@ export const EmailInbox: React.FC = () => {
       toast.success('Email supprimé');
       setEmails(prev => prev.filter(e => e.id !== email.id));
       setSelectedEmail(null);
-    } catch (error) {
-      console.error('Erreur suppression:', error);
+    } catch {
       toast.error('Erreur lors de la suppression');
     }
   };
@@ -185,12 +183,9 @@ export const EmailInbox: React.FC = () => {
 
   const handleSyncEmails = async () => {
     try {
-      console.log('🔄 Démarrage de la synchronisation des emails...');
       await syncEmails();
-      console.log('✅ Synchronisation terminée, rechargement des emails...');
       await loadEmails();
-    } catch (error) {
-      console.error('❌ Erreur lors de la synchronisation:', error);
+    } catch {
       // L'erreur est déjà gérée dans useEmailSync
     }
   };

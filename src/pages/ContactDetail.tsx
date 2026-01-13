@@ -87,8 +87,7 @@ export const ContactDetail: React.FC = () => {
 
       if (error) throw error;
       setContact(data);
-    } catch (error) {
-      console.error('Erreur lors du chargement du contact:', error);
+    } catch {
       toast.error('Contact non trouvé');
       navigate('/contacts');
     } finally {
@@ -99,7 +98,6 @@ export const ContactDetail: React.FC = () => {
   const loadConnections = async () => {
     if (!id) return;
     
-    console.log('🔍 Chargement des connexions pour le contact:', id);
     let data = await getContactConnections(id);
 
     // Fallback: si tout est vide, interroger directement les tables (évite un éventuel souci de RLS sur les tables de liaison)
@@ -113,7 +111,7 @@ export const ContactDetail: React.FC = () => {
           supabase.from('opportunities').select('id, title, status, date').eq('contact_id', id),
         ]);
 
-        console.log('🧪 Fallback résultats:', { eventsRes, oppsRes });
+        
 
         data = {
           events: eventsRes.data?.map((e: any) => ({ id: e.id, entity_type: 'event', entity_id: e.id, title: e.title, status: e.status, date: e.start_date })) || [],
@@ -124,8 +122,8 @@ export const ContactDetail: React.FC = () => {
           roadshow_stops: [],
           contacts: []
         } as any;
-      } catch (e) {
-        console.error('❌ Fallback error:', e);
+      } catch {
+        // Fallback error - silently ignore
       }
     }
 
@@ -166,8 +164,8 @@ export const ContactDetail: React.FC = () => {
         [...directTasks, ...viaTasks].forEach((t) => mergedMap.set(t.id, t));
 
         data = { ...(data || {}), tasks: Array.from(mergedMap.values()) } as any;
-      } catch (e) {
-        console.error('❌ Fallback tâches error:', e);
+      } catch {
+        // Fallback tâches error - silently ignore
       }
     }
     
@@ -207,14 +205,14 @@ export const ContactDetail: React.FC = () => {
         [...directQuotes, ...viaQuotes].forEach((q) => mergedQuoteMap.set(q.id, q));
 
         data = { ...(data || {}), quotes: Array.from(mergedQuoteMap.values()) } as any;
-      } catch (e) {
-        console.error('❌ Fallback devis error:', e);
+      } catch {
+        // Fallback devis error - silently ignore
       }
     }
 
-    console.log('📊 Données de connexions reçues (avec fallback):', data);
     setConnections(data);
   };
+
   const getEntityIcon = (type: string) => {
     switch (type) {
       case 'event': return <Calendar className="h-4 w-4" />;
@@ -268,14 +266,6 @@ export const ContactDetail: React.FC = () => {
       ...connections.tasks?.map((t: any) => ({ ...t, type: 'task' })) || [],
       ...connections.roadshow_stops?.map((r: any) => ({ ...r, type: 'roadshow_stop' })) || []
     ].sort((a, b) => new Date(b.date || b.created_at).getTime() - new Date(a.date || a.created_at).getTime());
-    
-    console.log('🎯 getAllConnections - Total connexions:', allConns.length, {
-      events: connections.events?.length || 0,
-      opportunities: connections.opportunities?.length || 0,
-      quotes: connections.quotes?.length || 0,
-      tasks: connections.tasks?.length || 0,
-      roadshow_stops: connections.roadshow_stops?.length || 0
-    });
     
     return allConns;
   };
