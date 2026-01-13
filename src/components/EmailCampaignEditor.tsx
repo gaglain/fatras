@@ -189,8 +189,7 @@ export const EmailCampaignEditor: React.FC<EmailCampaignEditorProps> = ({
       onSave(campaignWithAttachments);
       toast.success('Campagne sauvegardée');
       setAttachments([]);
-    } catch (error: any) {
-      console.error('Error uploading attachments:', error);
+    } catch {
       toast.error('Erreur lors de l\'upload des pièces jointes');
     } finally {
       setUploading(false);

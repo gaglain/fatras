@@ -62,8 +62,7 @@ export const FormSubmissions: React.FC<FormSubmissionsProps> = ({ forms }) => {
       }));
       
       setSubmissions(filteredSubmissions);
-    } catch (error) {
-      console.error('Erreur chargement soumissions:', error);
+    } catch {
       toast.error('Erreur lors du chargement des soumissions');
     } finally {
       setLoading(false);
@@ -83,8 +82,7 @@ export const FormSubmissions: React.FC<FormSubmissionsProps> = ({ forms }) => {
 
       setSubmissions(prev => prev.filter(s => s.id !== id));
       toast.success('Soumission supprimée');
-    } catch (error) {
-      console.error('Erreur suppression:', error);
+    } catch {
       toast.error('Erreur lors de la suppression');
     }
   };

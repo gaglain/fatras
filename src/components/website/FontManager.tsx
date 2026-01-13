@@ -61,8 +61,8 @@ export const FontManager: React.FC = () => {
         setFonts(parsedFonts);
         applyFonts(parsedFonts);
       }
-    } catch (error) {
-      console.error('Erreur chargement fonts:', error);
+    } catch {
+      // Silent - fonts loading failed
     }
   };
 
@@ -119,8 +119,7 @@ export const FontManager: React.FC = () => {
       setFonts(newFonts);
       applyFonts(newFonts);
       toast.success('Fonts enregistrées');
-    } catch (error) {
-      console.error('Erreur sauvegarde fonts:', error);
+    } catch {
       toast.error('Erreur lors de la sauvegarde');
     } finally {
       setLoading(false);
@@ -177,8 +176,7 @@ export const FontManager: React.FC = () => {
       setCustomFontFile(null);
       setCustomFontUrl('');
       toast.success('Font personnalisée ajoutée');
-    } catch (error) {
-      console.error('Erreur upload font:', error);
+    } catch {
       toast.error('Erreur lors de l\'upload');
     } finally {
       setLoading(false);

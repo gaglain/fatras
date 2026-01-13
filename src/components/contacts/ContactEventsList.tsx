@@ -41,13 +41,12 @@ export const ContactEventsList: React.FC<ContactEventsListProps> = ({ contactId 
         .order('start_date', { ascending: false });
 
       if (error) {
-        console.error('Error loading contact events:', error);
         return;
       }
 
       setEvents(data || []);
-    } catch (error) {
-      console.error('Error in loadContactEvents:', error);
+    } catch {
+      // Silent - events loading failed
     } finally {
       setLoading(false);
     }

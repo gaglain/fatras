@@ -77,9 +77,8 @@ export const EnhancedTaskCreator: React.FC<EnhancedTaskCreatorProps> = ({
               `${user.user_metadata?.first_name || ''} ${user.user_metadata?.last_name || ''}`.trim(),
               dueDate
             );
-          } catch (emailError) {
-            console.error('Erreur envoi email:', emailError);
-            // Ne pas faire échouer la création de tâche pour un problème d'email
+          } catch {
+            // Don't fail task creation for email issues
           }
         }
       }
@@ -96,8 +95,7 @@ export const EnhancedTaskCreator: React.FC<EnhancedTaskCreatorProps> = ({
       setPriority('medium');
       setDueDate('');
       setIsOpen(false);
-    } catch (error) {
-      console.error('Erreur création tâche:', error);
+    } catch {
       toast.error('Erreur lors de la création de la tâche');
     } finally {
       setCreating(false);

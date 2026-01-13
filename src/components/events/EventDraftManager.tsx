@@ -44,8 +44,7 @@ export const EventDraftManager: React.FC<EventDraftManagerProps> = ({
         const draft = JSON.parse(savedDraft);
         onFormDataChange(draft);
         toast.info('Brouillon restauré');
-      } catch (error) {
-        console.error('Erreur lors du chargement du brouillon:', error);
+      } catch {
         localStorage.removeItem(draftKey);
       }
     }
@@ -56,8 +55,8 @@ export const EventDraftManager: React.FC<EventDraftManagerProps> = ({
     const saveDraft = () => {
       try {
         localStorage.setItem(draftKey, JSON.stringify(formData));
-      } catch (error) {
-        console.error('Erreur lors de la sauvegarde du brouillon:', error);
+      } catch {
+        // Silent - draft save failed
       }
     };
 
@@ -94,8 +93,8 @@ export const useEventDraft = (eventId?: string) => {
   const saveDraft = (data: EventFormData) => {
     try {
       localStorage.setItem(draftKey, JSON.stringify(data));
-    } catch (error) {
-      console.error('Erreur sauvegarde brouillon:', error);
+    } catch {
+      // Silent - draft save failed
     }
   };
 
