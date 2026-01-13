@@ -186,7 +186,8 @@ export const EventDialog: React.FC<EventDialogProps> = ({
         notes: formData.notes || '',
         contact_id: formData.contact_id && formData.contact_id !== 'none' && formData.contact_id !== '' ? formData.contact_id : null,
         artist_id: formData.artist_id && formData.artist_id !== 'none' && formData.artist_id !== '' ? formData.artist_id : null,
-        booking_url: formData.booking_url || null
+        booking_url: formData.booking_url || null,
+        owner_id: formData.owner_id && formData.owner_id !== 'none' && formData.owner_id !== '' ? formData.owner_id : null
       };
 
       logger.debug('Saving event with data:', eventData);
@@ -453,6 +454,36 @@ export const EventDialog: React.FC<EventDialogProps> = ({
               value={formData.booking_url}
               onChange={(e) => setFormData(prev => ({ ...prev, booking_url: e.target.value }))}
             />
+          </div>
+
+          <div>
+            <Label htmlFor="owner_id">Propriétaire</Label>
+            <Select 
+              value={formData.owner_id || 'none'} 
+              onValueChange={(value) => setFormData(prev => ({ ...prev, owner_id: value === 'none' ? '' : value }))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner un propriétaire" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    Aucun propriétaire
+                  </div>
+                </SelectItem>
+                {activeUsers.map(u => (
+                  <SelectItem key={u.user_id} value={u.user_id}>
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      {u.first_name || u.last_name 
+                        ? `${u.first_name || ''} ${u.last_name || ''}`.trim() 
+                        : u.username || u.email}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex justify-end gap-2">
