@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from './useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 
 export type AppRole = 'super_admin' | 'admin' | 'manager' | 'collaborator' | 'artiste' | 'user';
 
@@ -37,8 +38,8 @@ export const usePermissions = () => {
 
       if (error) throw error;
       setUserRoles(data || []);
-    } catch (error) {
-      console.error('Error fetching user roles:', error);
+    } catch (error: unknown) {
+      logger.error('Error fetching user roles:', error);
     }
   };
 
@@ -50,8 +51,8 @@ export const usePermissions = () => {
 
       if (error) throw error;
       setPermissions(data || []);
-    } catch (error) {
-      console.error('Error fetching permissions:', error);
+    } catch (error: unknown) {
+      logger.error('Error fetching permissions:', error);
     }
   };
 

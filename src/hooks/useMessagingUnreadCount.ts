@@ -25,8 +25,8 @@ export const useMessagingUnreadCount = () => {
 
       if (error) throw error;
       setUnreadCount(count || 0);
-    } catch (error) {
-      console.error('Error fetching messaging unread count:', error);
+    } catch (error: unknown) {
+      logger.error('Error fetching messaging unread count:', error);
       setUnreadCount(0);
     }
   }, [user?.id]);

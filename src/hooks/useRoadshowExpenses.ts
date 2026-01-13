@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 export interface RoadshowExpense {
   id: string;
@@ -33,8 +34,8 @@ export const useRoadshowExpenses = () => {
 
       if (error) throw error;
       return (data || []) as RoadshowExpense[];
-    } catch (error) {
-      console.error('Error fetching expenses:', error);
+    } catch (error: unknown) {
+      logger.error('Error fetching expenses:', error);
       toast.error('Erreur lors du chargement des notes de frais');
       return [];
     } finally {
@@ -60,8 +61,8 @@ export const useRoadshowExpenses = () => {
         .getPublicUrl(fileName);
 
       return publicUrl;
-    } catch (error) {
-      console.error('Error uploading file:', error);
+    } catch (error: unknown) {
+      logger.error('Error uploading file:', error);
       toast.error('Erreur lors du téléchargement du fichier');
       return null;
     }
@@ -89,8 +90,8 @@ export const useRoadshowExpenses = () => {
           source_id: roadshowStopId,
           tags: ['note de frais', 'roadshow']
         });
-    } catch (error) {
-      console.error('Error adding to media bank:', error);
+    } catch (error: unknown) {
+      logger.warn('Error adding to media bank:', error);
       // Non-blocking error - don't show toast
     }
   };
@@ -130,8 +131,8 @@ export const useRoadshowExpenses = () => {
 
       toast.success('Note de frais créée avec succès');
       return true;
-    } catch (error) {
-      console.error('Error creating expense:', error);
+    } catch (error: unknown) {
+      logger.error('Error creating expense:', error);
       toast.error('Erreur lors de la création de la note de frais');
       return false;
     } finally {
@@ -170,8 +171,8 @@ export const useRoadshowExpenses = () => {
 
       toast.success('Note de frais supprimée');
       return true;
-    } catch (error) {
-      console.error('Error deleting expense:', error);
+    } catch (error: unknown) {
+      logger.error('Error deleting expense:', error);
       toast.error('Erreur lors de la suppression');
       return false;
     } finally {

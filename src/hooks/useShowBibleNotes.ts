@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 export interface ShowBibleNote {
   id: string;
@@ -53,14 +54,14 @@ export const useShowBibleNotes = (artistId?: string) => {
       const { data, error } = await query;
 
       if (error) {
-        console.error('Error fetching notes:', error);
+        logger.error('Error fetching notes:', error);
         toast.error('Erreur lors du chargement des notes');
         return;
       }
 
       setNotes((data || []) as ShowBibleNote[]);
-    } catch (error) {
-      console.error('Error fetching notes:', error);
+    } catch (error: unknown) {
+      logger.error('Error fetching notes:', error);
       toast.error('Erreur lors du chargement des notes');
     } finally {
       setLoading(false);
@@ -88,7 +89,7 @@ export const useShowBibleNotes = (artistId?: string) => {
         .single();
 
       if (error) {
-        console.error('Error creating note:', error);
+        logger.error('Error creating note:', error);
         toast.error('Erreur lors de la création de la note');
         return null;
       }
@@ -96,8 +97,8 @@ export const useShowBibleNotes = (artistId?: string) => {
       setNotes(prev => [data as ShowBibleNote, ...prev]);
       toast.success('Note créée avec succès');
       return data;
-    } catch (error) {
-      console.error('Error creating note:', error);
+    } catch (error: unknown) {
+      logger.error('Error creating note:', error);
       toast.error('Erreur lors de la création de la note');
       return null;
     }
@@ -117,7 +118,7 @@ export const useShowBibleNotes = (artistId?: string) => {
         .eq('user_id', user.id);
 
       if (error) {
-        console.error('Error updating note:', error);
+        logger.error('Error updating note:', error);
         toast.error('Erreur lors de la mise à jour de la note');
         return false;
       }
@@ -127,8 +128,8 @@ export const useShowBibleNotes = (artistId?: string) => {
       ));
       toast.success('Note mise à jour');
       return true;
-    } catch (error) {
-      console.error('Error updating note:', error);
+    } catch (error: unknown) {
+      logger.error('Error updating note:', error);
       toast.error('Erreur lors de la mise à jour de la note');
       return false;
     }
@@ -148,7 +149,7 @@ export const useShowBibleNotes = (artistId?: string) => {
         .eq('user_id', user.id);
 
       if (error) {
-        console.error('Error deleting note:', error);
+        logger.error('Error deleting note:', error);
         toast.error('Erreur lors de la suppression de la note');
         return false;
       }
@@ -156,8 +157,8 @@ export const useShowBibleNotes = (artistId?: string) => {
       setNotes(prev => prev.filter(note => note.id !== noteId));
       toast.success('Note supprimée');
       return true;
-    } catch (error) {
-      console.error('Error deleting note:', error);
+    } catch (error: unknown) {
+      logger.error('Error deleting note:', error);
       toast.error('Erreur lors de la suppression de la note');
       return false;
     }

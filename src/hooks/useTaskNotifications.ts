@@ -89,7 +89,10 @@ export const useTaskNotifications = () => {
         .in('data->>task_id', taskIds);
 
       const existingTaskIds = new Set(
-        (existingNotifs || []).map((n: any) => n.data?.task_id)
+        (existingNotifs || []).map((n) => {
+          const data = n.data as Record<string, unknown> | null;
+          return data?.task_id as string | undefined;
+        })
       );
 
       // Filtrer les tâches qui n'ont pas encore de notification
@@ -130,8 +133,8 @@ export const useTaskNotifications = () => {
           markToastShown(key);
         }
       }
-    } catch (error) {
-      console.error('Erreur lors de la vérification des tâches en retard:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur lors de la vérification des tâches en retard:', error);
     }
   };
 
@@ -167,7 +170,10 @@ export const useTaskNotifications = () => {
         .gte('created_at', `${today}T00:00:00Z`);
 
       const existingTaskIds = new Set(
-        (existingNotifs || []).map((n: any) => n.data?.task_id)
+        (existingNotifs || []).map((n) => {
+          const data = n.data as Record<string, unknown> | null;
+          return data?.task_id as string | undefined;
+        })
       );
 
       // Préparer les nouvelles notifications
@@ -227,8 +233,8 @@ export const useTaskNotifications = () => {
           markToastShown(key);
         }
       }
-    } catch (error) {
-      console.error('Erreur lors de la vérification des tâches à venir:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur lors de la vérification des tâches à venir:', error);
     }
   };
 
