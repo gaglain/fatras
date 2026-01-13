@@ -351,16 +351,43 @@ export const Contacts: React.FC = () => {
   const availableSources = getUniqueValues('source') as string[];
   const availableCities = getUniqueValues('city') as string[];
 
-  const getContactStats = () => {
-    const total = contacts.length;
-    const clients = contacts.filter(c => c.status === 'client').length;
-    const prospects = contacts.filter(c => c.status === 'prospect').length;
-    const inactifs = contacts.filter(c => c.status === 'inactif').length;
-    
-    return { total, clients, prospects, inactifs };
-  };
+  // Stats from database - use totalContactsCount for accurate total
+  const [contactStats, setContactStats] = useState({ total: 0, clients: 0, prospects: 0, inactifs: 0 });
 
-  const stats = getContactStats();
+  useEffect(() => {
+    const fetchStats = async () => {
+      if (!user) return;
+      
+      try {
+        // Fetch counts by status from database
+        const [totalRes, clientsRes, prospectsRes, inactifsRes] = await Promise.all([
+          supabase.from('contacts').select('*', { count: 'exact', head: true }),
+          supabase.from('contacts').select('*', { count: 'exact', head: true }).eq('status', 'client'),
+          supabase.from('contacts').select('*', { count: 'exact', head: true }).eq('status', 'prospect'),
+          supabase.from('contacts').select('*', { count: 'exact', head: true }).eq('status', 'inactif'),
+        ]);
+
+        setContactStats({
+          total: totalRes.count || 0,
+          clients: clientsRes.count || 0,
+          prospects: prospectsRes.count || 0,
+          inactifs: inactifsRes.count || 0,
+        });
+      } catch {
+        // Fallback to loaded contacts if query fails
+        setContactStats({
+          total: contacts.length,
+          clients: contacts.filter(c => c.status === 'client').length,
+          prospects: contacts.filter(c => c.status === 'prospect').length,
+          inactifs: contacts.filter(c => c.status === 'inactif').length,
+        });
+      }
+    };
+
+    fetchStats();
+  }, [user, contacts.length]);
+
+  const stats = contactStats;
 
   if (loading) {
     return (
