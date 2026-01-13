@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 export interface ShowBibleDocument {
   id: string;
@@ -55,14 +56,14 @@ export const useShowBible = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Erreur lors du chargement des documents:', error);
+        logger.error('Erreur lors du chargement des documents:', error);
         toast.error('Erreur lors du chargement des documents');
         return;
       }
 
       setDocuments((data || []) as ShowBibleDocument[]);
-    } catch (error) {
-      console.error('Erreur lors du chargement des documents:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur lors du chargement des documents:', error);
       toast.error('Erreur lors du chargement des documents');
     } finally {
       setLoading(false);
@@ -86,7 +87,7 @@ export const useShowBible = () => {
         .single();
 
       if (error) {
-        console.error('Erreur lors de la création du document:', error);
+        logger.error('Erreur lors de la création du document:', error);
         toast.error('Erreur lors de la création du document');
         return null;
       }
@@ -94,8 +95,8 @@ export const useShowBible = () => {
       setDocuments(prev => [data as ShowBibleDocument, ...prev]);
       toast.success('Document ajouté à la bible du spectacle');
       return data;
-    } catch (error) {
-      console.error('Erreur lors de la création du document:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur lors de la création du document:', error);
       toast.error('Erreur lors de la création du document');
       return null;
     }
@@ -114,7 +115,7 @@ export const useShowBible = () => {
         .remove([filePath]);
 
       if (storageError) {
-        console.error('Erreur lors de la suppression du fichier:', storageError);
+        logger.error('Erreur lors de la suppression du fichier:', storageError);
         // On continue même si la suppression du fichier échoue
       }
 
@@ -125,7 +126,7 @@ export const useShowBible = () => {
         .eq('id', documentId);
 
       if (dbError) {
-        console.error('Erreur lors de la suppression du document:', dbError);
+        logger.error('Erreur lors de la suppression du document:', dbError);
         toast.error('Erreur lors de la suppression du document');
         return false;
       }
@@ -133,8 +134,8 @@ export const useShowBible = () => {
       setDocuments(prev => prev.filter(doc => doc.id !== documentId));
       toast.success('Document supprimé');
       return true;
-    } catch (error) {
-      console.error('Erreur lors de la suppression du document:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur lors de la suppression du document:', error);
       toast.error('Erreur lors de la suppression du document');
       return false;
     }

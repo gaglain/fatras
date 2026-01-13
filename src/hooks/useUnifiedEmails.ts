@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 export interface UnifiedEmail {
   id: string;
@@ -18,7 +19,7 @@ export interface UnifiedEmail {
   provider: string;
   thread_id?: string;
   labels?: string[];
-  attachments?: any;
+  attachments?: unknown;
   contact_id?: string;
   sent_at?: string;
   received_at?: string;
@@ -223,8 +224,8 @@ export const useUnifiedEmails = () => {
       });
 
       setEmails(combined);
-    } catch (error) {
-      console.error('Erreur lors du chargement des emails:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur lors du chargement des emails:', error);
       toast.error('Erreur lors du chargement des emails');
     } finally {
       setIsLoading(false);
@@ -245,7 +246,7 @@ export const useUnifiedEmails = () => {
           filter: `user_id=eq.${user.id}`
         },
         (payload) => {
-          console.log('Nouvel email reçu:', payload);
+          logger.debug('Nouvel email reçu:', payload);
           const newEmail = payload.new as UnifiedEmail;
           setEmails(prev => [newEmail, ...prev]);
           
@@ -273,7 +274,7 @@ export const useUnifiedEmails = () => {
                 read: false
               })
               .then(({ error }) => {
-                if (error) console.error('Erreur création notification email:', error);
+                if (error) logger.error('Erreur création notification email:', error);
               });
           }
         }
@@ -384,7 +385,7 @@ export const useUnifiedEmails = () => {
                 read: false
               })
               .then(({ error }) => {
-                if (error) console.error('Erreur création notification email:', error);
+                if (error) logger.error('Erreur création notification email:', error);
               });
           }
         }
@@ -465,8 +466,8 @@ export const useUnifiedEmails = () => {
       setTimeout(() => {
         try {
           supabase.removeChannel(channel);
-        } catch (err) {
-          console.warn('⚠️ Warning during unified emails cleanup:', err);
+        } catch (err: unknown) {
+          logger.warn('⚠️ Warning during unified emails cleanup:', err);
         }
       }, 100);
     };
@@ -475,7 +476,7 @@ export const useUnifiedEmails = () => {
   const syncAllAccounts = async () => {
     if (!user) return;
     try {
-      console.log('🔄 Démarrage de la synchronisation automatique des emails...');
+      logger.debug('🔄 Démarrage de la synchronisation automatique des emails...');
       
       // Essayer d'abord la fonction sync-imap-emails pour la synchronisation IMAP
       try {
@@ -487,12 +488,12 @@ export const useUnifiedEmails = () => {
         });
 
         if (!imapError && imapData?.success) {
-          console.log('✅ Synchronisation IMAP réussie:', imapData);
+          logger.debug('✅ Synchronisation IMAP réussie:', imapData);
           await loadEmails();
           return;
         }
-      } catch (imapError) {
-        console.log('📧 IMAP sync non disponible, essai avec Nylas...');
+      } catch (imapSyncError: unknown) {
+        logger.debug('📧 IMAP sync non disponible, essai avec Nylas...');
       }
 
       // Si IMAP échoue, essayer avec Nylas
@@ -510,15 +511,15 @@ export const useUnifiedEmails = () => {
           await supabase.functions.invoke('nylas-email', {
             body: { action: 'sync', accountId: acc.id }
           });
-        } catch (e) {
-          console.error('Sync error for account', acc.id, e);
+        } catch (syncError: unknown) {
+          logger.error('Sync error for account', acc.id, syncError);
         }
       }
       
       await loadEmails();
-      console.log('✅ Synchronisation Nylas terminée');
-    } catch (e) {
-      console.error('❌ Erreur synchro auto:', e);
+      logger.debug('✅ Synchronisation Nylas terminée');
+    } catch (syncError: unknown) {
+      logger.error('❌ Erreur synchro auto:', syncError);
     }
   };
 
@@ -534,8 +535,8 @@ export const useUnifiedEmails = () => {
       setEmails(prev => prev.map(email => 
         email.id === emailId ? { ...email, read_at: new Date().toISOString() } : email
       ));
-    } catch (error) {
-      console.error('Erreur lors du marquage comme lu:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur lors du marquage comme lu:', error);
     }
   };
 

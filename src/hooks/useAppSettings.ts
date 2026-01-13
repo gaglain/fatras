@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 export const useAppSettings = () => {
   const { user } = useAuth();
@@ -21,7 +22,7 @@ export const useAppSettings = () => {
         .select('setting_key, setting_value');
 
       if (error) {
-        console.error('Erreur lors du chargement des paramètres:', error);
+        logger.error('Erreur lors du chargement des paramètres:', error);
         return;
       }
 
@@ -31,8 +32,8 @@ export const useAppSettings = () => {
       }, {} as Record<string, string>) || {};
 
       setSettings(settingsMap);
-    } catch (error) {
-      console.error('Erreur lors du chargement des paramètres:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur lors du chargement des paramètres:', error);
     } finally {
       setLoading(false);
     }
@@ -56,15 +57,15 @@ export const useAppSettings = () => {
         });
 
       if (error) {
-        console.error('Erreur lors de la sauvegarde du paramètre:', error);
+        logger.error('Erreur lors de la sauvegarde du paramètre:', error);
         toast.error('Erreur lors de la sauvegarde du paramètre');
         return false;
       }
 
       setSettings(prev => ({ ...prev, [key]: value }));
       return true;
-    } catch (error) {
-      console.error('Erreur lors de la sauvegarde du paramètre:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur lors de la sauvegarde du paramètre:', error);
       toast.error('Erreur lors de la sauvegarde du paramètre');
       return false;
     }
