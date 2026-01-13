@@ -73,21 +73,22 @@ export const EventDetail: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="container mx-auto py-6 space-y-6 px-4 lg:px-0">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
           <Button
             variant="ghost"
             onClick={() => navigate('/events')}
+            className="w-fit"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Retour
           </Button>
-          <div>
-            <h1 className="text-3xl font-bold">{event.title}</h1>
+          <div className="text-center sm:text-left">
+            <h1 className="text-2xl sm:text-3xl font-bold">{event.title}</h1>
             {event.venue && (
-              <p className="text-muted-foreground flex items-center gap-2 mt-1">
+              <p className="text-muted-foreground flex items-center justify-center sm:justify-start gap-2 mt-1">
                 <MapPin className="h-4 w-4" />
                 {event.venue}
                 {event.city && ` - ${event.city}`}
@@ -95,7 +96,7 @@ export const EventDetail: React.FC = () => {
             )}
           </div>
         </div>
-        <Button onClick={() => setEditDialogOpen(true)}>
+        <Button onClick={() => setEditDialogOpen(true)} className="w-full sm:w-auto">
           <Edit className="mr-2 h-4 w-4" />
           Modifier
         </Button>
