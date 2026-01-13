@@ -169,14 +169,6 @@ export const EmailPopup: React.FC<EmailPopupProps> = ({ isOpen, onClose, email, 
       // Simuler l'envoi d'email
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      console.log('Envoi d\'email:', {
-        to: email,
-        subject: emailSubject,
-        content: finalContent,
-        attachments: [...attachedBibleFiles, ...externalFiles.map(f => f.name)],
-        signature: includeSignature ? generateEmailSignature(currentUser) : null
-      });
-      
       toast.success('Email envoyé avec succès !');
       
       // Réinitialiser le formulaire

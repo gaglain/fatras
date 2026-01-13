@@ -8,8 +8,6 @@ export const SimpleFrontHeader: React.FC = () => {
   const { config } = useWebsiteConfig();
   useSimpleWebsiteSync();
 
-  console.log('🏠 Header rendering with config:', config.siteName);
-
   return (
     <header 
       className="py-4 px-6 border-b"
@@ -27,7 +25,6 @@ export const SimpleFrontHeader: React.FC = () => {
                 alt="Logo" 
                 className="h-8 w-auto"
                 onError={(e) => { 
-                  console.error('❌ Logo loading error');
                   (e.currentTarget as HTMLImageElement).style.display = 'none'; 
                 }}
               />
