@@ -126,7 +126,6 @@ export const ExtendedUserForm: React.FC<ExtendedUserFormProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('💾 Submitting form with data:', formData);
     
     // Validation basique
     if (!formData.email || !formData.firstName || !formData.lastName) {
@@ -136,10 +135,10 @@ export const ExtendedUserForm: React.FC<ExtendedUserFormProps> = ({
     setLoading(true);
     try {
       await onSave(formData);
-      console.log('✅ Form saved successfully');
-    } catch (error) {
-      console.error('❌ Form save error:', error);
-      if (error.message?.includes('foreign key constraint')) {
+    } catch (error: unknown) {
+      console.error('Erreur sauvegarde formulaire:', error);
+      const errorMessage = error instanceof Error ? error.message : '';
+      if (errorMessage.includes('foreign key constraint')) {
         throw new Error('Erreur de création utilisateur. Veuillez réessayer ou contacter l\'administrateur.');
       }
       throw error;
@@ -149,12 +148,7 @@ export const ExtendedUserForm: React.FC<ExtendedUserFormProps> = ({
   };
 
   const updateFormData = (field: keyof ExtendedUserFormData, value: string) => {
-    console.log('🔄 FormData update:', field, '=', value);
-    setFormData(prev => {
-      const newData = { ...prev, [field]: value };
-      console.log('📝 New formData after update:', newData);
-      return newData;
-    });
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   return (

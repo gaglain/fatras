@@ -63,7 +63,6 @@ export const DeferredAnalytics: React.FC<DeferredAnalyticsProps> = ({
         gtag('config', '${googleAnalyticsId}');
       `;
       document.head.appendChild(script2);
-      console.log('🔍 Google Analytics chargé (différé):', googleAnalyticsId);
     }
 
     // Charger Facebook Pixel
@@ -82,7 +81,6 @@ export const DeferredAnalytics: React.FC<DeferredAnalyticsProps> = ({
         fbq('track', 'PageView');
       `;
       document.head.appendChild(script);
-      console.log('📘 Facebook Pixel chargé (différé):', facebookPixelId);
     }
   }, [shouldLoad, googleAnalyticsId, facebookPixelId]);
 

@@ -62,7 +62,6 @@ export const PublicationForm: React.FC<PublicationFormProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      console.log('📝 Form opened with initial data:', initialData);
       setFormData({
         title: initialData.title || '',
         content: initialData.content || '',
@@ -104,15 +103,9 @@ export const PublicationForm: React.FC<PublicationFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('📝 Form submit triggered with data:', formData);
-    
-    if (isSubmitting) {
-      console.log('⏸️ Already submitting, ignoring');
-      return;
-    }
+    if (isSubmitting) return;
     
     if (!validateForm()) {
-      console.log('❌ Form validation failed:', errors);
       toast.error('Veuillez corriger les erreurs dans le formulaire');
       return;
     }
@@ -120,7 +113,6 @@ export const PublicationForm: React.FC<PublicationFormProps> = ({
     setIsSubmitting(true);
     
     try {
-      console.log('✅ Calling onSubmit with validated data:', formData);
       await onSubmit(formData);
       
       // Reset form après succès
@@ -136,9 +128,8 @@ export const PublicationForm: React.FC<PublicationFormProps> = ({
       });
       
       toast.success(isEditing ? 'Publication modifiée avec succès' : 'Publication créée avec succès');
-      console.log('✅ Form submitted successfully');
-    } catch (error) {
-      console.error('❌ Error in form submission:', error);
+    } catch (error: unknown) {
+      console.error('Erreur lors de la sauvegarde:', error);
       toast.error('Erreur lors de la sauvegarde de la publication');
     } finally {
       setIsSubmitting(false);
@@ -154,7 +145,6 @@ export const PublicationForm: React.FC<PublicationFormProps> = ({
   };
 
   const handleInputChange = (field: keyof PublicationFormData, value: string) => {
-    console.log(`🔧 Updating ${field} to:`, value);
     setFormData(prev => ({ ...prev, [field]: value }));
     
     if (errors[field]) {
