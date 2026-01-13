@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, Calendar, MapPin, Edit } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { ArrowLeft, Calendar, MapPin, Edit, User, History, Link as LinkIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -12,11 +13,62 @@ import { Event } from '@/types/event.types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
+interface Owner {
+  user_id: string;
+  first_name: string | null;
+  last_name: string | null;
+  username: string | null;
+  email: string | null;
+}
+
+interface LinkedOpportunity {
+  id: string;
+  title: string;
+  status: string;
+  venue: string | null;
+  date: string | null;
+  budget: number | null;
+}
+
+const getStatusLabel = (status: string) => {
+  switch (status) {
+    case 'pending': return 'En attente';
+    case 'option': return 'Option';
+    case 'confirmed': return 'Confirmé';
+    case 'cancelled': return 'Annulé';
+    case 'completed': return 'Terminé';
+    default: return status;
+  }
+};
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'pending': return 'bg-yellow-100 text-yellow-800';
+    case 'option': return 'bg-blue-100 text-blue-800';
+    case 'confirmed': return 'bg-green-100 text-green-800';
+    case 'cancelled': return 'bg-red-100 text-red-800';
+    case 'completed': return 'bg-purple-100 text-purple-800';
+    default: return 'bg-gray-100 text-gray-800';
+  }
+};
+
+const getOpportunityStatusLabel = (status: string) => {
+  switch (status) {
+    case 'open': return 'Ouverte';
+    case 'applied': return 'Candidaturé';
+    case 'won': return 'Remportée';
+    case 'lost': return 'Perdue';
+    default: return status;
+  }
+};
+
 export const EventDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [event, setEvent] = useState<Event | null>(null);
+  const [owner, setOwner] = useState<Owner | null>(null);
+  const [linkedOpportunities, setLinkedOpportunities] = useState<LinkedOpportunity[]>([]);
   const [loading, setLoading] = useState(true);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
 
@@ -34,6 +86,34 @@ export const EventDetail: React.FC = () => {
       if (error) throw error;
 
       setEvent(data);
+
+      // Fetch owner if exists
+      if (data.owner_id) {
+        const { data: ownerData } = await supabase
+          .from('user_profiles')
+          .select('user_id, first_name, last_name, username, email')
+          .eq('user_id', data.owner_id)
+          .single();
+        
+        if (ownerData) setOwner(ownerData);
+      }
+
+      // Fetch linked opportunities via opportunity_events
+      const { data: oppLinks } = await supabase
+        .from('opportunity_events')
+        .select('opportunity_id')
+        .eq('event_id', id);
+
+      if (oppLinks && oppLinks.length > 0) {
+        const oppIds = oppLinks.map(l => l.opportunity_id);
+        const { data: opps } = await supabase
+          .from('opportunities')
+          .select('id, title, status, venue, date, budget')
+          .in('id', oppIds);
+        
+        if (opps) setLinkedOpportunities(opps);
+      }
+
     } catch (error: any) {
       console.error('Error fetching event:', error);
       toast.error('Erreur lors du chargement du spectacle');
@@ -127,7 +207,9 @@ export const EventDetail: React.FC = () => {
             {event.status && (
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Statut</p>
-                <p className="font-semibold">{event.status}</p>
+                <Badge className={getStatusColor(event.status)}>
+                  {getStatusLabel(event.status)}
+                </Badge>
               </div>
             )}
             {event.event_type && (
@@ -142,6 +224,17 @@ export const EventDetail: React.FC = () => {
                 <p className="font-semibold">{event.attendees_count}</p>
               </div>
             )}
+            {owner && (
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Propriétaire</p>
+                <p className="font-semibold flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  {owner.first_name || owner.last_name 
+                    ? `${owner.first_name || ''} ${owner.last_name || ''}`.trim() 
+                    : owner.username || owner.email}
+                </p>
+              </div>
+            )}
           </div>
           {event.description && (
             <div className="mt-6">
@@ -151,6 +244,44 @@ export const EventDetail: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Linked Opportunities */}
+      {linkedOpportunities.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <History className="h-5 w-5" />
+              Opportunités liées
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {linkedOpportunities.map((opp) => (
+                <div 
+                  key={opp.id} 
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                  onClick={() => navigate('/opportunities')}
+                >
+                  <div className="flex items-center gap-3">
+                    <LinkIcon className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="font-medium">{opp.title}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {opp.venue && `${opp.venue} • `}
+                        {opp.date && format(new Date(opp.date), 'PPP', { locale: fr })}
+                        {opp.budget && ` • ${opp.budget}€`}
+                      </p>
+                    </div>
+                  </div>
+                  <Badge className="mt-2 sm:mt-0 w-fit">
+                    {getOpportunityStatusLabel(opp.status)}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Dashboard */}
       <EventDashboard eventId={event.id} eventName={event.title} />
