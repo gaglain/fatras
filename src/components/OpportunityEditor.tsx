@@ -5,7 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { User } from 'lucide-react';
 import { UniversalSearch, SearchItem } from '@/components/UniversalSearch';
+import { useActiveUsers } from '@/hooks/useActiveUsers';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -22,6 +24,7 @@ export const OpportunityEditor: React.FC<OpportunityEditorProps> = ({
   opportunity,
   onSave
 }) => {
+  const { users: activeUsers } = useActiveUsers();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -35,7 +38,8 @@ export const OpportunityEditor: React.FC<OpportunityEditorProps> = ({
     status: 'open',
     contact_id: '',
     artist_id: '',
-    event_id: ''
+    event_id: '',
+    owner_id: ''
   });
   const [loading, setLoading] = useState(false);
 
@@ -54,7 +58,8 @@ export const OpportunityEditor: React.FC<OpportunityEditorProps> = ({
         status: opportunity.status || 'open',
         contact_id: opportunity.contact_id || '',
         artist_id: opportunity.artist_id || '',
-        event_id: opportunity.event_id || ''
+        event_id: opportunity.event_id || '',
+        owner_id: opportunity.owner_id || ''
       });
     }
   }, [opportunity]);
@@ -81,6 +86,7 @@ export const OpportunityEditor: React.FC<OpportunityEditorProps> = ({
           contact_id: formData.contact_id || null,
           artist_id: formData.artist_id || null,
           event_id: formData.event_id || null,
+          owner_id: formData.owner_id && formData.owner_id !== 'none' ? formData.owner_id : null,
           updated_at: new Date().toISOString()
         })
         .eq('id', opportunity.id);
@@ -178,6 +184,36 @@ export const OpportunityEditor: React.FC<OpportunityEditorProps> = ({
                 <SelectItem value="confirmed">Confirmée</SelectItem>
                 <SelectItem value="cancelled">Annulée</SelectItem>
                 <SelectItem value="completed">Terminée</SelectItem>
+              </SelectContent>
+          </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="owner_id">Propriétaire</Label>
+            <Select 
+              value={formData.owner_id || 'none'} 
+              onValueChange={(value) => setFormData({ ...formData, owner_id: value === 'none' ? '' : value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner un propriétaire" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    Aucun propriétaire
+                  </div>
+                </SelectItem>
+                {activeUsers.map(u => (
+                  <SelectItem key={u.user_id} value={u.user_id}>
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      {u.first_name || u.last_name 
+                        ? `${u.first_name || ''} ${u.last_name || ''}`.trim() 
+                        : u.username || u.email}
+                    </div>
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
