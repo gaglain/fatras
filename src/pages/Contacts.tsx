@@ -505,7 +505,7 @@ export const Contacts: React.FC = () => {
             availableCities={availableCities}
             availableEvents={events}
             availableArtists={artists}
-            totalContacts={contacts.length}
+            totalContacts={totalContactsCount || contacts.length}
             filteredCount={filteredContacts.length}
             onClearFilters={clearAllFilters}
           />
