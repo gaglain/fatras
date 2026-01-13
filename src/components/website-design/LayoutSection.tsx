@@ -46,15 +46,12 @@ export const LayoutSection: React.FC = () => {
   }, [config]);
 
   const handleSave = () => {
-    console.log('💾 Saving layout config:', localConfig.siteName);
     updateConfig(localConfig);
     setPreviewNonce((n) => n + 1);
     toast.success(`Configuration sauvegardée ! Site: "${localConfig.siteName}"`);
   };
 
   const handlePreview = () => {
-    console.log('👁️ Preview requested');
-
     // Sauvegarder d'abord
     updateConfig(localConfig);
     setPreviewNonce((n) => n + 1);

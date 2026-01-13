@@ -91,8 +91,8 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({
             selectedLists: data.map(item => item.contact_list_id)
           }));
         }
-      } catch (error) {
-        console.error('Error loading contact lists:', error);
+      } catch {
+        // Error loading contact lists
       }
     };
     
@@ -149,7 +149,6 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({
           .insert(associations);
 
         if (associationError) {
-          console.error('Error saving contact lists:', associationError);
           throw associationError;
         }
       }
@@ -158,8 +157,7 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({
       if (!campaignId) {
         onBack?.();
       }
-    } catch (error) {
-      console.error('Save error:', error);
+    } catch {
       toast.error('Erreur lors de la sauvegarde');
     }
   };
@@ -335,9 +333,9 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({
       } else {
         throw new Error('Échec de l\'envoi');
       }
-    } catch (error: any) {
-      console.error('Error sending test email:', error);
-      toast.error('Erreur lors de l\'envoi du test: ' + (error.message || 'Erreur inconnue'));
+    } catch (error: unknown) {
+      const err = error as Error;
+      toast.error('Erreur lors de l\'envoi du test: ' + (err.message || 'Erreur inconnue'));
     } finally {
       setSendingTest(false);
     }
@@ -361,8 +359,7 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({
           content: parsedContent,
           subject: prev.subject || template.subject
         }));
-      } catch (error) {
-        console.error('Error parsing template content:', error);
+      } catch {
         toast.error('Erreur lors du chargement du template');
       }
     }
