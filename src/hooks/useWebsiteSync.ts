@@ -1,6 +1,6 @@
-
 import { useEffect, useCallback, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
+import { logger } from '@/lib/logger';
 
 interface WebsiteSettings {
   siteName: string;
@@ -44,9 +44,9 @@ export const useWebsiteSync = () => {
     const savedSettings = localStorage.getItem('websiteSettings');
     if (savedSettings) {
       try {
-        settings = JSON.parse(savedSettings);
-      } catch (error) {
-        console.error('❌ Error loading settings:', error);
+        settings = JSON.parse(savedSettings) as WebsiteSettings;
+      } catch (error: unknown) {
+        logger.error('Error loading settings:', error);
       }
     }
 
@@ -54,9 +54,9 @@ export const useWebsiteSync = () => {
     const savedDesign = localStorage.getItem('websiteDesign');
     if (savedDesign) {
       try {
-        design = JSON.parse(savedDesign);
-      } catch (error) {
-        console.error('❌ Error loading design:', error);
+        design = JSON.parse(savedDesign) as SiteDesign;
+      } catch (error: unknown) {
+        logger.error('Error loading design:', error);
       }
     }
 
@@ -66,7 +66,7 @@ export const useWebsiteSync = () => {
   const applyStyles = useCallback((design: SiteDesign) => {
     // NE PAS appliquer les styles si on n'est pas sur une page frontend
     if (!isFrontendPage) {
-      console.log('🚫 Styles not applied - not on frontend page');
+      logger.debug('Styles not applied - not on frontend page');
       return;
     }
 
@@ -119,13 +119,13 @@ export const useWebsiteSync = () => {
     `;
 
     document.head.appendChild(style);
-    console.log('✅ Frontend styles applied:', design.siteName);
+    logger.debug('Frontend styles applied:', design.siteName);
   }, [isFrontendPage]);
 
   const updateDOM = useCallback((siteName: string, logo?: string) => {
     // NE PAS modifier le DOM si on n'est pas sur une page frontend
     if (!isFrontendPage) {
-      console.log('🚫 DOM not updated - not on frontend page');
+      logger.debug('DOM not updated - not on frontend page');
       return;
     }
 
@@ -156,11 +156,11 @@ export const useWebsiteSync = () => {
   const sync = useCallback(() => {
     // NE synchroniser QUE si on est sur une page frontend
     if (!isFrontendPage) {
-      console.log('🚫 Sync skipped - not on frontend page');
+      logger.debug('Sync skipped - not on frontend page');
       return;
     }
 
-    console.log('🔄 Starting frontend website sync');
+    logger.debug('Starting frontend website sync');
     const { settings, design } = loadData();
     
     const finalSiteName = design?.siteName || settings?.siteName || 'Fatras';
@@ -173,7 +173,7 @@ export const useWebsiteSync = () => {
     // Mettre à jour le DOM
     updateDOM(finalSiteName, design?.logo);
     
-    console.log('✅ Frontend sync completed for:', finalSiteName);
+    logger.debug('Frontend sync completed for:', finalSiteName);
   }, [isFrontendPage, loadData, applyStyles, updateDOM]);
 
   const cleanup = useCallback(() => {
@@ -196,13 +196,13 @@ export const useWebsiteSync = () => {
     // Écouter les changements seulement si on est sur une page frontend
     const handleStorageChange = (event: StorageEvent) => {
       if (['websiteSettings', 'websiteDesign'].includes(event.key || '')) {
-        console.log('💾 Storage change detected:', event.key);
+        logger.debug('Storage change detected:', event.key);
         setTimeout(sync, 100);
       }
     };
 
     const handleCustomEvents = () => {
-      console.log('🎉 Custom event detected');
+      logger.debug('Custom event detected');
       setTimeout(sync, 100);
     };
 
