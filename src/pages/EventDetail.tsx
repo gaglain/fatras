@@ -98,21 +98,38 @@ export const EventDetail: React.FC = () => {
         if (ownerData) setOwner(ownerData);
       }
 
-      // Fetch linked opportunities via opportunity_events
+      // Fetch linked opportunities (directly via event_id or via opportunity_events)
+      const { data: directOpps } = await supabase
+        .from('opportunities')
+        .select('id, title, status, venue, date, budget')
+        .eq('event_id', id);
+
       const { data: oppLinks } = await supabase
         .from('opportunity_events')
         .select('opportunity_id')
         .eq('event_id', id);
 
+      let allOpps = directOpps || [];
+      
       if (oppLinks && oppLinks.length > 0) {
         const oppIds = oppLinks.map(l => l.opportunity_id);
-        const { data: opps } = await supabase
+        const { data: linkedOpps } = await supabase
           .from('opportunities')
           .select('id, title, status, venue, date, budget')
           .in('id', oppIds);
         
-        if (opps) setLinkedOpportunities(opps);
+        if (linkedOpps) {
+          // Merge without duplicates
+          const existingIds = new Set(allOpps.map(o => o.id));
+          linkedOpps.forEach(o => {
+            if (!existingIds.has(o.id)) {
+              allOpps.push(o);
+            }
+          });
+        }
       }
+
+      setLinkedOpportunities(allOpps);
 
     } catch (error: any) {
       console.error('Error fetching event:', error);
