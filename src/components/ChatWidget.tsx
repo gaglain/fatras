@@ -55,8 +55,8 @@ export const ChatWidget: React.FC = () => {
           const id = await createChannel('general', 'Canal par défaut', 'public', []);
           if (id) { setSelectedChannel(id); await fetchChannels(); }
         }
-      } catch (err) {
-        console.error('Error creating default channel:', err);
+      } catch {
+        // Channel creation failed silently
       }
     };
     createDefault();
@@ -91,9 +91,9 @@ export const ChatWidget: React.FC = () => {
             .eq('type', 'message')
             .filter('data->>channel_id', 'eq', selectedChannel);
           
-          if (error) console.error('Error marking notifications as read:', error);
-        } catch (err) {
-          console.error('Error updating notifications:', err);
+          // Ignore notification update errors
+        } catch {
+          // Ignore notification update errors
         }
       };
       

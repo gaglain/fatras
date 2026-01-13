@@ -70,8 +70,8 @@ export const EventCreationDialog: React.FC<EventCreationDialogProps> = ({
 
       if (error) throw error;
       setAppUsers(data || []);
-    } catch (error) {
-      console.error('Erreur lors du chargement des utilisateurs:', error);
+    } catch {
+      // Users loading failed silently
     }
   };
 
@@ -86,8 +86,8 @@ export const EventCreationDialog: React.FC<EventCreationDialogProps> = ({
       if (error) throw error;
       // Cast to EmailAccount[] since types may be out of sync after migration
       setEmailAccounts((data || []) as unknown as EmailAccount[]);
-    } catch (error) {
-      console.error('Erreur lors du chargement des comptes email:', error);
+    } catch {
+      // Email accounts loading failed silently
     }
   };
 
@@ -135,13 +135,11 @@ export const EventCreationDialog: React.FC<EventCreationDialogProps> = ({
             });
 
             if (error) {
-              console.error('Nylas calendar error:', error);
               toast.error('Erreur lors de la synchronisation avec Google Agenda');
             } else {
               toast.success('Événement créé dans Google Agenda');
             }
-          } catch (nylasError) {
-            console.error('Nylas error:', nylasError);
+          } catch {
             toast.error('Erreur lors de la synchronisation avec Google Agenda');
           }
         }
@@ -174,7 +172,7 @@ export const EventCreationDialog: React.FC<EventCreationDialogProps> = ({
         status: 'confirmed',
       });
 
-      if (centralError) console.error('Error creating centralized event:', centralError);
+      // Ignore centralized event creation errors
 
       // Send notifications to attendees (user IDs)
       if (attendeesArray.length > 0) {
@@ -204,9 +202,9 @@ export const EventCreationDialog: React.FC<EventCreationDialogProps> = ({
         sync_to_google: false,
         target_calendar_id: '',
       });
-    } catch (error: any) {
-      console.error('Erreur lors de la création:', error);
-      toast.error(`Erreur: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Erreur inconnue';
+      toast.error(`Erreur: ${message}`);
     } finally {
       setLoading(false);
     }

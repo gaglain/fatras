@@ -101,8 +101,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         toast.success('Image uploadée avec succès !');
       }
 
-    } catch (error: unknown) {
-      console.error('Erreur upload image:', error);
+    } catch {
       toast.error('Erreur lors de l\'upload de l\'image');
     } finally {
       setIsUploading(false);

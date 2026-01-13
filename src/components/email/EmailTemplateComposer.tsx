@@ -122,8 +122,8 @@ export const EmailTemplateComposer: React.FC<EmailTemplateComposerProps> = ({
           const blob = await response.blob();
           const file = new File([blob], att.name, { type: blob.type });
           templateFiles.push(file);
-        } catch (error) {
-          console.error(`Erreur lors du chargement de ${att.name}:`, error);
+        } catch {
+          // Template attachment loading failed - continue with others
         }
       }
       setAttachments(templateFiles);
@@ -221,8 +221,7 @@ export const EmailTemplateComposer: React.FC<EmailTemplateComposerProps> = ({
       setSelectedTemplate(null);
       setFromName('');
       setAttachments([]);
-    } catch (error) {
-      console.error('Erreur envoi email:', error);
+    } catch {
       toast.error('Erreur lors de l\'envoi de l\'email');
     } finally {
       setUploading(false);
