@@ -49,7 +49,6 @@ export const MenuManager: React.FC = () => {
       try {
         const { data: authData } = await supabase.auth.getUser();
         if (!authData?.user?.id) {
-          console.log('⚠️ Non authentifié, chargement depuis localStorage');
           loadFromLocalStorage();
           return;
         }
@@ -61,7 +60,6 @@ export const MenuManager: React.FC = () => {
           .order('menu_order', { ascending: true });
 
         if (error) {
-          console.error('❌ Erreur chargement menu Supabase:', error);
           loadFromLocalStorage();
           return;
         }
@@ -76,15 +74,12 @@ export const MenuManager: React.FC = () => {
             target: (item.target as '_self' | '_blank') || '_self',
             isSystem: false
           }));
-          console.log('✅ Menu chargé depuis Supabase:', normalized.length, 'items');
           setMenuItems(normalized);
           localStorage.setItem('websiteMenu', JSON.stringify(normalized));
         } else {
-          console.log('📝 Aucun menu en BDD, utilisation des valeurs par défaut');
           setMenuItems(defaultMenuItems);
         }
-      } catch (error) {
-        console.error('❌ Erreur chargement menu:', error);
+      } catch {
         loadFromLocalStorage();
       }
     };
@@ -104,8 +99,7 @@ export const MenuManager: React.FC = () => {
             isSystem: item.isSystem ?? false
           }));
           setMenuItems(normalized);
-        } catch (error) {
-          console.error('Erreur chargement menu localStorage:', error);
+        } catch {
           setMenuItems(defaultMenuItems);
         }
       } else {
@@ -149,17 +143,14 @@ export const MenuManager: React.FC = () => {
 
     // 2) Persistance Supabase (reset + insert pour éviter doublons)
     try {
-      console.log('💾 Sauvegarde du menu dans Supabase...');
       const { data: authData, error: authError } = await supabase.auth.getUser();
       
       if (authError || !authData?.user?.id) {
-        console.error('❌ Utilisateur non authentifié:', authError);
         toast.error("Vous devez être connecté pour sauvegarder le menu");
         return;
       }
 
       const currentUserId = authData.user.id;
-      console.log('✅ Utilisateur connecté:', currentUserId);
 
       // Supprimer l'ancien menu de l'utilisateur
       const { error: deleteError } = await supabase
@@ -168,12 +159,9 @@ export const MenuManager: React.FC = () => {
         .eq('user_id', currentUserId);
 
       if (deleteError) {
-        console.error('❌ Erreur suppression menu:', deleteError);
         toast.error("Erreur lors de la suppression de l'ancien menu");
         return;
       }
-
-      console.log('✅ Ancien menu supprimé');
 
       // Insérer le nouveau menu
       const payload = normalized.map((it, idx) => ({
@@ -187,23 +175,18 @@ export const MenuManager: React.FC = () => {
         updated_at: new Date().toISOString(),
       }));
 
-      console.log('📤 Insertion de', payload.length, 'éléments de menu');
-
-      const { error: insertError, data: insertedData } = await supabase
+      const { error: insertError } = await supabase
         .from('website_menu')
         .insert(payload)
         .select();
 
       if (insertError) {
-        console.error('❌ Erreur insertion menu Supabase:', insertError);
         toast.error(`Erreur lors de l'enregistrement en base: ${insertError.message}`);
         return;
       }
 
-      console.log('✅ Menu sauvegardé dans Supabase:', insertedData);
       toast.success('Menu sauvegardé avec succès');
     } catch (err: any) {
-      console.error('❌ Erreur Supabase:', err);
       toast.error(`Erreur: ${err.message || 'Erreur inconnue'}`);
     }
   };

@@ -91,8 +91,8 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({ page, onSave, onCancel
 
         if (error) throw error;
         setAvailableForms(data || []);
-      } catch (error) {
-        console.error('Erreur lors du chargement des formulaires:', error);
+      } catch {
+        // Silent - forms loading failed
       }
     };
 

@@ -51,8 +51,7 @@ export const ContactEventManager: React.FC<ContactEventManagerProps> = ({
 
       if (error) throw error;
       setAvailableContacts(data || []);
-    } catch (error) {
-      console.error('Erreur lors du chargement des contacts:', error);
+    } catch {
       toast.error('Erreur lors du chargement des contacts');
     }
   };
@@ -66,8 +65,8 @@ export const ContactEventManager: React.FC<ContactEventManagerProps> = ({
 
       if (error) throw error;
       setLinkedContacts(data || []);
-    } catch (error) {
-      console.error('Erreur lors du chargement des contacts liés:', error);
+    } catch {
+      // Silent - linked contacts loading failed
     }
   };
 
@@ -89,7 +88,6 @@ export const ContactEventManager: React.FC<ContactEventManagerProps> = ({
       setSelectedContact('');
       fetchLinkedContacts();
     } catch (error: any) {
-      console.error('Erreur lors de la liaison:', error);
       if (error.code === '23505') {
         toast.error('Ce contact est déjà lié à cet événement');
       } else {
@@ -114,8 +112,7 @@ export const ContactEventManager: React.FC<ContactEventManagerProps> = ({
       
       toast.success('Contact délié de l\'événement');
       fetchLinkedContacts();
-    } catch (error) {
-      console.error('Erreur lors de la suppression de la liaison:', error);
+    } catch {
       toast.error('Erreur lors de la suppression de la liaison');
     }
   };
