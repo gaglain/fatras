@@ -31,8 +31,7 @@ export const NotificationTester: React.FC = () => {
 
       if (error) throw error;
       toast.success('Notification de test créée !');
-    } catch (error) {
-      console.error('Erreur lors de la création de la notification:', error);
+    } catch {
       toast.error('Erreur lors de la création de la notification');
     }
   };

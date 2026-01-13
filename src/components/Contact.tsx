@@ -19,8 +19,7 @@ export const Contact: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Formulaire soumis:', formData);
-    // Ici vous pourriez envoyer les données à votre backend
+    // TODO: Envoyer les données à votre backend
   };
 
   const handleChange = (field: string, value: string) => {

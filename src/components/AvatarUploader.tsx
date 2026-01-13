@@ -18,8 +18,6 @@ export const AvatarUploader: React.FC<AvatarUploaderProps> = ({
   onAvatarChange,
   size = 'lg'
 }) => {
-  console.log('📷 AvatarUploader mounted with:', { currentAvatarUrl, userInitials, size });
-  
   const [uploading, setUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -56,7 +54,6 @@ export const AvatarUploader: React.FC<AvatarUploaderProps> = ({
   };
 
   const uploadAvatar = async (file: File) => {
-    console.log('🔄 Starting avatar upload...', { fileName: file.name, fileSize: file.size });
     setUploading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -64,49 +61,36 @@ export const AvatarUploader: React.FC<AvatarUploaderProps> = ({
       if (!user) {
         throw new Error('Utilisateur non connecté');
       }
-      
-      console.log('✅ User authenticated:', user.id);
 
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}.${fileExt}`;
-      const filePath = `${user.id}/${fileName}`; // Structure: userId/fileName.ext
+      const filePath = `${user.id}/${fileName}`;
 
-      console.log('📁 Upload path:', filePath);
-
-      // Upload file to Supabase Storage
-      const { error: uploadError, data } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file);
 
       if (uploadError) {
-        console.error('❌ Upload error:', uploadError);
         throw uploadError;
       }
-      
-      console.log('✅ File uploaded successfully:', data);
 
-      // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
         .getPublicUrl(filePath);
-        
-      console.log('🔗 Public URL generated:', publicUrl);
 
-      console.log('🔗 Calling onAvatarChange with URL:', publicUrl);
       onAvatarChange(publicUrl);
       setPreviewUrl(null);
       toast.success('Photo de profil mise à jour avec succès');
-      console.log('✅ Avatar upload completed');
-    } catch (error: any) {
-      console.error('Erreur lors de l\'upload:', error);
+    } catch (error: unknown) {
+      const err = error as Error;
       let errorMessage = 'Erreur lors de l\'upload de la photo';
       
-      if (error.message?.includes('not authenticated')) {
+      if (err.message?.includes('not authenticated')) {
         errorMessage = 'Vous devez être connecté pour uploader une photo';
-      } else if (error.message?.includes('violates')) {
+      } else if (err.message?.includes('violates')) {
         errorMessage = 'Permissions insuffisantes pour uploader dans ce dossier';
-      } else if (error.message) {
-        errorMessage = error.message;
+      } else if (err.message) {
+        errorMessage = err.message;
       }
       
       toast.error(errorMessage);

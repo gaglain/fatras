@@ -36,7 +36,6 @@ export const AppIconUploader: React.FC = () => {
     }
 
     try {
-      console.log('📱 Uploading app icon:', file.name);
       const result = await uploadFile(file, 'app-assets', 'icons');
       const url = result.url;
       setIconUrl(url);
@@ -49,8 +48,8 @@ export const AppIconUploader: React.FC = () => {
       updateFavicon(url);
       
       toast.success('Icône de l\'application mise à jour !');
-    } catch (error) {
-      console.error('❌ Error uploading icon:', error);
+    } catch {
+      toast.error('Erreur lors de l\'upload de l\'icône');
     }
   };
 
@@ -67,8 +66,6 @@ export const AppIconUploader: React.FC = () => {
     link.href = url;
     link.type = 'image/png';
     document.head.appendChild(link);
-    
-    console.log('🎯 Favicon updated:', url);
   };
 
   const handleUrlChange = async (url: string) => {
