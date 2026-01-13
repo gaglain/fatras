@@ -179,8 +179,8 @@ const loadOpportunityEntities = async () => {
       quotesData = (qoResp?.data || [])
         .map((row: any) => row.quotes)
         .filter(Boolean);
-    } catch (qErr) {
-      console.warn('quote_opportunities fetch error:', qErr);
+    } catch {
+      // quote_opportunities fetch failed silently
     }
 
     if (quotesData.length === 0) {
@@ -193,16 +193,10 @@ const loadOpportunityEntities = async () => {
             .in('event_id', eventIds);
           quotesData = quotesResp.data || [];
         }
-      } catch (qErr) {
-        console.warn('Quotes fetch via events failed:', qErr);
+      } catch {
+        // Quotes fetch via events failed silently
       }
     }
-
-    console.debug('[RoadshowEntityLinks] opportunityId', opportunityId, {
-      contacts: contactsCombined.length,
-      events: eventsCombined.length,
-      quotes: quotesData.length,
-    });
 
     setOpportunityEntities({
       contacts: contactsCombined,
@@ -213,8 +207,7 @@ const loadOpportunityEntities = async () => {
         total_amount: quote.total_amount,
       })),
     });
-  } catch (e) {
-    console.error('Erreur chargement entités opportunité:', e);
+  } catch {
     setOpportunityEntities(null);
   } finally {
     setLoadingOpportunity(false);

@@ -73,8 +73,8 @@ export const AnalyticsManager: React.FC = () => {
     if (savedSettings) {
       try {
         setSettings(JSON.parse(savedSettings));
-      } catch (error) {
-        console.error('Erreur chargement analytics:', error);
+      } catch {
+        // Failed to parse analytics settings
       }
     }
   }, []);
