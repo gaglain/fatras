@@ -45,7 +45,6 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
   });
 
   useEffect(() => {
-    console.log('🎯 FrontLayout mounted - Starting sync');
     
     const applyMetaDescription = (description: string) => {
       let metaDescription = document.querySelector('meta[name="description"]');
@@ -104,13 +103,11 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
         
         if (designData) {
           merged.siteName = designData.site_name || merged.siteName;
-          console.log('📦 Loaded site name from Supabase:', designData.site_name);
         }
         
         // Appliquer la meta description depuis SEO ou websiteConfig
         if (seoData?.site_description) {
           merged.siteDescription = seoData.site_description;
-          console.log('📦 Loaded site description from SEO:', seoData.site_description);
         }
         
         if (appSettings) {
@@ -132,9 +129,8 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
               if (!merged.siteDescription && config.siteDescription) {
                 merged.siteDescription = config.siteDescription;
               }
-              console.log('📦 Loaded settings from websiteConfig:', config.socialLinks);
-            } catch (e) {
-              console.error('❌ Error parsing websiteConfig:', e);
+            } catch {
+              // Error parsing websiteConfig
             }
           } else {
             // Fallback sur les clés individuelles
@@ -158,8 +154,8 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
         setSettings(merged);
         if (merged.siteName) document.title = merged.siteName;
         if (merged.siteDescription) applyMetaDescription(merged.siteDescription);
-      } catch (error) {
-        console.error('❌ FrontLayout - Error loading settings:', error);
+      } catch {
+        // Error loading settings
       }
     };
 
@@ -167,13 +163,11 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
     loadSettings();
 
     const handleSettingsUpdate = () => {
-      console.log('🔄 FrontLayout - Settings update detected');
       loadSettings();
     };
 
     const handleStorageChange = (event: StorageEvent) => {
       if (event.key === 'websiteSettings' || event.key === 'websiteDesign' || event.key === 'site_settings' || event.key === 'websiteConfig') {
-        console.log('💾 FrontLayout - Storage change detected for:', event.key);
         loadSettings();
       }
     };
