@@ -128,7 +128,7 @@ export function updatePWAManifest(config: {
   themeColor?: string;
   backgroundColor?: string;
 }) {
-  console.log('📝 Mise à jour du manifest PWA dynamique...');
+  // Mise à jour du manifest PWA dynamique
 
   const themeColor = config.themeColor || '#8b5cf6';
   const backgroundColor = config.backgroundColor || '#ffffff';
