@@ -61,8 +61,8 @@ export const useEmailSystem = () => {
       }
 
       return activeProviders.sort((a, b) => a.priority - b.priority);
-    } catch (error) {
-      console.error('Erreur lors de la récupération des fournisseurs:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur lors de la récupération des fournisseurs:', error);
       return [];
     }
   };
@@ -131,8 +131,8 @@ export const useEmailSystem = () => {
         messageId: data.id
       };
 
-    } catch (error) {
-      console.error('Erreur lors de l\'envoi:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur lors de l\'envoi:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
       
       toast.error(`Erreur lors de l'envoi: ${errorMessage}`);
@@ -182,8 +182,8 @@ export const useEmailSystem = () => {
         .from('emails')
         .insert([emailRecord]);
 
-    } catch (error) {
-      console.error('Erreur lors de la sauvegarde:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur lors de la sauvegarde:', error);
       // Ne pas faire échouer l'envoi pour une erreur de sauvegarde
     }
   };
@@ -201,8 +201,8 @@ export const useEmailSystem = () => {
 
       if (error) throw error;
       return emails || [];
-    } catch (error) {
-      console.error('Erreur lors de la récupération des emails:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur lors de la récupération des emails:', error);
       return [];
     }
   };

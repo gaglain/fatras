@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 export interface WebsiteDesign {
   id?: string;
@@ -69,8 +70,8 @@ export const useWebsiteDesign = () => {
       } else {
         setDesign(defaultDesign);
       }
-    } catch (error) {
-      console.error('Error fetching website design:', error);
+    } catch (error: unknown) {
+      logger.error('Error fetching website design:', error);
       setDesign(defaultDesign);
     } finally {
       setLoading(false);
@@ -128,8 +129,8 @@ export const useWebsiteDesign = () => {
 
       toast.success(`Design sauvegardé ! Site: "${design.site_name}"`);
       return true;
-    } catch (error) {
-      console.error('Error saving website design:', error);
+    } catch (error: unknown) {
+      logger.error('Error saving website design:', error);
       toast.error('Erreur lors de la sauvegarde du design');
       return false;
     } finally {
@@ -158,8 +159,8 @@ export const useWebsiteDesign = () => {
       
       toast.success('Design réinitialisé');
       return true;
-    } catch (error) {
-      console.error('Error resetting website design:', error);
+    } catch (error: unknown) {
+      logger.error('Error resetting website design:', error);
       toast.error('Erreur lors de la réinitialisation');
       return false;
     }

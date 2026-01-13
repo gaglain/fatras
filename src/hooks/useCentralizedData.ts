@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 export interface CentralizedArtist {
   id: string;
@@ -129,8 +130,8 @@ export const useCentralizedData = () => {
         comments: (pub.publication_comments || []) as PublicationComment[]
       })) as Publication[]);
       setEvents((eventsData || []) as CentralizedEvent[]);
-    } catch (error) {
-      console.error('Error fetching centralized data:', error);
+    } catch (error: unknown) {
+      logger.error('Error fetching centralized data:', error);
       toast.error('Erreur lors du chargement des données');
     } finally {
       setLoading(false);
@@ -159,8 +160,8 @@ export const useCentralizedData = () => {
 
       setArtists(prev => [...prev, data as CentralizedArtist]);
       return data;
-    } catch (error) {
-      console.error('Error adding artist:', error);
+    } catch (error: unknown) {
+      logger.error('Error adding artist:', error);
       toast.error('Erreur lors de l\'ajout de l\'artiste');
       return null;
     }
@@ -181,8 +182,8 @@ export const useCentralizedData = () => {
       setArtists(prev => prev.map(artist => 
         artist.id === id ? { ...artist, ...updates } : artist
       ));
-    } catch (error) {
-      console.error('Error updating artist:', error);
+    } catch (error: unknown) {
+      logger.error('Error updating artist:', error);
       toast.error('Erreur lors de la mise à jour de l\'artiste');
     }
   };
@@ -203,8 +204,8 @@ export const useCentralizedData = () => {
       setEvents(prev => prev.map(event => 
         event.artist_id === id ? { ...event, artist_id: undefined } : event
       ));
-    } catch (error) {
-      console.error('Error deleting artist:', error);
+    } catch (error: unknown) {
+      logger.error('Error deleting artist:', error);
       toast.error('Erreur lors de la suppression de l\'artiste');
     }
   };
@@ -228,8 +229,8 @@ export const useCentralizedData = () => {
       const newPub = { ...data, comments: [] };
       setPublications(prev => [...prev, newPub as Publication]);
       return newPub;
-    } catch (error) {
-      console.error('Error adding publication:', error);
+    } catch (error: unknown) {
+      logger.error('Error adding publication:', error);
       toast.error('Erreur lors de l\'ajout de la publication');
       return null;
     }
@@ -250,8 +251,8 @@ export const useCentralizedData = () => {
       setPublications(prev => prev.map(pub => 
         pub.id === id ? { ...pub, ...updates } : pub
       ));
-    } catch (error) {
-      console.error('Error updating publication:', error);
+    } catch (error: unknown) {
+      logger.error('Error updating publication:', error);
       toast.error('Erreur lors de la mise à jour de la publication');
     }
   };
@@ -269,8 +270,8 @@ export const useCentralizedData = () => {
       if (error) throw error;
 
       setPublications(prev => prev.filter(pub => pub.id !== id));
-    } catch (error) {
-      console.error('Error deleting publication:', error);
+    } catch (error: unknown) {
+      logger.error('Error deleting publication:', error);
       toast.error('Erreur lors de la suppression de la publication');
     }
   };
@@ -293,8 +294,8 @@ export const useCentralizedData = () => {
 
       setEvents(prev => [...prev, data]);
       return data;
-    } catch (error) {
-      console.error('Error adding event:', error);
+    } catch (error: unknown) {
+      logger.error('Error adding event:', error);
       toast.error('Erreur lors de l\'ajout de l\'événement');
       return null;
     }
@@ -315,8 +316,8 @@ export const useCentralizedData = () => {
       setEvents(prev => prev.map(event => 
         event.id === id ? { ...event, ...updates } : event
       ));
-    } catch (error) {
-      console.error('Error updating event:', error);
+    } catch (error: unknown) {
+      logger.error('Error updating event:', error);
       toast.error('Erreur lors de la mise à jour de l\'événement');
     }
   };
@@ -334,8 +335,8 @@ export const useCentralizedData = () => {
       if (error) throw error;
 
       setEvents(prev => prev.filter(event => event.id !== id));
-    } catch (error) {
-      console.error('Error deleting event:', error);
+    } catch (error: unknown) {
+      logger.error('Error deleting event:', error);
       toast.error('Erreur lors de la suppression de l\'événement');
     }
   };

@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { TourStop, FormData } from '@/types/roadshow.types';
 import { useMessaging } from '@/hooks/useMessaging';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 
 const initialFormData: FormData = {
   city: '',
@@ -87,8 +88,8 @@ export const useRoadshowForm = (
               memberIds,
               newStop.id // Link to roadshow
             );
-          } catch (channelError) {
-            console.error('Error creating channel:', channelError);
+          } catch (channelError: unknown) {
+            logger.error('Error creating channel:', channelError);
             // Don't fail the whole operation if channel creation fails
           }
         }
@@ -109,8 +110,8 @@ export const useRoadshowForm = (
                   action: 'confirm_availability'
                 }
               });
-          } catch (notifError) {
-            console.error('Error sending notification:', notifError);
+          } catch (notifError: unknown) {
+            logger.error('Error sending notification:', notifError);
           }
         }
         
@@ -120,8 +121,8 @@ export const useRoadshowForm = (
       } else {
         toast.error("Erreur lors de la création de l'étape");
       }
-    } catch (error) {
-      console.error('Error in handleCreateStop:', error);
+    } catch (error: unknown) {
+      logger.error('Error in handleCreateStop:', error);
       toast.error("Erreur lors de la création de l'étape");
     }
   };
