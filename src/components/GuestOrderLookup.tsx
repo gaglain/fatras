@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Search, Package, Mail, Calendar, Euro, MapPin, ShoppingBag } from 'lucide-react';
 import { useSecureShopOrders, ShopOrder } from '@/hooks/useSecureShopOrders';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 export const GuestOrderLookup: React.FC = () => {
   const { getGuestOrderByEmail } = useSecureShopOrders();
@@ -56,8 +57,8 @@ export const GuestOrderLookup: React.FC = () => {
         setFoundOrder(order);
         toast.success('Commande trouvée !');
       }
-    } catch (error) {
-      console.error('Erreur lors de la recherche:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur lors de la recherche:', error);
       toast.error('Erreur lors de la recherche');
     } finally {
       setIsSearching(false);

@@ -1,11 +1,13 @@
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
+import { Json } from '@/integrations/supabase/types';
 
 export interface NotificationData {
   user_id: string;
   type: string;
   title: string;
   message: string;
-  data?: any;
+  data?: Json;
 }
 
 /**
@@ -25,13 +27,13 @@ export const createNotification = async (notification: NotificationData) => {
       });
 
     if (error) {
-      console.error('❌ Erreur création notification:', error);
+      logger.error('❌ Erreur création notification:', error);
       throw error;
     }
 
-    console.log('✅ Notification créée avec succès');
-  } catch (error) {
-    console.error('❌ Erreur lors de la création de notification:', error);
+    logger.debug('✅ Notification créée avec succès');
+  } catch (error: unknown) {
+    logger.error('❌ Erreur lors de la création de notification:', error);
   }
 };
 

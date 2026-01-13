@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import { logger } from '@/lib/logger';
 
 interface ChatMessage {
   id: string;
@@ -131,7 +132,7 @@ export const PublicChatWidget: React.FC = () => {
       });
 
     if (error) {
-      console.error('Error sending message:', error);
+      logger.error('Error sending message:', error);
       toast.error('Erreur lors de l\'envoi du message');
     } else {
       setNewMessage('');

@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 
 /**
  * Génère un permalien propre pour un document
@@ -51,7 +52,7 @@ export const resolvePermalink = async (
       .single();
     
     if (error || !data) {
-      console.error('Document non trouvé pour le permalien:', permalink);
+      logger.warn('Document non trouvé pour le permalien:', permalink);
       return null;
     }
     
@@ -61,8 +62,8 @@ export const resolvePermalink = async (
       .getPublicUrl(data.file_path);
     
     return urlData.publicUrl;
-  } catch (error) {
-    console.error('Erreur résolution permalien:', error);
+  } catch (error: unknown) {
+    logger.error('Erreur résolution permalien:', error);
     return null;
   }
 };
