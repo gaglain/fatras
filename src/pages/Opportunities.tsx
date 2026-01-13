@@ -7,7 +7,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Search, Calendar, MapPin, DollarSign, Edit, Trash2, User, CalendarDays, CheckSquare, Grid, List } from 'lucide-react';
+import { Plus, Search, Calendar, MapPin, DollarSign, Edit, Trash2, User, CalendarDays, CheckSquare, Grid, List, Eye } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/AuthContext';
@@ -47,6 +48,7 @@ export const Opportunities: React.FC = () => {
   const { tasks } = useTasks();
   const { artists } = useCentralizedData();
   const { users, getUserDisplayName } = useActiveUsers();
+  const navigate = useNavigate();
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
@@ -469,20 +471,29 @@ setNewOpportunity({
                 </div>
 
                 {/* Actions en bas de carte */}
-                <div className="flex gap-2 pt-2 border-t">
+                <div className="flex flex-wrap gap-1.5 pt-2 border-t">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => navigate(`/opportunities/${opportunity.id}`)}
+                    className="flex-1 min-w-[70px] text-xs px-2"
+                  >
+                    <Eye className="h-3.5 w-3.5 mr-1" />
+                    Aperçu
+                  </Button>
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => handleEditOpportunity(opportunity)}
-                    className="flex-1"
+                    className="flex-1 min-w-[70px] text-xs px-2"
                   >
-                    <Edit className="h-4 w-4 mr-1" />
+                    <Edit className="h-3.5 w-3.5 mr-1" />
                     Modifier
                   </Button>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button size="sm" variant="outline" className="flex-1 text-red-500 border-red-200 hover:bg-red-50">
-                        <Trash2 className="h-4 w-4 mr-1" />
+                      <Button size="sm" variant="outline" className="flex-1 min-w-[70px] text-xs px-2 text-destructive border-destructive/30 hover:bg-destructive/10">
+                        <Trash2 className="h-3.5 w-3.5 mr-1" />
                         Supprimer
                       </Button>
                     </AlertDialogTrigger>
@@ -497,7 +508,7 @@ setNewOpportunity({
                         <AlertDialogCancel>Annuler</AlertDialogCancel>
                         <AlertDialogAction 
                           onClick={() => handleDeleteOpportunity(opportunity.id)}
-                          className="bg-red-600 hover:bg-red-700"
+                          className="bg-destructive hover:bg-destructive/90"
                         >
                           Supprimer
                         </AlertDialogAction>
