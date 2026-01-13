@@ -178,8 +178,8 @@ export const Events: React.FC = () => {
         // Run immediately and on next tick (in case unmount happens after a frame)
         unlock();
         setTimeout(unlock, 0);
-      } catch (e) {
-        logger.warn('Scroll lock cleanup error', e);
+      } catch {
+        // Scroll lock cleanup silently ignored
       }
     }
 

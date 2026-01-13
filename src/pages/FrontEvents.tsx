@@ -31,13 +31,11 @@ export const FrontEvents: React.FC = () => {
         .order('start_date', { ascending: true });
 
       if (error) {
-        console.error('❌ Error loading events:', error);
         setEvents([]);
       } else {
         setEvents(eventsData || []);
       }
-    } catch (error) {
-      console.error('❌ Error loading events:', error);
+    } catch {
       setEvents([]);
     } finally {
       setLoading(false);

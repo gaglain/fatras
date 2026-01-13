@@ -551,8 +551,7 @@ export const Quotes: React.FC = () => {
                                       } as any);
                                       setSelectedQuote(updated || { ...selectedQuote, vat_rate: rate, tax_amount: taxAmount, total_amount: totalWithTax });
                                       toast.success('TVA mise à jour');
-                                    } catch (e) {
-                                      console.error('Erreur mise à jour TVA:', e);
+                                    } catch {
                                       toast.error('Erreur lors de la mise à jour de la TVA');
                                     }
                                   }
@@ -578,7 +577,6 @@ export const Quotes: React.FC = () => {
                         quote={selectedQuote}
                         onItemsChange={(items) => {
                           setCurrentItems(items);
-                          console.log('Items mis à jour:', items);
                           // Recalculer et mettre à jour le total du devis
                           const total = items.reduce((sum, item) => sum + item.total_price, 0);
                           const vatRatePercent = (formData as any)?.vat_rate ?? (selectedQuote as any)?.vat_rate ?? 0;

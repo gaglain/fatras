@@ -182,8 +182,7 @@ export const ShowBible: React.FC = () => {
           artists: []
         });
       }
-    } catch (error) {
-      console.error('Erreur upload:', error);
+    } catch {
       toast.error('Erreur lors de l\'upload du fichier');
     }
   };
