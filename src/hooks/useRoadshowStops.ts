@@ -78,7 +78,7 @@ export const useRoadshowStops = () => {
         local_contact: stop.local_contact,
         local_contact_phone: stop.local_contact_phone,
         transport: stop.transport,
-        artist_lineup: Array.isArray(stop.artist_lineup) ? stop.artist_lineup.map((item: any) => ({
+        artist_lineup: Array.isArray(stop.artist_lineup) ? (stop.artist_lineup as unknown as ArtistLineupItem[]).map((item) => ({
           userId: item.userId || '',
           confirmed: item.confirmed || false
         })) : [],
@@ -154,7 +154,7 @@ export const useRoadshowStops = () => {
         local_contact: data.local_contact,
         local_contact_phone: data.local_contact_phone,
         transport: data.transport,
-        artist_lineup: Array.isArray(data.artist_lineup) ? data.artist_lineup.map((item: any) => ({
+        artist_lineup: Array.isArray(data.artist_lineup) ? (data.artist_lineup as unknown as ArtistLineupItem[]).map((item) => ({
           userId: item.userId || '',
           confirmed: item.confirmed || false
         })) : [],
@@ -317,7 +317,7 @@ export const useRoadshowStops = () => {
         local_contact: data.local_contact,
         local_contact_phone: data.local_contact_phone,
         transport: data.transport,
-        artist_lineup: Array.isArray(data.artist_lineup) ? data.artist_lineup.map((item: any) => ({
+        artist_lineup: Array.isArray(data.artist_lineup) ? (data.artist_lineup as unknown as ArtistLineupItem[]).map((item) => ({
           userId: item.userId || '',
           confirmed: item.confirmed || false
         })) : [],

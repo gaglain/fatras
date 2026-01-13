@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { logger } from '@/lib/logger';
 
 export interface ContactList {
   id: string;
@@ -77,8 +78,8 @@ export const useContactLists = () => {
       })) || [];
 
       setContactLists(listsWithCount);
-    } catch (error) {
-      console.error('Error fetching contact lists:', error);
+    } catch (error: unknown) {
+      logger.error('Error fetching contact lists:', error);
       toast({
         title: "Erreur",
         description: "Impossible de charger les listes de contacts",
@@ -96,8 +97,8 @@ export const useContactLists = () => {
 
       if (error) throw error;
       setContacts(data || []);
-    } catch (error) {
-      console.error('Error fetching contacts:', error);
+    } catch (error: unknown) {
+      logger.error('Error fetching contacts:', error);
       toast({
         title: "Erreur",
         description: "Impossible de charger les contacts",
@@ -154,8 +155,8 @@ export const useContactLists = () => {
       });
 
       return newList;
-    } catch (error) {
-      console.error('Error creating contact list:', error);
+    } catch (error: unknown) {
+      logger.error('Error creating contact list:', error);
       toast({
         title: "Erreur",
         description: "Impossible de créer la liste de contacts",
@@ -222,8 +223,8 @@ export const useContactLists = () => {
         title: "Succès",
         description: "Liste de contacts mise à jour"
       });
-    } catch (error) {
-      console.error('Error updating contact list:', error);
+    } catch (error: unknown) {
+      logger.error('Error updating contact list:', error);
       toast({
         title: "Erreur",
         description: "Impossible de mettre à jour la liste",
@@ -247,8 +248,8 @@ export const useContactLists = () => {
         title: "Succès",
         description: "Liste de contacts supprimée"
       });
-    } catch (error) {
-      console.error('Error deleting contact list:', error);
+    } catch (error: unknown) {
+      logger.error('Error deleting contact list:', error);
       toast({
         title: "Erreur",
         description: "Impossible de supprimer la liste",
@@ -276,8 +277,8 @@ export const useContactLists = () => {
       if (error) throw error;
 
       return data?.map(member => member.contacts).filter(Boolean) || [];
-    } catch (error) {
-      console.error('Error fetching contacts in list:', error);
+    } catch (error: unknown) {
+      logger.error('Error fetching contacts in list:', error);
       return [];
     }
   };
