@@ -26,6 +26,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useEntityConnections } from '@/hooks/useEntityConnections';
+import { useActiveUsers } from '@/hooks/useActiveUsers';
 import { Contact } from '@/types/contact.types';
 import { ContactDialog } from '@/components/contacts/ContactDialog';
 import { ContactEmailHistory } from '@/components/ContactEmailHistory';
@@ -39,7 +40,7 @@ export const ContactDetail: React.FC = () => {
   const [searchParams] = useSearchParams();
   const { user, loading: authLoading } = useAuth();
   const { getContactConnections, loading: connectionsLoading } = useEntityConnections();
-  
+  const { getUserDisplayName } = useActiveUsers();
   const [contact, setContact] = useState<Contact | null>(null);
   const [connections, setConnections] = useState<any>({
     events: [],
@@ -308,36 +309,41 @@ export const ContactDetail: React.FC = () => {
   }
 
   const allConnections = getAllConnections();
+  const ownerName = getUserDisplayName((contact as any)?.owner_id) || null;
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto py-6 space-y-6 px-4 lg:px-0">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <Button variant="ghost" onClick={() => navigate('/contacts')}>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <Button variant="ghost" onClick={() => navigate('/contacts')} className="w-fit">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Retour
           </Button>
-          <div className="flex items-center space-x-3">
-            <Avatar className="h-12 w-12">
+          <div className="flex items-center space-x-3 min-w-0">
+            <Avatar className="h-12 w-12 shrink-0">
               <AvatarFallback className="bg-primary text-primary-foreground">
                 {contact.first_name?.[0]}{contact.last_name?.[0]}
               </AvatarFallback>
             </Avatar>
-            <div>
-              <h1 className="text-2xl font-bold">
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl font-bold truncate">
                 {contact.first_name} {contact.last_name}
               </h1>
-              <p className="text-muted-foreground">{contact.position} {contact.company && `• ${contact.company}`}</p>
+              <p className="text-muted-foreground truncate">
+                {contact.position} {contact.company && `• ${contact.company}`}
+              </p>
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <ContactListAssignment 
-            contactId={contact.id!}
-            contactName={`${contact.first_name} ${contact.last_name}`}
-          />
-          <Button onClick={() => setEditDialogOpen(true)}>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+          <div className="w-full sm:w-auto">
+            <ContactListAssignment 
+              contactId={contact.id!}
+              contactName={`${contact.first_name} ${contact.last_name}`}
+            />
+          </div>
+          <Button onClick={() => setEditDialogOpen(true)} className="w-full sm:w-auto">
             <Edit className="h-4 w-4 mr-2" />
             Modifier
           </Button>
@@ -345,7 +351,7 @@ export const ContactDetail: React.FC = () => {
       </div>
 
       {/* Quick Info Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
@@ -377,6 +383,18 @@ export const ContactDetail: React.FC = () => {
               <div className="text-sm min-w-0 flex-1">
                 <p className="font-medium">Entreprise</p>
                 <p className="text-muted-foreground truncate">{contact.company || 'Non renseigné'}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <User className="h-4 w-4 text-muted-foreground" />
+              <div className="text-sm min-w-0 flex-1">
+                <p className="font-medium">Propriétaire</p>
+                <p className="text-muted-foreground truncate">{ownerName || 'Non défini'}</p>
               </div>
             </div>
           </CardContent>

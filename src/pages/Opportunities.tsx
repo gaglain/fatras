@@ -15,6 +15,7 @@ import { useContacts } from '@/hooks/useContacts';
 import { useEvents } from '@/hooks/useEvents';
 import { useTasks } from '@/hooks/useTasks';
 import { useCentralizedData } from '@/hooks/useCentralizedData';
+import { useActiveUsers } from '@/hooks/useActiveUsers';
 import { UniversalSearch } from '@/components/UniversalSearch';
 import { logger } from '@/lib/logger';
 
@@ -35,6 +36,7 @@ interface Opportunity {
   contact_id?: string;
   event_id?: string;
   task_id?: string;
+  owner_id?: string;
   createdAt: string;
 }
 
@@ -44,6 +46,7 @@ export const Opportunities: React.FC = () => {
   const { events } = useEvents();
   const { tasks } = useTasks();
   const { artists } = useCentralizedData();
+  const { getUserDisplayName } = useActiveUsers();
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
@@ -152,6 +155,7 @@ const formattedOpportunities = data.map(opp => ({
   contact_id: opp.contact_id || '',
   event_id: opp.event_id || '',
   task_id: opp.task_id || '',
+  owner_id: opp.owner_id || '',
   createdAt: opp.created_at
 }));
         setOpportunities(formattedOpportunities);
@@ -450,6 +454,12 @@ setNewOpportunity({
                     <DollarSign className="h-4 w-4 mr-2 flex-shrink-0" />
                     {opportunity.budget}€
                   </div>
+                  {getUserDisplayName(opportunity.owner_id) && (
+                    <div className="flex items-center text-gray-600">
+                      <User className="h-4 w-4 mr-2 flex-shrink-0" />
+                      <span className="truncate">{getUserDisplayName(opportunity.owner_id)}</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Actions en bas de carte */}
@@ -515,6 +525,12 @@ setNewOpportunity({
                       <DollarSign className="h-4 w-4 mr-1" />
                       {opportunity.budget}€
                     </div>
+                    {getUserDisplayName(opportunity.owner_id) && (
+                      <div className="flex items-center">
+                        <User className="h-4 w-4 mr-1" />
+                        {getUserDisplayName(opportunity.owner_id)}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="flex gap-2">
