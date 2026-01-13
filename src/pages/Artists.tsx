@@ -64,8 +64,6 @@ export const Artists: React.FC = () => {
   const [uploading, setUploading] = useState(false);
   const [upcomingShowsCounts, setUpcomingShowsCounts] = useState<Record<string, number>>({});
 
-  console.log('🎭 Artists page - Current artists:', artists.length);
-
   // Fetch real upcoming shows count for each artist
   useEffect(() => {
     const fetchUpcomingShows = async () => {
@@ -78,7 +76,6 @@ export const Artists: React.FC = () => {
         .not('artist_id', 'is', null);
       
       if (error) {
-        console.error('Error fetching upcoming shows:', error);
         return;
       }
 
@@ -124,7 +121,6 @@ export const Artists: React.FC = () => {
   };
 
   const handleEditArtist = (artist: Artist) => {
-    console.log('✏️ Editing artist:', artist);
     setEditingArtist(artist);
     setFormData({
       name: artist.name,
@@ -172,7 +168,6 @@ export const Artists: React.FC = () => {
         .upload(filePath, file);
 
       if (uploadError) {
-        console.error('Upload error:', uploadError);
         toast.error('Erreur lors de l\'upload de l\'image');
         return;
       }
@@ -185,8 +180,7 @@ export const Artists: React.FC = () => {
       // Mettre à jour le formData avec l'URL de l'image
       setFormData(prev => ({ ...prev, image: data.publicUrl }));
       toast.success('Image uploadée avec succès');
-    } catch (error) {
-      console.error('Error uploading image:', error);
+    } catch {
       toast.error('Erreur lors de l\'upload');
     } finally {
       setUploading(false);

@@ -86,8 +86,7 @@ export const ContactFiltersManager: React.FC<ContactFiltersManagerProps> = ({
         source: 'all'
       });
       setIsOpen(false);
-    } catch (error) {
-      console.error('Erreur lors de la création de la liste:', error);
+    } catch {
       toast.error('Erreur lors de la création de la liste');
     }
   };
