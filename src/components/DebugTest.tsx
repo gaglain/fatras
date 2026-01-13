@@ -7,6 +7,7 @@ import { EventDialog } from '@/components/events/EventDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 export const DebugTest: React.FC = () => {
   const { user } = useAuth();
@@ -17,26 +18,18 @@ export const DebugTest: React.FC = () => {
 
   const testEventCreation = async () => {
     if (!user) {
-      console.error('❌ No user found');
       toast.error('Vous devez être connecté');
       return;
     }
 
     if (!title.trim()) {
-      console.error('❌ No title provided');
       toast.error('Veuillez entrer un titre');
       return;
     }
 
-    console.log('🎯 Testing event creation');
-    console.log('👤 User:', user.id, user.email);
-    console.log('📝 Title:', title);
-    console.log('🔍 Title length:', title.length);
-    console.log('🔍 Title chars:', title.split('').map(c => c.charCodeAt(0)));
+    logger.debug('Testing event creation', { userId: user.id, title });
 
     try {
-      console.log('📤 Inserting event into database...');
-      
       const eventData = {
         user_id: user.id,
         title: title.trim(),
@@ -50,47 +43,40 @@ export const DebugTest: React.FC = () => {
         updated_at: new Date().toISOString()
       };
 
-      console.log('📊 Event data to insert:', eventData);
-
       const { data, error } = await supabase
         .from('events')
         .insert([eventData])
         .select();
 
       if (error) {
-        console.error('❌ Database error:', error);
-        console.error('❌ Error details:', JSON.stringify(error, null, 2));
+        logger.error('Database error:', error);
         toast.error(`Erreur DB: ${error.message}`);
         return;
       }
 
-      console.log('✅ Event created successfully:', data);
+      logger.debug('Event created successfully:', data);
       toast.success('Événement créé avec succès !');
       setTitle('');
       setDescription('');
-    } catch (error) {
-      console.error('❌ Catch error:', error);
-      console.error('❌ Error stack:', error.stack);
-      toast.error(`Erreur: ${error.message}`);
+    } catch (error: unknown) {
+      logger.error('Event creation error:', error);
+      toast.error('Erreur lors de la création');
     }
   };
 
   const testUserProfileUpdate = async () => {
     if (!user) {
-      console.error('❌ No user found');
       toast.error('Vous devez être connecté');
       return;
     }
 
-    console.log('🧪 Testing user profile update');
-    
     const profileData = {
       entertainment_leave_number: testData || 'TEST123',
       tax_reduction: true,
       updated_at: new Date().toISOString()
     };
 
-    console.log('📝 Profile data to update:', profileData);
+    logger.debug('Testing user profile update', profileData);
 
     try {
       const { data, error } = await supabase
@@ -99,18 +85,16 @@ export const DebugTest: React.FC = () => {
         .eq('user_id', user.id)
         .select();
 
-      console.log('📊 Update result:', { data, error });
-
       if (error) {
-        console.error('❌ Update error:', error);
+        logger.error('Update error:', error);
         toast.error(`Erreur: ${error.message}`);
         return;
       }
 
-      console.log('✅ Profile updated successfully:', data);
+      logger.debug('Profile updated successfully:', data);
       toast.success('Profil mis à jour !');
-    } catch (error) {
-      console.error('❌ Catch error:', error);
+    } catch (error: unknown) {
+      logger.error('Profile update error:', error);
       toast.error('Erreur lors du test');
     }
   };
@@ -118,8 +102,6 @@ export const DebugTest: React.FC = () => {
   const fetchCurrentProfile = async () => {
     if (!user) return;
 
-    console.log('🔍 Fetching current profile');
-    
     try {
       const { data, error } = await supabase
         .from('user_profiles')
@@ -127,28 +109,24 @@ export const DebugTest: React.FC = () => {
         .eq('user_id', user.id)
         .single();
 
-      console.log('📊 Profile fetch result:', { data, error });
-
       if (error) {
-        console.error('❌ Fetch error:', error);
+        logger.error('Fetch error:', error);
         toast.error(`Erreur: ${error.message}`);
         return;
       }
 
-      console.log('✅ Current profile:', data);
+      logger.debug('Current profile:', data);
       toast.success('Profil récupéré - voir console');
-    } catch (error) {
-      console.error('❌ Catch error:', error);
+    } catch (error: unknown) {
+      logger.error('Profile fetch error:', error);
     }
   };
 
   const testEventDialog = () => {
-    console.log('🎯 Opening EventDialog for testing');
     setEventDialogOpen(true);
   };
 
   const handleEventSave = () => {
-    console.log('✅ Event saved successfully');
     setEventDialogOpen(false);
     toast.success('Événement sauvegardé !');
   };
@@ -163,10 +141,7 @@ export const DebugTest: React.FC = () => {
           <Input
             placeholder="Titre de l'événement test"
             value={title}
-            onChange={(e) => {
-              console.log('📝 Title input change:', e.target.value);
-              setTitle(e.target.value);
-            }}
+            onChange={(e) => setTitle(e.target.value)}
           />
         </div>
         
@@ -174,10 +149,7 @@ export const DebugTest: React.FC = () => {
           <Textarea
             placeholder="Description test..."
             value={description}
-            onChange={(e) => {
-              console.log('📝 Description change:', e.target.value);
-              setDescription(e.target.value);
-            }}
+            onChange={(e) => setDescription(e.target.value)}
             rows={3}
           />
         </div>

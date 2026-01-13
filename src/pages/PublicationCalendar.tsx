@@ -112,13 +112,8 @@ export const PublicationCalendar: React.FC = () => {
     fetchPublications();
   }, [currentUser]);
 
-  console.log('📅 PublicationCalendar - Current publications:', publications.length);
-
   const handleFormSubmit = async (formData: any) => {
-    console.log('📝 Form submitted with data:', formData);
-    
     if (!currentUser) {
-      console.error('❌ No current user');
       toast.error('Utilisateur non connecté');
       return;
     }
@@ -127,7 +122,6 @@ export const PublicationCalendar: React.FC = () => {
 
     try {
       const assignedProfile = users.find(p => p.user_id === formData.assigned_to);
-      console.log('👤 Assigned profile found:', assignedProfile);
 
       // Créer une publication pour chaque plateforme sélectionnée
       const platforms = formData.platforms || [];
@@ -218,9 +212,8 @@ export const PublicationCalendar: React.FC = () => {
       setEditingPublication(null);
       setShowForm(false);
       setFormData(loadSavedFormData());
-      console.log('✅ Publication operation completed successfully');
-    } catch (error) {
-      console.error('❌ Error in handleFormSubmit:', error);
+    } catch (error: unknown) {
+      console.error('Erreur lors de la sauvegarde de la publication:', error);
       toast.error('Erreur lors de la sauvegarde de la publication');
     } finally {
       setIsLoading(false);
@@ -228,13 +221,11 @@ export const PublicationCalendar: React.FC = () => {
   };
 
   const handleEdit = (publication: Publication) => {
-    console.log('✏️ Editing publication:', publication.id);
     setEditingPublication(publication);
     setShowForm(true);
   };
 
   const handleDelete = async (id: string) => {
-    console.log('🗑️ Deleting publication:', id);
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cette publication ?')) {
       try {
         const { error } = await supabase
@@ -255,7 +246,6 @@ export const PublicationCalendar: React.FC = () => {
   };
 
   const changeStatus = async (id: string, newStatus: Publication['status']) => {
-    console.log('🔄 Changing status for publication:', id, 'to:', newStatus);
     try {
       const { error } = await supabase
         .from('publications')
@@ -269,7 +259,7 @@ export const PublicationCalendar: React.FC = () => {
         pub.id === id ? { ...pub, status: newStatus } : pub
       ));
       toast.success('Statut mis à jour');
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erreur lors de la mise à jour du statut:', error);
       toast.error('Erreur lors de la mise à jour');
     }
@@ -277,8 +267,6 @@ export const PublicationCalendar: React.FC = () => {
 
   const addComment = (publicationId: string) => {
     if (!newComment.trim() || !currentUser) return;
-
-    console.log('💬 Adding comment to publication:', publicationId);
 
     const comment: PublicationComment = {
       id: `comment-${Date.now()}`,
@@ -330,7 +318,6 @@ export const PublicationCalendar: React.FC = () => {
         </div>
         <Button 
           onClick={() => {
-            console.log('➕ Opening publication form');
             setEditingPublication(null);
             setShowForm(true);
           }} 
@@ -352,7 +339,6 @@ export const PublicationCalendar: React.FC = () => {
             <p className="text-gray-500 mb-4">Créez votre première publication pour commencer</p>
             <Button 
               onClick={() => {
-                console.log('➕ Opening form from empty state');
                 setEditingPublication(null);
                 setShowForm(true);
               }}
@@ -534,7 +520,6 @@ export const PublicationCalendar: React.FC = () => {
       <PublicationFormMultiPlatform
         isOpen={showForm}
         onClose={() => {
-          console.log('❌ Closing publication form');
           setShowForm(false);
           setEditingPublication(null);
         }}

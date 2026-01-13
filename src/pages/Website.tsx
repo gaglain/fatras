@@ -48,8 +48,8 @@ export const Website: React.FC = () => {
         const regs = await navigator.serviceWorker.getRegistrations();
         await Promise.all(regs.map((r) => r.unregister()));
       }
-    } catch (e) {
-      console.warn('Cache clear error:', e);
+    } catch {
+      // Ignore cache clear errors
     } finally {
       setPreviewVersion((v) => v + 1);
     }

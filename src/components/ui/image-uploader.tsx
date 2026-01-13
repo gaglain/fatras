@@ -56,7 +56,6 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       // Optimiser l'image si elle dépasse 100KB
       if (shouldOptimize(file, 100)) {
         setIsOptimizing(true);
-        console.log('🖼️ Optimisation automatique de l\'image...');
         
         const result = await optimizeImage(file, {
           maxWidth: 1920,
@@ -69,7 +68,6 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         if (result.compressionRatio > 1.1) {
           fileToUpload = createOptimizedFile(result.blob, file.name, result.format);
           setSavedBytes(originalSize - result.optimizedSize);
-          console.log(`✅ Image optimisée: ${(originalSize / 1024).toFixed(0)}KB → ${(result.optimizedSize / 1024).toFixed(0)}KB`);
         }
         setIsOptimizing(false);
       }
@@ -103,8 +101,8 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         toast.success('Image uploadée avec succès !');
       }
 
-    } catch (error: any) {
-      console.error('Erreur upload:', error);
+    } catch (error: unknown) {
+      console.error('Erreur upload image:', error);
       toast.error('Erreur lors de l\'upload de l\'image');
     } finally {
       setIsUploading(false);
