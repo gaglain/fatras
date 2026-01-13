@@ -5,15 +5,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { Event } from '@/types/event.types';
 import { Contact } from '@/types/contact.types';
-import { Info } from 'lucide-react';
 import { EventDraftManager, useEventDraft } from './EventDraftManager';
 import { UniversalSearch, SearchItem } from '@/components/UniversalSearch';
+import { logger } from '@/lib/logger';
 
 interface EventType {
   id: string;
@@ -37,7 +36,6 @@ export const EventDialog: React.FC<EventDialogProps> = ({
   const { user } = useAuth();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [eventTypes, setEventTypes] = useState<EventType[]>([]);
-  const [artists, setArtists] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -66,7 +64,6 @@ export const EventDialog: React.FC<EventDialogProps> = ({
     if (open && user) {
       fetchContacts();
       fetchEventTypes();
-      fetchArtists();
     }
   }, [open, user]);
 
@@ -131,8 +128,8 @@ export const EventDialog: React.FC<EventDialogProps> = ({
 
       if (error) throw error;
       setContacts(data || []);
-    } catch (error: any) {
-      console.error('Erreur lors du chargement des contacts:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur lors du chargement des contacts:', error);
     }
   };
 
@@ -145,36 +142,21 @@ export const EventDialog: React.FC<EventDialogProps> = ({
 
       if (error) throw error;
       setEventTypes(data || []);
-    } catch (error: any) {
-      console.error('Erreur lors du chargement des types d\'événements:', error);
-    }
-  };
-
-  const fetchArtists = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('centralized_artists')
-        .select('id, name, genre, status')
-        .eq('status', 'active')
-        .order('name');
-
-      if (error) throw error;
-      setArtists(data || []);
-    } catch (error: any) {
-      console.error('Erreur lors du chargement des spectacles:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur lors du chargement des types d\'événements:', error);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
-      console.error('❌ No user found, cannot create event');
+      logger.error('❌ No user found, cannot create event');
       toast.error('Vous devez être connecté pour créer un événement');
       return;
     }
 
-    console.log('🎯 Starting event creation with user:', user.id);
-    console.log('📝 Form data:', formData);
+    logger.debug('🎯 Starting event creation with user:', user.id);
+    logger.debug('📝 Form data:', formData);
 
     setLoading(true);
     try {
@@ -201,7 +183,7 @@ export const EventDialog: React.FC<EventDialogProps> = ({
         booking_url: formData.booking_url || null
       };
 
-      console.log('Saving event with data:', eventData);
+      logger.debug('Saving event with data:', eventData);
 
       if (event?.id) {
         const { data, error } = await supabase
@@ -211,10 +193,10 @@ export const EventDialog: React.FC<EventDialogProps> = ({
           .select();
         
         if (error) {
-          console.error('Update error:', error);
+          logger.error('Update error:', error);
           throw error;
         }
-        console.log('Event updated successfully:', data);
+        logger.debug('Event updated successfully:', data);
         toast.success('Événement mis à jour avec succès');
       } else {
         const { data, error } = await supabase
@@ -223,10 +205,10 @@ export const EventDialog: React.FC<EventDialogProps> = ({
           .select();
         
         if (error) {
-          console.error('Insert error:', error);
+          logger.error('Insert error:', error);
           throw error;
         }
-        console.log('Event created successfully:', data);
+        logger.debug('Event created successfully:', data);
         toast.success('Événement créé avec succès');
       }
 
@@ -234,8 +216,8 @@ export const EventDialog: React.FC<EventDialogProps> = ({
       clearDraft();
       
       onSave();
-    } catch (error: any) {
-      console.error('Erreur:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur:', error);
       toast.error('Erreur lors de la sauvegarde de l\'événement');
     } finally {
       setLoading(false);

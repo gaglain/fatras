@@ -1,25 +1,26 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Bell, X, Mail, CheckSquare, Calendar, User, MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { useNotifications } from '@/hooks/useNotifications';
+import { logger } from '@/lib/logger';
 
 interface NotificationCenterProps {
   onClose: () => void;
 }
 
 export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose }) => {
-  console.log('🔔 NotificationCenter component rendered');
+  logger.debug('🔔 NotificationCenter component rendered');
   
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const { theme } = useTheme();
   const navigate = useNavigate();
 
-  const handleNotificationClick = (e: React.MouseEvent, notification: any) => {
+  const handleNotificationClick = (e: React.MouseEvent, notification: typeof notifications[number]) => {
     e.stopPropagation();
-    console.log('🔔 Notification clicked:', notification.type, notification.data);
+    logger.debug('🔔 Notification clicked:', notification.type, notification.data);
     
     markAsRead(notification.id);
     
@@ -36,8 +37,9 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
         break;
       case 'public_chat':
         // Navigate to messagerie with visitor_id to open the conversation
-        const visitorId = notification.data?.visitor_id;
-        console.log('🔔 Navigating to public chat with visitorId:', visitorId);
+        const notifData = notification.data as Record<string, unknown> | null;
+        const visitorId = notifData?.visitor_id as string | undefined;
+        logger.debug('🔔 Navigating to public chat with visitorId:', visitorId);
         navigate('/messagerie', { state: { tab: 'public', visitorId } });
         break;
       default:
@@ -109,7 +111,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onClose 
           </div>
           <button 
             onClick={() => {
-              console.log('🔔 Close button clicked in NotificationCenter');
+              logger.debug('🔔 Close button clicked in NotificationCenter');
               onClose();
             }}
             className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-700 rounded flex items-center justify-center transition-all duration-300"
