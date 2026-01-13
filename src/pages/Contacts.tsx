@@ -107,8 +107,8 @@ export const Contacts: React.FC = () => {
           return next;
         });
       }
-    } catch (error: any) {
-      console.error('Erreur lors du chargement des liens contacts:', error);
+    } catch {
+      // Silent fail for relations loading
     }
   };
 
@@ -158,8 +158,7 @@ export const Contacts: React.FC = () => {
 
       // Charger les liens (événements/artistes) uniquement pour les contacts présents sur cette page
       await fetchRelationsForContacts(newContacts.map(c => c.id).filter(Boolean));
-    } catch (error: any) {
-      console.error('Erreur lors du chargement des contacts:', error);
+    } catch {
       toast.error('Erreur lors du chargement des contacts');
     } finally {
       setLoading(false);
@@ -176,8 +175,8 @@ export const Contacts: React.FC = () => {
 
       if (error) throw error;
       setEvents(data || []);
-    } catch (error: any) {
-      console.error('Erreur lors du chargement des événements:', error);
+    } catch {
+      // Silent fail for events loading
     }
   };
 
@@ -189,10 +188,9 @@ export const Contacts: React.FC = () => {
         .order('name');
 
       if (error) throw error;
-
       setArtists(data || []);
-    } catch (error: any) {
-      console.error('Erreur lors du chargement des artistes:', error);
+    } catch {
+      // Silent fail for artists loading
     }
   };
 
@@ -274,8 +272,7 @@ export const Contacts: React.FC = () => {
       if (error) throw error;
       toast.success('Contact supprimé avec succès');
       fetchContacts({ reset: true });
-    } catch (error: any) {
-      console.error('Erreur lors de la suppression:', error);
+    } catch {
       toast.error('Erreur lors de la suppression du contact');
     }
   };
@@ -285,9 +282,8 @@ export const Contacts: React.FC = () => {
     setEditingContact(null);
   };
 
-  const handleImportComplete = (importedContacts: any[]) => {
-    console.log('Import completed:', importedContacts.length, 'contacts');
-    fetchContacts({ reset: true }); // Refresh the contacts list
+  const handleImportComplete = () => {
+    fetchContacts({ reset: true });
     setCsvImportOpen(false);
   };
 
@@ -323,8 +319,7 @@ export const Contacts: React.FC = () => {
       toast.success(`${selectedContactIds.length} contact(s) supprimé(s) avec succès`);
       setSelectedContactIds([]);
       fetchContacts({ reset: true });
-    } catch (error: any) {
-      console.error('Erreur lors de la suppression en masse:', error);
+    } catch {
       toast.error('Erreur lors de la suppression des contacts');
     } finally {
       setIsDeleting(false);

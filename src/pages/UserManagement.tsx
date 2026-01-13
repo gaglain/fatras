@@ -28,15 +28,12 @@ import jsPDF from 'jspdf';
 
 
 export const UserManagement: React.FC = () => {
-  console.log('📊 UserManagement component rendering...');
-  
   // Protection contre l'erreur de contexte
   let currentUser = null;
   try {
     const userContext = useUser();
     currentUser = userContext?.currentUser;
-  } catch (error) {
-    console.warn('⚠️ UserContext not available yet in UserManagement, using fallback');
+  } catch {
     currentUser = null;
   }
   
@@ -305,17 +302,15 @@ export const UserManagement: React.FC = () => {
               tempPassword
             );
             toast.success('Utilisateur créé et email de bienvenue envoyé !');
-          } catch (emailError) {
-            console.error('Erreur envoi email:', emailError);
+          } catch {
             toast.success('Utilisateur créé (erreur envoi email)');
           }
         }
       }
 
       resetForm();
-      fetchUsers(); // Recharger la liste
-    } catch (error) {
-      console.error('Erreur:', error);
+      fetchUsers();
+    } catch {
       toast.error('Erreur lors de la sauvegarde');
     }
   };
@@ -347,8 +342,7 @@ export const UserManagement: React.FC = () => {
       } else {
         toast.success('Email de réinitialisation envoyé !');
       }
-    } catch (error) {
-      console.error('Error resetting password:', error);
+    } catch {
       toast.error('Erreur lors de la réinitialisation du mot de passe');
     }
   };
