@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 export interface BackgroundImage {
   id: string;
@@ -61,17 +62,18 @@ export const useBackgroundImages = (categoryFilter?: string) => {
       if (error) throw error;
       
       // Cast the data to include new fields
-      const typedData = (data || []).map(item => ({
+      const itemRecord = data || [];
+      const typedData = itemRecord.map(item => ({
         ...item,
-        category: (item as any).category || 'general',
-        tags: (item as any).tags || [],
-        source_type: (item as any).source_type || 'upload',
-        source_id: (item as any).source_id || null,
+        category: item.category || 'general',
+        tags: item.tags || [],
+        source_type: item.source_type || 'upload',
+        source_id: item.source_id || null,
       })) as BackgroundImage[];
       
       setImages(typedData);
-    } catch (error) {
-      console.error('Error fetching background images:', error);
+    } catch (error: unknown) {
+      logger.error('Error fetching background images:', error);
       toast.error('Erreur lors du chargement des images');
     } finally {
       setLoading(false);
@@ -134,8 +136,8 @@ export const useBackgroundImages = (categoryFilter?: string) => {
       toast.success('Image uploadée avec succès');
       await fetchImages();
       return data as BackgroundImage;
-    } catch (error) {
-      console.error('Error uploading image:', error);
+    } catch (error: unknown) {
+      logger.error('Error uploading image:', error);
       toast.error('Erreur lors de l\'upload de l\'image');
       return null;
     } finally {
@@ -161,8 +163,8 @@ export const useBackgroundImages = (categoryFilter?: string) => {
       toast.success('Image mise à jour');
       await fetchImages();
       return true;
-    } catch (error) {
-      console.error('Error updating image:', error);
+    } catch (error: unknown) {
+      logger.error('Error updating image:', error);
       toast.error('Erreur lors de la mise à jour');
       return false;
     }
@@ -191,8 +193,8 @@ export const useBackgroundImages = (categoryFilter?: string) => {
 
       toast.success('Image supprimée');
       await fetchImages();
-    } catch (error) {
-      console.error('Error deleting image:', error);
+    } catch (error: unknown) {
+      logger.error('Error deleting image:', error);
       toast.error('Erreur lors de la suppression');
     }
   };

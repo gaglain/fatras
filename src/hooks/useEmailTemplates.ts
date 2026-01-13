@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 export interface EmailTemplate {
   id: string;
@@ -36,8 +37,8 @@ export const useEmailTemplates = () => {
         attachments: Array.isArray(t.attachments) ? t.attachments as Array<{ name: string; url: string; size: number }> : []
       }));
       setTemplates(formattedData);
-    } catch (error) {
-      console.error('Error fetching templates:', error);
+    } catch (error: unknown) {
+      logger.error('Error fetching templates:', error);
       toast.error('Erreur lors du chargement des modèles');
     } finally {
       setLoading(false);
@@ -67,8 +68,8 @@ export const useEmailTemplates = () => {
       toast.success('Modèle créé avec succès');
       fetchTemplates();
       return data;
-    } catch (error) {
-      console.error('Error creating template:', error);
+    } catch (error: unknown) {
+      logger.error('Error creating template:', error);
       toast.error('Erreur lors de la création du modèle');
       return null;
     }
@@ -84,8 +85,8 @@ export const useEmailTemplates = () => {
       if (error) throw error;
       toast.success('Modèle mis à jour avec succès');
       fetchTemplates();
-    } catch (error) {
-      console.error('Error updating template:', error);
+    } catch (error: unknown) {
+      logger.error('Error updating template:', error);
       toast.error('Erreur lors de la mise à jour du modèle');
     }
   };
@@ -100,8 +101,8 @@ export const useEmailTemplates = () => {
       if (error) throw error;
       toast.success('Modèle supprimé avec succès');
       fetchTemplates();
-    } catch (error) {
-      console.error('Error deleting template:', error);
+    } catch (error: unknown) {
+      logger.error('Error deleting template:', error);
       toast.error('Erreur lors de la suppression du modèle');
     }
   };

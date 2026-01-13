@@ -1,4 +1,5 @@
 import { useEffect, useCallback, useRef } from 'react';
+import { logger } from '@/lib/logger';
 
 export const useFrontDataSync = () => {
   const syncInProgress = useRef(false);
@@ -14,14 +15,14 @@ export const useFrontDataSync = () => {
     syncInProgress.current = true;
     lastSyncTime.current = now;
 
-    console.log('🔄 Front data sync - Force sync triggered');
+    logger.debug('🔄 Front data sync - Force sync triggered');
 
     try {
       // Déclencher un rafraîchissement doux du front (évite le scintillement)
       window.dispatchEvent(new CustomEvent('frontDataRefresh'));
       
-    } catch (error) {
-      console.error('❌ Error during front sync:', error);
+    } catch (error: unknown) {
+      logger.error('❌ Error during front sync:', error);
     } finally {
       setTimeout(() => {
         syncInProgress.current = false;
@@ -38,13 +39,13 @@ export const useFrontDataSync = () => {
     // Listeners pour les changements
     const handleStorageChange = (event: StorageEvent) => {
       if (event.key === 'websiteSettings' || event.key === 'websiteDesign' || event.key === 'websitePages') {
-        console.log('📦 Storage change detected for:', event.key);
+        logger.debug('📦 Storage change detected for:', event.key);
         setTimeout(forceSync, 200);
       }
     };
 
     const handleCustomEvent = () => {
-      console.log('🎯 Custom event detected, syncing...');
+      logger.debug('🎯 Custom event detected, syncing...');
       setTimeout(forceSync, 100);
     };
 
