@@ -57,8 +57,7 @@ export const Forms: React.FC = () => {
       }));
 
       setForms(formattedForms);
-    } catch (error) {
-      console.error('Erreur lors du chargement des formulaires:', error);
+    } catch {
       toast.error('Erreur lors du chargement des formulaires');
     } finally {
       setLoading(false);
@@ -98,8 +97,7 @@ export const Forms: React.FC = () => {
       setShowBuilder(false);
       setEditingForm(null);
       await fetchForms();
-    } catch (error) {
-      console.error('Erreur lors de la sauvegarde:', error);
+    } catch {
       toast.error('Erreur lors de la sauvegarde du formulaire');
     }
   };
@@ -118,8 +116,7 @@ export const Forms: React.FC = () => {
 
       toast.success('Formulaire supprimé');
       await fetchForms();
-    } catch (error) {
-      console.error('Erreur lors de la suppression:', error);
+    } catch {
       toast.error('Erreur lors de la suppression');
     }
   };
@@ -276,8 +273,7 @@ export const Forms: React.FC = () => {
           {previewForm && (
             <FormRenderer
               form={previewForm}
-              onSubmit={(data) => {
-                console.log('Form submitted:', data);
+              onSubmit={() => {
                 toast.success('Formulaire soumis (mode aperçu)');
               }}
             />

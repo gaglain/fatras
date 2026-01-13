@@ -34,7 +34,6 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) =>
     
     // Honeypot check - if filled, it's a bot
     if (honeypot) {
-      console.log('🤖 Bot detected via honeypot');
       // Fake success to not alert the bot
       toast.success(form.settings.successMessage);
       return;
@@ -82,8 +81,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) =>
       if (form.settings.redirectUrl) {
         window.location.href = form.settings.redirectUrl;
       }
-    } catch (error: any) {
-      console.error('Form submission error:', error);
+    } catch {
       toast.error('Erreur lors de l\'envoi du formulaire');
     } finally {
       setIsSubmitting(false);

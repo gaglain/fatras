@@ -26,8 +26,6 @@ export const GoogleAnalytics: React.FC<GoogleAnalyticsProps> = ({ measurementId,
     `;
     document.head.appendChild(script2);
 
-    console.log('🔍 Google Analytics initialisé avec ID:', measurementId);
-
     return () => {
       // Nettoyer les scripts si nécessaire
       document.head.removeChild(script1);
@@ -42,7 +40,6 @@ export const GoogleAnalytics: React.FC<GoogleAnalyticsProps> = ({ measurementId,
 export const trackEvent = (eventName: string, parameters?: Record<string, any>) => {
   if (typeof window !== 'undefined' && (window as any).gtag) {
     (window as any).gtag('event', eventName, parameters);
-    console.log('📊 Événement GA envoyé:', eventName, parameters);
   }
 };
 
@@ -53,6 +50,5 @@ export const trackPageView = (pagePath: string, pageTitle?: string) => {
       page_path: pagePath,
       page_title: pageTitle,
     });
-    console.log('📄 Page vue GA envoyée:', pagePath, pageTitle);
   }
 };

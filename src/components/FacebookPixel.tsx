@@ -11,7 +11,6 @@ export const FacebookPixel: React.FC<FacebookPixelProps> = ({ pixelId, enabled =
 
     // Éviter les doublons
     if ((window as any).fbq) {
-      console.log('📘 Facebook Pixel déjà initialisé');
       return;
     }
 
@@ -38,8 +37,6 @@ export const FacebookPixel: React.FC<FacebookPixelProps> = ({ pixelId, enabled =
     noscript.innerHTML = `<img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=${pixelId}&ev=PageView&noscript=1"/>`;
     document.body.appendChild(noscript);
 
-    console.log('📘 Facebook Pixel initialisé avec ID:', pixelId);
-
     return () => {
       const existingScript = document.getElementById('fb-pixel-script');
       const existingNoscript = document.getElementById('fb-pixel-noscript');
@@ -55,13 +52,11 @@ export const FacebookPixel: React.FC<FacebookPixelProps> = ({ pixelId, enabled =
 export const trackFBEvent = (eventName: string, parameters?: Record<string, any>) => {
   if (typeof window !== 'undefined' && (window as any).fbq) {
     (window as any).fbq('track', eventName, parameters);
-    console.log('📘 Événement FB envoyé:', eventName, parameters);
   }
 };
 
 export const trackFBCustomEvent = (eventName: string, parameters?: Record<string, any>) => {
   if (typeof window !== 'undefined' && (window as any).fbq) {
     (window as any).fbq('trackCustom', eventName, parameters);
-    console.log('📘 Événement FB custom envoyé:', eventName, parameters);
   }
 };
