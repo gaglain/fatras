@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 export interface SetlistSong {
   id: string;
@@ -69,7 +70,7 @@ export const useShowBibleSetlists = (artistId?: string) => {
       const { data, error } = await query;
 
       if (error) {
-        console.error('Error fetching setlists:', error);
+        logger.error('Error fetching setlists:', error);
         toast.error('Erreur lors du chargement des setlists');
         return;
       }
@@ -91,8 +92,8 @@ export const useShowBibleSetlists = (artistId?: string) => {
       );
 
       setSetlists(setlistsWithSongs as Setlist[]);
-    } catch (error) {
-      console.error('Error fetching setlists:', error);
+    } catch (error: unknown) {
+      logger.error('Error fetching setlists:', error);
       toast.error('Erreur lors du chargement des setlists');
     } finally {
       setLoading(false);
@@ -118,13 +119,13 @@ export const useShowBibleSetlists = (artistId?: string) => {
       const { data, error } = await query;
 
       if (error) {
-        console.error('Error fetching library songs:', error);
+        logger.error('Error fetching library songs:', error);
         return;
       }
 
       setLibrarySongs((data || []) as LibrarySong[]);
-    } catch (error) {
-      console.error('Error fetching library songs:', error);
+    } catch (error: unknown) {
+      logger.error('Error fetching library songs:', error);
     }
   };
 
@@ -147,7 +148,7 @@ export const useShowBibleSetlists = (artistId?: string) => {
         .single();
 
       if (error) {
-        console.error('Error creating setlist:', error);
+        logger.error('Error creating setlist:', error);
         toast.error('Erreur lors de la création de la setlist');
         return null;
       }
@@ -155,8 +156,8 @@ export const useShowBibleSetlists = (artistId?: string) => {
       await fetchSetlists();
       toast.success('Setlist créée avec succès');
       return newSetlist;
-    } catch (error) {
-      console.error('Error creating setlist:', error);
+    } catch (error: unknown) {
+      logger.error('Error creating setlist:', error);
       toast.error('Erreur lors de la création de la setlist');
       return null;
     }
@@ -170,7 +171,7 @@ export const useShowBibleSetlists = (artistId?: string) => {
         .eq('id', id);
 
       if (error) {
-        console.error('Error updating setlist:', error);
+        logger.error('Error updating setlist:', error);
         toast.error('Erreur lors de la mise à jour');
         return false;
       }
@@ -178,8 +179,8 @@ export const useShowBibleSetlists = (artistId?: string) => {
       await fetchSetlists();
       toast.success('Setlist mise à jour');
       return true;
-    } catch (error) {
-      console.error('Error updating setlist:', error);
+    } catch (error: unknown) {
+      logger.error('Error updating setlist:', error);
       toast.error('Erreur lors de la mise à jour');
       return false;
     }
@@ -193,7 +194,7 @@ export const useShowBibleSetlists = (artistId?: string) => {
         .eq('id', id);
 
       if (error) {
-        console.error('Error deleting setlist:', error);
+        logger.error('Error deleting setlist:', error);
         toast.error('Erreur lors de la suppression');
         return false;
       }
@@ -201,8 +202,8 @@ export const useShowBibleSetlists = (artistId?: string) => {
       await fetchSetlists();
       toast.success('Setlist supprimée');
       return true;
-    } catch (error) {
-      console.error('Error deleting setlist:', error);
+    } catch (error: unknown) {
+      logger.error('Error deleting setlist:', error);
       toast.error('Erreur lors de la suppression');
       return false;
     }
@@ -234,7 +235,7 @@ export const useShowBibleSetlists = (artistId?: string) => {
 
       if (existing) {
         // Update existing song with new data if provided
-        const updates: any = {};
+        const updates: Partial<{ duration: string; notes: string; tonality: string; bpm: number; lyrics: string }> = {};
         if (song.duration) updates.duration = song.duration;
         if (song.notes) updates.notes = song.notes;
         if (song.tonality) updates.tonality = song.tonality;
@@ -269,14 +270,14 @@ export const useShowBibleSetlists = (artistId?: string) => {
         .single();
 
       if (error) {
-        console.error('Error adding song to library:', error);
+        logger.error('Error adding song to library:', error);
         return null;
       }
 
       await fetchLibrarySongs();
       return newSong as LibrarySong;
-    } catch (error) {
-      console.error('Error adding song to library:', error);
+    } catch (error: unknown) {
+      logger.error('Error adding song to library:', error);
       return null;
     }
   };
@@ -335,7 +336,7 @@ export const useShowBibleSetlists = (artistId?: string) => {
         }]);
 
       if (error) {
-        console.error('Error adding song:', error);
+        logger.error('Error adding song:', error);
         toast.error('Erreur lors de l\'ajout de la chanson');
         return false;
       }
@@ -343,8 +344,8 @@ export const useShowBibleSetlists = (artistId?: string) => {
       await fetchSetlists();
       toast.success('Chanson ajoutée');
       return true;
-    } catch (error) {
-      console.error('Error adding song:', error);
+    } catch (error: unknown) {
+      logger.error('Error adding song:', error);
       toast.error('Erreur lors de l\'ajout de la chanson');
       return false;
     }
@@ -377,7 +378,7 @@ export const useShowBibleSetlists = (artistId?: string) => {
         .eq('id', songId);
 
       if (error) {
-        console.error('Error updating song:', error);
+        logger.error('Error updating song:', error);
         toast.error('Erreur lors de la mise à jour');
         return false;
       }
@@ -385,8 +386,8 @@ export const useShowBibleSetlists = (artistId?: string) => {
       await fetchSetlists();
       toast.success('Chanson mise à jour');
       return true;
-    } catch (error) {
-      console.error('Error updating song:', error);
+    } catch (error: unknown) {
+      logger.error('Error updating song:', error);
       toast.error('Erreur lors de la mise à jour');
       return false;
     }
@@ -407,7 +408,7 @@ export const useShowBibleSetlists = (artistId?: string) => {
         .eq('id', songId);
 
       if (error) {
-        console.error('Error updating library song:', error);
+        logger.error('Error updating library song:', error);
         toast.error('Erreur lors de la mise à jour');
         return false;
       }
@@ -415,8 +416,8 @@ export const useShowBibleSetlists = (artistId?: string) => {
       await fetchLibrarySongs();
       toast.success('Chanson mise à jour dans la bibliothèque');
       return true;
-    } catch (error) {
-      console.error('Error updating library song:', error);
+    } catch (error: unknown) {
+      logger.error('Error updating library song:', error);
       toast.error('Erreur lors de la mise à jour');
       return false;
     }
@@ -430,7 +431,7 @@ export const useShowBibleSetlists = (artistId?: string) => {
         .eq('id', songId);
 
       if (error) {
-        console.error('Error deleting song:', error);
+        logger.error('Error deleting song:', error);
         toast.error('Erreur lors de la suppression');
         return false;
       }
@@ -438,8 +439,8 @@ export const useShowBibleSetlists = (artistId?: string) => {
       await fetchSetlists();
       toast.success('Chanson supprimée');
       return true;
-    } catch (error) {
-      console.error('Error deleting song:', error);
+    } catch (error: unknown) {
+      logger.error('Error deleting song:', error);
       toast.error('Erreur lors de la suppression');
       return false;
     }
@@ -453,7 +454,7 @@ export const useShowBibleSetlists = (artistId?: string) => {
         .eq('id', songId);
 
       if (error) {
-        console.error('Error deleting library song:', error);
+        logger.error('Error deleting library song:', error);
         toast.error('Erreur lors de la suppression');
         return false;
       }
@@ -461,8 +462,8 @@ export const useShowBibleSetlists = (artistId?: string) => {
       await fetchLibrarySongs();
       toast.success('Chanson supprimée de la bibliothèque');
       return true;
-    } catch (error) {
-      console.error('Error deleting library song:', error);
+    } catch (error: unknown) {
+      logger.error('Error deleting library song:', error);
       toast.error('Erreur lors de la suppression');
       return false;
     }
@@ -480,8 +481,8 @@ export const useShowBibleSetlists = (artistId?: string) => {
       await Promise.all(updates);
       await fetchSetlists();
       return true;
-    } catch (error) {
-      console.error('Error reordering songs:', error);
+    } catch (error: unknown) {
+      logger.error('Error reordering songs:', error);
       toast.error('Erreur lors de la réorganisation');
       return false;
     }

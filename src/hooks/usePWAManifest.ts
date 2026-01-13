@@ -98,11 +98,11 @@ export const usePWAManifest = () => {
     try {
       const stored = localStorage.getItem('pwaManifest');
       if (stored) {
-        const manifest = JSON.parse(stored);
+        const manifest = JSON.parse(stored) as Record<string, unknown>;
         return manifest;
       }
-    } catch (error) {
-      console.error('Erreur lors du chargement du manifest:', error);
+    } catch (error: unknown) {
+      logger.error('Erreur lors du chargement du manifest:', error);
     }
     return null;
   }, []);

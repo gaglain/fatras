@@ -95,7 +95,8 @@ class SimpleMessagingStore {
 
   private playNotificationSound() {
     try {
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const audioContext = new AudioContextClass();
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
       
@@ -110,8 +111,8 @@ class SimpleMessagingStore {
       
       oscillator.start(audioContext.currentTime);
       oscillator.stop(audioContext.currentTime + 0.3);
-    } catch (error) {
-      console.warn('Could not play notification sound:', error);
+    } catch {
+      // Notification sound unavailable - silent fail
     }
   }
 
