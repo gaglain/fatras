@@ -574,11 +574,10 @@ setNewOpportunity({
         ))}
       </div>
 
-      {(showAddForm || editingOpportunity) && (
-<Dialog open={showAddForm || !!editingOpportunity} modal={false} onOpenChange={(open) => {
-  if (!open) {
-    setShowAddForm(false);
-    setEditingOpportunity(null);
+      <Dialog open={showAddForm || !!editingOpportunity} onOpenChange={(open) => {
+        if (!open) {
+          setShowAddForm(false);
+          setEditingOpportunity(null);
           setNewOpportunity({
             title: '',
             description: '',
@@ -596,8 +595,8 @@ setNewOpportunity({
             event_id: '',
             task_id: ''
           });
-  }
-}}>
+        }
+      }}>
   <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
@@ -814,7 +813,6 @@ setNewOpportunity({
             </div>
           </DialogContent>
         </Dialog>
-      )}
     </div>
   );
 };
