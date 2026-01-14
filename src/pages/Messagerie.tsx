@@ -6,22 +6,27 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Send, Hash, MessageSquare, Users, Plus, Lock, Trash2, Globe } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useMessaging } from '@/hooks/useMessaging';
 import { useAuth } from '@/hooks/useAuth';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { ChannelManager } from '@/components/messaging/ChannelManager';
 import { DirectMessageManager } from '@/components/messaging/DirectMessageManager';
 import { ChannelBrowser } from '@/components/messaging/ChannelBrowser';
 import { AdminPublicChatFeed } from '@/components/AdminPublicChatFeed';
+import { ChatWidget } from '@/components/ChatWidget';
 import { toast } from 'sonner';
 
 export const Messagerie: React.FC = () => {
   const { user } = useAuth();
   const location = useLocation();
+  const isMobile = useIsMobile();
   const [selectedChannel, setSelectedChannel] = useState<string>('');
   const [message, setMessage] = useState('');
+  const [showMobileChat, setShowMobileChat] = useState(false);
   
   // Handle navigation state from notification click
-  const navigationState = location.state as { tab?: string; visitorId?: string } | null;
+  const navigationState = location.state as { tab?: string; visitorId?: string; channelName?: string } | null;
   const [activeTab, setActiveTab] = useState(navigationState?.tab || 'internal');
   const [initialVisitorId, setInitialVisitorId] = useState<string | undefined>(navigationState?.visitorId);
 
@@ -33,7 +38,11 @@ export const Messagerie: React.FC = () => {
     if (navigationState?.visitorId) {
       setInitialVisitorId(navigationState.visitorId);
     }
-  }, [navigationState]);
+    // En mobile, ouvrir directement le widget chat
+    if (isMobile && navigationState?.tab === 'internal') {
+      setShowMobileChat(true);
+    }
+  }, [navigationState, isMobile]);
   
   const { 
     channels, 
@@ -127,6 +136,43 @@ export const Messagerie: React.FC = () => {
         return <Hash className="h-4 w-4" />;
     }
   };
+
+  // En mobile, afficher le widget chat directement
+  if (isMobile) {
+    return (
+      <div className="p-4 space-y-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="w-full">
+            <TabsTrigger value="internal" className="flex-1 flex items-center gap-1.5 text-sm">
+              <MessageSquare className="h-4 w-4" />
+              Interne
+            </TabsTrigger>
+            <TabsTrigger value="public" className="flex-1 flex items-center gap-1.5 text-sm">
+              <Globe className="h-4 w-4" />
+              Chat Public
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="internal" className="mt-4">
+            <div className="text-center py-8">
+              <MessageSquare className="h-12 w-12 mx-auto mb-4 text-primary" />
+              <h3 className="text-lg font-medium mb-2">Messagerie Interne</h3>
+              <p className="text-muted-foreground text-sm mb-4">
+                Utilisez le widget chat pour discuter avec votre équipe
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Cliquez sur le bouton 💬 en bas à droite pour ouvrir le chat
+              </p>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="public" className="mt-4">
+            <AdminPublicChatFeed initialVisitorId={initialVisitorId} />
+          </TabsContent>
+        </Tabs>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 lg:p-6 space-y-4">
@@ -283,29 +329,39 @@ export const Messagerie: React.FC = () => {
                   ) : (
                     currentMessages.map((msg) => {
                       const isMe = msg.user_id === user?.id;
-                      const displayName = msg.user_profile?.first_name || 'Utilisateur';
+                      const displayName = msg.user_profile 
+                        ? `${msg.user_profile.first_name || ''} ${msg.user_profile.last_name || ''}`.trim() || 'Utilisateur'
+                        : 'Utilisateur';
                       
                       return (
                         <div
                           key={msg.id}
-                          className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
+                          className={`flex ${isMe ? 'justify-end' : 'justify-start'} animate-fade-in`}
                         >
-                          <div
-                            className={`max-w-[75%] rounded-lg p-3 ${
-                              isMe
-                                ? 'bg-primary text-primary-foreground'
-                                : 'bg-card text-card-foreground border border-border'
-                            }`}
-                          >
-                            {!isMe && (
-                              <div className="text-xs font-medium mb-1 opacity-70">{displayName}</div>
-                            )}
-                            <div className="text-sm">{msg.content}</div>
-                            <div className="text-xs mt-1 opacity-70">
-                              {new Date(msg.created_at).toLocaleTimeString('fr-FR', { 
-                                hour: '2-digit', 
-                                minute: '2-digit' 
-                              })}
+                          <div className={`flex items-start space-x-2 max-w-[80%] ${isMe ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                            <Avatar className="w-8 h-8 flex-shrink-0">
+                              <AvatarImage src={msg.user_profile?.avatar_url || ''} />
+                              <AvatarFallback className={`text-xs text-white ${isMe ? 'bg-primary' : 'bg-muted-foreground'}`}>
+                                {(msg.user_profile?.first_name?.[0] || 'U').toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div
+                              className={`rounded-lg p-3 ${
+                                isMe
+                                  ? 'bg-primary text-primary-foreground'
+                                  : 'bg-muted text-muted-foreground border border-border'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-xs font-medium">{isMe ? 'Moi' : displayName}</span>
+                                <span className="text-xs opacity-70">
+                                  {new Date(msg.created_at).toLocaleTimeString('fr-FR', { 
+                                    hour: '2-digit', 
+                                    minute: '2-digit' 
+                                  })}
+                                </span>
+                              </div>
+                              <div className="text-sm">{msg.content}</div>
                             </div>
                           </div>
                         </div>
