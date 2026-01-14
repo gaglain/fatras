@@ -315,6 +315,15 @@ export const EventCard: React.FC<EventCardProps> = ({
           <Button
             variant="outline"
             size="sm"
+            onClick={() => navigate(`/events/${event.id}`)}
+            className="flex-1"
+          >
+            <Eye className="h-4 w-4 mr-1" />
+            Aperçu
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => setContactManagerOpen(true)}
             className="flex-1"
           >
