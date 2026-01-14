@@ -50,11 +50,34 @@ export const Quotes: React.FC = () => {
         return;
       }
 
+      // Chercher l'opportunité associée via l'événement
+      let opportunityId: string | null = null;
+      if (event.id) {
+        const { data: oppEvent } = await supabase
+          .from('opportunity_events')
+          .select('opportunity_id')
+          .eq('event_id', event.id)
+          .maybeSingle();
+        
+        if (oppEvent?.opportunity_id) {
+          opportunityId = oppEvent.opportunity_id;
+        } else {
+          // Fallback: chercher par event_id direct dans opportunities
+          const { data: opp } = await supabase
+            .from('opportunities')
+            .select('id')
+            .eq('event_id', event.id)
+            .maybeSingle();
+          opportunityId = opp?.id || null;
+        }
+      }
+
       const { data: roadshow, error: roadshowError } = await supabase
         .from('roadshow_stops')
         .insert({
           user_id: user.id,
           quote_id: quoteId,
+          opportunity_id: opportunityId,
           city: event.city || 'Ville à définir',
           venue: event.venue || 'Lieu à définir',
           address: event.address || '',

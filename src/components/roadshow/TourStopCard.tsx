@@ -70,51 +70,51 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
   return (
     <>
       <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader className="pb-2 sm:pb-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <CardTitle className="flex min-w-0 items-center gap-2 text-base sm:text-lg">
-                <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600 flex-shrink-0" />
-                <span className="min-w-0 truncate">{stop.city} - {stop.venue}</span>
-              </CardTitle>
-              <Badge className={`${getStatusColor(stop.status)} w-fit`}>
-                {getStatusLabel(stop.status)}
-              </Badge>
-            </div>
-          </CardHeader>
-        <CardContent className="pt-2">
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4 mb-4">
+        <CardHeader className="pb-2 sm:pb-4 px-3 sm:px-6">
+          <div className="flex items-start justify-between gap-2">
+            <CardTitle className="flex min-w-0 items-center gap-2 text-base sm:text-lg">
+              <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
+              <span className="min-w-0 break-words">{stop.city} - {stop.venue}</span>
+            </CardTitle>
+            <Badge className={`${getStatusColor(stop.status)} flex-shrink-0`}>
+              {getStatusLabel(stop.status)}
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-2 px-3 sm:px-6">
+          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4 mb-4">
             <div className="flex items-center space-x-2">
               <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-              <span className="text-xs sm:text-sm truncate">{new Date(stop.date).toLocaleDateString()}</span>
+              <span className="text-xs sm:text-sm">{new Date(stop.date).toLocaleDateString('fr-FR')}</span>
             </div>
             <div className="flex items-center space-x-2">
               <Clock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
               <span className="text-xs sm:text-sm">{stop.time || '-'}</span>
             </div>
-            <div className="flex items-center space-x-2 col-span-2 sm:col-span-1">
+            <div className="flex items-center space-x-2">
               <Users className="h-4 w-4 text-muted-foreground flex-shrink-0" />
               <span className="text-xs sm:text-sm">Capacité: {stop.capacity}</span>
             </div>
           </div>
 
           {stop.address && (
-            <div className="mb-4">
+            <div className="mb-3 sm:mb-4">
               <p className="text-xs sm:text-sm text-muted-foreground mb-1">Adresse:</p>
-              <p className="text-xs sm:text-sm">{stop.address}</p>
+              <p className="text-xs sm:text-sm break-words">{stop.address}</p>
             </div>
           )}
 
           {stop.artistLineup.length > 0 && (
-            <div className="mb-4">
+            <div className="mb-3 sm:mb-4">
               <p className="text-xs sm:text-sm text-muted-foreground mb-2">Casting:</p>
-              <div className="flex flex-wrap gap-1 sm:gap-2">
+              <div className="flex flex-wrap gap-1.5">
                 {stop.artistLineup.map((artistInfo) => {
                   const user = getUserById(artistInfo.userId);
                   return (
                     <Badge 
                       key={artistInfo.userId} 
                       variant={artistInfo.confirmed ? "default" : "secondary"}
-                      className="text-xs"
+                      className="text-xs px-2 py-0.5"
                     >
                       {user?.name} {artistInfo.confirmed ? '✓' : '?'}
                     </Badge>
@@ -125,19 +125,19 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
           )}
 
           {stop.notes && (
-            <div className="mb-4">
+            <div className="mb-3 sm:mb-4">
               <p className="text-xs sm:text-sm text-muted-foreground mb-1">Notes:</p>
-              <p className="text-xs sm:text-sm line-clamp-2">{stop.notes}</p>
+              <p className="text-xs sm:text-sm line-clamp-2 break-words">{stop.notes}</p>
             </div>
           )}
 
-          <div className="flex flex-col gap-3 pt-4 border-t sm:flex-row sm:items-center sm:justify-between">
-            <div className="text-xs sm:text-sm text-muted-foreground">
+          <div className="flex flex-col gap-3 pt-3 sm:pt-4 border-t sm:flex-row sm:items-center sm:justify-between">
+            <div className="text-xs text-muted-foreground">
               Créé par: {creator?.name || 'Utilisateur inconnu'}
             </div>
 
             {/* Mobile: icônes compactes */}
-            <div className="sm:hidden grid grid-cols-4 gap-2">
+            <div className="sm:hidden flex justify-end gap-2">
               <Button
                 variant="outline-subtle"
                 size="icon-sm"

@@ -79,18 +79,17 @@ export const RoadShow: React.FC = () => {
   }, [tourStops, searchTerm, filterArtist, filterUser, sortBy, artists]);
 
   return (
-    <div className="space-y-6 p-4 lg:p-0">
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+    <div className="space-y-4 sm:space-y-6 px-3 sm:px-4 lg:px-0 pb-20 sm:pb-0">
+      <div className="flex flex-col gap-3 sm:gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Feuille de Route</h1>
-          <p className="text-muted-foreground mt-2">Gérez votre tournée et planifiez vos dates</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Feuille de Route</h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-1 sm:mt-2">Gérez votre tournée et planifiez vos dates</p>
         </div>
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogTrigger asChild>
-            <Button className="w-full lg:w-auto">
+            <Button className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">Nouvelle Étape</span>
-              <span className="sm:hidden">Nouvelle</span>
+              Nouvelle
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
