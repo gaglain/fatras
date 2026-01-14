@@ -289,17 +289,17 @@ Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleT
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <span className="text-lg sm:text-xl">Aperçu - {stop.city}</span>
-            <div className="flex space-x-2">
-              <Button variant="outline" size="sm" onClick={handlePrint}>
-                <Printer className="h-4 w-4 mr-2" />
+      <DialogContent className="max-w-4xl w-[95vw] sm:w-full max-h-[85vh] sm:max-h-[90vh] overflow-y-auto p-3 sm:p-6">
+        <DialogHeader className="pb-2 sm:pb-4">
+          <DialogTitle className="flex flex-col gap-3">
+            <span className="text-base sm:text-xl font-semibold">Aperçu - {stop.city}</span>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={handlePrint} className="flex-1 sm:flex-none h-9 text-xs sm:text-sm">
+                <Printer className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">Imprimer</span>
               </Button>
-              <Button variant="outline" size="sm" onClick={handleDownloadPDF}>
-                <Download className="h-4 w-4 mr-2" />
+              <Button variant="outline" size="sm" onClick={handleDownloadPDF} className="flex-1 sm:flex-none h-9 text-xs sm:text-sm">
+                <Download className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">Télécharger</span>
               </Button>
             </div>
@@ -307,24 +307,24 @@ Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleT
         </DialogHeader>
 
         <Tabs defaultValue="roadmap" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="roadmap">
-              <FileText className="h-4 w-4 mr-2" />
-              Feuille de Route
+          <TabsList className="grid w-full grid-cols-2 h-10">
+            <TabsTrigger value="roadmap" className="text-xs sm:text-sm px-2">
+              <FileText className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <span className="hidden xs:inline">Feuille de</span> Route
             </TabsTrigger>
-            <TabsTrigger value="setlist">
-              <Music className="h-4 w-4 mr-2" />
+            <TabsTrigger value="setlist" className="text-xs sm:text-sm px-2">
+              <Music className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
               Setlist
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="roadmap" className="mt-4">
-        <div className="space-y-6 p-2 sm:p-4 bg-white rounded-lg">
+          <TabsContent value="roadmap" className="mt-3 sm:mt-4">
+        <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 bg-white rounded-lg">
           {/* En-tête */}
-          <div className="text-center border-b pb-4">
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">FEUILLE DE ROUTE</h1>
-            <h2 className="text-lg sm:text-xl text-gray-700 mt-2">{stop.city} - {stop.venue}</h2>
-            <div className={`inline-block px-3 py-1 rounded-full text-sm font-medium mt-2 ${getStatusColor(stop.status)}`}>
+          <div className="text-center border-b pb-3 sm:pb-4">
+            <h1 className="text-lg sm:text-2xl font-bold text-gray-900">FEUILLE DE ROUTE</h1>
+            <h2 className="text-sm sm:text-xl text-gray-700 mt-1 sm:mt-2">{stop.city} - {stop.venue}</h2>
+            <div className={`inline-block px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium mt-2 ${getStatusColor(stop.status)}`}>
               {stop.status === 'confirmed' ? 'CONFIRMÉ' : 
                stop.status === 'pending' ? 'EN ATTENTE' : 
                'ANNULÉ'}
@@ -332,146 +332,163 @@ Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleT
           </div>
 
           {/* Informations principales */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-2 flex items-center">
-                  <MapPin className="h-4 w-4 mr-2 text-purple-600" />
-                  Lieu et Adresse
-                </h3>
-                <p className="text-gray-700">{stop.venue || 'Non défini'}</p>
-                <p className="text-gray-600 text-sm">{stop.address || 'Adresse non définie'}</p>
-              </div>
+          <div className="grid grid-cols-1 gap-3 sm:gap-4">
+            {/* Lieu */}
+            <div className="bg-gray-50 p-3 rounded-lg">
+              <h3 className="font-semibold text-gray-900 mb-1 sm:mb-2 flex items-center text-sm sm:text-base">
+                <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-2 text-purple-600 flex-shrink-0" />
+                Lieu et Adresse
+              </h3>
+              <p className="text-gray-700 text-sm sm:text-base">{stop.venue || 'Non défini'}</p>
+              <p className="text-gray-600 text-xs sm:text-sm">{stop.address || 'Adresse non définie'}</p>
+            </div>
 
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-2 flex items-center">
-                  <Calendar className="h-4 w-4 mr-2 text-purple-600" />
-                  Date et Horaires
-                </h3>
-                <p className="text-gray-700">{new Date(stop.date).toLocaleDateString('fr-FR', { 
-                  weekday: 'long', 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                })}</p>
-                <p className="text-gray-600 text-sm">Spectacle: {stop.time || 'Non défini'}</p>
-                <p className="text-gray-600 text-sm">Arrivée équipe: {stop.checkInTime || 'Non défini'}</p>
-                <p className="text-gray-600 text-sm">Départ: {stop.departureTime || 'Non défini'}</p>
+            {/* Date et Horaires */}
+            <div className="bg-gray-50 p-3 rounded-lg">
+              <h3 className="font-semibold text-gray-900 mb-1 sm:mb-2 flex items-center text-sm sm:text-base">
+                <Calendar className="h-3 w-3 sm:h-4 sm:w-4 mr-2 text-purple-600 flex-shrink-0" />
+                Date et Horaires
+              </h3>
+              <p className="text-gray-700 text-sm sm:text-base">{new Date(stop.date).toLocaleDateString('fr-FR', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              })}</p>
+              <div className="grid grid-cols-3 gap-2 mt-2">
+                <div className="text-center">
+                  <p className="text-[10px] sm:text-xs text-gray-500 uppercase">Spectacle</p>
+                  <p className="text-xs sm:text-sm font-medium text-gray-700">{stop.time || '-'}</p>
+                </div>
+                <div className="text-center border-x border-gray-200">
+                  <p className="text-[10px] sm:text-xs text-gray-500 uppercase">Arrivée</p>
+                  <p className="text-xs sm:text-sm font-medium text-gray-700">{stop.checkInTime || '-'}</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-[10px] sm:text-xs text-gray-500 uppercase">Départ</p>
+                  <p className="text-xs sm:text-sm font-medium text-gray-700">{stop.departureTime || '-'}</p>
+                </div>
               </div>
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-2 flex items-center">
-                  <Users className="h-4 w-4 mr-2 text-purple-600" />
+            {/* Capacité et Contact - 2 cols sur mobile */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <h3 className="font-semibold text-gray-900 mb-1 flex items-center text-xs sm:text-sm">
+                  <Users className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 text-purple-600 flex-shrink-0" />
                   Capacité
                 </h3>
-                <p className="text-gray-700">Capacité totale: {stop.capacity || 0} personnes</p>
-                <p className="text-gray-600 text-sm">Billets disponibles: {stop.ticketsAvailable || 'Non défini'}</p>
+                <p className="text-lg sm:text-xl font-bold text-gray-900">{stop.capacity || 0}</p>
+                <p className="text-[10px] sm:text-xs text-gray-500">personnes</p>
+                {stop.ticketsAvailable && (
+                  <p className="text-[10px] sm:text-xs text-gray-600 mt-1">{stop.ticketsAvailable} billets</p>
+                )}
               </div>
 
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-2">📞 Contact Local</h3>
-                <p className="text-gray-700">{stop.localContact || 'Non défini'}</p>
-                <p className="text-gray-600 text-sm">{stop.localContactPhone || 'Téléphone non défini'}</p>
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <h3 className="font-semibold text-gray-900 mb-1 flex items-center text-xs sm:text-sm">
+                  <span className="mr-1 sm:mr-2">📞</span>
+                  Contact
+                </h3>
+                <p className="text-xs sm:text-sm text-gray-700 truncate">{stop.localContact || 'Non défini'}</p>
+                <p className="text-[10px] sm:text-xs text-gray-600 truncate">{stop.localContactPhone || '-'}</p>
               </div>
             </div>
           </div>
 
           {/* Casting */}
           <div>
-            <h3 className="font-semibold text-gray-900 mb-3">🎭 Casting</h3>
+            <h3 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base">🎭 Casting</h3>
             {stop.artistLineup.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div className="flex flex-wrap gap-2">
                 {stop.artistLineup.map((artist, index) => {
                   const user = getUserById(artist.userId);
                   return (
-                    <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                    <div key={index} className="flex items-center gap-2 px-2 py-1.5 bg-gray-50 rounded-full text-xs sm:text-sm">
                       <span className="text-gray-700">{user?.name || 'Artiste inconnu'}</span>
-                      <span className={`text-xs px-2 py-1 rounded ${artist.confirmed ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                        {artist.confirmed ? 'Confirmé' : 'En attente'}
-                      </span>
+                      <span className={`w-2 h-2 rounded-full flex-shrink-0 ${artist.confirmed ? 'bg-green-500' : 'bg-yellow-500'}`} />
                     </div>
                   );
                 })}
               </div>
             ) : (
-              <p className="text-gray-500 italic">Aucun artiste assigné</p>
+              <p className="text-gray-500 italic text-sm">Aucun artiste assigné</p>
             )}
           </div>
 
           {/* Hébergement et Transport */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">🏨 Hébergement</h3>
-              <p className="text-gray-700">{stop.accommodation || 'Non défini'}</p>
-              <p className="text-gray-600 text-sm">{stop.accommodationAddress || 'Adresse non définie'}</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-gray-50 p-3 rounded-lg">
+              <h3 className="font-semibold text-gray-900 mb-1 text-xs sm:text-sm">🏨 Hébergement</h3>
+              <p className="text-xs sm:text-sm text-gray-700 truncate">{stop.accommodation || 'Non défini'}</p>
+              <p className="text-[10px] sm:text-xs text-gray-600 truncate">{stop.accommodationAddress || '-'}</p>
             </div>
             
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">🚐 Transport</h3>
-              <p className="text-gray-700">{stop.transport || 'Non défini'}</p>
+            <div className="bg-gray-50 p-3 rounded-lg">
+              <h3 className="font-semibold text-gray-900 mb-1 text-xs sm:text-sm">🚐 Transport</h3>
+              <p className="text-xs sm:text-sm text-gray-700">{stop.transport || 'Non défini'}</p>
             </div>
           </div>
 
           {/* Notes */}
-          <div>
-            <h3 className="font-semibold text-gray-900 mb-2">📝 Notes Importantes</h3>
-            <p className="text-gray-700 bg-yellow-50 p-3 rounded">{stop.notes || 'Aucune note spécifique'}</p>
-          </div>
+          {stop.notes && (
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-1 text-sm sm:text-base">📝 Notes</h3>
+              <p className="text-xs sm:text-sm text-gray-700 bg-yellow-50 p-2 sm:p-3 rounded">{stop.notes}</p>
+            </div>
+          )}
 
           {/* Équipe technique */}
-          <div>
-            <h3 className="font-semibold text-gray-900 mb-3">🎵 Équipe Technique</h3>
-            {stop.crew && stop.crew.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {stop.crew && stop.crew.length > 0 && (
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base">🎵 Équipe Technique</h3>
+              <div className="flex flex-wrap gap-2">
                 {stop.crew.map((crewId) => {
                   const user = getUserById(crewId);
                   return (
-                    <div key={crewId} className="p-2 bg-gray-50 rounded">
-                      <span className="text-gray-700">{user?.name || 'Équipe inconnue'}</span>
-                    </div>
+                    <span key={crewId} className="px-2 py-1 bg-gray-100 rounded-full text-xs sm:text-sm text-gray-700">
+                      {user?.name || 'Équipe inconnue'}
+                    </span>
                   );
                 })}
               </div>
-            ) : (
-              <p className="text-gray-500 italic">Aucune équipe assignée</p>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Notes de frais */}
-          <div className="border-t pt-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold text-gray-900 flex items-center">
-                <FileText className="h-4 w-4 mr-2 text-purple-600" />
-                Notes de Frais ({expenses.length})
+          <div className="border-t pt-3 sm:pt-4">
+            <div className="flex items-center justify-between mb-2 sm:mb-3">
+              <h3 className="font-semibold text-gray-900 flex items-center text-sm sm:text-base">
+                <FileText className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 text-purple-600" />
+                Frais ({expenses.length})
               </h3>
               <Button 
                 size="sm" 
                 variant="outline" 
                 onClick={() => setShowAddExpense(!showAddExpense)}
+                className="h-7 sm:h-8 text-xs sm:text-sm px-2 sm:px-3"
               >
-                {showAddExpense ? <X className="h-4 w-4 mr-1" /> : <Plus className="h-4 w-4 mr-1" />}
-                {showAddExpense ? 'Annuler' : 'Ajouter'}
+                {showAddExpense ? <X className="h-3 w-3 sm:h-4 sm:w-4" /> : <Plus className="h-3 w-3 sm:h-4 sm:w-4" />}
+                <span className="ml-1 hidden sm:inline">{showAddExpense ? 'Annuler' : 'Ajouter'}</span>
               </Button>
             </div>
 
             {/* Add expense form */}
             {showAddExpense && (
-              <div className="bg-gray-50 p-4 rounded-lg mb-4 space-y-3">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="bg-gray-50 p-3 sm:p-4 rounded-lg mb-3 space-y-2 sm:space-y-3">
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
                   <div>
-                    <Label htmlFor="expense-title" className="text-sm">Titre *</Label>
+                    <Label htmlFor="expense-title" className="text-xs sm:text-sm">Titre *</Label>
                     <Input
                       id="expense-title"
                       value={expenseTitle}
                       onChange={(e) => setExpenseTitle(e.target.value)}
-                      placeholder="Ex: Repas équipe"
-                      className="bg-white"
+                      placeholder="Ex: Repas"
+                      className="bg-white h-8 sm:h-10 text-sm"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="expense-amount" className="text-sm">Montant (€)</Label>
+                    <Label htmlFor="expense-amount" className="text-xs sm:text-sm">Montant (€)</Label>
                     <Input
                       id="expense-amount"
                       type="number"
@@ -479,39 +496,39 @@ Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleT
                       value={expenseAmount}
                       onChange={(e) => setExpenseAmount(e.target.value)}
                       placeholder="0.00"
-                      className="bg-white"
+                      className="bg-white h-8 sm:h-10 text-sm"
                     />
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="expense-description" className="text-sm">Description</Label>
+                  <Label htmlFor="expense-description" className="text-xs sm:text-sm">Description</Label>
                   <Textarea
                     id="expense-description"
                     value={expenseDescription}
                     onChange={(e) => setExpenseDescription(e.target.value)}
                     placeholder="Détails..."
                     rows={2}
-                    className="bg-white"
+                    className="bg-white text-sm"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="expense-file" className="text-sm">Fichier (Image ou PDF) *</Label>
+                  <Label htmlFor="expense-file" className="text-xs sm:text-sm">Fichier *</Label>
                   <Input
                     id="expense-file"
                     type="file"
                     accept="image/*,.pdf"
                     onChange={handleFileSelect}
-                    className="bg-white"
+                    className="bg-white h-8 sm:h-10 text-xs sm:text-sm"
                   />
                   {previewUrl && (
                     <img 
                       src={previewUrl} 
                       alt="Aperçu" 
-                      className="mt-2 max-h-32 rounded border"
+                      className="mt-2 max-h-20 sm:max-h-32 rounded border"
                     />
                   )}
                   {expenseFile && !previewUrl && (
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       📄 {expenseFile.name}
                     </p>
                   )}
@@ -519,20 +536,20 @@ Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleT
                 <Button 
                   onClick={handleAddExpense}
                   disabled={!expenseTitle || !expenseFile || expenseLoading}
-                  className="w-full sm:w-auto"
+                  className="w-full h-8 sm:h-10 text-xs sm:text-sm"
                 >
-                  {expenseLoading ? 'Ajout...' : 'Ajouter la note de frais'}
+                  {expenseLoading ? 'Ajout...' : 'Ajouter'}
                 </Button>
               </div>
             )}
 
             {/* Expenses list with visual preview */}
             {expenses.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                 {expenses.map((expense) => (
                   <div key={expense.id} className="bg-gray-50 rounded-lg overflow-hidden border">
                     {/* Visual preview */}
-                    <div className="aspect-video bg-gray-200 relative overflow-hidden">
+                    <div className="aspect-square bg-gray-200 relative overflow-hidden">
                       {expense.file_type === 'image' ? (
                         <img 
                           src={expense.file_url} 
@@ -541,36 +558,33 @@ Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleT
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                          <FileText className="h-12 w-12 text-gray-400" />
-                          <span className="absolute bottom-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded">PDF</span>
+                          <FileText className="h-8 w-8 sm:h-12 sm:w-12 text-gray-400" />
+                          <span className="absolute bottom-1 left-1 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded">PDF</span>
                         </div>
                       )}
                       {/* Overlay actions */}
-                      <div className="absolute top-2 right-2 flex gap-1">
+                      <div className="absolute top-1 right-1 flex gap-0.5">
                         <a 
                           href={expense.file_url} 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="p-1.5 bg-white/90 rounded-full hover:bg-white transition-colors"
+                          className="p-1 bg-white/90 rounded-full hover:bg-white transition-colors"
                         >
-                          <Eye className="h-4 w-4 text-gray-700" />
+                          <Eye className="h-3 w-3 sm:h-4 sm:w-4 text-gray-700" />
                         </a>
                         <button 
                           onClick={() => handleDeleteExpense(expense)}
-                          className="p-1.5 bg-white/90 rounded-full hover:bg-red-100 transition-colors"
+                          className="p-1 bg-white/90 rounded-full hover:bg-red-100 transition-colors"
                         >
-                          <Trash2 className="h-4 w-4 text-red-600" />
+                          <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 text-red-600" />
                         </button>
                       </div>
                     </div>
                     {/* Info */}
-                    <div className="p-3">
-                      <p className="font-medium text-gray-900 truncate">{expense.title}</p>
-                      {expense.description && (
-                        <p className="text-sm text-gray-600 truncate">{expense.description}</p>
-                      )}
+                    <div className="p-2">
+                      <p className="font-medium text-gray-900 truncate text-xs sm:text-sm">{expense.title}</p>
                       {expense.amount && (
-                        <p className="text-sm font-semibold text-purple-600 mt-1">
+                        <p className="text-xs sm:text-sm font-semibold text-purple-600">
                           {expense.amount}€
                         </p>
                       )}
@@ -579,10 +593,9 @@ Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleT
                 ))}
               </div>
             ) : (
-              <div className="text-center py-6 text-gray-500 bg-gray-50 rounded-lg">
-                <FileText className="h-10 w-10 mx-auto mb-2 opacity-50" />
-                <p>Aucune note de frais</p>
-                <p className="text-sm">Cliquez sur "Ajouter" pour créer une note de frais</p>
+              <div className="text-center py-4 text-gray-500 bg-gray-50 rounded-lg">
+                <FileText className="h-6 w-6 sm:h-10 sm:w-10 mx-auto mb-1 opacity-50" />
+                <p className="text-xs sm:text-sm">Aucune note de frais</p>
               </div>
             )}
           </div>
