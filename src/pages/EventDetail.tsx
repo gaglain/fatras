@@ -159,7 +159,23 @@ export const EventDetail: React.FC = () => {
         if (ownerData) setOwner(ownerData);
       }
 
-      // Fetch linked contacts via contact_events
+      // Fetch linked contacts - from BOTH contact_id field AND contact_events junction table
+      let allContacts: LinkedContact[] = [];
+      
+      // 1. Direct contact from contact_id field
+      if (data.contact_id) {
+        const { data: directContact } = await supabase
+          .from('contacts')
+          .select('id, first_name, last_name, email, phone, company, role')
+          .eq('id', data.contact_id)
+          .single();
+        
+        if (directContact) {
+          allContacts.push(directContact);
+        }
+      }
+      
+      // 2. Contacts from junction table contact_events
       const { data: contactLinks } = await supabase
         .from('contact_events')
         .select('contact_id')
@@ -172,8 +188,18 @@ export const EventDetail: React.FC = () => {
           .select('id, first_name, last_name, email, phone, company, role')
           .in('id', contactIds);
         
-        if (contacts) setLinkedContacts(contacts);
+        if (contacts) {
+          // Dedupe
+          const existingIds = new Set(allContacts.map(c => c.id));
+          contacts.forEach(c => {
+            if (!existingIds.has(c.id)) {
+              allContacts.push(c);
+            }
+          });
+        }
       }
+      
+      setLinkedContacts(allContacts);
 
       // Fetch linked opportunities (directly via event_id or via opportunity_events)
       const { data: directOpps } = await supabase
