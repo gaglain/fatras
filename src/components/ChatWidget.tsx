@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MessageSquare, Send, Hash, Plus } from 'lucide-react';
+import { MessageSquare, Send, Hash, Plus, Archive } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useMessaging } from '@/hooks/useMessaging';
 import { useAuth } from '@/hooks/useAuth';
@@ -41,7 +41,8 @@ export const ChatWidget: React.FC = () => {
     ensureMembership,
     sendMessage, 
     markChannelAsRead,
-    createChannel
+    createChannel,
+    archiveChannel
   } = useMessaging();
 
   // Handler for external chat open requests (from roadshow, etc.)
@@ -260,7 +261,24 @@ export const ChatWidget: React.FC = () => {
                 </SelectContent>
               </Select>
               
-              <div className="flex gap-1 flex-wrap">
+              <div className="flex gap-1 flex-wrap items-center">
+                {/* Archive current channel button */}
+                {selectedChannel && currentChannel && currentChannel.type === 'public' && !currentChannel.roadshow_id && (
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    className="shrink-0 h-8 px-2 text-xs text-primary-foreground hover:bg-primary-foreground/20"
+                    onClick={async () => {
+                      if (confirm(`Archiver le canal "${getChannelDisplayName(currentChannel)}" ?`)) {
+                        await archiveChannel(selectedChannel);
+                        setSelectedChannel(channels.find(c => c.id !== selectedChannel)?.id || '');
+                      }
+                    }}
+                    title="Archiver ce canal"
+                  >
+                    <Archive className="h-3 w-3" />
+                  </Button>
+                )}
                 <ChannelManager onChannelCreated={(channelId) => setSelectedChannel(channelId)} />
                 <DirectMessageManager
                   onChannelCreated={(channelId) => setSelectedChannel(channelId)}
