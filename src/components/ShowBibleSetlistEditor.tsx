@@ -354,56 +354,57 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <h4 className="text-xl font-semibold">{selectedSetlist.title}</h4>
-                  {selectedSetlist.description && (
-                    <p className="text-sm text-muted-foreground mt-1">{selectedSetlist.description}</p>
-                  )}
-                  <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground flex-wrap">
-                    <span>{selectedSetlist.songs?.length || 0} chanson(s)</span>
-                    {selectedSetlist.songs && selectedSetlist.songs.length > 0 && (
-                      <span className="font-medium">
-                        Durée totale: {calculateTotalDuration(selectedSetlist.songs)}
-                      </span>
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-xl font-semibold break-words">{selectedSetlist.title}</h4>
+                    {selectedSetlist.description && (
+                      <p className="text-sm text-muted-foreground mt-1">{selectedSetlist.description}</p>
                     )}
-                    {selectedSetlist.sacem_program_number && (
-                      <Badge variant="secondary" className="text-xs">
-                        SACEM: {selectedSetlist.sacem_program_number}
-                      </Badge>
-                    )}
+                    <div className="flex items-center gap-2 sm:gap-4 mt-2 text-sm text-muted-foreground flex-wrap">
+                      <span>{selectedSetlist.songs?.length || 0} chanson(s)</span>
+                      {selectedSetlist.songs && selectedSetlist.songs.length > 0 && (
+                        <span className="font-medium">
+                          Durée: {calculateTotalDuration(selectedSetlist.songs)}
+                        </span>
+                      )}
+                      {selectedSetlist.sacem_program_number && (
+                        <Badge variant="secondary" className="text-xs">
+                          SACEM: {selectedSetlist.sacem_program_number}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => {
-                      setNewSetlistData({
-                        title: selectedSetlist.title,
-                        description: selectedSetlist.description || '',
-                        artist_id: selectedSetlist.artist_id || '',
-                        sacem_program_number: selectedSetlist.sacem_program_number || ''
-                      });
-                      setIsEditSetlistDialogOpen(true);
-                    }}
-                  >
-                    <Edit className="h-4 w-4 mr-2" />
-                    Modifier
-                  </Button>
-                  <Dialog open={isAddSongDialogOpen} onOpenChange={(open) => {
-                    setIsAddSongDialogOpen(open);
-                    if (!open) {
-                      resetNewSongData();
-                      setLibrarySearchQuery('');
-                    }
-                  }}>
-                    <DialogTrigger asChild>
-                      <Button size="sm">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Ajouter
-                      </Button>
-                    </DialogTrigger>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => {
+                        setNewSetlistData({
+                          title: selectedSetlist.title,
+                          description: selectedSetlist.description || '',
+                          artist_id: selectedSetlist.artist_id || '',
+                          sacem_program_number: selectedSetlist.sacem_program_number || ''
+                        });
+                        setIsEditSetlistDialogOpen(true);
+                      }}
+                    >
+                      <Edit className="h-4 w-4 sm:mr-2" />
+                      <span className="hidden sm:inline">Modifier</span>
+                    </Button>
+                    <Dialog open={isAddSongDialogOpen} onOpenChange={(open) => {
+                      setIsAddSongDialogOpen(open);
+                      if (!open) {
+                        resetNewSongData();
+                        setLibrarySearchQuery('');
+                      }
+                    }}>
+                      <DialogTrigger asChild>
+                        <Button size="sm">
+                          <Plus className="h-4 w-4 sm:mr-2" />
+                          <span className="hidden sm:inline">Ajouter</span>
+                        </Button>
+                      </DialogTrigger>
                     <DialogContent className="max-w-2xl">
                     <DialogHeader>
                       <DialogTitle>Ajouter une chanson</DialogTitle>
@@ -550,6 +551,7 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
                     </Tabs>
                   </DialogContent>
                 </Dialog>
+              </div>
               </div>
               </div>
 
