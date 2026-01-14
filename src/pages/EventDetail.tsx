@@ -32,6 +32,7 @@ import { EventDashboard } from '@/components/EventDashboard';
 import { EventDialog } from '@/components/events/EventDialog';
 import { ContactEventManager } from '@/components/contacts/ContactEventManager';
 import { OpportunityEventManager } from '@/components/events/OpportunityEventManager';
+import { TaskEventManager } from '@/components/events/TaskEventManager';
 import { Event } from '@/types/event.types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -132,6 +133,7 @@ export const EventDetail: React.FC = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [contactManagerOpen, setContactManagerOpen] = useState(false);
   const [opportunityManagerOpen, setOpportunityManagerOpen] = useState(false);
+  const [taskManagerOpen, setTaskManagerOpen] = useState(false);
 
   const fetchEvent = async () => {
     if (!id || !user?.id) return;
@@ -641,11 +643,15 @@ export const EventDetail: React.FC = () => {
 
         <TabsContent value="tasks" className="space-y-4">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <CheckSquare className="h-5 w-5" />
                 Tâches liées ({linkedTasks.length})
               </CardTitle>
+              <Button onClick={() => setTaskManagerOpen(true)} size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                Ajouter
+              </Button>
             </CardHeader>
             <CardContent>
               {linkedTasks.length === 0 ? (
@@ -729,6 +735,18 @@ export const EventDetail: React.FC = () => {
         isOpen={opportunityManagerOpen}
         onClose={() => {
           setOpportunityManagerOpen(false);
+          fetchEvent();
+        }}
+        eventId={event.id}
+        eventTitle={event.title}
+        onUpdate={fetchEvent}
+      />
+
+      {/* Task Manager */}
+      <TaskEventManager
+        isOpen={taskManagerOpen}
+        onClose={() => {
+          setTaskManagerOpen(false);
           fetchEvent();
         }}
         eventId={event.id}
