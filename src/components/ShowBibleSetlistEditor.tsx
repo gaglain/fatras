@@ -69,6 +69,7 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
   
   const [selectedSetlist, setSelectedSetlist] = useState<Setlist | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditSetlistDialogOpen, setIsEditSetlistDialogOpen] = useState(false);
   const [isAddSongDialogOpen, setIsAddSongDialogOpen] = useState(false);
   const [editingSong, setEditingSong] = useState<SetlistSong | null>(null);
   const [artists, setArtists] = useState<Artist[]>([]);
@@ -373,20 +374,37 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
                     )}
                   </div>
                 </div>
-                <Dialog open={isAddSongDialogOpen} onOpenChange={(open) => {
-                  setIsAddSongDialogOpen(open);
-                  if (!open) {
-                    resetNewSongData();
-                    setLibrarySearchQuery('');
-                  }
-                }}>
-                  <DialogTrigger asChild>
-                    <Button size="sm">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Ajouter
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-2xl">
+                <div className="flex items-center gap-2">
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => {
+                      setNewSetlistData({
+                        title: selectedSetlist.title,
+                        description: selectedSetlist.description || '',
+                        artist_id: selectedSetlist.artist_id || '',
+                        sacem_program_number: selectedSetlist.sacem_program_number || ''
+                      });
+                      setIsEditSetlistDialogOpen(true);
+                    }}
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Modifier
+                  </Button>
+                  <Dialog open={isAddSongDialogOpen} onOpenChange={(open) => {
+                    setIsAddSongDialogOpen(open);
+                    if (!open) {
+                      resetNewSongData();
+                      setLibrarySearchQuery('');
+                    }
+                  }}>
+                    <DialogTrigger asChild>
+                      <Button size="sm">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Ajouter
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl">
                     <DialogHeader>
                       <DialogTitle>Ajouter une chanson</DialogTitle>
                     </DialogHeader>
@@ -532,6 +550,7 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
                     </Tabs>
                   </DialogContent>
                 </Dialog>
+              </div>
               </div>
 
               <DragDropContext onDragEnd={handleDragEnd}>
@@ -708,6 +727,58 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
           )}
         </Card>
       </div>
+
+      {/* Edit Setlist Dialog */}
+      <Dialog open={isEditSetlistDialogOpen} onOpenChange={setIsEditSetlistDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Modifier la setlist</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Titre</Label>
+              <Input
+                value={newSetlistData.title}
+                onChange={(e) => setNewSetlistData(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="Nom de la setlist"
+              />
+            </div>
+            <div>
+              <Label>Description</Label>
+              <Textarea
+                value={newSetlistData.description}
+                onChange={(e) => setNewSetlistData(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Description..."
+              />
+            </div>
+            <div>
+              <Label>N° Programme SACEM</Label>
+              <Input
+                value={newSetlistData.sacem_program_number}
+                onChange={(e) => setNewSetlistData(prev => ({ ...prev, sacem_program_number: e.target.value }))}
+                placeholder="Numéro de programme SACEM"
+              />
+            </div>
+            <Button 
+              onClick={async () => {
+                if (selectedSetlist) {
+                  const result = await updateSetlist(selectedSetlist.id, {
+                    title: newSetlistData.title,
+                    description: newSetlistData.description || undefined,
+                    sacem_program_number: newSetlistData.sacem_program_number || undefined
+                  });
+                  if (result) {
+                    setIsEditSetlistDialogOpen(false);
+                  }
+                }
+              }} 
+              className="w-full"
+            >
+              Enregistrer
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
