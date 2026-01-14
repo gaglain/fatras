@@ -208,7 +208,7 @@ export const ShowBible: React.FC = () => {
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold" style={{ color: 'var(--app-text, #18181b)' }}>
-            Bible du Spectacle
+            Ressources
           </h1>
           <p className="mt-2" style={{ color: 'var(--app-text, #666666)' }}>
             Centralisez tous vos documents, médias et ressources collaboratifs

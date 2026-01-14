@@ -40,6 +40,7 @@ export interface LibrarySong {
   tonality: string | null;
   bpm: number | null;
   lyrics: string | null;
+  sacem_number: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -216,6 +217,7 @@ export const useShowBibleSetlists = (artistId?: string) => {
     tonality?: string; 
     bpm?: number; 
     lyrics?: string;
+    sacem_number?: string;
     artist_id?: string;
   }): Promise<LibrarySong | null> => {
     if (!user) return null;
@@ -235,12 +237,13 @@ export const useShowBibleSetlists = (artistId?: string) => {
 
       if (existing) {
         // Update existing song with new data if provided
-        const updates: Partial<{ duration: string; notes: string; tonality: string; bpm: number; lyrics: string }> = {};
+        const updates: Partial<{ duration: string; notes: string; tonality: string; bpm: number; lyrics: string; sacem_number: string }> = {};
         if (song.duration) updates.duration = song.duration;
         if (song.notes) updates.notes = song.notes;
         if (song.tonality) updates.tonality = song.tonality;
         if (song.bpm) updates.bpm = song.bpm;
         if (song.lyrics) updates.lyrics = song.lyrics;
+        if (song.sacem_number) updates.sacem_number = song.sacem_number;
 
         if (Object.keys(updates).length > 0) {
           await supabase
@@ -264,7 +267,8 @@ export const useShowBibleSetlists = (artistId?: string) => {
           notes: song.notes || null,
           tonality: song.tonality || null,
           bpm: song.bpm || null,
-          lyrics: song.lyrics || null
+          lyrics: song.lyrics || null,
+          sacem_number: song.sacem_number || null
         }])
         .select()
         .single();
@@ -291,6 +295,7 @@ export const useShowBibleSetlists = (artistId?: string) => {
       tonality?: string;
       bpm?: number;
       lyrics?: string;
+      sacem_number?: string;
       library_song_id?: string;
     },
     setlistArtistId?: string
@@ -400,6 +405,7 @@ export const useShowBibleSetlists = (artistId?: string) => {
     tonality?: string;
     bpm?: number;
     lyrics?: string;
+    sacem_number?: string;
   }) => {
     try {
       const { error } = await supabase
