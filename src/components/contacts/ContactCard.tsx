@@ -12,6 +12,7 @@ interface ContactCardProps {
   contact: Contact;
   onEdit: (contact: Contact) => void;
   onDelete: (id: string) => void;
+  onContact?: (contact: Contact, method: 'email' | 'phone') => void;
   isSelected?: boolean;
   onSelect?: (selected: boolean) => void;
   viewMode?: 'grid' | 'list';
@@ -21,6 +22,7 @@ export const ContactCard: React.FC<ContactCardProps> = ({
   contact, 
   onEdit, 
   onDelete,
+  onContact,
   isSelected = false,
   onSelect,
   viewMode = 'grid'
@@ -94,15 +96,33 @@ export const ContactCard: React.FC<ContactCardProps> = ({
                 <Eye className="h-4 w-4 mr-1" />
                 Visualiser
               </Button>
-              {contact.email && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={(e) => { e.stopPropagation(); window.location.href = `mailto:${contact.email}`; }}
-                >
-                  <MessageSquare className="h-4 w-4 mr-1" />
-                  Contacter
-                </Button>
+              {(contact.email || contact.phone) && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <MessageSquare className="h-4 w-4 mr-1" />
+                      Contacter
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                    {contact.email && (
+                      <DropdownMenuItem onClick={() => onContact?.(contact, 'email')}>
+                        <Mail className="h-4 w-4 mr-2" />
+                        Envoyer un email
+                      </DropdownMenuItem>
+                    )}
+                    {contact.phone && (
+                      <DropdownMenuItem onClick={() => onContact?.(contact, 'phone')}>
+                        <Phone className="h-4 w-4 mr-2" />
+                        Appeler ({contact.phone})
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               )}
             </div>
              <DropdownMenu>
@@ -200,16 +220,34 @@ export const ContactCard: React.FC<ContactCardProps> = ({
             <Eye className="h-4 w-4 mr-1" />
             Visualiser
           </Button>
-          {contact.email && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="flex-1"
-              onClick={(e) => { e.stopPropagation(); window.location.href = `mailto:${contact.email}`; }}
-            >
-              <MessageSquare className="h-4 w-4 mr-1" />
-              Contacter
-            </Button>
+          {(contact.email || contact.phone) && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <MessageSquare className="h-4 w-4 mr-1" />
+                  Contacter
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                {contact.email && (
+                  <DropdownMenuItem onClick={() => onContact?.(contact, 'email')}>
+                    <Mail className="h-4 w-4 mr-2" />
+                    Envoyer un email
+                  </DropdownMenuItem>
+                )}
+                {contact.phone && (
+                  <DropdownMenuItem onClick={() => onContact?.(contact, 'phone')}>
+                    <Phone className="h-4 w-4 mr-2" />
+                    Appeler ({contact.phone})
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </div>
         <div className="space-y-2">
