@@ -905,6 +905,28 @@ export const useMessaging = () => {
     }
   };
 
+  // Archive a channel (set is_active to false)
+  const archiveChannel = async (channelId: string) => {
+    if (!user) return false;
+
+    try {
+      const { error } = await supabase
+        .from('messaging_channels')
+        .update({ is_active: false })
+        .eq('id', channelId);
+
+      if (error) throw error;
+
+      await fetchChannels();
+      toast.success('Canal archivé');
+      return true;
+    } catch (error) {
+      logger.error('Error archiving channel:', error);
+      toast.error('Erreur lors de l\'archivage du canal');
+      return false;
+    }
+  };
+
   return {
     channels,
     messages,
@@ -922,6 +944,7 @@ export const useMessaging = () => {
     ensureMembership,
     removeChannelMember,
     joinChannel,
-    markChannelAsRead
+    markChannelAsRead,
+    archiveChannel
   };
 };
