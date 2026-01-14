@@ -1,9 +1,10 @@
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Calendar, Clock, Users, Eye, Edit, Trash2, Download } from 'lucide-react';
+import { MapPin, Calendar, Clock, Users, Eye, Edit, Trash2, Download, MessageSquare } from 'lucide-react';
 import { TourStop, Artist } from '@/types/roadshow.types';
 import { TourStopPreview } from './TourStopPreview';
 import { generateTourStopPDF } from '@/utils/pdfGenerator';
@@ -53,9 +54,17 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
   getUserById
 }) => {
   const [showPreview, setShowPreview] = useState(false);
+  const navigate = useNavigate();
 
   const handlePreview = () => {
     setShowPreview(true);
+  };
+
+  const handleOpenChat = () => {
+    // Naviguer vers la messagerie avec le canal de la feuille de route pré-sélectionné
+    // Le canal a un nom basé sur la ville et le lieu
+    const channelName = `${stop.city} - ${stop.venue}`;
+    navigate('/messagerie', { state: { tab: 'internal', channelName } });
   };
 
   const handleDownloadPDF = () => {
@@ -141,6 +150,15 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
               <Button
                 variant="outline-subtle"
                 size="icon-sm"
+                onClick={handleOpenChat}
+                aria-label="Discuter"
+                className="text-primary"
+              >
+                <MessageSquare className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline-subtle"
+                size="icon-sm"
                 onClick={handlePreview}
                 aria-label="Aperçu"
               >
@@ -175,6 +193,10 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
 
             {/* Desktop: icône + libellé */}
             <div className="hidden sm:flex flex-wrap gap-2">
+              <Button variant="outline-subtle" size="sm" onClick={handleOpenChat} className="text-primary">
+                <MessageSquare className="h-4 w-4" />
+                Discuter
+              </Button>
               <Button variant="outline-subtle" size="sm" onClick={handlePreview}>
                 <Eye className="h-4 w-4" />
                 Aperçu
