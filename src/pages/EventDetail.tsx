@@ -22,13 +22,16 @@ import {
   CheckSquare,
   Eye,
   Clock,
-  Users
+  Users,
+  Plus
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { EventDashboard } from '@/components/EventDashboard';
 import { EventDialog } from '@/components/events/EventDialog';
+import { ContactEventManager } from '@/components/contacts/ContactEventManager';
+import { OpportunityEventManager } from '@/components/events/OpportunityEventManager';
 import { Event } from '@/types/event.types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -127,6 +130,8 @@ export const EventDetail: React.FC = () => {
   const [linkedTasks, setLinkedTasks] = useState<LinkedTask[]>([]);
   const [loading, setLoading] = useState(true);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [contactManagerOpen, setContactManagerOpen] = useState(false);
+  const [opportunityManagerOpen, setOpportunityManagerOpen] = useState(false);
 
   const fetchEvent = async () => {
     if (!id || !user?.id) return;
@@ -467,11 +472,15 @@ export const EventDetail: React.FC = () => {
 
         <TabsContent value="contacts" className="space-y-4">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
                 Contacts liés ({linkedContacts.length})
               </CardTitle>
+              <Button onClick={() => setContactManagerOpen(true)} size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                Ajouter
+              </Button>
             </CardHeader>
             <CardContent>
               {linkedContacts.length === 0 ? (
@@ -538,11 +547,15 @@ export const EventDetail: React.FC = () => {
 
         <TabsContent value="opportunities" className="space-y-4">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <Target className="h-5 w-5" />
                 Opportunités liées ({linkedOpportunities.length})
               </CardTitle>
+              <Button onClick={() => setOpportunityManagerOpen(true)} size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                Ajouter
+              </Button>
             </CardHeader>
             <CardContent>
               {linkedOpportunities.length === 0 ? (
@@ -673,6 +686,29 @@ export const EventDetail: React.FC = () => {
           }}
         />
       )}
+
+      {/* Contact Manager */}
+      <ContactEventManager
+        isOpen={contactManagerOpen}
+        onClose={() => {
+          setContactManagerOpen(false);
+          fetchEvent();
+        }}
+        eventId={event.id}
+        eventTitle={event.title}
+      />
+
+      {/* Opportunity Manager */}
+      <OpportunityEventManager
+        isOpen={opportunityManagerOpen}
+        onClose={() => {
+          setOpportunityManagerOpen(false);
+          fetchEvent();
+        }}
+        eventId={event.id}
+        eventTitle={event.title}
+        onUpdate={fetchEvent}
+      />
     </div>
   );
 };
