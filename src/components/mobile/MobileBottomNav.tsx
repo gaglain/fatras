@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Users, Calendar, ContactRound } from 'lucide-react';
+import { Home, MapPin, Calendar, ContactRound } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface NavItem {
@@ -11,7 +11,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { icon: Home, label: 'Dashboard', path: '/dashboard' },
-  { icon: Users, label: 'Artistes', path: '/artists' },
+  { icon: MapPin, label: 'Tournée', path: '/roadshow' },
   { icon: Calendar, label: 'Événements', path: '/events' },
   { icon: ContactRound, label: 'Contacts', path: '/contacts' },
 ];
