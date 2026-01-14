@@ -78,7 +78,8 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
   const [newSetlistData, setNewSetlistData] = useState({
     title: '',
     description: '',
-    artist_id: artistId || ''
+    artist_id: artistId || '',
+    sacem_program_number: ''
   });
 
   const [newSongData, setNewSongData] = useState({
@@ -134,12 +135,13 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
     const result = await createSetlist({
       title: newSetlistData.title,
       description: newSetlistData.description,
-      artist_id: newSetlistData.artist_id || artistId
+      artist_id: newSetlistData.artist_id || artistId,
+      sacem_program_number: newSetlistData.sacem_program_number || undefined
     });
 
     if (result) {
       setIsCreateDialogOpen(false);
-      setNewSetlistData({ title: '', description: '', artist_id: artistId || '' });
+      setNewSetlistData({ title: '', description: '', artist_id: artistId || '', sacem_program_number: '' });
     }
   };
 
@@ -283,6 +285,14 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
                   placeholder="Description..."
                 />
               </div>
+              <div>
+                <Label>N° Programme SACEM</Label>
+                <Input
+                  value={newSetlistData.sacem_program_number}
+                  onChange={(e) => setNewSetlistData(prev => ({ ...prev, sacem_program_number: e.target.value }))}
+                  placeholder="Numéro de programme SACEM"
+                />
+              </div>
               <Button onClick={handleCreateSetlist} className="w-full">Créer</Button>
             </div>
           </DialogContent>
@@ -349,12 +359,17 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
                   {selectedSetlist.description && (
                     <p className="text-sm text-muted-foreground mt-1">{selectedSetlist.description}</p>
                   )}
-                  <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground flex-wrap">
                     <span>{selectedSetlist.songs?.length || 0} chanson(s)</span>
                     {selectedSetlist.songs && selectedSetlist.songs.length > 0 && (
                       <span className="font-medium">
                         Durée totale: {calculateTotalDuration(selectedSetlist.songs)}
                       </span>
+                    )}
+                    {selectedSetlist.sacem_program_number && (
+                      <Badge variant="secondary" className="text-xs">
+                        SACEM: {selectedSetlist.sacem_program_number}
+                      </Badge>
                     )}
                   </div>
                 </div>

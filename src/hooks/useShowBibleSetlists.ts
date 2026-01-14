@@ -25,6 +25,7 @@ export interface Setlist {
   artist_id: string | null;
   title: string;
   description: string | null;
+  sacem_program_number: string | null;
   created_at: string;
   updated_at: string;
   songs?: SetlistSong[];
@@ -130,7 +131,7 @@ export const useShowBibleSetlists = (artistId?: string) => {
     }
   };
 
-  const createSetlist = async (data: { title: string; description?: string; artist_id?: string }) => {
+  const createSetlist = async (data: { title: string; description?: string; artist_id?: string; sacem_program_number?: string }) => {
     if (!user) {
       toast.error('Vous devez être connecté');
       return null;
@@ -143,7 +144,8 @@ export const useShowBibleSetlists = (artistId?: string) => {
           user_id: user.id,
           title: data.title,
           description: data.description || null,
-          artist_id: data.artist_id || null
+          artist_id: data.artist_id || null,
+          sacem_program_number: data.sacem_program_number || null
         }])
         .select()
         .single();
@@ -164,7 +166,7 @@ export const useShowBibleSetlists = (artistId?: string) => {
     }
   };
 
-  const updateSetlist = async (id: string, data: { title?: string; description?: string }) => {
+  const updateSetlist = async (id: string, data: { title?: string; description?: string; sacem_program_number?: string }) => {
     try {
       const { error } = await supabase
         .from('show_bible_setlists')
