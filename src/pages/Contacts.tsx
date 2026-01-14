@@ -12,6 +12,7 @@ import { ContactLists } from '@/pages/ContactLists';
 import { ContactFilters } from '@/components/contacts/ContactFilters';
 import { BulkContactActions } from '@/components/contacts/BulkContactActions';
 import { BulkContactListAssignment } from '@/components/contacts/BulkContactListAssignment';
+import { EmailComposer } from '@/components/email/EmailComposer';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useContactLists } from '@/hooks/useContactLists';
@@ -46,6 +47,11 @@ export const Contacts: React.FC = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [bulkListAssignmentOpen, setBulkListAssignmentOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [emailComposer, setEmailComposer] = useState<{
+    isOpen: boolean;
+    to: string;
+    toName: string;
+  }>({ isOpen: false, to: '', toName: '' });
 
   const [events, setEvents] = useState<Array<{ id: string; title: string }>>([]);
   const [contactEvents, setContactEvents] = useState<Record<string, string[]>>({});
@@ -330,6 +336,18 @@ export const Contacts: React.FC = () => {
     setBulkListAssignmentOpen(true);
   };
 
+  const handleContact = (contact: Contact, method: 'email' | 'phone') => {
+    if (method === 'email' && contact.email) {
+      setEmailComposer({
+        isOpen: true,
+        to: contact.email,
+        toName: `${contact.first_name} ${contact.last_name}`,
+      });
+    } else if (method === 'phone' && contact.phone) {
+      window.location.href = `tel:${contact.phone}`;
+    }
+  };
+
   const clearAllFilters = () => {
     setSearchTerm('');
     setStatusFilter('all');
@@ -591,6 +609,7 @@ export const Contacts: React.FC = () => {
                   contact={contact}
                   onEdit={handleEdit}
                   onDelete={handleDelete}
+                  onContact={handleContact}
                   isSelected={selectedContactIds.includes(contact.id!)}
                   onSelect={(selected) => handleContactSelect(contact.id!, selected)}
                   viewMode={viewMode}
@@ -636,6 +655,14 @@ export const Contacts: React.FC = () => {
           setSelectedContactIds([]);
           setBulkListAssignmentOpen(false);
         }}
+      />
+
+      <EmailComposer
+        isOpen={emailComposer.isOpen}
+        onClose={() => setEmailComposer({ isOpen: false, to: '', toName: '' })}
+        toEmail={emailComposer.to}
+        subject=""
+        preText=""
       />
     </div>
   );
