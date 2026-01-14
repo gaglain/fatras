@@ -160,10 +160,15 @@ export const ChatWidget: React.FC = () => {
     }
   }, [isOpen, selectedChannel, markChannelAsRead, user?.id]);
 
-  // Scroll automatique vers le dernier message
+  // Scroll automatique vers le dernier message uniquement quand un nouveau message arrive
+  const prevMessagesLengthRef = React.useRef<number>(0);
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [currentMessages]);
+    // Scroll seulement si le nombre de messages a augmenté (nouveau message)
+    if (currentMessages.length > prevMessagesLengthRef.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+    prevMessagesLengthRef.current = currentMessages.length;
+  }, [currentMessages.length]);
 
   const handleSendMessage = async () => {
     if (!inputValue.trim() || !selectedChannel) return;
@@ -331,7 +336,9 @@ export const ChatWidget: React.FC = () => {
                     >
                       <div className={`flex items-start space-x-2 max-w-[80%] ${isMe ? 'flex-row-reverse space-x-reverse' : ''}`}>
                         <Avatar className="w-6 h-6">
-                          <AvatarImage src={message.user_profile?.avatar_url || ''} />
+                          {message.user_profile?.avatar_url && (
+                            <AvatarImage src={message.user_profile.avatar_url} />
+                          )}
                           <AvatarFallback className={`text-xs text-white ${isMe ? 'bg-primary' : 'bg-muted-foreground'}`}>
                             {(message.user_profile?.first_name?.[0] || 'U').toUpperCase()}
                           </AvatarFallback>
