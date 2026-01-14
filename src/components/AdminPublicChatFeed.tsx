@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { MessageCircle, Send, User, Clock, Mail, RefreshCw } from 'lucide-react';
+import { MessageCircle, Send, User, Clock, Mail, RefreshCw, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -38,6 +39,7 @@ interface AdminPublicChatFeedProps {
 
 export const AdminPublicChatFeed: React.FC<AdminPublicChatFeedProps> = ({ initialVisitorId }) => {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -111,8 +113,7 @@ export const AdminPublicChatFeed: React.FC<AdminPublicChatFeedProps> = ({ initia
     }
   }, [initialVisitorId, conversations.length, isLoading]);
 
-  // Subscribe to realtime updates - unique channel name to avoid conflicts
-  // Note: Notifications are created globally via usePublicChatNotifications hook in Layout
+  // Subscribe to realtime updates
   useEffect(() => {
     const channelName = `admin-chat-feed-${Date.now()}`;
     
@@ -158,6 +159,10 @@ export const AdminPublicChatFeed: React.FC<AdminPublicChatFeedProps> = ({ initia
     ));
   };
 
+  const handleBackToList = () => {
+    setSelectedConversation(null);
+  };
+
   const handleSendReply = async () => {
     if (!replyMessage.trim() || !selectedConversation || !user) return;
 
@@ -188,169 +193,200 @@ export const AdminPublicChatFeed: React.FC<AdminPublicChatFeedProps> = ({ initia
   const selectedConv = conversations.find(c => c.visitor_id === selectedConversation);
   const totalUnread = conversations.reduce((sum, c) => sum + c.unread_count, 0);
 
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[600px]">
-      {/* Conversations List */}
-      <Card className="md:col-span-1">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <MessageCircle className="h-5 w-5" />
-              Conversations
-              {totalUnread > 0 && (
-                <Badge variant="destructive">{totalUnread}</Badge>
-              )}
-            </CardTitle>
-            <Button variant="ghost" size="icon" onClick={loadConversations}>
-              <RefreshCw className="h-4 w-4" />
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <ScrollArea className="h-[500px]">
-            {isLoading ? (
-              <div className="p-4 text-center text-muted-foreground">
-                Chargement...
-              </div>
-            ) : conversations.length === 0 ? (
-              <div className="p-4 text-center text-muted-foreground">
-                Aucune conversation
-              </div>
-            ) : (
-              <div className="divide-y">
-                {conversations.map((conv) => (
-                  <div
-                    key={conv.visitor_id}
-                    className={`p-4 cursor-pointer hover:bg-muted/50 transition-colors ${
-                      selectedConversation === conv.visitor_id ? 'bg-muted' : ''
-                    }`}
-                    onClick={() => handleSelectConversation(conv.visitor_id)}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <User className="h-8 w-8 p-1.5 bg-muted rounded-full shrink-0" />
-                        <div className="min-w-0">
-                          <p className="font-medium truncate">
-                            {conv.visitor_name || 'Visiteur anonyme'}
+  // Composant liste des conversations
+  const ConversationsList = () => (
+    <Card className={isMobile ? "h-full" : ""}>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+            <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+            Conversations
+            {totalUnread > 0 && (
+              <Badge variant="destructive" className="text-xs">{totalUnread}</Badge>
+            )}
+          </CardTitle>
+          <Button variant="ghost" size="icon" onClick={loadConversations} className="h-8 w-8">
+            <RefreshCw className="h-4 w-4" />
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="p-0">
+        <ScrollArea className={isMobile ? "h-[calc(100vh-16rem)]" : "h-[500px]"}>
+          {isLoading ? (
+            <div className="p-4 text-center text-muted-foreground">
+              Chargement...
+            </div>
+          ) : conversations.length === 0 ? (
+            <div className="p-4 text-center text-muted-foreground">
+              <MessageCircle className="h-10 w-10 mx-auto mb-2 opacity-50" />
+              <p className="text-sm">Aucune conversation</p>
+              <p className="text-xs mt-1">Les messages des visiteurs apparaîtront ici</p>
+            </div>
+          ) : (
+            <div className="divide-y">
+              {conversations.map((conv) => (
+                <div
+                  key={conv.visitor_id}
+                  className={`p-3 sm:p-4 cursor-pointer hover:bg-muted/50 transition-colors active:bg-muted ${
+                    selectedConversation === conv.visitor_id ? 'bg-muted' : ''
+                  }`}
+                  onClick={() => handleSelectConversation(conv.visitor_id)}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <User className="h-8 w-8 p-1.5 bg-primary/10 text-primary rounded-full shrink-0" />
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm truncate">
+                          {conv.visitor_name || 'Visiteur anonyme'}
+                        </p>
+                        {conv.visitor_email && (
+                          <p className="text-xs text-muted-foreground flex items-center gap-1 truncate">
+                            <Mail className="h-3 w-3 flex-shrink-0" />
+                            <span className="truncate">{conv.visitor_email}</span>
                           </p>
-                          {conv.visitor_email && (
-                            <p className="text-xs text-muted-foreground flex items-center gap-1">
-                              <Mail className="h-3 w-3" />
-                              {conv.visitor_email}
-                            </p>
-                          )}
-                        </div>
+                        )}
                       </div>
-                      {conv.unread_count > 0 && (
-                        <Badge variant="destructive" className="shrink-0">
-                          {conv.unread_count}
-                        </Badge>
-                      )}
                     </div>
-                    <p className="text-sm text-muted-foreground mt-2 line-clamp-1">
-                      {conv.last_message}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {formatDistanceToNow(new Date(conv.last_message_at), { 
-                        addSuffix: true, 
-                        locale: fr 
-                      })}
-                    </p>
+                    {conv.unread_count > 0 && (
+                      <Badge variant="destructive" className="shrink-0 text-xs">
+                        {conv.unread_count}
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-2 line-clamp-1">
+                    {conv.last_message}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    {formatDistanceToNow(new Date(conv.last_message_at), { 
+                      addSuffix: true, 
+                      locale: fr 
+                    })}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </ScrollArea>
+      </CardContent>
+    </Card>
+  );
+
+  // Composant vue des messages
+  const MessagesView = () => (
+    <Card className={`flex flex-col ${isMobile ? "h-full" : ""}`}>
+      <CardHeader className="pb-3 border-b px-3 sm:px-6">
+        {selectedConv ? (
+          <div className="flex items-center gap-2 sm:gap-3">
+            {isMobile && (
+              <Button variant="ghost" size="icon" onClick={handleBackToList} className="h-8 w-8 -ml-1">
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            )}
+            <User className="h-8 w-8 sm:h-10 sm:w-10 p-1.5 sm:p-2 bg-primary/10 text-primary rounded-full flex-shrink-0" />
+            <div className="min-w-0">
+              <CardTitle className="text-base sm:text-lg truncate">
+                {selectedConv.visitor_name || 'Visiteur anonyme'}
+              </CardTitle>
+              {selectedConv.visitor_email && (
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                  {selectedConv.visitor_email}
+                </p>
+              )}
+            </div>
+          </div>
+        ) : (
+          <CardTitle className="text-base sm:text-lg text-muted-foreground">
+            Sélectionnez une conversation
+          </CardTitle>
+        )}
+      </CardHeader>
+      
+      <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
+        {selectedConv ? (
+          <>
+            <ScrollArea className={`flex-1 p-3 sm:p-4 ${isMobile ? "h-[calc(100vh-22rem)]" : ""}`}>
+              <div className="space-y-3">
+                {selectedConv.messages.map((msg) => (
+                  <div
+                    key={msg.id}
+                    className={`flex ${msg.is_from_admin ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div
+                      className={`max-w-[85%] sm:max-w-[70%] p-2.5 sm:p-3 rounded-lg ${
+                        msg.is_from_admin
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted'
+                      }`}
+                    >
+                      <p className="text-sm whitespace-pre-wrap break-words">{msg.message}</p>
+                      <p className="text-xs opacity-50 mt-1">
+                        {new Date(msg.created_at).toLocaleString('fr-FR', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                    </div>
                   </div>
                 ))}
+                <div ref={messagesEndRef} />
               </div>
-            )}
-          </ScrollArea>
-        </CardContent>
-      </Card>
+            </ScrollArea>
 
-      {/* Messages View */}
-      <Card className="md:col-span-2 flex flex-col">
-        <CardHeader className="pb-3 border-b">
-          {selectedConv ? (
-            <div className="flex items-center gap-3">
-              <User className="h-10 w-10 p-2 bg-muted rounded-full" />
-              <div>
-                <CardTitle className="text-lg">
-                  {selectedConv.visitor_name || 'Visiteur anonyme'}
-                </CardTitle>
-                {selectedConv.visitor_email && (
-                  <p className="text-sm text-muted-foreground">
-                    {selectedConv.visitor_email}
-                  </p>
-                )}
+            <div className="border-t p-3 sm:p-4">
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Tapez votre réponse..."
+                  value={replyMessage}
+                  onChange={(e) => setReplyMessage(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && !isSending && handleSendReply()}
+                  disabled={isSending}
+                  className="text-sm"
+                />
+                <Button 
+                  onClick={handleSendReply}
+                  disabled={isSending || !replyMessage.trim()}
+                  size={isMobile ? "icon" : "default"}
+                  className={isMobile ? "w-10 h-10 flex-shrink-0" : ""}
+                >
+                  <Send className="h-4 w-4" />
+                  {!isMobile && <span className="ml-2">Envoyer</span>}
+                </Button>
               </div>
             </div>
-          ) : (
-            <CardTitle className="text-lg text-muted-foreground">
-              Sélectionnez une conversation
-            </CardTitle>
-          )}
-        </CardHeader>
-        
-        <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
-          {selectedConv ? (
-            <>
-              <ScrollArea className="flex-1 p-4">
-                <div className="space-y-3">
-                  {selectedConv.messages.map((msg) => (
-                    <div
-                      key={msg.id}
-                      className={`flex ${msg.is_from_admin ? 'justify-end' : 'justify-start'}`}
-                    >
-                      <div
-                        className={`max-w-[70%] p-3 rounded-lg ${
-                          msg.is_from_admin
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted'
-                        }`}
-                      >
-                        <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
-                        <p className="text-xs opacity-50 mt-1">
-                          {new Date(msg.created_at).toLocaleString('fr-FR', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                  <div ref={messagesEndRef} />
-                </div>
-              </ScrollArea>
-
-              <div className="border-t p-4">
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Tapez votre réponse..."
-                    value={replyMessage}
-                    onChange={(e) => setReplyMessage(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && !isSending && handleSendReply()}
-                    disabled={isSending}
-                  />
-                  <Button 
-                    onClick={handleSendReply}
-                    disabled={isSending || !replyMessage.trim()}
-                  >
-                    <Send className="h-4 w-4 mr-2" />
-                    Envoyer
-                  </Button>
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className="flex-1 flex items-center justify-center text-muted-foreground">
-              <div className="text-center">
-                <MessageCircle className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                <p>Sélectionnez une conversation pour voir les messages</p>
-              </div>
+          </>
+        ) : (
+          <div className="flex-1 flex items-center justify-center text-muted-foreground p-4">
+            <div className="text-center">
+              <MessageCircle className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-2 opacity-50" />
+              <p className="text-sm">Sélectionnez une conversation pour voir les messages</p>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+
+  // Mode mobile : affichage conditionnel liste/messages
+  if (isMobile) {
+    return (
+      <div className="h-[calc(100vh-12rem)]">
+        {selectedConversation ? <MessagesView /> : <ConversationsList />}
+      </div>
+    );
+  }
+
+  // Mode desktop : grille côte à côte
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[600px]">
+      <div className="md:col-span-1">
+        <ConversationsList />
+      </div>
+      <div className="md:col-span-2">
+        <MessagesView />
+      </div>
     </div>
   );
 };
