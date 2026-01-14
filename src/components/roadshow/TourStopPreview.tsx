@@ -289,7 +289,7 @@ Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleT
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl w-[95vw] sm:w-full max-h-[85vh] sm:max-h-[90vh] overflow-y-auto p-3 sm:p-6">
+      <DialogContent className="max-w-4xl w-screen h-screen sm:w-full sm:h-auto sm:max-h-[90vh] overflow-y-auto p-3 sm:p-6 rounded-none sm:rounded-lg fixed inset-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2">
         <DialogHeader className="pb-2 sm:pb-4">
           <DialogTitle className="flex flex-col gap-3">
             <span className="text-base sm:text-xl font-semibold">Aperçu - {stop.city}</span>
