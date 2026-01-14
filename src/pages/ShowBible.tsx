@@ -21,7 +21,8 @@ import {
   X,
   Image as ImageIcon,
   FileEdit,
-  Music
+  Music,
+  LayoutGrid
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useFileUpload } from '@/hooks/useFileUpload';
@@ -33,6 +34,7 @@ import { useCentralizedData } from '@/hooks/useCentralizedData';
 import { MediaBankManager } from '@/components/MediaBankManager';
 import { ShowBibleNotesEditor } from '@/components/ShowBibleNotesEditor';
 import { ShowBibleSetlistEditor } from '@/components/ShowBibleSetlistEditor';
+import { ResourcesOverview } from '@/components/ResourcesOverview';
 
 
 interface Category {
@@ -60,6 +62,7 @@ export const ShowBible: React.FC = () => {
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [filterArtist, setFilterArtist] = useState<string>('all');
+  const [activeTab, setActiveTab] = useState<string>('overview');
   const [availableArtists, setAvailableArtists] = useState<{id: string, name: string}[]>([]);
   const [uploadForm, setUploadForm] = useState<{
     name: string;
@@ -216,28 +219,35 @@ export const ShowBible: React.FC = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="documents" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 h-auto">
-          <TabsTrigger value="documents" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-xs sm:text-sm">
-            <FileText className="h-4 w-4 flex-shrink-0" />
-            <span className="hidden sm:inline">Documents</span>
-            <span className="sm:hidden">Docs</span>
-          </TabsTrigger>
-          <TabsTrigger value="media" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-xs sm:text-sm">
-            <ImageIcon className="h-4 w-4 flex-shrink-0" />
-            <span className="hidden sm:inline">Banque Médias</span>
-            <span className="sm:hidden">Médias</span>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-5 h-auto">
+          <TabsTrigger value="overview" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-xs sm:text-sm">
+            <LayoutGrid className="h-4 w-4 flex-shrink-0" />
+            <span className="hidden sm:inline">Aperçu</span>
           </TabsTrigger>
           <TabsTrigger value="notes" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-xs sm:text-sm">
             <FileEdit className="h-4 w-4 flex-shrink-0" />
-            <span>Notes</span>
+            <span className="hidden sm:inline">Notes</span>
           </TabsTrigger>
           <TabsTrigger value="setlists" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-xs sm:text-sm">
             <Music className="h-4 w-4 flex-shrink-0" />
             <span className="hidden sm:inline">Setlists</span>
             <span className="sm:hidden">Sets</span>
           </TabsTrigger>
+          <TabsTrigger value="media" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-xs sm:text-sm">
+            <ImageIcon className="h-4 w-4 flex-shrink-0" />
+            <span className="hidden sm:inline">Médias</span>
+          </TabsTrigger>
+          <TabsTrigger value="documents" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-xs sm:text-sm">
+            <FileText className="h-4 w-4 flex-shrink-0" />
+            <span className="hidden sm:inline">Documents</span>
+            <span className="sm:hidden">Docs</span>
+          </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="overview" className="mt-6">
+          <ResourcesOverview onNavigate={setActiveTab} />
+        </TabsContent>
 
         <TabsContent value="documents" className="space-y-6 mt-6">
           <div className="flex justify-end">
