@@ -8,7 +8,7 @@ import { TourStop, Artist } from '@/types/roadshow.types';
 import { TourStopPreview } from './TourStopPreview';
 import { generateTourStopPDF } from '@/utils/pdfGenerator';
 import { toast } from 'sonner';
-import { openChatWithChannel } from '@/lib/chatWidgetEvents';
+import { openChatWithRoadshowStop } from '@/lib/chatWidgetEvents';
 
 interface TourStopCardProps {
   stop: TourStop;
@@ -60,9 +60,8 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
   };
 
   const handleOpenChat = () => {
-    // Ouvrir le widget chat avec le canal de la feuille de route
-    const channelName = `${stop.city} - ${stop.venue}`;
-    openChatWithChannel(channelName);
+    // Ouvrir le widget chat avec le canal lié à cette feuille de route (évite les doublons)
+    openChatWithRoadshowStop(stop.id);
   };
 
   const handleDownloadPDF = () => {

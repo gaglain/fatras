@@ -1,5 +1,9 @@
 // Global event system for ChatWidget control
-type ChatWidgetEventCallback = (channelName: string) => void;
+export type ChatWidgetOpenEvent =
+  | { kind: 'channelName'; channelName: string }
+  | { kind: 'roadshowStopId'; roadshowStopId: string };
+
+type ChatWidgetEventCallback = (event: ChatWidgetOpenEvent) => void;
 
 let openChatCallback: ChatWidgetEventCallback | null = null;
 
@@ -12,7 +16,10 @@ export const unregisterChatWidgetHandler = () => {
 };
 
 export const openChatWithChannel = (channelName: string) => {
-  if (openChatCallback) {
-    openChatCallback(channelName);
-  }
+  openChatCallback?.({ kind: 'channelName', channelName });
 };
+
+export const openChatWithRoadshowStop = (roadshowStopId: string) => {
+  openChatCallback?.({ kind: 'roadshowStopId', roadshowStopId });
+};
+

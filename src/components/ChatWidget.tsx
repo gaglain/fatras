@@ -17,13 +17,14 @@ import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
-import { registerChatWidgetHandler, unregisterChatWidgetHandler } from '@/lib/chatWidgetEvents';
+import { registerChatWidgetHandler, unregisterChatWidgetHandler, type ChatWidgetOpenEvent } from '@/lib/chatWidgetEvents';
 
 export const ChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedChannel, setSelectedChannel] = useState('');
   const [inputValue, setInputValue] = useState('');
   const [pendingChannelName, setPendingChannelName] = useState<string | null>(null);
+  const [pendingRoadshowStopId, setPendingRoadshowStopId] = useState<string | null>(null);
   const { user } = useAuth();
   const { createNotification } = useNotifications();
   const isMobile = useIsMobile();
@@ -44,10 +45,17 @@ export const ChatWidget: React.FC = () => {
   } = useMessaging();
 
   // Handler for external chat open requests (from roadshow, etc.)
-  const handleExternalOpen = useCallback(async (channelName: string) => {
+  const handleExternalOpen = useCallback(async (event: ChatWidgetOpenEvent) => {
     setIsOpen(true);
-    setPendingChannelName(channelName);
-    
+
+    if (event.kind === 'channelName') {
+      setPendingChannelName(event.channelName);
+      setPendingRoadshowStopId(null);
+    } else {
+      setPendingRoadshowStopId(event.roadshowStopId);
+      setPendingChannelName(null);
+    }
+
     // Fetch channels to ensure we have the latest
     await fetchChannels();
   }, [fetchChannels]);
@@ -58,6 +66,21 @@ export const ChatWidget: React.FC = () => {
     return () => unregisterChatWidgetHandler();
   }, [handleExternalOpen]);
 
+  // Handle pending roadshow channel selection after channels are loaded
+  useEffect(() => {
+    if (pendingRoadshowStopId && channels.length > 0) {
+      const matching = channels.find((c) => c.roadshow_id === pendingRoadshowStopId);
+
+      if (matching) {
+        setSelectedChannel(matching.id);
+      } else {
+        toast.error("Aucun canal trouvé pour cette feuille de route");
+      }
+
+      setPendingRoadshowStopId(null);
+    }
+  }, [pendingRoadshowStopId, channels]);
+
   // Handle pending channel selection after channels are loaded
   useEffect(() => {
     if (pendingChannelName && channels.length > 0) {
@@ -67,33 +90,26 @@ export const ChatWidget: React.FC = () => {
       
       if (matchingChannel) {
         setSelectedChannel(matchingChannel.id);
-        setPendingChannelName(null);
       } else {
-        // Create the channel if it doesn't exist
-        createChannel(pendingChannelName, `Canal pour ${pendingChannelName}`, 'public', [])
-          .then((newChannelId) => {
-            if (newChannelId) {
-              setSelectedChannel(newChannelId);
-              fetchChannels();
-            }
-            setPendingChannelName(null);
-          });
+        toast.error("Canal introuvable");
       }
+
+      setPendingChannelName(null);
     }
-  }, [pendingChannelName, channels, createChannel, fetchChannels]);
+  }, [pendingChannelName, channels]);
 
   // Auto-select first channel when opening (only if no pending channel)
   useEffect(() => {
-    if (isOpen && channels.length > 0 && !selectedChannel && !pendingChannelName) {
+    if (isOpen && channels.length > 0 && !selectedChannel && !pendingChannelName && !pendingRoadshowStopId) {
       setSelectedChannel(channels[0].id);
     }
-  }, [isOpen, channels, selectedChannel, pendingChannelName]);
+  }, [isOpen, channels, selectedChannel, pendingChannelName, pendingRoadshowStopId]);
 
   // Auto-create a default #general channel if none exists
   useEffect(() => {
     const createDefault = async () => {
       try {
-        if (isOpen && !loading && channels.length === 0 && !pendingChannelName) {
+        if (isOpen && !loading && channels.length === 0 && !pendingChannelName && !pendingRoadshowStopId) {
           const id = await createChannel('general', 'Canal par défaut', 'public', []);
           if (id) { setSelectedChannel(id); await fetchChannels(); }
         }
@@ -102,7 +118,7 @@ export const ChatWidget: React.FC = () => {
       }
     };
     createDefault();
-  }, [isOpen, loading, channels.length, createChannel, pendingChannelName]);
+  }, [isOpen, loading, channels.length, createChannel, pendingChannelName, pendingRoadshowStopId]);
 
   // Fetch messages when selecting a channel (with auto-join)
   useEffect(() => {
