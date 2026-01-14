@@ -1,10 +1,10 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MessageSquare, X, Send, User, Hash, Plus } from 'lucide-react';
+import { MessageSquare, Send, Hash, Plus } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useMessaging } from '@/hooks/useMessaging';
 import { useAuth } from '@/hooks/useAuth';
@@ -17,11 +17,13 @@ import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import { registerChatWidgetHandler, unregisterChatWidgetHandler } from '@/lib/chatWidgetEvents';
 
 export const ChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedChannel, setSelectedChannel] = useState('');
   const [inputValue, setInputValue] = useState('');
+  const [pendingChannelName, setPendingChannelName] = useState<string | null>(null);
   const { user } = useAuth();
   const { createNotification } = useNotifications();
   const isMobile = useIsMobile();
@@ -41,18 +43,57 @@ export const ChatWidget: React.FC = () => {
     createChannel
   } = useMessaging();
 
-  // Auto-select first channel when opening
+  // Handler for external chat open requests (from roadshow, etc.)
+  const handleExternalOpen = useCallback(async (channelName: string) => {
+    setIsOpen(true);
+    setPendingChannelName(channelName);
+    
+    // Fetch channels to ensure we have the latest
+    await fetchChannels();
+  }, [fetchChannels]);
+
+  // Register/unregister global event handler
   useEffect(() => {
-    if (isOpen && channels.length > 0 && !selectedChannel) {
+    registerChatWidgetHandler(handleExternalOpen);
+    return () => unregisterChatWidgetHandler();
+  }, [handleExternalOpen]);
+
+  // Handle pending channel selection after channels are loaded
+  useEffect(() => {
+    if (pendingChannelName && channels.length > 0) {
+      const matchingChannel = channels.find(c => 
+        c.name?.toLowerCase() === pendingChannelName.toLowerCase()
+      );
+      
+      if (matchingChannel) {
+        setSelectedChannel(matchingChannel.id);
+        setPendingChannelName(null);
+      } else {
+        // Create the channel if it doesn't exist
+        createChannel(pendingChannelName, `Canal pour ${pendingChannelName}`, 'public', [])
+          .then((newChannelId) => {
+            if (newChannelId) {
+              setSelectedChannel(newChannelId);
+              fetchChannels();
+            }
+            setPendingChannelName(null);
+          });
+      }
+    }
+  }, [pendingChannelName, channels, createChannel, fetchChannels]);
+
+  // Auto-select first channel when opening (only if no pending channel)
+  useEffect(() => {
+    if (isOpen && channels.length > 0 && !selectedChannel && !pendingChannelName) {
       setSelectedChannel(channels[0].id);
     }
-  }, [isOpen, channels, selectedChannel]);
+  }, [isOpen, channels, selectedChannel, pendingChannelName]);
 
   // Auto-create a default #general channel if none exists
   useEffect(() => {
     const createDefault = async () => {
       try {
-        if (isOpen && !loading && channels.length === 0) {
+        if (isOpen && !loading && channels.length === 0 && !pendingChannelName) {
           const id = await createChannel('general', 'Canal par défaut', 'public', []);
           if (id) { setSelectedChannel(id); await fetchChannels(); }
         }
@@ -61,7 +102,7 @@ export const ChatWidget: React.FC = () => {
       }
     };
     createDefault();
-  }, [isOpen, loading, channels.length, createChannel]);
+  }, [isOpen, loading, channels.length, createChannel, pendingChannelName]);
 
   // Fetch messages when selecting a channel (with auto-join)
   useEffect(() => {

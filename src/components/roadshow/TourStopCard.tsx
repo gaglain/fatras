@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +8,7 @@ import { TourStop, Artist } from '@/types/roadshow.types';
 import { TourStopPreview } from './TourStopPreview';
 import { generateTourStopPDF } from '@/utils/pdfGenerator';
 import { toast } from 'sonner';
+import { openChatWithChannel } from '@/lib/chatWidgetEvents';
 
 interface TourStopCardProps {
   stop: TourStop;
@@ -54,17 +54,15 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
   getUserById
 }) => {
   const [showPreview, setShowPreview] = useState(false);
-  const navigate = useNavigate();
 
   const handlePreview = () => {
     setShowPreview(true);
   };
 
   const handleOpenChat = () => {
-    // Naviguer vers la messagerie avec le canal de la feuille de route pré-sélectionné
-    // Le canal a un nom basé sur la ville et le lieu
+    // Ouvrir le widget chat avec le canal de la feuille de route
     const channelName = `${stop.city} - ${stop.venue}`;
-    navigate('/messagerie', { state: { tab: 'internal', channelName } });
+    openChatWithChannel(channelName);
   };
 
   const handleDownloadPDF = () => {
