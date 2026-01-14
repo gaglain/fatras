@@ -75,9 +75,9 @@ export const ChannelManager: React.FC<ChannelManagerProps> = ({ onChannelCreated
       {/* Create Channel */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
         <DialogTrigger asChild>
-          <Button variant="outline" className="justify-start h-8 shrink-0">
-            <Plus className="h-3 w-3 mr-2" />
-            Créer un canal
+          <Button variant="secondary" className="justify-start h-8 px-2 text-xs shrink-0">
+            <Plus className="h-3 w-3 mr-1" />
+            Créer
           </Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-md">
