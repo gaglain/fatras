@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Mail, Phone, MapPin, MoreVertical, Edit, Trash2, User, Eye } from 'lucide-react';
+import { Mail, Phone, MapPin, MoreVertical, Edit, Trash2, User, Eye, MessageSquare } from 'lucide-react';
 import { Contact } from '@/types/contact.types';
 
 interface ContactCardProps {
@@ -86,6 +86,24 @@ export const ContactCard: React.FC<ContactCardProps> = ({
               <Badge className={getStatusColor(contact.status)}>
                 {contact.status}
               </Badge>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={(e) => { e.stopPropagation(); navigate(`/contacts/${contact.id}`); }}
+              >
+                <Eye className="h-4 w-4 mr-1" />
+                Visualiser
+              </Button>
+              {contact.email && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={(e) => { e.stopPropagation(); window.location.href = `mailto:${contact.email}`; }}
+                >
+                  <MessageSquare className="h-4 w-4 mr-1" />
+                  Contacter
+                </Button>
+              )}
             </div>
              <DropdownMenu>
                <DropdownMenuTrigger asChild>
@@ -154,10 +172,6 @@ export const ContactCard: React.FC<ContactCardProps> = ({
                  </Button>
                </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => navigate(`/contacts/${contact.id}`)}>
-                  <Eye className="h-4 w-4 mr-2" />
-                  Voir le détail
-                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onEdit(contact)}>
                   <Edit className="h-4 w-4 mr-2" />
                   Modifier
@@ -175,6 +189,29 @@ export const ContactCard: React.FC<ContactCardProps> = ({
         </div>
       </CardHeader>
       <CardContent className="pt-0">
+        {/* Action buttons */}
+        <div className="flex gap-2 mb-4">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex-1"
+            onClick={(e) => { e.stopPropagation(); navigate(`/contacts/${contact.id}`); }}
+          >
+            <Eye className="h-4 w-4 mr-1" />
+            Visualiser
+          </Button>
+          {contact.email && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex-1"
+              onClick={(e) => { e.stopPropagation(); window.location.href = `mailto:${contact.email}`; }}
+            >
+              <MessageSquare className="h-4 w-4 mr-1" />
+              Contacter
+            </Button>
+          )}
+        </div>
         <div className="space-y-2">
           {contact.email && (
             <div className="flex items-center text-sm text-muted-foreground">
