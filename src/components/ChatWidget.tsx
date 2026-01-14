@@ -244,7 +244,7 @@ export const ChatWidget: React.FC = () => {
                 </SelectContent>
               </Select>
               
-              <div className="flex gap-1 overflow-x-auto pb-1">
+              <div className="flex gap-1 flex-wrap">
                 <ChannelManager onChannelCreated={(channelId) => setSelectedChannel(channelId)} />
                 <DirectMessageManager
                   onChannelCreated={(channelId) => setSelectedChannel(channelId)}
