@@ -97,7 +97,7 @@ export const navigationData: MenuItem[] = [
     ]
   },
 { 
-  name: 'Show Bible', 
+  name: 'Ressources', 
   href: '/show-bible', 
   icon: FileStack, 
   visible: true 

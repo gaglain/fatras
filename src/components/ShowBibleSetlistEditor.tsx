@@ -87,7 +87,8 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
     notes: '',
     tonality: '',
     bpm: '',
-    lyrics: ''
+    lyrics: '',
+    sacem_number: ''
   });
 
   useEffect(() => {
@@ -156,7 +157,8 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
         notes: newSongData.notes || undefined,
         tonality: newSongData.tonality || undefined,
         bpm: newSongData.bpm ? parseInt(newSongData.bpm) : undefined,
-        lyrics: newSongData.lyrics || undefined
+        lyrics: newSongData.lyrics || undefined,
+        sacem_number: newSongData.sacem_number || undefined
       },
       selectedSetlist.artist_id || undefined
     );
@@ -199,7 +201,7 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
   };
 
   const resetNewSongData = () => {
-    setNewSongData({ title: '', duration: '', notes: '', tonality: '', bpm: '', lyrics: '' });
+    setNewSongData({ title: '', duration: '', notes: '', tonality: '', bpm: '', lyrics: '', sacem_number: '' });
   };
 
   const handleDragEnd = (result: DropResult) => {
@@ -220,7 +222,8 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
       notes: song.notes || '',
       tonality: song.tonality || '',
       bpm: song.bpm?.toString() || '',
-      lyrics: song.lyrics || ''
+      lyrics: song.lyrics || '',
+      sacem_number: (song as any).sacem_number || ''
     });
   };
 
@@ -413,10 +416,11 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
                                     <div className="flex items-center justify-between">
                                       <div>
                                         <p className="font-medium">{song.title}</p>
-                                        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                                        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1 flex-wrap">
                                           {song.duration && <span>{song.duration}</span>}
                                           {song.tonality && <Badge variant="outline" className="text-xs">{song.tonality}</Badge>}
                                           {song.bpm && <span>{song.bpm} BPM</span>}
+                                          {song.sacem_number && <span className="text-primary">SACEM: {song.sacem_number}</span>}
                                         </div>
                                       </div>
                                       <Plus className="h-4 w-4 text-primary" />
@@ -496,6 +500,14 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
                                 onChange={(e) => setNewSongData(prev => ({ ...prev, lyrics: e.target.value }))}
                                 placeholder="Paroles de la chanson..."
                                 rows={4}
+                              />
+                            </div>
+                            <div className="col-span-2">
+                              <Label>N° SACEM</Label>
+                              <Input
+                                value={newSongData.sacem_number}
+                                onChange={(e) => setNewSongData(prev => ({ ...prev, sacem_number: e.target.value }))}
+                                placeholder="ex: 1234567890"
                               />
                             </div>
                           </div>
@@ -638,6 +650,14 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
                                               value={newSongData.lyrics}
                                               onChange={(e) => setNewSongData(prev => ({ ...prev, lyrics: e.target.value }))}
                                               rows={6}
+                                            />
+                                          </div>
+                                          <div className="col-span-2">
+                                            <Label>N° SACEM</Label>
+                                            <Input
+                                              value={newSongData.sacem_number}
+                                              onChange={(e) => setNewSongData(prev => ({ ...prev, sacem_number: e.target.value }))}
+                                              placeholder="ex: 1234567890"
                                             />
                                           </div>
                                         </div>

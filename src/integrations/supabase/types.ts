@@ -181,6 +181,7 @@ export type Database = {
           id: string
           lyrics: string | null
           notes: string | null
+          sacem_number: string | null
           title: string
           tonality: string | null
           updated_at: string
@@ -194,6 +195,7 @@ export type Database = {
           id?: string
           lyrics?: string | null
           notes?: string | null
+          sacem_number?: string | null
           title: string
           tonality?: string | null
           updated_at?: string
@@ -207,6 +209,7 @@ export type Database = {
           id?: string
           lyrics?: string | null
           notes?: string | null
+          sacem_number?: string | null
           title?: string
           tonality?: string | null
           updated_at?: string

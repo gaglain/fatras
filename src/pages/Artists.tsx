@@ -233,8 +233,8 @@ export const Artists: React.FC = () => {
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <Button variant="outline" onClick={() => navigate('/show-bible')} className="w-full sm:w-auto">
             <BookOpen className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">Bible de Spectacle</span>
-            <span className="sm:hidden">Bible</span>
+            <span className="hidden sm:inline">Ressources</span>
+            <span className="sm:hidden">Ressources</span>
           </Button>
           <Button onClick={() => setShowAddForm(true)} className="w-full sm:w-auto">
             <Plus className="h-4 w-4 mr-2" />
@@ -348,7 +348,7 @@ export const Artists: React.FC = () => {
                           }}
                         >
                           <BookOpen className="h-3 w-3 mr-1" />
-                          Bible
+                          Ressources
                         </Button>
                         <Button
                           variant="ghost"
