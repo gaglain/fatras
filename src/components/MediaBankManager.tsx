@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { 
   Upload, Image as ImageIcon, FileText, Trash2, Eye, 
-  Filter, FolderOpen, Tag, X, Edit2, Music
+  Filter, FolderOpen, Tag, X, Music, ExternalLink
 } from 'lucide-react';
 import { useBackgroundImages, BackgroundImage, MEDIA_CATEGORIES } from '@/hooks/useBackgroundImages';
 import { supabase } from '@/integrations/supabase/client';
@@ -259,26 +259,17 @@ export const MediaBankManager: React.FC = () => {
                 {/* Hover overlay */}
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
                   <div className="flex gap-2">
-                    <a 
-                      href={image.bucket_name && image.file_path 
-                        ? getDocumentUrl(image.bucket_name, image.file_path, image.category)
-                        : image.url
-                      } 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="p-2 bg-white rounded-full hover:bg-gray-100"
-                    >
-                      <Eye className="h-4 w-4 text-gray-700" />
-                    </a>
                     <button 
                       onClick={() => setSelectedImage(image)}
                       className="p-2 bg-white rounded-full hover:bg-gray-100"
+                      title="Aperçu"
                     >
-                      <Edit2 className="h-4 w-4 text-gray-700" />
+                      <Eye className="h-4 w-4 text-gray-700" />
                     </button>
                     <button 
                       onClick={() => handleDelete(image)}
                       className="p-2 bg-white rounded-full hover:bg-red-100"
+                      title="Supprimer"
                     >
                       <Trash2 className="h-4 w-4 text-red-600" />
                     </button>
@@ -373,20 +364,50 @@ export const MediaBankManager: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Edit Dialog */}
+      {/* Preview/Edit Dialog */}
       <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
-        <DialogContent>
+        <DialogContent className="max-w-4xl max-h-[90vh]">
           <DialogHeader>
-            <DialogTitle>Modifier le fichier</DialogTitle>
+            <DialogTitle className="flex items-center justify-between">
+              <span className="truncate">{selectedImage?.name}</span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  if (selectedImage) {
+                    const url = selectedImage.bucket_name && selectedImage.file_path 
+                      ? getDocumentUrl(selectedImage.bucket_name, selectedImage.file_path, selectedImage.category)
+                      : selectedImage.url;
+                    window.open(url, '_blank');
+                  }
+                }}
+              >
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Ouvrir
+              </Button>
+            </DialogTitle>
           </DialogHeader>
           {selectedImage && (
             <div className="space-y-4">
-              <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
+              {/* Image Preview */}
+              <div className="aspect-video bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden">
                 {selectedImage.url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
                   <img 
-                    src={selectedImage.url} 
+                    src={selectedImage.bucket_name && selectedImage.file_path 
+                      ? getDocumentUrl(selectedImage.bucket_name, selectedImage.file_path, selectedImage.category)
+                      : selectedImage.url
+                    } 
                     alt={selectedImage.name}
                     className="w-full h-full object-contain"
+                  />
+                ) : selectedImage.url.match(/\.pdf$/i) ? (
+                  <iframe 
+                    src={selectedImage.bucket_name && selectedImage.file_path 
+                      ? getDocumentUrl(selectedImage.bucket_name, selectedImage.file_path, selectedImage.category)
+                      : selectedImage.url
+                    }
+                    title={selectedImage.name}
+                    className="w-full h-full"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
@@ -394,52 +415,53 @@ export const MediaBankManager: React.FC = () => {
                   </div>
                 )}
               </div>
-              <div>
-                <Label>Nom</Label>
-                <p className="text-sm text-muted-foreground">{selectedImage.name}</p>
+              
+              {/* Edit Options */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label>Artiste/Spectacle</Label>
+                  <Select 
+                    value={selectedImage.source_id || 'none'} 
+                    onValueChange={async (value) => {
+                      const newSourceId = value === 'none' ? null : value;
+                      await updateImage(selectedImage.id, { source_id: newSourceId });
+                      setSelectedImage({ ...selectedImage, source_id: newSourceId || undefined });
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Aucun artiste" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Aucun artiste</SelectItem>
+                      {artists.map(artist => (
+                        <SelectItem key={artist.id} value={artist.id}>
+                          {artist.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Catégorie</Label>
+                  <Select 
+                    value={selectedImage.category || 'general'} 
+                    onValueChange={async (value) => {
+                      await updateImage(selectedImage.id, { category: value });
+                      setSelectedImage({ ...selectedImage, category: value });
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {MEDIA_CATEGORIES.map(cat => (
+                        <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div>
-                <Label>Artiste/Spectacle</Label>
-                <Select 
-                  value={selectedImage.source_id || 'none'} 
-                  onValueChange={async (value) => {
-                    const newSourceId = value === 'none' ? null : value;
-                    await updateImage(selectedImage.id, { source_id: newSourceId });
-                    setSelectedImage({ ...selectedImage, source_id: newSourceId || undefined });
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Aucun artiste" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Aucun artiste</SelectItem>
-                    {artists.map(artist => (
-                      <SelectItem key={artist.id} value={artist.id}>
-                        {artist.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Catégorie</Label>
-                <Select 
-                  value={selectedImage.category || 'general'} 
-                  onValueChange={async (value) => {
-                    await updateImage(selectedImage.id, { category: value });
-                    setSelectedImage({ ...selectedImage, category: value });
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {MEDIA_CATEGORIES.map(cat => (
-                      <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              
               {selectedImage.tags && selectedImage.tags.length > 0 && (
                 <div>
                   <Label>Tags</Label>
@@ -450,7 +472,19 @@ export const MediaBankManager: React.FC = () => {
                   </div>
                 </div>
               )}
-              <div className="flex justify-end">
+              
+              <div className="flex justify-between">
+                <Button 
+                  variant="destructive" 
+                  size="sm"
+                  onClick={() => {
+                    handleDelete(selectedImage);
+                    setSelectedImage(null);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Supprimer
+                </Button>
                 <Button variant="outline" onClick={() => setSelectedImage(null)}>
                   Fermer
                 </Button>
