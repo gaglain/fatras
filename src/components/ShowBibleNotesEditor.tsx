@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Plus, Edit2, Trash2, Pin, PinOff, User, Tag, 
-  FileText, Clock, Loader2, AtSign
+  FileText, Clock, Loader2, AtSign, Eye
 } from 'lucide-react';
 import { useShowBibleNotes, ShowBibleNote, CreateNoteData } from '@/hooks/useShowBibleNotes';
 import { useCentralizedData } from '@/hooks/useCentralizedData';
@@ -28,7 +28,7 @@ interface UserProfile {
 export const ShowBibleNotesEditor: React.FC<{ artistId?: string }> = ({ artistId }) => {
   const { user } = useAuth();
   const { artists: spectacles } = useCentralizedData();
-  const { notes, loading, createNote, updateNote, deleteNote, togglePin } = useShowBibleNotes(artistId);
+  const { notes, loading, createNote, updateNote, deleteNote, togglePin } = useShowBibleNotes();
   const [showNoteDialog, setShowNoteDialog] = useState(false);
   const [editingNote, setEditingNote] = useState<ShowBibleNote | null>(null);
   const [viewingNote, setViewingNote] = useState<ShowBibleNote | null>(null);
@@ -36,6 +36,7 @@ export const ShowBibleNotesEditor: React.FC<{ artistId?: string }> = ({ artistId
   const [showMentionSuggestions, setShowMentionSuggestions] = useState(false);
   const [mentionSearch, setMentionSearch] = useState('');
   const contentRef = useRef<HTMLTextAreaElement>(null);
+  const [artistIdFilter, setArtistIdFilter] = useState<string>(artistId || 'all');
 
   const [noteForm, setNoteForm] = useState<CreateNoteData>({
     title: '',
@@ -154,11 +155,16 @@ export const ShowBibleNotesEditor: React.FC<{ artistId?: string }> = ({ artistId
     return fullName.includes(search) || u.username.toLowerCase().includes(search);
   });
 
-  const getSpectacleName = (artistId: string | null) => {
-    if (!artistId) return 'Toutes les spectacles';
-    const spectacle = spectacles.find(s => s.id === artistId);
+  const getSpectacleName = (noteArtistId: string | null) => {
+    if (!noteArtistId) return 'Toutes les spectacles';
+    const spectacle = spectacles.find(s => s.id === noteArtistId);
     return spectacle ? `${spectacle.name} - ${spectacle.genre}` : 'Spectacle inconnu';
   };
+
+  // Filter notes by artist
+  const filteredNotes = artistIdFilter === 'all' 
+    ? notes 
+    : notes.filter(note => note.artist_id === artistIdFilter);
 
   return (
     <Card>
@@ -174,6 +180,25 @@ export const ShowBibleNotesEditor: React.FC<{ artistId?: string }> = ({ artistId
             <span className="sm:hidden">Nouvelle</span>
           </Button>
         </div>
+        
+        {/* Filter by artist */}
+        {!artistId && spectacles.length > 0 && (
+          <div className="mt-4">
+            <Select value={artistIdFilter} onValueChange={setArtistIdFilter}>
+              <SelectTrigger className="w-full sm:w-[250px]">
+                <SelectValue placeholder="Filtrer par spectacle" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les spectacles</SelectItem>
+                {spectacles.map((spectacle) => (
+                  <SelectItem key={spectacle.id} value={spectacle.id}>
+                    {spectacle.name} - {spectacle.genre}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </CardHeader>
 
       <CardContent>
@@ -181,7 +206,7 @@ export const ShowBibleNotesEditor: React.FC<{ artistId?: string }> = ({ artistId
           <div className="flex justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
-        ) : notes.length === 0 ? (
+        ) : filteredNotes.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
             <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
             <p>Aucune note pour le moment</p>
@@ -189,7 +214,7 @@ export const ShowBibleNotesEditor: React.FC<{ artistId?: string }> = ({ artistId
           </div>
         ) : (
           <div className="space-y-4">
-            {notes.map((note) => (
+            {filteredNotes.map((note) => (
               <Card key={note.id} className={note.is_pinned ? 'border-primary' : ''}>
                 <CardContent className="pt-6">
                   <div className="flex items-start justify-between mb-2">
@@ -215,6 +240,7 @@ export const ShowBibleNotesEditor: React.FC<{ artistId?: string }> = ({ artistId
                         size="sm" 
                         variant="ghost"
                         onClick={() => togglePin(note.id, note.is_pinned)}
+                        title={note.is_pinned ? "Désépingler" : "Épingler"}
                       >
                         {note.is_pinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
                       </Button>
@@ -222,8 +248,9 @@ export const ShowBibleNotesEditor: React.FC<{ artistId?: string }> = ({ artistId
                         size="sm" 
                         variant="ghost"
                         onClick={() => setViewingNote(note)}
+                        title="Aperçu"
                       >
-                        <FileText className="h-4 w-4" />
+                        <Eye className="h-4 w-4" />
                       </Button>
                       {note.user_id === user?.id && (
                         <>
@@ -231,6 +258,7 @@ export const ShowBibleNotesEditor: React.FC<{ artistId?: string }> = ({ artistId
                             size="sm" 
                             variant="ghost"
                             onClick={() => handleEditNote(note)}
+                            title="Modifier"
                           >
                             <Edit2 className="h-4 w-4" />
                           </Button>
@@ -238,6 +266,7 @@ export const ShowBibleNotesEditor: React.FC<{ artistId?: string }> = ({ artistId
                             size="sm" 
                             variant="ghost"
                             onClick={() => handleDeleteNote(note.id)}
+                            title="Supprimer"
                           >
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
