@@ -44,30 +44,30 @@ export const ImprovedDocumentPreview: React.FC<ImprovedDocumentPreviewProps> = (
       );
     }
 
-    // Pour les PDF - carte avec boutons d'action
+    // Pour les PDF - carte avec boutons d'action (ouvre en popup)
     if (document.type === 'pdf') {
       return (
         <div 
           className="flex flex-col items-center justify-center h-32 border-2 border-border rounded bg-red-50 dark:bg-red-950/20 cursor-pointer hover:bg-red-100 dark:hover:bg-red-950/30 transition-colors p-4"
-          onClick={() => window.open(publicUrl, '_blank')}
+          onClick={() => setShowFullPreview(true)}
         >
           <FileText className="h-12 w-12 text-red-600 dark:text-red-400 mb-2" />
           <span className="text-xs text-red-700 dark:text-red-300 font-medium">PDF</span>
-          <ExternalLink className="h-4 w-4 text-red-500 mt-1" />
+          <Eye className="h-4 w-4 text-red-500 mt-1" />
         </div>
       );
     }
 
-    // Pour les vidéos
+    // Pour les vidéos (ouvre en popup)
     if (document.type === 'video') {
       return (
         <div 
           className="flex flex-col items-center justify-center h-32 border-2 border-border rounded bg-blue-50 dark:bg-blue-950/20 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-950/30 transition-colors"
-          onClick={() => window.open(publicUrl, '_blank')}
+          onClick={() => setShowFullPreview(true)}
         >
           <Film className="h-12 w-12 text-blue-600 dark:text-blue-400 mb-2" />
           <span className="text-xs text-blue-700 dark:text-blue-300 font-medium">VIDÉO</span>
-          <ExternalLink className="h-4 w-4 text-blue-500 mt-1" />
+          <Eye className="h-4 w-4 text-blue-500 mt-1" />
         </div>
       );
     }
@@ -76,11 +76,82 @@ export const ImprovedDocumentPreview: React.FC<ImprovedDocumentPreviewProps> = (
     return (
       <div 
         className="flex flex-col items-center justify-center h-32 border-2 border-border rounded bg-muted cursor-pointer hover:bg-muted/80 transition-colors"
-        onClick={() => window.open(publicUrl, '_blank')}
+        onClick={() => setShowFullPreview(true)}
       >
         {getFileIcon(document.type)}
         <span className="text-xs text-muted-foreground font-medium mt-2">{document.type.toUpperCase()}</span>
-        <ExternalLink className="h-4 w-4 text-muted-foreground mt-1" />
+        <Eye className="h-4 w-4 text-muted-foreground mt-1" />
+      </div>
+    );
+  };
+
+  const renderDialogContent = () => {
+    // Pour les images
+    if (document.type === 'image') {
+      return (
+        <div className="flex-1 border-2 border-border rounded overflow-hidden">
+          <img 
+            src={publicUrl} 
+            alt={document.name}
+            className="w-full h-full object-contain"
+          />
+        </div>
+      );
+    }
+
+    // Pour les PDF - utiliser un iframe
+    if (document.type === 'pdf') {
+      return (
+        <div className="flex-1 border-2 border-border rounded overflow-hidden">
+          <iframe 
+            src={publicUrl} 
+            title={document.name}
+            className="w-full h-full"
+          />
+        </div>
+      );
+    }
+
+    // Pour les vidéos - utiliser un player vidéo
+    if (document.type === 'video') {
+      return (
+        <div className="flex-1 border-2 border-border rounded overflow-hidden flex items-center justify-center bg-black">
+          <video 
+            src={publicUrl} 
+            controls
+            className="max-w-full max-h-full"
+          >
+            Votre navigateur ne supporte pas la lecture de vidéos.
+          </video>
+        </div>
+      );
+    }
+
+    // Pour les fichiers audio
+    if (document.type === 'audio') {
+      return (
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 p-8">
+          <Music className="h-24 w-24 text-primary" />
+          <audio 
+            src={publicUrl} 
+            controls
+            className="w-full max-w-md"
+          >
+            Votre navigateur ne supporte pas la lecture audio.
+          </audio>
+        </div>
+      );
+    }
+
+    // Pour les autres types - message d'aperçu non disponible
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center gap-4 p-8">
+        {getFileIcon(document.type)}
+        <p className="text-muted-foreground">Aperçu non disponible pour ce type de fichier</p>
+        <Button onClick={() => window.open(publicUrl, '_blank')}>
+          <ExternalLink className="h-4 w-4 mr-2" />
+          Télécharger
+        </Button>
       </div>
     );
   };
@@ -92,33 +163,25 @@ export const ImprovedDocumentPreview: React.FC<ImprovedDocumentPreviewProps> = (
         <p className="text-xs text-muted-foreground truncate text-center">{document.name}</p>
       </div>
 
-      {/* Full preview dialog - images only */}
-      {document.type === 'image' && (
-        <Dialog open={showFullPreview} onOpenChange={setShowFullPreview}>
-          <DialogContent className="max-w-5xl h-[90vh]">
-            <div className="flex flex-col h-full gap-2">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold truncate flex-1">{document.name}</h3>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => window.open(publicUrl, '_blank')}
-                >
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Ouvrir
-                </Button>
-              </div>
-              <div className="flex-1 border-2 border-border rounded overflow-hidden">
-                <img 
-                  src={publicUrl} 
-                  alt={document.name}
-                  className="w-full h-full object-contain"
-                />
-              </div>
+      {/* Full preview dialog - pour tous les types de fichiers */}
+      <Dialog open={showFullPreview} onOpenChange={setShowFullPreview}>
+        <DialogContent className="max-w-5xl h-[90vh]">
+          <div className="flex flex-col h-full gap-2">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold truncate flex-1">{document.name}</h3>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.open(publicUrl, '_blank')}
+              >
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Ouvrir
+              </Button>
             </div>
-          </DialogContent>
-        </Dialog>
-      )}
+            {renderDialogContent()}
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

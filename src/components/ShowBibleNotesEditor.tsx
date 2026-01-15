@@ -213,17 +213,17 @@ export const ShowBibleNotesEditor: React.FC<{ artistId?: string }> = ({ artistId
             <p className="text-sm">Créez votre première note collaborative</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 gap-4">
             {filteredNotes.map((note) => (
               <Card key={note.id} className={note.is_pinned ? 'border-primary' : ''}>
-                <CardContent className="pt-6">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1">
+                <CardContent className="pt-4 px-4">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        {note.is_pinned && <Pin className="h-4 w-4 text-primary" />}
-                        <h3 className="font-semibold">{note.title}</h3>
+                        {note.is_pinned && <Pin className="h-4 w-4 text-primary flex-shrink-0" />}
+                        <h3 className="font-semibold truncate">{note.title}</h3>
                       </div>
-                      <div className="flex flex-wrap gap-2 text-sm text-muted-foreground mb-2">
+                      <div className="flex flex-wrap gap-1.5 text-xs text-muted-foreground mb-2">
                         <span className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
                           {format(new Date(note.updated_at), 'PPp', { locale: fr })}
@@ -235,10 +235,11 @@ export const ShowBibleNotesEditor: React.FC<{ artistId?: string }> = ({ artistId
                         )}
                       </div>
                     </div>
-                    <div className="flex gap-1">
+                    <div className="flex gap-1 flex-shrink-0">
                       <Button 
                         size="sm" 
                         variant="ghost"
+                        className="h-8 w-8 p-0"
                         onClick={() => togglePin(note.id, note.is_pinned)}
                         title={note.is_pinned ? "Désépingler" : "Épingler"}
                       >
@@ -247,6 +248,7 @@ export const ShowBibleNotesEditor: React.FC<{ artistId?: string }> = ({ artistId
                       <Button 
                         size="sm" 
                         variant="ghost"
+                        className="h-8 w-8 p-0"
                         onClick={() => setViewingNote(note)}
                         title="Aperçu"
                       >
@@ -257,6 +259,7 @@ export const ShowBibleNotesEditor: React.FC<{ artistId?: string }> = ({ artistId
                           <Button 
                             size="sm" 
                             variant="ghost"
+                            className="h-8 w-8 p-0"
                             onClick={() => handleEditNote(note)}
                             title="Modifier"
                           >
@@ -265,6 +268,7 @@ export const ShowBibleNotesEditor: React.FC<{ artistId?: string }> = ({ artistId
                           <Button 
                             size="sm" 
                             variant="ghost"
+                            className="h-8 w-8 p-0"
                             onClick={() => handleDeleteNote(note.id)}
                             title="Supprimer"
                           >
@@ -277,7 +281,7 @@ export const ShowBibleNotesEditor: React.FC<{ artistId?: string }> = ({ artistId
                   
                   <p className="text-sm line-clamp-3 mb-2">{note.content}</p>
                   
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-1.5">
                     {note.tags.map(tag => (
                       <Badge key={tag} variant="secondary" className="text-xs">
                         <Tag className="h-3 w-3 mr-1" />
