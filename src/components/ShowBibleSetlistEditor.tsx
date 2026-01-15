@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Music, GripVertical, Trash2, Edit, Plus, Library, FileText, Search } from 'lucide-react';
+import { Music, GripVertical, Trash2, Edit, Plus, Library, FileText, Search, Eye, Filter } from 'lucide-react';
 import { useShowBibleSetlists, Setlist, SetlistSong, LibrarySong } from '@/hooks/useShowBibleSetlists';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -65,7 +65,7 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
     updateSong, 
     deleteSong, 
     reorderSongs 
-  } = useShowBibleSetlists(artistId);
+  } = useShowBibleSetlists();
   
   const [selectedSetlist, setSelectedSetlist] = useState<Setlist | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -75,6 +75,7 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
   const [artists, setArtists] = useState<Artist[]>([]);
   const [librarySearchQuery, setLibrarySearchQuery] = useState('');
   const [addSongTab, setAddSongTab] = useState<'new' | 'library'>('library');
+  const [artistIdFilter, setArtistIdFilter] = useState<string>(artistId || 'all');
 
   const [newSetlistData, setNewSetlistData] = useState({
     title: '',
@@ -234,9 +235,14 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
     return <div className="text-muted-foreground">Chargement...</div>;
   }
 
+  // Filter setlists by artist
+  const filteredSetlists = artistIdFilter === 'all' 
+    ? setlists 
+    : setlists.filter(s => s.artist_id === artistIdFilter);
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h3 className="text-lg font-semibold">Setlists</h3>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
@@ -300,14 +306,34 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
         </Dialog>
       </div>
 
+      {/* Filter by artist */}
+      {!artistId && artists.length > 0 && (
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          <Select value={artistIdFilter} onValueChange={setArtistIdFilter}>
+            <SelectTrigger className="w-full sm:w-[250px]">
+              <SelectValue placeholder="Filtrer par spectacle" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous les spectacles</SelectItem>
+              {artists.map((artist) => (
+                <SelectItem key={artist.id} value={artist.id}>
+                  {artist.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Setlists list */}
         <Card className="p-4 space-y-2">
-          <h4 className="font-medium mb-4">Mes Setlists</h4>
-          {setlists.length === 0 ? (
+          <h4 className="font-medium mb-4">Mes Setlists ({filteredSetlists.length})</h4>
+          {filteredSetlists.length === 0 ? (
             <p className="text-sm text-muted-foreground">Aucune setlist</p>
           ) : (
-            setlists.map((setlist) => (
+            filteredSetlists.map((setlist) => (
               <div
                 key={setlist.id}
                 className={`p-3 rounded-lg border cursor-pointer transition-colors ${
@@ -329,16 +355,29 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
                       {setlist.songs?.length || 0} chanson(s)
                     </p>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteSetlist(setlist.id);
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedSetlist(setlist);
+                      }}
+                      title="Aperçu"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteSetlist(setlist.id);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             ))
