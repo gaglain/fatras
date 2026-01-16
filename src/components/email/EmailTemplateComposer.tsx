@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Mail, Send, FileText, X, Paperclip, Signature, Search } from 'lucide-react';
+import { Mail, Send, FileText, X, Paperclip, Signature, Search, Image as ImageIcon } from 'lucide-react';
+import { ImageGalleryPicker } from '@/components/website/ImageGalleryPicker';
 import { useEmailSender } from '@/hooks/useEmailSender';
 import { supabase } from '@/integrations/supabase/client';
 import { useNylasEmail } from '@/hooks/useNylasEmail';
@@ -64,8 +65,7 @@ export const EmailTemplateComposer: React.FC<EmailTemplateComposerProps> = ({
   const [attachments, setAttachments] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const [includeSignature, setIncludeSignature] = useState(true);
-  const [showMediaPicker, setShowMediaPicker] = useState(false);
-  const [mediaFiles, setMediaFiles] = useState<Array<{name: string; url: string}>>([]);
+  const [addingFromMediaBank, setAddingFromMediaBank] = useState(false);
 
   React.useEffect(() => {
     loadAccounts();
@@ -83,30 +83,26 @@ export const EmailTemplateComposer: React.FC<EmailTemplateComposerProps> = ({
     if (defaultSubject) setSubject(defaultSubject);
   }, [defaultRecipient, defaultSubject]);
 
-  // Charger les fichiers de la banque de médias
-  React.useEffect(() => {
-    const loadMediaFiles = async () => {
-      if (!user?.id) return;
-      
-      const { data: files } = await supabase.storage
-        .from('email-attachments')
-        .list(undefined, { limit: 100 });
-      
-      if (files) {
-        const filesWithUrls = files.map(file => {
-          const { data: { publicUrl } } = supabase.storage
-            .from('email-attachments')
-            .getPublicUrl(file.name);
-          return { name: file.name, url: publicUrl };
-        });
-        setMediaFiles(filesWithUrls);
-      }
-    };
+  // Handler pour ajouter un fichier depuis la banque de médias
+  const handleMediaBankSelect = async (url: string, type?: string) => {
+    if (!url) return;
     
-    if (showMediaPicker) {
-      loadMediaFiles();
+    setAddingFromMediaBank(true);
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      // Extraire le nom du fichier depuis l'URL
+      const urlParts = url.split('/');
+      const fileName = decodeURIComponent(urlParts[urlParts.length - 1]) || 'fichier';
+      const fileObj = new File([blob], fileName, { type: blob.type });
+      setAttachments(prev => [...prev, fileObj]);
+      toast.success('Fichier ajouté depuis la banque de médias');
+    } catch (error) {
+      toast.error('Erreur lors de l\'ajout du fichier');
+    } finally {
+      setAddingFromMediaBank(false);
     }
-  }, [showMediaPicker, user]);
+  };
 
   const applyTemplate = async (template: EmailTemplate) => {
     setSelectedTemplate(template);
@@ -418,14 +414,11 @@ export const EmailTemplateComposer: React.FC<EmailTemplateComposerProps> = ({
                 <Paperclip className="h-4 w-4 mr-2" />
                 Depuis l'ordinateur
               </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowMediaPicker(true)}
-              >
-                <Paperclip className="h-4 w-4 mr-2" />
-                Depuis la banque de médias
-              </Button>
+              <ImageGalleryPicker
+                onSelect={handleMediaBankSelect}
+                buttonText={addingFromMediaBank ? "Chargement..." : "Depuis la banque de médias"}
+                acceptedTypes={['image', 'pdf', 'audio', 'video', 'text', 'other']}
+              />
             </div>
             
             {attachments.length > 0 && (
@@ -489,47 +482,6 @@ export const EmailTemplateComposer: React.FC<EmailTemplateComposerProps> = ({
       </CardContent>
     </Card>
 
-    {/* Dialog pour sélectionner depuis la banque de médias */}
-    <Dialog open={showMediaPicker} onOpenChange={setShowMediaPicker}>
-      <DialogContent className="max-w-3xl max-h-[80vh]">
-        <DialogHeader>
-          <DialogTitle>Sélectionner depuis la banque de médias</DialogTitle>
-        </DialogHeader>
-        <ScrollArea className="h-[60vh]">
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-4">
-            {mediaFiles.map((file, index) => (
-              <div 
-                key={index}
-                className="border rounded-lg p-3 hover:bg-accent cursor-pointer transition-colors"
-                onClick={async () => {
-                  try {
-                    // Télécharger le fichier depuis l'URL
-                    const response = await fetch(file.url);
-                    const blob = await response.blob();
-                    const fileObj = new File([blob], file.name, { type: blob.type });
-                    setAttachments(prev => [...prev, fileObj]);
-                    setShowMediaPicker(false);
-                    toast.success('Fichier ajouté depuis la banque de médias');
-                  } catch (error) {
-                    toast.error('Erreur lors de l\'ajout du fichier');
-                  }
-                }}
-              >
-                <div className="flex items-center gap-2">
-                  <Paperclip className="h-4 w-4 flex-shrink-0" />
-                  <span className="text-sm truncate">{file.name}</span>
-                </div>
-              </div>
-            ))}
-            {mediaFiles.length === 0 && (
-              <div className="col-span-full text-center text-muted-foreground py-8">
-                Aucun fichier dans la banque de médias
-              </div>
-            )}
-          </div>
-        </ScrollArea>
-      </DialogContent>
-    </Dialog>
     </>
   );
 };

@@ -7,7 +7,8 @@ import { RichTextEditor } from '@/components/RichTextEditor';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Plus, Edit2, Trash2, Save, X, Paperclip } from 'lucide-react';
+import { FileText, Plus, Edit2, Trash2, Save, X, Paperclip, Image as ImageIcon } from 'lucide-react';
+import { ImageGalleryPicker } from '@/components/website/ImageGalleryPicker';
 import { useEmailTemplates, EmailTemplate } from '@/hooks/useEmailTemplates';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -26,6 +27,7 @@ export const EmailTemplateManager: React.FC = () => {
   });
   const [attachmentFiles, setAttachmentFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [addingFromMediaBank, setAddingFromMediaBank] = useState(false);
 
   const categories = [
     { value: 'general', label: 'Général' },
@@ -133,6 +135,25 @@ export const EmailTemplateManager: React.FC = () => {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     setAttachmentFiles(prev => [...prev, ...files]);
+  };
+
+  const handleMediaBankSelect = async (url: string, type?: string) => {
+    if (!url) return;
+    
+    setAddingFromMediaBank(true);
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const urlParts = url.split('/');
+      const fileName = decodeURIComponent(urlParts[urlParts.length - 1]) || 'fichier';
+      const fileObj = new File([blob], fileName, { type: blob.type });
+      setAttachmentFiles(prev => [...prev, fileObj]);
+      toast.success('Fichier ajouté depuis la banque de médias');
+    } catch (error) {
+      toast.error('Erreur lors de l\'ajout du fichier');
+    } finally {
+      setAddingFromMediaBank(false);
+    }
   };
 
   const removeAttachment = (index: number) => {
@@ -255,15 +276,21 @@ export const EmailTemplateManager: React.FC = () => {
                   onChange={handleFileSelect}
                   className="hidden"
                 />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => document.getElementById('template-attachments')?.click()}
-                  className="w-full"
-                >
-                  <Paperclip className="h-4 w-4 mr-2" />
-                  Ajouter des pièces jointes
-                </Button>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => document.getElementById('template-attachments')?.click()}
+                  >
+                    <Paperclip className="h-4 w-4 mr-2" />
+                    Depuis l'ordinateur
+                  </Button>
+                  <ImageGalleryPicker
+                    onSelect={handleMediaBankSelect}
+                    buttonText={addingFromMediaBank ? "Chargement..." : "Depuis les médias"}
+                    acceptedTypes={['image', 'pdf', 'audio', 'video', 'text', 'other']}
+                  />
+                </div>
                 {attachmentFiles.length > 0 && (
                   <div className="mt-2 space-y-2">
                     {attachmentFiles.map((file, index) => (
@@ -441,15 +468,21 @@ export const EmailTemplateManager: React.FC = () => {
                 onChange={handleFileSelect}
                 className="hidden"
               />
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => document.getElementById('template-attachments-edit')?.click()}
-                className="w-full"
-              >
-                <Paperclip className="h-4 w-4 mr-2" />
-                Ajouter des pièces jointes
-              </Button>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => document.getElementById('template-attachments-edit')?.click()}
+                >
+                  <Paperclip className="h-4 w-4 mr-2" />
+                  Depuis l'ordinateur
+                </Button>
+                <ImageGalleryPicker
+                  onSelect={handleMediaBankSelect}
+                  buttonText={addingFromMediaBank ? "Chargement..." : "Depuis les médias"}
+                  acceptedTypes={['image', 'pdf', 'audio', 'video', 'text', 'other']}
+                />
+              </div>
               {attachmentFiles.length > 0 && (
                 <div className="mt-2 space-y-2">
                   {attachmentFiles.map((file, index) => (
