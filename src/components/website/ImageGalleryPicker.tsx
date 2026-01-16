@@ -126,23 +126,41 @@ export const ImageGalleryPicker: React.FC<ImageGalleryPickerProps> = ({
                           preload="metadata"
                         />
                         <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                          {getFileIcon(doc.type)}
+                          <Video className="h-8 w-8 text-white" />
                         </div>
                       </div>
                     ) : doc.type === 'pdf' ? (
-                      <div className="aspect-video rounded overflow-hidden bg-muted">
+                      <div className="aspect-video rounded overflow-hidden bg-muted relative">
                         <iframe
-                          src={`${doc.url}#view=FitH`}
-                          className="w-full h-full pointer-events-none"
+                          src={`${doc.url}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
+                          className="w-full h-full pointer-events-none scale-100"
                           title={doc.name}
+                          loading="lazy"
                         />
+                        <div className="absolute bottom-1 right-1 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                          PDF
+                        </div>
+                      </div>
+                    ) : doc.type === 'audio' ? (
+                      <div className="aspect-video rounded bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900/30 dark:to-purple-800/30 flex flex-col items-center justify-center gap-2">
+                        <div className="p-4 bg-purple-500/20 rounded-full">
+                          <Music className="h-8 w-8 text-purple-600 dark:text-purple-400" />
+                        </div>
+                        <p className="text-xs font-medium text-purple-700 dark:text-purple-300">Audio</p>
+                      </div>
+                    ) : doc.type === 'text' ? (
+                      <div className="aspect-video rounded bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30 flex flex-col items-center justify-center gap-2">
+                        <div className="p-4 bg-blue-500/20 rounded-full">
+                          <FileText className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <p className="text-xs font-medium text-blue-700 dark:text-blue-300">Document</p>
                       </div>
                     ) : (
-                      <div className="aspect-video rounded bg-muted flex flex-col items-center justify-center gap-2">
-                        <div className="p-3 bg-background rounded-full">
-                          {getFileIcon(doc.type)}
+                      <div className="aspect-video rounded bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800/30 dark:to-gray-700/30 flex flex-col items-center justify-center gap-2">
+                        <div className="p-4 bg-gray-500/20 rounded-full">
+                          <File className="h-8 w-8 text-gray-600 dark:text-gray-400" />
                         </div>
-                        <p className="text-xs text-muted-foreground capitalize">{doc.type}</p>
+                        <p className="text-xs font-medium text-gray-700 dark:text-gray-300">{doc.type || 'Fichier'}</p>
                       </div>
                     )}
                     <div className="space-y-1">
