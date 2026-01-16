@@ -55,6 +55,13 @@ export const ImageGalleryPicker: React.FC<ImageGalleryPickerProps> = ({
     }
   };
 
+  // Vérifier si l'URL est un vrai fichier PDF accessible
+  const isPdfUrl = (url: string) => {
+    if (!url) return false;
+    const lowercaseUrl = url.toLowerCase();
+    return lowercaseUrl.endsWith('.pdf') || lowercaseUrl.includes('/pdf/') || lowercaseUrl.includes('supabase') && lowercaseUrl.includes('.pdf');
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
@@ -130,13 +137,22 @@ export const ImageGalleryPicker: React.FC<ImageGalleryPickerProps> = ({
                         </div>
                       </div>
                     ) : doc.type === 'pdf' ? (
-                      <div className="aspect-video rounded overflow-hidden bg-muted relative">
-                        <iframe
-                          src={`${doc.url}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
-                          className="w-full h-full pointer-events-none scale-100"
-                          title={doc.name}
-                          loading="lazy"
-                        />
+                      <div className="aspect-video rounded overflow-hidden bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 relative">
+                        {isPdfUrl(doc.url) ? (
+                          <iframe
+                            src={`${doc.url}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
+                            className="w-full h-full pointer-events-none"
+                            title={doc.name}
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex flex-col items-center justify-center gap-2">
+                            <div className="p-4 bg-red-500/20 rounded-full">
+                              <FileText className="h-8 w-8 text-red-600 dark:text-red-400" />
+                            </div>
+                            <p className="text-xs text-muted-foreground line-clamp-1 px-2">{doc.name}</p>
+                          </div>
+                        )}
                         <div className="absolute bottom-1 right-1 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
                           PDF
                         </div>
