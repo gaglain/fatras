@@ -1,10 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { Image as ImageIcon, Search, Loader2, Check, FileText, Music, Video, File } from 'lucide-react';
 import { useShowBible } from '@/hooks/useShowBible';
@@ -16,50 +14,121 @@ interface ImageGalleryPickerProps {
   acceptedTypes?: ('image' | 'pdf' | 'audio' | 'video' | 'text' | 'other')[];
 }
 
+let pdfWorkerConfigured = false;
+
+async function ensurePdfWorker() {
+  if (pdfWorkerConfigured) return;
+  const pdfjs = await import('pdfjs-dist');
+  // Vite/Esm worker config
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (pdfjs as any).GlobalWorkerOptions.workerSrc = new URL(
+    'pdfjs-dist/build/pdf.worker.mjs',
+    import.meta.url
+  ).toString();
+  pdfWorkerConfigured = true;
+}
+
+function PdfThumbnail({ url, title }: { url: string; title: string }) {
+  const [status, setStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+
+  // Render the PDF first page into a canvas (works even when iframe is blocked)
+  return (
+    <div className="w-full h-full">
+      <canvas
+        ref={(canvas) => {
+          if (!canvas) return;
+          if (!url) return;
+          if (status !== 'idle') return;
+
+          (async () => {
+            try {
+              setStatus('loading');
+              await ensurePdfWorker();
+              const pdfjs = await import('pdfjs-dist');
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const loadingTask = (pdfjs as any).getDocument({ url });
+              const pdf = await loadingTask.promise;
+              const page = await pdf.getPage(1);
+
+              // Compute scale to fit width (canvas will be resized to the container by CSS)
+              const viewport = page.getViewport({ scale: 1 });
+              const desiredWidth = 640;
+              const scale = desiredWidth / viewport.width;
+              const scaledViewport = page.getViewport({ scale });
+
+              const dpr = window.devicePixelRatio || 1;
+              canvas.width = Math.floor(scaledViewport.width * dpr);
+              canvas.height = Math.floor(scaledViewport.height * dpr);
+              canvas.style.width = '100%';
+              canvas.style.height = '100%';
+
+              const ctx = canvas.getContext('2d');
+              if (!ctx) throw new Error('Canvas context not available');
+              ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+              await page.render({ canvasContext: ctx, viewport: scaledViewport }).promise;
+              setStatus('ready');
+            } catch {
+              setStatus('error');
+            }
+          })();
+        }}
+        aria-label={`Aperçu PDF: ${title}`}
+        className="w-full h-full object-cover"
+      />
+
+      {status === 'loading' && (
+        <div className="absolute inset-0 grid place-items-center bg-background/60">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        </div>
+      )}
+
+      {status === 'error' && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-muted">
+          <div className="p-4 bg-background rounded-full">
+            <FileText className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <p className="text-xs text-muted-foreground line-clamp-1 px-2">{title}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export const ImageGalleryPicker: React.FC<ImageGalleryPickerProps> = ({
   onSelect,
   selectedUrl,
-  buttonText = "Choisir depuis la bibliothèque",
-  acceptedTypes = ['image', 'pdf', 'audio', 'video', 'text', 'other']
+  buttonText = 'Choisir depuis la bibliothèque',
+  acceptedTypes = ['image', 'pdf', 'audio', 'video', 'text', 'other'],
 }) => {
-  const { user } = useAuth();
   const { documents, loading } = useShowBible();
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedArtist, setSelectedArtist] = useState<string>('all');
 
-  // Get unique artists from all documents
-  const allArtists = Array.from(new Set(documents.flatMap(doc => doc.artists || [])));
+  const allArtists = useMemo(
+    () => Array.from(new Set(documents.flatMap((doc) => doc.artists || []))),
+    [documents]
+  );
 
-  const filteredDocuments = documents.filter(doc => {
-    const matchesSearch = doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         doc.description?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = acceptedTypes.includes(doc.type);
-    const matchesArtist = selectedArtist === 'all' || (doc.artists && doc.artists.includes(selectedArtist));
-    return matchesSearch && matchesType && matchesArtist;
-  });
+  const filteredDocuments = useMemo(
+    () =>
+      documents.filter((doc) => {
+        const matchesSearch =
+          doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          doc.description?.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesType = acceptedTypes.includes(doc.type);
+        const matchesArtist =
+          selectedArtist === 'all' || (doc.artists && doc.artists.includes(selectedArtist));
+        return matchesSearch && matchesType && matchesArtist;
+      }),
+    [documents, searchTerm, acceptedTypes, selectedArtist]
+  );
 
   const handleSelect = (doc: any) => {
     onSelect(doc.url, doc.type);
     setIsOpen(false);
     toast.success(`${doc.name} sélectionné`);
-  };
-
-  const getFileIcon = (type: string) => {
-    switch (type) {
-      case 'image': return <ImageIcon className="h-4 w-4" />;
-      case 'pdf': return <FileText className="h-4 w-4" />;
-      case 'audio': return <Music className="h-4 w-4" />;
-      case 'video': return <Video className="h-4 w-4" />;
-      default: return <File className="h-4 w-4" />;
-    }
-  };
-
-  // Vérifier si l'URL est un vrai fichier PDF accessible
-  const isPdfUrl = (url: string) => {
-    if (!url) return false;
-    const lowercaseUrl = url.toLowerCase();
-    return lowercaseUrl.endsWith('.pdf') || lowercaseUrl.includes('/pdf/') || lowercaseUrl.includes('supabase') && lowercaseUrl.includes('.pdf');
   };
 
   return (
@@ -92,8 +161,10 @@ export const ImageGalleryPicker: React.FC<ImageGalleryPickerProps> = ({
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               <option value="all">Tous les spectacles</option>
-              {allArtists.map(artist => (
-                <option key={artist} value={artist}>{artist}</option>
+              {allArtists.map((artist) => (
+                <option key={artist} value={artist}>
+                  {artist}
+                </option>
               ))}
             </select>
           </div>
@@ -123,62 +194,48 @@ export const ImageGalleryPicker: React.FC<ImageGalleryPickerProps> = ({
                           src={doc.url}
                           alt={doc.name}
                           className="w-full h-full object-cover"
+                          loading="lazy"
                         />
                       </div>
                     ) : doc.type === 'video' ? (
                       <div className="aspect-video rounded overflow-hidden bg-muted relative">
-                        <video
-                          src={doc.url}
-                          className="w-full h-full object-cover"
-                          preload="metadata"
-                        />
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                          <Video className="h-8 w-8 text-white" />
+                        <video src={doc.url} className="w-full h-full object-cover" preload="metadata" />
+                        <div className="absolute inset-0 flex items-center justify-center bg-foreground/20">
+                          <Video className="h-8 w-8 text-background" />
                         </div>
                       </div>
                     ) : doc.type === 'pdf' ? (
-                      <div className="aspect-video rounded overflow-hidden bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 relative">
-                        {isPdfUrl(doc.url) ? (
-                          <iframe
-                            src={`${doc.url}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
-                            className="w-full h-full pointer-events-none"
-                            title={doc.name}
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex flex-col items-center justify-center gap-2">
-                            <div className="p-4 bg-red-500/20 rounded-full">
-                              <FileText className="h-8 w-8 text-red-600 dark:text-red-400" />
-                            </div>
-                            <p className="text-xs text-muted-foreground line-clamp-1 px-2">{doc.name}</p>
-                          </div>
-                        )}
-                        <div className="absolute bottom-1 right-1 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                      <div className="aspect-video rounded overflow-hidden bg-muted relative">
+                        <div className="absolute inset-0">
+                          <PdfThumbnail url={doc.url} title={doc.name} />
+                        </div>
+                        <div className="absolute bottom-1 right-1 bg-destructive text-destructive-foreground text-[10px] font-bold px-1.5 py-0.5 rounded">
                           PDF
                         </div>
                       </div>
                     ) : doc.type === 'audio' ? (
-                      <div className="aspect-video rounded bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900/30 dark:to-purple-800/30 flex flex-col items-center justify-center gap-2">
-                        <div className="p-4 bg-purple-500/20 rounded-full">
-                          <Music className="h-8 w-8 text-purple-600 dark:text-purple-400" />
+                      <div className="aspect-video rounded bg-muted flex flex-col items-center justify-center gap-2">
+                        <div className="p-4 bg-background rounded-full">
+                          <Music className="h-8 w-8 text-muted-foreground" />
                         </div>
-                        <p className="text-xs font-medium text-purple-700 dark:text-purple-300">Audio</p>
+                        <p className="text-xs font-medium text-muted-foreground">Audio</p>
                       </div>
                     ) : doc.type === 'text' ? (
-                      <div className="aspect-video rounded bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30 flex flex-col items-center justify-center gap-2">
-                        <div className="p-4 bg-blue-500/20 rounded-full">
-                          <FileText className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                      <div className="aspect-video rounded bg-muted flex flex-col items-center justify-center gap-2">
+                        <div className="p-4 bg-background rounded-full">
+                          <FileText className="h-8 w-8 text-muted-foreground" />
                         </div>
-                        <p className="text-xs font-medium text-blue-700 dark:text-blue-300">Document</p>
+                        <p className="text-xs font-medium text-muted-foreground">Document</p>
                       </div>
                     ) : (
-                      <div className="aspect-video rounded bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800/30 dark:to-gray-700/30 flex flex-col items-center justify-center gap-2">
-                        <div className="p-4 bg-gray-500/20 rounded-full">
-                          <File className="h-8 w-8 text-gray-600 dark:text-gray-400" />
+                      <div className="aspect-video rounded bg-muted flex flex-col items-center justify-center gap-2">
+                        <div className="p-4 bg-background rounded-full">
+                          <File className="h-8 w-8 text-muted-foreground" />
                         </div>
-                        <p className="text-xs font-medium text-gray-700 dark:text-gray-300">{doc.type || 'Fichier'}</p>
+                        <p className="text-xs font-medium text-muted-foreground">Fichier</p>
                       </div>
                     )}
+
                     <div className="space-y-1">
                       <p className="text-sm font-medium line-clamp-1">{doc.name}</p>
                       {doc.description && (
@@ -194,7 +251,7 @@ export const ImageGalleryPicker: React.FC<ImageGalleryPickerProps> = ({
                       </div>
                       {doc.tags && doc.tags.length > 0 && (
                         <div className="flex gap-1 flex-wrap">
-                          {doc.tags.slice(0, 2).map((tag, idx) => (
+                          {doc.tags.slice(0, 2).map((tag: string, idx: number) => (
                             <span key={idx} className="text-xs px-2 py-0.5 bg-muted rounded-full">
                               {tag}
                             </span>
@@ -203,6 +260,7 @@ export const ImageGalleryPicker: React.FC<ImageGalleryPickerProps> = ({
                       )}
                     </div>
                   </div>
+
                   {selectedUrl === doc.url && (
                     <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1">
                       <Check className="h-4 w-4" />
@@ -223,3 +281,4 @@ export const ImageGalleryPicker: React.FC<ImageGalleryPickerProps> = ({
     </Dialog>
   );
 };
+
