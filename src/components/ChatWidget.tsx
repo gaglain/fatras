@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MessageSquare, Send, Hash, Plus, Archive } from 'lucide-react';
@@ -13,6 +12,9 @@ import { useMessagingUnreadCount } from '@/hooks/useMessagingUnreadCount';
 import { ChannelManager } from '@/components/messaging/ChannelManager';
 import { DirectMessageManager } from '@/components/messaging/DirectMessageManager';
 import { ChannelBrowser } from '@/components/messaging/ChannelBrowser';
+import { MentionInput, extractMentions } from '@/components/messaging/MentionInput';
+import { MessageContent } from '@/components/messaging/MessageContent';
+import { notifyMentionedUsers } from '@/utils/mentionNotificationHelpers';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
@@ -42,7 +44,8 @@ export const ChatWidget: React.FC = () => {
     sendMessage, 
     markChannelAsRead,
     createChannel,
-    archiveChannel
+    archiveChannel,
+    availableUsers
   } = useMessaging();
 
   // Handler for external chat open requests (from roadshow, etc.)
@@ -171,13 +174,33 @@ export const ChatWidget: React.FC = () => {
   }, [currentMessages.length]);
 
   const handleSendMessage = async () => {
-    if (!inputValue.trim() || !selectedChannel) return;
+    if (!inputValue.trim() || !selectedChannel || !user) return;
 
-    const res = await sendMessage(selectedChannel, inputValue.trim());
+    const messageContent = inputValue.trim();
+    const res = await sendMessage(selectedChannel, messageContent);
     if (!res) {
       toast.error("L'envoi du message a échoué. Réessayez plus tard.");
       return;
     }
+
+    // Check for mentions and notify users
+    const mentionedUserIds = extractMentions(messageContent, availableUsers);
+    if (mentionedUserIds.length > 0 && currentChannel) {
+      const senderName = user.email?.split('@')[0] || 'Utilisateur';
+      const channelName = currentChannel.type === 'direct' 
+        ? 'Message privé' 
+        : `#${getChannelDisplayName(currentChannel)}`;
+      
+      notifyMentionedUsers({
+        mentionedUserIds,
+        senderUserId: user.id,
+        senderName,
+        channelId: selectedChannel,
+        channelName,
+        messageContent
+      });
+    }
+
     setInputValue('');
   };
 
@@ -357,7 +380,7 @@ export const ChatWidget: React.FC = () => {
                               })}
                             </span>
                           </div>
-                          <div>{message.content}</div>
+                          <MessageContent content={message.content} />
                         </div>
                       </div>
                     </div>
@@ -371,16 +394,17 @@ export const ChatWidget: React.FC = () => {
           <div className="p-4 border-t bg-card">
             {selectedChannel ? (
               <div className="flex space-x-2">
-                <Input
+                <MentionInput
                   value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
+                  onChange={setInputValue}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault();
                       handleSendMessage();
                     }
                   }}
-                  placeholder={`Message ${currentChannel ? getChannelDisplayName(currentChannel) : 'canal'}...`}
+                  users={availableUsers}
+                  placeholder={`Message ${currentChannel ? getChannelDisplayName(currentChannel) : 'canal'}... (@ pour mentionner)`}
                   className="flex-1 text-sm bg-background text-foreground"
                 />
                 <Button 

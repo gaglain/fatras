@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -13,6 +12,9 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { ChannelManager } from '@/components/messaging/ChannelManager';
 import { DirectMessageManager } from '@/components/messaging/DirectMessageManager';
 import { ChannelBrowser } from '@/components/messaging/ChannelBrowser';
+import { MentionInput, extractMentions } from '@/components/messaging/MentionInput';
+import { MessageContent } from '@/components/messaging/MessageContent';
+import { notifyMentionedUsers } from '@/utils/mentionNotificationHelpers';
 import { AdminPublicChatFeed } from '@/components/AdminPublicChatFeed';
 import { ChatWidget } from '@/components/ChatWidget';
 import { toast } from 'sonner';
@@ -52,7 +54,8 @@ export const Messagerie: React.FC = () => {
     ensureMembership,
     sendMessage, 
     markChannelAsRead,
-    deleteChannel 
+    deleteChannel,
+    availableUsers
   } = useMessaging();
 
   // Auto-select first channel if none selected
@@ -73,13 +76,33 @@ export const Messagerie: React.FC = () => {
   }, [selectedChannel, ensureMembership, fetchMessages, markChannelAsRead]);
 
   const handleSendMessage = async () => {
-    if (!message.trim() || !selectedChannel) return;
+    if (!message.trim() || !selectedChannel || !user) return;
 
-    const res = await sendMessage(selectedChannel, message.trim());
+    const messageContent = message.trim();
+    const res = await sendMessage(selectedChannel, messageContent);
     if (!res) {
       toast.error("L'envoi du message a échoué. Vérifiez vos droits sur ce canal.");
       return;
     }
+
+    // Check for mentions and notify users
+    const mentionedUserIds = extractMentions(messageContent, availableUsers);
+    if (mentionedUserIds.length > 0 && currentChannel) {
+      const senderName = user.email?.split('@')[0] || 'Utilisateur';
+      const channelName = currentChannel.type === 'direct' 
+        ? 'Message privé' 
+        : `#${getChannelDisplayName(currentChannel)}`;
+      
+      notifyMentionedUsers({
+        mentionedUserIds,
+        senderUserId: user.id,
+        senderName,
+        channelId: selectedChannel,
+        channelName,
+        messageContent
+      });
+    }
+
     setMessage('');
   };
 
@@ -361,7 +384,7 @@ export const Messagerie: React.FC = () => {
                                   })}
                                 </span>
                               </div>
-                              <div className="text-sm">{msg.content}</div>
+                              <MessageContent content={msg.content} className="text-sm" />
                             </div>
                           </div>
                         </div>
@@ -375,10 +398,11 @@ export const Messagerie: React.FC = () => {
               {currentChannel && (
                 <div className="p-2 sm:p-4 border-t border-border bg-card">
                   <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-                    <Input
-                      placeholder={`Message ${getChannelDisplayName(currentChannel)}...`}
+                    <MentionInput
+                      placeholder={`Message ${getChannelDisplayName(currentChannel)}... (@ pour mentionner)`}
                       value={message}
-                      onChange={(e) => setMessage(e.target.value)}
+                      onChange={setMessage}
+                      users={availableUsers}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && !e.shiftKey) {
                           e.preventDefault();
