@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Image as ImageIcon, Search, Loader2, Check, FileText, Music, Video, File } from 'lucide-react';
+import { Image as ImageIcon, Search, Loader2, Check, FileText, Music, Video, File, FileSpreadsheet } from 'lucide-react';
 import { useShowBible } from '@/hooks/useShowBible';
 
 interface ImageGalleryPickerProps {
@@ -228,11 +228,28 @@ export const ImageGalleryPicker: React.FC<ImageGalleryPickerProps> = ({
                         <p className="text-xs font-medium text-muted-foreground">Document</p>
                       </div>
                     ) : (
-                      <div className="aspect-video rounded bg-muted flex flex-col items-center justify-center gap-2">
-                        <div className="p-4 bg-background rounded-full">
-                          <File className="h-8 w-8 text-muted-foreground" />
+                      // Fichiers autres (docx, xlsx, etc.) - affichage amélioré
+                      <div className="aspect-video rounded bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 flex flex-col items-center justify-center gap-2 relative">
+                        <div className="p-4 bg-background rounded-full shadow-sm">
+                          {doc.name.toLowerCase().endsWith('.docx') || doc.name.toLowerCase().endsWith('.doc') ? (
+                            <FileText className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                          ) : doc.name.toLowerCase().endsWith('.xlsx') || doc.name.toLowerCase().endsWith('.xls') ? (
+                            <FileSpreadsheet className="h-8 w-8 text-green-600 dark:text-green-400" />
+                          ) : (
+                            <File className="h-8 w-8 text-muted-foreground" />
+                          )}
                         </div>
-                        <p className="text-xs font-medium text-muted-foreground">Fichier</p>
+                        <p className="text-xs font-medium text-muted-foreground line-clamp-1 px-2">{doc.name.split('.').pop()?.toUpperCase()}</p>
+                        {(doc.name.toLowerCase().endsWith('.docx') || doc.name.toLowerCase().endsWith('.doc')) && (
+                          <div className="absolute bottom-1 right-1 bg-blue-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                            WORD
+                          </div>
+                        )}
+                        {(doc.name.toLowerCase().endsWith('.xlsx') || doc.name.toLowerCase().endsWith('.xls')) && (
+                          <div className="absolute bottom-1 right-1 bg-green-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                            EXCEL
+                          </div>
+                        )}
                       </div>
                     )}
 
