@@ -7,6 +7,7 @@ import { Header } from '@/components/Header';
 import { cn } from '@/lib/utils';
 import { PanelLeft, X } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 interface MobileLayoutProps {
   children: React.ReactNode;
@@ -101,7 +102,8 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({ children, className 
           </div>
           
           {/* Actions rapides */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            <ThemeToggle />
             <Button variant="ghost" size="icon" className="relative">
               <span className="text-xs">🔔</span>
               <Badge className="absolute -top-1 -right-1 h-4 w-4 p-0 text-xs bg-red-500">
