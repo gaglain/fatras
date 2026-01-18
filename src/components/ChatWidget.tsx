@@ -48,6 +48,17 @@ export const ChatWidget: React.FC = () => {
     availableUsers
   } = useMessaging();
 
+  // Stabilise les références de fonctions (sinon les useEffect se relancent en boucle)
+  const fetchChannelsRef = React.useRef(fetchChannels);
+  const fetchMessagesRef = React.useRef(fetchMessages);
+  const ensureMembershipRef = React.useRef(ensureMembership);
+  const markChannelAsReadRef = React.useRef(markChannelAsRead);
+
+  useEffect(() => { fetchChannelsRef.current = fetchChannels; }, [fetchChannels]);
+  useEffect(() => { fetchMessagesRef.current = fetchMessages; }, [fetchMessages]);
+  useEffect(() => { ensureMembershipRef.current = ensureMembership; }, [ensureMembership]);
+  useEffect(() => { markChannelAsReadRef.current = markChannelAsRead; }, [markChannelAsRead]);
+
   // Handler for external chat open requests (from roadshow, etc.)
   const handleExternalOpen = useCallback(async (event: ChatWidgetOpenEvent) => {
     setIsOpen(true);
@@ -61,8 +72,8 @@ export const ChatWidget: React.FC = () => {
     }
 
     // Fetch channels to ensure we have the latest
-    await fetchChannels();
-  }, [fetchChannels]);
+    await fetchChannelsRef.current();
+  }, []);
 
   // Register/unregister global event handler
   useEffect(() => {
@@ -127,12 +138,12 @@ export const ChatWidget: React.FC = () => {
   // Fetch messages when selecting a channel (with auto-join)
   useEffect(() => {
     if (selectedChannel && isOpen) {
-      ensureMembership(selectedChannel).finally(() => {
-        fetchMessages(selectedChannel);
-        markChannelAsRead(selectedChannel);
+      ensureMembershipRef.current(selectedChannel).finally(() => {
+        fetchMessagesRef.current(selectedChannel);
+        markChannelAsReadRef.current(selectedChannel);
       });
     }
-  }, [selectedChannel, isOpen, ensureMembership, fetchMessages, markChannelAsRead]);
+  }, [selectedChannel, isOpen]);
 
   const currentChannel = channels.find(c => c.id === selectedChannel);
   const currentMessages = messages[selectedChannel] || [];
@@ -140,20 +151,18 @@ export const ChatWidget: React.FC = () => {
   // Mark channel as read and clear notifications when widget is opened
   useEffect(() => {
     if (isOpen && selectedChannel && user?.id) {
-      markChannelAsRead(selectedChannel);
+      markChannelAsReadRef.current(selectedChannel);
       
       // Marquer les notifications de ce canal comme lues
       const markNotificationsAsRead = async () => {
         try {
           // Use data column (not metadata) and proper JSONB filter syntax
-          const { error } = await supabase
+          await supabase
             .from('notifications')
             .update({ read: true })
             .eq('user_id', user.id)
             .eq('type', 'message')
             .filter('data->>channel_id', 'eq', selectedChannel);
-          
-          // Ignore notification update errors
         } catch {
           // Ignore notification update errors
         }
@@ -161,7 +170,7 @@ export const ChatWidget: React.FC = () => {
       
       markNotificationsAsRead();
     }
-  }, [isOpen, selectedChannel, markChannelAsRead, user?.id]);
+  }, [isOpen, selectedChannel, user?.id]);
 
   // Scroll automatique vers le dernier message uniquement quand un nouveau message arrive
   const prevMessagesLengthRef = React.useRef<number>(0);
