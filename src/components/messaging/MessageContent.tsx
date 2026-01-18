@@ -28,11 +28,11 @@ export const MessageContent: React.FC<MessageContentProps> = ({ content, classNa
       );
     }
     
-    // Add the mention with styling
+    // Add the mention with styling - using contrasting colors for readability
     parts.push(
       <span 
         key={`mention-${match.index}`}
-        className="bg-primary/20 text-primary font-medium px-1 rounded"
+        className="bg-background/90 text-foreground font-semibold px-1.5 py-0.5 rounded shadow-sm"
       >
         {match[1]}
       </span>
