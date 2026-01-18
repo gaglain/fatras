@@ -348,9 +348,11 @@ export const ChatWidget: React.FC = () => {
                   </p>
                 </div>
               ) : (
-                currentMessages.map((message) => {
+              currentMessages.map((message) => {
                   const isMe = message.user_id === user?.id;
                   const displayName = message.user_profile?.first_name || 'Utilisateur';
+                  const avatarUrl = message.user_profile?.avatar_url;
+                  const avatarInitial = (message.user_profile?.first_name?.[0] || 'U').toUpperCase();
                   
                   return (
                     <div 
@@ -358,12 +360,12 @@ export const ChatWidget: React.FC = () => {
                       className={`flex ${isMe ? 'justify-end' : 'justify-start'} animate-fade-in`}
                     >
                       <div className={`flex items-start space-x-2 max-w-[80%] ${isMe ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                        <Avatar className="w-6 h-6">
-                          {message.user_profile?.avatar_url && (
-                            <AvatarImage src={message.user_profile.avatar_url} />
-                          )}
+                        <Avatar className="w-6 h-6 shrink-0">
+                          {avatarUrl ? (
+                            <AvatarImage src={avatarUrl} loading="lazy" />
+                          ) : null}
                           <AvatarFallback className={`text-xs text-white ${isMe ? 'bg-primary' : 'bg-muted-foreground'}`}>
-                            {(message.user_profile?.first_name?.[0] || 'U').toUpperCase()}
+                            {avatarInitial}
                           </AvatarFallback>
                         </Avatar>
                         <div className={`px-3 py-2 rounded-lg text-sm transition-all duration-200 hover:shadow-md ${
