@@ -105,22 +105,31 @@ export const FrontArtistDetail: React.FC = () => {
     );
   }
 
+  // Générer une description SEO enrichie
+  const seoDescription = artist.short_description || artist.bio 
+    ? `${artist.name} - ${artist.short_description || artist.bio}. Spectacle de rue musical, concert-théâtre participatif pour festivals et arts de la rue.`
+    : `${artist.name} - Spectacle de rue musical par la compagnie Fatras. Concert-théâtre participatif et spectacle interactif pour festivals et événements.`;
+
+  const seoKeywords = `${artist.name}, spectacle de rue musical, spectacle musical de rue, concert théâtre, théâtre de rue musical, spectacle participatif, spectacle interactif public, spectacle arts de la rue, Fatras`;
+
   return (
     <>
       <SEOHead 
-        title={`${artist.name} - MusiConnect`}
-        description={artist.short_description || artist.bio}
+        title={`${artist.name} - Spectacle de Rue Musical | Fatras`}
+        description={seoDescription}
+        keywords={seoKeywords}
+        url={`https://fatras.net/artistes/${artist.slug || artist.id}`}
       />
       
-      <div className="min-h-screen py-12 px-4 bg-background">
-        <div className="container mx-auto max-w-6xl">
+      <main className="min-h-screen py-12 px-4 bg-background">
+        <article className="container mx-auto max-w-6xl">
           <Button 
             variant="ghost" 
             onClick={() => navigate('/artistes')}
             className="mb-6"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Retour aux artistes
+            Retour aux spectacles
           </Button>
 
           {/* Hero Section */}
@@ -444,8 +453,8 @@ export const FrontArtistDetail: React.FC = () => {
               )}
             </TabsContent>
           </Tabs>
-        </div>
-      </div>
+        </article>
+      </main>
     </>
   );
 };

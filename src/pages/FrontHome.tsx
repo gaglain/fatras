@@ -11,15 +11,15 @@ import { Button } from '@/components/ui/button';
 import { SEOHead } from '@/components/SEOHead';
 import { OptimizedImage } from '@/components/OptimizedImage';
 
-// Composant Hero avec effet hover
+// Composant Hero avec effet hover - optimisé SEO
 const HeroBlock: React.FC<{ content: any; siteSettings: any }> = ({ content, siteSettings }) => {
   const [isHovered, setIsHovered] = useState(false);
   
-  // Toujours utiliser "Fatras" comme titre par défaut
+  // Toujours utiliser "Fatras" comme titre par défaut - H1 optimisé SEO
   const title = 'Fatras';
-  const subtitle = 'Spectacle de rue & de scène';
+  const subtitle = 'Spectacle de rue musical & théâtre de rue participatif';
   const backgroundImage = content?.backgroundImage;
-  const buttonText = content?.buttonText || 'Découvrir nos Spectacles';
+  const buttonText = content?.buttonText || 'Découvrir nos Spectacles de Rue';
   const buttonLink = content?.buttonLink || '#spectacles';
 
   return (
@@ -417,9 +417,9 @@ export const FrontHome: React.FC = () => {
   return (
     <FrontLayout>
       <SEOHead 
-        title="Fatras - Spectacle de rue & de scène"
-        description="Fatras, compagnie de spectacle de rue et de scène. Découvrez nos créations artistiques uniques, nos dates de tournée et réservez nos spectacles pour vos événements."
-        keywords="spectacle de rue, spectacle de scène, compagnie artistique, Fatras, festivals, arts de la rue, événements culturels"
+        title="Fatras - Spectacle de Rue Musical | Concert Théâtre & Arts de la Rue"
+        description="Fatras, compagnie de spectacle de rue musical et concert-théâtre. Spectacles participatifs et interactifs pour festivals, arts de la rue. À L'Épreuve des Pavés, Live Électrique - réservez nos spectacles."
+        keywords="spectacle de rue musical, spectacle musical de rue, concert théâtre, théâtre de rue musical, spectacle participatif, spectacle interactif public, spectacle arts de la rue, Fatras, festival arts de rue"
         url="https://fatras.net/"
       />
       <div className="min-h-screen">
@@ -436,10 +436,10 @@ export const FrontHome: React.FC = () => {
             
             {/* Section Spectacles */}
             {(block.type === 'events' || block.type === 'events-list') && (
-              <div id="spectacles" className="py-12 px-4 bg-background">
+              <section id="spectacles" className="py-12 px-4 bg-background" aria-labelledby="spectacles-heading">
                 <div className="container mx-auto">
-                   <h2 className="text-3xl font-bold text-center mb-8">
-                    {block.content?.title || 'Nos Spectacles'}
+                   <h2 id="spectacles-heading" className="text-3xl font-bold text-center mb-8">
+                    {block.content?.title || 'Nos Spectacles de Rue Musicaux'}
                   </h2>
                   
                   {Array.isArray(events) && events.length > 0 ? (
@@ -524,7 +524,7 @@ export const FrontHome: React.FC = () => {
                     </div>
                   )}
                 </div>
-              </div>
+              </section>
             )}
             
             {/* Section Artistes */}

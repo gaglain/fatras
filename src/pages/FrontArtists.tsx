@@ -61,38 +61,40 @@ export const FrontArtists: React.FC = () => {
   return (
     <>
       <SEOHead 
-        title="Nos Spectacles - Fatras"
-        description="Découvrez les spectacles de la compagnie Fatras. Spectacles de rue et de scène uniques pour vos festivals et événements culturels."
-        keywords="spectacles Fatras, spectacle de rue, spectacle de scène, compagnie artistique, festival"
+        title="Spectacles de Rue Musicaux | Concert Théâtre & Théâtre de Rue - Fatras"
+        description="Découvrez nos spectacles de rue musicaux : 'À L'Épreuve des Pavés' (concert-théâtre participatif) et 'Live Électrique' (spectacle musical de rue). Spectacles interactifs pour festivals et arts de la rue."
+        keywords="spectacle de rue musical, spectacle musical de rue, concert théâtre, théâtre de rue musical, spectacle participatif, spectacle interactif public, spectacle arts de la rue, À L'Épreuve des Pavés, Live Électrique"
         url="https://fatras.net/artistes"
       />
-      <div className="min-h-screen py-12 px-4 bg-background">
+      <main className="min-h-screen py-12 px-4 bg-background">
         <div className="container mx-auto">
-          <div className="text-center mb-12">
+          <header className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-              Nos Spectacles
+              Nos Spectacles de Rue Musicaux
             </h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Découvrez notre sélection d'artistes exceptionnels et leurs spectacles uniques.
+              Concert-théâtre participatif, spectacle musical de rue interactif : découvrez nos créations pour festivals et arts de la rue.
             </p>
-          </div>
+          </header>
         
         {artists.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" aria-label="Liste des spectacles">
             {artists.map((artist) => (
-              <Card key={artist.id} className="hover:shadow-lg transition-shadow">
-                <CardContent className="p-6">
-                  {artist.photo_url && (
-                    <div className="mb-4 bg-muted rounded-lg overflow-hidden">
-                      <img 
-                        src={artist.photo_url} 
-                        alt={artist.name}
-                        className="w-full h-48 object-contain"
-                      />
-                    </div>
-                  )}
-                  <div className="text-center">
-                    <h3 className="text-xl font-semibold mb-2">{artist.name}</h3>
+              <article key={artist.id} className="hover:shadow-lg transition-shadow">
+                <Card>
+                  <CardContent className="p-6">
+                    {artist.photo_url && (
+                      <figure className="mb-4 bg-muted rounded-lg overflow-hidden">
+                        <img 
+                          src={artist.photo_url} 
+                          alt={`${artist.name} - Spectacle de rue musical`}
+                          className="w-full h-48 object-contain"
+                          loading="lazy"
+                        />
+                      </figure>
+                    )}
+                    <div className="text-center">
+                      <h2 className="text-xl font-semibold mb-2">{artist.name}</h2>
                     <div className="flex items-center justify-center gap-2 mb-3">
                       {artist.genre && (
                         <Badge variant="outline">{artist.genre}</Badge>
@@ -107,26 +109,29 @@ export const FrontArtists: React.FC = () => {
                     {artist.bio && (
                       <p className="text-muted-foreground text-sm mb-4">{artist.bio}</p>
                     )}
-                    <a 
-                      href={`/artistes/${artist.slug || artist.id}`}
-                      className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
-                    >
-                      Découvrir
-                    </a>
-                  </div>
-                </CardContent>
-              </Card>
+                      <a 
+                        href={`/artistes/${artist.slug || artist.id}`}
+                        className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+                        aria-label={`Découvrir le spectacle ${artist.name}`}
+                      >
+                        Découvrir le spectacle
+                      </a>
+                    </div>
+                  </CardContent>
+                </Card>
+              </article>
             ))}
-          </div>
+          </section>
         ) : (
           <div className="text-center text-muted-foreground py-16">
             <Users className="h-16 w-16 mx-auto mb-6 text-muted-foreground/50" />
-            <h3 className="text-xl font-medium mb-2">Aucun spectacle disponible</h3>
-            <p>Nos spectacles seront bientôt disponibles. Revenez nous voir !</p>
+            <h2 className="text-xl font-medium mb-2">Aucun spectacle disponible</h2>
+            <p>Nos spectacles de rue musicaux seront bientôt disponibles. Revenez nous voir !</p>
           </div>
         )}
         </div>
-      </div>
+      </main>
+      
     </>
   );
 };
