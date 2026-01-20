@@ -430,15 +430,66 @@ export const EventDetail: React.FC = () => {
                   )}
                   {event.attendees_count && (
                     <div>
-                      <p className="text-sm text-muted-foreground mb-1">Participants attendus</p>
-                      <p className="font-semibold">{event.attendees_count}</p>
+                      <p className="text-sm text-muted-foreground mb-1">Jauge / Participants</p>
+                      <p className="font-semibold flex items-center gap-2">
+                        <Users className="h-4 w-4" />
+                        {event.attendees_count.toLocaleString('fr-FR')}
+                      </p>
+                    </div>
+                  )}
+                  {(event.budget_min || event.budget_max) && (
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Budget / Prix</p>
+                      <p className="font-semibold">
+                        {event.budget_min && event.budget_max
+                          ? `${event.budget_min.toLocaleString('fr-FR')}€ - ${event.budget_max.toLocaleString('fr-FR')}€`
+                          : event.budget_min
+                            ? `À partir de ${event.budget_min.toLocaleString('fr-FR')}€`
+                            : `Jusqu'à ${event.budget_max?.toLocaleString('fr-FR')}€`
+                        }
+                      </p>
                     </div>
                   )}
                 </div>
+
+                {/* Adresse complète */}
+                {(event.venue || event.address || event.city || event.postal_code || event.country) && (
+                  <div className="mt-6">
+                    <p className="text-sm text-muted-foreground mb-2">Lieu / Adresse</p>
+                    <div className="flex items-start gap-2">
+                      <MapPin className="h-4 w-4 mt-1 text-muted-foreground" />
+                      <div>
+                        {event.venue && <p className="font-semibold">{event.venue}</p>}
+                        {event.address && <p className="text-foreground">{event.address}</p>}
+                        {(event.postal_code || event.city) && (
+                          <p className="text-foreground">
+                            {[event.postal_code, event.city].filter(Boolean).join(' ')}
+                          </p>
+                        )}
+                        {event.country && <p className="text-muted-foreground">{event.country}</p>}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {event.description && (
                   <div className="mt-6">
                     <p className="text-sm text-muted-foreground mb-2">Description</p>
                     <p className="text-foreground">{event.description}</p>
+                  </div>
+                )}
+
+                {event.requirements && (
+                  <div className="mt-6">
+                    <p className="text-sm text-muted-foreground mb-2">Besoins techniques</p>
+                    <p className="text-foreground whitespace-pre-wrap">{event.requirements}</p>
+                  </div>
+                )}
+
+                {event.notes && (
+                  <div className="mt-6">
+                    <p className="text-sm text-muted-foreground mb-2">Notes</p>
+                    <p className="text-foreground whitespace-pre-wrap">{event.notes}</p>
                   </div>
                 )}
               </CardContent>
