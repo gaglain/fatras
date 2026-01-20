@@ -105,7 +105,7 @@ const App = () => {
               Rafraîchir
             </button>
             <button
-              onClick={() => {
+              onClick={async () => {
                 try {
                   const preserved: Record<string, string> = {};
                   for (let i = 0; i < localStorage.length; i++) {
@@ -117,9 +117,20 @@ const App = () => {
                   localStorage.clear();
                   Object.entries(preserved).forEach(([k, v]) => localStorage.setItem(k, v));
                   sessionStorage.clear();
+
+                  // Also clear Service Worker + Cache Storage to prevent mixed-build crashes
+                  if ('caches' in window) {
+                    const keys = await caches.keys();
+                    await Promise.all(keys.map((k) => caches.delete(k)));
+                  }
+                  if ('serviceWorker' in navigator) {
+                    const regs = await navigator.serviceWorker.getRegistrations();
+                    await Promise.all(regs.map((r) => r.unregister()));
+                  }
                 } catch (e) {
                   logger.warn('Cache reset failed:', e);
                 }
+
                 resetErrorBoundary();
                 window.location.reload();
               }}
