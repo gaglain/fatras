@@ -5,68 +5,90 @@ import { Users, Calendar, CheckSquare, Music, Euro, Mail } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 export const DashboardStatsCards: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   // Récupération des contacts depuis Supabase
   const { data: contacts = [] } = useQuery({
-    queryKey: ['contacts'],
+    queryKey: ['contacts', user?.id],
     queryFn: async () => {
+      if (!user?.id) return [];
       const { data, error } = await supabase
         .from('contacts')
-        .select('*');
+        .select('id, role');
       
       if (error) {
+        console.error('Error fetching contacts:', error);
         return [];
       }
       return data || [];
-    }
+    },
+    enabled: !!user?.id,
+    staleTime: 30000,
+    refetchOnWindowFocus: true,
   });
 
   // Récupération des événements depuis Supabase
   const { data: events = [] } = useQuery({
-    queryKey: ['events'],
+    queryKey: ['events', user?.id],
     queryFn: async () => {
+      if (!user?.id) return [];
       const { data, error } = await supabase
         .from('events')
-        .select('*');
+        .select('id, start_date');
       
       if (error) {
+        console.error('Error fetching events:', error);
         return [];
       }
       return data || [];
-    }
+    },
+    enabled: !!user?.id,
+    staleTime: 30000,
+    refetchOnWindowFocus: true,
   });
 
   // Récupération des campagnes email depuis Supabase
   const { data: campaigns = [] } = useQuery({
-    queryKey: ['campaigns'],
+    queryKey: ['email_campaigns', user?.id],
     queryFn: async () => {
+      if (!user?.id) return [];
       const { data, error } = await supabase
         .from('email_campaigns')
-        .select('*');
+        .select('id, status');
       
       if (error) {
+        console.error('Error fetching campaigns:', error);
         return [];
       }
       return data || [];
-    }
+    },
+    enabled: !!user?.id,
+    staleTime: 30000,
+    refetchOnWindowFocus: true,
   });
 
   // Récupération des devis depuis Supabase
   const { data: quotes = [] } = useQuery({
-    queryKey: ['quotes'],
+    queryKey: ['quotes', user?.id],
     queryFn: async () => {
+      if (!user?.id) return [];
       const { data, error } = await supabase
         .from('quotes')
-        .select('*');
+        .select('id, status, total_amount');
       
       if (error) {
+        console.error('Error fetching quotes:', error);
         return [];
       }
       return data || [];
-    }
+    },
+    enabled: !!user?.id,
+    staleTime: 30000,
+    refetchOnWindowFocus: true,
   });
 
   // Calculs des statistiques en temps réel avec les vraies données
