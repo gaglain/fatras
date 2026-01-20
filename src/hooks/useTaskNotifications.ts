@@ -68,6 +68,8 @@ export const useTaskNotifications = () => {
     if (!user) return;
 
     try {
+      const today = new Date().toISOString().split('T')[0];
+
       const { data: tasks, error } = await supabase
         .from('tasks')
         .select('*')
@@ -79,29 +81,29 @@ export const useTaskNotifications = () => {
       if (error) throw error;
       if (!tasks?.length) return;
 
-      // Récupérer les notifications existantes en une seule requête
+      // Récupérer les notifications existantes POUR AUJOURD'HUI (recrée chaque jour)
       const taskIds = tasks.map(t => t.id);
       const { data: existingNotifs } = await supabase
         .from('notifications')
         .select('data')
         .eq('user_id', user.id)
         .eq('type', 'task_overdue')
-        .in('data->>task_id', taskIds);
+        .gte('created_at', `${today}T00:00:00Z`);
 
       const existingTaskIds = new Set(
         (existingNotifs || []).map((n) => {
           const data = n.data as Record<string, unknown> | null;
           return data?.task_id as string | undefined;
-        })
+        }).filter((id): id is string => !!id && taskIds.includes(id))
       );
 
-      // Filtrer les tâches qui n'ont pas encore de notification
+      // Filtrer les tâches qui n'ont pas encore de notification AUJOURD'HUI
       const newTasks = tasks.filter(t => !existingTaskIds.has(t.id));
 
       // Batch insert des nouvelles notifications (pour user.id uniquement = RLS OK)
       if (newTasks.length > 0) {
         const notificationsToInsert = newTasks.map(task => ({
-          user_id: user.id, // ✅ Toujours l'utilisateur actuel = RLS respecté
+          user_id: user.id,
           type: 'task_overdue',
           title: 'Tâche en retard',
           message: `La tâche "${task.title}" était due le ${new Date(task.due_date).toLocaleDateString('fr-FR')}`,
@@ -109,22 +111,25 @@ export const useTaskNotifications = () => {
             task_id: task.id,
             task_title: task.title,
             due_date: task.due_date,
-            priority: task.priority
+            priority: task.priority,
+            reminder_date: today // Track which day this reminder is for
           },
           read: false
         }));
 
-        await supabase
+        // Use regular insert (not upsert) to create new daily reminders
+        const { error: insertError } = await supabase
           .from('notifications')
-          .upsert(notificationsToInsert, { 
-            onConflict: 'user_id,type,data->>task_id',
-            ignoreDuplicates: true 
-          });
+          .insert(notificationsToInsert);
+
+        if (insertError) {
+          logger.error('Error inserting overdue notifications:', insertError);
+        }
       }
 
       // Afficher les toasts (côté client uniquement)
       for (const task of tasks) {
-        const key = `overdue:${task.id}`;
+        const key = `overdue:${task.id}:${today}`;
         if (!hasShownToast(key)) {
           toast.error(`Tâche en retard: ${task.title}`, {
             description: `Due le ${new Date(task.due_date).toLocaleDateString('fr-FR')}`,
@@ -208,12 +213,14 @@ export const useTaskNotifications = () => {
           };
         });
 
-        await supabase
+        // Use regular insert (not upsert) to create new daily reminders
+        const { error: insertError } = await supabase
           .from('notifications')
-          .upsert(notificationsToInsert, { 
-            onConflict: 'user_id,type,data->>task_id',
-            ignoreDuplicates: true 
-          });
+          .insert(notificationsToInsert);
+
+        if (insertError) {
+          logger.error('Error inserting due_soon notifications:', insertError);
+        }
       }
 
       // Afficher les toasts urgents (côté client uniquement)
