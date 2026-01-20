@@ -1,17 +1,16 @@
-// Smarter Service Worker with network-first for pages and cache-busting support
-const CACHE_NAME = 'artistcrm-v7';
+// Smarter Service Worker with safe caching (prevents mixed-build crashes)
+const CACHE_NAME = 'artistcrm-v8';
+
+// Keep precache minimal to avoid serving stale app code
 const urlsToCache = [
-  // Keep minimal precache
-  '/favicon.png'
+  '/favicon.png',
 ];
 
 self.addEventListener('install', (event) => {
   // Activate immediately
   self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(urlsToCache);
-    })
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache))
   );
 });
 
@@ -21,7 +20,9 @@ self.addEventListener('activate', (event) => {
       // Clean old caches
       const keys = await caches.keys();
       await Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)));
+
       await self.clients.claim();
+
       // Inform clients they can refresh if needed (avoid forced reload loops)
       const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
       await Promise.all(
@@ -40,14 +41,14 @@ self.addEventListener('activate', (event) => {
 // Handle push notifications
 self.addEventListener('push', (event) => {
   console.log('📬 Push notification received:', event);
-  
+
   let notificationData = {
     title: 'Nouvelle notification',
     body: 'Vous avez une nouvelle notification',
     badge: '/favicon.png',
     icon: '/favicon.png',
     tag: 'notification',
-    data: {}
+    data: {},
   };
 
   if (event.data) {
@@ -59,7 +60,7 @@ self.addEventListener('push', (event) => {
         badge: payload.badge || notificationData.badge,
         icon: payload.icon || notificationData.icon,
         tag: payload.tag || notificationData.tag,
-        data: payload.data || {}
+        data: payload.data || {},
       };
     } catch (error) {
       console.error('Error parsing push payload:', error);
@@ -73,7 +74,7 @@ self.addEventListener('push', (event) => {
       badge: notificationData.badge,
       tag: notificationData.tag,
       data: notificationData.data,
-      vibrate: [200, 100, 200]
+      vibrate: [200, 100, 200],
     })
   );
 });
@@ -83,9 +84,7 @@ self.addEventListener('notificationclick', (event) => {
   console.log('🔔 Notification clicked:', event);
   event.notification.close();
 
-  event.waitUntil(
-    clients.openWindow(event.notification.data.url || '/')
-  );
+  event.waitUntil(clients.openWindow(event.notification.data.url || '/'));
 });
 
 self.addEventListener('fetch', (event) => {
@@ -98,9 +97,18 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Respect cache-busting query params (?v=..., ?preview=...)
-  if (url.searchParams.has('v') || url.searchParams.has('preview')) {
-    event.respondWith(fetch(request));
+  // CRITICAL: never cache any request with query params (Vite dev uses ?t=...)
+  // This avoids loading a mix of old/new modules which can break React/Router contexts.
+  const hasQuery = url.search && url.search.length > 0;
+  const isViteDevRequest =
+    url.pathname.startsWith('/@') ||
+    url.pathname.startsWith('/src') ||
+    url.pathname.startsWith('/@fs') ||
+    url.pathname.includes('/node_modules/') ||
+    url.pathname.includes('/.vite/');
+
+  if (hasQuery || isViteDevRequest) {
+    event.respondWith(fetch(request, { cache: 'no-store' }));
     return;
   }
 
@@ -123,9 +131,7 @@ self.addEventListener('fetch', (event) => {
   // Always try network first for logo-like images
   const isLogoAsset = /logo|site-logo|branding|app-icon|favicon/i.test(url.pathname);
   if (isLogoAsset) {
-    event.respondWith(
-      fetch(request).catch(() => caches.match(request))
-    );
+    event.respondWith(fetch(request).catch(() => caches.match(request)));
     return;
   }
 
