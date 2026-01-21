@@ -51,6 +51,8 @@ const ChatMessage = memo(({ message, isMe }: { message: any; isMe: boolean }) =>
 });
 ChatMessage.displayName = 'ChatMessage';
 
+const LAST_CHANNEL_KEY = 'chat_widget_last_channel';
+
 export const ChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedChannel, setSelectedChannel] = useState('');
@@ -61,6 +63,19 @@ export const ChatWidget: React.FC = () => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
+
+  // Save last used channel to localStorage
+  const saveLastChannel = useCallback((channelId: string) => {
+    if (channelId) {
+      localStorage.setItem(LAST_CHANNEL_KEY, channelId);
+    }
+  }, []);
+
+  // Handle channel selection with persistence
+  const handleChannelSelect = useCallback((channelId: string) => {
+    setSelectedChannel(channelId);
+    saveLastChannel(channelId);
+  }, [saveLastChannel]);
 
   const messagingUnreadCount = useMessagingUnreadCountOptimized();
 
@@ -99,36 +114,45 @@ export const ChatWidget: React.FC = () => {
   useEffect(() => {
     if (pendingRoadshowStopId && channels.length > 0) {
       const matching = channels.find((c) => c.roadshow_id === pendingRoadshowStopId);
-      if (matching) setSelectedChannel(matching.id);
+      if (matching) handleChannelSelect(matching.id);
       else toast.error("Aucun canal trouvé pour cette feuille de route");
       setPendingRoadshowStopId(null);
     }
-  }, [pendingRoadshowStopId, channels]);
+  }, [pendingRoadshowStopId, channels, handleChannelSelect]);
 
   useEffect(() => {
     if (pendingChannelName && channels.length > 0) {
       const matchingChannel = channels.find(c => c.name?.toLowerCase() === pendingChannelName.toLowerCase());
-      if (matchingChannel) setSelectedChannel(matchingChannel.id);
+      if (matchingChannel) handleChannelSelect(matchingChannel.id);
       else toast.error("Canal introuvable");
       setPendingChannelName(null);
     }
-  }, [pendingChannelName, channels]);
+  }, [pendingChannelName, channels, handleChannelSelect]);
 
+  // Restore last used channel or fall back to first channel
   useEffect(() => {
     if (isOpen && channels.length > 0 && !selectedChannel && !pendingChannelName && !pendingRoadshowStopId) {
-      setSelectedChannel(channels[0].id);
+      const lastChannelId = localStorage.getItem(LAST_CHANNEL_KEY);
+      const lastChannel = lastChannelId ? channels.find(c => c.id === lastChannelId) : null;
+      
+      if (lastChannel) {
+        setSelectedChannel(lastChannel.id);
+      } else {
+        // Fall back to first channel if last used is not found
+        handleChannelSelect(channels[0].id);
+      }
     }
-  }, [isOpen, channels, selectedChannel, pendingChannelName, pendingRoadshowStopId]);
+  }, [isOpen, channels, selectedChannel, pendingChannelName, pendingRoadshowStopId, handleChannelSelect]);
 
   useEffect(() => {
     const createDefault = async () => {
       if (isOpen && !loading && channels.length === 0 && !pendingChannelName && !pendingRoadshowStopId) {
         const id = await createChannel('general', 'Canal par défaut', 'public', []);
-        if (id) { setSelectedChannel(id); await fetchChannels(); }
+        if (id) { handleChannelSelect(id); await fetchChannels(); }
       }
     };
     createDefault();
-  }, [isOpen, loading, channels.length, createChannel, fetchChannels, pendingChannelName, pendingRoadshowStopId]);
+  }, [isOpen, loading, channels.length, createChannel, fetchChannels, pendingChannelName, pendingRoadshowStopId, handleChannelSelect]);
 
   useEffect(() => {
     if (selectedChannel && isOpen) {
@@ -217,7 +241,7 @@ export const ChatWidget: React.FC = () => {
               <Button variant="ghost" size="sm" onClick={() => setIsOpen(false)} className="text-primary-foreground hover:bg-primary-foreground/20">Masquer</Button>
             </div>
             <div className="space-y-2">
-              <Select value={selectedChannel} onValueChange={setSelectedChannel}>
+              <Select value={selectedChannel} onValueChange={handleChannelSelect}>
                 <SelectTrigger className="w-full h-9 text-sm bg-background text-foreground"><SelectValue placeholder="Sélectionner un canal" /></SelectTrigger>
                 <SelectContent className="bg-card text-card-foreground max-h-60">
                   {channels.map((channel) => (
@@ -229,11 +253,11 @@ export const ChatWidget: React.FC = () => {
               </Select>
               <div className="flex gap-1 flex-wrap items-center">
                 {selectedChannel && currentChannel && currentChannel.type === 'public' && !currentChannel.roadshow_id && (
-                  <Button size="sm" variant="ghost" className="shrink-0 h-8 px-2 text-xs text-primary-foreground hover:bg-primary-foreground/20" onClick={async () => { if (confirm(`Archiver le canal "${getChannelDisplayName(currentChannel)}" ?`)) { await archiveChannel(selectedChannel); setSelectedChannel(channels.find(c => c.id !== selectedChannel)?.id || ''); } }} title="Archiver ce canal"><Archive className="h-3 w-3" /></Button>
+                  <Button size="sm" variant="ghost" className="shrink-0 h-8 px-2 text-xs text-primary-foreground hover:bg-primary-foreground/20" onClick={async () => { if (confirm(`Archiver le canal "${getChannelDisplayName(currentChannel)}" ?`)) { await archiveChannel(selectedChannel); const nextChannel = channels.find(c => c.id !== selectedChannel); if (nextChannel) handleChannelSelect(nextChannel.id); else setSelectedChannel(''); } }} title="Archiver ce canal"><Archive className="h-3 w-3" /></Button>
                 )}
-                <ChannelManager onChannelCreated={setSelectedChannel} />
-                <DirectMessageManager onChannelCreated={setSelectedChannel} trigger={<Button size="sm" variant="secondary" className="shrink-0 h-8 px-2 text-xs"><MessageSquare className="h-3 w-3 mr-1" />DM</Button>} />
-                <ChannelBrowser trigger={<Button size="sm" variant="secondary" className="shrink-0 h-8 px-2 text-xs"><Plus className="h-3 w-3 mr-1" />Parcourir</Button>} onChannelJoined={setSelectedChannel} />
+                <ChannelManager onChannelCreated={handleChannelSelect} />
+                <DirectMessageManager onChannelCreated={handleChannelSelect} trigger={<Button size="sm" variant="secondary" className="shrink-0 h-8 px-2 text-xs"><MessageSquare className="h-3 w-3 mr-1" />DM</Button>} />
+                <ChannelBrowser trigger={<Button size="sm" variant="secondary" className="shrink-0 h-8 px-2 text-xs"><Plus className="h-3 w-3 mr-1" />Parcourir</Button>} onChannelJoined={handleChannelSelect} />
               </div>
             </div>
           </div>
@@ -258,7 +282,7 @@ export const ChatWidget: React.FC = () => {
             ) : (
               <div className="flex items-center justify-between gap-2">
                 <p className="text-sm text-muted-foreground">Aucun canal sélectionné.</p>
-                <Button size="sm" variant="secondary" onClick={async () => { const id = await createChannel('general', 'Canal par défaut', 'public', []); if (id) { setSelectedChannel(id); await fetchChannels(); } }}><Plus className="h-3 w-3 mr-1" /> Créer #general</Button>
+                <Button size="sm" variant="secondary" onClick={async () => { const id = await createChannel('general', 'Canal par défaut', 'public', []); if (id) { handleChannelSelect(id); await fetchChannels(); } }}><Plus className="h-3 w-3 mr-1" /> Créer #general</Button>
               </div>
             )}
           </div>
