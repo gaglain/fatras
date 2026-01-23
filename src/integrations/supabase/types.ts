@@ -1505,6 +1505,7 @@ export type Database = {
           end_date: string | null
           event_type: string | null
           external_id: string | null
+          google_calendar_event_id: string | null
           id: string
           notes: string | null
           owner_id: string | null
@@ -1532,6 +1533,7 @@ export type Database = {
           end_date?: string | null
           event_type?: string | null
           external_id?: string | null
+          google_calendar_event_id?: string | null
           id?: string
           notes?: string | null
           owner_id?: string | null
@@ -1559,6 +1561,7 @@ export type Database = {
           end_date?: string | null
           event_type?: string | null
           external_id?: string | null
+          google_calendar_event_id?: string | null
           id?: string
           notes?: string | null
           owner_id?: string | null
