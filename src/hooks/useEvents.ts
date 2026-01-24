@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/UnifiedAuthContext';
 import { logger } from '@/lib/logger';
+import { useGoogleCalendarSync } from '@/hooks/useGoogleCalendarSync';
 import type { Database } from '@/integrations/supabase/types';
 
 type DbEvent = Database['public']['Tables']['events']['Row'];
@@ -75,6 +76,7 @@ const fetchEvents = async (): Promise<Event[]> => {
 export const useEvents = () => {
   const queryClient = useQueryClient();
   const { user } = useAuthContext();
+  const { syncEventToCalendar } = useGoogleCalendarSync();
 
   const { 
     data: events = [], 
@@ -156,6 +158,13 @@ export const useEvents = () => {
         .single();
 
       if (error) throw error;
+      
+      // Auto-sync to Google Calendar when status is 'option' or 'confirmé'
+      if (updates.status === 'option' || updates.status === 'confirmé') {
+        logger.info(`Auto-syncing event ${id} to Google Calendar (status: ${updates.status})`);
+        syncEventToCalendar(id);
+      }
+      
       return mapDbToEvent(data);
     },
     onSuccess: () => {
