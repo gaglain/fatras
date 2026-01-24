@@ -2,8 +2,27 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/UnifiedAuthContext';
 import { logger } from '@/lib/logger';
-import { useGoogleCalendarSync } from '@/hooks/useGoogleCalendarSync';
 import type { Database } from '@/integrations/supabase/types';
+
+// Fonction standalone pour sync Google Calendar (évite les problèmes de hooks)
+const syncToGoogleCalendar = async (eventId: string) => {
+  try {
+    const { data, error } = await supabase.functions.invoke('sync-google-calendar', {
+      body: {
+        action: 'sync_event',
+        event_id: eventId
+      }
+    });
+    if (error) {
+      logger.warn('Google Calendar sync failed (non-blocking):', error);
+    } else if (data?.success) {
+      logger.info('Event synced to Google Calendar:', eventId);
+    }
+  } catch (err) {
+    // Non-blocking - on log l'erreur mais on ne propage pas
+    logger.warn('Google Calendar sync error (non-blocking):', err);
+  }
+};
 
 type DbEvent = Database['public']['Tables']['events']['Row'];
 
@@ -76,7 +95,6 @@ const fetchEvents = async (): Promise<Event[]> => {
 export const useEvents = () => {
   const queryClient = useQueryClient();
   const { user } = useAuthContext();
-  const { syncEventToCalendar } = useGoogleCalendarSync();
 
   const { 
     data: events = [], 
@@ -159,10 +177,11 @@ export const useEvents = () => {
 
       if (error) throw error;
       
-      // Auto-sync to Google Calendar when status is 'option' or 'confirmé'
+      // Auto-sync to Google Calendar when status is 'option' or 'confirmé' (non-blocking)
       if (updates.status === 'option' || updates.status === 'confirmé') {
         logger.info(`Auto-syncing event ${id} to Google Calendar (status: ${updates.status})`);
-        syncEventToCalendar(id);
+        // Appel asynchrone non-bloquant
+        syncToGoogleCalendar(id);
       }
       
       return mapDbToEvent(data);
