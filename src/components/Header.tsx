@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Bell, User, LogOut, MessageSquare, ChevronDown } from 'lucide-react';
+import { Bell, User, LogOut, MessageSquare, ChevronDown, Mail } from 'lucide-react';
 import { UserProfile } from './UserProfile';
 import { ThemeToggle } from './ThemeToggle';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -10,8 +10,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useUser } from '@/contexts/UserContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotifications } from '@/hooks/useNotifications';
+import { useEmailNotifications } from '@/hooks/useEmailNotifications';
 import { NotificationCenter } from '@/components/NotificationCenter';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { toast } from 'sonner';
 
@@ -19,6 +20,10 @@ export const Header: React.FC = () => {
   const { currentUser } = useUser();
   const { signOut } = useAuth();
   const { unreadCount } = useNotifications();
+  const { getUnreadCount: getEmailUnreadCount } = useEmailNotifications();
+  const navigate = useNavigate();
+  
+  const emailUnreadCount = getEmailUnreadCount();
   
   const [showUserProfile, setShowUserProfile] = useState(false);
   const [showNotificationCenter, setShowNotificationCenter] = useState(false);
@@ -102,6 +107,28 @@ export const Header: React.FC = () => {
             <div className="flex items-center space-x-1 lg:space-x-2">
               <ThemeToggle />
               
+              {/* Email notification button */}
+              <Button
+                onClick={() => navigate('/emails')}
+                variant="ghost"
+                size="icon"
+                className="relative h-10 w-10"
+                title="Emails"
+              >
+                <Mail className="h-5 w-5" />
+                {emailUnreadCount > 0 && (
+                  <div 
+                    className="absolute -top-1 -right-1 min-w-[1.25rem] h-5 flex items-center justify-center 
+                               text-destructive-foreground text-xs font-bold rounded-full 
+                               bg-primary border-2 border-background
+                               animate-pulse shadow-lg z-10"
+                  >
+                    {emailUnreadCount > 99 ? '99+' : emailUnreadCount}
+                  </div>
+                )}
+              </Button>
+              
+              {/* General notifications button */}
               <div className="relative">
                  <Button
                   onClick={handleNotificationClick}
@@ -113,13 +140,9 @@ export const Header: React.FC = () => {
                    {unreadCount > 0 && (
                      <div 
                        className="absolute -top-1 -right-1 min-w-[1.25rem] h-5 flex items-center justify-center 
-                                  text-white text-xs font-bold rounded-full 
-                                  border-2 border-white dark:border-gray-900 
+                                  text-destructive-foreground text-xs font-bold rounded-full 
+                                  bg-destructive border-2 border-background
                                   animate-pulse shadow-lg z-10"
-                       style={{
-                         background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-                         boxShadow: '0 2px 8px rgba(239, 68, 68, 0.4)'
-                       }}
                      >
                        {unreadCount > 99 ? '99+' : unreadCount}
                      </div>
