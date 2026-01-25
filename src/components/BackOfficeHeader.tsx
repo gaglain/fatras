@@ -1,13 +1,14 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Bell, Menu } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Bell, Menu, Mail } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { CommandPalette } from '@/components/ui/command-palette';
 import { useTheme } from 'next-themes';
 import { useCompanySettings } from '@/hooks/useCompanySettings';
 import { useUser } from '@/contexts/UserContext';
+import { useEmailNotifications } from '@/hooks/useEmailNotifications';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { UserProfile } from './UserProfile';
 import { UnifiedNotificationCenter } from './UnifiedNotificationCenter';
@@ -18,6 +19,10 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 export const BackOfficeHeader: React.FC = () => {
   const { theme } = useTheme();
   const { name, logo } = useCompanySettings();
+  const { getUnreadCount: getEmailUnreadCount } = useEmailNotifications();
+  const navigate = useNavigate();
+  
+  const emailUnreadCount = getEmailUnreadCount();
   
   // Protection contre l'erreur de contexte
   let currentUser = null;
@@ -28,10 +33,10 @@ export const BackOfficeHeader: React.FC = () => {
     currentUser = null;
   }
   
-const [showUserProfile, setShowUserProfile] = useState(false);
-const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showUserProfile, setShowUserProfile] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-const isDark = theme === "dark";
+  const isDark = theme === "dark";
 
   return (
     <>
@@ -102,6 +107,27 @@ const isDark = theme === "dark";
                 </Button>
               </div>
               
+              {/* Email notification button */}
+              <Button
+                onClick={() => navigate('/emails')}
+                variant="ghost"
+                size="icon"
+                className="relative h-10 w-10"
+                title="Emails"
+              >
+                <Mail className="h-5 w-5" />
+                {emailUnreadCount > 0 && (
+                  <div 
+                    className="absolute -top-1 -right-1 min-w-[1.25rem] h-5 flex items-center justify-center 
+                               text-destructive-foreground text-xs font-bold rounded-full 
+                               bg-primary border-2 border-background
+                               animate-pulse shadow-lg z-10"
+                  >
+                    {emailUnreadCount > 99 ? '99+' : emailUnreadCount}
+                  </div>
+                )}
+              </Button>
+              
               <UnifiedNotificationCenter />
               
               <ThemeToggle />
@@ -113,7 +139,7 @@ const isDark = theme === "dark";
               >
                 <Avatar className="h-8 w-8 border-2 border-border hover:border-primary transition-colors">
                   <AvatarImage src={currentUser?.avatar} alt={currentUser?.name} />
-                  <AvatarFallback className="text-base bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold">
+                  <AvatarFallback className="text-base bg-primary text-primary-foreground font-semibold">
                     {currentUser?.name?.charAt(0) || 'U'}
                     {currentUser?.lastName?.charAt(0) || ''}
                   </AvatarFallback>
