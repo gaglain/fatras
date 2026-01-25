@@ -467,36 +467,10 @@ const handler = async (req: Request): Promise<Response> => {
             .select('id')
             .maybeSingle();
           
-          // Si l'email a été inséré (pas ignoré), créer les notifications
+          // Si l'email a été inséré (pas ignoré), comptabiliser
+          // Les notifications sont créées automatiquement par le trigger trg_create_email_notification
           if (insertedEmail && !emailError) {
             syncedInbox++;
-            
-            // Créer notification email_notifications
-            await supabase
-              .from('email_notifications')
-              .insert({
-                user_id: userId,
-                type: 'new_email',
-                title: 'Nouveau message',
-                message: `De: ${email.from_name || email.from_email}\nSujet: ${email.subject}`,
-                is_read: false
-              });
-            
-            // Créer notification principale
-            await supabase
-              .from('notifications')
-              .insert({
-                user_id: userId,
-                type: 'new_email',
-                title: 'Nouveau email reçu',
-                message: `De: ${email.from_name || email.from_email} - ${email.subject || 'Sans objet'}`,
-                data: {
-                  from_email: email.from_email,
-                  from_name: email.from_name,
-                  subject: email.subject
-                },
-                read: false
-              });
           }
         } catch (error) {
           console.error('❌ Erreur traitement email INBOX:', error);
