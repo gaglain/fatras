@@ -1045,6 +1045,7 @@ export type Database = {
           access_token_encrypted: string | null
           created_at: string | null
           email: string
+          grant_id: string | null
           id: string
           imap_config: Json | null
           is_active: boolean | null
@@ -1060,6 +1061,7 @@ export type Database = {
           access_token_encrypted?: string | null
           created_at?: string | null
           email: string
+          grant_id?: string | null
           id?: string
           imap_config?: Json | null
           is_active?: boolean | null
@@ -1075,6 +1077,7 @@ export type Database = {
           access_token_encrypted?: string | null
           created_at?: string | null
           email?: string
+          grant_id?: string | null
           id?: string
           imap_config?: Json | null
           is_active?: boolean | null
