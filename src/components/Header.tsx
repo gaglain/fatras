@@ -107,26 +107,6 @@ export const Header: React.FC = () => {
             <div className="flex items-center space-x-1 lg:space-x-2">
               <ThemeToggle />
               
-              {/* Email notification button */}
-              <Button
-                onClick={() => navigate('/email')}
-                variant="ghost"
-                size="icon"
-                className="relative h-10 w-10"
-                title="Emails"
-              >
-                <Mail className="h-5 w-5" />
-                {emailUnreadCount > 0 && (
-                  <div 
-                    className="absolute -top-1 -right-1 min-w-[1.25rem] h-5 flex items-center justify-center 
-                               text-destructive-foreground text-xs font-bold rounded-full 
-                               bg-primary border-2 border-background
-                               animate-pulse shadow-lg z-10"
-                  >
-                    {emailUnreadCount > 99 ? '99+' : emailUnreadCount}
-                  </div>
-                )}
-              </Button>
               
               {/* General notifications button */}
               <div className="relative">
