@@ -109,7 +109,7 @@ export const Header: React.FC = () => {
               
               {/* Email notification button */}
               <Button
-                onClick={() => navigate('/emails')}
+                onClick={() => navigate('/email')}
                 variant="ghost"
                 size="icon"
                 className="relative h-10 w-10"
