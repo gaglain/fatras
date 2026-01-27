@@ -279,11 +279,17 @@ export const useMessagingOptimized = () => {
         }];
       });
 
-      // Update channel timestamp
-      void supabase
+      // Update channel timestamp and refresh channel list
+      supabase
         .from('messaging_channels')
         .update({ updated_at: new Date().toISOString() })
-        .eq('id', channelId);
+        .eq('id', channelId)
+        .then(() => {
+          // Invalidate channels cache to update sort order
+          if (user) {
+            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.channels(user.id) });
+          }
+        });
     },
     onError: (error: Error) => {
       toast.error(`Erreur: ${error.message}`);
