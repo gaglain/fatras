@@ -19,6 +19,8 @@ export interface Event {
   attendees_count?: number;
   requirements?: string;
   notes?: string;
+  latitude?: number | null;
+  longitude?: number | null;
   created_at?: string;
   updated_at?: string;
 }

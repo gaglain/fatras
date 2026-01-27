@@ -1510,6 +1510,8 @@ export type Database = {
           external_id: string | null
           google_calendar_event_id: string | null
           id: string
+          latitude: number | null
+          longitude: number | null
           notes: string | null
           owner_id: string | null
           postal_code: string | null
@@ -1538,6 +1540,8 @@ export type Database = {
           external_id?: string | null
           google_calendar_event_id?: string | null
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           notes?: string | null
           owner_id?: string | null
           postal_code?: string | null
@@ -1566,6 +1570,8 @@ export type Database = {
           external_id?: string | null
           google_calendar_event_id?: string | null
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           notes?: string | null
           owner_id?: string | null
           postal_code?: string | null
