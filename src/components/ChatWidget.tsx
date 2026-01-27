@@ -136,9 +136,11 @@ export const ChatWidget: React.FC = () => {
       const lastChannel = lastChannelId ? channels.find(c => c.id === lastChannelId) : null;
       
       if (lastChannel) {
+        // Restore the last used channel (don't call handleChannelSelect to avoid re-saving)
         setSelectedChannel(lastChannel.id);
       } else {
-        // Fall back to first channel if last used is not found
+        // Fall back to channel with most recent message activity, not just first in list
+        // channels are already sorted, so use first one and save it
         handleChannelSelect(channels[0].id);
       }
     }
