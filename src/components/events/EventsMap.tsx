@@ -1,22 +1,19 @@
-import { useEffect, useState, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Calendar, Eye, Navigation } from 'lucide-react';
+import { MapPin, Calendar, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
-// Fix default marker icon issue with webpack/vite
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-});
+// Lazy load Leaflet to avoid SSR issues
+let L: typeof import('leaflet') | null = null;
+let MapContainer: any = null;
+let TileLayer: any = null;
+let Marker: any = null;
+let Popup: any = null;
+let useMap: any = null;
 
 interface Event {
   id: string;
@@ -58,12 +55,12 @@ const FitBounds = ({ events }: { events: Event[] }) => {
 };
 
 // Custom marker icon based on status
-const getMarkerIcon = (status?: string | null) => {
+const getMarkerIcon = (status: string | null | undefined, leaflet: any) => {
   const color = status === 'confirmed' ? '#22c55e' : 
                 status === 'pending' ? '#f59e0b' : 
                 status === 'cancelled' ? '#ef4444' : '#6b7280';
   
-  return L.divIcon({
+  return leaflet.divIcon({
     className: 'custom-marker',
     html: `
       <div style="
@@ -110,6 +107,44 @@ const getStatusVariant = (status?: string | null): "default" | "secondary" | "de
 
 export const EventsMap = ({ events, selectedEventId, onEventSelect, height = '500px' }: EventsMapProps) => {
   const navigate = useNavigate();
+  const [leafletLoaded, setLeafletLoaded] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  
+  // Load Leaflet dynamically
+  useEffect(() => {
+    const loadLeaflet = async () => {
+      try {
+        // Import Leaflet CSS
+        await import('leaflet/dist/leaflet.css');
+        
+        // Import Leaflet modules
+        const leafletModule = await import('leaflet');
+        const reactLeafletModule = await import('react-leaflet');
+        
+        L = leafletModule.default || leafletModule;
+        MapContainer = reactLeafletModule.MapContainer;
+        TileLayer = reactLeafletModule.TileLayer;
+        Marker = reactLeafletModule.Marker;
+        Popup = reactLeafletModule.Popup;
+        useMap = reactLeafletModule.useMap;
+        
+        // Fix default marker icon issue
+        delete (L.Icon.Default.prototype as any)._getIconUrl;
+        L.Icon.Default.mergeOptions({
+          iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+          iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+        });
+        
+        setLeafletLoaded(true);
+      } catch (error) {
+        console.error('Failed to load Leaflet:', error);
+        setLoadError('Impossible de charger la carte');
+      }
+    };
+    
+    loadLeaflet();
+  }, []);
   
   // Filter events with coordinates
   const geoEvents = useMemo(() => 
@@ -122,6 +157,32 @@ export const EventsMap = ({ events, selectedEventId, onEventSelect, height = '50
     [events]
   );
 
+  if (loadError) {
+    return (
+      <Card className="overflow-hidden">
+        <CardContent className="flex items-center justify-center" style={{ height }}>
+          <p className="text-muted-foreground">{loadError}</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!leafletLoaded || !L || !MapContainer) {
+    return (
+      <Card className="overflow-hidden">
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2">
+            <MapPin className="h-5 w-5" />
+            Carte des événements
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center" style={{ height }}>
+          <p className="text-muted-foreground">Chargement de la carte...</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="overflow-hidden">
       <CardHeader className="pb-2">
@@ -132,7 +193,7 @@ export const EventsMap = ({ events, selectedEventId, onEventSelect, height = '50
           </CardTitle>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded-full bg-green-500" />
+              <div className="w-3 h-3 rounded-full bg-emerald-500" />
               {geoEvents.filter(e => e.status === 'confirmed').length} confirmés
             </span>
             <span className="flex items-center gap-1">
@@ -159,13 +220,13 @@ export const EventsMap = ({ events, selectedEventId, onEventSelect, height = '50
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            <FitBounds events={geoEvents} />
+            <FitBoundsComponent events={geoEvents} leaflet={L} useMapHook={useMap} />
             
             {geoEvents.map((event) => (
               <Marker
                 key={event.id}
                 position={[event.latitude!, event.longitude!]}
-                icon={getMarkerIcon(event.status)}
+                icon={getMarkerIcon(event.status, L)}
                 eventHandlers={{
                   click: () => onEventSelect?.(event.id),
                 }}
@@ -215,4 +276,24 @@ export const EventsMap = ({ events, selectedEventId, onEventSelect, height = '50
       </CardContent>
     </Card>
   );
+};
+
+// Component to fit bounds when events change - must be inside MapContainer
+const FitBoundsComponent = ({ events, leaflet, useMapHook }: { events: Event[]; leaflet: any; useMapHook: any }) => {
+  const map = useMapHook();
+  
+  useEffect(() => {
+    const geoEvents = events.filter(e => e.latitude && e.longitude);
+    if (geoEvents.length > 0) {
+      const bounds = leaflet.latLngBounds(
+        geoEvents.map(e => [e.latitude!, e.longitude!] as [number, number])
+      );
+      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
+    } else {
+      // Default to France center
+      map.setView([46.603354, 1.888334], 6);
+    }
+  }, [events, map, leaflet]);
+  
+  return null;
 };
