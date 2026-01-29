@@ -80,18 +80,24 @@ export const EventsMap = ({ events, selectedEventId, onEventSelect, height = '50
 
         // Create map once
         if (!mapRef.current && mapElRef.current) {
-          mapRef.current = leaflet.map(mapElRef.current, {
+          const map = leaflet.map(mapElRef.current, {
             center: [46.603354, 1.888334],
             zoom: 6,
             scrollWheelZoom: true,
           });
+          mapRef.current = map;
 
           leaflet.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution:
               '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-          }).addTo(mapRef.current);
+          }).addTo(map);
 
-          markersRef.current = leaflet.layerGroup().addTo(mapRef.current);
+          markersRef.current = leaflet.layerGroup().addTo(map);
+          
+          // Force a resize after mount to fix tile loading
+          setTimeout(() => {
+            map.invalidateSize();
+          }, 100);
         }
 
         setLeafletLoaded(true);
@@ -243,8 +249,8 @@ export const EventsMap = ({ events, selectedEventId, onEventSelect, height = '50
         )}
       </CardHeader>
       <CardContent className="p-0">
-        <div style={{ height }}>
-          <div ref={mapElRef} style={{ height: '100%', width: '100%' }} />
+        <div style={{ height, minHeight: '400px' }}>
+          <div ref={mapElRef} style={{ height: '100%', width: '100%', minHeight: '400px' }} />
         </div>
       </CardContent>
     </Card>
