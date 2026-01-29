@@ -81,22 +81,65 @@ export const useGeocoding = () => {
     }
   }, [geocodeAddress]);
 
+  // Build the best possible address string for geocoding
+  const buildGeocodingAddress = useCallback((event: { 
+    address?: string | null; 
+    city?: string | null; 
+    venue?: string | null;
+    postal_code?: string | null;
+    country?: string | null;
+  }): string | null => {
+    // Priority 1: Full address with postal code and city (most accurate)
+    if (event.address && event.city) {
+      const parts = [event.address];
+      if (event.postal_code) parts.push(event.postal_code);
+      parts.push(event.city);
+      if (event.country) parts.push(event.country);
+      else parts.push('France'); // Default to France
+      return parts.join(', ');
+    }
+    
+    // Priority 2: City with postal code
+    if (event.city) {
+      const parts = [];
+      if (event.postal_code) parts.push(event.postal_code);
+      parts.push(event.city);
+      if (event.country) parts.push(event.country);
+      else parts.push('France');
+      return parts.join(', ');
+    }
+    
+    // Priority 3: Just the address if available
+    if (event.address) {
+      return event.address + ', France';
+    }
+    
+    return null;
+  }, []);
+
   // Batch geocode multiple events
-  const batchGeocodeEvents = useCallback(async (events: Array<{ id: string; address?: string | null; city?: string | null; venue?: string | null }>) => {
+  const batchGeocodeEvents = useCallback(async (events: Array<{ 
+    id: string; 
+    address?: string | null; 
+    city?: string | null; 
+    venue?: string | null;
+    postal_code?: string | null;
+    country?: string | null;
+  }>) => {
     setIsGeocoding(true);
     let successCount = 0;
     let failCount = 0;
 
     try {
       for (const event of events) {
-        // Build address from available fields
-        const addressParts = [event.venue, event.address, event.city].filter(Boolean);
-        if (addressParts.length === 0) {
+        // Build optimized address for geocoding
+        const fullAddress = buildGeocodingAddress(event);
+        if (!fullAddress) {
           failCount++;
           continue;
         }
 
-        const fullAddress = addressParts.join(', ');
+        logger.log(`Geocoding: ${fullAddress}`);
         const result = await geocodeAddress(fullAddress);
 
         if (result) {

@@ -131,8 +131,15 @@ export const Events: React.FC = () => {
   const handleGeocodeAll = async () => {
     // Get events without coordinates that have address info
     const eventsToGeocode = events
-      .filter(e => e.id && (!e.latitude || !e.longitude) && (e.address || e.city || e.venue))
-      .map(e => ({ id: e.id!, address: e.address, city: e.city, venue: e.venue }));
+      .filter(e => e.id && (!e.latitude || !e.longitude) && (e.address || e.city))
+      .map(e => ({ 
+        id: e.id!, 
+        address: e.address, 
+        city: e.city, 
+        venue: e.venue,
+        postal_code: e.postal_code,
+        country: e.country
+      }));
     
     if (eventsToGeocode.length === 0) {
       toast.info('Tous les événements sont déjà géolocalisés');
