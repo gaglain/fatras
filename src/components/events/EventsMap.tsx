@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Calendar } from 'lucide-react';
@@ -66,6 +66,34 @@ export const EventsMap = ({ events, selectedEventId, onEventSelect, height = '50
 
   const geoEvents = useMemo(() => events.filter(e => e.latitude && e.longitude), [events]);
 
+  const ensureMapInitialized = useCallback(() => {
+    const leaflet = leafletRef.current;
+    if (!leaflet) return;
+    if (mapRef.current) return;
+    if (!mapElRef.current) return;
+
+    const map = leaflet.map(mapElRef.current, {
+      center: [46.603354, 1.888334],
+      zoom: 6,
+      scrollWheelZoom: true,
+    });
+    mapRef.current = map;
+
+    leaflet
+      .tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      })
+      .addTo(map);
+
+    markersRef.current = leaflet.layerGroup().addTo(map);
+
+    // If the map is rendered inside a tab/accordion, it can be 0x0 at init.
+    // Invalidate size a couple of times after mount to force tile render.
+    requestAnimationFrame(() => map.invalidateSize());
+    setTimeout(() => map.invalidateSize(), 150);
+  }, []);
+
   // Load Leaflet + init map once
   useEffect(() => {
     let cancelled = false;
@@ -78,28 +106,8 @@ export const EventsMap = ({ events, selectedEventId, onEventSelect, height = '50
         if (cancelled) return;
         leafletRef.current = leaflet;
 
-        // Create map once
-        if (!mapRef.current && mapElRef.current) {
-          const map = leaflet.map(mapElRef.current, {
-            center: [46.603354, 1.888334],
-            zoom: 6,
-            scrollWheelZoom: true,
-          });
-          mapRef.current = map;
-
-          leaflet.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution:
-              '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-          }).addTo(map);
-
-          markersRef.current = leaflet.layerGroup().addTo(map);
-          
-          // Force a resize after mount to fix tile loading
-          setTimeout(() => {
-            map.invalidateSize();
-          }, 100);
-        }
-
+        // Important: the map container (<div ref={mapElRef} />) is only rendered
+        // AFTER leafletLoaded=true, so we initialize the map in a separate effect.
         setLeafletLoaded(true);
       } catch (e) {
         console.error('Failed to load Leaflet:', e);
@@ -121,9 +129,16 @@ export const EventsMap = ({ events, selectedEventId, onEventSelect, height = '50
     };
   }, []);
 
+  // Initialize map once the container exists (it renders only when leafletLoaded=true)
+  useEffect(() => {
+    if (!leafletLoaded) return;
+    ensureMapInitialized();
+  }, [leafletLoaded, ensureMapInitialized]);
+
   // Update markers when events change
   useEffect(() => {
     if (!leafletLoaded) return;
+    ensureMapInitialized();
     const leaflet = leafletRef.current;
     const map = mapRef.current;
     const markers = markersRef.current;
@@ -195,7 +210,7 @@ export const EventsMap = ({ events, selectedEventId, onEventSelect, height = '50
     } else {
       map.setView([46.603354, 1.888334], 6);
     }
-  }, [leafletLoaded, geoEvents, onEventSelect]);
+  }, [leafletLoaded, geoEvents, onEventSelect, ensureMapInitialized]);
 
   if (loadError) {
     return (
