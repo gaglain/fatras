@@ -12,7 +12,8 @@ interface TaskNotificationBannerProps {
 
 export const TaskNotificationBanner: React.FC<TaskNotificationBannerProps> = ({ className }) => {
   const { user } = useAuth();
-  const { checkOverdueTasks, checkUpcomingTasks } = useTaskNotifications();
+  // Background scheduler (singleton) to generate task notifications.
+  useTaskNotifications();
   const [urgentNotifications, setUrgentNotifications] = useState<any[]>([]);
   const [dismissedNotifications, setDismissedNotifications] = useState<Set<string>>(new Set());
 
@@ -22,15 +23,13 @@ export const TaskNotificationBanner: React.FC<TaskNotificationBannerProps> = ({ 
     // Charger les notifications urgentes
     loadUrgentNotifications();
 
-    // Vérifier les tâches toutes les 2 minutes
+    // Rafraîchir l'affichage des notifications urgentes toutes les 2 minutes
     const interval = setInterval(() => {
-      checkOverdueTasks();
-      checkUpcomingTasks();
       loadUrgentNotifications();
     }, 2 * 60 * 1000);
 
     return () => clearInterval(interval);
-  }, [user, checkOverdueTasks, checkUpcomingTasks]);
+  }, [user, dismissedNotifications]);
 
   const loadUrgentNotifications = async () => {
     if (!user) return;

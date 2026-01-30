@@ -5,6 +5,25 @@ import './index.css';
 
 // Global menu normalization listener to keep data consistent and prevent crashes
 if (typeof window !== 'undefined') {
+  // Safety net: prevent unhandled async errors from taking down the whole app.
+  window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
+    try {
+      console.error('Unhandled promise rejection:', event.reason);
+      event.preventDefault();
+    } catch {
+      // ignore
+    }
+  });
+
+  window.addEventListener('error', (event: ErrorEvent) => {
+    try {
+      // Keep in console for debugging; avoid cascading crashes.
+      console.error('Global error:', event.error || event.message);
+    } catch {
+      // ignore
+    }
+  });
+
   window.addEventListener('websiteMenuUpdated', (event: any) => {
     try {
       const clean = (s: any) => {

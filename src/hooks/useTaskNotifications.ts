@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -15,6 +15,11 @@ export interface TaskNotification {
   created_at: string;
 }
 const TASK_TOAST_STORAGE_KEY = 'task_toast_shown';
+
+// Prevent multiple mounted instances of this hook from creating duplicate intervals / inserts.
+let schedulerInterval: number | null = null;
+let schedulerUserId: string | null = null;
+let schedulerRefCount = 0;
 
 const readToastStore = () => {
   try {
@@ -44,28 +49,16 @@ const markToastShown = (key: string) => {
 
 export const useTaskNotifications = () => {
   const { user } = useAuthContext();
+  const userId = user?.id ?? null;
   const [notifications, setNotifications] = useState<TaskNotification[]>([]);
 
-  useEffect(() => {
-    if (!user) return;
+  const overdueInFlightRef = useRef(false);
+  const upcomingInFlightRef = useRef(false);
 
-    // Vérifier les tâches en retard au chargement
-    checkOverdueTasks();
-    
-    // Vérifier les tâches qui arrivent à échéance bientôt
-    checkUpcomingTasks();
-
-    // Configurer un intervalle pour vérifier toutes les 5 minutes
-    const interval = setInterval(() => {
-      checkOverdueTasks();
-      checkUpcomingTasks();
-    }, 5 * 60 * 1000); // 5 minutes
-
-    return () => clearInterval(interval);
-  }, [user]);
-
-  const checkOverdueTasks = async () => {
-    if (!user) return;
+  const checkOverdueTasks = useCallback(async () => {
+    if (!userId) return;
+    if (overdueInFlightRef.current) return;
+    overdueInFlightRef.current = true;
 
     try {
       const today = new Date().toISOString().split('T')[0];
@@ -73,7 +66,7 @@ export const useTaskNotifications = () => {
       const { data: tasks, error } = await supabase
         .from('tasks')
         .select('*')
-        .or(`user_id.eq.${user.id},assigned_to.eq.${user.id}`)
+        .or(`user_id.eq.${userId},assigned_to.eq.${userId}`)
         .not('status', 'in', '(completed,cancelled)')
         .not('due_date', 'is', null)
         .lt('due_date', new Date().toISOString());
@@ -86,8 +79,9 @@ export const useTaskNotifications = () => {
       const { data: existingNotifs } = await supabase
         .from('notifications')
         .select('data')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .eq('type', 'task_overdue')
+        .in('data->>task_id', taskIds)
         .gte('created_at', `${today}T00:00:00Z`);
 
       const existingTaskIds = new Set(
@@ -103,7 +97,7 @@ export const useTaskNotifications = () => {
       // Batch insert des nouvelles notifications (pour user.id uniquement = RLS OK)
       if (newTasks.length > 0) {
         const notificationsToInsert = newTasks.map(task => ({
-          user_id: user.id,
+          user_id: userId,
           type: 'task_overdue',
           title: 'Tâche en retard',
           message: `La tâche "${task.title}" était due le ${new Date(task.due_date).toLocaleDateString('fr-FR')}`,
@@ -123,7 +117,11 @@ export const useTaskNotifications = () => {
           .insert(notificationsToInsert);
 
         if (insertError) {
-          logger.error('Error inserting overdue notifications:', insertError);
+          const code = (insertError as any)?.code;
+          // Unique constraint hit (duplicate). This is expected under concurrency; ignore.
+          if (code !== '23505') {
+            logger.error('Error inserting overdue notifications:', insertError);
+          }
         }
       }
 
@@ -140,11 +138,15 @@ export const useTaskNotifications = () => {
       }
     } catch (error: unknown) {
       logger.error('Erreur lors de la vérification des tâches en retard:', error);
+    } finally {
+      overdueInFlightRef.current = false;
     }
-  };
+  }, [userId]);
 
-  const checkUpcomingTasks = async () => {
-    if (!user) return;
+  const checkUpcomingTasks = useCallback(async () => {
+    if (!userId) return;
+    if (upcomingInFlightRef.current) return;
+    upcomingInFlightRef.current = true;
 
     try {
       const tomorrow = new Date();
@@ -155,7 +157,7 @@ export const useTaskNotifications = () => {
       const { data: tasks, error } = await supabase
         .from('tasks')
         .select('*')
-        .or(`user_id.eq.${user.id},assigned_to.eq.${user.id}`)
+        .or(`user_id.eq.${userId},assigned_to.eq.${userId}`)
         .not('status', 'in', '(completed,cancelled)')
         .not('due_date', 'is', null)
         .gte('due_date', new Date().toISOString())
@@ -169,7 +171,7 @@ export const useTaskNotifications = () => {
       const { data: existingNotifs } = await supabase
         .from('notifications')
         .select('data')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .eq('type', 'task_due_soon')
         .in('data->>task_id', taskIds)
         .gte('created_at', `${today}T00:00:00Z`);
@@ -198,7 +200,7 @@ export const useTaskNotifications = () => {
           }
 
           return {
-            user_id: user.id, // ✅ Toujours l'utilisateur actuel = RLS respecté
+            user_id: userId, // ✅ Toujours l'utilisateur actuel = RLS respecté
             type: 'task_due_soon',
             title: 'Tâche bientôt due',
             message: message || `La tâche "${task.title}" est bientôt due`,
@@ -219,7 +221,10 @@ export const useTaskNotifications = () => {
           .insert(notificationsToInsert);
 
         if (insertError) {
-          logger.error('Error inserting due_soon notifications:', insertError);
+          const code = (insertError as any)?.code;
+          if (code !== '23505') {
+            logger.error('Error inserting due_soon notifications:', insertError);
+          }
         }
       }
 
@@ -242,8 +247,48 @@ export const useTaskNotifications = () => {
       }
     } catch (error: unknown) {
       logger.error('Erreur lors de la vérification des tâches à venir:', error);
+    } finally {
+      upcomingInFlightRef.current = false;
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    schedulerRefCount += 1;
+
+    // If the scheduler is already running for this user, don't create another interval.
+    const shouldStartScheduler = schedulerUserId !== userId;
+    if (shouldStartScheduler) {
+      if (schedulerInterval) {
+        clearInterval(schedulerInterval);
+        schedulerInterval = null;
+      }
+      schedulerUserId = userId;
+
+      // Vérifier immédiatement au chargement
+      void checkOverdueTasks();
+      void checkUpcomingTasks();
+
+      // Configurer un intervalle pour vérifier toutes les 5 minutes
+      schedulerInterval = window.setInterval(() => {
+        void checkOverdueTasks();
+        void checkUpcomingTasks();
+      }, 5 * 60 * 1000);
+    }
+
+    return () => {
+      schedulerRefCount -= 1;
+      if (schedulerRefCount <= 0) {
+        schedulerRefCount = 0;
+        schedulerUserId = null;
+        if (schedulerInterval) {
+          clearInterval(schedulerInterval);
+          schedulerInterval = null;
+        }
+      }
+    };
+  }, [userId, checkOverdueTasks, checkUpcomingTasks]);
 
   return {
     notifications,
