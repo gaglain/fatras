@@ -630,7 +630,8 @@ export const Contacts: React.FC = () => {
         contact={editingContact}
         onSave={() => {
           fetchContacts({ reset: true });
-          handleDialogClose();
+          // Ne pas fermer le dialog ici - ContactDialog gère sa propre fermeture
+          // pour permettre l'affichage de la suite de création
         }}
       />
 
