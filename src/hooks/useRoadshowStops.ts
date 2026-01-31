@@ -32,6 +32,7 @@ export interface RoadshowStop {
   local_contact_phone?: string;
   transport?: string;
   artist_lineup: {userId: string, confirmed: boolean}[];
+  invitations?: string;
   created_at: string;
   updated_at: string;
 }
@@ -389,7 +390,8 @@ export const useRoadshowStops = () => {
     localContact: stop.local_contact || '',
     localContactPhone: stop.local_contact_phone || '',
     transport: stop.transport || '',
-    artistLineup: stop.artist_lineup
+    artistLineup: stop.artist_lineup,
+    invitations: stop.invitations || ''
   });
 
   // Convert TourStop format to database format
@@ -413,7 +415,8 @@ export const useRoadshowStops = () => {
     local_contact: tourStop.localContact,
     local_contact_phone: tourStop.localContactPhone,
     transport: tourStop.transport,
-    artist_lineup: tourStop.artistLineup || []
+    artist_lineup: tourStop.artistLineup || [],
+    invitations: tourStop.invitations
   });
 
   useEffect(() => {

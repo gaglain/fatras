@@ -22,6 +22,7 @@ export interface TourStop {
   localContactPhone: string;
   transport: string;
   artistLineup: {userId: string, confirmed: boolean}[];
+  invitations: string;
 }
 
 export interface Artist {
@@ -51,4 +52,5 @@ export interface FormData {
   localContactPhone: string;
   transport: string;
   artistLineup: {userId: string, confirmed: boolean}[];
+  invitations: string;
 }

@@ -104,6 +104,19 @@ export const GeneralForm: React.FC<GeneralFormProps> = ({ formData, setFormData 
           className="min-h-[100px]"
         />
       </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Invitations</label>
+        <Textarea
+          value={formData.invitations || ''}
+          onChange={(e) => setFormData({ ...formData, invitations: e.target.value })}
+          placeholder="Liste des invités, contacts VIP, entrées gratuites..."
+          className="min-h-[120px]"
+        />
+        <p className="text-xs text-muted-foreground mt-1">
+          Notez ici les invités, contacts ou listes d'entrées pour cette date
+        </p>
+      </div>
     </div>
   );
 };

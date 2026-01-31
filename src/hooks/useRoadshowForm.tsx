@@ -26,7 +26,8 @@ const initialFormData: FormData = {
   localContact: '',
   localContactPhone: '',
   transport: '',
-  artistLineup: []
+  artistLineup: [],
+  invitations: ''
 };
 
 export const useRoadshowForm = (
@@ -149,7 +150,8 @@ export const useRoadshowForm = (
       localContact: stop.localContact || '',
       localContactPhone: stop.localContactPhone || '',
       transport: stop.transport || '',
-      artistLineup: stop.artistLineup || []
+      artistLineup: stop.artistLineup || [],
+      invitations: stop.invitations || ''
     });
     setShowEditDialog(true);
   };
