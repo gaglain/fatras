@@ -23,8 +23,8 @@ interface ContactCreationSuiteProps {
 
 const steps = [
   { id: 1, name: 'Événement', description: 'Créer un événement lié' },
-  { id: 2, name: 'Opportunité', description: 'Créer une opportunité' },
-  { id: 3, name: 'Tâche', description: 'Créer une tâche de suivi' }
+  { id: 2, name: 'Tâche', description: 'Créer une tâche de suivi' },
+  { id: 3, name: 'Opportunité', description: 'Créer une opportunité' }
 ];
 
 export const ContactCreationSuite: React.FC<ContactCreationSuiteProps> = ({
@@ -123,7 +123,7 @@ export const ContactCreationSuite: React.FC<ContactCreationSuiteProps> = ({
       if (event) {
         setCreatedIds(prev => ({ ...prev, eventId: event.id }));
         toast.success('Événement créé avec succès');
-        setCurrentStep(2);
+        setCurrentStep(2); // Passe à Tâche
       }
     } catch (error) {
       toast.error('Erreur lors de la création de l\'événement');
@@ -158,7 +158,8 @@ export const ContactCreationSuite: React.FC<ContactCreationSuiteProps> = ({
       if (opportunity) {
         setCreatedIds(prev => ({ ...prev, opportunityId: opportunity.id }));
         toast.success('Opportunité créée avec succès');
-        setCurrentStep(3);
+        toast.success('Suite de création terminée !');
+        onClose();
       }
     } catch (error) {
       toast.error('Erreur lors de la création de l\'opportunité');
@@ -188,8 +189,7 @@ export const ContactCreationSuite: React.FC<ContactCreationSuiteProps> = ({
       if (task) {
         setCreatedIds(prev => ({ ...prev, taskId: task.id }));
         toast.success('Tâche créée avec succès');
-        toast.success('Suite de création terminée !');
-        onClose();
+        setCurrentStep(3); // Passe à Opportunité
       }
     } catch (error) {
       toast.error('Erreur lors de la création de la tâche');
@@ -350,6 +350,87 @@ export const ContactCreationSuite: React.FC<ContactCreationSuiteProps> = ({
             </div>
 
             <div>
+              <Label htmlFor="task-title">Titre de la tâche *</Label>
+              <Input
+                id="task-title"
+                value={taskData.title}
+                onChange={(e) => setTaskData(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="Appeler le contact, envoyer un devis..."
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="task-type">Type de tâche</Label>
+                <Select value={taskData.task_type} onValueChange={(value: any) => setTaskData(prev => ({ ...prev, task_type: value }))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Email">Email</SelectItem>
+                    <SelectItem value="Telephone">Téléphone</SelectItem>
+                    <SelectItem value="RDV">Rendez-vous</SelectItem>
+                    <SelectItem value="Autre">Autre</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="priority">Priorité</Label>
+                <Select value={taskData.priority} onValueChange={(value: any) => setTaskData(prev => ({ ...prev, priority: value }))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Faible</SelectItem>
+                    <SelectItem value="medium">Moyenne</SelectItem>
+                    <SelectItem value="high">Haute</SelectItem>
+                    <SelectItem value="urgent">Urgente</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="due-date">Échéance</Label>
+              <Input
+                id="due-date"
+                type="datetime-local"
+                value={taskData.due_date}
+                onChange={(e) => setTaskData(prev => ({ ...prev, due_date: e.target.value }))}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="task-description">Description</Label>
+              <Textarea
+                id="task-description"
+                value={taskData.description}
+                onChange={(e) => setTaskData(prev => ({ ...prev, description: e.target.value }))}
+                rows={3}
+              />
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <Button type="button" variant="outline" onClick={() => setCurrentStep(1)}>
+                Retour
+              </Button>
+              <Button onClick={handleCreateTask} disabled={loading || !taskData.title}>
+                {loading ? 'Création...' : 'Créer la tâche'}
+              </Button>
+            </div>
+          </div>
+        );
+
+      case 3:
+        return (
+          <div className="space-y-4">
+            <div className="p-3 bg-muted/50 rounded text-sm">
+              <strong>Adresse:</strong> {commonData.address || 'Non renseignée'} - {commonData.postal_code} {commonData.city}
+              {commonData.artist_id && <div><strong>Spectacle:</strong> {artists.find(a => a.id === commonData.artist_id)?.name}</div>}
+            </div>
+
+            <div>
               <Label htmlFor="opp-title">Titre de l'opportunité *</Label>
               <Input
                 id="opp-title"
@@ -429,92 +510,11 @@ export const ContactCreationSuite: React.FC<ContactCreationSuiteProps> = ({
             </div>
 
             <div className="flex justify-end space-x-2">
-              <Button type="button" variant="outline" onClick={() => setCurrentStep(1)}>
+              <Button type="button" variant="outline" onClick={() => setCurrentStep(2)}>
                 Retour
               </Button>
               <Button onClick={handleCreateOpportunity} disabled={loading || !opportunityData.title}>
                 {loading ? 'Création...' : 'Créer l\'opportunité'}
-              </Button>
-            </div>
-          </div>
-        );
-
-      case 3:
-        return (
-          <div className="space-y-4">
-            <div className="p-3 bg-muted/50 rounded text-sm">
-              <strong>Adresse:</strong> {commonData.address || 'Non renseignée'} - {commonData.postal_code} {commonData.city}
-              {commonData.artist_id && <div><strong>Spectacle:</strong> {artists.find(a => a.id === commonData.artist_id)?.name}</div>}
-            </div>
-
-            <div>
-              <Label htmlFor="task-title">Titre de la tâche *</Label>
-              <Input
-                id="task-title"
-                value={taskData.title}
-                onChange={(e) => setTaskData(prev => ({ ...prev, title: e.target.value }))}
-                placeholder="Appeler le contact, envoyer un devis..."
-                required
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="task-type">Type de tâche</Label>
-                <Select value={taskData.task_type} onValueChange={(value: any) => setTaskData(prev => ({ ...prev, task_type: value }))}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Email">Email</SelectItem>
-                    <SelectItem value="Telephone">Téléphone</SelectItem>
-                    <SelectItem value="RDV">Rendez-vous</SelectItem>
-                    <SelectItem value="Autre">Autre</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="priority">Priorité</Label>
-                <Select value={taskData.priority} onValueChange={(value: any) => setTaskData(prev => ({ ...prev, priority: value }))}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low">Faible</SelectItem>
-                    <SelectItem value="medium">Moyenne</SelectItem>
-                    <SelectItem value="high">Haute</SelectItem>
-                    <SelectItem value="urgent">Urgente</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="due-date">Échéance</Label>
-              <Input
-                id="due-date"
-                type="datetime-local"
-                value={taskData.due_date}
-                onChange={(e) => setTaskData(prev => ({ ...prev, due_date: e.target.value }))}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="task-description">Description</Label>
-              <Textarea
-                id="task-description"
-                value={taskData.description}
-                onChange={(e) => setTaskData(prev => ({ ...prev, description: e.target.value }))}
-                rows={3}
-              />
-            </div>
-
-            <div className="flex justify-end space-x-2">
-              <Button type="button" variant="outline" onClick={() => setCurrentStep(2)}>
-                Retour
-              </Button>
-              <Button onClick={handleCreateTask} disabled={loading || !taskData.title}>
-                {loading ? 'Création...' : 'Créer la tâche'}
               </Button>
             </div>
           </div>
