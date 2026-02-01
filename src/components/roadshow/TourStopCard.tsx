@@ -88,10 +88,11 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
           </div>
         </CardHeader>
         <CardContent className="pt-2 px-3 sm:px-6">
-          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4 mb-4">
+          {/* Infos principales */}
+          <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-3 mb-4">
             <div className="flex items-center space-x-2">
               <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-              <span className="text-xs sm:text-sm">{new Date(stop.date).toLocaleDateString('fr-FR')}</span>
+              <span className="text-xs sm:text-sm">{stop.date ? new Date(stop.date).toLocaleDateString('fr-FR') : '-'}</span>
             </div>
             <div className="flex items-center space-x-2">
               <Clock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
@@ -99,20 +100,34 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
             </div>
             <div className="flex items-center space-x-2">
               <Users className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-              <span className="text-xs sm:text-sm">Capacité: {stop.capacity}</span>
+              <span className="text-xs sm:text-sm">{stop.capacity || 0}</span>
             </div>
+            {stop.ticketsAvailable > 0 && (
+              <div className="flex items-center space-x-2">
+                <span className="text-xs sm:text-sm text-muted-foreground">🎫 {stop.ticketsAvailable}</span>
+              </div>
+            )}
           </div>
+
+          {/* Horaires détaillés */}
+          {(stop.checkInTime || stop.departureTime) && (
+            <div className="flex flex-wrap gap-3 mb-3 text-xs sm:text-sm text-muted-foreground">
+              {stop.checkInTime && <span>🚪 Arrivée: {stop.checkInTime}</span>}
+              {stop.departureTime && <span>🚌 Départ: {stop.departureTime}</span>}
+            </div>
+          )}
 
           {stop.address && (
             <div className="mb-3 sm:mb-4">
-              <p className="text-xs sm:text-sm text-muted-foreground mb-1">Adresse:</p>
+              <p className="text-xs sm:text-sm text-muted-foreground mb-1">📍 Adresse:</p>
               <p className="text-xs sm:text-sm break-words">{stop.address}</p>
             </div>
           )}
 
+          {/* Casting */}
           {stop.artistLineup.length > 0 && (
             <div className="mb-3 sm:mb-4">
-              <p className="text-xs sm:text-sm text-muted-foreground mb-2">Casting:</p>
+              <p className="text-xs sm:text-sm text-muted-foreground mb-2">🎭 Casting:</p>
               <div className="flex flex-wrap gap-1.5">
                 {stop.artistLineup.map((artistInfo) => {
                   const user = getUserById(artistInfo.userId);
@@ -130,10 +145,73 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
             </div>
           )}
 
+          {/* Équipe technique */}
+          {stop.crew && stop.crew.length > 0 && (
+            <div className="mb-3 sm:mb-4">
+              <p className="text-xs sm:text-sm text-muted-foreground mb-2">🎵 Équipe:</p>
+              <div className="flex flex-wrap gap-1.5">
+                {stop.crew.map((crewId) => {
+                  const user = getUserById(crewId);
+                  return (
+                    <Badge key={crewId} variant="outline" className="text-xs px-2 py-0.5">
+                      {user?.name || 'Inconnu'}
+                    </Badge>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Hébergement & Transport */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
+            {(stop.accommodation || stop.accommodationAddress) && (
+              <div className="text-xs sm:text-sm">
+                <span className="text-muted-foreground">🏨 </span>
+                <span>{stop.accommodation || stop.accommodationAddress}</span>
+              </div>
+            )}
+            {stop.transport && (
+              <div className="text-xs sm:text-sm">
+                <span className="text-muted-foreground">🚐 </span>
+                <span>{stop.transport}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Contact local */}
+          {(stop.localContact || stop.localContactPhone) && (
+            <div className="mb-3 text-xs sm:text-sm">
+              <span className="text-muted-foreground">📞 </span>
+              <span>{stop.localContact}</span>
+              {stop.localContactPhone && <span className="ml-2 text-muted-foreground">({stop.localContactPhone})</span>}
+            </div>
+          )}
+
+          {/* Invitations */}
+          {stop.invitations && (
+            <div className="mb-3 sm:mb-4">
+              <p className="text-xs sm:text-sm text-muted-foreground mb-1">🎟️ Invitations:</p>
+              <p className="text-xs sm:text-sm line-clamp-2 break-words">{stop.invitations}</p>
+            </div>
+          )}
+
+          {/* Notes */}
           {stop.notes && (
             <div className="mb-3 sm:mb-4">
-              <p className="text-xs sm:text-sm text-muted-foreground mb-1">Notes:</p>
+              <p className="text-xs sm:text-sm text-muted-foreground mb-1">📝 Notes:</p>
               <p className="text-xs sm:text-sm line-clamp-2 break-words">{stop.notes}</p>
+            </div>
+          )}
+
+          {/* Équipement */}
+          {stop.equipment && stop.equipment.length > 0 && (
+            <div className="mb-3 sm:mb-4">
+              <p className="text-xs sm:text-sm text-muted-foreground mb-1">🔧 Équipement:</p>
+              <div className="flex flex-wrap gap-1">
+                {stop.equipment.map((eq, idx) => (
+                  <Badge key={idx} variant="outline" className="text-xs">{eq}</Badge>
+                ))}
+              </div>
             </div>
           )}
 

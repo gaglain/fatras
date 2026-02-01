@@ -191,6 +191,19 @@ ${stop.crew && stop.crew.length > 0
 
 ═══════════════════════════════════════════════════════════
 
+🎟️ INVITATIONS
+${stop.invitations || 'Aucune invitation spécifique'}
+
+═══════════════════════════════════════════════════════════
+
+🔧 ÉQUIPEMENT
+${stop.equipment && stop.equipment.length > 0 
+  ? stop.equipment.map(eq => `• ${eq}`).join('\n')
+  : '• Aucun équipement listé'
+}
+
+═══════════════════════════════════════════════════════════
+
 📝 NOTES IMPORTANTES
 ${stop.notes || 'Aucune note spécifique'}
 
@@ -430,11 +443,19 @@ Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleT
             </div>
           </div>
 
+          {/* Invitations */}
+          {stop.invitations && (
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-1 text-sm sm:text-base">🎟️ Invitations</h3>
+              <p className="text-xs sm:text-sm text-gray-700 bg-purple-50 p-2 sm:p-3 rounded whitespace-pre-wrap">{stop.invitations}</p>
+            </div>
+          )}
+
           {/* Notes */}
           {stop.notes && (
             <div>
               <h3 className="font-semibold text-gray-900 mb-1 text-sm sm:text-base">📝 Notes</h3>
-              <p className="text-xs sm:text-sm text-gray-700 bg-yellow-50 p-2 sm:p-3 rounded">{stop.notes}</p>
+              <p className="text-xs sm:text-sm text-gray-700 bg-yellow-50 p-2 sm:p-3 rounded whitespace-pre-wrap">{stop.notes}</p>
             </div>
           )}
 
@@ -451,6 +472,20 @@ Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleT
                     </span>
                   );
                 })}
+              </div>
+            </div>
+          )}
+
+          {/* Équipement */}
+          {stop.equipment && stop.equipment.length > 0 && (
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base">🔧 Équipement</h3>
+              <div className="flex flex-wrap gap-2">
+                {stop.equipment.map((eq, idx) => (
+                  <span key={idx} className="px-2 py-1 bg-blue-50 text-blue-700 rounded-full text-xs sm:text-sm">
+                    {eq}
+                  </span>
+                ))}
               </div>
             </div>
           )}
