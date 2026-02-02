@@ -124,7 +124,8 @@ export const useRoadshowStops = () => {
           local_contact: stopData.local_contact,
           local_contact_phone: stopData.local_contact_phone,
           transport: stopData.transport,
-          artist_lineup: stopData.artist_lineup || []
+          artist_lineup: stopData.artist_lineup || [],
+          invitations: stopData.invitations
         })
         .select()
         .single();
@@ -286,7 +287,8 @@ export const useRoadshowStops = () => {
           local_contact: stopData.local_contact,
           local_contact_phone: stopData.local_contact_phone,
           transport: stopData.transport,
-          artist_lineup: stopData.artist_lineup
+          artist_lineup: stopData.artist_lineup,
+          invitations: stopData.invitations
         })
         .eq('id', stopId)
         .select()
