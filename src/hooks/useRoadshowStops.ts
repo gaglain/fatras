@@ -83,6 +83,7 @@ export const useRoadshowStops = () => {
           userId: item.userId || '',
           confirmed: item.confirmed || false
         })) : [],
+         invitations: stop.invitations,
         created_at: stop.created_at,
         updated_at: stop.updated_at
       }));
@@ -160,6 +161,7 @@ export const useRoadshowStops = () => {
           userId: item.userId || '',
           confirmed: item.confirmed || false
         })) : [],
+         invitations: data.invitations,
         created_at: data.created_at,
         updated_at: data.updated_at
       };
@@ -324,6 +326,7 @@ export const useRoadshowStops = () => {
           userId: item.userId || '',
           confirmed: item.confirmed || false
         })) : [],
+         invitations: data.invitations,
         created_at: data.created_at,
         updated_at: data.updated_at
       };
