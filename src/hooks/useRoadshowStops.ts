@@ -33,6 +33,10 @@ export interface RoadshowStop {
   transport?: string;
   artist_lineup: {userId: string, confirmed: boolean}[];
   invitations?: string;
+  latitude?: number;
+  longitude?: number;
+  vehicle_type?: string;
+  distance_km?: number;
   created_at: string;
   updated_at: string;
 }
@@ -83,7 +87,11 @@ export const useRoadshowStops = () => {
           userId: item.userId || '',
           confirmed: item.confirmed || false
         })) : [],
-         invitations: stop.invitations,
+        invitations: stop.invitations,
+        latitude: stop.latitude,
+        longitude: stop.longitude,
+        vehicle_type: stop.vehicle_type,
+        distance_km: stop.distance_km ? Number(stop.distance_km) : undefined,
         created_at: stop.created_at,
         updated_at: stop.updated_at
       }));
@@ -161,7 +169,11 @@ export const useRoadshowStops = () => {
           userId: item.userId || '',
           confirmed: item.confirmed || false
         })) : [],
-         invitations: data.invitations,
+        invitations: data.invitations,
+        latitude: data.latitude,
+        longitude: data.longitude,
+        vehicle_type: data.vehicle_type,
+        distance_km: data.distance_km ? Number(data.distance_km) : undefined,
         created_at: data.created_at,
         updated_at: data.updated_at
       };
@@ -326,7 +338,11 @@ export const useRoadshowStops = () => {
           userId: item.userId || '',
           confirmed: item.confirmed || false
         })) : [],
-         invitations: data.invitations,
+        invitations: data.invitations,
+        latitude: data.latitude,
+        longitude: data.longitude,
+        vehicle_type: data.vehicle_type,
+        distance_km: data.distance_km ? Number(data.distance_km) : undefined,
         created_at: data.created_at,
         updated_at: data.updated_at
       };

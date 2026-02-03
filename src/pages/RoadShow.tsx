@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, Map, List } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useUser } from '@/contexts/UserContext';
 import { useArtists } from '@/hooks/useArtists';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import { SearchBar } from '@/components/roadshow/SearchBar';
 import { RoadShowForm } from '@/components/roadshow/RoadShowForm';
 import { TourStopCard } from '@/components/roadshow/TourStopCard';
+import { RoadshowRouteMap } from '@/components/roadshow/RoadshowRouteMap';
 import { useRoadshowForm } from '@/hooks/useRoadshowForm';
 import { useRoadshowStops } from '@/hooks/useRoadshowStops';
 import { TourStop } from '@/types/roadshow.types';
@@ -15,7 +17,8 @@ import { TourStop } from '@/types/roadshow.types';
 export const RoadShow: React.FC = () => {
   const { users, getUserById, currentUser } = useUser();
   const { artists: artistsData } = useArtists();
-  const { tourStops, loading, createStop, updateStop, deleteStop, convertFromTourStop } = useRoadshowStops();
+  const { tourStops, stops, loading, createStop, updateStop, deleteStop, convertFromTourStop } = useRoadshowStops();
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   
   // Transformer les données des artistes pour correspondre au type roadshow
   const artists = artistsData.map(artist => ({
@@ -132,33 +135,64 @@ export const RoadShow: React.FC = () => {
         users={users}
       />
 
-      {/* Liste des étapes */}
-      {loading ? (
-        <div className="text-center py-8 text-muted-foreground">
-          Chargement des étapes...
-        </div>
-      ) : (
-        <div className="grid gap-6">
-          {filteredAndSortedStops.length === 0 ? (
+      {/* Onglets Liste / Carte */}
+      <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'list' | 'map')} className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="list" className="flex items-center gap-2">
+            <List className="h-4 w-4" />
+            Liste
+          </TabsTrigger>
+          <TabsTrigger value="map" className="flex items-center gap-2">
+            <Map className="h-4 w-4" />
+            Carte & Itinéraire
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="list">
+          {loading ? (
             <div className="text-center py-8 text-muted-foreground">
-              <p>Aucune étape de tournée trouvée.</p>
-              <p className="text-sm">Créez votre première étape pour commencer !</p>
+              Chargement des étapes...
             </div>
           ) : (
-            filteredAndSortedStops.map((stop) => (
-              <TourStopCard
-                key={stop.id}
-                stop={stop}
-                artists={artists}
-                creator={getUserById(stop.createdBy)}
-                onEdit={handleEditStop}
-                onDelete={handleDeleteStop}
-                getUserById={getUserById}
-              />
-            ))
+            <div className="grid gap-6">
+              {filteredAndSortedStops.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>Aucune étape de tournée trouvée.</p>
+                  <p className="text-sm">Créez votre première étape pour commencer !</p>
+                </div>
+              ) : (
+                filteredAndSortedStops.map((stop) => (
+                  <TourStopCard
+                    key={stop.id}
+                    stop={stop}
+                    artists={artists}
+                    creator={getUserById(stop.createdBy)}
+                    onEdit={handleEditStop}
+                    onDelete={handleDeleteStop}
+                    getUserById={getUserById}
+                  />
+                ))
+              )}
+            </div>
           )}
-        </div>
-      )}
+        </TabsContent>
+
+        <TabsContent value="map">
+          <RoadshowRouteMap 
+            stops={tourStops.map(stop => {
+              // Merge with raw stop data to get lat/lng
+              const rawStop = stops.find(s => s.id === stop.id);
+              return {
+                ...stop,
+                latitude: rawStop?.latitude ?? undefined,
+                longitude: rawStop?.longitude ?? undefined,
+                vehicleType: rawStop?.vehicle_type ?? undefined
+              };
+            }) as any}
+            height="600px"
+          />
+        </TabsContent>
+      </Tabs>
 
       {/* Dialog de modification */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
