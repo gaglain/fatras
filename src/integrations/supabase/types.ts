@@ -3043,13 +3043,16 @@ export type Database = {
           created_at: string
           crew: string[] | null
           departure_time: string | null
+          distance_km: number | null
           equipment: string[] | null
           event_date: string | null
           event_time: string | null
           id: string
           invitations: string | null
+          latitude: number | null
           local_contact: string | null
           local_contact_phone: string | null
+          longitude: number | null
           notes: string | null
           opportunity_id: string | null
           quote_id: string | null
@@ -3058,6 +3061,7 @@ export type Database = {
           transport: string | null
           updated_at: string
           user_id: string
+          vehicle_type: string | null
           venue: string
         }
         Insert: {
@@ -3072,13 +3076,16 @@ export type Database = {
           created_at?: string
           crew?: string[] | null
           departure_time?: string | null
+          distance_km?: number | null
           equipment?: string[] | null
           event_date?: string | null
           event_time?: string | null
           id?: string
           invitations?: string | null
+          latitude?: number | null
           local_contact?: string | null
           local_contact_phone?: string | null
+          longitude?: number | null
           notes?: string | null
           opportunity_id?: string | null
           quote_id?: string | null
@@ -3087,6 +3094,7 @@ export type Database = {
           transport?: string | null
           updated_at?: string
           user_id: string
+          vehicle_type?: string | null
           venue: string
         }
         Update: {
@@ -3101,13 +3109,16 @@ export type Database = {
           created_at?: string
           crew?: string[] | null
           departure_time?: string | null
+          distance_km?: number | null
           equipment?: string[] | null
           event_date?: string | null
           event_time?: string | null
           id?: string
           invitations?: string | null
+          latitude?: number | null
           local_contact?: string | null
           local_contact_phone?: string | null
+          longitude?: number | null
           notes?: string | null
           opportunity_id?: string | null
           quote_id?: string | null
@@ -3116,6 +3127,7 @@ export type Database = {
           transport?: string | null
           updated_at?: string
           user_id?: string
+          vehicle_type?: string | null
           venue?: string
         }
         Relationships: [
@@ -3797,6 +3809,42 @@ export type Database = {
           social_security_number_encrypted?: string | null
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      vehicle_rates: {
+        Row: {
+          created_at: string
+          description: string | null
+          fixed_cost: number | null
+          id: string
+          is_default: boolean | null
+          rate_per_km: number
+          updated_at: string
+          user_id: string
+          vehicle_name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          fixed_cost?: number | null
+          id?: string
+          is_default?: boolean | null
+          rate_per_km?: number
+          updated_at?: string
+          user_id: string
+          vehicle_name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          fixed_cost?: number | null
+          id?: string
+          is_default?: boolean | null
+          rate_per_km?: number
+          updated_at?: string
+          user_id?: string
+          vehicle_name?: string
         }
         Relationships: []
       }
