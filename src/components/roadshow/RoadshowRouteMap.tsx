@@ -16,6 +16,7 @@ interface RoadshowRouteMapProps {
   stops: TourStop[];
   height?: string;
   onStopSelect?: (stopId: string) => void;
+  defaultDepartureAddress?: string;
 }
 
 const formatDuration = (minutes: number): string => {
@@ -25,7 +26,7 @@ const formatDuration = (minutes: number): string => {
   return `${hours}h ${mins}min`;
 };
 
-export const RoadshowRouteMap = ({ stops, height = '500px', onStopSelect }: RoadshowRouteMapProps) => {
+export const RoadshowRouteMap = ({ stops, height = '500px', onStopSelect, defaultDepartureAddress }: RoadshowRouteMapProps) => {
   const mapElRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<any>(null);
   const markersRef = useRef<any>(null);
@@ -38,6 +39,7 @@ export const RoadshowRouteMap = ({ stops, height = '500px', onStopSelect }: Road
   const [isCalculating, setIsCalculating] = useState(false);
   const [isGeocodingAll, setIsGeocodingAll] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+  const [departureCoords, setDepartureCoords] = useState<{ lat: number; lng: number } | null>(null);
 
   const { rates, loading: ratesLoading } = useVehicleRates();
 
@@ -116,9 +118,28 @@ export const RoadshowRouteMap = ({ stops, height = '500px', onStopSelect }: Road
     window.location.reload();
   };
 
+  // Geocode departure address when it changes
+  useEffect(() => {
+    const geocodeDeparture = async () => {
+      if (!defaultDepartureAddress || defaultDepartureAddress.trim() === '') {
+        setDepartureCoords(null);
+        return;
+      }
+      try {
+        const result = await geocodeAddress(defaultDepartureAddress, '', undefined, 'France');
+        if (result) {
+          setDepartureCoords({ lat: result.latitude, lng: result.longitude });
+        }
+      } catch (error) {
+        console.error('Error geocoding departure address:', error);
+      }
+    };
+    geocodeDeparture();
+  }, [defaultDepartureAddress]);
+
   // Calculate route between all confirmed stops
   const calculateFullRoute = async () => {
-    if (stopsWithCoords.length < 2) {
+    if (stopsWithCoords.length < 2 && !departureCoords) {
       toast.error('Il faut au moins 2 étapes géolocalisées pour calculer un itinéraire');
       return;
     }
@@ -134,6 +155,30 @@ export const RoadshowRouteMap = ({ stops, height = '500px', onStopSelect }: Road
         longitude: (s as any).longitude,
         vehicleType: (s as any).vehicleType
       }));
+
+      // Add departure point if configured
+      if (departureCoords) {
+        // Add as first stop (departure)
+        tourStops.unshift({
+          id: 'departure-point',
+          city: 'Point de départ',
+          venue: defaultDepartureAddress || '',
+          date: tourStops[0]?.date || '',
+          latitude: departureCoords.lat,
+          longitude: departureCoords.lng,
+          vehicleType: undefined
+        });
+        // Add as last stop (return)
+        tourStops.push({
+          id: 'return-point',
+          city: 'Retour',
+          venue: defaultDepartureAddress || '',
+          date: tourStops[tourStops.length - 1]?.date || '',
+          latitude: departureCoords.lat,
+          longitude: departureCoords.lng,
+          vehicleType: undefined
+        });
+      }
 
       const result = await calculateTourRoute(tourStops);
       setRouteResult(result);
@@ -230,6 +275,47 @@ export const RoadshowRouteMap = ({ stops, height = '500px', onStopSelect }: Road
 
     const coords = sortedStops.map((s) => [(s as any).latitude, (s as any).longitude] as [number, number]);
 
+    // Add departure marker if configured
+    if (departureCoords) {
+      const homeIcon = leaflet.divIcon({
+        className: 'custom-marker',
+        html: `
+          <div style="
+            background-color: hsl(142 76% 36%);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+          ">
+            🏠
+          </div>
+        `,
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32],
+      });
+
+      const departureMarker = leaflet
+        .marker([departureCoords.lat, departureCoords.lng], { icon: homeIcon })
+        .addTo(markers);
+
+      departureMarker.bindPopup(`
+        <div style="min-width: 180px; padding: 4px;">
+          <div style="font-weight: 600; font-size: 13px; margin-bottom: 4px;">🏠 Point de départ / retour</div>
+          <div style="font-size: 12px; opacity: .8;">${defaultDepartureAddress || ''}</div>
+        </div>
+      `);
+
+      coords.push([departureCoords.lat, departureCoords.lng]);
+    }
+
     // Add markers with numbers
     sortedStops.forEach((stop, index) => {
       const icon = leaflet.divIcon({
@@ -300,7 +386,7 @@ export const RoadshowRouteMap = ({ stops, height = '500px', onStopSelect }: Road
     } else {
       map.setView([46.603354, 1.888334], 6);
     }
-  }, [leafletLoaded, stopsWithCoords, routeResult, onStopSelect, ensureMapInitialized]);
+  }, [leafletLoaded, stopsWithCoords, routeResult, onStopSelect, ensureMapInitialized, departureCoords, defaultDepartureAddress]);
 
   if (loadError) {
     return (
