@@ -23,6 +23,8 @@ export interface TourStop {
   transport: string;
   artistLineup: {userId: string, confirmed: boolean}[];
   invitations: string;
+  vehicleType?: string;
+  distanceKm?: number;
 }
 
 export interface Artist {
@@ -53,4 +55,6 @@ export interface FormData {
   transport: string;
   artistLineup: {userId: string, confirmed: boolean}[];
   invitations: string;
+  vehicleType?: string;
+  distanceKm?: number;
 }
