@@ -11,12 +11,32 @@ import { VehicleRate, useVehicleRates } from '@/hooks/useVehicleRates';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+interface StopWithVehicle extends TourStop {
+  latitude?: number;
+  longitude?: number;
+  vehicleType?: string;
+  distance_km?: number;
+}
+
+interface SegmentCost {
+  fromStopId: string;
+  toStopId: string;
+  distanceKm: number;
+  durationMinutes: number;
+  vehicleName: string;
+  ratePerKm: number;
+  fixedCost: number;
+  cost: number;
+}
 
 interface RoadshowRouteMapProps {
-  stops: TourStop[];
+  stops: StopWithVehicle[];
   height?: string;
   onStopSelect?: (stopId: string) => void;
   defaultDepartureAddress?: string;
+  onVehicleChange?: (stopId: string, vehicleType: string) => void;
 }
 
 const formatDuration = (minutes: number): string => {
@@ -26,7 +46,7 @@ const formatDuration = (minutes: number): string => {
   return `${hours}h ${mins}min`;
 };
 
-export const RoadshowRouteMap = ({ stops, height = '500px', onStopSelect, defaultDepartureAddress }: RoadshowRouteMapProps) => {
+export const RoadshowRouteMap = ({ stops, height = '500px', onStopSelect, defaultDepartureAddress, onVehicleChange }: RoadshowRouteMapProps) => {
   const mapElRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<any>(null);
   const markersRef = useRef<any>(null);
@@ -40,6 +60,7 @@ export const RoadshowRouteMap = ({ stops, height = '500px', onStopSelect, defaul
   const [isGeocodingAll, setIsGeocodingAll] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [departureCoords, setDepartureCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [segmentVehicles, setSegmentVehicles] = useState<Record<string, string>>({});
 
   const { rates, loading: ratesLoading } = useVehicleRates();
 
@@ -64,15 +85,27 @@ export const RoadshowRouteMap = ({ stops, height = '500px', onStopSelect, defaul
   );
 
   // Calculate route costs based on vehicle rates
-  const calculateCosts = useCallback((segments: TourRouteSegment[], vehicleRates: VehicleRate[]) => {
+  const calculateCosts = useCallback((segments: TourRouteSegment[], vehicleRates: VehicleRate[], stopsData: StopWithVehicle[], vehicleOverrides: Record<string, string>) => {
     const defaultRate = vehicleRates.find(r => r.is_default) || vehicleRates[0];
-    if (!defaultRate) return { totalCost: 0, costPerSegment: [] };
+    if (!defaultRate) return { totalCost: 0, costPerSegment: [] as SegmentCost[] };
 
     let totalCost = 0;
-    const costPerSegment = segments.map(segment => {
-      const cost = (segment.distanceKm * defaultRate.rate_per_km) + defaultRate.fixed_cost;
+    const costPerSegment: SegmentCost[] = segments.map(segment => {
+      // Priority: segment override > destination stop vehicle > default
+      const segmentKey = `${segment.fromStopId}-${segment.toStopId}`;
+      const toStop = stopsData.find(s => s.id === segment.toStopId);
+      const vehicleName = vehicleOverrides[segmentKey] || toStop?.vehicleType || defaultRate.vehicle_name;
+      
+      const vehicleRate = vehicleRates.find(r => r.vehicle_name === vehicleName) || defaultRate;
+      const cost = (segment.distanceKm * vehicleRate.rate_per_km) + vehicleRate.fixed_cost;
       totalCost += cost;
-      return { ...segment, cost };
+      return { 
+        ...segment, 
+        vehicleName: vehicleRate.vehicle_name,
+        ratePerKm: vehicleRate.rate_per_km,
+        fixedCost: vehicleRate.fixed_cost,
+        cost 
+      };
     });
 
     return { totalCost, costPerSegment };
@@ -80,8 +113,16 @@ export const RoadshowRouteMap = ({ stops, height = '500px', onStopSelect, defaul
 
   const costs = useMemo(() => {
     if (!routeResult || rates.length === 0) return null;
-    return calculateCosts(routeResult.segments, rates);
-  }, [routeResult, rates, calculateCosts]);
+    return calculateCosts(routeResult.segments, rates, stopsWithCoords, segmentVehicles);
+  }, [routeResult, rates, calculateCosts, stopsWithCoords, segmentVehicles]);
+
+  // Handle vehicle change for a segment
+  const handleSegmentVehicleChange = (segmentKey: string, vehicleName: string) => {
+    setSegmentVehicles(prev => ({
+      ...prev,
+      [segmentKey]: vehicleName
+    }));
+  };
 
   // Geocode all stops without coordinates
   const geocodeAllStops = async () => {
@@ -522,18 +563,66 @@ export const RoadshowRouteMap = ({ stops, height = '500px', onStopSelect, defaul
                           <span className="truncate">
                             {fromStop?.city} → {toStop?.city}
                           </span>
+                          {toStop?.date && (
+                            <span className="text-xs text-muted-foreground hidden sm:inline">
+                              ({format(new Date(toStop.date), 'dd/MM', { locale: fr })})
+                            </span>
+                          )}
                         </div>
-                        <div className="flex items-center gap-3 flex-shrink-0">
+                        <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                          {rates.length > 0 && (
+                            <Select
+                              value={segmentCost?.vehicleName || ''}
+                              onValueChange={(value) => handleSegmentVehicleChange(`${segment.fromStopId}-${segment.toStopId}`, value)}
+                            >
+                              <SelectTrigger className="w-[100px] sm:w-[140px] h-7 text-xs">
+                                <SelectValue placeholder="Véhicule" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {rates.map(rate => (
+                                  <SelectItem key={rate.id} value={rate.vehicle_name}>
+                                    {rate.vehicle_name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
                           <span className="font-medium">{segment.distanceKm.toFixed(0)} km</span>
-                          <span className="text-muted-foreground">{formatDuration(segment.durationMinutes)}</span>
+                          <span className="text-muted-foreground hidden sm:inline">{formatDuration(segment.durationMinutes)}</span>
                           {segmentCost && (
-                            <span className="font-medium text-emerald-600 dark:text-emerald-400">{segmentCost.cost.toFixed(2)} €</span>
+                            <span className="font-medium text-emerald-600 dark:text-emerald-400 min-w-[70px] text-right">
+                              {segmentCost.cost.toFixed(2)} €
+                            </span>
                           )}
                         </div>
                       </div>
                     );
                   })}
                 </div>
+                
+                {/* Cost breakdown summary */}
+                {costs && rates.length > 0 && (
+                  <div className="mt-4 p-3 rounded-lg bg-muted/50 border">
+                    <h4 className="text-sm font-medium mb-2">Récapitulatif des frais</h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                      {rates.map(rate => {
+                        const vehicleSegments = costs.costPerSegment.filter(s => s.vehicleName === rate.vehicle_name);
+                        const vehicleKm = vehicleSegments.reduce((sum, s) => sum + s.distanceKm, 0);
+                        const vehicleCost = vehicleSegments.reduce((sum, s) => sum + s.cost, 0);
+                        if (vehicleSegments.length === 0) return null;
+                        return (
+                          <div key={rate.id} className="p-2 rounded bg-background border">
+                            <div className="font-medium">{rate.vehicle_name}</div>
+                            <div className="text-muted-foreground">{vehicleKm.toFixed(0)} km</div>
+                            <div className="text-emerald-600 dark:text-emerald-400 font-medium">
+                              {vehicleCost.toFixed(2)} €
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </CollapsibleContent>
             </Collapsible>
           </div>
