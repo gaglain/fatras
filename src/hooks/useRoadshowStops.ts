@@ -412,7 +412,9 @@ export const useRoadshowStops = () => {
     localContactPhone: stop.local_contact_phone || '',
     transport: stop.transport || '',
     artistLineup: stop.artist_lineup,
-    invitations: stop.invitations || ''
+    invitations: stop.invitations || '',
+    vehicleType: stop.vehicle_type,
+    distanceKm: stop.distance_km
   });
 
   // Convert TourStop format to database format
@@ -437,7 +439,9 @@ export const useRoadshowStops = () => {
     local_contact_phone: tourStop.localContactPhone,
     transport: tourStop.transport,
     artist_lineup: tourStop.artistLineup || [],
-    invitations: tourStop.invitations
+    invitations: tourStop.invitations,
+    vehicle_type: tourStop.vehicleType,
+    distance_km: tourStop.distanceKm
   });
 
   useEffect(() => {

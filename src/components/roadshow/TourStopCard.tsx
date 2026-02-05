@@ -4,14 +4,21 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Calendar, Clock, Users, Eye, Edit, Trash2, Download, MessageSquare } from 'lucide-react';
+import { Car } from 'lucide-react';
 import { TourStop, Artist } from '@/types/roadshow.types';
 import { TourStopPreview } from './TourStopPreview';
 import { generateTourStopPDF } from '@/utils/pdfGenerator';
 import { toast } from 'sonner';
 import { openChatWithRoadshowStop } from '@/lib/chatWidgetEvents';
 
+interface TourStopWithCosts extends TourStop {
+  vehicleType?: string;
+  distanceKm?: number;
+  travelCost?: number;
+}
+
 interface TourStopCardProps {
-  stop: TourStop;
+  stop: TourStopWithCosts;
   artists: Artist[];
   creator: { name: string } | undefined;
   onEdit: (stop: TourStop) => void;
@@ -163,7 +170,7 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
           )}
 
           {/* Hébergement & Transport */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
             {(stop.accommodation || stop.accommodationAddress) && (
               <div className="text-xs sm:text-sm">
                 <span className="text-muted-foreground">🏨 </span>
@@ -174,6 +181,20 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
               <div className="text-xs sm:text-sm">
                 <span className="text-muted-foreground">🚐 </span>
                 <span>{stop.transport}</span>
+              </div>
+            )}
+            {(stop.vehicleType || stop.distanceKm) && (
+              <div className="text-xs sm:text-sm flex items-center gap-1">
+                <Car className="h-3 w-3 text-muted-foreground" />
+                <span>
+                  {stop.vehicleType && <span>{stop.vehicleType}</span>}
+                  {stop.distanceKm && <span className="ml-1">({stop.distanceKm} km)</span>}
+                  {stop.travelCost && (
+                    <span className="ml-1 font-medium text-emerald-600 dark:text-emerald-400">
+                      {stop.travelCost.toFixed(2)} €
+                    </span>
+                  )}
+                </span>
               </div>
             )}
           </div>

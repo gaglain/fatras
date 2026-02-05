@@ -14,6 +14,7 @@ import { VehicleRatesSettings } from '@/components/roadshow/VehicleRatesSettings
 import { useRoadshowForm } from '@/hooks/useRoadshowForm';
 import { useRoadshowStops } from '@/hooks/useRoadshowStops';
 import { useRoadshowSettings } from '@/hooks/useRoadshowSettings';
+import { useVehicleRates } from '@/hooks/useVehicleRates';
 import { TourStop } from '@/types/roadshow.types';
 
 export const RoadShow: React.FC = () => {
@@ -21,6 +22,7 @@ export const RoadShow: React.FC = () => {
   const { artists: artistsData } = useArtists();
   const { tourStops, stops, loading, createStop, updateStop, deleteStop, convertFromTourStop } = useRoadshowStops();
   const { settings } = useRoadshowSettings();
+  const { rates, getRateByName, getDefaultRate } = useVehicleRates();
   const [viewMode, setViewMode] = useState<'list' | 'map' | 'settings'>('list');
   
   // Transformer les données des artistes pour correspondre au type roadshow
@@ -50,9 +52,33 @@ export const RoadShow: React.FC = () => {
     handleDeleteStop
   } = useRoadshowForm(currentUser?.id, { createStop, updateStop, deleteStop, convertFromTourStop });
 
+  // Enrichir les stops avec les données de coût de transport
+  const stopsWithCosts = React.useMemo(() => {
+    return tourStops.map(stop => {
+      const rawStop = stops.find(s => s.id === stop.id);
+      const vehicleType = rawStop?.vehicle_type;
+      const distanceKm = rawStop?.distance_km;
+      
+      let travelCost: number | undefined;
+      if (vehicleType && distanceKm && rates.length > 0) {
+        const rate = getRateByName(vehicleType) || getDefaultRate();
+        if (rate) {
+          travelCost = (distanceKm * rate.rate_per_km) + rate.fixed_cost;
+        }
+      }
+      
+      return {
+        ...stop,
+        vehicleType,
+        distanceKm,
+        travelCost
+      };
+    });
+  }, [tourStops, stops, rates, getRateByName, getDefaultRate]);
+
   const filteredAndSortedStops = React.useMemo(() => {
     // Filtrage
-    const filtered = tourStops.filter(stop => {
+    const filtered = stopsWithCosts.filter(stop => {
       const matchesSearch = stop.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
         stop.venue.toLowerCase().includes(searchTerm.toLowerCase());
       
@@ -82,7 +108,7 @@ export const RoadShow: React.FC = () => {
     });
 
     return sorted;
-  }, [tourStops, searchTerm, filterArtist, filterUser, sortBy, artists]);
+  }, [stopsWithCosts, searchTerm, filterArtist, filterUser, sortBy, artists]);
 
   return (
     <div className="space-y-4 sm:space-y-6 px-3 sm:px-4 lg:px-0 pb-20 sm:pb-0">
