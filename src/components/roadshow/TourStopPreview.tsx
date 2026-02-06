@@ -6,8 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TourStop } from '@/types/roadshow.types';
-import { MapPin, Calendar, Clock, Users, Download, Printer, FileText, DollarSign, Contact, CalendarDays, Plus, Trash2, Image as ImageIcon, Eye, X, Music } from 'lucide-react';
+import { MapPin, Calendar, Clock, Users, Download, Printer, FileText, DollarSign, Contact, CalendarDays, Plus, Trash2, Image as ImageIcon, Eye, X, Music, Route } from 'lucide-react';
 import { TourStopTravelInfo } from './TourStopTravelInfo';
+import { TourStopRouteMap } from './TourStopRouteMap';
 import { useRoadshowExpenses, RoadshowExpense } from '@/hooks/useRoadshowExpenses';
 import { useRoadshowEntityConnections, RoadshowEntityConnection } from '@/hooks/useRoadshowEntityConnections';
 import { useShowBibleSetlists } from '@/hooks/useShowBibleSetlists';
@@ -321,10 +322,14 @@ Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleT
         </DialogHeader>
 
         <Tabs defaultValue="roadmap" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 h-10">
+          <TabsList className="grid w-full grid-cols-3 h-10">
             <TabsTrigger value="roadmap" className="text-xs sm:text-sm px-2">
               <FileText className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
               <span className="hidden xs:inline">Feuille de</span> Route
+            </TabsTrigger>
+            <TabsTrigger value="trajet" className="text-xs sm:text-sm px-2">
+              <Route className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              Trajet
             </TabsTrigger>
             <TabsTrigger value="setlist" className="text-xs sm:text-sm px-2">
               <Music className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
@@ -720,6 +725,17 @@ Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleT
             </div>
           )}
         </div>
+          </TabsContent>
+
+          <TabsContent value="trajet" className="mt-3 sm:mt-4">
+            <div className="space-y-4 p-2 sm:p-4 bg-white rounded-lg">
+              <TourStopRouteMap
+                stopId={stop.id}
+                stopAddress={stop.address}
+                stopCity={stop.city}
+                height="400px"
+              />
+            </div>
           </TabsContent>
 
           <TabsContent value="setlist" className="mt-4">

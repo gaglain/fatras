@@ -4,7 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Car, MapPin, ArrowRight, Calculator, Edit2, Check } from 'lucide-react';
+import { Car, MapPin, ArrowRight, Calculator, Edit2, Check, Leaf } from 'lucide-react';
 import { useVehicleRates } from '@/hooks/useVehicleRates';
 import { useRoadshowSettings } from '@/hooks/useRoadshowSettings';
 import { supabase } from '@/integrations/supabase/client';
@@ -76,6 +76,9 @@ export const TourStopTravelInfo: React.FC<TourStopTravelInfoProps> = ({
   const selectedRate = rates.find(r => r.vehicle_name === vehicleType);
   const calculatedCost = selectedRate && distanceKm > 0
     ? (distanceKm * selectedRate.rate_per_km) + selectedRate.fixed_cost
+    : 0;
+  const co2Emission = selectedRate && distanceKm > 0
+    ? distanceKm * (selectedRate.co2_per_km || 0.21)
     : 0;
 
   const handleSave = async () => {
@@ -218,18 +221,34 @@ export const TourStopTravelInfo: React.FC<TourStopTravelInfoProps> = ({
 
       {/* Coût calculé */}
       {selectedRate && distanceKm > 0 && (
-        <div className="flex items-center justify-between bg-white p-2 sm:p-3 rounded-lg border border-blue-200">
-          <div className="flex items-center gap-1.5">
-            <Calculator className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500" />
-            <span className="text-xs sm:text-sm text-gray-600">Coût estimé</span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div className="flex items-center justify-between bg-white p-2 sm:p-3 rounded-lg border border-blue-200">
+            <div className="flex items-center gap-1.5">
+              <Calculator className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500" />
+              <span className="text-xs sm:text-sm text-gray-600">Coût estimé</span>
+            </div>
+            <div className="text-right">
+              <span className="text-base sm:text-lg font-bold text-emerald-600">
+                {calculatedCost.toFixed(2)} €
+              </span>
+              <p className="text-[10px] sm:text-xs text-gray-400">
+                {distanceKm} km × {selectedRate.rate_per_km.toFixed(2)} € + {selectedRate.fixed_cost.toFixed(2)} €
+              </p>
+            </div>
           </div>
-          <div className="text-right">
-            <span className="text-base sm:text-lg font-bold text-emerald-600">
-              {calculatedCost.toFixed(2)} €
-            </span>
-            <p className="text-[10px] sm:text-xs text-gray-400">
-              {distanceKm} km × {selectedRate.rate_per_km.toFixed(2)} € + {selectedRate.fixed_cost.toFixed(2)} €
-            </p>
+          <div className="flex items-center justify-between bg-white p-2 sm:p-3 rounded-lg border border-green-200">
+            <div className="flex items-center gap-1.5">
+              <Leaf className="h-3 w-3 sm:h-4 sm:w-4 text-green-500" />
+              <span className="text-xs sm:text-sm text-gray-600">Empreinte CO₂</span>
+            </div>
+            <div className="text-right">
+              <span className="text-base sm:text-lg font-bold text-green-600">
+                {co2Emission < 1 ? `${(co2Emission * 1000).toFixed(0)} g` : `${co2Emission.toFixed(1)} kg`}
+              </span>
+              <p className="text-[10px] sm:text-xs text-gray-400">
+                {distanceKm} km × {(selectedRate.co2_per_km || 0.21).toFixed(3)} kg/km
+              </p>
+            </div>
           </div>
         </div>
       )}

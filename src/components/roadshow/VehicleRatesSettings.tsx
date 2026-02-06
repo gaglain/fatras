@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Trash2, Edit2, Check, X, Car, MapPin } from 'lucide-react';
+import { Plus, Trash2, Edit2, Check, X, Car, MapPin, Leaf } from 'lucide-react';
 import { useVehicleRates, VehicleRate } from '@/hooks/useVehicleRates';
 import { useRoadshowSettings } from '@/hooks/useRoadshowSettings';
 import { toast } from 'sonner';
@@ -15,8 +15,8 @@ export const VehicleRatesSettings: React.FC = () => {
   
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [newRate, setNewRate] = useState({ vehicle_name: '', rate_per_km: 0.50, fixed_cost: 0 });
-  const [editForm, setEditForm] = useState({ vehicle_name: '', rate_per_km: 0, fixed_cost: 0 });
+  const [newRate, setNewRate] = useState({ vehicle_name: '', rate_per_km: 0.50, fixed_cost: 0, co2_per_km: 0.21 });
+  const [editForm, setEditForm] = useState({ vehicle_name: '', rate_per_km: 0, fixed_cost: 0, co2_per_km: 0.21 });
   const [departureAddress, setDepartureAddress] = useState(settings.default_departure_address || '');
 
   // Sync departure address when settings load
@@ -30,7 +30,7 @@ export const VehicleRatesSettings: React.FC = () => {
       return;
     }
     await createRate(newRate);
-    setNewRate({ vehicle_name: '', rate_per_km: 0.50, fixed_cost: 0 });
+    setNewRate({ vehicle_name: '', rate_per_km: 0.50, fixed_cost: 0, co2_per_km: 0.21 });
     setIsAdding(false);
   };
 
@@ -39,7 +39,8 @@ export const VehicleRatesSettings: React.FC = () => {
     setEditForm({
       vehicle_name: rate.vehicle_name,
       rate_per_km: rate.rate_per_km,
-      fixed_cost: rate.fixed_cost
+      fixed_cost: rate.fixed_cost,
+      co2_per_km: rate.co2_per_km || 0.21
     });
   };
 
@@ -51,7 +52,7 @@ export const VehicleRatesSettings: React.FC = () => {
 
   const handleCancelEdit = () => {
     setEditingId(null);
-    setEditForm({ vehicle_name: '', rate_per_km: 0, fixed_cost: 0 });
+    setEditForm({ vehicle_name: '', rate_per_km: 0, fixed_cost: 0, co2_per_km: 0.21 });
   };
 
   const handleSaveDepartureAddress = async () => {
@@ -107,7 +108,7 @@ export const VehicleRatesSettings: React.FC = () => {
                 Barèmes kilométriques
               </CardTitle>
               <CardDescription>
-                Définissez les tarifs par type de véhicule
+                Définissez les tarifs et émissions CO₂ par type de véhicule
               </CardDescription>
             </div>
             <Button onClick={() => setIsAdding(true)} disabled={isAdding}>
@@ -123,6 +124,12 @@ export const VehicleRatesSettings: React.FC = () => {
                 <TableHead>Véhicule</TableHead>
                 <TableHead className="text-right">Tarif / km (€)</TableHead>
                 <TableHead className="text-right">Coût fixe (€)</TableHead>
+                <TableHead className="text-right">
+                  <div className="flex items-center justify-end gap-1">
+                    <Leaf className="h-3 w-3 text-green-500" />
+                    CO₂/km (kg)
+                  </div>
+                </TableHead>
                 <TableHead className="text-right w-24">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -156,6 +163,16 @@ export const VehicleRatesSettings: React.FC = () => {
                       className="text-right"
                     />
                   </TableCell>
+                  <TableCell>
+                    <Input
+                      type="number"
+                      step="0.001"
+                      min="0"
+                      value={newRate.co2_per_km}
+                      onChange={(e) => setNewRate(prev => ({ ...prev, co2_per_km: parseFloat(e.target.value) || 0 }))}
+                      className="text-right"
+                    />
+                  </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
                       <Button size="icon" variant="ghost" onClick={handleAddRate}>
@@ -170,7 +187,7 @@ export const VehicleRatesSettings: React.FC = () => {
               )}
               {rates.length === 0 && !isAdding ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                     Aucun tarif véhicule configuré. Ajoutez-en un pour calculer les frais de route.
                   </TableCell>
                 </TableRow>
@@ -213,6 +230,20 @@ export const VehicleRatesSettings: React.FC = () => {
                         />
                       ) : (
                         <span>{rate.fixed_cost.toFixed(2)} €</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {editingId === rate.id ? (
+                        <Input
+                          type="number"
+                          step="0.001"
+                          min="0"
+                          value={editForm.co2_per_km}
+                          onChange={(e) => setEditForm(prev => ({ ...prev, co2_per_km: parseFloat(e.target.value) || 0 }))}
+                          className="text-right"
+                        />
+                      ) : (
+                        <span className="text-green-600">{(rate.co2_per_km || 0.21).toFixed(3)}</span>
                       )}
                     </TableCell>
                     <TableCell className="text-right">
