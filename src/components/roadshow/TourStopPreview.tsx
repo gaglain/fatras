@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TourStop } from '@/types/roadshow.types';
 import { MapPin, Calendar, Clock, Users, Download, Printer, FileText, DollarSign, Contact, CalendarDays, Plus, Trash2, Image as ImageIcon, Eye, X, Music } from 'lucide-react';
+import { TourStopTravelInfo } from './TourStopTravelInfo';
 import { useRoadshowExpenses, RoadshowExpense } from '@/hooks/useRoadshowExpenses';
 import { useRoadshowEntityConnections, RoadshowEntityConnection } from '@/hooks/useRoadshowEntityConnections';
 import { useShowBibleSetlists } from '@/hooks/useShowBibleSetlists';
@@ -442,6 +443,13 @@ Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleT
               <p className="text-xs sm:text-sm text-gray-700">{stop.transport || 'Non défini'}</p>
             </div>
           </div>
+
+          {/* Trajet & Frais de déplacement */}
+          <TourStopTravelInfo
+            stopId={stop.id}
+            stopAddress={stop.address}
+            stopCity={stop.city}
+          />
 
           {/* Invitations */}
           {stop.invitations && (

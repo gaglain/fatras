@@ -38,15 +38,22 @@ export const TourStopTravelInfo: React.FC<TourStopTravelInfoProps> = ({
 
       const { data, error } = await supabase
         .from('roadshow_stops')
-        .select('vehicle_type, distance_km, departure_address')
+        .select('vehicle_type, distance_km')
         .eq('id', stopId)
         .maybeSingle();
+
+      // Also fetch departure_address via raw query since types may not be updated yet
+      const { data: extraData } = await supabase
+        .from('roadshow_stops')
+        .select('departure_address' as any)
+        .eq('id', stopId)
+        .maybeSingle() as any;
 
       if (!error && data) {
         if (data.vehicle_type) setVehicleType(data.vehicle_type);
         if (data.distance_km) setDistanceKm(Number(data.distance_km));
-        // Use stop-specific departure or fall back to default settings
-        setDepartureAddress(data.departure_address || settings.default_departure_address || '');
+        const depAddr = extraData?.departure_address;
+        setDepartureAddress(depAddr || settings.default_departure_address || '');
       } else {
         setDepartureAddress(settings.default_departure_address || '');
       }
@@ -74,13 +81,14 @@ export const TourStopTravelInfo: React.FC<TourStopTravelInfoProps> = ({
   const handleSave = async () => {
     setIsSaving(true);
     try {
+      const updateData: any = {
+        vehicle_type: vehicleType,
+        distance_km: distanceKm,
+        departure_address: departureAddress
+      };
       const { error } = await supabase
         .from('roadshow_stops')
-        .update({
-          vehicle_type: vehicleType,
-          distance_km: distanceKm,
-          departure_address: departureAddress
-        })
+        .update(updateData)
         .eq('id', stopId);
 
       if (error) throw error;

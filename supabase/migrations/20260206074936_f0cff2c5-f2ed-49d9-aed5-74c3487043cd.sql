@@ -1,0 +1,1 @@
+ALTER TABLE public.roadshow_stops ADD COLUMN IF NOT EXISTS departure_address TEXT;
