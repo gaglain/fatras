@@ -9,6 +9,7 @@ export interface VehicleRate {
   vehicle_name: string;
   rate_per_km: number;
   fixed_cost: number;
+  co2_per_km: number;
   description?: string;
   is_default: boolean;
   created_at: string;
@@ -34,7 +35,8 @@ export const useVehicleRates = () => {
       setRates((data || []).map(r => ({
         ...r,
         rate_per_km: Number(r.rate_per_km),
-        fixed_cost: Number(r.fixed_cost || 0)
+        fixed_cost: Number(r.fixed_cost || 0),
+        co2_per_km: Number((r as any).co2_per_km || 0.21)
       })));
     } catch (error) {
       console.error('Error fetching vehicle rates:', error);
@@ -54,9 +56,10 @@ export const useVehicleRates = () => {
           vehicle_name: rateData.vehicle_name!,
           rate_per_km: rateData.rate_per_km || 0.50,
           fixed_cost: rateData.fixed_cost || 0,
+          co2_per_km: rateData.co2_per_km || 0.21,
           description: rateData.description,
           is_default: rateData.is_default || false
-        })
+        } as any)
         .select()
         .single();
 
@@ -65,7 +68,8 @@ export const useVehicleRates = () => {
       const newRate = {
         ...data,
         rate_per_km: Number(data.rate_per_km),
-        fixed_cost: Number(data.fixed_cost || 0)
+        fixed_cost: Number(data.fixed_cost || 0),
+        co2_per_km: Number((data as any).co2_per_km || 0.21)
       };
       
       setRates(prev => [...prev, newRate]);
@@ -88,9 +92,10 @@ export const useVehicleRates = () => {
           vehicle_name: rateData.vehicle_name,
           rate_per_km: rateData.rate_per_km,
           fixed_cost: rateData.fixed_cost,
+          co2_per_km: rateData.co2_per_km,
           description: rateData.description,
           is_default: rateData.is_default
-        })
+        } as any)
         .eq('id', rateId)
         .select()
         .single();
@@ -100,7 +105,8 @@ export const useVehicleRates = () => {
       const updatedRate = {
         ...data,
         rate_per_km: Number(data.rate_per_km),
-        fixed_cost: Number(data.fixed_cost || 0)
+        fixed_cost: Number(data.fixed_cost || 0),
+        co2_per_km: Number((data as any).co2_per_km || 0.21)
       };
 
       setRates(prev => prev.map(r => r.id === rateId ? updatedRate : r));

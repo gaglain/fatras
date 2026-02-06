@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Calendar, Clock, Users, Eye, Edit, Trash2, Download, MessageSquare } from 'lucide-react';
+import { MapPin, Calendar, Clock, Users, Eye, Edit, Trash2, Download, MessageSquare, Leaf } from 'lucide-react';
 import { Car } from 'lucide-react';
 import { TourStop, Artist } from '@/types/roadshow.types';
 import { TourStopPreview } from './TourStopPreview';
@@ -15,6 +15,7 @@ interface TourStopWithCosts extends TourStop {
   vehicleType?: string;
   distanceKm?: number;
   travelCost?: number;
+  co2Emission?: number;
 }
 
 interface TourStopCardProps {
@@ -192,6 +193,12 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
                   {stop.travelCost && (
                     <span className="ml-1 font-medium text-emerald-600 dark:text-emerald-400">
                       {stop.travelCost.toFixed(2)} €
+                    </span>
+                  )}
+                  {stop.co2Emission && stop.co2Emission > 0 && (
+                    <span className="ml-2 inline-flex items-center gap-0.5 text-green-600 dark:text-green-400">
+                      <Leaf className="h-3 w-3" />
+                      {stop.co2Emission < 1 ? `${(stop.co2Emission * 1000).toFixed(0)}g` : `${stop.co2Emission.toFixed(1)}kg`} CO₂
                     </span>
                   )}
                 </span>

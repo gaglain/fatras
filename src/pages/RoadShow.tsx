@@ -60,10 +60,12 @@ export const RoadShow: React.FC = () => {
       const distanceKm = rawStop?.distance_km;
       
       let travelCost: number | undefined;
+      let co2Emission: number | undefined;
       if (vehicleType && distanceKm && rates.length > 0) {
         const rate = getRateByName(vehicleType) || getDefaultRate();
         if (rate) {
           travelCost = (distanceKm * rate.rate_per_km) + rate.fixed_cost;
+          co2Emission = distanceKm * (rate.co2_per_km || 0.21);
         }
       }
       
@@ -71,7 +73,8 @@ export const RoadShow: React.FC = () => {
         ...stop,
         vehicleType,
         distanceKm,
-        travelCost
+        travelCost,
+        co2Emission
       };
     });
   }, [tourStops, stops, rates, getRateByName, getDefaultRate]);

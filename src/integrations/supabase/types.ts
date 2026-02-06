@@ -3817,6 +3817,7 @@ export type Database = {
       }
       vehicle_rates: {
         Row: {
+          co2_per_km: number | null
           created_at: string
           description: string | null
           fixed_cost: number | null
@@ -3828,6 +3829,7 @@ export type Database = {
           vehicle_name: string
         }
         Insert: {
+          co2_per_km?: number | null
           created_at?: string
           description?: string | null
           fixed_cost?: number | null
@@ -3839,6 +3841,7 @@ export type Database = {
           vehicle_name: string
         }
         Update: {
+          co2_per_km?: number | null
           created_at?: string
           description?: string | null
           fixed_cost?: number | null
