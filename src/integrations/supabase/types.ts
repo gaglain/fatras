@@ -3042,6 +3042,7 @@ export type Database = {
           city: string
           created_at: string
           crew: string[] | null
+          departure_address: string | null
           departure_time: string | null
           distance_km: number | null
           equipment: string[] | null
@@ -3075,6 +3076,7 @@ export type Database = {
           city: string
           created_at?: string
           crew?: string[] | null
+          departure_address?: string | null
           departure_time?: string | null
           distance_km?: number | null
           equipment?: string[] | null
@@ -3108,6 +3110,7 @@ export type Database = {
           city?: string
           created_at?: string
           crew?: string[] | null
+          departure_address?: string | null
           departure_time?: string | null
           distance_km?: number | null
           equipment?: string[] | null
