@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { MapPin, Route, Calculator, RefreshCw, Car, Leaf } from 'lucide-react';
 import { calculateRoute, geocodeAddress, decodePolyline, RouteResult } from '@/lib/geocoding';
 import { useVehicleRates } from '@/hooks/useVehicleRates';
 import { useRoadshowSettings } from '@/hooks/useRoadshowSettings';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { WaypointManager, Waypoint } from './WaypointManager';
 
 interface TourStopRouteMapProps {
   stopId: string;
@@ -34,6 +34,7 @@ export const TourStopRouteMap: React.FC<TourStopRouteMapProps> = ({
   const [departureAddress, setDepartureAddress] = useState('');
   const [vehicleType, setVehicleType] = useState('');
   const [distanceKm, setDistanceKm] = useState(0);
+  const [waypoints, setWaypoints] = useState<Waypoint[]>([]);
 
   const { rates } = useVehicleRates();
   const { settings } = useRoadshowSettings();
@@ -44,7 +45,7 @@ export const TourStopRouteMap: React.FC<TourStopRouteMapProps> = ({
       if (!stopId) return;
       const { data } = await supabase
         .from('roadshow_stops')
-        .select('vehicle_type, distance_km, departure_address')
+        .select('vehicle_type, distance_km, departure_address, waypoints')
         .eq('id', stopId)
         .maybeSingle();
 
@@ -52,6 +53,11 @@ export const TourStopRouteMap: React.FC<TourStopRouteMapProps> = ({
         setVehicleType(data.vehicle_type || '');
         setDistanceKm(Number(data.distance_km) || 0);
         setDepartureAddress((data as any).departure_address || settings.default_departure_address || '');
+        // Load waypoints from DB
+        const dbWaypoints = (data as any).waypoints;
+        if (Array.isArray(dbWaypoints) && dbWaypoints.length > 0) {
+          setWaypoints(dbWaypoints as Waypoint[]);
+        }
       } else {
         setDepartureAddress(settings.default_departure_address || '');
       }
@@ -119,6 +125,15 @@ export const TourStopRouteMap: React.FC<TourStopRouteMapProps> = ({
     if (leafletLoaded) ensureMapInitialized();
   }, [leafletLoaded, ensureMapInitialized]);
 
+  const handleWaypointsChange = async (newWaypoints: Waypoint[]) => {
+    setWaypoints(newWaypoints);
+    // Persist to DB
+    await supabase
+      .from('roadshow_stops')
+      .update({ waypoints: newWaypoints } as any)
+      .eq('id', stopId);
+  };
+
   const calculateStopRoute = async () => {
     if (!departureAddress || (!stopAddress && !stopCity)) {
       toast.error('Adresses de départ et destination requises');
@@ -127,20 +142,44 @@ export const TourStopRouteMap: React.FC<TourStopRouteMapProps> = ({
 
     setIsCalculating(true);
     try {
-      // Geocode both addresses
-      const [departureResult, destinationResult] = await Promise.all([
+      // Geocode departure, destination, and all waypoints
+      const geocodePromises = [
         geocodeAddress(departureAddress, '', undefined, 'France'),
-        geocodeAddress(stopAddress || '', stopCity, undefined, 'France')
-      ]);
+        geocodeAddress(stopAddress || '', stopCity, undefined, 'France'),
+        ...waypoints.map(wp => geocodeAddress(wp.address, '', undefined, 'France'))
+      ];
+      
+      const results = await Promise.all(geocodePromises);
+      const departureResult = results[0];
+      const destinationResult = results[1];
+      const waypointResults = results.slice(2);
 
       if (!departureResult || !destinationResult) {
-        toast.error('Impossible de géolocaliser les adresses');
+        toast.error('Impossible de géolocaliser les adresses principales');
         return;
       }
 
+      // Filter out failed waypoint geocodes
+      const validWaypoints = waypointResults
+        .map((r, i) => r ? { result: r, index: i } : null)
+        .filter(Boolean) as { result: NonNullable<typeof departureResult>; index: number }[];
+
+      if (validWaypoints.length < waypointResults.length) {
+        const failedNames = waypoints
+          .filter((_, i) => !waypointResults[i])
+          .map(wp => wp.address);
+        toast.warning(`Étapes non trouvées: ${failedNames.join(', ')}`);
+      }
+
+      const waypointCoords = validWaypoints.map(vw => ({
+        lat: vw.result.latitude,
+        lng: vw.result.longitude
+      }));
+
       const route = await calculateRoute(
         { lat: departureResult.latitude, lng: departureResult.longitude },
-        { lat: destinationResult.latitude, lng: destinationResult.longitude }
+        { lat: destinationResult.latitude, lng: destinationResult.longitude },
+        waypointCoords.length > 0 ? waypointCoords : undefined
       );
 
       if (!route) {
@@ -158,59 +197,85 @@ export const TourStopRouteMap: React.FC<TourStopRouteMapProps> = ({
         .eq('id', stopId);
 
       // Draw on map
-      const leaflet = leafletRef.current;
-      const map = mapRef.current;
-      const markers = markersRef.current;
-      const routeLayer = routeLayerRef.current;
+      drawRoute(departureResult, destinationResult, validWaypoints, route);
 
-      if (leaflet && map && markers && routeLayer) {
-        markers.clearLayers();
-        routeLayer.clearLayers();
-
-        // Departure marker
-        const homeIcon = leaflet.divIcon({
-          className: 'custom-marker',
-          html: `<div style="background-color:hsl(142 76% 36%);width:28px;height:28px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;color:white;font-size:14px;">🏠</div>`,
-          iconSize: [28, 28], iconAnchor: [14, 28], popupAnchor: [0, -28],
-        });
-        leaflet.marker([departureResult.latitude, departureResult.longitude], { icon: homeIcon })
-          .addTo(markers)
-          .bindPopup(`<b>Départ</b><br/>${departureAddress}`);
-
-        // Destination marker
-        const destIcon = leaflet.divIcon({
-          className: 'custom-marker',
-          html: `<div style="background-color:hsl(0 84% 60%);width:28px;height:28px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;color:white;font-size:14px;">📍</div>`,
-          iconSize: [28, 28], iconAnchor: [14, 28], popupAnchor: [0, -28],
-        });
-        leaflet.marker([destinationResult.latitude, destinationResult.longitude], { icon: destIcon })
-          .addTo(markers)
-          .bindPopup(`<b>${stopCity}</b><br/>${stopAddress || ''}`);
-
-        // Route polyline
-        if (route.geometry) {
-          const decoded = decodePolyline(route.geometry);
-          leaflet.polyline(decoded, {
-            color: 'hsl(var(--primary))',
-            weight: 4,
-            opacity: 0.8,
-          }).addTo(routeLayer);
-        }
-
-        // Fit bounds
-        const bounds = leaflet.latLngBounds([
-          [departureResult.latitude, departureResult.longitude],
-          [destinationResult.latitude, destinationResult.longitude]
-        ]);
-        map.fitBounds(bounds, { padding: [40, 40], maxZoom: 12 });
-      }
-
-      toast.success(`Itinéraire: ${route.distanceKm.toFixed(1)} km, ${Math.round(route.durationMinutes)} min`);
+      const waypointInfo = waypoints.length > 0 ? ` (${waypoints.length} étape${waypoints.length > 1 ? 's' : ''})` : '';
+      toast.success(`Itinéraire: ${route.distanceKm.toFixed(1)} km, ${Math.round(route.durationMinutes)} min${waypointInfo}`);
     } catch (error) {
       console.error('Error calculating route:', error);
       toast.error('Erreur lors du calcul');
     } finally {
       setIsCalculating(false);
+    }
+  };
+
+  const drawRoute = (
+    departureResult: { latitude: number; longitude: number },
+    destinationResult: { latitude: number; longitude: number },
+    validWaypoints: { result: { latitude: number; longitude: number }; index: number }[],
+    route: RouteResult
+  ) => {
+    const leaflet = leafletRef.current;
+    const map = mapRef.current;
+    const markers = markersRef.current;
+    const routeLayer = routeLayerRef.current;
+
+    if (!leaflet || !map || !markers || !routeLayer) return;
+
+    markers.clearLayers();
+    routeLayer.clearLayers();
+
+    const allPoints: [number, number][] = [];
+
+    // Departure marker
+    const homeIcon = leaflet.divIcon({
+      className: 'custom-marker',
+      html: `<div style="background-color:hsl(142 76% 36%);width:28px;height:28px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;color:white;font-size:14px;">🏠</div>`,
+      iconSize: [28, 28], iconAnchor: [14, 28], popupAnchor: [0, -28],
+    });
+    leaflet.marker([departureResult.latitude, departureResult.longitude], { icon: homeIcon })
+      .addTo(markers)
+      .bindPopup(`<b>Départ</b><br/>${departureAddress}`);
+    allPoints.push([departureResult.latitude, departureResult.longitude]);
+
+    // Waypoint markers
+    validWaypoints.forEach((vw) => {
+      const wpIcon = leaflet.divIcon({
+        className: 'custom-marker',
+        html: `<div style="background-color:hsl(221 83% 53%);width:24px;height:24px;border-radius:50%;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:bold;">${vw.index + 1}</div>`,
+        iconSize: [24, 24], iconAnchor: [12, 24], popupAnchor: [0, -24],
+      });
+      leaflet.marker([vw.result.latitude, vw.result.longitude], { icon: wpIcon })
+        .addTo(markers)
+        .bindPopup(`<b>Étape ${vw.index + 1}</b><br/>${waypoints[vw.index]?.address || ''}`);
+      allPoints.push([vw.result.latitude, vw.result.longitude]);
+    });
+
+    // Destination marker
+    const destIcon = leaflet.divIcon({
+      className: 'custom-marker',
+      html: `<div style="background-color:hsl(0 84% 60%);width:28px;height:28px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;color:white;font-size:14px;">📍</div>`,
+      iconSize: [28, 28], iconAnchor: [14, 28], popupAnchor: [0, -28],
+    });
+    leaflet.marker([destinationResult.latitude, destinationResult.longitude], { icon: destIcon })
+      .addTo(markers)
+      .bindPopup(`<b>${stopCity}</b><br/>${stopAddress || ''}`);
+    allPoints.push([destinationResult.latitude, destinationResult.longitude]);
+
+    // Route polyline
+    if (route.geometry) {
+      const decoded = decodePolyline(route.geometry);
+      leaflet.polyline(decoded, {
+        color: 'hsl(var(--primary))',
+        weight: 4,
+        opacity: 0.8,
+      }).addTo(routeLayer);
+    }
+
+    // Fit bounds to all points
+    if (allPoints.length >= 2) {
+      const bounds = leaflet.latLngBounds(allPoints);
+      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 12 });
     }
   };
 
@@ -233,6 +298,11 @@ export const TourStopRouteMap: React.FC<TourStopRouteMapProps> = ({
           <MapPin className="h-4 w-4" />
           <span className="truncate">{departureAddress || 'Adresse de départ non définie'}</span>
           <span>→</span>
+          {waypoints.length > 0 && (
+            <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-medium">
+              {waypoints.length} étape{waypoints.length > 1 ? 's' : ''}
+            </span>
+          )}
           <span className="truncate">{stopAddress || stopCity}</span>
         </div>
         <Button
@@ -248,6 +318,13 @@ export const TourStopRouteMap: React.FC<TourStopRouteMapProps> = ({
           {isCalculating ? 'Calcul...' : 'Calculer l\'itinéraire'}
         </Button>
       </div>
+
+      {/* Waypoints manager */}
+      <WaypointManager
+        waypoints={waypoints}
+        onChange={handleWaypointsChange}
+        disabled={isCalculating}
+      />
 
       {/* Map */}
       <div className="rounded-lg overflow-hidden border">

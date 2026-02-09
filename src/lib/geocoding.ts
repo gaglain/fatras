@@ -68,12 +68,20 @@ export interface RouteResult {
 
 export const calculateRoute = async (
   start: { lat: number; lng: number },
-  end: { lat: number; lng: number }
+  end: { lat: number; lng: number },
+  waypoints?: { lat: number; lng: number }[]
 ): Promise<RouteResult | null> => {
   try {
+    // Build coordinates string: start;waypoint1;waypoint2;...;end
+    const coords = [
+      `${start.lng},${start.lat}`,
+      ...(waypoints || []).map(wp => `${wp.lng},${wp.lat}`),
+      `${end.lng},${end.lat}`
+    ].join(';');
+    
     // OSRM demo server - free but limited
     const response = await fetch(
-      `https://router.project-osrm.org/route/v1/driving/${start.lng},${start.lat};${end.lng},${end.lat}?overview=full&geometries=polyline`
+      `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=polyline`
     );
 
     if (!response.ok) return null;
