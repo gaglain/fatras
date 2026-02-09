@@ -3064,6 +3064,7 @@ export type Database = {
           user_id: string
           vehicle_type: string | null
           venue: string
+          waypoints: Json | null
         }
         Insert: {
           accommodation?: string | null
@@ -3098,6 +3099,7 @@ export type Database = {
           user_id: string
           vehicle_type?: string | null
           venue: string
+          waypoints?: Json | null
         }
         Update: {
           accommodation?: string | null
@@ -3132,6 +3134,7 @@ export type Database = {
           user_id?: string
           vehicle_type?: string | null
           venue?: string
+          waypoints?: Json | null
         }
         Relationships: [
           {
