@@ -2807,6 +2807,56 @@ export type Database = {
           },
         ]
       }
+      roadshow_documents: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          file_name: string
+          file_path: string
+          file_size: number | null
+          file_type: string
+          id: string
+          roadshow_stop_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          file_type: string
+          id?: string
+          roadshow_stop_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          file_type?: string
+          id?: string
+          roadshow_stop_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roadshow_documents_roadshow_stop_id_fkey"
+            columns: ["roadshow_stop_id"]
+            isOneToOne: false
+            referencedRelation: "roadshow_stops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       roadshow_expenses: {
         Row: {
           amount: number | null
@@ -2847,6 +2897,41 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "roadshow_expenses_roadshow_stop_id_fkey"
+            columns: ["roadshow_stop_id"]
+            isOneToOne: false
+            referencedRelation: "roadshow_stops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roadshow_notes: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          roadshow_stop_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          roadshow_stop_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          roadshow_stop_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roadshow_notes_roadshow_stop_id_fkey"
             columns: ["roadshow_stop_id"]
             isOneToOne: false
             referencedRelation: "roadshow_stops"
@@ -3042,9 +3127,11 @@ export type Database = {
           city: string
           created_at: string
           crew: string[] | null
+          curfew_time: string | null
           departure_address: string | null
           departure_time: string | null
           distance_km: number | null
+          doors_time: string | null
           equipment: string[] | null
           event_date: string | null
           event_time: string | null
@@ -3057,6 +3144,9 @@ export type Database = {
           notes: string | null
           opportunity_id: string | null
           quote_id: string | null
+          show_end_time: string | null
+          show_start_time: string | null
+          soundcheck_time: string | null
           status: string
           tickets_available: number | null
           transport: string | null
@@ -3077,9 +3167,11 @@ export type Database = {
           city: string
           created_at?: string
           crew?: string[] | null
+          curfew_time?: string | null
           departure_address?: string | null
           departure_time?: string | null
           distance_km?: number | null
+          doors_time?: string | null
           equipment?: string[] | null
           event_date?: string | null
           event_time?: string | null
@@ -3092,6 +3184,9 @@ export type Database = {
           notes?: string | null
           opportunity_id?: string | null
           quote_id?: string | null
+          show_end_time?: string | null
+          show_start_time?: string | null
+          soundcheck_time?: string | null
           status?: string
           tickets_available?: number | null
           transport?: string | null
@@ -3112,9 +3207,11 @@ export type Database = {
           city?: string
           created_at?: string
           crew?: string[] | null
+          curfew_time?: string | null
           departure_address?: string | null
           departure_time?: string | null
           distance_km?: number | null
+          doors_time?: string | null
           equipment?: string[] | null
           event_date?: string | null
           event_time?: string | null
@@ -3127,6 +3224,9 @@ export type Database = {
           notes?: string | null
           opportunity_id?: string | null
           quote_id?: string | null
+          show_end_time?: string | null
+          show_start_time?: string | null
+          soundcheck_time?: string | null
           status?: string
           tickets_available?: number | null
           transport?: string | null
