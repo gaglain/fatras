@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, Map, List, Settings } from 'lucide-react';
+import { Plus, Map, List, Settings, CalendarDays } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useUser } from '@/contexts/UserContext';
 import { useArtists } from '@/hooks/useArtists';
@@ -10,6 +10,7 @@ import { SearchBar } from '@/components/roadshow/SearchBar';
 import { RoadShowForm } from '@/components/roadshow/RoadShowForm';
 import { TourStopCard } from '@/components/roadshow/TourStopCard';
 import { RoadshowRouteMap } from '@/components/roadshow/RoadshowRouteMap';
+import { RoadshowTimeline } from '@/components/roadshow/RoadshowTimeline';
 import { VehicleRatesSettings } from '@/components/roadshow/VehicleRatesSettings';
 import { useRoadshowForm } from '@/hooks/useRoadshowForm';
 import { useRoadshowStops } from '@/hooks/useRoadshowStops';
@@ -23,7 +24,7 @@ export const RoadShow: React.FC = () => {
   const { tourStops, stops, loading, createStop, updateStop, deleteStop, convertFromTourStop } = useRoadshowStops();
   const { settings } = useRoadshowSettings();
   const { rates, getRateByName, getDefaultRate } = useVehicleRates();
-  const [viewMode, setViewMode] = useState<'list' | 'map' | 'settings'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'timeline' | 'map' | 'settings'>('list');
   
   // Transformer les données des artistes pour correspondre au type roadshow
   const artists = artistsData.map(artist => ({
@@ -168,15 +169,19 @@ export const RoadShow: React.FC = () => {
       />
 
       {/* Onglets Liste / Carte */}
-      <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'list' | 'map' | 'settings')} className="w-full">
+      <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'list' | 'timeline' | 'map' | 'settings')} className="w-full">
         <TabsList className="mb-4">
           <TabsTrigger value="list" className="flex items-center gap-2">
             <List className="h-4 w-4" />
             Liste
           </TabsTrigger>
+          <TabsTrigger value="timeline" className="flex items-center gap-2">
+            <CalendarDays className="h-4 w-4" />
+            Timeline
+          </TabsTrigger>
           <TabsTrigger value="map" className="flex items-center gap-2">
             <Map className="h-4 w-4" />
-            Carte & Itinéraire
+            Carte
           </TabsTrigger>
           <TabsTrigger value="settings" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
@@ -211,6 +216,14 @@ export const RoadShow: React.FC = () => {
               )}
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="timeline">
+          <RoadshowTimeline
+            stops={filteredAndSortedStops}
+            getUserById={getUserById}
+            onStopClick={handleEditStop}
+          />
         </TabsContent>
 
         <TabsContent value="map">

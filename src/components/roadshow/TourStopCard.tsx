@@ -118,9 +118,14 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
           </div>
 
           {/* Horaires détaillés */}
-          {(stop.checkInTime || stop.departureTime) && (
-            <div className="flex flex-wrap gap-3 mb-3 text-xs sm:text-sm text-muted-foreground">
+          {(stop.checkInTime || stop.departureTime || stop.soundcheckTime || stop.doorsTime || stop.showStartTime || stop.showEndTime || stop.curfewTime) && (
+            <div className="flex flex-wrap gap-2 sm:gap-3 mb-3 text-xs sm:text-sm text-muted-foreground">
               {stop.checkInTime && <span>🚪 Arrivée: {stop.checkInTime}</span>}
+              {stop.soundcheckTime && <span>🎵 Balance: {stop.soundcheckTime}</span>}
+              {stop.doorsTime && <span>🚪 Portes: {stop.doorsTime}</span>}
+              {stop.showStartTime && <span>🎭 Début: {stop.showStartTime}</span>}
+              {stop.showEndTime && <span>🏁 Fin: {stop.showEndTime}</span>}
+              {stop.curfewTime && <span>⏰ Couvre-feu: {stop.curfewTime}</span>}
               {stop.departureTime && <span>🚌 Départ: {stop.departureTime}</span>}
             </div>
           )}
@@ -206,12 +211,21 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
             )}
           </div>
 
-          {/* Contact local */}
+          {/* Contact local - avec actions rapides */}
           {(stop.localContact || stop.localContactPhone) && (
-            <div className="mb-3 text-xs sm:text-sm">
+            <div className="mb-3 text-xs sm:text-sm flex items-center gap-2 flex-wrap">
               <span className="text-muted-foreground">📞 </span>
               <span>{stop.localContact}</span>
-              {stop.localContactPhone && <span className="ml-2 text-muted-foreground">({stop.localContactPhone})</span>}
+              {stop.localContactPhone && (
+                <span className="flex items-center gap-1">
+                  <a href={`tel:${stop.localContactPhone}`} className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-xs font-medium">
+                    📞 Appeler
+                  </a>
+                  <a href={`sms:${stop.localContactPhone}`} className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-xs font-medium">
+                    💬 SMS
+                  </a>
+                </span>
+              )}
             </div>
           )}
 

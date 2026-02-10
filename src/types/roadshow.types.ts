@@ -8,6 +8,11 @@ export interface TourStop {
   time: string;
   checkInTime: string;
   departureTime: string;
+  soundcheckTime?: string;
+  doorsTime?: string;
+  showStartTime?: string;
+  showEndTime?: string;
+  curfewTime?: string;
   capacity: number;
   ticketsAvailable: number;
   status: 'confirmed' | 'pending' | 'cancelled';
@@ -41,6 +46,11 @@ export interface FormData {
   time: string;
   checkInTime: string;
   departureTime: string;
+  soundcheckTime?: string;
+  doorsTime?: string;
+  showStartTime?: string;
+  showEndTime?: string;
+  curfewTime?: string;
   capacity: string;
   ticketsAvailable: string;
   status: 'confirmed' | 'pending' | 'cancelled';

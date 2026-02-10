@@ -9,6 +9,8 @@ import { LineupForm } from './LineupForm';
 import { EntityLinksForm } from './EntityLinksForm';
 import { ExpensesForm } from './ExpensesForm';
 import { TravelCostsForm } from './TravelCostsForm';
+import { RoadshowDocuments } from './RoadshowDocuments';
+import { RoadshowNotes } from './RoadshowNotes';
 
 interface RoadShowFormProps {
   formData: FormData;
@@ -24,14 +26,16 @@ export const RoadShowForm: React.FC<RoadShowFormProps> = ({
 }) => {
   return (
     <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-      <TabsList className="grid grid-cols-4 sm:grid-cols-7 mb-4 h-auto">
-        <TabsTrigger value="general" className="text-xs sm:text-sm py-2">Général</TabsTrigger>
-        <TabsTrigger value="logistics" className="text-xs sm:text-sm py-2">Logistique</TabsTrigger>
-        <TabsTrigger value="contacts" className="text-xs sm:text-sm py-2">Contacts</TabsTrigger>
-        <TabsTrigger value="lineup" className="text-xs sm:text-sm py-2">Casting</TabsTrigger>
-        <TabsTrigger value="entities" className="text-xs sm:text-sm py-2">Entités</TabsTrigger>
-        <TabsTrigger value="travel" className="text-xs sm:text-sm py-2">Route</TabsTrigger>
-        <TabsTrigger value="expenses" className="text-xs sm:text-sm py-2">Frais</TabsTrigger>
+      <TabsList className="grid grid-cols-3 sm:grid-cols-9 mb-4 h-auto gap-1">
+        <TabsTrigger value="general" className="text-xs py-2">Général</TabsTrigger>
+        <TabsTrigger value="logistics" className="text-xs py-2">Logistique</TabsTrigger>
+        <TabsTrigger value="contacts" className="text-xs py-2">Contacts</TabsTrigger>
+        <TabsTrigger value="lineup" className="text-xs py-2">Casting</TabsTrigger>
+        <TabsTrigger value="entities" className="text-xs py-2">Entités</TabsTrigger>
+        <TabsTrigger value="travel" className="text-xs py-2">Route</TabsTrigger>
+        <TabsTrigger value="expenses" className="text-xs py-2">Frais</TabsTrigger>
+        <TabsTrigger value="documents" className="text-xs py-2">Documents</TabsTrigger>
+        <TabsTrigger value="notes" className="text-xs py-2">Notes</TabsTrigger>
       </TabsList>
 
       <TabsContent value="general">
@@ -54,7 +58,6 @@ export const RoadShowForm: React.FC<RoadShowFormProps> = ({
               Choisissez les utilisateurs qui feront partie de cette étape de tournée
             </p>
           </div>
-          {/* CastingSelector sera intégré ici */}
           <LineupForm formData={formData} setFormData={setFormData} users={users} />
         </div>
       </TabsContent>
@@ -69,6 +72,14 @@ export const RoadShowForm: React.FC<RoadShowFormProps> = ({
 
       <TabsContent value="expenses">
         <ExpensesForm roadshowStopId={roadshowStopId} />
+      </TabsContent>
+
+      <TabsContent value="documents">
+        <RoadshowDocuments roadshowStopId={roadshowStopId} />
+      </TabsContent>
+
+      <TabsContent value="notes">
+        <RoadshowNotes roadshowStopId={roadshowStopId} />
       </TabsContent>
     </Tabs>
   );

@@ -19,6 +19,11 @@ export interface RoadshowStop {
   event_time?: string;
   check_in_time?: string;
   departure_time?: string;
+  soundcheck_time?: string;
+  doors_time?: string;
+  show_start_time?: string;
+  show_end_time?: string;
+  curfew_time?: string;
   capacity: number;
   tickets_available: number;
   status: 'confirmed' | 'pending' | 'cancelled';
@@ -71,6 +76,11 @@ export const useRoadshowStops = () => {
         event_time: stop.event_time,
         check_in_time: stop.check_in_time,
         departure_time: stop.departure_time,
+        soundcheck_time: (stop as any).soundcheck_time,
+        doors_time: (stop as any).doors_time,
+        show_start_time: (stop as any).show_start_time,
+        show_end_time: (stop as any).show_end_time,
+        curfew_time: (stop as any).curfew_time,
         capacity: stop.capacity,
         tickets_available: stop.tickets_available,
         status: stop.status as 'confirmed' | 'pending' | 'cancelled',
@@ -110,7 +120,7 @@ export const useRoadshowStops = () => {
 
     try {
       logger.debug('Creating new roadshow stop');
-      const { data, error } = await supabase
+      const { data, error } = await (supabase
         .from('roadshow_stops')
         .insert({
           user_id: user.id,
@@ -121,6 +131,11 @@ export const useRoadshowStops = () => {
           event_time: stopData.event_time || null,
           check_in_time: stopData.check_in_time || null,
           departure_time: stopData.departure_time || null,
+          soundcheck_time: stopData.soundcheck_time || null,
+          doors_time: stopData.doors_time || null,
+          show_start_time: stopData.show_start_time || null,
+          show_end_time: stopData.show_end_time || null,
+          curfew_time: stopData.curfew_time || null,
           capacity: stopData.capacity || 0,
           tickets_available: stopData.tickets_available || 0,
           status: stopData.status || 'pending',
@@ -135,9 +150,9 @@ export const useRoadshowStops = () => {
           transport: stopData.transport,
           artist_lineup: stopData.artist_lineup || [],
           invitations: stopData.invitations
-        })
+        } as any)
         .select()
-        .single();
+        .single()) as any;
 
       if (error) throw error;
 
@@ -279,7 +294,7 @@ export const useRoadshowStops = () => {
       const oldLineup = currentStop?.artist_lineup || [];
 
       logger.debug('Updating roadshow stop:', stopId);
-      const { data, error } = await supabase
+      const { data, error } = await (supabase
         .from('roadshow_stops')
         .update({
           city: stopData.city,
@@ -289,6 +304,11 @@ export const useRoadshowStops = () => {
           event_time: stopData.event_time || null,
           check_in_time: stopData.check_in_time || null,
           departure_time: stopData.departure_time || null,
+          soundcheck_time: stopData.soundcheck_time || null,
+          doors_time: stopData.doors_time || null,
+          show_start_time: stopData.show_start_time || null,
+          show_end_time: stopData.show_end_time || null,
+          curfew_time: stopData.curfew_time || null,
           capacity: stopData.capacity,
           tickets_available: stopData.tickets_available,
           status: stopData.status,
@@ -303,10 +323,10 @@ export const useRoadshowStops = () => {
           transport: stopData.transport,
           artist_lineup: stopData.artist_lineup,
           invitations: stopData.invitations
-        })
+        } as any)
         .eq('id', stopId)
         .select()
-        .single();
+        .single()) as any;
 
       if (error) throw error;
 
@@ -398,6 +418,11 @@ export const useRoadshowStops = () => {
     time: stop.event_time || '',
     checkInTime: stop.check_in_time || '',
     departureTime: stop.departure_time || '',
+    soundcheckTime: stop.soundcheck_time,
+    doorsTime: stop.doors_time,
+    showStartTime: stop.show_start_time,
+    showEndTime: stop.show_end_time,
+    curfewTime: stop.curfew_time,
     capacity: stop.capacity,
     ticketsAvailable: stop.tickets_available,
     status: stop.status,
@@ -426,6 +451,11 @@ export const useRoadshowStops = () => {
     event_time: tourStop.time || null,
     check_in_time: tourStop.checkInTime || null,
     departure_time: tourStop.departureTime || null,
+    soundcheck_time: tourStop.soundcheckTime || null,
+    doors_time: tourStop.doorsTime || null,
+    show_start_time: tourStop.showStartTime || null,
+    show_end_time: tourStop.showEndTime || null,
+    curfew_time: tourStop.curfewTime || null,
     capacity: tourStop.capacity,
     tickets_available: tourStop.ticketsAvailable,
     status: tourStop.status,
