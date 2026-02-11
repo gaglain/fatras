@@ -128,7 +128,7 @@ export const RoadShow: React.FC = () => {
               Nouvelle
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+           <DialogContent className="max-w-3xl !left-0 !top-0 !translate-x-0 !translate-y-0 w-screen h-screen sm:!left-1/2 sm:!top-1/2 sm:!-translate-x-1/2 sm:!-translate-y-1/2 sm:w-auto sm:h-auto sm:max-h-[90vh] overflow-y-auto overflow-x-hidden rounded-none sm:rounded-lg">
             <DialogHeader>
               <DialogTitle>Créer une nouvelle étape de tournée</DialogTitle>
             </DialogHeader>
@@ -170,22 +170,22 @@ export const RoadShow: React.FC = () => {
 
       {/* Onglets Liste / Carte */}
       <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'list' | 'timeline' | 'map' | 'settings')} className="w-full">
-        <TabsList className="mb-4">
-          <TabsTrigger value="list" className="flex items-center gap-2">
-            <List className="h-4 w-4" />
-            Liste
+        <TabsList className="mb-4 w-full grid grid-cols-4">
+          <TabsTrigger value="list" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
+            <List className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="hidden xs:inline">Liste</span>
           </TabsTrigger>
-          <TabsTrigger value="timeline" className="flex items-center gap-2">
-            <CalendarDays className="h-4 w-4" />
-            Timeline
+          <TabsTrigger value="timeline" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
+            <CalendarDays className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="hidden xs:inline">Timeline</span>
           </TabsTrigger>
-          <TabsTrigger value="map" className="flex items-center gap-2">
-            <Map className="h-4 w-4" />
-            Carte
+          <TabsTrigger value="map" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
+            <Map className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="hidden xs:inline">Carte</span>
           </TabsTrigger>
-          <TabsTrigger value="settings" className="flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            Paramètres
+          <TabsTrigger value="settings" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
+            <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="hidden xs:inline">Paramètres</span>
           </TabsTrigger>
         </TabsList>
 
@@ -250,7 +250,7 @@ export const RoadShow: React.FC = () => {
 
       {/* Dialog de modification */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl !left-0 !top-0 !translate-x-0 !translate-y-0 w-screen h-screen sm:!left-1/2 sm:!top-1/2 sm:!-translate-x-1/2 sm:!-translate-y-1/2 sm:w-auto sm:h-auto sm:max-h-[90vh] overflow-y-auto overflow-x-hidden rounded-none sm:rounded-lg">
           <DialogHeader>
             <DialogTitle>Modifier l'étape de tournée</DialogTitle>
           </DialogHeader>
