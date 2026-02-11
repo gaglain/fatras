@@ -26,17 +26,19 @@ export const RoadShowForm: React.FC<RoadShowFormProps> = ({
 }) => {
   return (
     <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-      <TabsList className="grid grid-cols-3 sm:grid-cols-9 mb-4 h-auto gap-1">
-        <TabsTrigger value="general" className="text-xs py-2">Général</TabsTrigger>
-        <TabsTrigger value="logistics" className="text-xs py-2">Logistique</TabsTrigger>
-        <TabsTrigger value="contacts" className="text-xs py-2">Contacts</TabsTrigger>
-        <TabsTrigger value="lineup" className="text-xs py-2">Casting</TabsTrigger>
-        <TabsTrigger value="entities" className="text-xs py-2">Entités</TabsTrigger>
-        <TabsTrigger value="travel" className="text-xs py-2">Route</TabsTrigger>
-        <TabsTrigger value="expenses" className="text-xs py-2">Frais</TabsTrigger>
-        <TabsTrigger value="documents" className="text-xs py-2">Documents</TabsTrigger>
-        <TabsTrigger value="notes" className="text-xs py-2">Notes</TabsTrigger>
-      </TabsList>
+      <div className="overflow-x-auto -mx-2 px-2 pb-1">
+        <TabsList className="inline-flex w-max sm:grid sm:w-full sm:grid-cols-9 mb-4 h-auto gap-1">
+          <TabsTrigger value="general" className="text-xs py-2 px-3 whitespace-nowrap">Général</TabsTrigger>
+          <TabsTrigger value="logistics" className="text-xs py-2 px-3 whitespace-nowrap">Logistique</TabsTrigger>
+          <TabsTrigger value="contacts" className="text-xs py-2 px-3 whitespace-nowrap">Contacts</TabsTrigger>
+          <TabsTrigger value="lineup" className="text-xs py-2 px-3 whitespace-nowrap">Casting</TabsTrigger>
+          <TabsTrigger value="entities" className="text-xs py-2 px-3 whitespace-nowrap">Entités</TabsTrigger>
+          <TabsTrigger value="travel" className="text-xs py-2 px-3 whitespace-nowrap">Route</TabsTrigger>
+          <TabsTrigger value="expenses" className="text-xs py-2 px-3 whitespace-nowrap">Frais</TabsTrigger>
+          <TabsTrigger value="documents" className="text-xs py-2 px-3 whitespace-nowrap">Docs</TabsTrigger>
+          <TabsTrigger value="notes" className="text-xs py-2 px-3 whitespace-nowrap">Notes</TabsTrigger>
+        </TabsList>
+      </div>
 
       <TabsContent value="general">
         <GeneralForm formData={formData} setFormData={setFormData} />
