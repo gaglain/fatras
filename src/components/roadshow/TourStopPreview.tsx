@@ -304,7 +304,7 @@ Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleT
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl !left-0 !top-0 !translate-x-0 !translate-y-0 w-screen h-screen sm:!left-1/2 sm:!top-1/2 sm:!-translate-x-1/2 sm:!-translate-y-1/2 sm:w-[90vw] sm:h-auto sm:max-h-[90vh] overflow-y-auto overflow-x-hidden p-3 sm:p-6 rounded-none sm:rounded-lg">
+      <DialogContent className="sm:max-w-4xl overflow-x-hidden">
         <DialogHeader className="pb-2 sm:pb-4">
           <DialogTitle className="flex flex-col gap-3">
             <span className="text-base sm:text-xl font-semibold">Aperçu - {stop.city}</span>
