@@ -1,8 +1,8 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Save, Bell, Mail, CheckSquare, Calendar, MessageSquare, User, Users, AtSign } from "lucide-react";
+import { Save, Bell, Mail, CheckSquare, Calendar, MessageSquare, User, Users, AtSign, Loader2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 interface NotificationSettings {
   email: boolean;
   push: boolean;
+  mentions_email: boolean;
   tasks: boolean;
   contracts: boolean;
   events: boolean;
@@ -23,83 +24,133 @@ interface NotificationSettings {
   calendar: boolean;
 }
 
+const DEFAULT_SETTINGS: NotificationSettings = {
+  email: true,
+  push: true,
+  mentions_email: false,
+  tasks: true,
+  contracts: true,
+  events: true,
+  messages: true,
+  contacts: true,
+  artists: true,
+  dashboard: true,
+  calendar: true,
+};
+
+const SETTING_KEY = 'notification_settings';
+const MENTION_KEY = 'notify_mentions_by_email';
+
 export const NotificationsTab: React.FC = () => {
   const { user } = useAuth();
-  const [notifications, setNotifications] = useState<NotificationSettings>({
-    email: true,
-    push: true,
-    tasks: true,
-    contracts: true,
-    events: true,
-    messages: true,
-    contacts: true,
-    artists: true,
-    dashboard: true,
-    calendar: true
-  });
+  const [settings, setSettings] = useState<NotificationSettings>(DEFAULT_SETTINGS);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  const [mentionEmailEnabled, setMentionEmailEnabled] = useState(false);
-  const [mentionEmailLoading, setMentionEmailLoading] = useState(true);
-
-  useEffect(() => {
-    const savedNotifications = localStorage.getItem("notificationSettings");
-    if (savedNotifications) {
-      try {
-        setNotifications(JSON.parse(savedNotifications));
-      } catch {}
-    }
-  }, []);
-
-  // Load mention email preference from Supabase
+  // Load settings from Supabase
   useEffect(() => {
     if (!user?.id) return;
-    const loadMentionPref = async () => {
-      const { data } = await supabase
-        .from('app_settings')
-        .select('setting_value')
-        .eq('user_id', user.id)
-        .eq('setting_key', 'notify_mentions_by_email')
-        .maybeSingle();
-      setMentionEmailEnabled(data?.setting_value === 'true');
-      setMentionEmailLoading(false);
+
+    const load = async () => {
+      setLoading(true);
+      try {
+        const { data } = await supabase
+          .from('app_settings')
+          .select('setting_key, setting_value')
+          .eq('user_id', user.id)
+          .in('setting_key', [SETTING_KEY, MENTION_KEY]);
+
+        let loaded = { ...DEFAULT_SETTINGS };
+
+        // Migrate from localStorage if exists and no DB data
+        const localData = localStorage.getItem('notificationSettings');
+
+        if (data && data.length > 0) {
+          data.forEach(row => {
+            if (row.setting_key === SETTING_KEY) {
+              try {
+                const parsed = JSON.parse(row.setting_value);
+                loaded = { ...loaded, ...parsed };
+              } catch {}
+            }
+            if (row.setting_key === MENTION_KEY) {
+              loaded.mentions_email = row.setting_value === 'true';
+            }
+          });
+        } else if (localData) {
+          // Migrate from localStorage
+          try {
+            const parsed = JSON.parse(localData);
+            loaded = { ...loaded, ...parsed };
+          } catch {}
+        }
+
+        setSettings(loaded);
+      } catch (err) {
+        console.error('Error loading notification settings:', err);
+      } finally {
+        setLoading(false);
+      }
     };
-    loadMentionPref();
+
+    load();
   }, [user?.id]);
 
-  const toggleMentionEmail = async (enabled: boolean) => {
+  const updateSetting = useCallback((key: keyof NotificationSettings, value: boolean) => {
+    setSettings(prev => ({ ...prev, [key]: value }));
+  }, []);
+
+  const saveSettings = async () => {
     if (!user?.id) return;
-    setMentionEmailEnabled(enabled);
+    setSaving(true);
 
-    const { error } = await supabase
-      .from('app_settings')
-      .upsert({
-        user_id: user.id,
-        setting_key: 'notify_mentions_by_email',
-        setting_value: enabled ? 'true' : 'false',
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'user_id,setting_key' });
+    try {
+      const { mentions_email, ...rest } = settings;
+      const now = new Date().toISOString();
 
-    if (error) {
-      console.error('Error saving mention email pref:', error);
+      // Save main settings
+      await supabase
+        .from('app_settings')
+        .upsert({
+          user_id: user.id,
+          setting_key: SETTING_KEY,
+          setting_value: JSON.stringify(rest),
+          updated_at: now,
+        }, { onConflict: 'user_id,setting_key' });
+
+      // Save mention email separately (used by DB trigger)
+      await supabase
+        .from('app_settings')
+        .upsert({
+          user_id: user.id,
+          setting_key: MENTION_KEY,
+          setting_value: mentions_email ? 'true' : 'false',
+          updated_at: now,
+        }, { onConflict: 'user_id,setting_key' });
+
+      // Clean up localStorage
+      localStorage.removeItem('notificationSettings');
+
+      toast.success("Preferences de notifications sauvegardees");
+    } catch (err) {
+      console.error('Error saving notification settings:', err);
       toast.error("Erreur lors de la sauvegarde");
-      setMentionEmailEnabled(!enabled);
-    } else {
-      toast.success(enabled ? "Notifications email pour les mentions activees" : "Notifications email pour les mentions desactivees");
+    } finally {
+      setSaving(false);
     }
   };
 
-  const saveNotificationSettings = () => {
-    localStorage.setItem("notificationSettings", JSON.stringify(notifications));
-    toast.success("Parametres de notification sauvegardes");
-  };
-
-  const updateSetting = (key: keyof NotificationSettings, value: boolean) => {
-    setNotifications(prev => ({ ...prev, [key]: value }));
-  };
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      {/* Email sur mentions */}
+      {/* Mentions */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
@@ -117,15 +168,14 @@ export const NotificationsTab: React.FC = () => {
               <Label>Email lors d'une mention</Label>
             </div>
             <Switch
-              checked={mentionEmailEnabled}
-              onCheckedChange={toggleMentionEmail}
-              disabled={mentionEmailLoading}
+              checked={settings.mentions_email}
+              onCheckedChange={(checked) => updateSetting('mentions_email', checked)}
             />
           </div>
         </CardContent>
       </Card>
 
-      {/* Types de notifications generales */}
+      {/* Types generaux */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
@@ -140,7 +190,7 @@ export const NotificationsTab: React.FC = () => {
               <Label>Notifications par email</Label>
             </div>
             <Switch
-              checked={notifications.email}
+              checked={settings.email}
               onCheckedChange={(checked) => updateSetting('email', checked)}
             />
           </div>
@@ -150,14 +200,14 @@ export const NotificationsTab: React.FC = () => {
               <Label>Notifications push</Label>
             </div>
             <Switch
-              checked={notifications.push}
+              checked={settings.push}
               onCheckedChange={(checked) => updateSetting('push', checked)}
             />
           </div>
         </CardContent>
       </Card>
 
-      {/* Notifications par module */}
+      {/* Par module */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
@@ -169,103 +219,52 @@ export const NotificationsTab: React.FC = () => {
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center space-x-2">
-              <CheckSquare className="h-4 w-4 text-muted-foreground" />
-              <Label>Taches</Label>
+          {[
+            { key: 'tasks' as const, icon: CheckSquare, label: 'Taches' },
+            { key: 'messages' as const, icon: MessageSquare, label: 'Messages' },
+            { key: 'events' as const, icon: Calendar, label: 'Evenements' },
+            { key: 'contacts' as const, icon: User, label: 'Contacts' },
+            { key: 'artists' as const, icon: Users, label: 'Artistes' },
+          ].map(({ key, icon: Icon, label }) => (
+            <div key={key} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-center space-x-2">
+                <Icon className="h-4 w-4 text-muted-foreground" />
+                <Label>{label}</Label>
+              </div>
+              <Switch
+                checked={settings[key]}
+                onCheckedChange={(checked) => updateSetting(key, checked)}
+              />
             </div>
-            <Switch
-              checked={notifications.tasks}
-              onCheckedChange={(checked) => updateSetting('tasks', checked)}
-            />
-          </div>
-          
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center space-x-2">
-              <MessageSquare className="h-4 w-4 text-muted-foreground" />
-              <Label>Messages</Label>
-            </div>
-            <Switch
-              checked={notifications.messages}
-              onCheckedChange={(checked) => updateSetting('messages', checked)}
-            />
-          </div>
-
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center space-x-2">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-              <Label>Evenements</Label>
-            </div>
-            <Switch
-              checked={notifications.events}
-              onCheckedChange={(checked) => updateSetting('events', checked)}
-            />
-          </div>
-
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center space-x-2">
-              <User className="h-4 w-4 text-muted-foreground" />
-              <Label>Contacts</Label>
-            </div>
-            <Switch
-              checked={notifications.contacts}
-              onCheckedChange={(checked) => updateSetting('contacts', checked)}
-            />
-          </div>
-
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center space-x-2">
-              <Users className="h-4 w-4 text-muted-foreground" />
-              <Label>Artistes</Label>
-            </div>
-            <Switch
-              checked={notifications.artists}
-              onCheckedChange={(checked) => updateSetting('artists', checked)}
-            />
-          </div>
+          ))}
 
           <Separator />
 
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center space-x-2">
-              <CheckSquare className="h-4 w-4 text-muted-foreground" />
-              <Label>Contrats</Label>
+          {[
+            { key: 'contracts' as const, icon: CheckSquare, label: 'Contrats' },
+            { key: 'calendar' as const, icon: Calendar, label: 'Calendrier' },
+            { key: 'dashboard' as const, icon: CheckSquare, label: 'Tableau de bord' },
+          ].map(({ key, icon: Icon, label }) => (
+            <div key={key} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-center space-x-2">
+                <Icon className="h-4 w-4 text-muted-foreground" />
+                <Label>{label}</Label>
+              </div>
+              <Switch
+                checked={settings[key]}
+                onCheckedChange={(checked) => updateSetting(key, checked)}
+              />
             </div>
-            <Switch
-              checked={notifications.contracts}
-              onCheckedChange={(checked) => updateSetting('contracts', checked)}
-            />
-          </div>
-
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center space-x-2">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-              <Label>Calendrier</Label>
-            </div>
-            <Switch
-              checked={notifications.calendar}
-              onCheckedChange={(checked) => updateSetting('calendar', checked)}
-            />
-          </div>
-
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center space-x-2">
-              <CheckSquare className="h-4 w-4 text-muted-foreground" />
-              <Label>Tableau de bord</Label>
-            </div>
-            <Switch
-              checked={notifications.dashboard}
-              onCheckedChange={(checked) => updateSetting('dashboard', checked)}
-            />
-          </div>
+          ))}
         </CardContent>
       </Card>
 
-      <Button 
-        onClick={saveNotificationSettings} 
-        className="w-full bg-[#ec5f65] hover:bg-[#ec5f65]/90 text-white"
+      <Button
+        onClick={saveSettings}
+        disabled={saving}
+        className="w-full"
       >
-        <Save className="h-4 w-4 mr-2" />
+        {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
         Sauvegarder les parametres
       </Button>
     </div>
