@@ -5,12 +5,13 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CheckSquare, Search, Plus, Trash, Upload, LayoutGrid, List, Edit, X, Filter, ChevronDown, ChevronUp } from 'lucide-react';
+import { CheckSquare, Search, Plus, Trash, Upload, LayoutGrid, List, Edit, X, Filter, ChevronDown, ChevronUp, Columns3 } from 'lucide-react';
 import { toast } from 'sonner';
 import { TaskCreator } from '@/components/tasks/TaskCreator';
 import { TaskCSVImporter } from '@/components/tasks/TaskCSVImporter';
 import { TaskList } from '@/components/tasks/TaskList';
 import { CompactTaskView } from '@/components/tasks/CompactTaskView';
+import { TaskKanbanView } from '@/components/tasks/TaskKanbanView';
 import { useUser } from '@/contexts/UserContext';
 import { useTasks, Task as TaskType } from '@/hooks/useTasks';
 import { EmailComposer } from '@/components/email/EmailComposer';
@@ -39,7 +40,7 @@ export const Tasks: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'dueDate' | 'priority' | 'status' | 'createdAt'>('dueDate');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [viewMode, setViewMode] = useState<'list' | 'compact'>('compact');
+  const [viewMode, setViewMode] = useState<'list' | 'compact' | 'kanban'>('compact');
   const [selectedTask, setSelectedTask] = useState<TaskType | null>(null);
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
   const [bulkEditorOpen, setBulkEditorOpen] = useState(false);
@@ -262,6 +263,15 @@ export const Tasks: React.FC = () => {
             <span className="hidden sm:inline">Compact</span>
           </Button>
           <Button
+            variant={viewMode === 'kanban' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setViewMode('kanban')}
+            className="text-xs"
+          >
+            <Columns3 className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Kanban</span>
+          </Button>
+          <Button
             variant={viewMode === 'list' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setViewMode('list')}
@@ -361,7 +371,14 @@ export const Tasks: React.FC = () => {
         </div>
       </div>
 
-      {viewMode === 'compact' ? (
+      {viewMode === 'kanban' ? (
+        <TaskKanbanView
+          tasks={sortedTasks}
+          onUpdateStatus={updateTaskStatus}
+          onTaskClick={(task) => setSelectedTask(task)}
+          onDeleteTask={handleDeleteTask}
+        />
+      ) : viewMode === 'compact' ? (
         <CompactTaskView
           tasks={sortedTasks}
           onUpdateStatus={updateTaskStatus}
