@@ -1,6 +1,8 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { FormData } from '@/types/roadshow.types';
 import { GeneralForm } from './GeneralForm';
 import { LogisticsForm } from './LogisticsForm';
@@ -24,21 +26,42 @@ interface RoadShowFormProps {
 export const RoadShowForm: React.FC<RoadShowFormProps> = ({ 
   formData, setFormData, selectedTab, setSelectedTab, users, roadshowStopId 
 }) => {
+  const isMobile = useIsMobile();
+
+  const tabOptions = [
+    { value: 'general', label: 'Général' },
+    { value: 'logistics', label: 'Logistique' },
+    { value: 'contacts', label: 'Contacts' },
+    { value: 'lineup', label: 'Casting' },
+    { value: 'entities', label: 'Entités' },
+    { value: 'travel', label: 'Route' },
+    { value: 'expenses', label: 'Frais' },
+    { value: 'documents', label: 'Docs' },
+    { value: 'notes', label: 'Notes' },
+  ];
+
   return (
     <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-      <div className="overflow-x-auto -mx-3 px-3 pb-2 scrollbar-thin">
-        <TabsList className="inline-flex w-max min-w-full sm:grid sm:w-full sm:grid-cols-9 mb-4 h-auto gap-1">
-          <TabsTrigger value="general" className="text-xs py-2 px-2.5 whitespace-nowrap">Général</TabsTrigger>
-          <TabsTrigger value="logistics" className="text-xs py-2 px-2.5 whitespace-nowrap">Logistique</TabsTrigger>
-          <TabsTrigger value="contacts" className="text-xs py-2 px-2.5 whitespace-nowrap">Contacts</TabsTrigger>
-          <TabsTrigger value="lineup" className="text-xs py-2 px-2.5 whitespace-nowrap">Casting</TabsTrigger>
-          <TabsTrigger value="entities" className="text-xs py-2 px-2.5 whitespace-nowrap">Entités</TabsTrigger>
-          <TabsTrigger value="travel" className="text-xs py-2 px-2.5 whitespace-nowrap">Route</TabsTrigger>
-          <TabsTrigger value="expenses" className="text-xs py-2 px-2.5 whitespace-nowrap">Frais</TabsTrigger>
-          <TabsTrigger value="documents" className="text-xs py-2 px-2.5 whitespace-nowrap">Docs</TabsTrigger>
-          <TabsTrigger value="notes" className="text-xs py-2 px-2.5 whitespace-nowrap">Notes</TabsTrigger>
+      {isMobile ? (
+        <Select value={selectedTab} onValueChange={setSelectedTab}>
+          <SelectTrigger className="mb-4">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {tabOptions.map(tab => (
+              <SelectItem key={tab.value} value={tab.value}>{tab.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ) : (
+        <TabsList className="grid w-full grid-cols-9 mb-4 h-auto gap-1">
+          {tabOptions.map(tab => (
+            <TabsTrigger key={tab.value} value={tab.value} className="text-xs py-2 px-2.5 whitespace-nowrap">
+              {tab.label}
+            </TabsTrigger>
+          ))}
         </TabsList>
-      </div>
+      )}
 
       <TabsContent value="general">
         <GeneralForm formData={formData} setFormData={setFormData} />
