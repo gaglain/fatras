@@ -2,18 +2,17 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Save, Bell, Mail, CheckSquare, Calendar, MessageSquare, User, Users } from "lucide-react";
+import { Save, Bell, Mail, CheckSquare, Calendar, MessageSquare, User, Users, AtSign } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface NotificationSettings {
-  // Types de notifications
   email: boolean;
   push: boolean;
-  
-  // Notifications par module
   tasks: boolean;
   contracts: boolean;
   events: boolean;
@@ -25,6 +24,7 @@ interface NotificationSettings {
 }
 
 export const NotificationsTab: React.FC = () => {
+  const { user } = useAuth();
   const [notifications, setNotifications] = useState<NotificationSettings>({
     email: true,
     push: true,
@@ -38,6 +38,9 @@ export const NotificationsTab: React.FC = () => {
     calendar: true
   });
 
+  const [mentionEmailEnabled, setMentionEmailEnabled] = useState(false);
+  const [mentionEmailLoading, setMentionEmailLoading] = useState(true);
+
   useEffect(() => {
     const savedNotifications = localStorage.getItem("notificationSettings");
     if (savedNotifications) {
@@ -47,9 +50,47 @@ export const NotificationsTab: React.FC = () => {
     }
   }, []);
 
+  // Load mention email preference from Supabase
+  useEffect(() => {
+    if (!user?.id) return;
+    const loadMentionPref = async () => {
+      const { data } = await supabase
+        .from('app_settings')
+        .select('setting_value')
+        .eq('user_id', user.id)
+        .eq('setting_key', 'notify_mentions_by_email')
+        .maybeSingle();
+      setMentionEmailEnabled(data?.setting_value === 'true');
+      setMentionEmailLoading(false);
+    };
+    loadMentionPref();
+  }, [user?.id]);
+
+  const toggleMentionEmail = async (enabled: boolean) => {
+    if (!user?.id) return;
+    setMentionEmailEnabled(enabled);
+
+    const { error } = await supabase
+      .from('app_settings')
+      .upsert({
+        user_id: user.id,
+        setting_key: 'notify_mentions_by_email',
+        setting_value: enabled ? 'true' : 'false',
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id,setting_key' });
+
+    if (error) {
+      console.error('Error saving mention email pref:', error);
+      toast.error("Erreur lors de la sauvegarde");
+      setMentionEmailEnabled(!enabled);
+    } else {
+      toast.success(enabled ? "Notifications email pour les mentions activees" : "Notifications email pour les mentions desactivees");
+    }
+  };
+
   const saveNotificationSettings = () => {
     localStorage.setItem("notificationSettings", JSON.stringify(notifications));
-    toast.success("Paramètres de notification sauvegardés");
+    toast.success("Parametres de notification sauvegardes");
   };
 
   const updateSetting = (key: keyof NotificationSettings, value: boolean) => {
@@ -58,7 +99,33 @@ export const NotificationsTab: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Types de notifications générales */}
+      {/* Email sur mentions */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <AtSign className="h-5 w-5 mr-2" />
+            Mentions
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Recevez un email quand quelqu'un vous mentionne (@) dans un message ou une note
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center space-x-2">
+              <Mail className="h-4 w-4 text-muted-foreground" />
+              <Label>Email lors d'une mention</Label>
+            </div>
+            <Switch
+              checked={mentionEmailEnabled}
+              onCheckedChange={toggleMentionEmail}
+              disabled={mentionEmailLoading}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Types de notifications generales */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
@@ -105,7 +172,7 @@ export const NotificationsTab: React.FC = () => {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center space-x-2">
               <CheckSquare className="h-4 w-4 text-muted-foreground" />
-              <Label>Tâches</Label>
+              <Label>Taches</Label>
             </div>
             <Switch
               checked={notifications.tasks}
@@ -127,7 +194,7 @@ export const NotificationsTab: React.FC = () => {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center space-x-2">
               <Calendar className="h-4 w-4 text-muted-foreground" />
-              <Label>Événements</Label>
+              <Label>Evenements</Label>
             </div>
             <Switch
               checked={notifications.events}
@@ -199,7 +266,7 @@ export const NotificationsTab: React.FC = () => {
         className="w-full bg-[#ec5f65] hover:bg-[#ec5f65]/90 text-white"
       >
         <Save className="h-4 w-4 mr-2" />
-        Sauvegarder les paramètres
+        Sauvegarder les parametres
       </Button>
     </div>
   );
