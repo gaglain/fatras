@@ -26,17 +26,17 @@ export const RoadShowForm: React.FC<RoadShowFormProps> = ({
 }) => {
   return (
     <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-      <div className="overflow-x-auto -mx-2 px-2 pb-1">
-        <TabsList className="inline-flex w-max sm:grid sm:w-full sm:grid-cols-9 mb-4 h-auto gap-1">
-          <TabsTrigger value="general" className="text-xs py-2 px-3 whitespace-nowrap">Général</TabsTrigger>
-          <TabsTrigger value="logistics" className="text-xs py-2 px-3 whitespace-nowrap">Logistique</TabsTrigger>
-          <TabsTrigger value="contacts" className="text-xs py-2 px-3 whitespace-nowrap">Contacts</TabsTrigger>
-          <TabsTrigger value="lineup" className="text-xs py-2 px-3 whitespace-nowrap">Casting</TabsTrigger>
-          <TabsTrigger value="entities" className="text-xs py-2 px-3 whitespace-nowrap">Entités</TabsTrigger>
-          <TabsTrigger value="travel" className="text-xs py-2 px-3 whitespace-nowrap">Route</TabsTrigger>
-          <TabsTrigger value="expenses" className="text-xs py-2 px-3 whitespace-nowrap">Frais</TabsTrigger>
-          <TabsTrigger value="documents" className="text-xs py-2 px-3 whitespace-nowrap">Docs</TabsTrigger>
-          <TabsTrigger value="notes" className="text-xs py-2 px-3 whitespace-nowrap">Notes</TabsTrigger>
+      <div className="overflow-x-auto -mx-3 px-3 pb-2 scrollbar-thin">
+        <TabsList className="inline-flex w-max min-w-full sm:grid sm:w-full sm:grid-cols-9 mb-4 h-auto gap-1">
+          <TabsTrigger value="general" className="text-xs py-2 px-2.5 whitespace-nowrap">Général</TabsTrigger>
+          <TabsTrigger value="logistics" className="text-xs py-2 px-2.5 whitespace-nowrap">Logistique</TabsTrigger>
+          <TabsTrigger value="contacts" className="text-xs py-2 px-2.5 whitespace-nowrap">Contacts</TabsTrigger>
+          <TabsTrigger value="lineup" className="text-xs py-2 px-2.5 whitespace-nowrap">Casting</TabsTrigger>
+          <TabsTrigger value="entities" className="text-xs py-2 px-2.5 whitespace-nowrap">Entités</TabsTrigger>
+          <TabsTrigger value="travel" className="text-xs py-2 px-2.5 whitespace-nowrap">Route</TabsTrigger>
+          <TabsTrigger value="expenses" className="text-xs py-2 px-2.5 whitespace-nowrap">Frais</TabsTrigger>
+          <TabsTrigger value="documents" className="text-xs py-2 px-2.5 whitespace-nowrap">Docs</TabsTrigger>
+          <TabsTrigger value="notes" className="text-xs py-2 px-2.5 whitespace-nowrap">Notes</TabsTrigger>
         </TabsList>
       </div>
 
