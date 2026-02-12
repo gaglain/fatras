@@ -1,5 +1,6 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Globe, Palette, Bell, Smartphone, Calendar, Mail, Settings, MapPin, User } from 'lucide-react';
 import { CustomColorsForm } from "./preferences/CustomColorsForm";
 import { GoogleCalendarTab } from "./preferences/GoogleCalendarTab";
@@ -18,71 +19,64 @@ import {
 import { AccountTab } from "./preferences/AccountTab";
 import { ContactSettingsTab } from '@/components/preferences/ContactSettingsTab';
 import { useSearchParams } from 'react-router-dom';
+import { useIsMobile } from '@/hooks/use-mobile';
+
+const tabOptions = [
+  { value: 'account', label: 'Compte', icon: User },
+  { value: 'company', label: 'Entreprise', icon: Globe },
+  { value: 'contact', label: 'Contact', icon: MapPin },
+  { value: 'appearance', label: 'Apparence', icon: Palette },
+  { value: 'notifications', label: 'Notifications', icon: Bell },
+  { value: 'email', label: 'IMAP', icon: Settings },
+  { value: 'smtp', label: 'SMTP', icon: Mail },
+  { value: 'calendar', label: 'Agenda', icon: Calendar },
+  { value: 'gmail', label: 'Gmail', icon: Mail },
+  { value: 'mobile', label: 'Mobile', icon: Smartphone },
+  { value: 'colors', label: 'Couleurs', icon: Palette },
+];
 
 export const Preferences: React.FC = () => {
   const [searchParams] = useSearchParams();
   const defaultTab = searchParams.get('tab') || 'account';
+  const isMobile = useIsMobile();
+  const [activeTab, setActiveTab] = React.useState(defaultTab);
 
   return (
     <div className="space-y-4 lg:space-y-6">
       <div>
-        <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Préférences</h1>
+        <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Preferences</h1>
         <p className="text-muted-foreground mt-2 text-sm lg:text-base">
-          Personnalisez votre expérience
+          Personnalisez votre experience
         </p>
       </div>
-      <Tabs defaultValue={defaultTab} className="w-full">
-        <div className="overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
-          <TabsList className="inline-flex h-auto gap-1 p-1 bg-muted/50 min-w-max sm:flex sm:flex-wrap sm:min-w-0 sm:w-full">
-            <TabsTrigger value="account" className="text-xs sm:text-sm px-2 sm:px-3 py-1.5 data-[state=active]:bg-background whitespace-nowrap">
-              <User className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              <span>Compte</span>
-            </TabsTrigger>
-            <TabsTrigger value="company" className="text-xs sm:text-sm px-2 sm:px-3 py-1.5 data-[state=active]:bg-background whitespace-nowrap">
-              <Globe className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              <span className="hidden xs:inline sm:inline">Entreprise</span>
-              <span className="xs:hidden">Cie</span>
-            </TabsTrigger>
-            <TabsTrigger value="contact" className="text-xs sm:text-sm px-2 sm:px-3 py-1.5 data-[state=active]:bg-background whitespace-nowrap">
-              <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              <span>Contact</span>
-            </TabsTrigger>
-            <TabsTrigger value="appearance" className="text-xs sm:text-sm px-2 sm:px-3 py-1.5 data-[state=active]:bg-background whitespace-nowrap">
-              <Palette className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              <span className="hidden sm:inline">Apparence</span>
-              <span className="sm:hidden">Style</span>
-            </TabsTrigger>
-            <TabsTrigger value="notifications" className="text-xs sm:text-sm px-2 sm:px-3 py-1.5 data-[state=active]:bg-background whitespace-nowrap">
-              <Bell className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              <span className="hidden sm:inline">Notifications</span>
-              <span className="sm:hidden">Notif</span>
-            </TabsTrigger>
-            <TabsTrigger value="email" className="text-xs sm:text-sm px-2 sm:px-3 py-1.5 data-[state=active]:bg-background whitespace-nowrap">
-              <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              <span>IMAP</span>
-            </TabsTrigger>
-            <TabsTrigger value="smtp" className="text-xs sm:text-sm px-2 sm:px-3 py-1.5 data-[state=active]:bg-background whitespace-nowrap">
-              <Mail className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              <span>SMTP</span>
-            </TabsTrigger>
-            <TabsTrigger value="calendar" className="text-xs sm:text-sm px-2 sm:px-3 py-1.5 data-[state=active]:bg-background whitespace-nowrap">
-              <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              <span>Agenda</span>
-            </TabsTrigger>
-            <TabsTrigger value="gmail" className="text-xs sm:text-sm px-2 sm:px-3 py-1.5 data-[state=active]:bg-background whitespace-nowrap">
-              <Mail className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              <span>Gmail</span>
-            </TabsTrigger>
-            <TabsTrigger value="mobile" className="text-xs sm:text-sm px-2 sm:px-3 py-1.5 data-[state=active]:bg-background whitespace-nowrap">
-              <Smartphone className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              <span>Mobile</span>
-            </TabsTrigger>
-            <TabsTrigger value="colors" className="text-xs sm:text-sm px-2 sm:px-3 py-1.5 data-[state=active]:bg-background whitespace-nowrap">
-              <Palette className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              <span>Couleurs</span>
-            </TabsTrigger>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        {isMobile ? (
+          <Select value={activeTab} onValueChange={setActiveTab}>
+            <SelectTrigger className="mb-4">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {tabOptions.map(tab => (
+                <SelectItem key={tab.value} value={tab.value}>
+                  <span className="flex items-center gap-2">
+                    <tab.icon className="h-4 w-4" />
+                    {tab.label}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : (
+          <TabsList className="flex flex-wrap h-auto gap-1 p-1 bg-muted/50 w-full mb-4">
+            {tabOptions.map(tab => (
+              <TabsTrigger key={tab.value} value={tab.value} className="text-xs sm:text-sm px-2 sm:px-3 py-1.5 data-[state=active]:bg-background whitespace-nowrap">
+                <tab.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                <span>{tab.label}</span>
+              </TabsTrigger>
+            ))}
           </TabsList>
-        </div>
+        )}
+
         <TabsContent value="account" className="space-y-4">
           <AccountTab />
         </TabsContent>
