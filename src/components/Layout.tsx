@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
@@ -14,6 +14,9 @@ import { usePWABadge } from '@/hooks/usePWABadge';
 import { useMessagingUnreadCount } from '@/hooks/useMessagingUnreadCount';
 import { PushNotificationPrompt } from '@/components/notifications/PushNotificationPrompt';
 import { OfflineBanner } from '@/components/OfflineBanner';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import { PullToRefreshIndicator } from '@/components/mobile/PullToRefreshIndicator';
+import { useQueryClient } from '@tanstack/react-query';
 import { logger } from '@/lib/logger';
 
 const adminRoutes = [
@@ -30,15 +33,23 @@ interface LayoutProps {
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   const isMobile = useIsMobile();
+  const queryClient = useQueryClient();
   const { unreadCount: generalUnreadCount } = useNotifications();
   const { getUnreadCount } = useEmailNotifications();
   const messagingUnreadCount = useMessagingUnreadCount();
   
   // Badge PWA avec toutes les notifications (général + email + messagerie)
-  
-  // Badge PWA avec toutes les notifications (général + email + messagerie)
   const totalUnreadCount = generalUnreadCount + getUnreadCount() + messagingUnreadCount;
   usePWABadge(totalUnreadCount);
+
+  const handleRefresh = useCallback(async () => {
+    await queryClient.invalidateQueries();
+  }, [queryClient]);
+
+  const { containerRef, isRefreshing, pullDistance, pullProgress } = usePullToRefresh({
+    onRefresh: handleRefresh,
+    disabled: !isMobile,
+  });
   
   const isAdminRoute = adminRoutes.some(route =>
     location.pathname === route || location.pathname.startsWith(route + '/')
@@ -70,7 +81,15 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         <OfflineBanner />
         <MobileTopBar />
         
-        <main className="flex-1 overflow-y-auto overflow-x-hidden p-3 bg-background">
+        <main 
+          ref={containerRef}
+          className="flex-1 overflow-y-auto overflow-x-hidden p-3 bg-background"
+        >
+          <PullToRefreshIndicator
+            pullDistance={pullDistance}
+            pullProgress={pullProgress}
+            isRefreshing={isRefreshing}
+          />
           <TaskNotificationBanner className="mb-3" />
           {children}
         </main>
