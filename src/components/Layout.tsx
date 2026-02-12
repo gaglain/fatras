@@ -13,6 +13,7 @@ import { useEmailNotifications } from '@/hooks/useEmailNotifications';
 import { usePWABadge } from '@/hooks/usePWABadge';
 import { useMessagingUnreadCount } from '@/hooks/useMessagingUnreadCount';
 import { PushNotificationPrompt } from '@/components/notifications/PushNotificationPrompt';
+import { OfflineBanner } from '@/components/OfflineBanner';
 import { logger } from '@/lib/logger';
 
 const adminRoutes = [
@@ -48,6 +49,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   if (!isAdminRoute) {
     return (
       <>
+        <OfflineBanner />
         {children}
         <ChatWidget />
         <PushNotificationPrompt />
@@ -65,6 +67,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           paddingBottom: 'calc(4rem + env(safe-area-inset-bottom))'
         }}
       >
+        <OfflineBanner />
         <MobileTopBar />
         
         <main className="flex-1 overflow-y-auto overflow-x-hidden p-3 bg-background">
@@ -82,6 +85,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   // Desktop Admin Layout
   return (
     <SidebarProvider>
+      <OfflineBanner />
       <div className="flex h-screen w-full">
         <div className="hidden lg:block">
           <AppSidebar />
