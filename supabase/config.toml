@@ -36,6 +36,8 @@ verify_jwt = false
 
 [functions.nylas-email]
 verify_jwt = false
-
 [functions.send-mention-email]
+verify_jwt = false
+
+[functions.task-reminders]
 verify_jwt = false
