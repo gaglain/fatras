@@ -16,7 +16,7 @@ export const LogisticsForm: React.FC<LogisticsFormProps> = ({ formData, setFormD
       {/* Horaires détaillés */}
       <div>
         <h3 className="text-sm font-semibold text-foreground mb-3">🕐 Horaires détaillés</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
             <label className="block text-xs font-medium text-muted-foreground mb-1">Arrivée équipe</label>
             <Input
