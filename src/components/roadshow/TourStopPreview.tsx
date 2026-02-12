@@ -374,24 +374,24 @@ Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleT
                 month: 'long', 
                 day: 'numeric' 
               })}</p>
-              <div className="grid grid-cols-3 gap-2 mt-2">
-                <div className="text-center">
-                  <p className="text-[10px] sm:text-xs text-gray-500 uppercase">Spectacle</p>
-                  <p className="text-xs sm:text-sm font-medium text-gray-700">{stop.time || '-'}</p>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
+                <div>
+                  <span className="text-[10px] sm:text-xs text-gray-500 uppercase">Spectacle: </span>
+                  <span className="text-xs sm:text-sm font-medium text-gray-700">{stop.time || '-'}</span>
                 </div>
-                <div className="text-center border-x border-gray-200">
-                  <p className="text-[10px] sm:text-xs text-gray-500 uppercase">Arrivée</p>
-                  <p className="text-xs sm:text-sm font-medium text-gray-700">{stop.checkInTime || '-'}</p>
+                <div>
+                  <span className="text-[10px] sm:text-xs text-gray-500 uppercase">Arrivée: </span>
+                  <span className="text-xs sm:text-sm font-medium text-gray-700">{stop.checkInTime || '-'}</span>
                 </div>
-                <div className="text-center">
-                  <p className="text-[10px] sm:text-xs text-gray-500 uppercase">Départ</p>
-                  <p className="text-xs sm:text-sm font-medium text-gray-700">{stop.departureTime || '-'}</p>
+                <div>
+                  <span className="text-[10px] sm:text-xs text-gray-500 uppercase">Départ: </span>
+                  <span className="text-xs sm:text-sm font-medium text-gray-700">{stop.departureTime || '-'}</span>
                 </div>
               </div>
             </div>
 
             {/* Capacité et Contact - 2 cols sur mobile */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="bg-gray-50 p-3 rounded-lg">
                 <h3 className="font-semibold text-gray-900 mb-1 flex items-center text-xs sm:text-sm">
                   <Users className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 text-purple-600 flex-shrink-0" />
@@ -436,7 +436,7 @@ Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleT
           </div>
 
           {/* Hébergement et Transport */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="bg-gray-50 p-3 rounded-lg">
               <h3 className="font-semibold text-gray-900 mb-1 text-xs sm:text-sm">🏨 Hébergement</h3>
               <p className="text-xs sm:text-sm text-gray-700 truncate">{stop.accommodation || 'Non défini'}</p>
