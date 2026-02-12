@@ -11,17 +11,17 @@ interface TourStopWithCosts extends TourStop {
 
 // Design tokens (RGB)
 const COLORS = {
-  primary: [180, 83, 9],       // terracotta/amber
-  primaryLight: [251, 243, 230], // warm sand bg
-  text: [30, 30, 30],
-  muted: [120, 113, 108],
-  success: [22, 163, 74],
-  warning: [202, 138, 4],
-  danger: [220, 38, 38],
-  white: [255, 255, 255],
-  border: [214, 211, 209],
-  sectionBg: [245, 241, 237],
-} as const;
+  primary: [180, 83, 9] as const,
+  primaryLight: [251, 243, 230] as const,
+  text: [30, 30, 30] as const,
+  muted: [120, 113, 108] as const,
+  success: [22, 163, 74] as const,
+  warning: [202, 138, 4] as const,
+  danger: [220, 38, 38] as const,
+  white: [255, 255, 255] as const,
+  border: [214, 211, 209] as const,
+  sectionBg: [245, 241, 237] as const,
+};
 
 export const generateTourStopPDF = (
   tourStop: TourStopWithCosts,
@@ -30,11 +30,10 @@ export const generateTourStopPDF = (
   const doc = new jsPDF();
   const pw = doc.internal.pageSize.width;
   const ph = doc.internal.pageSize.height;
-  const m = 16; // margin
+  const m = 16;
   const contentW = pw - 2 * m;
   let y = m;
 
-  // --- Helpers ---
   const setColor = (c: readonly number[]) => doc.setTextColor(c[0], c[1], c[2]);
   const setFill = (c: readonly number[]) => doc.setFillColor(c[0], c[1], c[2]);
   const setDraw = (c: readonly number[]) => doc.setDrawColor(c[0], c[1], c[2]);
@@ -46,20 +45,20 @@ export const generateTourStopPDF = (
     }
   };
 
-  const drawSectionHeader = (title: string, emoji: string) => {
+  const drawSectionHeader = (title: string) => {
     checkPage(16);
     setFill(COLORS.primary);
     doc.roundedRect(m, y - 1, contentW, 10, 2, 2, 'F');
     doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
     setColor(COLORS.white);
-    doc.text(`${emoji}  ${title}`, m + 4, y + 6);
+    doc.text(title, m + 4, y + 6);
     setColor(COLORS.text);
     y += 14;
   };
 
   const drawField = (label: string, value: string, labelWidth = 45) => {
-    if (!value || value === 'Non spécifié' || value === 'Non spécifiée') return;
+    if (!value) return;
     checkPage(7);
     doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
@@ -84,11 +83,23 @@ export const generateTourStopPDF = (
     return tw + 3;
   };
 
-  const getStatusInfo = (status: string): { label: string; color: readonly number[] } => {
+  const drawBadgeOutline = (text: string, x: number, yPos: number): number => {
+    doc.setFontSize(8);
+    const tw = doc.getTextWidth(text) + 8;
+    setDraw(COLORS.border);
+    setFill(COLORS.white);
+    doc.roundedRect(x, yPos - 4, tw, 7, 1.5, 1.5, 'FD');
+    setColor(COLORS.text);
+    doc.setFont('helvetica', 'bold');
+    doc.text(text, x + 4, yPos);
+    return tw + 3;
+  };
+
+  const getStatusInfo = (status: string) => {
     switch (status) {
-      case 'confirmed': return { label: 'CONFIRMÉ', color: COLORS.success };
+      case 'confirmed': return { label: 'CONFIRME', color: COLORS.success };
       case 'pending': return { label: 'EN ATTENTE', color: COLORS.warning };
-      case 'cancelled': return { label: 'ANNULÉ', color: COLORS.danger };
+      case 'cancelled': return { label: 'ANNULE', color: COLORS.danger };
       default: return { label: status.toUpperCase(), color: COLORS.muted };
     }
   };
@@ -96,24 +107,22 @@ export const generateTourStopPDF = (
   // ==========================================
   // HEADER
   // ==========================================
-  // Background band
   setFill(COLORS.primaryLight);
   doc.rect(0, 0, pw, 50, 'F');
   setFill(COLORS.primary);
   doc.rect(0, 0, pw, 4, 'F');
 
-  // Title
   y = 18;
   doc.setFontSize(22);
   doc.setFont('helvetica', 'bold');
   setColor(COLORS.primary);
   doc.text('FEUILLE DE ROUTE', m, y);
 
-  // City & Venue
   y += 10;
   doc.setFontSize(16);
   setColor(COLORS.text);
-  doc.text(`${tourStop.city || '—'} — ${tourStop.venue || '—'}`, m, y);
+  const cityVenue = [tourStop.city, tourStop.venue].filter(Boolean).join(' - ');
+  doc.text(cityVenue || '—', m, y);
 
   // Status badge
   const statusInfo = getStatusInfo(tourStop.status);
@@ -125,7 +134,9 @@ export const generateTourStopPDF = (
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
     setColor(COLORS.primary);
-    const dateStr = new Date(tourStop.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    const dateStr = new Date(tourStop.date).toLocaleDateString('fr-FR', {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+    });
     doc.text(dateStr, pw - m, 28, { align: 'right' });
     if (tourStop.time) {
       doc.setFontSize(10);
@@ -134,7 +145,6 @@ export const generateTourStopPDF = (
     }
   }
 
-  // Separator
   y = 54;
   setDraw(COLORS.border);
   doc.setLineWidth(0.5);
@@ -142,43 +152,41 @@ export const generateTourStopPDF = (
   y += 8;
 
   // ==========================================
-  // ÉVÉNEMENT
+  // EVENEMENT
   // ==========================================
-  drawSectionHeader('DÉTAILS DE L\'ÉVÉNEMENT', '📋');
+  drawSectionHeader("DETAILS DE L'EVENEMENT");
 
-  drawField('Adresse:', tourStop.address || '');
-  drawField('Capacité:', tourStop.capacity ? `${tourStop.capacity} places` : '');
-  drawField('Billets dispo.:', tourStop.ticketsAvailable ? `${tourStop.ticketsAvailable}` : '');
-
+  drawField('Adresse :', tourStop.address || '');
+  drawField('Capacite :', tourStop.capacity ? `${tourStop.capacity} places` : '');
+  drawField('Billets dispo. :', tourStop.ticketsAvailable ? `${tourStop.ticketsAvailable}` : '');
   y += 4;
 
   // ==========================================
-  // HORAIRES DÉTAILLÉS
+  // HORAIRES
   // ==========================================
   const timeSlots = [
-    { label: 'Arrivée', value: tourStop.checkInTime, emoji: '🚪' },
-    { label: 'Balance', value: tourStop.soundcheckTime, emoji: '🎵' },
-    { label: 'Ouverture portes', value: tourStop.doorsTime, emoji: '🚪' },
-    { label: 'Début show', value: tourStop.showStartTime, emoji: '🎭' },
-    { label: 'Fin show', value: tourStop.showEndTime, emoji: '🏁' },
-    { label: 'Couvre-feu', value: tourStop.curfewTime, emoji: '⏰' },
-    { label: 'Départ', value: tourStop.departureTime, emoji: '🚌' },
+    { label: 'Arrivee', value: tourStop.checkInTime },
+    { label: 'Balance', value: tourStop.soundcheckTime },
+    { label: 'Ouverture portes', value: tourStop.doorsTime },
+    { label: 'Debut show', value: tourStop.showStartTime },
+    { label: 'Fin show', value: tourStop.showEndTime },
+    { label: 'Couvre-feu', value: tourStop.curfewTime },
+    { label: 'Depart', value: tourStop.departureTime },
   ].filter(t => t.value);
 
   if (timeSlots.length > 0) {
-    drawSectionHeader('HORAIRES', '⏱');
+    drawSectionHeader('HORAIRES');
 
-    // Draw timeline-style
     checkPage(timeSlots.length * 8 + 4);
     setFill(COLORS.sectionBg);
     doc.roundedRect(m, y - 2, contentW, timeSlots.length * 8 + 4, 3, 3, 'F');
-    
+
     timeSlots.forEach((slot, i) => {
       const slotY = y + i * 8 + 4;
       doc.setFontSize(9);
       doc.setFont('helvetica', 'normal');
       setColor(COLORS.muted);
-      doc.text(`${slot.emoji} ${slot.label}`, m + 6, slotY);
+      doc.text(slot.label, m + 6, slotY);
       doc.setFont('helvetica', 'bold');
       setColor(COLORS.text);
       doc.text(slot.value!, m + 55, slotY);
@@ -187,18 +195,18 @@ export const generateTourStopPDF = (
   }
 
   // ==========================================
-  // CASTING / LINEUP
+  // CASTING
   // ==========================================
   if (tourStop.artistLineup && tourStop.artistLineup.length > 0) {
-    drawSectionHeader('CASTING', '🎭');
-    
+    drawSectionHeader('CASTING');
+
     let badgeX = m + 4;
     tourStop.artistLineup.forEach((artist) => {
       const user = getUserById(artist.userId);
-      const name = user?.name || `Artiste ${artist.userId.slice(0, 6)}`;
-      const label = `${name} ${artist.confirmed ? '✓' : '?'}`;
+      const name = user?.name || `Artiste`;
+      const label = artist.confirmed ? `${name} (conf.)` : `${name} (att.)`;
       const color = artist.confirmed ? COLORS.success : COLORS.warning;
-      
+
       doc.setFontSize(8);
       const bw = doc.getTextWidth(label) + 10;
       if (badgeX + bw > pw - m) {
@@ -213,16 +221,16 @@ export const generateTourStopPDF = (
   }
 
   // ==========================================
-  // ÉQUIPE TECHNIQUE
+  // EQUIPE TECHNIQUE
   // ==========================================
   if (tourStop.crew && tourStop.crew.length > 0) {
-    drawSectionHeader('ÉQUIPE TECHNIQUE', '🎵');
-    
+    drawSectionHeader('EQUIPE TECHNIQUE');
+
     let badgeX = m + 4;
     tourStop.crew.forEach((crewId) => {
       const user = getUserById(crewId);
       const name = user?.name || 'Inconnu';
-      
+
       doc.setFontSize(8);
       const bw = doc.getTextWidth(name) + 10;
       if (badgeX + bw > pw - m) {
@@ -230,12 +238,7 @@ export const generateTourStopPDF = (
         y += 9;
         checkPage(10);
       }
-      
-      setFill(COLORS.border);
-      doc.roundedRect(badgeX, y - 4, bw, 7, 1.5, 1.5, 'F');
-      setColor(COLORS.text);
-      doc.setFont('helvetica', 'bold');
-      doc.text(name, badgeX + 5, y);
+      drawBadgeOutline(name, badgeX, y);
       badgeX += bw + 3;
     });
     y += 10;
@@ -244,35 +247,34 @@ export const generateTourStopPDF = (
   // ==========================================
   // LOGISTIQUE
   // ==========================================
-  drawSectionHeader('LOGISTIQUE', '🚐');
+  drawSectionHeader('LOGISTIQUE');
 
-  drawField('Transport:', tourStop.transport || '');
-  drawField('Hébergement:', tourStop.accommodation || '');
-  drawField('Adr. héberg.:', tourStop.accommodationAddress || '');
+  drawField('Transport :', tourStop.transport || '');
+  drawField('Hebergement :', tourStop.accommodation || '');
+  drawField('Adr. heberg. :', tourStop.accommodationAddress || '');
 
   if (tourStop.vehicleType || tourStop.distanceKm) {
     let travelInfo = '';
     if (tourStop.vehicleType) travelInfo += tourStop.vehicleType;
-    if (tourStop.distanceKm) travelInfo += ` — ${tourStop.distanceKm} km`;
-    if (tourStop.travelCost) travelInfo += ` — ${tourStop.travelCost.toFixed(2)} €`;
-    drawField('Véhicule:', travelInfo);
+    if (tourStop.distanceKm) travelInfo += ` - ${tourStop.distanceKm} km`;
+    if (tourStop.travelCost) travelInfo += ` - ${tourStop.travelCost.toFixed(2)} EUR`;
+    drawField('Vehicule :', travelInfo);
   }
 
   if (tourStop.co2Emission && tourStop.co2Emission > 0) {
-    const co2Text = tourStop.co2Emission < 1 
-      ? `${(tourStop.co2Emission * 1000).toFixed(0)}g CO₂` 
-      : `${tourStop.co2Emission.toFixed(1)}kg CO₂`;
-    drawField('Empreinte:', co2Text);
+    const co2Text = tourStop.co2Emission < 1
+      ? `${(tourStop.co2Emission * 1000).toFixed(0)}g CO2`
+      : `${tourStop.co2Emission.toFixed(1)}kg CO2`;
+    drawField('Empreinte :', co2Text);
   }
-
   y += 4;
 
   // ==========================================
-  // ÉQUIPEMENT
+  // EQUIPEMENT
   // ==========================================
   if (tourStop.equipment && tourStop.equipment.length > 0 && tourStop.equipment.some(e => e.trim())) {
-    drawSectionHeader('ÉQUIPEMENT', '🔧');
-    
+    drawSectionHeader('EQUIPEMENT');
+
     let badgeX = m + 4;
     tourStop.equipment.forEach((item) => {
       if (!item.trim()) return;
@@ -283,12 +285,7 @@ export const generateTourStopPDF = (
         y += 9;
         checkPage(10);
       }
-      setFill(COLORS.border);
-      doc.roundedRect(badgeX, y - 4, bw, 7, 1.5, 1.5, 'F');
-      setColor(COLORS.text);
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8);
-      doc.text(item.trim(), badgeX + 5, y);
+      drawBadgeOutline(item.trim(), badgeX, y);
       badgeX += bw + 3;
     });
     y += 10;
@@ -298,9 +295,9 @@ export const generateTourStopPDF = (
   // CONTACT SUR PLACE
   // ==========================================
   if (tourStop.localContact || tourStop.localContactPhone) {
-    drawSectionHeader('CONTACT SUR PLACE', '📞');
-    drawField('Nom:', tourStop.localContact || '');
-    drawField('Téléphone:', tourStop.localContactPhone || '');
+    drawSectionHeader('CONTACT SUR PLACE');
+    drawField('Nom :', tourStop.localContact || '');
+    drawField('Telephone :', tourStop.localContactPhone || '');
     y += 4;
   }
 
@@ -308,7 +305,7 @@ export const generateTourStopPDF = (
   // INVITATIONS
   // ==========================================
   if (tourStop.invitations && tourStop.invitations.trim()) {
-    drawSectionHeader('INVITATIONS', '🎟');
+    drawSectionHeader('INVITATIONS');
     checkPage(10);
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
@@ -322,7 +319,7 @@ export const generateTourStopPDF = (
   // NOTES
   // ==========================================
   if (tourStop.notes && tourStop.notes.trim()) {
-    drawSectionHeader('NOTES', '📝');
+    drawSectionHeader('NOTES');
     checkPage(10);
     setFill(COLORS.sectionBg);
     const noteLines = doc.splitTextToSize(tourStop.notes, contentW - 12);
@@ -346,13 +343,12 @@ export const generateTourStopPDF = (
   doc.setFont('helvetica', 'italic');
   setColor(COLORS.muted);
   doc.text(
-    `Document généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}`,
+    `Document genere le ${new Date().toLocaleDateString('fr-FR')} a ${new Date().toLocaleTimeString('fr-FR')}`,
     pw / 2,
     footerY,
     { align: 'center' }
   );
 
-  // Save
   const safeName = (tourStop.city || 'etape').replace(/\s+/g, '-').toLowerCase();
   doc.save(`feuille-de-route-${safeName}-${tourStop.date || 'sans-date'}.pdf`);
   return doc;
