@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { DashboardStats } from './DashboardStats';
 import { DashboardCharts } from './DashboardCharts';
+import { DashboardKPIs } from './DashboardKPIs';
 import { OpportunityStatsCard } from './OpportunityStatsCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -74,6 +75,9 @@ export const DashboardHome: React.FC = () => {
 
       {/* Stats Cards */}
       <DashboardStats selectedArtist={selectedArtist} />
+
+      {/* KPIs Tournée */}
+      <DashboardKPIs selectedArtist={selectedArtist} />
 
       {/* Charts Section */}
       <DashboardCharts selectedArtist={selectedArtist} />
