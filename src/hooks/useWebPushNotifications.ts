@@ -34,7 +34,7 @@ export const useWebPushNotifications = () => {
   const loadExistingSubscription = async () => {
     try {
       const registration = await navigator.serviceWorker.ready;
-      const existingSubscription = await registration.pushManager.getSubscription();
+      const existingSubscription = await (registration as any).pushManager.getSubscription();
       setSubscription(existingSubscription);
     } catch (error) {
       logger.error('Error loading existing subscription:', error);
@@ -81,11 +81,11 @@ export const useWebPushNotifications = () => {
         throw new Error('Service Worker not supported');
       }
 
-      const registration = await navigator.serviceWorker.ready;
+      const registration = await navigator.serviceWorker.ready as any;
       logger.debug('Service Worker ready');
       
       // Check if PushManager is available
-      if (!('pushManager' in registration)) {
+      if (!registration.pushManager) {
         throw new Error('Push Manager not supported');
       }
 
