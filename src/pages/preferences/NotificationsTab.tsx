@@ -14,6 +14,7 @@ interface NotificationSettings {
   email: boolean;
   push: boolean;
   mentions_email: boolean;
+  task_reminders_email: boolean;
   tasks: boolean;
   contracts: boolean;
   events: boolean;
@@ -28,6 +29,7 @@ const DEFAULT_SETTINGS: NotificationSettings = {
   email: true,
   push: true,
   mentions_email: false,
+  task_reminders_email: false,
   tasks: true,
   contracts: true,
   events: true,
@@ -40,6 +42,7 @@ const DEFAULT_SETTINGS: NotificationSettings = {
 
 const SETTING_KEY = 'notification_settings';
 const MENTION_KEY = 'notify_mentions_by_email';
+const TASK_REMINDER_KEY = 'notify_task_reminders_by_email';
 
 export const NotificationsTab: React.FC = () => {
   const { user } = useAuth();
@@ -58,7 +61,7 @@ export const NotificationsTab: React.FC = () => {
           .from('app_settings')
           .select('setting_key, setting_value')
           .eq('user_id', user.id)
-          .in('setting_key', [SETTING_KEY, MENTION_KEY]);
+          .in('setting_key', [SETTING_KEY, MENTION_KEY, TASK_REMINDER_KEY]);
 
         let loaded = { ...DEFAULT_SETTINGS };
 
@@ -75,6 +78,9 @@ export const NotificationsTab: React.FC = () => {
             }
             if (row.setting_key === MENTION_KEY) {
               loaded.mentions_email = row.setting_value === 'true';
+            }
+            if (row.setting_key === TASK_REMINDER_KEY) {
+              loaded.task_reminders_email = row.setting_value === 'true';
             }
           });
         } else if (localData) {
@@ -105,7 +111,7 @@ export const NotificationsTab: React.FC = () => {
     setSaving(true);
 
     try {
-      const { mentions_email, ...rest } = settings;
+      const { mentions_email, task_reminders_email, ...rest } = settings;
       const now = new Date().toISOString();
 
       // Save main settings
@@ -125,6 +131,16 @@ export const NotificationsTab: React.FC = () => {
           user_id: user.id,
           setting_key: MENTION_KEY,
           setting_value: mentions_email ? 'true' : 'false',
+          updated_at: now,
+        }, { onConflict: 'user_id,setting_key' });
+
+      // Save task reminders email preference separately (used by edge function)
+      await supabase
+        .from('app_settings')
+        .upsert({
+          user_id: user.id,
+          setting_key: TASK_REMINDER_KEY,
+          setting_value: task_reminders_email ? 'true' : 'false',
           updated_at: now,
         }, { onConflict: 'user_id,setting_key' });
 
@@ -170,6 +186,31 @@ export const NotificationsTab: React.FC = () => {
             <Switch
               checked={settings.mentions_email}
               onCheckedChange={(checked) => updateSetting('mentions_email', checked)}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Rappels tâches */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <CheckSquare className="h-5 w-5 mr-2" />
+            Rappels de tâches
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Recevez un récapitulatif quotidien par email des tâches en retard et à venir
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center space-x-2">
+              <Mail className="h-4 w-4 text-muted-foreground" />
+              <Label>Email récapitulatif quotidien</Label>
+            </div>
+            <Switch
+              checked={settings.task_reminders_email}
+              onCheckedChange={(checked) => updateSetting('task_reminders_email', checked)}
             />
           </div>
         </CardContent>
