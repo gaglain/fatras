@@ -377,6 +377,8 @@ export const Tasks: React.FC = () => {
           onUpdateStatus={updateTaskStatus}
           onTaskClick={(task) => setSelectedTask(task)}
           onDeleteTask={handleDeleteTask}
+          selectedTaskIds={selectedTaskIds}
+          onToggleSelection={toggleTaskSelection}
         />
       ) : viewMode === 'compact' ? (
         <CompactTaskView

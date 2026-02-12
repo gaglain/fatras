@@ -2,6 +2,7 @@ import React, { useState, useRef, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { GripVertical, Calendar, AlertCircle, Trash, Plus } from 'lucide-react';
 import { Task } from '@/hooks/useTasks';
 import { TaskExecuteButton } from './TaskExecuteButton';
@@ -12,6 +13,8 @@ interface TaskKanbanViewProps {
   onUpdateStatus: (taskId: string, status: Task['status']) => void;
   onTaskClick: (task: Task) => void;
   onDeleteTask?: (taskId: string) => void;
+  selectedTaskIds?: string[];
+  onToggleSelection?: (taskId: string) => void;
 }
 
 interface KanbanColumn {
@@ -42,6 +45,8 @@ export const TaskKanbanView: React.FC<TaskKanbanViewProps> = ({
   onUpdateStatus,
   onTaskClick,
   onDeleteTask,
+  selectedTaskIds = [],
+  onToggleSelection,
 }) => {
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
@@ -166,6 +171,14 @@ export const TaskKanbanView: React.FC<TaskKanbanViewProps> = ({
                     )}
                   >
                     <div className="flex items-start gap-2">
+                      {onToggleSelection && (
+                        <Checkbox
+                          checked={selectedTaskIds.includes(task.id)}
+                          onCheckedChange={() => onToggleSelection(task.id)}
+                          onClick={(e) => e.stopPropagation()}
+                          className="h-4 w-4 shrink-0 mt-0.5"
+                        />
+                      )}
                       <GripVertical className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0 opacity-40" />
                       
                       <div className="flex-1 min-w-0 space-y-2">
