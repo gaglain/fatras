@@ -15,10 +15,16 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({ selectedArtist }) 
   const { data: kpis } = useQuery({
     queryKey: ['dashboard-kpis', selectedArtist, user?.id],
     queryFn: async () => {
-      // 1. Roadshow stops with distance
-      const { data: stops } = await supabase
+      // 1. Roadshow stops with distance (filter by artist if selected)
+      let stopsQuery = supabase
         .from('roadshow_stops')
-        .select('distance_km, vehicle_type, status, event_date');
+        .select('distance_km, vehicle_type, status, event_date, artists');
+
+      if (selectedArtist !== 'all') {
+        stopsQuery = stopsQuery.contains('artists', [selectedArtist]);
+      }
+
+      const { data: stops } = await stopsQuery;
 
       // 2. Vehicle rates for CO2
       const { data: rates } = await supabase
