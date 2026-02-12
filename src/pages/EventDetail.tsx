@@ -15,6 +15,7 @@ import {
   User, 
   History, 
   Link as LinkIcon,
+  Download,
   Mail,
   Phone,
   Building,
@@ -36,6 +37,7 @@ import { TaskEventManager } from '@/components/events/TaskEventManager';
 import { Event } from '@/types/event.types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { downloadICSFile } from '@/utils/icsExport';
 
 interface Owner {
   user_id: string;
@@ -312,10 +314,31 @@ export const EventDetail: React.FC = () => {
             )}
           </div>
         </div>
-        <Button onClick={() => setEditDialogOpen(true)} className="w-full sm:w-auto">
-          <Edit className="mr-2 h-4 w-4" />
-          Modifier
-        </Button>
+        <div className="flex gap-2">
+          {event.start_date && (
+            <Button
+              variant="outline"
+              onClick={() => downloadICSFile({
+                title: event.title,
+                description: event.description,
+                startDate: event.start_date!,
+                endDate: event.end_date,
+                venue: event.venue,
+                address: event.address,
+                city: event.city,
+                country: event.country,
+              })}
+              className="w-full sm:w-auto"
+            >
+              <Download className="mr-2 h-4 w-4" />
+              .ics
+            </Button>
+          )}
+          <Button onClick={() => setEditDialogOpen(true)} className="w-full sm:w-auto">
+            <Edit className="mr-2 h-4 w-4" />
+            Modifier
+          </Button>
+        </div>
       </div>
 
       {/* Info Cards Grid */}
