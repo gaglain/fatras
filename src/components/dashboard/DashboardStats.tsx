@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Calendar, FileText, TrendingUp } from 'lucide-react';
+import { Users, Calendar, FileText, TrendingUp, Target, CheckCircle } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -111,7 +111,14 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ selectedArtist }
   const revenueHT = acceptedQuotes.reduce((total, quote) => total + ((Number(quote.total_amount) || 0) - (Number(quote.tax_amount) || 0)), 0);
   const avgRevenuePerShow = confirmedEvents > 0 ? revenueHT / confirmedEvents : 0;
   const pendingQuotes = quotes.filter(q => q.status === 'pending' || q.status === 'draft').length;
-  const totalOpportunities = opportunities.length;
+  
+  // Opportunités : exclure les "lost"
+  const activeOpportunities = opportunities.filter(o => o.status !== 'lost');
+  const wonOpportunities = opportunities.filter(o => o.status === 'won');
+  const openOpportunities = opportunities.filter(o => o.status === 'open');
+  const appliedOpportunities = opportunities.filter(o => o.status === 'applied');
+  const wonBudget = wonOpportunities.reduce((sum, o) => sum + (Number(o.budget) || 0), 0);
+  const activeBudget = activeOpportunities.reduce((sum, o) => sum + (Number(o.budget) || 0), 0);
 
   const stats = [
     {
@@ -129,11 +136,18 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ selectedArtist }
       color: 'text-green-600'
     },
     {
-      title: 'Opportunités',
-      value: totalOpportunities.toString(),
-      icon: TrendingUp,
-      description: 'Total opportunités',
+      title: 'Opportunités actives',
+      value: `${openOpportunities.length + appliedOpportunities.length}`,
+      icon: Target,
+      description: `${openOpportunities.length} ouvertes · ${appliedOpportunities.length} postulées`,
       color: 'text-purple-600'
+    },
+    {
+      title: 'Opportunités gagnées',
+      value: `${wonOpportunities.length}`,
+      icon: CheckCircle,
+      description: `Budget: ${wonBudget.toLocaleString('fr-FR', { maximumFractionDigits: 0 })}€`,
+      color: 'text-green-600'
     },
     {
       title: 'Revenus HT',
@@ -152,7 +166,7 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ selectedArtist }
   ];
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
       {stats.map((stat, index) => (
         <Card key={index} className="hover:shadow-elegant transition-all duration-300 border-border bg-card animate-fade-in" style={{
           animationDelay: `${index * 100}ms`
