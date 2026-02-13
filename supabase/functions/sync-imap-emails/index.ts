@@ -232,124 +232,79 @@ const handler = async (req: Request): Promise<Response> => {
       // Fonction pour parser les emails d'une réponse FETCH
       const parseEmailsFromResponse = (fetchResponse: string, folder: string): any[] => {
         const emails: any[] = [];
-        const messageLines = fetchResponse.split('\r\n');
         
-        let currentMessage: any = null;
-        let currentHeaders = '';
-        let inHeaders = false;
-        let headerBytesRemaining = 0;
-        
-        for (let i = 0; i < messageLines.length; i++) {
-          const line = messageLines[i];
-          
-          const fetchMatch = line.match(/^\* (\d+) FETCH/);
-          if (fetchMatch) {
-            if (currentMessage && currentMessage.message_id && currentMessage.from_email) {
-              emails.push(currentMessage);
-            }
-            
-            const isSentFolder = folder.toLowerCase().includes('sent') || 
-                                 folder.toLowerCase().includes('envoy');
-            
-            currentMessage = {
-              user_id: userId,
-              provider: 'imap',
-              message_id: '',
-              from_email: '',
-              from_name: '',
-              to_email: '',
-              subject: '',
-              content: '',
-              html_content: '',
-              received_at: new Date().toISOString(),
-              direction: isSentFolder ? 'sent' : 'received',
-              labels: [folder]
-            };
-            currentHeaders = '';
-            inHeaders = false;
-            headerBytesRemaining = 0;
-            
-            const headerStartMatch = line.match(/BODY\[HEADER\]\s*\{(\d+)\}/);
-            if (headerStartMatch) {
-              headerBytesRemaining = parseInt(headerStartMatch[1]);
-              inHeaders = true;
-            }
-            continue;
-          }
-          
-          if (!inHeaders && line.includes('BODY[HEADER]')) {
-            const headerMatch = line.match(/BODY\[HEADER\]\s*\{(\d+)\}/);
-            if (headerMatch) {
-              headerBytesRemaining = parseInt(headerMatch[1]);
-              inHeaders = true;
-              continue;
-            }
-          }
-          
-          if (inHeaders && currentMessage) {
-            currentHeaders += line + '\r\n';
-            
-            const lineEndMatch = line.match(/\)$/);
-            const emptyLineAfterHeaders = line.trim() === '' && currentHeaders.includes('Message-ID');
-            
-            if (lineEndMatch || emptyLineAfterHeaders || currentHeaders.length > headerBytesRemaining + 200) {
-              const messageIdMatch = currentHeaders.match(/Message-ID:\s*<?([^>\s\r\n]+)>?/i);
-              const fromMatch = currentHeaders.match(/From:\s*(?:"?([^"<\r\n]*)"?\s*)?<?([^>\r\n\s]+@[^>\r\n\s]+)>?/i);
-              const toMatch = currentHeaders.match(/To:\s*(?:"?([^"<\r\n]*)"?\s*)?<?([^>\r\n\s]+@[^>\r\n\s]+)>?/i);
-              const subjectMatch = currentHeaders.match(/Subject:\s*([^\r\n]+(?:\r\n\s+[^\r\n]+)*)/i);
-              const dateMatch = currentHeaders.match(/Date:\s*([^\r\n]+)/i);
-              
-              if (messageIdMatch) {
-                currentMessage.message_id = messageIdMatch[1].trim();
-              }
-              
-              if (fromMatch) {
-                currentMessage.from_name = fromMatch[1]?.trim() || '';
-                currentMessage.from_email = fromMatch[2]?.trim().toLowerCase() || '';
-              }
-              
-              if (toMatch) {
-                currentMessage.to_email = toMatch[2]?.trim().toLowerCase() || '';
-              }
-              
-              if (subjectMatch) {
-                let subject = subjectMatch[1].replace(/\r\n\s+/g, ' ').trim();
-                subject = subject.replace(/=\?[^?]+\?[BQ]\?[^?]+\?=/gi, (match) => {
-                  try {
-                    const parts = match.split('?');
-                    if (parts.length >= 4) {
-                      const encoding = parts[2].toUpperCase();
-                      const encoded = parts[3];
-                      if (encoding === 'B') {
-                        return atob(encoded);
-                      } else if (encoding === 'Q') {
-                        return encoded.replace(/_/g, ' ').replace(/=([0-9A-F]{2})/gi, (_, hex) => 
-                          String.fromCharCode(parseInt(hex, 16))
-                        );
-                      }
-                    }
-                  } catch (e) {}
-                  return match;
-                });
-                currentMessage.subject = subject;
-              }
-              
-              if (dateMatch) {
-                try {
-                  const parsedDate = new Date(dateMatch[1].trim());
-                  if (!isNaN(parsedDate.getTime())) {
-                    currentMessage.received_at = parsedDate.toISOString();
-                  }
-                } catch (e) {}
-              }
-              
-              inHeaders = false;
-            }
-          }
+        const isSentFolder = folder.toLowerCase().includes('sent') || 
+                             folder.toLowerCase().includes('envoy');
+
+        // Split response into individual message blocks using FETCH markers
+        const fetchRegex = /^\* \d+ FETCH /gm;
+        const fetchPositions: number[] = [];
+        let match;
+        while ((match = fetchRegex.exec(fetchResponse)) !== null) {
+          fetchPositions.push(match.index);
         }
-        
-        if (currentMessage && currentMessage.message_id && currentMessage.from_email) {
-          emails.push(currentMessage);
+
+        for (let i = 0; i < fetchPositions.length; i++) {
+          const start = fetchPositions[i];
+          const end = i + 1 < fetchPositions.length ? fetchPositions[i + 1] : fetchResponse.length;
+          const block = fetchResponse.substring(start, end);
+
+          // Extract raw headers from BODY[HEADER] literal
+          const headerLiteralMatch = block.match(/BODY\[HEADER\]\s*\{(\d+)\}\r\n/);
+          if (!headerLiteralMatch) continue;
+
+          const headerSize = parseInt(headerLiteralMatch[1]);
+          const headerStart = block.indexOf(headerLiteralMatch[0]) + headerLiteralMatch[0].length;
+          const rawHeaders = block.substring(headerStart, headerStart + headerSize);
+
+          // Parse fields from raw headers
+          const messageIdMatch = rawHeaders.match(/^Message-ID:\s*<?([^>\s\r\n]+)>?/im);
+          const fromMatch = rawHeaders.match(/^From:\s*(?:"?([^"<\r\n]*)"?\s*)?<?([^>\r\n\s]+@[^>\r\n\s]+)>?/im);
+          const toMatch = rawHeaders.match(/^To:\s*(?:"?([^"<\r\n]*)"?\s*)?<?([^>\r\n\s]+@[^>\r\n\s]+)>?/im);
+          const subjectMatch = rawHeaders.match(/^Subject:\s*([^\r\n]+(?:\r\n[ \t]+[^\r\n]+)*)/im);
+          const dateMatch = rawHeaders.match(/^Date:\s*([^\r\n]+)/im);
+
+          if (!messageIdMatch || !fromMatch) continue;
+
+          let subject = '';
+          if (subjectMatch) {
+            subject = subjectMatch[1].replace(/\r\n[ \t]+/g, ' ').trim();
+            subject = subject.replace(/=\?[^?]+\?[BQ]\?[^?]+\?=/gi, (m) => {
+              try {
+                const parts = m.split('?');
+                if (parts.length >= 4) {
+                  const encoding = parts[2].toUpperCase();
+                  const encoded = parts[3];
+                  if (encoding === 'B') return atob(encoded);
+                  if (encoding === 'Q') return encoded.replace(/_/g, ' ').replace(/=([0-9A-F]{2})/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+                }
+              } catch (_e) {}
+              return m;
+            });
+          }
+
+          let receivedAt = new Date().toISOString();
+          if (dateMatch) {
+            try {
+              const parsed = new Date(dateMatch[1].trim());
+              if (!isNaN(parsed.getTime())) receivedAt = parsed.toISOString();
+            } catch (_e) {}
+          }
+
+          emails.push({
+            user_id: userId,
+            provider: 'imap',
+            message_id: messageIdMatch[1].trim(),
+            from_email: fromMatch[2]?.trim().toLowerCase() || '',
+            from_name: fromMatch[1]?.trim() || '',
+            to_email: toMatch?.[2]?.trim().toLowerCase() || '',
+            subject,
+            content: '',
+            html_content: '',
+            received_at: receivedAt,
+            direction: isSentFolder ? 'sent' : 'received',
+            labels: [folder]
+          });
         }
         
         return emails;
