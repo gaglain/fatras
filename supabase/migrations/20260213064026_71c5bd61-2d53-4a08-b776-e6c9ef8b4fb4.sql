@@ -1,0 +1,2 @@
+ALTER TABLE public.emails REPLICA IDENTITY FULL;
+ALTER TABLE public.inbound_emails REPLICA IDENTITY FULL;
