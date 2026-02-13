@@ -76,7 +76,6 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ selectedArtist }
       let query = supabase.from('opportunities').select('*');
       
       if (selectedArtist !== 'all') {
-        // Filtrer les opportunités liées à l'artiste via artist_opportunities
         const { data: artistOpps } = await supabase
           .from('artist_opportunities')
           .select('opportunity_id')
@@ -97,8 +96,7 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ selectedArtist }
     refetchInterval: 30000,
   });
 
-  // Calculs basés sur les vraies données avec opportunités
-  // Ne compter que les événements confirmés pour "Ce mois"
+  // Calculs basés sur les vraies données
   const thisMonthEvents = events.filter(e => {
     if (!e.start_date) return false;
     if (e.status !== 'confirmed') return false;
@@ -107,7 +105,11 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ selectedArtist }
     return eventDate.getMonth() === now.getMonth() && eventDate.getFullYear() === now.getFullYear();
   }).length;
 
-  const totalRevenue = quotes.filter(q => q.status === 'accepted').reduce((total, quote) => total + (Number(quote.total_amount) || 0), 0);
+  const confirmedEvents = events.filter(e => e.status === 'confirmed').length;
+  const acceptedQuotes = quotes.filter(q => q.status === 'accepted');
+  const revenueTTC = acceptedQuotes.reduce((total, quote) => total + (Number(quote.total_amount) || 0), 0);
+  const revenueHT = acceptedQuotes.reduce((total, quote) => total + ((Number(quote.total_amount) || 0) - (Number(quote.tax_amount) || 0)), 0);
+  const avgRevenuePerShow = confirmedEvents > 0 ? revenueHT / confirmedEvents : 0;
   const pendingQuotes = quotes.filter(q => q.status === 'pending' || q.status === 'draft').length;
   const totalOpportunities = opportunities.length;
 
@@ -123,7 +125,7 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ selectedArtist }
       title: 'Événements',
       value: thisMonthEvents.toString(),
       icon: Calendar,
-      description: 'Ce mois',
+      description: 'Ce mois (confirmés)',
       color: 'text-green-600'
     },
     {
@@ -134,16 +136,23 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ selectedArtist }
       color: 'text-purple-600'
     },
     {
-      title: 'Revenus',
-      value: `€${totalRevenue.toLocaleString('fr-FR')}`,
+      title: 'Revenus HT',
+      value: `${revenueHT.toLocaleString('fr-FR', { maximumFractionDigits: 0 })}€`,
       icon: FileText,
-      description: 'Devis acceptés',
+      description: `TTC: ${revenueTTC.toLocaleString('fr-FR', { maximumFractionDigits: 0 })}€`,
       color: 'text-orange-600'
+    },
+    {
+      title: 'Moy./représentation',
+      value: `${avgRevenuePerShow.toLocaleString('fr-FR', { maximumFractionDigits: 0 })}€`,
+      icon: TrendingUp,
+      description: `${confirmedEvents} dates confirmées`,
+      color: 'text-emerald-600'
     }
   ];
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
       {stats.map((stat, index) => (
         <Card key={index} className="hover:shadow-elegant transition-all duration-300 border-border bg-card animate-fade-in" style={{
           animationDelay: `${index * 100}ms`

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Users, Calendar, CheckSquare, Music, Euro, Mail } from 'lucide-react';
+import { Users, Calendar, CheckSquare, Music, Euro, Mail, TrendingUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -78,7 +78,7 @@ export const DashboardStatsCards: React.FC = () => {
       if (!user?.id) return [];
       const { data, error } = await supabase
         .from('quotes')
-        .select('id, status, total_amount');
+        .select('id, status, total_amount, tax_amount');
       
       if (error) {
         console.error('Error fetching quotes:', error);
@@ -89,6 +89,22 @@ export const DashboardStatsCards: React.FC = () => {
     enabled: !!user?.id,
     staleTime: 30000,
     refetchOnWindowFocus: true,
+  });
+
+  // Récupération du nombre d'événements confirmés pour la moyenne
+  const { data: confirmedEventsCount = 0 } = useQuery({
+    queryKey: ['confirmed-events-count', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return 0;
+      const { count, error } = await supabase
+        .from('events')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'confirmed');
+      if (error) return 0;
+      return count || 0;
+    },
+    enabled: !!user?.id,
+    staleTime: 30000,
   });
 
   // Calculs des statistiques en temps réel avec les vraies données
@@ -104,8 +120,11 @@ export const DashboardStatsCards: React.FC = () => {
   const activeArtists = contacts.filter(c => c.role === 'artist').length;
   const sentCampaigns = campaigns.filter(c => c.status === 'sent').length;
   
-  // Calcul du revenu total des devis acceptés
-  const revenue = quotes.filter(q => q.status === 'accepted').reduce((total, quote) => total + (Number(quote.total_amount) || 0), 0);
+  // Calcul des revenus HT et TTC des devis acceptés
+  const acceptedQuotes = quotes.filter(q => q.status === 'accepted');
+  const revenueTTC = acceptedQuotes.reduce((total, quote) => total + (Number(quote.total_amount) || 0), 0);
+  const revenueHT = acceptedQuotes.reduce((total, quote) => total + ((Number(quote.total_amount) || 0) - (Number(quote.tax_amount) || 0)), 0);
+  const avgRevenuePerShow = confirmedEventsCount > 0 ? revenueHT / confirmedEventsCount : 0;
 
   const stats = [
     { 
@@ -141,12 +160,20 @@ export const DashboardStatsCards: React.FC = () => {
       route: '/artists'
     },
     { 
-      name: 'Revenus', 
-      value: `${revenue.toLocaleString('fr-FR')}€`, 
+      name: 'Revenus HT', 
+      value: `${revenueHT.toLocaleString('fr-FR', { maximumFractionDigits: 0 })}€`, 
       icon: Euro, 
-      change: revenue > 0 ? '+15%' : '0%', 
+      change: `TTC: ${revenueTTC.toLocaleString('fr-FR', { maximumFractionDigits: 0 })}€`, 
       changeType: 'positive' as const,
       route: '/quotes'
+    },
+    { 
+      name: 'Moy./représentation', 
+      value: `${avgRevenuePerShow.toLocaleString('fr-FR', { maximumFractionDigits: 0 })}€`, 
+      icon: TrendingUp, 
+      change: `${confirmedEventsCount} dates confirmées`, 
+      changeType: 'positive' as const,
+      route: '/events'
     },
     { 
       name: 'Campagnes email', 
