@@ -229,6 +229,32 @@ const handler = async (req: Request): Promise<Response> => {
         });
       }
 
+      // Fonction pour décoder les encoded-words MIME (RFC 2047)
+      const decodeMimeWord = (text: string): string => {
+        if (!text) return text;
+        return text.replace(/=\?([^?]+)\?([BQ])\?([^?]+)\?=/gi, (m, charset, encoding, encoded) => {
+          try {
+            const enc = encoding.toUpperCase();
+            let bytes: Uint8Array;
+            if (enc === 'B') {
+              const binary = atob(encoded);
+              bytes = new Uint8Array(binary.length);
+              for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+            } else {
+              // Quoted-Printable
+              const decoded = encoded.replace(/_/g, ' ').replace(/=([0-9A-F]{2})/gi, (_: string, hex: string) => String.fromCharCode(parseInt(hex, 16)));
+              const binary = unescape(encodeURIComponent(decoded));
+              bytes = new Uint8Array(binary.length);
+              for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+            }
+            // Decode bytes as UTF-8
+            const td = new TextDecoder(charset.toLowerCase().replace('windows-', 'windows').replace('iso-8859-1', 'latin1') || 'utf-8', { fatal: false });
+            return td.decode(bytes);
+          } catch (_e) {}
+          return m;
+        });
+      };
+
       // Fonction pour parser les emails d'une réponse FETCH
       const parseEmailsFromResponse = (fetchResponse: string, folder: string): any[] => {
         const emails: any[] = [];
@@ -269,19 +295,10 @@ const handler = async (req: Request): Promise<Response> => {
           let subject = '';
           if (subjectMatch) {
             subject = subjectMatch[1].replace(/\r\n[ \t]+/g, ' ').trim();
-            subject = subject.replace(/=\?[^?]+\?[BQ]\?[^?]+\?=/gi, (m) => {
-              try {
-                const parts = m.split('?');
-                if (parts.length >= 4) {
-                  const encoding = parts[2].toUpperCase();
-                  const encoded = parts[3];
-                  if (encoding === 'B') return atob(encoded);
-                  if (encoding === 'Q') return encoded.replace(/_/g, ' ').replace(/=([0-9A-F]{2})/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
-                }
-              } catch (_e) {}
-              return m;
-            });
+            subject = decodeMimeWord(subject);
           }
+
+          const fromName = decodeMimeWord(fromMatch[1]?.trim() || '');
 
           let receivedAt = new Date().toISOString();
           if (dateMatch) {
@@ -296,7 +313,7 @@ const handler = async (req: Request): Promise<Response> => {
             provider: 'imap',
             message_id: messageIdMatch[1].trim(),
             from_email: fromMatch[2]?.trim().toLowerCase() || '',
-            from_name: fromMatch[1]?.trim() || '',
+            from_name: fromName,
             to_email: toMatch?.[2]?.trim().toLowerCase() || '',
             subject,
             content: '',
@@ -310,7 +327,22 @@ const handler = async (req: Request): Promise<Response> => {
         return emails;
       };
 
-      // Fonction pour synchroniser un dossier
+      // Récupérer la date du dernier email synchronisé pour synchro incrémentale
+      const { data: lastEmail } = await supabase
+        .from('emails')
+        .select('received_at')
+        .eq('user_id', userId)
+        .eq('direction', 'received')
+        .eq('provider', 'imap')
+        .order('received_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const lastSyncDate = lastEmail?.received_at 
+        ? new Date(lastEmail.received_at) 
+        : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // 30 jours par défaut
+
+      // Fonction pour synchroniser un dossier avec SEARCH SINCE
       const syncFolder = async (folderName: string): Promise<{ syncedCount: number; totalMessages: number; emails: any[] }> => {
         try {
           response = await sendCommand(`SELECT "${folderName}"`);
@@ -328,12 +360,28 @@ const handler = async (req: Request): Promise<Response> => {
             return { syncedCount: 0, totalMessages: 0, emails: [] };
           }
 
-          const startMsg = Math.max(1, totalMessages - 49);
-          const endMsg = totalMessages;
+          // Utiliser SEARCH SINCE pour synchro incrémentale
+          const sinceDate = lastSyncDate.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' }).replace(',', '');
+          // Format IMAP: DD-Mon-YYYY
+          const imapDate = `${lastSyncDate.getUTCDate()}-${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][lastSyncDate.getUTCMonth()]}-${lastSyncDate.getUTCFullYear()}`;
           
-          console.log(`🔍 Fetching messages ${startMsg}:${endMsg} from ${folderName}`);
+          console.log(`🔍 Searching messages SINCE ${imapDate} in ${folderName}`);
+          response = await sendCommand(`SEARCH SINCE ${imapDate}`);
+          
+          const searchMatch = response.match(/\* SEARCH([\d\s]*)/);
+          const messageNums = searchMatch?.[1]?.trim().split(/\s+/).filter(Boolean) || [];
+          
+          if (messageNums.length === 0) {
+            console.log(`📭 No messages since ${imapDate} in ${folderName}`);
+            return { syncedCount: 0, totalMessages, emails: [] };
+          }
 
-          response = await sendCommand(`FETCH ${startMsg}:${endMsg} (FLAGS ENVELOPE BODY.PEEK[HEADER])`);
+          // Limiter à 200 messages max pour éviter les timeouts
+          const msgsToFetch = messageNums.slice(-200);
+          const fetchRange = msgsToFetch.join(',');
+          
+          console.log(`🔍 Fetching ${msgsToFetch.length} messages from ${folderName}`);
+          response = await sendCommand(`FETCH ${fetchRange} (FLAGS ENVELOPE BODY.PEEK[HEADER])`);
           
           const emails = parseEmailsFromResponse(response, folderName);
           console.log(`📧 ${emails.length} emails parsés depuis ${folderName}`);
@@ -350,27 +398,52 @@ const handler = async (req: Request): Promise<Response> => {
       const inboxResult = await syncFolder('INBOX');
       const inboxEmails = inboxResult.emails;
 
-      // Synchroniser le dossier Envoyés
-      console.log('📤 Synchronisation dossier Envoyés...');
-      const sentFolderNames = [
-        '[Gmail]/Sent Mail',
-        '[Gmail]/Messages envoy&AOk-s',
-        'Sent',
-        'Sent Items',
-        'Sent Messages',
-        'INBOX.Sent',
-        'Envoy&AOk-s',
-        'Messages envoy&AOk-s'
-      ];
+      // Découvrir le dossier Envoyés via LIST
+      console.log('📤 Découverte du dossier Envoyés...');
+      response = await sendCommand('LIST "" "*"');
+      
+      // Chercher un dossier avec l'attribut \Sent ou un nom connu
+      const listLines = response.split('\r\n');
+      let sentFolderName = '';
+      
+      for (const line of listLines) {
+        // Priorité 1: attribut \Sent (standard IMAP)
+        if (line.includes('\\Sent') && !line.includes('\\Noselect')) {
+          const folderMatch = line.match(/"\/" "?([^"\r\n]+)"?\s*$/);
+          if (folderMatch) {
+            sentFolderName = folderMatch[1].replace(/"/g, '');
+            console.log(`✅ Found sent folder by attribute: ${sentFolderName}`);
+            break;
+          }
+        }
+      }
+
+      // Priorité 2: chercher par nom si pas trouvé par attribut
+      if (!sentFolderName) {
+        const sentPatterns = [/sent/i, /envoy/i, /éléments envoyés/i];
+        for (const line of listLines) {
+          if (line.includes('\\Noselect')) continue;
+          const folderMatch = line.match(/"\/" "?([^"\r\n]+)"?\s*$/);
+          if (folderMatch) {
+            const name = folderMatch[1].replace(/"/g, '');
+            for (const pattern of sentPatterns) {
+              if (pattern.test(name)) {
+                sentFolderName = name;
+                console.log(`✅ Found sent folder by name: ${sentFolderName}`);
+                break;
+              }
+            }
+            if (sentFolderName) break;
+          }
+        }
+      }
       
       let sentEmails: any[] = [];
-      for (const folderName of sentFolderNames) {
-        const sentResult = await syncFolder(folderName);
-        if (sentResult.emails.length > 0) {
-          sentEmails = sentResult.emails;
-          console.log(`✅ Found sent emails in folder: ${folderName}`);
-          break;
-        }
+      if (sentFolderName) {
+        const sentResult = await syncFolder(sentFolderName);
+        sentEmails = sentResult.emails;
+      } else {
+        console.log('⚠️ No sent folder found on this server');
       }
 
       // Sauvegarder les emails reçus - utiliser upsert pour éviter les doublons
@@ -422,8 +495,6 @@ const handler = async (req: Request): Promise<Response> => {
             .select('id')
             .maybeSingle();
           
-          // Si l'email a été inséré (pas ignoré), comptabiliser
-          // Les notifications sont créées automatiquement par le trigger trg_create_email_notification
           if (insertedEmail && !emailError) {
             syncedInbox++;
           }
@@ -436,7 +507,6 @@ const handler = async (req: Request): Promise<Response> => {
       let syncedSent = 0;
       for (const email of sentEmails) {
         try {
-          // Vérifier si l'email existe déjà
           const { data: existing } = await supabase
             .from('emails')
             .select('id')
@@ -445,7 +515,6 @@ const handler = async (req: Request): Promise<Response> => {
             .single();
           
           if (!existing) {
-            // Trouver le contact correspondant au destinataire
             const { data: contact } = await supabase
               .from('contacts')
               .select('id')
