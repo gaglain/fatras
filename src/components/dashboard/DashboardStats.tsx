@@ -174,7 +174,7 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ selectedArtist }
   ];
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+    <div className="grid gap-4 grid-cols-2 lg:grid-cols-3">
       {stats.map((stat, index) => (
         <Card key={index} className="hover:shadow-elegant transition-all duration-300 border-border bg-card animate-fade-in" style={{
           animationDelay: `${index * 100}ms`
