@@ -57,15 +57,23 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ selectedArtist }
   const { data: quotes = [], refetch: refetchQuotes } = useQuery({
     queryKey: ['dashboard-quotes', selectedArtist],
     queryFn: async () => {
-      let query = supabase.from('quotes').select('*, events!inner(artist_id)');
-      
-      if (selectedArtist !== 'all') {
-        query = query.eq('events.artist_id', selectedArtist);
+      try {
+        let query = supabase.from('quotes').select('*, events!inner(artist_id)');
+        
+        if (selectedArtist !== 'all') {
+          query = query.eq('events.artist_id', selectedArtist);
+        }
+        
+        const { data, error } = await query;
+        if (error) {
+          console.warn('Error fetching quotes:', error.message);
+          return [];
+        }
+        return data || [];
+      } catch (e) {
+        console.warn('Quotes query failed:', e);
+        return [];
       }
-      
-      const { data, error } = await query;
-      if (error) throw error;
-      return data || [];
     },
     refetchInterval: 30000,
   });
