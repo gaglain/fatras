@@ -84,17 +84,7 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ selectedArtist }
       let query = supabase.from('opportunities').select('*');
       
       if (selectedArtist !== 'all') {
-        const { data: artistOpps } = await supabase
-          .from('artist_opportunities')
-          .select('opportunity_id')
-          .eq('artist_id', selectedArtist);
-        
-        const oppIds = artistOpps?.map(ao => ao.opportunity_id) || [];
-        if (oppIds.length > 0) {
-          query = query.in('id', oppIds);
-        } else {
-          return [];
-        }
+        query = query.eq('artist_id', selectedArtist);
       }
       
       const { data, error } = await query;
