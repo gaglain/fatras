@@ -34,35 +34,38 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({ selectedArtist
   const { data: monthlyRevenue = [] } = useQuery({
     queryKey: ['dashboard-monthly-revenue', selectedArtist],
     queryFn: async () => {
-      const months = [];
-      for (let i = 5; i >= 0; i--) {
-        const date = subMonths(new Date(), i);
-        const start = startOfMonth(date);
-        const end = endOfMonth(date);
-        
-        let query = supabase
-          .from('quotes')
-          .select('total_amount, created_at, events!inner(artist_id)')
-          .gte('created_at', start.toISOString())
-          .lte('created_at', end.toISOString())
-          .eq('status', 'accepted');
-        
-        if (selectedArtist !== 'all') {
-          query = query.eq('events.artist_id', selectedArtist);
+      try {
+        const months = [];
+        for (let i = 5; i >= 0; i--) {
+          const date = subMonths(new Date(), i);
+          const start = startOfMonth(date);
+          const end = endOfMonth(date);
+          
+          let query = supabase
+            .from('quotes')
+            .select('total_amount, created_at, events!inner(artist_id)')
+            .gte('created_at', start.toISOString())
+            .lte('created_at', end.toISOString())
+            .eq('status', 'accepted');
+          
+          if (selectedArtist !== 'all') {
+            query = query.eq('events.artist_id', selectedArtist);
+          }
+          
+          const { data: quotes, error } = await query;
+          
+          const total = (error ? [] : quotes || []).reduce((sum, quote) => sum + (Number(quote.total_amount) || 0), 0);
+          
+          months.push({
+            month: format(date, 'MMM'),
+            revenue: total,
+          });
         }
-        
-        const { data: quotes, error } = await query;
-        
-        if (error) throw error;
-        
-        const total = quotes?.reduce((sum, quote) => sum + (Number(quote.total_amount) || 0), 0) || 0;
-        
-        months.push({
-          month: format(date, 'MMM'),
-          revenue: total,
-        });
+        return months;
+      } catch (e) {
+        console.warn('Monthly revenue query failed:', e);
+        return [];
       }
-      return months;
     }
   });
 
@@ -114,28 +117,33 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({ selectedArtist
   const { data: eventStatus = [] } = useQuery({
     queryKey: ['dashboard-event-status', selectedArtist],
     queryFn: async () => {
-      let query = supabase.from('events').select('status');
-      
-      if (selectedArtist !== 'all') {
-        query = query.eq('artist_id', selectedArtist);
+      try {
+        let query = supabase.from('events').select('status');
+        
+        if (selectedArtist !== 'all') {
+          query = query.eq('artist_id', selectedArtist);
+        }
+        
+        const { data: events, error } = await query;
+        
+        if (error) return [];
+        
+        const statusCount = events?.reduce((acc, event) => {
+          acc[event.status || 'unknown'] = (acc[event.status || 'unknown'] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>) || {};
+        
+        return Object.entries(statusCount).map(([status, count]) => ({
+          status: status.charAt(0).toUpperCase() + status.slice(1),
+          count,
+          fill: status === 'confirmed' ? 'hsl(var(--chart-1))' : 
+                status === 'pending' ? 'hsl(var(--chart-2))' : 
+                'hsl(var(--chart-3))'
+        }));
+      } catch (e) {
+        console.warn('Event status query failed:', e);
+        return [];
       }
-      
-      const { data: events, error } = await query;
-      
-      if (error) throw error;
-      
-      const statusCount = events?.reduce((acc, event) => {
-        acc[event.status] = (acc[event.status] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>) || {};
-      
-      return Object.entries(statusCount).map(([status, count]) => ({
-        status: status.charAt(0).toUpperCase() + status.slice(1),
-        count,
-        fill: status === 'confirmed' ? 'hsl(var(--chart-1))' : 
-              status === 'pending' ? 'hsl(var(--chart-2))' : 
-              'hsl(var(--chart-3))'
-      }));
     }
   });
 

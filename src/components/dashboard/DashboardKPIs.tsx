@@ -50,19 +50,26 @@ export const DashboardKPIs: React.FC<DashboardKPIsProps> = ({ selectedArtist }) 
       const totalDates = confirmedStops.length;
 
       // 3. Revenue from accepted quotes
-      let quotesQuery = supabase
-        .from('quotes')
-        .select('total_amount, events!inner(artist_id)')
-        .eq('status', 'accepted');
+      let totalRevenue = 0;
+      try {
+        let quotesQuery = supabase
+          .from('quotes')
+          .select('total_amount, events!inner(artist_id)')
+          .eq('status', 'accepted');
 
-      if (selectedArtist !== 'all') {
-        quotesQuery = quotesQuery.eq('events.artist_id', selectedArtist);
+        if (selectedArtist !== 'all') {
+          quotesQuery = quotesQuery.eq('events.artist_id', selectedArtist);
+        }
+
+        const { data: quotes, error } = await quotesQuery;
+        if (!error) {
+          totalRevenue = (quotes || []).reduce(
+            (sum, q) => sum + (Number(q.total_amount) || 0), 0
+          );
+        }
+      } catch (e) {
+        console.warn('KPI quotes query failed:', e);
       }
-
-      const { data: quotes } = await quotesQuery;
-      const totalRevenue = (quotes || []).reduce(
-        (sum, q) => sum + (Number(q.total_amount) || 0), 0
-      );
 
       return { totalDistance, totalCO2, totalDates, totalRevenue };
     },
