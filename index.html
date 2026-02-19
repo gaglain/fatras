@@ -2,9 +2,9 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" href="/favicon.png?v=20251222" type="image/png" sizes="32x32" />
-    <link rel="icon" href="/favicon.png?v=20251222" type="image/png" sizes="16x16" />
-    <link rel="shortcut icon" href="/favicon.png?v=20251222" type="image/png" />
+    <link rel="icon" href="/favicon.png?v=20260219" type="image/png" sizes="32x32" />
+    <link rel="icon" href="/favicon.png?v=20260219" type="image/png" sizes="16x16" />
+    <link rel="shortcut icon" href="/favicon.png?v=20260219" type="image/png" />
     <link rel="canonical" href="https://fatras.net/" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests; block-all-mixed-content" />
@@ -97,12 +97,14 @@
           }
           
           // Charger le favicon depuis localStorage / companySettings
-          var FAVICON_DEFAULT = '/favicon.png?v=20251222';
+          var FAVICON_DEFAULT = '/favicon.png?v=20260219';
           var normalizeFavicon = function(v) {
             if (!v) return FAVICON_DEFAULT;
             v = String(v).trim();
             if (!v) return FAVICON_DEFAULT;
             if (v.indexOf('favicon.ico') !== -1) return FAVICON_DEFAULT;
+            // Reject blob: URLs (stale from previous sessions)
+            if (v.indexOf('blob:') === 0) return FAVICON_DEFAULT;
             return v;
           };
 
@@ -121,18 +123,20 @@
           }
 
           chosenFavicon = normalizeFavicon(chosenFavicon);
-          var favicon = document.querySelector("link[rel*='icon']");
-          if (favicon && chosenFavicon) {
-            favicon.href = chosenFavicon;
+          
+          // Update ALL favicon link tags
+          var faviconLinks = document.querySelectorAll("link[rel*='icon']");
+          for (var i = 0; i < faviconLinks.length; i++) {
+            faviconLinks[i].href = chosenFavicon;
           }
 
-          // Persist migration away from /favicon.ico
+          // Persist migration
           try {
             localStorage.setItem('customFavicon', chosenFavicon);
             var cs = localStorage.getItem('companySettings');
             if (cs) {
               var s = JSON.parse(cs);
-              if (s && s.favicon && String(s.favicon).indexOf('favicon.ico') !== -1) {
+              if (s && s.favicon && (String(s.favicon).indexOf('favicon.ico') !== -1 || String(s.favicon).indexOf('blob:') === 0)) {
                 s.favicon = chosenFavicon;
                 localStorage.setItem('companySettings', JSON.stringify(s));
               }

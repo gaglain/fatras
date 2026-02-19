@@ -19,7 +19,7 @@ export function useCompanySettings() {
 
 
   const normalizeFavicon = (value?: string) => {
-    const fallback = '/favicon.png?v=20251222';
+    const fallback = '/favicon.png?v=20260219';
     if (!value) return fallback;
     const v = String(value).trim();
     if (!v) return fallback;
