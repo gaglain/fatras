@@ -507,11 +507,11 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
               </p>
             )}
 
-            <div className="flex justify-between pt-4 border-t">
+            <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 pt-4 border-t">
               <Button variant="outline" onClick={() => setStep('mapping')}>
                 Retour
               </Button>
-              <Button onClick={handleImport} disabled={importing}>
+              <Button onClick={handleImport} disabled={importing} className="w-full sm:w-auto">
                 {importing ? 'Import en cours...' : `Importer ${csvData.length} contacts`}
               </Button>
             </div>
