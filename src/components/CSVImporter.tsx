@@ -468,30 +468,31 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
         )}
 
         {step === 'preview' && (
-          <div className="space-y-6">
+          <div className="space-y-4">
             <div>
               <h3 className="text-lg font-medium">Aperçu de l'import</h3>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 Vérifiez les données avant l'import ({csvData.length} contacts)
               </p>
             </div>
 
-            <div className="max-h-80 overflow-auto border rounded-lg">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50 sticky top-0">
+            {/* Mobile: card layout, Desktop: table */}
+            <div className="hidden sm:block max-h-80 overflow-auto border rounded-lg">
+              <table className="min-w-full divide-y divide-border">
+                <thead className="bg-muted sticky top-0">
                   <tr>
                     {expectedFields.filter(f => mapping[f.key]).map(field => (
-                      <th key={field.key} className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                      <th key={field.key} className="px-3 py-2 text-left text-xs font-medium text-muted-foreground uppercase">
                         {field.label.replace(' *', '')}
                       </th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="divide-y divide-border">
                   {csvData.slice(0, 5).map((row, index) => (
                     <tr key={index}>
                       {expectedFields.filter(f => mapping[f.key]).map(field => (
-                        <td key={field.key} className="px-3 py-2 text-sm text-gray-900 whitespace-nowrap">
+                        <td key={field.key} className="px-3 py-2 text-sm whitespace-nowrap">
                           {row[mapping[field.key]] || '-'}
                         </td>
                       ))}
@@ -500,9 +501,23 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
                 </tbody>
               </table>
             </div>
+
+            {/* Mobile cards */}
+            <div className="sm:hidden max-h-72 overflow-auto space-y-2">
+              {csvData.slice(0, 5).map((row, index) => (
+                <div key={index} className="border rounded-lg p-3 space-y-1 text-sm">
+                  {expectedFields.filter(f => mapping[f.key]).map(field => (
+                    <div key={field.key} className="flex justify-between gap-2">
+                      <span className="text-muted-foreground text-xs shrink-0">{field.label.replace(' *', '')}</span>
+                      <span className="text-right truncate">{row[mapping[field.key]] || '-'}</span>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
             
             {csvData.length > 5 && (
-              <p className="text-sm text-gray-500 text-center">
+              <p className="text-sm text-muted-foreground text-center">
                 ... et {csvData.length - 5} autres contacts
               </p>
             )}
