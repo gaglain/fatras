@@ -474,13 +474,13 @@ export const Contracts: React.FC = () => {
         <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
       </div>
 
-      {/* Formulaire de devis */}
-      {showForm && (
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>{editingQuote ? 'Modifier le devis' : 'Créer un nouveau devis'}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
+      {/* Formulaire de devis en popup */}
+      <Dialog open={showForm} onOpenChange={(open) => { if (!open) resetForm(); }}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editingQuote ? 'Modifier le devis' : 'Créer un nouveau devis'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="title">Titre du devis *</Label>
@@ -765,7 +765,7 @@ export const Contracts: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex justify-end space-x-2">
+            <div className="flex justify-end space-x-2 pt-4 border-t">
               <Button variant="outline" onClick={resetForm}>
                 Annuler
               </Button>
@@ -774,9 +774,9 @@ export const Contracts: React.FC = () => {
                 {editingQuote ? 'Modifier' : 'Créer'} le devis
               </Button>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Liste des devis */}
       <div className={viewMode === 'grid' ? "grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6" : "space-y-4"}>
@@ -855,27 +855,6 @@ export const Contracts: React.FC = () => {
         ))}
       </div>
 
-      {/* Gestionnaire d'items pour le devis sélectionné */}
-      {editingQuote && (
-        <div className="mt-6">
-          <QuoteItemManager 
-            quoteId={editingQuote.id}
-            quote={editingQuote}
-            onItemsChange={(items) => {
-              // Recalculer le total automatiquement
-              const subtotal = items.reduce((sum, item) => sum + item.total_price, 0);
-              const ratePct = (typeof editingQuote?.vat_rate === 'number' ? editingQuote.vat_rate : Number(editingQuote?.vat_rate)) || 20;
-              const tax = subtotal * (ratePct / 100);
-              const total = subtotal + tax;
-              
-              updateQuote(editingQuote.id, {
-                total_amount: total,
-                tax_amount: tax
-              });
-            }}
-          />
-        </div>
-      )}
 
       {quotes.length === 0 && (
         <div className="text-center py-12">
