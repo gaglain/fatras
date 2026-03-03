@@ -168,9 +168,7 @@ export const FrontArtistDetail: React.FC = () => {
                 </div>
 
                 {artist.short_description && (
-                  <p className="text-xl text-muted-foreground leading-relaxed">
-                    {artist.short_description}
-                  </p>
+                  <div className="text-xl text-muted-foreground leading-relaxed prose prose-lg max-w-none" dangerouslySetInnerHTML={{ __html: artist.short_description }} />
                 )}
 
                 {/* Contact & Social */}
@@ -246,9 +244,7 @@ export const FrontArtistDetail: React.FC = () => {
               <Card>
                 <CardContent className="p-8">
                   <h2 className="text-2xl font-bold mb-4">Présentation</h2>
-                  <div className="prose prose-lg max-w-none">
-                    {artist.presentation_text || artist.bio || "Aucune présentation disponible."}
-                  </div>
+                  <div className="prose prose-lg max-w-none" dangerouslySetInnerHTML={{ __html: artist.presentation_text || artist.bio || "Aucune présentation disponible." }} />
                 </CardContent>
               </Card>
             </TabsContent>
