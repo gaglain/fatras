@@ -570,7 +570,7 @@ export const FrontHome: React.FC = () => {
                           {/* Description complète */}
                           {artist.short_description && (
                             <CardContent className="p-4">
-                              <p className="text-muted-foreground text-sm">{artist.short_description}</p>
+                              <div className="text-muted-foreground text-sm prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: artist.short_description }} />
                             </CardContent>
                           )}
                         </Card>

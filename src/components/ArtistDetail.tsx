@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditor } from '@/components/RichTextEditor';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Play, Download, Calendar, Star, Upload, Plus, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -194,16 +195,13 @@ export const ArtistDetail: React.FC<ArtistDetailProps> = ({ artist, setCurrentPa
               </CardHeader>
               <CardContent>
                 {isEditing ? (
-                  <Textarea
+                  <RichTextEditor
                     value={artistData.presentation_text || ''}
-                    onChange={(e) => setArtistData({...artistData, presentation_text: e.target.value})}
+                    onChange={(val) => setArtistData({...artistData, presentation_text: val})}
                     placeholder="Texte de présentation de l'artiste..."
-                    rows={6}
                   />
                 ) : (
-                  <p className="text-gray-700 whitespace-pre-wrap">
-                    {artistData.presentation_text || 'Aucun texte de présentation disponible'}
-                  </p>
+                  <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: artistData.presentation_text || 'Aucun texte de présentation disponible' }} />
                 )}
               </CardContent>
             </Card>

@@ -3,8 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Upload, X, Image as ImageIcon, FileText, Video } from 'lucide-react';
+import { RichTextEditor } from '@/components/RichTextEditor';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { CentralizedArtist } from '@/hooks/useCentralizedData';
@@ -212,11 +212,10 @@ export const ArtistMediaManager: React.FC<ArtistMediaManagerProps> = ({ artist, 
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <Textarea
+            <RichTextEditor
               value={shortDescription}
-              onChange={(e) => setShortDescription(e.target.value)}
+              onChange={setShortDescription}
               placeholder="Texte de présentation courte..."
-              rows={4}
             />
             <Button onClick={() => handleSaveText('short_description', shortDescription)}>
               Enregistrer
@@ -232,11 +231,10 @@ export const ArtistMediaManager: React.FC<ArtistMediaManagerProps> = ({ artist, 
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <Textarea
+            <RichTextEditor
               value={presentationText}
-              onChange={(e) => setPresentationText(e.target.value)}
+              onChange={setPresentationText}
               placeholder="Texte de présentation complète..."
-              rows={8}
             />
             <Button onClick={() => handleSaveText('presentation_text', presentationText)}>
               Enregistrer
