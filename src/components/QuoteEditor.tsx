@@ -9,7 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { QuoteItemManager } from '@/components/quotes/QuoteItemManager';
-import { FileText, List } from 'lucide-react';
+import { useQuotes } from '@/hooks/useQuotes';
+import { FileText, List, FileDown } from 'lucide-react';
 
 interface QuoteEditorProps {
   isOpen: boolean;
@@ -32,6 +33,65 @@ export const QuoteEditor: React.FC<QuoteEditorProps> = ({
     status: 'draft'
   });
   const [loading, setLoading] = useState(false);
+  const [quoteTemplates, setQuoteTemplates] = useState<any[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState('');
+  const { addQuoteItem } = useQuotes();
+
+  useEffect(() => {
+    fetchQuoteTemplates();
+  }, []);
+
+  const fetchQuoteTemplates = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('quote_templates')
+        .select('*')
+        .order('name');
+      if (error) throw error;
+      setQuoteTemplates(data || []);
+    } catch {
+      // silent
+    }
+  };
+
+  const handleApplyTemplate = async (templateId: string) => {
+    const template = quoteTemplates.find(t => t.id === templateId);
+    if (!template || !quote?.id) return;
+
+    try {
+      // Update quote description/terms
+      const updates: any = {};
+      if (template.description) updates.description = template.description;
+      if (template.default_terms) updates.description = (formData.description ? formData.description + '\n\n' : '') + 'Conditions : ' + template.default_terms;
+      
+      if (Object.keys(updates).length > 0) {
+        setFormData(prev => ({ ...prev, ...updates }));
+      }
+
+      // Add default items from template
+      const items = Array.isArray(template.default_items)
+        ? template.default_items
+        : typeof template.default_items === 'string'
+        ? JSON.parse(template.default_items)
+        : [];
+
+      for (const item of items) {
+        const totalPrice = (item.quantity || 1) * (item.unit_price || 0);
+        await addQuoteItem(quote.id, {
+          name: item.name,
+          description: item.description || '',
+          quantity: item.quantity || 1,
+          unit_price: item.unit_price || 0,
+          total_price: totalPrice,
+        });
+      }
+
+      toast.success(`Modèle "${template.name}" appliqué avec ${items.length} ligne(s)`);
+      setSelectedTemplateId('');
+    } catch {
+      toast.error("Erreur lors de l'application du modèle");
+    }
+  };
 
   useEffect(() => {
     if (quote) {
@@ -81,6 +141,32 @@ export const QuoteEditor: React.FC<QuoteEditorProps> = ({
         <DialogHeader>
           <DialogTitle>Modifier le devis - {quote?.quote_number || quote?.title}</DialogTitle>
         </DialogHeader>
+
+        {/* Sélecteur de modèle de devis */}
+        {quoteTemplates.length > 0 && quote?.id && (
+          <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg border">
+            <FileDown className="h-4 w-4 text-muted-foreground shrink-0" />
+            <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
+              <SelectTrigger className="flex-1">
+                <SelectValue placeholder="Appliquer un modèle de devis..." />
+              </SelectTrigger>
+              <SelectContent>
+                {quoteTemplates.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>
+                    {t.name} {t.category ? `(${t.category})` : ''}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              size="sm"
+              disabled={!selectedTemplateId}
+              onClick={() => handleApplyTemplate(selectedTemplateId)}
+            >
+              Appliquer
+            </Button>
+          </div>
+        )}
         
         <Tabs defaultValue="details" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
