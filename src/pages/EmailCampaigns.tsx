@@ -3,12 +3,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Mail, Send, Search, Edit, Trash2, Loader2, Calendar, Eye, ArrowLeft, MousePointer, TrendingDown } from 'lucide-react';
+import { Plus, Mail, Send, Search, Edit, Trash2, Loader2, Calendar, Eye, ArrowLeft, MousePointer, TrendingDown, Users, BarChart3 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { EmailCampaignEditor } from '@/components/EmailCampaignEditor';
 import { EmailAnalytics } from '@/components/EmailAnalytics';
 import { EmailCampaignManager } from '@/components/EmailCampaignManager';
+import { CampaignContactStats } from '@/components/email/CampaignContactStats';
+import { EmailEngagementDashboard } from '@/components/email/EmailEngagementDashboard';
 import { useContactLists } from '@/hooks/useContactLists';
 
 interface Campaign {
@@ -28,6 +30,8 @@ export const EmailCampaigns: React.FC = () => {
   const [showEditor, setShowEditor] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [showCampaignManager, setShowCampaignManager] = useState(false);
+  const [showContactStats, setShowContactStats] = useState(false);
+  const [showEngagementDashboard, setShowEngagementDashboard] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
 
   const { contactLists } = useContactLists();
@@ -262,6 +266,42 @@ export const EmailCampaigns: React.FC = () => {
     );
   }
 
+  if (showEngagementDashboard) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center space-x-4">
+          <Button variant="ghost" onClick={() => setShowEngagementDashboard(false)}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Retour
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold">Engagement des contacts</h1>
+            <p className="text-muted-foreground">Score de fiabilité et classement par engagement email</p>
+          </div>
+        </div>
+        <EmailEngagementDashboard />
+      </div>
+    );
+  }
+
+  if (showContactStats && selectedCampaign) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center space-x-4">
+          <Button variant="ghost" onClick={() => { setShowContactStats(false); setSelectedCampaign(null); }}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Retour
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold">{selectedCampaign.name}</h1>
+            <p className="text-muted-foreground">Statistiques par contact</p>
+          </div>
+        </div>
+        <CampaignContactStats campaignId={selectedCampaign.id} campaignName={selectedCampaign.name} />
+      </div>
+    );
+  }
+
   if (showAnalytics) {
     return (
       <div className="space-y-6">
@@ -303,7 +343,17 @@ export const EmailCampaigns: React.FC = () => {
             Créez et gérez vos campagnes
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <Button 
+            variant="outline" 
+            onClick={() => setShowEngagementDashboard(true)} 
+            className="flex-1 md:flex-initial"
+            size="sm"
+          >
+            <BarChart3 className="h-4 w-4 mr-1.5" />
+            <span className="hidden sm:inline">Engagement Contacts</span>
+            <span className="sm:hidden">Engagement</span>
+          </Button>
           <Button 
             variant="outline" 
             onClick={() => setShowAnalytics(true)} 
@@ -411,17 +461,32 @@ export const EmailCampaigns: React.FC = () => {
                   {/* Actions buttons */}
                   <div className="flex gap-1 shrink-0">
                     {campaign.status === 'sent' && (
-                      <Button 
-                        variant="outline" 
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => {
-                          setSelectedCampaign(campaign);
-                          setShowAnalytics(true);
-                        }}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
+                      <>
+                        <Button 
+                          variant="outline" 
+                          size="icon"
+                          className="h-8 w-8"
+                          title="Stats par contact"
+                          onClick={() => {
+                            setSelectedCampaign(campaign);
+                            setShowContactStats(true);
+                          }}
+                        >
+                          <Users className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="icon"
+                          className="h-8 w-8"
+                          title="Analytics"
+                          onClick={() => {
+                            setSelectedCampaign(campaign);
+                            setShowAnalytics(true);
+                          }}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </>
                     )}
                     <Button 
                       variant="outline" 

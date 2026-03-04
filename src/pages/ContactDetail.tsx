@@ -27,11 +27,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useEntityConnections } from '@/hooks/useEntityConnections';
 import { useActiveUsers } from '@/hooks/useActiveUsers';
+import { useContactEngagement } from '@/hooks/useContactEngagement';
 import { Contact } from '@/types/contact.types';
 import { ContactDialog } from '@/components/contacts/ContactDialog';
 import { ContactEmailHistory } from '@/components/ContactEmailHistory';
 import { EmailTemplateComposer } from '@/components/email/EmailTemplateComposer';
 import { ContactListAssignment } from '@/components/contacts/ContactListAssignment';
+import { ContactEngagementBadge } from '@/components/contacts/ContactEngagementBadge';
 import { toast } from 'sonner';
 
 export const ContactDetail: React.FC = () => {
@@ -41,6 +43,7 @@ export const ContactDetail: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
   const { getContactConnections, loading: connectionsLoading } = useEntityConnections();
   const { getUserDisplayName } = useActiveUsers();
+  const { stats: engagementStats } = useContactEngagement(id);
   const [contact, setContact] = useState<Contact | null>(null);
   const [connections, setConnections] = useState<any>({
     events: [],
@@ -327,9 +330,17 @@ export const ContactDetail: React.FC = () => {
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl font-bold truncate">
-                {contact.first_name} {contact.last_name}
-              </h1>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-xl sm:text-2xl font-bold truncate">
+                  {contact.first_name} {contact.last_name}
+                </h1>
+                {engagementStats.length > 0 && (
+                  <ContactEngagementBadge
+                    score={engagementStats[0].score}
+                    grade={engagementStats[0].grade}
+                  />
+                )}
+              </div>
               <p className="text-muted-foreground truncate">
                 {contact.position} {contact.company && `• ${contact.company}`}
               </p>
