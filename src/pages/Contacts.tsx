@@ -25,7 +25,7 @@ const PAGE_SIZE = 200;
 export const Contacts: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { contactLists } = useContactLists();
+  const { contactLists, createContactList } = useContactLists();
 
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [filteredContacts, setFilteredContacts] = useState<Contact[]>([]);
@@ -639,6 +639,10 @@ export const Contacts: React.FC = () => {
         isOpen={csvImportOpen}
         onClose={() => setCsvImportOpen(false)}
         onImport={handleImportComplete}
+        contactLists={contactLists}
+        onCreateList={async (listName, contactIds) => {
+          await createContactList({ name: listName, contactIds });
+        }}
       />
 
       <CSVExporter

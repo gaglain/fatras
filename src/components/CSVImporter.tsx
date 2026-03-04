@@ -535,10 +535,13 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
 
         {step === 'assign-list' && (
           <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-medium">Assigner à une liste (optionnel)</h3>
-              <p className="text-sm text-gray-600">
-                Vous pouvez ajouter les contacts importés à une liste existante ou en créer une nouvelle
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-primary/10 mb-3">
+                <Upload className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="text-lg font-semibold">Import réussi ! 🎉</h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                {importedContacts.length} contacts ont été importés. Souhaitez-vous les organiser dans une liste ?
               </p>
             </div>
 
@@ -553,7 +556,7 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
                     setSelectedListId(e.target.value);
                     if (e.target.value) setNewListName('');
                   }}
-                  className="w-full p-2 border rounded-md"
+                  className="w-full p-2 border rounded-md bg-background text-foreground"
                   disabled={!!newListName.trim()}
                 >
                   <option value="">-- Sélectionner une liste --</option>
@@ -564,9 +567,9 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
               </div>
 
               <div className="flex items-center">
-                <div className="flex-grow border-t border-gray-300"></div>
-                <span className="px-3 text-sm text-gray-500">ou</span>
-                <div className="flex-grow border-t border-gray-300"></div>
+                <div className="flex-grow border-t border-border"></div>
+                <span className="px-3 text-sm text-muted-foreground">ou</span>
+                <div className="flex-grow border-t border-border"></div>
               </div>
 
               <div>
@@ -581,7 +584,7 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
                     if (e.target.value) setSelectedListId('');
                   }}
                   placeholder="Nom de la nouvelle liste..."
-                  className="w-full p-2 border rounded-md"
+                  className="w-full p-2 border rounded-md bg-background text-foreground"
                   disabled={!!selectedListId}
                 />
               </div>
