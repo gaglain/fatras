@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { ViewToggle } from '@/components/ui/view-toggle';
-import { Plus, FileText, Edit, Trash2, Save, Calculator, Search, File } from 'lucide-react';
+import { Plus, FileText, Edit, Trash2, Save, Calculator, Search, File, FileDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQuotes } from '@/hooks/useQuotes';
 import { useContacts } from '@/hooks/useContacts';
@@ -56,6 +56,54 @@ export const Contracts: React.FC = () => {
   const [editingQuote, setEditingQuote] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [quoteTemplates, setQuoteTemplates] = useState<any[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState('');
+
+  useEffect(() => {
+    const fetchTemplates = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('quote_templates')
+          .select('*')
+          .order('name');
+        if (error) throw error;
+        setQuoteTemplates(data || []);
+      } catch {
+        // silent
+      }
+    };
+    fetchTemplates();
+  }, []);
+
+  const handleApplyTemplateToForm = (templateId: string) => {
+    const template = quoteTemplates.find(t => t.id === templateId);
+    if (!template) return;
+
+    const updates: Partial<QuoteFormData> = {};
+    if (template.description) updates.description = template.description;
+    if (template.default_terms) {
+      updates.description = (formData.description ? formData.description + '\n\n' : '') + 'Conditions : ' + template.default_terms;
+    }
+
+    const items = Array.isArray(template.default_items)
+      ? template.default_items
+      : typeof template.default_items === 'string'
+      ? JSON.parse(template.default_items)
+      : [];
+
+    if (items.length > 0) {
+      updates.items = items.map((item: any) => ({
+        name: item.name || '',
+        description: item.description || '',
+        quantity: item.quantity || 1,
+        unit_price: item.unit_price || 0,
+      }));
+    }
+
+    setFormData(prev => ({ ...prev, ...updates }));
+    setSelectedTemplateId('');
+    toast.success(`Modèle "${template.name}" appliqué avec ${items.length} ligne(s)`);
+  };
   const [formData, setFormData] = useState<QuoteFormData>(() => {
     try {
       const saved = localStorage.getItem('contractsQuoteDraft');
@@ -480,6 +528,33 @@ export const Contracts: React.FC = () => {
           <DialogHeader>
             <DialogTitle>{editingQuote ? 'Modifier le devis' : 'Créer un nouveau devis'}</DialogTitle>
           </DialogHeader>
+
+          {/* Sélecteur de modèle de devis */}
+          {quoteTemplates.length > 0 && (
+            <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg border">
+              <FileDown className="h-4 w-4 text-muted-foreground shrink-0" />
+              <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
+                <SelectTrigger className="flex-1">
+                  <SelectValue placeholder="Appliquer un modèle de devis..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {quoteTemplates.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.name} {t.category ? `(${t.category})` : ''}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                size="sm"
+                disabled={!selectedTemplateId}
+                onClick={() => handleApplyTemplateToForm(selectedTemplateId)}
+              >
+                Appliquer
+              </Button>
+            </div>
+          )}
+
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
