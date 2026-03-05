@@ -84,7 +84,7 @@ export const ContactForm: React.FC<ContactFormProps> = ({
         accepts_marketing_emails: true
       });
     }
-  }, [contact, isOpen]);
+  }, [contact]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
