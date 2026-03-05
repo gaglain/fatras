@@ -128,7 +128,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
     }
     fetchSpectacles();
     fetchContactTypes();
-  }, [contact, isOpen]);
+  }, [contact]);
 
   const loadContactArtist = async (contactId: string) => {
     try {
