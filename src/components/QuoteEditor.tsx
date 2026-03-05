@@ -5,12 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { QuoteItemManager } from '@/components/quotes/QuoteItemManager';
 import { useQuotes } from '@/hooks/useQuotes';
-import { FileText, List, FileDown } from 'lucide-react';
+import { FileText, List, FileDown, ChevronDown } from 'lucide-react';
 
 interface QuoteEditorProps {
   isOpen: boolean;
@@ -35,6 +34,7 @@ export const QuoteEditor: React.FC<QuoteEditorProps> = ({
   const [loading, setLoading] = useState(false);
   const [quoteTemplates, setQuoteTemplates] = useState<any[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
+  const [activeSection, setActiveSection] = useState<'details' | 'items'>('details');
   const { addQuoteItem } = useQuotes();
 
   useEffect(() => {
@@ -59,7 +59,6 @@ export const QuoteEditor: React.FC<QuoteEditorProps> = ({
     if (!template || !quote?.id) return;
 
     try {
-      // Update quote description/terms
       const updates: any = {};
       if (template.description) updates.description = template.description;
       if (template.default_terms) updates.description = (formData.description ? formData.description + '\n\n' : '') + 'Conditions : ' + template.default_terms;
@@ -68,7 +67,6 @@ export const QuoteEditor: React.FC<QuoteEditorProps> = ({
         setFormData(prev => ({ ...prev, ...updates }));
       }
 
-      // Add default items from template
       const items = Array.isArray(template.default_items)
         ? template.default_items
         : typeof template.default_items === 'string'
@@ -86,7 +84,7 @@ export const QuoteEditor: React.FC<QuoteEditorProps> = ({
         });
       }
 
-      toast.success(`Modèle "${template.name}" appliqué avec ${items.length} ligne(s)`);
+      toast.success(`Modèle "${template.name}" appliqué`);
       setSelectedTemplateId('');
     } catch {
       toast.error("Erreur lors de l'application du modèle");
@@ -135,20 +133,57 @@ export const QuoteEditor: React.FC<QuoteEditorProps> = ({
     }
   };
 
+  const statusLabels: Record<string, string> = {
+    draft: 'Brouillon',
+    sent: 'Envoyé',
+    accepted: 'Accepté',
+    rejected: 'Refusé'
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:!max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Modifier le devis - {quote?.quote_number || quote?.title}</DialogTitle>
+          <DialogTitle className="text-base">
+            Modifier — {quote?.quote_number || quote?.title}
+          </DialogTitle>
         </DialogHeader>
 
-        {/* Sélecteur de modèle de devis */}
-        {quoteTemplates.length > 0 && quote?.id && (
-          <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg border">
+        {/* Section switcher */}
+        <div className="flex gap-1 p-1 bg-muted rounded-lg">
+          <button
+            type="button"
+            onClick={() => setActiveSection('details')}
+            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+              activeSection === 'details'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <FileText className="h-4 w-4" />
+            Détails
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveSection('items')}
+            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+              activeSection === 'items'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <List className="h-4 w-4" />
+            Lignes
+          </button>
+        </div>
+
+        {/* Template selector */}
+        {quoteTemplates.length > 0 && quote?.id && activeSection === 'details' && (
+          <div className="flex items-center gap-2 p-2.5 bg-muted/50 rounded-lg border border-dashed">
             <FileDown className="h-4 w-4 text-muted-foreground shrink-0" />
             <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
-              <SelectTrigger className="flex-1">
-                <SelectValue placeholder="Appliquer un modèle de devis..." />
+              <SelectTrigger className="flex-1 h-9 text-sm">
+                <SelectValue placeholder="Appliquer un modèle…" />
               </SelectTrigger>
               <SelectContent>
                 {quoteTemplates.map((t) => (
@@ -160,110 +195,102 @@ export const QuoteEditor: React.FC<QuoteEditorProps> = ({
             </Select>
             <Button
               size="sm"
+              className="h-9"
               disabled={!selectedTemplateId}
               onClick={() => handleApplyTemplate(selectedTemplateId)}
             >
-              Appliquer
+              OK
             </Button>
           </div>
         )}
-        
-        <Tabs defaultValue="details" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="details" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              Informations générales
-            </TabsTrigger>
-            <TabsTrigger value="items" className="flex items-center gap-2">
-              <List className="h-4 w-4" />
-              Lignes détaillées
-            </TabsTrigger>
-          </TabsList>
 
-          <TabsContent value="details" className="space-y-4 mt-4">
-            <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="title">Titre *</Label>
-            <Input
-              id="title"
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              required
-            />
-          </div>
+        {/* Details section */}
+        {activeSection === 'details' && (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="title" className="text-sm">Titre *</Label>
+              <Input
+                id="title"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                required
+                className="h-10"
+              />
+            </div>
 
-          <div>
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              rows={3}
-            />
-          </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="description" className="text-sm">Description</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                rows={3}
+                className="resize-none"
+              />
+            </div>
 
-          <div>
-            <Label htmlFor="total_amount">Montant total (€)</Label>
-            <Input
-              id="total_amount"
-              type="number"
-              step="0.01"
-              value={formData.total_amount}
-              onChange={(e) => setFormData({ ...formData, total_amount: e.target.value })}
-            />
-          </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="total_amount" className="text-sm">Total (€)</Label>
+                <Input
+                  id="total_amount"
+                  type="number"
+                  step="0.01"
+                  value={formData.total_amount}
+                  onChange={(e) => setFormData({ ...formData, total_amount: e.target.value })}
+                  className="h-10"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="tax_amount" className="text-sm">TVA (€)</Label>
+                <Input
+                  id="tax_amount"
+                  type="number"
+                  step="0.01"
+                  value={formData.tax_amount}
+                  onChange={(e) => setFormData({ ...formData, tax_amount: e.target.value })}
+                  className="h-10"
+                />
+              </div>
+            </div>
 
-          <div>
-            <Label htmlFor="tax_amount">Montant TVA (€)</Label>
-            <Input
-              id="tax_amount"
-              type="number"
-              step="0.01"
-              value={formData.tax_amount}
-              onChange={(e) => setFormData({ ...formData, tax_amount: e.target.value })}
-            />
-          </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="status" className="text-sm">Statut</Label>
+              <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+                <SelectTrigger className="h-10">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(statusLabels).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>{label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          <div>
-            <Label htmlFor="status">Statut</Label>
-            <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="draft">Brouillon</SelectItem>
-                <SelectItem value="sent">Envoyé</SelectItem>
-                <SelectItem value="accepted">Accepté</SelectItem>
-                <SelectItem value="rejected">Refusé</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Annuler
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? 'Enregistrement...' : 'Enregistrer'}
-            </Button>
-          </div>
-        </form>
-      </TabsContent>
-
-      <TabsContent value="items" className="mt-4">
-        {quote?.id && (
-          <QuoteItemManager 
-            quoteId={quote.id}
-            quote={quote}
-          />
+            <div className="flex justify-end gap-2 pt-2">
+              <Button type="button" variant="outline" size="sm" onClick={onClose}>
+                Annuler
+              </Button>
+              <Button type="submit" size="sm" disabled={loading}>
+                {loading ? 'Enregistrement…' : 'Enregistrer'}
+              </Button>
+            </div>
+          </form>
         )}
-        {!quote?.id && (
-          <div className="text-center py-8 text-muted-foreground">
-            <p>Veuillez d'abord enregistrer le devis pour ajouter des lignes détaillées.</p>
+
+        {/* Items section */}
+        {activeSection === 'items' && (
+          <div>
+            {quote?.id ? (
+              <QuoteItemManager quoteId={quote.id} quote={quote} />
+            ) : (
+              <div className="text-center py-8 text-muted-foreground text-sm">
+                Enregistrez d'abord le devis pour ajouter des lignes.
+              </div>
+            )}
           </div>
         )}
-      </TabsContent>
-    </Tabs>
       </DialogContent>
     </Dialog>
   );
