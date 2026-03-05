@@ -655,92 +655,96 @@ export const Contracts: React.FC = () => {
             </div>
 
             {/* Items du devis */}
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <Label>Éléments du devis</Label>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-semibold">Lignes du devis</Label>
                 <Button onClick={addItem} variant="outline" size="sm">
-                  <Plus className="h-4 w-4 mr-1" />
-                  Ajouter un élément
+                  <Plus className="h-4 w-4 mr-1.5" />
+                  Ajouter
                 </Button>
               </div>
 
-              <div className="space-y-4">
-                {formData.items.map((item, index) => (
-                  <Card key={index} className="p-4">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                      <div>
-                        <Label>Nom de l'élément</Label>
-                        <Input
-                          value={item.name}
-                          onChange={(e) => updateItem(index, 'name', e.target.value)}
-                          placeholder="Service ou produit"
-                        />
-                      </div>
-                      <div>
-                        <Label>Description</Label>
-                        <Input
-                          value={item.description}
-                          onChange={(e) => updateItem(index, 'description', e.target.value)}
-                          placeholder="Détails"
-                        />
-                      </div>
-                      <div>
-                        <Label>Quantité</Label>
-                        <Input
-                          type="number"
-                          value={item.quantity}
-                          onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 0)}
-                          min="1"
-                        />
-                      </div>
-                      <div className="flex items-end space-x-2">
-                        <div className="flex-1">
-                          <Label>Prix unitaire (€)</Label>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            value={item.unit_price}
-                            onChange={(e) => updateItem(index, 'unit_price', parseFloat(e.target.value) || 0)}
-                            min="0"
-                          />
-                        </div>
-                        {formData.items.length > 1 && (
-                          <Button
-                            onClick={() => removeItem(index)}
-                            variant="outline"
-                            size="sm"
-                            className="text-red-600"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
+              {formData.items.map((item, index) => (
+                <Card key={index} className="p-3 sm:p-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">Nom *</Label>
+                      <Input
+                        value={item.name}
+                        onChange={(e) => updateItem(index, 'name', e.target.value)}
+                        placeholder="Service ou produit"
+                        className="h-9"
+                      />
                     </div>
-                    <div className="mt-2 text-right text-sm font-medium">
-                      Total ligne: {(item.quantity * item.unit_price).toFixed(2)} €
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">Description</Label>
+                      <Input
+                        value={item.description}
+                        onChange={(e) => updateItem(index, 'description', e.target.value)}
+                        placeholder="Détails"
+                        className="h-9"
+                      />
                     </div>
-                  </Card>
-                ))}
-              </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3 mt-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">Qté</Label>
+                      <Input
+                        type="number"
+                        value={item.quantity}
+                        onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 0)}
+                        min="1"
+                        className="h-9"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">Prix unit. (€)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={item.unit_price}
+                        onChange={(e) => updateItem(index, 'unit_price', parseFloat(e.target.value) || 0)}
+                        min="0"
+                        className="h-9"
+                      />
+                    </div>
+                    <div className="flex items-end justify-between">
+                      <span className="text-sm font-semibold pb-2">
+                        {(item.quantity * item.unit_price).toFixed(2)} €
+                      </span>
+                      {formData.items.length > 1 && (
+                        <Button
+                          onClick={() => removeItem(index)}
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              ))}
 
               {/* Totaux - seulement lors de la création */}
               {!editingQuote && (
-                <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                  <div className="space-y-2">
+                <Card className="p-4 bg-muted/50">
+                  <div className="space-y-1.5 text-sm">
                     <div className="flex justify-between">
-                      <span>Sous-total:</span>
+                      <span className="text-muted-foreground">Sous-total</span>
                       <span>{calculateTotal().toFixed(2)} €</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>TVA ({formData.vat_rate}%):</span>
+                      <span className="text-muted-foreground">TVA ({formData.vat_rate}%)</span>
                       <span>{calculateTax(calculateTotal()).toFixed(2)} €</span>
                     </div>
-                    <div className="flex justify-between text-lg font-bold border-t pt-2">
-                      <span>Total TTC:</span>
+                    <div className="flex justify-between text-base font-bold border-t border-border pt-2 mt-2">
+                      <span>Total TTC</span>
                       <span>{(calculateTotal() + calculateTax(calculateTotal())).toFixed(2)} €</span>
                     </div>
                   </div>
-                </div>
+                </Card>
               )}
             </div>
 
