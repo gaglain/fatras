@@ -260,7 +260,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
 
   return (
     <>
-    <Dialog open={isOpen && !showCreationSuite} onOpenChange={(open) => { if (!open) onClose(); }}>
+    <Dialog open={isOpen && !showCreationSuite} onOpenChange={(open) => { if (!open && !showCreationSuite) onClose(); }}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
