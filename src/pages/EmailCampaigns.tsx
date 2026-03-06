@@ -492,6 +492,15 @@ export const EmailCampaigns: React.FC = () => {
                       variant="outline" 
                       size="icon"
                       className="h-8 w-8"
+                      title="Dupliquer"
+                      onClick={() => handleDuplicateCampaign(campaign)}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="icon"
+                      className="h-8 w-8"
                       onClick={() => handleEditCampaign(campaign)}
                     >
                       <Edit className="h-4 w-4" />
