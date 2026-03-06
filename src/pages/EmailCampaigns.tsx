@@ -196,6 +196,56 @@ export const EmailCampaigns: React.FC = () => {
     }
   };
 
+  const handleDuplicateCampaign = async (campaign: Campaign) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const { data: fullCampaign, error: fetchError } = await supabase
+        .from('email_campaigns')
+        .select('*')
+        .eq('id', campaign.id)
+        .single();
+
+      if (fetchError || !fullCampaign) throw fetchError;
+
+      const { data: newCampaign, error: insertError } = await supabase
+        .from('email_campaigns')
+        .insert({
+          user_id: user.id,
+          name: `${fullCampaign.name} (copie)`,
+          subject: fullCampaign.subject,
+          content: fullCampaign.content,
+          status: 'draft',
+          artist_id: fullCampaign.artist_id,
+          event_id: fullCampaign.event_id,
+          template_id: fullCampaign.template_id,
+        })
+        .select('id')
+        .single();
+
+      if (insertError) throw insertError;
+
+      if (newCampaign) {
+        const { data: lists } = await supabase
+          .from('campaign_contact_lists')
+          .select('contact_list_id')
+          .eq('campaign_id', campaign.id);
+
+        if (lists && lists.length > 0) {
+          await supabase.from('campaign_contact_lists').insert(
+            lists.map(l => ({ campaign_id: newCampaign.id, contact_list_id: l.contact_list_id }))
+          );
+        }
+      }
+
+      toast({ title: "Succès", description: "Campagne dupliquée avec succès" });
+      await fetchCampaigns();
+    } catch {
+      toast({ title: "Erreur", description: "Impossible de dupliquer la campagne", variant: "destructive" });
+    }
+  };
+
   const filteredCampaigns = campaigns.filter(campaign =>
     campaign.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (campaign.subject && campaign.subject.toLowerCase().includes(searchTerm.toLowerCase()))
