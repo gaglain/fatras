@@ -318,10 +318,12 @@ export const Contracts: React.FC = () => {
           event_id: formData.event_id || undefined,
           artist_id: formData.artist_id || undefined,
           status: formData.status,
+          total_amount: total,
+          tax_amount: tax,
+          vat_rate: formData.vat_rate,
           valid_until: formData.valid_until || undefined,
           terms: formData.terms,
-          notes: formData.notes,
-          vat_rate: formData.vat_rate
+          notes: formData.notes
         });
 
         if (formData.status === 'accepted' && previousStatus !== 'accepted') {
