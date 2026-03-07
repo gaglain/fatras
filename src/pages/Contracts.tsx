@@ -959,6 +959,10 @@ export const Contracts: React.FC = () => {
               </div>
 
               <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => handleView(quote)} className="flex-1">
+                  <Eye className="h-3 w-3 mr-1" />
+                  Voir
+                </Button>
                 <Button variant="outline" size="sm" onClick={() => handleEdit(quote)} className="flex-1">
                   <Edit className="h-3 w-3 mr-1" />
                   Modifier
