@@ -21,6 +21,7 @@ import { QuoteTemplateManager } from '@/components/quotes/QuoteTemplateManager';
 import { UniversalSearch } from '@/components/UniversalSearch';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/logger';
+import { generateQuotePDF } from '@/utils/quotePdfGenerator';
 
 interface QuoteFormData {
   title: string;
