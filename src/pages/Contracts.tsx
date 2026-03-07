@@ -305,10 +305,25 @@ export const Contracts: React.FC = () => {
       return;
     }
 
-    // Calcul des montants (utilisés uniquement à la création; en édition, les lignes gèrent les totaux)
-    const subtotal = calculateTotal();
-    const tax = calculateTax(subtotal);
-    const total = subtotal + tax;
+    let subtotal: number;
+    let tax: number;
+    let total: number;
+
+    if (editingQuote) {
+      // En édition, récupérer les items depuis la DB pour calculer les vrais totaux
+      const { data: dbItems } = await supabase
+        .from('quote_items')
+        .select('*')
+        .eq('quote_id', editingQuote.id);
+      
+      subtotal = dbItems?.reduce((sum, item) => sum + (item.total_price || 0), 0) || 0;
+      tax = subtotal * (formData.vat_rate / 100);
+      total = subtotal + tax;
+    } else {
+      subtotal = calculateTotal();
+      tax = calculateTax(subtotal);
+      total = subtotal + tax;
+    }
 
     try {
       if (editingQuote) {
