@@ -459,6 +459,29 @@ export const Contracts: React.FC = () => {
     }
   };
 
+  const handleView = async (quote: typeof quotes[number]) => {
+    try {
+      const { data: items } = await supabase
+        .from('quote_items')
+        .select('*')
+        .eq('quote_id', quote.id)
+        .order('created_at', { ascending: true });
+      
+      setViewingQuote(quote);
+      setViewingQuoteItems(items || []);
+    } catch (error) {
+      logger.error('Erreur chargement items:', error);
+      toast.error('Erreur lors du chargement du devis');
+    }
+  };
+
+  const handleDownloadPDF = () => {
+    if (!viewingQuote) return;
+    const doc = generateQuotePDF(viewingQuote, viewingQuoteItems);
+    doc.save(`devis-${viewingQuote.quote_number}.pdf`);
+    toast.success('PDF téléchargé');
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'draft': return 'bg-gray-100 text-gray-800';
