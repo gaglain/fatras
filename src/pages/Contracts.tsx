@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { ViewToggle } from '@/components/ui/view-toggle';
-import { Plus, FileText, Edit, Trash2, Save, Calculator, Search, File, FileDown } from 'lucide-react';
+import { Plus, FileText, Edit, Trash2, Save, Calculator, Search, File, FileDown, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQuotes } from '@/hooks/useQuotes';
 import { useContacts } from '@/hooks/useContacts';
@@ -21,6 +21,7 @@ import { QuoteTemplateManager } from '@/components/quotes/QuoteTemplateManager';
 import { UniversalSearch } from '@/components/UniversalSearch';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/logger';
+import { generateQuotePDF } from '@/utils/quotePdfGenerator';
 
 interface QuoteFormData {
   title: string;
@@ -56,6 +57,8 @@ export const Contracts: React.FC = () => {
   const [editingQuote, setEditingQuote] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewingQuote, setViewingQuote] = useState<any>(null);
+  const [viewingQuoteItems, setViewingQuoteItems] = useState<any[]>([]);
   const [quoteTemplates, setQuoteTemplates] = useState<any[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
 
@@ -302,10 +305,25 @@ export const Contracts: React.FC = () => {
       return;
     }
 
-    // Calcul des montants (utilisés uniquement à la création; en édition, les lignes gèrent les totaux)
-    const subtotal = calculateTotal();
-    const tax = calculateTax(subtotal);
-    const total = subtotal + tax;
+    let subtotal: number;
+    let tax: number;
+    let total: number;
+
+    if (editingQuote) {
+      // En édition, récupérer les items depuis la DB pour calculer les vrais totaux
+      const { data: dbItems } = await supabase
+        .from('quote_items')
+        .select('*')
+        .eq('quote_id', editingQuote.id);
+      
+      subtotal = dbItems?.reduce((sum, item) => sum + (item.total_price || 0), 0) || 0;
+      tax = subtotal * (formData.vat_rate / 100);
+      total = subtotal + tax;
+    } else {
+      subtotal = calculateTotal();
+      tax = calculateTax(subtotal);
+      total = subtotal + tax;
+    }
 
     try {
       if (editingQuote) {
@@ -439,6 +457,29 @@ export const Contracts: React.FC = () => {
       await deleteQuote(quoteId);
       toast.success('Devis supprimé');
     }
+  };
+
+  const handleView = async (quote: typeof quotes[number]) => {
+    try {
+      const { data: items } = await supabase
+        .from('quote_items')
+        .select('*')
+        .eq('quote_id', quote.id)
+        .order('created_at', { ascending: true });
+      
+      setViewingQuote(quote);
+      setViewingQuoteItems(items || []);
+    } catch (error) {
+      logger.error('Erreur chargement items:', error);
+      toast.error('Erreur lors du chargement du devis');
+    }
+  };
+
+  const handleDownloadPDF = () => {
+    if (!viewingQuote) return;
+    const doc = generateQuotePDF(viewingQuote, viewingQuoteItems);
+    doc.save(`devis-${viewingQuote.quote_number}.pdf`);
+    toast.success('PDF téléchargé');
   };
 
   const getStatusColor = (status: string) => {
@@ -918,6 +959,10 @@ export const Contracts: React.FC = () => {
               </div>
 
               <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => handleView(quote)} className="flex-1">
+                  <Eye className="h-3 w-3 mr-1" />
+                  Voir
+                </Button>
                 <Button variant="outline" size="sm" onClick={() => handleEdit(quote)} className="flex-1">
                   <Edit className="h-3 w-3 mr-1" />
                   Modifier
@@ -966,6 +1011,131 @@ export const Contracts: React.FC = () => {
             <DialogTitle>Modèles de Devis</DialogTitle>
           </DialogHeader>
           <QuoteTemplateManager onApplyTemplate={handleApplyTemplate} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Visualisation du devis */}
+      <Dialog open={!!viewingQuote} onOpenChange={(open) => { if (!open) { setViewingQuote(null); setViewingQuoteItems([]); } }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Devis N° {viewingQuote?.quote_number}</DialogTitle>
+          </DialogHeader>
+          {viewingQuote && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Titre:</span>
+                  <p className="font-medium">{viewingQuote.title}</p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Statut:</span>
+                  <div className="mt-1">
+                    <Badge className={getStatusColor(viewingQuote.status)}>
+                      {getStatusLabel(viewingQuote.status)}
+                    </Badge>
+                  </div>
+                </div>
+                {viewingQuote.description && (
+                  <div className="col-span-2">
+                    <span className="text-muted-foreground">Description:</span>
+                    <p>{viewingQuote.description}</p>
+                  </div>
+                )}
+                <div>
+                  <span className="text-muted-foreground">Créé le:</span>
+                  <p>{new Date(viewingQuote.created_at).toLocaleDateString('fr-FR')}</p>
+                </div>
+                {viewingQuote.valid_until && (
+                  <div>
+                    <span className="text-muted-foreground">Valide jusqu'au:</span>
+                    <p>{new Date(viewingQuote.valid_until).toLocaleDateString('fr-FR')}</p>
+                  </div>
+                )}
+                <div>
+                  <span className="text-muted-foreground">Contact:</span>
+                  <p>{viewingQuote.contact_id ? ((contacts.find(c => c.id === viewingQuote.contact_id)?.first_name || '') + ' ' + (contacts.find(c => c.id === viewingQuote.contact_id)?.last_name || '')).trim() || '-' : '-'}</p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Événement:</span>
+                  <p>{viewingQuote.event_id ? events.find(e => e.id === viewingQuote.event_id)?.title || '-' : '-'}</p>
+                </div>
+              </div>
+
+              {/* Items */}
+              {viewingQuoteItems.length > 0 && (
+                <div>
+                  <h4 className="font-semibold mb-3">Lignes du devis</h4>
+                  <div className="space-y-2">
+                    {viewingQuoteItems.map((item: any) => (
+                      <div key={item.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg text-sm">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium">{item.name}</p>
+                          {item.description && <p className="text-muted-foreground text-xs">{item.description}</p>}
+                        </div>
+                        <div className="text-right shrink-0 ml-4">
+                          <p>{item.quantity} × {Number(item.unit_price).toFixed(2)} €</p>
+                          <p className="font-semibold">{Number(item.total_price).toFixed(2)} €</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Totaux */}
+              <Card className="p-4 bg-muted/50">
+                <div className="space-y-1.5 text-sm">
+                  {(() => {
+                    const subtotal = viewingQuoteItems.reduce((sum, item) => sum + (item.total_price || 0), 0);
+                    const vatRate = viewingQuote.vat_rate ?? 0;
+                    const tax = viewingQuote.tax_amount ?? (subtotal * vatRate / 100);
+                    const total = viewingQuote.total_amount ?? (subtotal + tax);
+                    return (
+                      <>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Sous-total HT</span>
+                          <span>{subtotal.toFixed(2)} €</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">TVA ({vatRate}%)</span>
+                          <span>{tax.toFixed(2)} €</span>
+                        </div>
+                        <div className="flex justify-between text-base font-bold border-t border-border pt-2 mt-2">
+                          <span>Total TTC</span>
+                          <span>{total.toFixed(2)} €</span>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+              </Card>
+
+              {viewingQuote.terms && (
+                <div>
+                  <h4 className="font-semibold mb-1">Conditions</h4>
+                  <p className="text-sm text-muted-foreground">{viewingQuote.terms}</p>
+                </div>
+              )}
+
+              {viewingQuote.notes && (
+                <div>
+                  <h4 className="font-semibold mb-1">Notes</h4>
+                  <p className="text-sm text-muted-foreground">{viewingQuote.notes}</p>
+                </div>
+              )}
+
+              <div className="flex gap-2 pt-4 border-t">
+                <Button onClick={handleDownloadPDF} className="flex-1">
+                  <FileDown className="h-4 w-4 mr-2" />
+                  Télécharger PDF
+                </Button>
+                <Button variant="outline" onClick={() => { setViewingQuote(null); handleEdit(viewingQuote); }}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Modifier
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
