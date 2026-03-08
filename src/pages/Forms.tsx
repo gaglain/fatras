@@ -5,6 +5,7 @@ import { Plus, Edit, Trash2, Eye, Code, FileText, BarChart3 } from 'lucide-react
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { FormBuilder } from '@/components/FormBuilder/FormBuilder';
 import { FormRenderer } from '@/components/FormBuilder/FormRenderer';
 import { FormSubmissions } from '@/components/FormBuilder/FormSubmissions';
