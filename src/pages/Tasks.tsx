@@ -85,7 +85,13 @@ export const Tasks: React.FC = () => {
   };
 
   const handleBulkDelete = async () => {
-    if (!confirm(`Supprimer ${selectedTaskIds.length} tâche(s) ?`)) return;
+    const ok = await confirm({
+      title: 'Supprimer les tâches',
+      description: `Voulez-vous vraiment supprimer ${selectedTaskIds.length} tâche(s) ? Cette action est irréversible.`,
+      confirmText: 'Supprimer',
+      variant: 'destructive',
+    });
+    if (!ok) return;
     for (const taskId of selectedTaskIds) {
       await deleteTask(taskId);
     }
