@@ -11,11 +11,14 @@ import {
   AlignRight,
   Link,
   Type,
-  Image
+  Image,
+  AtSign
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { toast } from 'sonner';
+import { MentionSuggestions } from '@/components/mentions/MentionSuggestions';
+import { useMentionableUsers, MentionableUser } from '@/hooks/useMentionableUsers';
 
 interface RichTextEditorProps {
   value: string;
@@ -34,6 +37,13 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const { uploadImage, isUploading } = useFileUpload();
   const [imageUploading, setImageUploading] = useState(false);
   const [isComposing, setIsComposing] = useState(false);
+  
+  // Mention state
+  const { filterUsers } = useMentionableUsers();
+  const [showMentions, setShowMentions] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState('');
+  const [mentionSuggestions, setMentionSuggestions] = useState<MentionableUser[]>([]);
+  const [mentionPosition, setMentionPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
 
   const execCommand = useCallback((command: string, value?: string) => {
     document.execCommand(command, false, value);
@@ -87,18 +97,123 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     });
   }, [onChange]);
 
+  // Detect @mention in contentEditable
+  const checkForMention = useCallback(() => {
+    const selection = window.getSelection();
+    if (!selection || !selection.rangeCount) {
+      setShowMentions(false);
+      return;
+    }
+
+    const range = selection.getRangeAt(0);
+    const textNode = range.startContainer;
+    if (textNode.nodeType !== Node.TEXT_NODE) {
+      setShowMentions(false);
+      return;
+    }
+
+    const text = textNode.textContent || '';
+    const cursorOffset = range.startOffset;
+    const textBeforeCursor = text.substring(0, cursorOffset);
+    const lastAtIndex = textBeforeCursor.lastIndexOf('@');
+
+    if (lastAtIndex >= 0) {
+      const query = textBeforeCursor.substring(lastAtIndex + 1);
+      if (query.length <= 30 && !/\n/.test(query)) {
+        const filtered = filterUsers(query);
+        if (filtered.length > 0) {
+          // Get caret position for popup placement
+          const tempRange = document.createRange();
+          tempRange.setStart(textNode, lastAtIndex);
+          tempRange.setEnd(textNode, cursorOffset);
+          const rect = tempRange.getBoundingClientRect();
+          const editorRect = editorRef.current?.getBoundingClientRect();
+          
+          if (editorRect) {
+            setMentionPosition({
+              top: rect.bottom - editorRect.top + 4,
+              left: rect.left - editorRect.left,
+            });
+          }
+
+          setMentionQuery(query);
+          setMentionSuggestions(filtered);
+          setShowMentions(true);
+          return;
+        }
+      }
+    }
+
+    setShowMentions(false);
+  }, [filterUsers]);
+
+  const insertMentionInEditor = useCallback((user: MentionableUser) => {
+    const selection = window.getSelection();
+    if (!selection || !selection.rangeCount) return;
+
+    const range = selection.getRangeAt(0);
+    const textNode = range.startContainer;
+    if (textNode.nodeType !== Node.TEXT_NODE) return;
+
+    const text = textNode.textContent || '';
+    const cursorOffset = range.startOffset;
+    const textBeforeCursor = text.substring(0, cursorOffset);
+    const lastAtIndex = textBeforeCursor.lastIndexOf('@');
+
+    if (lastAtIndex < 0) return;
+
+    // Create mention element
+    const mentionEl = document.createElement('span');
+    mentionEl.className = 'mention-tag';
+    mentionEl.contentEditable = 'false';
+    mentionEl.setAttribute('data-mention-id', user.user_id);
+    mentionEl.setAttribute('data-mention-name', user.displayName);
+    mentionEl.textContent = `@${user.displayName}`;
+    mentionEl.style.cssText = 'color: hsl(var(--primary)); font-weight: 600; background: hsl(var(--primary) / 0.1); padding: 1px 4px; border-radius: 4px; cursor: default;';
+
+    // Replace @query with mention element
+    const beforeText = text.substring(0, lastAtIndex);
+    const afterText = text.substring(cursorOffset);
+
+    const parent = textNode.parentNode;
+    if (!parent) return;
+
+    // Create text nodes
+    const beforeNode = document.createTextNode(beforeText);
+    const afterNode = document.createTextNode('\u00A0' + afterText); // non-breaking space after mention
+
+    parent.insertBefore(beforeNode, textNode);
+    parent.insertBefore(mentionEl, textNode);
+    parent.insertBefore(afterNode, textNode);
+    parent.removeChild(textNode);
+
+    // Set cursor after mention
+    const newRange = document.createRange();
+    newRange.setStart(afterNode, 1);
+    newRange.collapse(true);
+    selection.removeAllRanges();
+    selection.addRange(newRange);
+
+    setShowMentions(false);
+
+    // Update value
+    if (editorRef.current) {
+      onChange(editorRef.current.innerHTML);
+    }
+  }, [onChange]);
+
   const handleInput = useCallback(() => {
     if (isComposing) return;
     if (editorRef.current) {
-      // Petit délai pour permettre au DOM de se mettre à jour
       requestAnimationFrame(() => {
         if (editorRef.current) {
           onChange(editorRef.current.innerHTML);
           makeImagesResizable();
+          checkForMention();
         }
       });
     }
-  }, [onChange, makeImagesResizable, isComposing]);
+  }, [onChange, makeImagesResizable, isComposing, checkForMention]);
 
   const handleImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -113,7 +228,6 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     try {
       const result = await uploadImage(file);
       
-      // Insérer l'image dans l'éditeur
       const img = `<img src="${result.url}" alt="${result.name}" style="max-width: 100%; height: auto;" />`;
       document.execCommand('insertHTML', false, img);
       
@@ -128,6 +242,14 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     }
   }, [uploadImage, onChange, makeImagesResizable]);
 
+  const triggerMention = useCallback(() => {
+    if (!editorRef.current) return;
+    editorRef.current.focus();
+    document.execCommand('insertText', false, '@');
+    // Trigger mention check after inserting @
+    setTimeout(() => checkForMention(), 10);
+  }, [checkForMention]);
+
   const formatButtons = [
     { icon: Bold, command: 'bold', tooltip: 'Gras' },
     { icon: Italic, command: 'italic', tooltip: 'Italique' },
@@ -141,7 +263,6 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
   const fontSizes = ['12px', '14px', '16px', '18px', '20px', '24px'];
 
-  // Initialize editor content and resizable images on mount and when value changes
   React.useEffect(() => {
     if (!editorRef.current) return;
     if (!isComposing && editorRef.current.innerHTML !== (value || '')) {
@@ -151,11 +272,10 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   }, [value, makeImagesResizable, isComposing]);
 
   return (
-    <div className={cn("border border-border rounded-lg overflow-hidden bg-background", className)}>
+    <div className={cn("border border-border rounded-lg overflow-hidden bg-background relative", className)}>
       {/* Toolbar */}
       <div className="border-b border-border p-2 bg-background/50 backdrop-blur-sm">
         <div className="flex flex-wrap items-center gap-1">
-          {/* Format buttons */}
           {formatButtons.map(({ icon: Icon, command, tooltip }) => (
             <Button
               key={command}
@@ -171,7 +291,6 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           
           <div className="h-6 w-px bg-border mx-1" />
           
-          {/* Font size */}
           <select
             className="text-xs border border-border rounded px-2 py-1 bg-background"
             onChange={(e) => execCommand('fontSize', e.target.value)}
@@ -186,7 +305,6 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           
           <div className="h-6 w-px bg-border mx-1" />
           
-          {/* Link button */}
           <Button
             variant="ghost"
             size="sm"
@@ -202,7 +320,6 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
           <div className="h-6 w-px bg-border mx-1" />
 
-          {/* Image upload */}
           <input
             type="file"
             id="image-upload"
@@ -220,6 +337,19 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           >
             <Image className="h-3.5 w-3.5" />
           </Button>
+
+          <div className="h-6 w-px bg-border mx-1" />
+
+          {/* Mention button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={triggerMention}
+            title="Mentionner un utilisateur (@)"
+            className="h-8 w-8 p-1 hover:bg-accent transition-colors"
+          >
+            <AtSign className="h-3.5 w-3.5" />
+          </Button>
         </div>
       </div>
 
@@ -230,9 +360,18 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         suppressContentEditableWarning
         onInput={handleInput}
         onKeyDown={(e) => {
+          // Handle mention navigation
+          if (showMentions && mentionSuggestions.length > 0) {
+            if (e.key === 'Escape') {
+              e.preventDefault();
+              setShowMentions(false);
+              return;
+            }
+          }
+
           const anyEvent: any = e as any;
           if (anyEvent.isComposing || (e.nativeEvent as any).isComposing || isComposing) return;
-          if (e.key === 'Enter') {
+          if (e.key === 'Enter' && !showMentions) {
             e.preventDefault();
             if (e.shiftKey) {
               document.execCommand('insertLineBreak');
@@ -243,6 +382,10 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
               onChange(editorRef.current.innerHTML);
             }
           }
+        }}
+        onClick={() => {
+          // Check mention on click position change
+          setTimeout(() => checkForMention(), 10);
         }}
         className={cn(
           "min-h-[200px] p-4 outline-none text-sm leading-relaxed",
@@ -262,6 +405,20 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           whiteSpace: 'pre-wrap'
         }}
       />
+
+      {/* Mention suggestions dropdown */}
+      {showMentions && mentionSuggestions.length > 0 && (
+        <MentionSuggestions
+          suggestions={mentionSuggestions}
+          onSelect={insertMentionInEditor}
+          onClose={() => setShowMentions(false)}
+          style={{
+            position: 'absolute',
+            top: mentionPosition.top + 56, // offset for toolbar height
+            left: mentionPosition.left,
+          }}
+        />
+      )}
     </div>
   );
 };
