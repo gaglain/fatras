@@ -95,7 +95,7 @@ export const FormRendererStepped: React.FC<FormRendererSteppedProps> = ({ form, 
     }
 
     // Validate all required fields
-    const missingFields = inputFields
+    const missingFields = visibleInputFields
       .filter(field => field.required && !formData[field.id])
       .map(field => field.label);
 
