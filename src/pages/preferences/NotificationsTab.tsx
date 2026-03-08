@@ -28,7 +28,7 @@ interface NotificationSettings {
 const DEFAULT_SETTINGS: NotificationSettings = {
   email: true,
   push: true,
-  mentions_email: false,
+  mentions_email: true,
   task_reminders_email: false,
   tasks: true,
   contracts: true,
