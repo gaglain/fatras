@@ -161,6 +161,10 @@ export default {
 				'bounce-soft': {
 					'0%, 100%': { transform: 'translateY(0)' },
 					'50%': { transform: 'translateY(-4px)' }
+				},
+				'confetti-fall': {
+					'0%': { transform: 'translateY(0) rotate(0deg)', opacity: '1' },
+					'100%': { transform: 'translateY(100vh) rotate(720deg)', opacity: '0' }
 				}
 			},
 			animation: {
