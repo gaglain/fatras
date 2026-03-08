@@ -7,6 +7,7 @@ import { Plus, Calendar, Edit, Trash2, Music, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useArtists } from '@/hooks/useArtists';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
