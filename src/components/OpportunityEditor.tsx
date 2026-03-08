@@ -122,11 +122,11 @@ export const OpportunityEditor: React.FC<OpportunityEditorProps> = ({
 
           <div>
             <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
+            <MentionableTextarea
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={(val) => setFormData({ ...formData, description: val })}
               rows={3}
+              placeholder="Tapez @ pour mentionner un utilisateur"
             />
           </div>
 

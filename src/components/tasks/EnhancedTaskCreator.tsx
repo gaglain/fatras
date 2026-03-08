@@ -148,11 +148,10 @@ export const EnhancedTaskCreator: React.FC<EnhancedTaskCreatorProps> = ({
 
               <div>
                 <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
+                <MentionableTextarea
                   value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Détails de la tâche..."
+                  onChange={setDescription}
+                  placeholder="Détails de la tâche... Tapez @ pour mentionner"
                   rows={3}
                 />
               </div>

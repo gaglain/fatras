@@ -489,11 +489,11 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
 
           <div>
             <Label htmlFor="notes">Notes</Label>
-            <Textarea
-              id="notes"
+            <MentionableTextarea
               value={formData.notes || ''}
-              onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+              onChange={(val) => setFormData(prev => ({ ...prev, notes: val }))}
               rows={3}
+              placeholder="Ajoutez des notes... Tapez @ pour mentionner"
             />
           </div>
 

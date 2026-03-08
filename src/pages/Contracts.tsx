@@ -865,10 +865,9 @@ export const Contracts: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="terms">Conditions générales</Label>
-                <Textarea
-                  id="terms"
+                <MentionableTextarea
                   value={formData.terms}
-                  onChange={(e) => setFormData(prev => ({ ...prev, terms: e.target.value }))}
+                  onChange={(val) => setFormData(prev => ({ ...prev, terms: val }))}
                   placeholder="Conditions de paiement, délais, etc."
                   rows={4}
                 />
@@ -876,11 +875,10 @@ export const Contracts: React.FC = () => {
 
               <div>
                 <Label htmlFor="notes">Notes internes</Label>
-                <Textarea
-                  id="notes"
+                <MentionableTextarea
                   value={formData.notes}
-                  onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                  placeholder="Notes privées non visibles par le client"
+                  onChange={(val) => setFormData(prev => ({ ...prev, notes: val }))}
+                  placeholder="Notes privées... Tapez @ pour mentionner"
                   rows={4}
                 />
               </div>

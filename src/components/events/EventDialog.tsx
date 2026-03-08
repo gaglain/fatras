@@ -427,21 +427,21 @@ export const EventDialog: React.FC<EventDialogProps> = ({
 
           <div>
             <Label htmlFor="requirements">Exigences techniques</Label>
-            <Textarea
-              id="requirements"
+            <MentionableTextarea
               value={formData.requirements}
-              onChange={(e) => setFormData(prev => ({ ...prev, requirements: e.target.value }))}
+              onChange={(val) => setFormData(prev => ({ ...prev, requirements: val }))}
               rows={3}
+              placeholder="Tapez @ pour mentionner"
             />
           </div>
 
           <div>
             <Label htmlFor="notes">Notes</Label>
-            <Textarea
-              id="notes"
+            <MentionableTextarea
               value={formData.notes}
-              onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+              onChange={(val) => setFormData(prev => ({ ...prev, notes: val }))}
               rows={3}
+              placeholder="Tapez @ pour mentionner"
             />
           </div>
 
