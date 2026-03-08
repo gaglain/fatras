@@ -94,9 +94,9 @@ export const FrontArtists: React.FC = () => {
         
         {artists.length > 0 ? (
           <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" aria-label="Liste des spectacles">
-            {artists.map((artist) => (
-              <article key={artist.id} className="hover:shadow-lg transition-shadow">
-                <Card>
+            {artists.map((artist, index) => (
+              <ScrollRevealCard key={artist.id} index={index}>
+              <article className="hover:shadow-lg transition-shadow">
                   <CardContent className="p-6">
                     {artist.photo_url && (
                       <figure className="mb-4 bg-muted rounded-lg overflow-hidden">
