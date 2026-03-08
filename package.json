@@ -51,6 +51,7 @@
     "@tiptap/extension-text-style": "^3.10.7",
     "@tiptap/react": "^3.10.7",
     "@tiptap/starter-kit": "^3.10.7",
+    "@tiptap/suggestion": "^3.10.7",
     "@types/dompurify": "^3.0.5",
     "@types/leaflet": "^1.9.21",
     "@xyflow/react": "^12.8.2",
