@@ -87,6 +87,19 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
 
       const newTask = await addTask(taskData);
       
+      // Notify mentioned users
+      if (formData.description) {
+        const senderName = currentUser?.name || 'Utilisateur';
+        notifyMentionsIfNeeded({
+          text: formData.description,
+          senderUserId: currentUser?.id || '',
+          senderName,
+          contextType: 'task',
+          contextName: formData.title,
+          contextId: newTask?.id,
+        });
+      }
+      
       if (onTaskCreated) {
         onTaskCreated(newTask);
       }

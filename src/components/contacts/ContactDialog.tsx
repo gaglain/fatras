@@ -183,6 +183,18 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
           throw error;
         }
         toast.success('Contact mis à jour avec succès');
+
+        // Notify mentions in notes
+        if (formData.notes) {
+          notifyMentionsIfNeeded({
+            text: formData.notes,
+            senderUserId: user.id,
+            senderName: user.email || 'Utilisateur',
+            contextType: 'contact',
+            contextName: `${formData.first_name} ${formData.last_name}`,
+            contextId: contact.id,
+          });
+        }
         
         // Mettre à jour le lien avec l'artiste
         if (contact.id) {

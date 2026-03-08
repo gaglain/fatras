@@ -171,6 +171,19 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
       };
 
       await updateTask(task.id, updates);
+
+      // Notify mentioned users in description
+      if (formData.description) {
+        const sender = users.find(u => u.id === currentUser?.id);
+        notifyMentionsIfNeeded({
+          text: formData.description,
+          senderUserId: currentUser?.id || '',
+          senderName: sender?.name || 'Utilisateur',
+          contextType: 'task',
+          contextName: formData.title,
+          contextId: task.id,
+        });
+      }
       
       if (onTaskUpdated) {
         onTaskUpdated({ ...task, ...updates });
