@@ -242,6 +242,7 @@ const App = () => {
                     </Suspense>
                   </WebsiteConfigProvider>
                 </BrowserRouter>
+                </ConfirmProvider>
               </TooltipProvider>
             </ThemeProvider>
           </HelmetProvider>
