@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { 
   Upload, Image as ImageIcon, FileText, Trash2, Eye, 
   Filter, FolderOpen, Tag, X, Music, ExternalLink
@@ -96,8 +97,10 @@ export const MediaBankManager: React.FC = () => {
     setUploadArtistId('none');
   };
 
+  const confirmAction = useConfirm();
   const handleDelete = async (image: BackgroundImage) => {
-    if (confirm('Supprimer cette image définitivement ?')) {
+    const ok = await confirmAction({ title: 'Supprimer', description: 'Supprimer cette image définitivement ?', variant: 'destructive' });
+    if (ok) {
       await deleteImage(image.id);
     }
   };

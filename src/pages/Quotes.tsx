@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { Badge } from '@/components/ui/badge';
 import { FileText, Plus, Search, Eye, Edit, Trash2, Download, Calculator } from 'lucide-react';
 import { useQuotes, Quote, QuoteItem } from '@/hooks/useQuotes';
@@ -275,8 +276,10 @@ export const Quotes: React.FC = () => {
     }
   };
 
+  const confirmAction = useConfirm();
   const handleDelete = async (id: string) => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer ce devis ?')) {
+    const ok = await confirmAction({ title: 'Supprimer le devis', description: 'Êtes-vous sûr de vouloir supprimer ce devis ?', variant: 'destructive' });
+    if (ok) {
       try {
         await deleteQuote(id);
         toast.success('Devis supprimé avec succès');

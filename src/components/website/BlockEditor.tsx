@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ImageUploader } from '@/components/ui/image-uploader';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { 
   ArrowLeft, 
   Save, 
@@ -157,8 +158,10 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({ page, onSave, onCancel
     }));
   };
 
-  const deleteBlock = (blockId: string) => {
-    if (confirm('Supprimer ce bloc ?')) {
+  const confirmAction = useConfirm();
+  const deleteBlock = async (blockId: string) => {
+    const ok = await confirmAction({ title: 'Supprimer', description: 'Supprimer ce bloc ?', variant: 'destructive' });
+    if (ok) {
       setCurrentPage(prev => ({
         ...prev,
         blocks: prev.blocks.filter(block => block.id !== blockId)

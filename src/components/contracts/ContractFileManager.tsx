@@ -9,6 +9,7 @@ import { FileText, Upload, Link as LinkIcon, User, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 
 interface ContractFile {
   id: string;
@@ -117,8 +118,10 @@ export const ContractFileManager: React.FC<ContractFileManagerProps> = ({ artist
     }
   };
 
+  const confirmAction = useConfirm();
   const handleDeleteFile = async (fileId: string) => {
-    if (!confirm('Supprimer ce fichier ?')) return;
+    const ok = await confirmAction({ title: 'Supprimer', description: 'Supprimer ce fichier ?', variant: 'destructive' });
+    if (!ok) return;
 
     try {
       const { error } = await supabase

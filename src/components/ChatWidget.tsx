@@ -18,6 +18,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { registerChatWidgetHandler, unregisterChatWidgetHandler, type ChatWidgetOpenEvent } from '@/lib/chatWidgetEvents';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 
 // Memoized message component to prevent re-renders
 const ChatMessage = memo(({ message, isMe }: { message: any; isMe: boolean }) => {
@@ -62,6 +63,7 @@ export const ChatWidget: React.FC = () => {
   const [localMessages, setLocalMessages] = useState<any[]>([]);
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  const confirmAction = useConfirm();
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
 
   // Save last used channel to localStorage
@@ -255,7 +257,7 @@ export const ChatWidget: React.FC = () => {
               </Select>
               <div className="flex gap-1 flex-wrap items-center">
                 {selectedChannel && currentChannel && currentChannel.type === 'public' && !currentChannel.roadshow_id && (
-                  <Button size="sm" variant="ghost" className="shrink-0 h-8 px-2 text-xs text-primary-foreground hover:bg-primary-foreground/20" onClick={async () => { if (confirm(`Archiver le canal "${getChannelDisplayName(currentChannel)}" ?`)) { await archiveChannel(selectedChannel); const nextChannel = channels.find(c => c.id !== selectedChannel); if (nextChannel) handleChannelSelect(nextChannel.id); else setSelectedChannel(''); } }} title="Archiver ce canal"><Archive className="h-3 w-3" /></Button>
+                  <Button size="sm" variant="ghost" className="shrink-0 h-8 px-2 text-xs text-primary-foreground hover:bg-primary-foreground/20" onClick={async () => { const ok = await confirmAction({ title: 'Archiver le canal', description: `Archiver le canal "${getChannelDisplayName(currentChannel)}" ?` }); if (ok) { await archiveChannel(selectedChannel); const nextChannel = channels.find(c => c.id !== selectedChannel); if (nextChannel) handleChannelSelect(nextChannel.id); else setSelectedChannel(''); } }} title="Archiver ce canal"><Archive className="h-3 w-3" /></Button>
                 )}
                 <ChannelManager onChannelCreated={handleChannelSelect} />
                 <DirectMessageManager onChannelCreated={handleChannelSelect} trigger={<Button size="sm" variant="secondary" className="shrink-0 h-8 px-2 text-xs"><MessageSquare className="h-3 w-3 mr-1" />DM</Button>} />

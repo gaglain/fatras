@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { 
   Plus, 
   Edit, 
@@ -207,8 +208,10 @@ export const PageManager: React.FC = () => {
     }
   };
 
+  const confirmAction = useConfirm();
   const handleDeletePage = async (pageId: string) => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer cette page ?')) {
+    const ok = await confirmAction({ title: 'Supprimer la page', description: 'Êtes-vous sûr de vouloir supprimer cette page ?', variant: 'destructive' });
+    if (ok) {
       try {
         await deletePage(pageId);
         toast.success('Page supprimée');

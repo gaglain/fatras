@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Search, Filter, Users, UserCheck, UserX, Upload, Download, Mail, List, Grid, LayoutList, Loader2 } from 'lucide-react';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { ContactCard } from '@/components/contacts/ContactCard';
 import { ContactDialog } from '@/components/contacts/ContactDialog';
 import { CSVImporter } from '@/components/CSVImporter';
@@ -266,8 +267,10 @@ export const Contacts: React.FC = () => {
     setDialogOpen(true);
   };
 
+  const confirmAction = useConfirm();
   const handleDelete = async (id: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce contact ?')) return;
+    const ok = await confirmAction({ title: 'Supprimer le contact', description: 'Êtes-vous sûr de vouloir supprimer ce contact ?', variant: 'destructive' });
+    if (!ok) return;
 
     try {
       const { error } = await supabase

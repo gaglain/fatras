@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { 
   Package, 
   Mail, 
@@ -73,8 +74,10 @@ export const SecureOrderManagement: React.FC = () => {
     }
   };
 
+  const confirmAction = useConfirm();
   const handleDeleteOrder = async (orderId: string) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette commande ?')) {
+    const ok = await confirmAction({ title: 'Supprimer la commande', description: 'Êtes-vous sûr de vouloir supprimer cette commande ?', variant: 'destructive' });
+    if (ok) {
       const success = await deleteOrder(orderId);
       if (success && selectedOrder?.id === orderId) {
         setIsDetailModalOpen(false);

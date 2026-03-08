@@ -7,6 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Mail, RefreshCw, Clock, User, ArrowLeft, Reply, Forward, Trash2, AlertOctagon, MoreVertical } from 'lucide-react';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useEmailSync } from '@/hooks/useEmailSync';
@@ -145,8 +146,10 @@ export const EmailInbox: React.FC = () => {
     }
   };
 
+  const confirmAction = useConfirm();
   const handleDelete = async (email: InboundEmail) => {
-    if (!confirm('Voulez-vous vraiment supprimer cet email ?')) return;
+    const ok = await confirmAction({ title: 'Supprimer l\'email', description: 'Voulez-vous vraiment supprimer cet email ?', variant: 'destructive' });
+    if (!ok) return;
 
     try {
       const { error } = await supabase

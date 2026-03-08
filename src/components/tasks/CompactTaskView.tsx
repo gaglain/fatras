@@ -5,6 +5,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { CheckCircle2, Circle, Trash } from 'lucide-react';
 import { Task } from '@/hooks/useTasks';
 import { TaskExecuteButton } from './TaskExecuteButton';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 
 interface CompactTaskViewProps {
   tasks: Task[];
@@ -25,6 +26,7 @@ export const CompactTaskView: React.FC<CompactTaskViewProps> = ({
   onToggleSelection,
   onSelectAll
 }) => {
+  const confirmAction = useConfirm();
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'urgent': return 'text-red-600';
@@ -145,9 +147,10 @@ export const CompactTaskView: React.FC<CompactTaskViewProps> = ({
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={(e) => {
+                    onClick={async (e) => {
                       e.stopPropagation();
-                      if (window.confirm('Voulez-vous vraiment supprimer cette tâche ?')) {
+                      const ok = await confirmAction({ title: 'Supprimer', description: 'Voulez-vous vraiment supprimer cette tâche ?', variant: 'destructive' });
+                      if (ok) {
                         onDeleteTask?.(task.id);
                       }
                     }}

@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { 
   Plus, 
   Edit, 
@@ -41,6 +42,7 @@ export const UserManagement: React.FC = () => {
   const { sendUserWelcomeEmail, sending } = useEmailSender();
   const { users, loading, fetchUsers, createUser, updateUserProfile, deactivateUser } = useUserManagement();
   const { hasPermission, isSuperAdmin, loading: permissionsLoading } = usePermissions();
+  const confirmAction = useConfirm();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -384,7 +386,8 @@ export const UserManagement: React.FC = () => {
       return;
     }
     
-    if (confirm('Êtes-vous sûr de vouloir désactiver cet utilisateur ?')) {
+    const ok = await confirmAction({ title: 'Désactiver l\'utilisateur', description: 'Êtes-vous sûr de vouloir désactiver cet utilisateur ?', variant: 'destructive' });
+    if (ok) {
       await deactivateUser(userId);
     }
   };

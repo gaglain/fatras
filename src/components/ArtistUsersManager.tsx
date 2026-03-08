@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Users, X, Plus } from 'lucide-react';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 
 interface ArtistUsersManagerProps {
   artistId: string;
@@ -155,8 +156,10 @@ export const ArtistUsersManager: React.FC<ArtistUsersManagerProps> = ({ artistId
     }
   };
 
+  const confirmAction = useConfirm();
   const handleRemoveUser = async (artistUserId: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir retirer cet utilisateur ?')) return;
+    const ok = await confirmAction({ title: 'Retirer l\'utilisateur', description: 'Êtes-vous sûr de vouloir retirer cet utilisateur ?', variant: 'destructive' });
+    if (!ok) return;
 
     try {
       const { error } = await supabase

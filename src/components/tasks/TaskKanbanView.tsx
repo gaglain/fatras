@@ -7,6 +7,7 @@ import { GripVertical, Calendar, AlertCircle, Trash, Plus } from 'lucide-react';
 import { Task } from '@/hooks/useTasks';
 import { TaskExecuteButton } from './TaskExecuteButton';
 import { cn } from '@/lib/utils';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 
 interface TaskKanbanViewProps {
   tasks: Task[];
@@ -51,6 +52,7 @@ export const TaskKanbanView: React.FC<TaskKanbanViewProps> = ({
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
   const dragCounter = useRef<Record<string, number>>({});
+  const confirmAction = useConfirm();
 
   const handleDragStart = useCallback((e: React.DragEvent, taskId: string) => {
     setDraggedTaskId(taskId);
@@ -227,9 +229,10 @@ export const TaskKanbanView: React.FC<TaskKanbanViewProps> = ({
                               variant="ghost"
                               size="sm"
                               className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive ml-auto"
-                              onClick={(e) => {
+                              onClick={async (e) => {
                                 e.stopPropagation();
-                                if (window.confirm('Supprimer cette tâche ?')) {
+                                const ok = await confirmAction({ title: 'Supprimer', description: 'Supprimer cette tâche ?', variant: 'destructive' });
+                                if (ok) {
                                   onDeleteTask(task.id);
                                 }
                               }}

@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, Trash2, Edit, Save, Copy, File } from 'lucide-react';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -131,8 +132,10 @@ export const QuoteTemplateManager: React.FC<QuoteTemplateManagerProps> = ({
     }
   };
 
+  const confirmAction = useConfirm();
   const handleDeleteTemplate = async (templateId: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce modèle ?')) return;
+    const ok = await confirmAction({ title: 'Supprimer le modèle', description: 'Êtes-vous sûr de vouloir supprimer ce modèle ?', variant: 'destructive' });
+    if (!ok) return;
 
     try {
       const { error } = await supabase

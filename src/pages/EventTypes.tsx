@@ -7,6 +7,7 @@ import { Plus, Calendar, Edit, Trash2, Music, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useArtists } from '@/hooks/useArtists';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -128,8 +129,10 @@ export const EventTypes: React.FC = () => {
     setIsFormOpen(true);
   };
 
+  const confirmAction = useConfirm();
   const handleDelete = async (typeId: string) => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer ce type d\'événement ?')) {
+    const ok = await confirmAction({ title: 'Supprimer', description: 'Êtes-vous sûr de vouloir supprimer ce type d\'événement ?', variant: 'destructive' });
+    if (ok) {
       const { error } = await supabase
         .from('event_types')
         .delete()

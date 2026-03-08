@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Edit, Trash2, Save, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 
 interface ProductAttribute {
   id: string;
@@ -64,8 +65,10 @@ export const ProductVariationManager: React.FC<ProductVariationManagerProps> = (
   };
 
   // Supprimer un attribut
-  const handleDeleteAttribute = (attributeId: string) => {
-    if (confirm('Supprimer cet attribut supprimera aussi toutes les variations associées. Continuer ?')) {
+  const confirmAction = useConfirm();
+  const handleDeleteAttribute = async (attributeId: string) => {
+    const ok = await confirmAction({ title: 'Supprimer l\'attribut', description: 'Supprimer cet attribut supprimera aussi toutes les variations associées. Continuer ?', variant: 'destructive' });
+    if (ok) {
       const updatedAttributes = attributes.filter(attr => attr.id !== attributeId);
       onAttributesChange(updatedAttributes);
       
@@ -143,8 +146,9 @@ export const ProductVariationManager: React.FC<ProductVariationManagerProps> = (
   };
 
   // Supprimer une variation
-  const handleDeleteVariation = (variationId: string) => {
-    if (confirm('Supprimer cette variation ?')) {
+  const handleDeleteVariation = async (variationId: string) => {
+    const ok = await confirmAction({ title: 'Supprimer', description: 'Supprimer cette variation ?', variant: 'destructive' });
+    if (ok) {
       onVariationsChange(variations.filter(v => v.id !== variationId));
       toast.success('Variation supprimée');
     }

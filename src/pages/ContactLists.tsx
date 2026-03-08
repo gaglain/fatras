@@ -8,6 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Users, Edit, Trash2, Search, Loader2, UserPlus, X } from 'lucide-react';
 import { useContactLists } from '@/hooks/useContactLists';
 import { ContactListMemberManager } from '@/components/contacts/ContactListMemberManager';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { UniversalSearch, SearchItem } from '@/components/UniversalSearch';
 
 export const ContactLists: React.FC = () => {
@@ -120,8 +121,10 @@ export const ContactLists: React.FC = () => {
     }
   };
 
+  const confirmAction = useConfirm();
   const handleDeleteList = async (listId: string) => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer cette liste ?')) {
+    const ok = await confirmAction({ title: 'Supprimer la liste', description: 'Êtes-vous sûr de vouloir supprimer cette liste ?', variant: 'destructive' });
+    if (ok) {
       await deleteContactList(listId);
     }
   };

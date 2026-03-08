@@ -7,6 +7,7 @@ import { ViewToggle } from '@/components/ui/view-toggle';
 import { Plus, Music, Calendar, MapPin, Clock, Bed, BookOpen, Trash2, Upload, Image, Search, Edit2, Plane, Star, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCentralizedData, CentralizedArtist as Artist } from '@/hooks/useCentralizedData';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { useOpportunities } from '@/hooks/useOpportunities';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -108,9 +109,11 @@ export const Artists: React.FC = () => {
   // Synchronisation des opportunités avec le planning
   const selectedArtistOpportunities = selectedArtist ? getArtistOpportunities(selectedArtist) : [];
 
-  const handleDeleteArtist = (artistId: string) => {
+  const confirmAction = useConfirm();
+  const handleDeleteArtist = async (artistId: string) => {
     const artist = artists.find(a => a.id === artistId);
-    if (confirm(`Êtes-vous sûr de vouloir supprimer l'artiste "${artist?.name}" ? Cette action est irréversible.`)) {
+    const ok = await confirmAction({ title: 'Supprimer l\'artiste', description: `Êtes-vous sûr de vouloir supprimer l'artiste "${artist?.name}" ? Cette action est irréversible.`, variant: 'destructive' });
+    if (ok) {
       deleteArtist(artistId);
       setTourSchedule(prev => prev.filter(schedule => schedule.artistId !== artistId));
       if (selectedArtist === artistId) {

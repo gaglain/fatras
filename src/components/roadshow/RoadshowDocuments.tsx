@@ -7,6 +7,7 @@ import { Upload, Trash2, FileText, Download, File } from 'lucide-react';
 import { useRoadshowDocuments, RoadshowDocument } from '@/hooks/useRoadshowDocuments';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 
 interface RoadshowDocumentsProps {
   roadshowStopId?: string;
@@ -48,8 +49,10 @@ export const RoadshowDocuments: React.FC<RoadshowDocumentsProps> = ({ roadshowSt
     e.target.value = '';
   };
 
+  const confirmAction = useConfirm();
   const handleDelete = async (doc: RoadshowDocument) => {
-    if (!confirm(`Supprimer "${doc.file_name}" ?`)) return;
+    const ok = await confirmAction({ title: 'Supprimer', description: `Supprimer "${doc.file_name}" ?`, variant: 'destructive' });
+    if (!ok) return;
     const success = await deleteDocument(doc.id, doc.file_path);
     if (success) await loadDocs();
   };

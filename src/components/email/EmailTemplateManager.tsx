@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { FileText, Plus, Edit2, Trash2, Save, X, Paperclip, Image as ImageIcon } from 'lucide-react';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { ImageGalleryPicker } from '@/components/website/ImageGalleryPicker';
 import { useEmailTemplates, EmailTemplate } from '@/hooks/useEmailTemplates';
 import { supabase } from '@/integrations/supabase/client';
@@ -81,8 +82,10 @@ export const EmailTemplateManager: React.FC = () => {
     setAttachmentFiles([]);
   };
 
+  const confirmAction = useConfirm();
   const handleDelete = async (id: string) => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer ce modèle ?')) {
+    const ok = await confirmAction({ title: 'Supprimer le modèle', description: 'Êtes-vous sûr de vouloir supprimer ce modèle ?', variant: 'destructive' });
+    if (ok) {
       await deleteTemplate(id);
     }
   };

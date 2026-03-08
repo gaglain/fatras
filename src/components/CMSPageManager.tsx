@@ -12,6 +12,7 @@ import { Plus, Edit, Trash2, Eye, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Tables } from '@/integrations/supabase/types';
 import { BlockEditor } from '@/components/BlockEditor/BlockEditor';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 
 type WebsitePage = Tables<'website_pages'>;
 
@@ -75,8 +76,10 @@ export const CMSPageManager: React.FC = () => {
     }
   };
 
+  const confirmAction = useConfirm();
   const handleDeletePage = async (id: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cette page ?')) return;
+    const ok = await confirmAction({ title: 'Supprimer la page', description: 'Êtes-vous sûr de vouloir supprimer cette page ?', variant: 'destructive' });
+    if (!ok) return;
 
     try {
       await deletePage(id);

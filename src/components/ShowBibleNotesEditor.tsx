@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { 
   Plus, Edit2, Trash2, Pin, PinOff, User, Tag, 
   FileText, Clock, Loader2, AtSign, Eye
@@ -98,8 +99,10 @@ export const ShowBibleNotesEditor: React.FC<{ artistId?: string }> = ({ artistId
     setShowNoteDialog(true);
   };
 
+  const confirmAction = useConfirm();
   const handleDeleteNote = async (noteId: string) => {
-    if (confirm('Supprimer cette note ?')) {
+    const ok = await confirmAction({ title: 'Supprimer', description: 'Supprimer cette note ?', variant: 'destructive' });
+    if (ok) {
       await deleteNote(noteId);
     }
   };

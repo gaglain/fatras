@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Info, Upload, FileText, Image as ImageIcon, Trash2 } from 'lucide-react';
 import { useRoadshowExpenses, RoadshowExpense } from '@/hooks/useRoadshowExpenses';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 
 interface ExpensesFormProps {
   roadshowStopId?: string;
@@ -73,8 +74,10 @@ export const ExpensesForm: React.FC<ExpensesFormProps> = ({ roadshowStopId }) =>
     }
   };
 
+  const confirmAction = useConfirm();
   const handleDelete = async (expense: RoadshowExpense) => {
-    if (confirm('Supprimer cette note de frais ?')) {
+    const ok = await confirmAction({ title: 'Supprimer', description: 'Supprimer cette note de frais ?', variant: 'destructive' });
+    if (ok) {
       const success = await deleteExpense(expense.id, expense.file_url);
       if (success) {
         loadExpenses();

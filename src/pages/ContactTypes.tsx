@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 
 interface ContactType {
@@ -127,8 +128,10 @@ export default function ContactTypes() {
     setIsOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer ce type de contact ?')) {
+  const confirmAction = useConfirm();
+  const handleDelete = async (id: string) => {
+    const ok = await confirmAction({ title: 'Supprimer', description: 'Êtes-vous sûr de vouloir supprimer ce type de contact ?', variant: 'destructive' });
+    if (ok) {
       deleteMutation.mutate(id);
     }
   };

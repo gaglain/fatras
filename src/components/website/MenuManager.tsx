@@ -8,6 +8,7 @@ import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { GripVertical, Plus, Trash2, Eye, EyeOff, Save, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 interface MenuItem {
   id: string;
   label: string;
@@ -245,14 +246,16 @@ export const MenuManager: React.FC = () => {
     toast.success('Élément ajouté au menu');
   };
 
-  const removeItem = (id: string) => {
+  const confirmAction = useConfirm();
+  const removeItem = async (id: string) => {
     const item = menuItems.find(item => item.id === id);
     if (item?.isSystem) {
       toast.error('Impossible de supprimer un élément système');
       return;
     }
 
-    if (confirm('Supprimer cet élément du menu ?')) {
+    const ok = await confirmAction({ title: 'Supprimer', description: 'Supprimer cet élément du menu ?', variant: 'destructive' });
+    if (ok) {
       setMenuItems(items => items.filter(item => item.id !== id));
       toast.success('Élément supprimé');
     }

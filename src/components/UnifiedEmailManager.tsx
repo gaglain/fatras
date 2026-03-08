@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { 
   Mail, 
   Send, 
@@ -109,8 +110,10 @@ export const UnifiedEmailManager: React.FC = () => {
     setShowComposer(true);
   };
 
+  const confirmAction = useConfirm();
   const handleDelete = async (email: UnifiedEmail) => {
-    if (!confirm('Voulez-vous vraiment supprimer cet email ?')) return;
+    const ok = await confirmAction({ title: 'Supprimer l\'email', description: 'Voulez-vous vraiment supprimer cet email ?', variant: 'destructive' });
+    if (!ok) return;
     try {
       if (email.direction === 'received') {
         await supabase.from('inbound_emails').delete().eq('id', email.id);

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Plus, Edit, Trash2, Image, Link, MessageSquare, CheckCircle, XCircle, Users } from 'lucide-react';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { toast } from 'sonner';
 import { useUser } from '@/contexts/UserContext';
 import { PublicationFormMultiPlatform } from '@/components/PublicationFormMultiPlatform';
@@ -222,8 +223,10 @@ export const PublicationCalendar: React.FC = () => {
     setShowForm(true);
   };
 
+  const confirmAction = useConfirm();
   const handleDelete = async (id: string) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette publication ?')) {
+    const ok = await confirmAction({ title: 'Supprimer', description: 'Êtes-vous sûr de vouloir supprimer cette publication ?', variant: 'destructive' });
+    if (ok) {
       try {
         const { error } = await supabase
           .from('publications')

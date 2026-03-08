@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TourStop } from '@/types/roadshow.types';
 import { MapPin, Calendar, Clock, Users, Download, Printer, FileText, DollarSign, Contact, CalendarDays, Plus, Trash2, Image as ImageIcon, Eye, X, Music, Route } from 'lucide-react';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { TourStopTravelInfo } from './TourStopTravelInfo';
 import { TourStopRouteMap } from './TourStopRouteMap';
 import { useRoadshowExpenses, RoadshowExpense } from '@/hooks/useRoadshowExpenses';
@@ -115,8 +116,10 @@ export const TourStopPreview: React.FC<TourStopPreviewProps> = ({
     }
   };
 
+  const confirmAction = useConfirm();
   const handleDeleteExpense = async (expense: RoadshowExpense) => {
-    if (confirm('Supprimer cette note de frais ?')) {
+    const ok = await confirmAction({ title: 'Supprimer', description: 'Supprimer cette note de frais ?', variant: 'destructive' });
+    if (ok) {
       const success = await deleteExpense(expense.id, expense.file_url);
       if (success) {
         loadData();

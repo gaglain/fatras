@@ -13,6 +13,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Search, Eye, Trash2, Download, Mail, FileText } from 'lucide-react';
 import { FormData } from './types';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface FormSubmission {
@@ -69,8 +70,10 @@ export const FormSubmissions: React.FC<FormSubmissionsProps> = ({ forms }) => {
     }
   };
 
+  const confirmAction = useConfirm();
   const deleteSubmission = async (id: string) => {
-    if (!window.confirm('Supprimer cette soumission ?')) return;
+    const ok = await confirmAction({ title: 'Supprimer', description: 'Supprimer cette soumission ?', variant: 'destructive' });
+    if (!ok) return;
 
     try {
       const { error } = await supabase

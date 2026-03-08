@@ -9,6 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Calendar, Plus, Settings, Clock, MapPin, Users, Edit, Trash2, User, Upload } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { AgendaCSVImporter } from '@/components/agenda/AgendaCSVImporter';
 import { AgendaCSVExporter } from '@/components/agenda/AgendaCSVExporter';
 import { CalendarFilter } from '@/components/agenda/CalendarFilter';
@@ -274,8 +275,10 @@ export const Agenda: React.FC = () => {
     setShowEditDialog(true);
   };
 
+  const confirmAction = useConfirm();
   const handleDeleteEvent = async (eventId: string) => {
-    if (confirm('Supprimer cet événement ?')) {
+    const ok = await confirmAction({ title: 'Supprimer', description: 'Supprimer cet événement ?', variant: 'destructive' });
+    if (ok) {
       await deleteEvent(eventId);
       toast.success('Événement supprimé');
     }

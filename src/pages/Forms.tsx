@@ -5,6 +5,7 @@ import { Plus, Edit, Trash2, Eye, Code, FileText, BarChart3 } from 'lucide-react
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { FormBuilder } from '@/components/FormBuilder/FormBuilder';
 import { FormRenderer } from '@/components/FormBuilder/FormRenderer';
 import { FormSubmissions } from '@/components/FormBuilder/FormSubmissions';
@@ -102,8 +103,11 @@ export const Forms: React.FC = () => {
     }
   };
 
+  const confirmAction = useConfirm();
   const handleDeleteForm = async (formId: string) => {
-    if (!user || !window.confirm('Êtes-vous sûr de vouloir supprimer ce formulaire ?')) return;
+    if (!user) return;
+    const ok = await confirmAction({ title: 'Supprimer le formulaire', description: 'Êtes-vous sûr de vouloir supprimer ce formulaire ?', variant: 'destructive' });
+    if (!ok) return;
 
     try {
       const { error } = await supabase
