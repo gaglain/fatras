@@ -189,7 +189,7 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({ initialForm, onSave, o
       </div>
 
       {/* Center Panel - Form Preview */}
-      <div className="flex-1 border rounded-lg bg-card overflow-hidden">
+      <div className="flex-1 min-w-0 border rounded-lg bg-card overflow-hidden flex flex-col">
         <div className="p-3 border-b flex items-center justify-between">
           <Input
             value={form.name}
