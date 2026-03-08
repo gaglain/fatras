@@ -364,7 +364,14 @@ export const FormRendererStepped: React.FC<FormRendererSteppedProps> = ({ form, 
 
   const isLastStep = currentStep === totalSteps - 1;
 
+  const buttonStyle: React.CSSProperties = theme?.buttonColor ? {
+    backgroundColor: theme.buttonColor,
+    color: theme.buttonTextColor || '#ffffff',
+    borderColor: theme.buttonColor,
+  } : {};
+
   return (
+    <FormThemeWrapper theme={theme}>
     <div ref={containerRef} className="min-h-[60vh] flex flex-col">
       {/* Honeypot */}
       <div className="absolute left-[-9999px]" aria-hidden="true" style={{ position: 'absolute', left: '-9999px' }}>
