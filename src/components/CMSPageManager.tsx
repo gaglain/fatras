@@ -12,6 +12,7 @@ import { Plus, Edit, Trash2, Eye, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Tables } from '@/integrations/supabase/types';
 import { BlockEditor } from '@/components/BlockEditor/BlockEditor';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 
 type WebsitePage = Tables<'website_pages'>;
 
