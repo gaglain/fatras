@@ -39,8 +39,10 @@ export const RoadshowNotes: React.FC<RoadshowNotesProps> = ({ roadshowStopId }) 
     setEditingId(null);
   };
 
+  const confirmAction = useConfirm();
   const handleDelete = async (noteId: string) => {
-    if (!confirm('Supprimer cette note ?')) return;
+    const ok = await confirmAction({ title: 'Supprimer', description: 'Supprimer cette note ?', variant: 'destructive' });
+    if (!ok) return;
     await deleteNote(noteId);
   };
 

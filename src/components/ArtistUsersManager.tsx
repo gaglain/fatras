@@ -156,8 +156,10 @@ export const ArtistUsersManager: React.FC<ArtistUsersManagerProps> = ({ artistId
     }
   };
 
+  const confirmAction = useConfirm();
   const handleRemoveUser = async (artistUserId: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir retirer cet utilisateur ?')) return;
+    const ok = await confirmAction({ title: 'Retirer l\'utilisateur', description: 'Êtes-vous sûr de vouloir retirer cet utilisateur ?', variant: 'destructive' });
+    if (!ok) return;
 
     try {
       const { error } = await supabase

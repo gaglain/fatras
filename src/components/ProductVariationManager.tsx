@@ -146,8 +146,9 @@ export const ProductVariationManager: React.FC<ProductVariationManagerProps> = (
   };
 
   // Supprimer une variation
-  const handleDeleteVariation = (variationId: string) => {
-    if (confirm('Supprimer cette variation ?')) {
+  const handleDeleteVariation = async (variationId: string) => {
+    const ok = await confirmAction({ title: 'Supprimer', description: 'Supprimer cette variation ?', variant: 'destructive' });
+    if (ok) {
       onVariationsChange(variations.filter(v => v.id !== variationId));
       toast.success('Variation supprimée');
     }

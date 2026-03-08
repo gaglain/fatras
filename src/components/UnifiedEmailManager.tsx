@@ -110,8 +110,10 @@ export const UnifiedEmailManager: React.FC = () => {
     setShowComposer(true);
   };
 
+  const confirmAction = useConfirm();
   const handleDelete = async (email: UnifiedEmail) => {
-    if (!confirm('Voulez-vous vraiment supprimer cet email ?')) return;
+    const ok = await confirmAction({ title: 'Supprimer l\'email', description: 'Voulez-vous vraiment supprimer cet email ?', variant: 'destructive' });
+    if (!ok) return;
     try {
       if (email.direction === 'received') {
         await supabase.from('inbound_emails').delete().eq('id', email.id);

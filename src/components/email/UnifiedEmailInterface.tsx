@@ -318,8 +318,10 @@ const [accountEmails, setAccountEmails] = useState<string[]>([]);
     setShowComposer(true);
   };
 
+  const confirmAction = useConfirm();
   const handleDelete = async (email: InboundEmail) => {
-    if (!confirm('Voulez-vous vraiment supprimer cet email ?')) return;
+    const ok = await confirmAction({ title: 'Supprimer l\'email', description: 'Voulez-vous vraiment supprimer cet email ?', variant: 'destructive' });
+    if (!ok) return;
     try {
       const { error } = await supabase
         .from('inbound_emails')

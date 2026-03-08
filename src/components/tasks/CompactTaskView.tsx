@@ -146,9 +146,10 @@ export const CompactTaskView: React.FC<CompactTaskViewProps> = ({
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={(e) => {
+                    onClick={async (e) => {
                       e.stopPropagation();
-                      if (window.confirm('Voulez-vous vraiment supprimer cette tâche ?')) {
+                      const ok = await confirmAction({ title: 'Supprimer', description: 'Voulez-vous vraiment supprimer cette tâche ?', variant: 'destructive' });
+                      if (ok) {
                         onDeleteTask?.(task.id);
                       }
                     }}

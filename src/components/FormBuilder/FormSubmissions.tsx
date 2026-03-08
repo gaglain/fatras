@@ -70,8 +70,10 @@ export const FormSubmissions: React.FC<FormSubmissionsProps> = ({ forms }) => {
     }
   };
 
+  const confirmAction = useConfirm();
   const deleteSubmission = async (id: string) => {
-    if (!window.confirm('Supprimer cette soumission ?')) return;
+    const ok = await confirmAction({ title: 'Supprimer', description: 'Supprimer cette soumission ?', variant: 'destructive' });
+    if (!ok) return;
 
     try {
       const { error } = await supabase

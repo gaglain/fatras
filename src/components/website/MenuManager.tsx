@@ -253,7 +253,8 @@ export const MenuManager: React.FC = () => {
       return;
     }
 
-    if (confirm('Supprimer cet élément du menu ?')) {
+    const ok = await confirmAction({ title: 'Supprimer', description: 'Supprimer cet élément du menu ?', variant: 'destructive' });
+    if (ok) {
       setMenuItems(items => items.filter(item => item.id !== id));
       toast.success('Élément supprimé');
     }

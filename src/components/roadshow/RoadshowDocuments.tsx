@@ -49,8 +49,10 @@ export const RoadshowDocuments: React.FC<RoadshowDocumentsProps> = ({ roadshowSt
     e.target.value = '';
   };
 
+  const confirmAction = useConfirm();
   const handleDelete = async (doc: RoadshowDocument) => {
-    if (!confirm(`Supprimer "${doc.file_name}" ?`)) return;
+    const ok = await confirmAction({ title: 'Supprimer', description: `Supprimer "${doc.file_name}" ?`, variant: 'destructive' });
+    if (!ok) return;
     const success = await deleteDocument(doc.id, doc.file_path);
     if (success) await loadDocs();
   };

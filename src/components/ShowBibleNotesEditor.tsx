@@ -99,8 +99,10 @@ export const ShowBibleNotesEditor: React.FC<{ artistId?: string }> = ({ artistId
     setShowNoteDialog(true);
   };
 
+  const confirmAction = useConfirm();
   const handleDeleteNote = async (noteId: string) => {
-    if (confirm('Supprimer cette note ?')) {
+    const ok = await confirmAction({ title: 'Supprimer', description: 'Supprimer cette note ?', variant: 'destructive' });
+    if (ok) {
       await deleteNote(noteId);
     }
   };

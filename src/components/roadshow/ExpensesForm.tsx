@@ -74,8 +74,10 @@ export const ExpensesForm: React.FC<ExpensesFormProps> = ({ roadshowStopId }) =>
     }
   };
 
+  const confirmAction = useConfirm();
   const handleDelete = async (expense: RoadshowExpense) => {
-    if (confirm('Supprimer cette note de frais ?')) {
+    const ok = await confirmAction({ title: 'Supprimer', description: 'Supprimer cette note de frais ?', variant: 'destructive' });
+    if (ok) {
       const success = await deleteExpense(expense.id, expense.file_url);
       if (success) {
         loadExpenses();

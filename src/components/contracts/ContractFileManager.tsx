@@ -118,8 +118,10 @@ export const ContractFileManager: React.FC<ContractFileManagerProps> = ({ artist
     }
   };
 
+  const confirmAction = useConfirm();
   const handleDeleteFile = async (fileId: string) => {
-    if (!confirm('Supprimer ce fichier ?')) return;
+    const ok = await confirmAction({ title: 'Supprimer', description: 'Supprimer ce fichier ?', variant: 'destructive' });
+    if (!ok) return;
 
     try {
       const { error } = await supabase
