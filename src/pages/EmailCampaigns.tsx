@@ -26,6 +26,7 @@ interface Campaign {
 }
 
 export const EmailCampaigns: React.FC = () => {
+  const confirm = useConfirm();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
