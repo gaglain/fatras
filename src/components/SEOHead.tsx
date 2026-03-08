@@ -116,7 +116,7 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
   title = "Fatras - Spectacle de rue & de scène",
   description = "Fatras, compagnie de spectacle de rue et de scène. Découvrez nos créations artistiques uniques et réservez nos spectacles pour vos événements.",
   keywords = "spectacle de rue, spectacle de scène, compagnie artistique, Fatras, événements, festivals, arts de la rue",
-  image = "https://fatras.net/og-image.jpg",
+  image: imageProp,
   url = typeof window !== 'undefined' ? window.location.origin + window.location.pathname.replace(/\/+$/, '') : "https://fatras.net",
   type = "website",
   siteName = "Fatras",

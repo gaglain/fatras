@@ -353,7 +353,7 @@ export const FrontLayout: React.FC<FrontLayoutProps> = ({ children }) => {
           
           <div className="border-t border-gray-600 mt-8 pt-8 text-center text-sm">
             <p style={{ color: 'var(--site-text-color, #9ca3af)' }}>
-              © 2024 {settings.siteName}. Tous droits réservés.
+              © {new Date().getFullYear()} {settings.siteName}. Tous droits réservés.
             </p>
           </div>
         </div>
