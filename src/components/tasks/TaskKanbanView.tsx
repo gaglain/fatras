@@ -52,6 +52,7 @@ export const TaskKanbanView: React.FC<TaskKanbanViewProps> = ({
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
   const dragCounter = useRef<Record<string, number>>({});
+  const confirmAction = useConfirm();
 
   const handleDragStart = useCallback((e: React.DragEvent, taskId: string) => {
     setDraggedTaskId(taskId);
