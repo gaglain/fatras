@@ -65,8 +65,10 @@ export const ProductVariationManager: React.FC<ProductVariationManagerProps> = (
   };
 
   // Supprimer un attribut
-  const handleDeleteAttribute = (attributeId: string) => {
-    if (confirm('Supprimer cet attribut supprimera aussi toutes les variations associées. Continuer ?')) {
+  const confirmAction = useConfirm();
+  const handleDeleteAttribute = async (attributeId: string) => {
+    const ok = await confirmAction({ title: 'Supprimer l\'attribut', description: 'Supprimer cet attribut supprimera aussi toutes les variations associées. Continuer ?', variant: 'destructive' });
+    if (ok) {
       const updatedAttributes = attributes.filter(attr => attr.id !== attributeId);
       onAttributesChange(updatedAttributes);
       
