@@ -40,6 +40,14 @@ export const FormRendererStepped: React.FC<FormRendererSteppedProps> = ({ form, 
   const totalSteps = visibleInputFields.length;
   const currentField = visibleInputFields[currentStep];
   const progress = totalSteps > 0 ? ((currentStep) / totalSteps) * 100 : 0;
+  const theme = form.settings.formTheme;
+
+  // Clamp currentStep when visible fields change due to conditional logic
+  useEffect(() => {
+    if (currentStep >= totalSteps && totalSteps > 0) {
+      setCurrentStep(totalSteps - 1);
+    }
+  }, [totalSteps, currentStep]);
 
   const updateFieldValue = useCallback((fieldId: string, value: any) => {
     setFormData(prev => ({ ...prev, [fieldId]: value }));
