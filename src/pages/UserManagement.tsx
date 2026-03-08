@@ -386,7 +386,6 @@ export const UserManagement: React.FC = () => {
       return;
     }
     
-    const confirmAction = useConfirm();
     const ok = await confirmAction({ title: 'Désactiver l\'utilisateur', description: 'Êtes-vous sûr de vouloir désactiver cet utilisateur ?', variant: 'destructive' });
     if (ok) {
       await deactivateUser(userId);
