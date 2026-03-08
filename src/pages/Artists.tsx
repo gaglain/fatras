@@ -7,6 +7,7 @@ import { ViewToggle } from '@/components/ui/view-toggle';
 import { Plus, Music, Calendar, MapPin, Clock, Bed, BookOpen, Trash2, Upload, Image, Search, Edit2, Plane, Star, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCentralizedData, CentralizedArtist as Artist } from '@/hooks/useCentralizedData';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { useOpportunities } from '@/hooks/useOpportunities';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
