@@ -124,10 +124,17 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
   artistData,
   eventData
 }) => {
+  const ensureAbsoluteUrl = (imgUrl: string) => {
+    if (!imgUrl) return "https://fatras.net/og-image.jpg";
+    if (imgUrl.startsWith('http://') || imgUrl.startsWith('https://')) return imgUrl;
+    if (imgUrl.startsWith('/')) return `https://fatras.net${imgUrl}`;
+    return `https://fatras.net/${imgUrl}`;
+  };
+  
+  const image = ensureAbsoluteUrl(imageProp || "https://fatras.net/og-image.jpg");
   const fullTitle = title.includes(siteName) ? title : `${title} | ${siteName}`;
   const baseUrl = "https://fatras.net";
 
-  // Build structured data array
   const structuredDataItems: Record<string, unknown>[] = [
     getOrganizationSchema(siteName, description, baseUrl, image)
   ];
