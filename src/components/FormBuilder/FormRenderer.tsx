@@ -13,6 +13,7 @@ import { FormData, FormSubmission } from './types';
 import { FormRendererStepped } from './FormRendererStepped';
 import { FormThemeWrapper } from './FormThemeWrapper';
 import { evaluateFieldVisibility } from './conditionalLogic';
+import { FormThankYou } from './FormThankYou';
 
 interface FormRendererProps {
   form: FormData;
@@ -22,6 +23,7 @@ interface FormRendererProps {
 export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) => {
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isComplete, setIsComplete] = useState(false);
   const [honeypot, setHoneypot] = useState('');
 
   // Delegate to stepped renderer if display mode is "stepped"
