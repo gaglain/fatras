@@ -135,6 +135,7 @@ export const FrontArtists: React.FC = () => {
                   </CardContent>
                 </Card>
               </article>
+              </ScrollRevealCard>
             ))}
           </section>
         ) : (
