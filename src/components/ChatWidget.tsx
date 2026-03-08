@@ -63,6 +63,7 @@ export const ChatWidget: React.FC = () => {
   const [localMessages, setLocalMessages] = useState<any[]>([]);
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  const confirmAction = useConfirm();
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
 
   // Save last used channel to localStorage
