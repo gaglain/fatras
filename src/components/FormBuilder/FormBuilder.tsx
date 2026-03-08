@@ -513,16 +513,81 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({ initialForm, onSave, o
                 />
               </div>
 
-              <div>
-                <Label>URL de redirection (optionnel)</Label>
-                <Input
-                  value={form.settings.redirectUrl || ''}
-                  onChange={(e) => setForm(prev => ({
-                    ...prev,
-                    settings: { ...prev.settings, redirectUrl: e.target.value }
-                  }))}
-                  placeholder="https://..."
-                />
+              <div className="space-y-3 pt-2 border-t">
+                <div className="text-sm font-semibold">Page de remerciement</div>
+                
+                <div>
+                  <Label className="text-xs">Titre</Label>
+                  <Input
+                    value={form.settings.thankYouPage?.title || ''}
+                    onChange={(e) => setForm(prev => ({
+                      ...prev,
+                      settings: { ...prev.settings, thankYouPage: { ...prev.settings.thankYouPage, title: e.target.value } }
+                    }))}
+                    placeholder="Merci !"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-xs">Image (URL)</Label>
+                  <Input
+                    value={form.settings.thankYouPage?.imageUrl || ''}
+                    onChange={(e) => setForm(prev => ({
+                      ...prev,
+                      settings: { ...prev.settings, thankYouPage: { ...prev.settings.thankYouPage, imageUrl: e.target.value } }
+                    }))}
+                    placeholder="https://..."
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs">Confetti 🎉</Label>
+                  <Switch
+                    checked={form.settings.thankYouPage?.showConfetti || false}
+                    onCheckedChange={(checked) => setForm(prev => ({
+                      ...prev,
+                      settings: { ...prev.settings, thankYouPage: { ...prev.settings.thankYouPage, showConfetti: checked } }
+                    }))}
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-xs">Texte du CTA</Label>
+                  <Input
+                    value={form.settings.thankYouPage?.ctaText || ''}
+                    onChange={(e) => setForm(prev => ({
+                      ...prev,
+                      settings: { ...prev.settings, thankYouPage: { ...prev.settings.thankYouPage, ctaText: e.target.value } }
+                    }))}
+                    placeholder="Retour au site"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-xs">Lien du CTA</Label>
+                  <Input
+                    value={form.settings.thankYouPage?.ctaUrl || ''}
+                    onChange={(e) => setForm(prev => ({
+                      ...prev,
+                      settings: { ...prev.settings, thankYouPage: { ...prev.settings.thankYouPage, ctaUrl: e.target.value } }
+                    }))}
+                    placeholder="https://..."
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-xs">Délai redirection (sec, 0 = pas de redirection auto)</Label>
+                  <Input
+                    type="number"
+                    value={form.settings.thankYouPage?.redirectDelay ?? ''}
+                    onChange={(e) => setForm(prev => ({
+                      ...prev,
+                      settings: { ...prev.settings, thankYouPage: { ...prev.settings.thankYouPage, redirectDelay: Number(e.target.value) } }
+                    }))}
+                    placeholder="3"
+                    min={0}
+                  />
+                </div>
               </div>
 
               <div className="space-y-3 pt-2 border-t">
