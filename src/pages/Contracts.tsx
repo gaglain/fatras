@@ -688,11 +688,10 @@ export const Contracts: React.FC = () => {
 
             <div>
               <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
+              <MentionableTextarea
                 value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Description détaillée du devis"
+                onChange={(val) => setFormData(prev => ({ ...prev, description: val }))}
+                placeholder="Description détaillée du devis... Tapez @ pour mentionner"
                 rows={3}
               />
             </div>
