@@ -304,7 +304,7 @@ export const FormRendererStepped: React.FC<FormRendererSteppedProps> = ({ form, 
                 }}
                 className={cn(
                   "text-4xl transition-all duration-200 hover:scale-110",
-                  formData[field.id] >= star ? 'text-yellow-400' : 'text-muted-foreground/30 hover:text-yellow-300'
+                  formData[field.id] >= star ? 'text-amber-400' : 'text-muted-foreground/30 hover:text-amber-300'
                 )}
               >
                 ★
