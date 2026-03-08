@@ -499,5 +499,6 @@ export const FormRendererStepped: React.FC<FormRendererSteppedProps> = ({ form, 
         </span>
       </div>
     </div>
+    </FormThemeWrapper>
   );
 };
