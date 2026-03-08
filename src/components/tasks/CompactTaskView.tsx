@@ -5,6 +5,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { CheckCircle2, Circle, Trash } from 'lucide-react';
 import { Task } from '@/hooks/useTasks';
 import { TaskExecuteButton } from './TaskExecuteButton';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 
 interface CompactTaskViewProps {
   tasks: Task[];
