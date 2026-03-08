@@ -35,6 +35,7 @@ interface Task {
 }
 
 export const Tasks: React.FC = () => {
+  const confirm = useConfirm();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<string>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
