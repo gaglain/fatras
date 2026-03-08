@@ -14,6 +14,7 @@ import { useTasks } from '@/hooks/useTasks';
 import { useCentralizedData } from '@/hooks/useCentralizedData';
 import { UniversalSearch } from '@/components/UniversalSearch';
 import { toast } from 'sonner';
+import { notifyMentionsIfNeeded } from '@/utils/mentionNotifier';
 
 interface TaskCreatorProps {
   onTaskCreated?: (task: any) => void;
