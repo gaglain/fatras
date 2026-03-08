@@ -338,19 +338,11 @@ export const FormRendererStepped: React.FC<FormRendererSteppedProps> = ({ form, 
   if (isComplete) {
     return (
       <FormThemeWrapper theme={theme}>
-        <div className="min-h-[60vh] flex items-center justify-center">
-          <div className="text-center max-w-md mx-auto animate-fade-in">
-            <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
-              <Check className="h-10 w-10 text-primary" />
-            </div>
-            <h2 className="text-2xl font-bold mb-3">
-              {form.settings.successMessage}
-            </h2>
-            {form.settings.redirectUrl && (
-              <p className="text-sm opacity-70">Redirection en cours...</p>
-            )}
-          </div>
-        </div>
+        <FormThankYou
+          config={form.settings.thankYouPage}
+          fallbackMessage={form.settings.successMessage}
+          redirectUrl={form.settings.redirectUrl}
+        />
       </FormThemeWrapper>
     );
   }
