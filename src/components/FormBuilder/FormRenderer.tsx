@@ -87,13 +87,8 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) =>
       };
 
       onSubmit?.(submission);
-      toast.success(form.settings.successMessage);
+      setIsComplete(true);
       setFormData({});
-      
-      // Redirect if configured
-      if (form.settings.redirectUrl) {
-        window.location.href = form.settings.redirectUrl;
-      }
     } catch {
       toast.error('Erreur lors de l\'envoi du formulaire');
     } finally {
