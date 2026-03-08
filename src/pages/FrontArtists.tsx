@@ -1,9 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Users, Plane } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { SEOHead } from '@/components/SEOHead';
+import { useScrollReveal } from '@/hooks/useScrollReveal';
+
+const ScrollRevealCard: React.FC<{ children: React.ReactNode; index: number }> = ({ children, index }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const isVisible = useScrollReveal(ref);
+  return (
+    <div 
+      ref={ref}
+      className={`transition-all duration-700 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+      style={{ transitionDelay: `${index * 120}ms` }}
+    >
+      {children}
+    </div>
+  );
+};
 
 export const FrontArtists: React.FC = () => {
   const [artists, setArtists] = useState<any[]>([]);
