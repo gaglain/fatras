@@ -8,6 +8,7 @@ import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { GripVertical, Plus, Trash2, Eye, EyeOff, Save, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 interface MenuItem {
   id: string;
   label: string;
