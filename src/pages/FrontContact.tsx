@@ -9,7 +9,6 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
 
-// Schéma de validation
 const contactFormSchema = z.object({
   name: z.string().trim().min(2, 'Le nom doit contenir au moins 2 caractères').max(100, 'Le nom est trop long'),
   email: z.string().trim().email('Adresse email invalide').max(255, 'Email trop long'),
@@ -58,10 +57,7 @@ export const FrontContact: React.FC = () => {
           'contact_city'
         ]);
 
-      if (error) {
-        console.error('Erreur chargement infos contact:', error);
-        return;
-      }
+      if (error) return;
 
       if (settings && settings.length > 0) {
         const configMap = settings.reduce((acc: Record<string, string>, s) => {
@@ -76,8 +72,8 @@ export const FrontContact: React.FC = () => {
           city: configMap.contact_city || ''
         });
       }
-    } catch (error) {
-      console.error('Erreur chargement infos contact:', error);
+    } catch {
+      // silently fail
     }
   };
 
@@ -85,7 +81,6 @@ export const FrontContact: React.FC = () => {
     e.preventDefault();
     setErrors({});
     
-    // Validation avec Zod
     const result = contactFormSchema.safeParse(formData);
     if (!result.success) {
       const fieldErrors: Record<string, string> = {};
@@ -115,18 +110,11 @@ export const FrontContact: React.FC = () => {
 
       if (data?.success) {
         toast.success('Message envoyé avec succès ! Nous vous répondrons rapidement.');
-        setFormData({
-          name: '',
-          email: '',
-          phone: '',
-          subject: '',
-          message: ''
-        });
+        setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
       } else {
         throw new Error(data?.error || 'Erreur lors de l\'envoi');
       }
     } catch (error: any) {
-      console.error('Erreur envoi formulaire:', error);
       toast.error(error.message || 'Erreur lors de l\'envoi du message. Veuillez réessayer.');
     } finally {
       setIsSubmitting(false);
@@ -135,11 +123,7 @@ export const FrontContact: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    // Clear error when user starts typing
+    setFormData(prev => ({ ...prev, [name]: value }));
     if (errors[name]) {
       setErrors(prev => {
         const newErrors = { ...prev };
@@ -152,16 +136,15 @@ export const FrontContact: React.FC = () => {
   return (
     <div className="py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Contactez-nous</h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+        <div className="text-center mb-12 animate-fade-in">
+          <h1 className="text-4xl font-bold text-foreground mb-4">Contactez-nous</h1>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Vous avez une question ? N'hésitez pas à nous contacter, nous vous répondrons rapidement.
           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Contact Form */}
-          <Card>
+          <Card className="animate-fade-in" style={{ animationDelay: '100ms' }}>
             <CardHeader>
               <CardTitle className="text-2xl">Envoyez-nous un message</CardTitle>
             </CardHeader>
@@ -176,10 +159,10 @@ export const FrontContact: React.FC = () => {
                       placeholder="Votre nom"
                       value={formData.name}
                       onChange={handleChange}
-                      className={errors.name ? 'border-red-500' : ''}
+                      className={errors.name ? 'border-destructive' : ''}
                       required
                     />
-                    {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+                    {errors.name && <p className="text-destructive text-sm mt-1">{errors.name}</p>}
                   </div>
                   <div>
                     <Label htmlFor="email">Email *</Label>
@@ -190,10 +173,10 @@ export const FrontContact: React.FC = () => {
                       placeholder="Votre email"
                       value={formData.email}
                       onChange={handleChange}
-                      className={errors.email ? 'border-red-500' : ''}
+                      className={errors.email ? 'border-destructive' : ''}
                       required
                     />
-                    {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+                    {errors.email && <p className="text-destructive text-sm mt-1">{errors.email}</p>}
                   </div>
                 </div>
                 
@@ -207,9 +190,9 @@ export const FrontContact: React.FC = () => {
                       placeholder="06 12 34 56 78"
                       value={formData.phone}
                       onChange={handleChange}
-                      className={errors.phone ? 'border-red-500' : ''}
+                      className={errors.phone ? 'border-destructive' : ''}
                     />
-                    {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
+                    {errors.phone && <p className="text-destructive text-sm mt-1">{errors.phone}</p>}
                   </div>
                   <div>
                     <Label htmlFor="subject">Sujet *</Label>
@@ -219,10 +202,10 @@ export const FrontContact: React.FC = () => {
                       placeholder="Sujet"
                       value={formData.subject}
                       onChange={handleChange}
-                      className={errors.subject ? 'border-red-500' : ''}
+                      className={errors.subject ? 'border-destructive' : ''}
                       required
                     />
-                    {errors.subject && <p className="text-red-500 text-sm mt-1">{errors.subject}</p>}
+                    {errors.subject && <p className="text-destructive text-sm mt-1">{errors.subject}</p>}
                   </div>
                 </div>
                 
@@ -235,15 +218,15 @@ export const FrontContact: React.FC = () => {
                     rows={6}
                     value={formData.message}
                     onChange={handleChange}
-                    className={errors.message ? 'border-red-500' : ''}
+                    className={errors.message ? 'border-destructive' : ''}
                     required
                   />
-                  {errors.message && <p className="text-red-500 text-sm mt-1">{errors.message}</p>}
+                  {errors.message && <p className="text-destructive text-sm mt-1">{errors.message}</p>}
                 </div>
                 
                 <Button 
                   type="submit" 
-                  className="w-full bg-purple-600 hover:bg-purple-700"
+                  className="w-full"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (
@@ -262,18 +245,17 @@ export const FrontContact: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* Contact Information */}
-          <div className="space-y-8">
+          <div className="space-y-8 animate-fade-in" style={{ animationDelay: '200ms' }}>
             {contactInfo.email && (
               <Card>
                 <CardContent className="p-6">
                   <div className="flex items-center space-x-4">
-                    <div className="bg-purple-100 p-3 rounded-full">
-                      <Mail className="h-6 w-6 text-purple-600" />
+                    <div className="bg-primary/10 p-3 rounded-full">
+                      <Mail className="h-6 w-6 text-primary" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-lg">Email</h3>
-                      <a href={`mailto:${contactInfo.email}`} className="text-purple-600 hover:underline">
+                      <h3 className="font-semibold text-lg text-foreground">Email</h3>
+                      <a href={`mailto:${contactInfo.email}`} className="text-primary hover:underline">
                         {contactInfo.email}
                       </a>
                     </div>
@@ -286,12 +268,12 @@ export const FrontContact: React.FC = () => {
               <Card>
                 <CardContent className="p-6">
                   <div className="flex items-center space-x-4">
-                    <div className="bg-purple-100 p-3 rounded-full">
-                      <Phone className="h-6 w-6 text-purple-600" />
+                    <div className="bg-primary/10 p-3 rounded-full">
+                      <Phone className="h-6 w-6 text-primary" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-lg">Téléphone</h3>
-                      <a href={`tel:${contactInfo.phone}`} className="text-gray-600 hover:text-purple-600">
+                      <h3 className="font-semibold text-lg text-foreground">Téléphone</h3>
+                      <a href={`tel:${contactInfo.phone}`} className="text-muted-foreground hover:text-primary transition-colors">
                         {contactInfo.phone}
                       </a>
                     </div>
@@ -304,12 +286,12 @@ export const FrontContact: React.FC = () => {
               <Card>
                 <CardContent className="p-6">
                   <div className="flex items-center space-x-4">
-                    <div className="bg-purple-100 p-3 rounded-full">
-                      <MapPin className="h-6 w-6 text-purple-600" />
+                    <div className="bg-primary/10 p-3 rounded-full">
+                      <MapPin className="h-6 w-6 text-primary" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-lg">Adresse</h3>
-                      <p className="text-gray-600">
+                      <h3 className="font-semibold text-lg text-foreground">Adresse</h3>
+                      <p className="text-muted-foreground">
                         {contactInfo.address && <>{contactInfo.address}<br /></>}
                         {contactInfo.city}
                       </p>
