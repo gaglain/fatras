@@ -300,7 +300,7 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({ initialForm, onSave, o
       </div>
 
       {/* Right Panel - Field Settings */}
-      <div className="w-72 border rounded-lg bg-card">
+      <div className="w-80 shrink-0 border rounded-lg bg-card flex flex-col">
         <Tabs defaultValue="field" className="h-full flex flex-col">
           <TabsList className="w-full justify-start rounded-none border-b bg-transparent h-auto p-0 flex-wrap">
             <TabsTrigger value="field" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary text-xs px-2">
