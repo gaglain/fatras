@@ -461,6 +461,7 @@ export const FormRendererStepped: React.FC<FormRendererSteppedProps> = ({ form, 
                 onClick={handleSubmit}
                 disabled={!canProceed() || isSubmitting}
                 className="gap-2"
+                style={buttonStyle}
               >
                 {isSubmitting ? 'Envoi...' : form.settings.submitButtonText}
                 {!isSubmitting && <Check className="h-4 w-4" />}
