@@ -31,6 +31,8 @@ export interface FormField {
   width?: 'full' | 'half';
 }
 
+export type FormDisplayMode = 'classic' | 'stepped';
+
 export interface FormSettings {
   submitButtonText: string;
   successMessage: string;
@@ -41,6 +43,7 @@ export interface FormSettings {
   theme?: 'default' | 'minimal' | 'modern';
   showProgressBar?: boolean;
   confirmationEmail?: boolean;
+  displayMode?: FormDisplayMode;
 }
 
 export interface FormData {

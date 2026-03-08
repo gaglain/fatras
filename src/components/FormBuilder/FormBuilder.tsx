@@ -544,6 +544,28 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({ initialForm, onSave, o
               </div>
 
               <div className="pt-2 border-t">
+                <Label>Mode d'affichage</Label>
+                <Select
+                  value={form.settings.displayMode || 'classic'}
+                  onValueChange={(value: 'classic' | 'stepped') => setForm(prev => ({
+                    ...prev,
+                    settings: { ...prev.settings, displayMode: value }
+                  }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="classic">Classique (tous les champs)</SelectItem>
+                    <SelectItem value="stepped">Question par question (Tally)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Le mode "question par question" affiche une seule question à la fois avec des animations.
+                </p>
+              </div>
+
+              <div className="pt-2 border-t">
                 <Label>Thème</Label>
                 <Select
                   value={form.settings.theme || 'default'}

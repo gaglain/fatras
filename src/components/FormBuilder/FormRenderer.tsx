@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { FormData, FormSubmission } from './types';
+import { FormRendererStepped } from './FormRendererStepped';
 
 interface FormRendererProps {
   form: FormData;
@@ -19,8 +20,16 @@ interface FormRendererProps {
 export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) => {
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // Honeypot anti-spam field
   const [honeypot, setHoneypot] = useState('');
+
+  // Delegate to stepped renderer if display mode is "stepped"
+  if (form.settings.displayMode === 'stepped') {
+    return (
+      <div className="max-w-2xl mx-auto p-6">
+        <FormRendererStepped form={form} onSubmit={onSubmit} />
+      </div>
+    );
+  }
 
   const updateFieldValue = (fieldId: string, value: any) => {
     setFormData(prev => ({
