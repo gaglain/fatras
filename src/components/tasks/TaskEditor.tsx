@@ -14,6 +14,7 @@ import { useTasks, Task } from '@/hooks/useTasks';
 import { toast } from 'sonner';
 import { UniversalSearch } from '@/components/UniversalSearch';
 import { useCentralizedData } from '@/hooks/useCentralizedData';
+import { notifyMentionsIfNeeded } from '@/utils/mentionNotifier';
 
 interface TaskEditorProps {
   task: Task;
@@ -29,7 +30,7 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
   onTaskUpdated
 }) => {
   const [loading, setLoading] = useState(false);
-  const { users } = useUser();
+  const { users, currentUser } = useUser();
   const { contacts } = useContacts();
   const { events } = useEvents();
   const { artists } = useCentralizedData();
@@ -170,6 +171,19 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
       };
 
       await updateTask(task.id, updates);
+
+      // Notify mentioned users in description
+      if (formData.description) {
+        const sender = users.find(u => u.id === currentUser?.id);
+        notifyMentionsIfNeeded({
+          text: formData.description,
+          senderUserId: currentUser?.id || '',
+          senderName: sender?.name || 'Utilisateur',
+          contextType: 'task',
+          contextName: formData.title,
+          contextId: task.id,
+        });
+      }
       
       if (onTaskUpdated) {
         onTaskUpdated({ ...task, ...updates });

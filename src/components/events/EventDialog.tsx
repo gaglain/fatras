@@ -15,6 +15,7 @@ import { Contact } from '@/types/contact.types';
 import { EventDraftManager, useEventDraft } from './EventDraftManager';
 import { UniversalSearch, SearchItem } from '@/components/UniversalSearch';
 import { logger } from '@/lib/logger';
+import { notifyMentionsIfNeeded } from '@/utils/mentionNotifier';
 
 interface EventType {
   id: string;
@@ -217,6 +218,21 @@ export const EventDialog: React.FC<EventDialogProps> = ({
         }
         logger.debug('Event created successfully:', data);
         toast.success('Événement créé avec succès');
+      }
+
+      // Notify mentions in description, requirements, notes
+      const mentionTexts = [formData.description, formData.requirements, formData.notes].filter(Boolean);
+      for (const text of mentionTexts) {
+        if (text) {
+          notifyMentionsIfNeeded({
+            text,
+            senderUserId: user.id,
+            senderName: user.email || 'Utilisateur',
+            contextType: 'event',
+            contextName: formData.title,
+            contextId: event?.id,
+          });
+        }
       }
 
       // Nettoyer le brouillon après succès
