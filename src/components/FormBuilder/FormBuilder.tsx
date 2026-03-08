@@ -302,13 +302,21 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({ initialForm, onSave, o
       {/* Right Panel - Field Settings */}
       <div className="w-72 border rounded-lg bg-card">
         <Tabs defaultValue="field" className="h-full flex flex-col">
-          <TabsList className="w-full justify-start rounded-none border-b bg-transparent h-auto p-0">
-            <TabsTrigger value="field" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary">
+          <TabsList className="w-full justify-start rounded-none border-b bg-transparent h-auto p-0 flex-wrap">
+            <TabsTrigger value="field" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary text-xs px-2">
               Champ
             </TabsTrigger>
-            <TabsTrigger value="settings" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary">
-              <Settings2 className="h-4 w-4 mr-1" />
-              Paramètres
+            <TabsTrigger value="logic" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary text-xs px-2">
+              <GitBranch className="h-3 w-3 mr-1" />
+              Logique
+            </TabsTrigger>
+            <TabsTrigger value="theme" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary text-xs px-2">
+              <Palette className="h-3 w-3 mr-1" />
+              Thème
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary text-xs px-2">
+              <Settings2 className="h-3 w-3 mr-1" />
+              Params
             </TabsTrigger>
           </TabsList>
 
