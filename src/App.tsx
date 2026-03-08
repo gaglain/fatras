@@ -166,6 +166,7 @@ const App = () => {
               storageKey="lovable-theme"
             >
               <TooltipProvider>
+                <ConfirmProvider>
                 <BrowserRouter>
                   <WebsiteConfigProvider>
                     <PWAManifestSync />
