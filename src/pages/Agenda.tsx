@@ -9,6 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Calendar, Plus, Settings, Clock, MapPin, Users, Edit, Trash2, User, Upload } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { AgendaCSVImporter } from '@/components/agenda/AgendaCSVImporter';
 import { AgendaCSVExporter } from '@/components/agenda/AgendaCSVExporter';
 import { CalendarFilter } from '@/components/agenda/CalendarFilter';
