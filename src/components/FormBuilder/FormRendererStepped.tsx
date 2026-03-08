@@ -336,19 +336,21 @@ export const FormRendererStepped: React.FC<FormRendererSteppedProps> = ({ form, 
   // Completion screen
   if (isComplete) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto animate-fade-in">
-          <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
-            <Check className="h-10 w-10 text-primary" />
+      <FormThemeWrapper theme={theme}>
+        <div className="min-h-[60vh] flex items-center justify-center">
+          <div className="text-center max-w-md mx-auto animate-fade-in">
+            <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
+              <Check className="h-10 w-10 text-primary" />
+            </div>
+            <h2 className="text-2xl font-bold mb-3">
+              {form.settings.successMessage}
+            </h2>
+            {form.settings.redirectUrl && (
+              <p className="text-sm opacity-70">Redirection en cours...</p>
+            )}
           </div>
-          <h2 className="text-2xl font-bold text-foreground mb-3">
-            {form.settings.successMessage}
-          </h2>
-          {form.settings.redirectUrl && (
-            <p className="text-muted-foreground text-sm">Redirection en cours...</p>
-          )}
         </div>
-      </div>
+      </FormThemeWrapper>
     );
   }
 
