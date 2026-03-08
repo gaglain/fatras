@@ -254,14 +254,14 @@ export const Forms: React.FC = () => {
 
       {/* Form Builder Dialog */}
       <Dialog open={showBuilder} onOpenChange={setShowBuilder}>
-        <DialogContent className="max-w-full w-full h-[100dvh] max-h-[100dvh] rounded-none border-0 p-0 gap-0 [&>button]:z-50">
-          <div className="flex flex-col h-full">
-            <DialogHeader className="px-4 py-3 border-b shrink-0">
-              <DialogTitle>
+        <DialogContent className="fixed inset-0 max-w-none w-screen h-screen translate-x-0 translate-y-0 top-0 left-0 rounded-none border-0 p-0 gap-0 [&>button]:z-50 data-[state=open]:slide-in-from-bottom-0">
+          <div className="flex flex-col h-screen">
+            <DialogHeader className="px-4 py-2 border-b shrink-0">
+              <DialogTitle className="text-base">
                 {editingForm ? 'Modifier le formulaire' : 'Nouveau formulaire'}
               </DialogTitle>
             </DialogHeader>
-            <div className="flex-1 overflow-hidden p-4">
+            <div className="flex-1 min-h-0 p-2 md:p-3">
               <FormBuilder
                 initialForm={editingForm || undefined}
                 onSave={handleSaveForm}
