@@ -228,6 +228,20 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) =>
     borderColor: theme.buttonColor,
   } : {};
 
+  if (isComplete) {
+    return (
+      <FormThemeWrapper theme={theme}>
+        <div className="max-w-2xl mx-auto">
+          <FormThankYou
+            config={form.settings.thankYouPage}
+            fallbackMessage={form.settings.successMessage}
+            redirectUrl={form.settings.redirectUrl}
+          />
+        </div>
+      </FormThemeWrapper>
+    );
+  }
+
   return (
     <FormThemeWrapper theme={theme}>
       <Card className="max-w-2xl mx-auto" style={theme?.backgroundImage ? { background: 'transparent', border: 'none' } : undefined}>
