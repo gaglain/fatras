@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { FileText, Plus, Edit2, Trash2, Save, X, Paperclip, Image as ImageIcon } from 'lucide-react';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { ImageGalleryPicker } from '@/components/website/ImageGalleryPicker';
 import { useEmailTemplates, EmailTemplate } from '@/hooks/useEmailTemplates';
 import { supabase } from '@/integrations/supabase/client';
