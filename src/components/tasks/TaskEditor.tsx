@@ -30,7 +30,7 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
   onTaskUpdated
 }) => {
   const [loading, setLoading] = useState(false);
-  const { users } = useUser();
+  const { users, currentUser } = useUser();
   const { contacts } = useContacts();
   const { events } = useEvents();
   const { artists } = useCentralizedData();
