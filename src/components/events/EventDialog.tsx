@@ -259,11 +259,11 @@ export const EventDialog: React.FC<EventDialogProps> = ({
 
           <div>
             <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
+            <MentionableTextarea
               value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              onChange={(val) => setFormData(prev => ({ ...prev, description: val }))}
               rows={3}
+              placeholder="Tapez @ pour mentionner un utilisateur"
             />
           </div>
 
