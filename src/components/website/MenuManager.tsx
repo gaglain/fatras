@@ -246,7 +246,8 @@ export const MenuManager: React.FC = () => {
     toast.success('Élément ajouté au menu');
   };
 
-  const removeItem = (id: string) => {
+  const confirmAction = useConfirm();
+  const removeItem = async (id: string) => {
     const item = menuItems.find(item => item.id === id);
     if (item?.isSystem) {
       toast.error('Impossible de supprimer un élément système');

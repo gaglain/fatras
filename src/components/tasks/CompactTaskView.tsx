@@ -26,6 +26,7 @@ export const CompactTaskView: React.FC<CompactTaskViewProps> = ({
   onToggleSelection,
   onSelectAll
 }) => {
+  const confirmAction = useConfirm();
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'urgent': return 'text-red-600';
