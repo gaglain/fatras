@@ -223,11 +223,11 @@ export const CreateEventFromContact: React.FC<CreateEventFromContactProps> = ({
 
           <div className="space-y-2">
             <Label htmlFor="requirements">Exigences particulières</Label>
-            <Textarea
-              id="requirements"
+            <MentionableTextarea
               value={formData.requirements}
-              onChange={(e) => setFormData({ ...formData, requirements: e.target.value })}
+              onChange={(val) => setFormData({ ...formData, requirements: val })}
               rows={3}
+              placeholder="Tapez @ pour mentionner"
             />
           </div>
 
