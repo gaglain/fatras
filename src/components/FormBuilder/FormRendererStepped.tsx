@@ -21,10 +21,6 @@ interface FormRendererSteppedProps {
 }
 
 export const FormRendererStepped: React.FC<FormRendererSteppedProps> = ({ form, onSubmit }) => {
-  // Filter out non-input fields (headings, paragraphs) from steps
-  const inputFields = form.fields.filter(f => !['heading', 'paragraph'].includes(f.type));
-  const totalSteps = inputFields.length;
-
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -33,7 +29,16 @@ export const FormRendererStepped: React.FC<FormRendererSteppedProps> = ({ form, 
   const [honeypot, setHoneypot] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const currentField = inputFields[currentStep];
+  // Filter fields: exclude headings/paragraphs AND conditionally hidden fields
+  const visibleInputFields = useMemo(() => {
+    return form.fields.filter(f => 
+      !['heading', 'paragraph'].includes(f.type) &&
+      evaluateFieldVisibility(f, formData, form.fields)
+    );
+  }, [form.fields, formData]);
+
+  const totalSteps = visibleInputFields.length;
+  const currentField = visibleInputFields[currentStep];
   const progress = totalSteps > 0 ? ((currentStep) / totalSteps) * 100 : 0;
 
   const updateFieldValue = useCallback((fieldId: string, value: any) => {
