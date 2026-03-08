@@ -208,7 +208,7 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({ initialForm, onSave, o
           </div>
         </div>
 
-        <ScrollArea className="h-[calc(100%-60px)]">
+        <ScrollArea className="flex-1">
           <div className="p-4 space-y-3">
             {form.description !== undefined && (
               <Textarea
