@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
@@ -16,6 +16,7 @@ interface MentionableTextareaProps {
 /**
  * Universal textarea with @mention autocomplete.
  * Stores mentions as @[DisplayName](user_id) in the value.
+ * Features: debounced search, smart dropdown positioning.
  */
 export const MentionableTextarea: React.FC<MentionableTextareaProps> = ({
   value,
@@ -31,8 +32,19 @@ export const MentionableTextarea: React.FC<MentionableTextareaProps> = ({
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [mentionStart, setMentionStart] = useState(-1);
   const [mentionQuery, setMentionQuery] = useState('');
+  const [dropdownPosition, setDropdownPosition] = useState<'bottom' | 'top'>('bottom');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+
+  // Compute dropdown position based on available space
+  const updateDropdownPosition = useCallback(() => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    setDropdownPosition(spaceBelow < 220 ? 'top' : 'bottom');
+  }, []);
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
@@ -45,22 +57,26 @@ export const MentionableTextarea: React.FC<MentionableTextareaProps> = ({
 
     if (lastAt >= 0) {
       const query = textBefore.substring(lastAt + 1);
-      // Only trigger if no space in query (single word mention search)
-      // Allow spaces for multi-word names
       if (query.length <= 30 && !/\n/.test(query)) {
         setMentionStart(lastAt);
         setMentionQuery(query);
-        const filtered = filterUsers(query);
-        setSuggestions(filtered);
-        setShowSuggestions(filtered.length > 0);
-        setSelectedIndex(0);
+
+        // Debounced filtering (150ms)
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(() => {
+          const filtered = filterUsers(query);
+          setSuggestions(filtered);
+          setShowSuggestions(filtered.length > 0);
+          setSelectedIndex(0);
+          updateDropdownPosition();
+        }, 150);
         return;
       }
     }
 
     setShowSuggestions(false);
     setMentionStart(-1);
-  }, [onChange, filterUsers]);
+  }, [onChange, filterUsers, updateDropdownPosition]);
 
   const insertMention = useCallback((user: MentionableUser) => {
     if (mentionStart < 0) return;
@@ -119,11 +135,21 @@ export const MentionableTextarea: React.FC<MentionableTextareaProps> = ({
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
   // Display value: render @[Name](id) as @Name for display
-  const displayValue = value.replace(/@\[([^\]]+)\]\([^)]+\)/g, '@$1');
+  const displayValue = useMemo(
+    () => value.replace(/@\[([^\]]+)\]\([^)]+\)/g, '@$1'),
+    [value]
+  );
 
   return (
-    <div className="relative">
+    <div className="relative" ref={containerRef}>
       <Textarea
         ref={textareaRef}
         value={displayValue}
@@ -138,7 +164,10 @@ export const MentionableTextarea: React.FC<MentionableTextareaProps> = ({
       {showSuggestions && suggestions.length > 0 && (
         <div
           ref={suggestionsRef}
-          className="absolute z-50 mt-1 w-72 bg-popover border border-border rounded-md shadow-lg max-h-48 overflow-y-auto"
+          className={cn(
+            "absolute z-50 w-72 bg-popover border border-border rounded-md shadow-lg max-h-48 overflow-y-auto",
+            dropdownPosition === 'bottom' ? 'mt-1 top-full' : 'mb-1 bottom-full'
+          )}
         >
           {suggestions.map((user, index) => (
             <button

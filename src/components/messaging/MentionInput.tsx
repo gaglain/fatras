@@ -22,6 +22,11 @@ interface MentionInputProps {
   disabled?: boolean;
 }
 
+const getUserDisplayName = (user: User) => {
+  const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim();
+  return fullName || user.username || user.email?.split('@')[0] || 'Utilisateur';
+};
+
 export const MentionInput: React.FC<MentionInputProps> = ({
   value,
   onChange,
@@ -38,11 +43,7 @@ export const MentionInput: React.FC<MentionInputProps> = ({
   const [mentionStart, setMentionStart] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
-
-  const getUserDisplayName = (user: User) => {
-    const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim();
-    return fullName || user.username || user.email?.split('@')[0] || 'Utilisateur';
-  };
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
@@ -50,30 +51,31 @@ export const MentionInput: React.FC<MentionInputProps> = ({
     
     onChange(newValue);
 
-    // Check if we're typing a mention
     const textBeforeCursor = newValue.substring(0, cursorPosition);
     const lastAtIndex = textBeforeCursor.lastIndexOf('@');
 
     if (lastAtIndex >= 0) {
-      // Check if there's no space between @ and cursor
       const textAfterAt = textBeforeCursor.substring(lastAtIndex + 1);
       
-      if (!/\s/.test(textAfterAt)) {
+      if (textAfterAt.length <= 30 && !/\n/.test(textAfterAt)) {
         setMentionStart(lastAtIndex);
-        setMentionQuery(textAfterAt.toLowerCase());
-        
-        const filtered = users.filter(user => {
-          const displayName = getUserDisplayName(user).toLowerCase();
-          const username = (user.username || '').toLowerCase();
-          const email = (user.email || '').toLowerCase();
-          return displayName.includes(textAfterAt.toLowerCase()) ||
-                 username.includes(textAfterAt.toLowerCase()) ||
-                 email.includes(textAfterAt.toLowerCase());
-        }).slice(0, 5);
-        
-        setSuggestions(filtered);
-        setShowSuggestions(filtered.length > 0);
-        setSelectedIndex(0);
+        setMentionQuery(textAfterAt);
+
+        // Debounced filtering
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(() => {
+          const q = textAfterAt.toLowerCase();
+          const filtered = users.filter(user => {
+            const displayName = getUserDisplayName(user).toLowerCase();
+            const username = (user.username || '').toLowerCase();
+            const email = (user.email || '').toLowerCase();
+            return displayName.includes(q) || username.includes(q) || email.includes(q);
+          }).slice(0, 5);
+          
+          setSuggestions(filtered);
+          setShowSuggestions(filtered.length > 0);
+          setSelectedIndex(0);
+        }, 150);
         return;
       }
     }
@@ -90,18 +92,18 @@ export const MentionInput: React.FC<MentionInputProps> = ({
     const beforeMention = value.substring(0, mentionStart);
     const afterMention = value.substring(mentionStart + mentionQuery.length + 1);
     
-    // Insert mention with a special format: @[Name](user_id)
-    const newValue = `${beforeMention}@${displayName} ${afterMention}`;
+    // Use unified format: @[DisplayName](user_id)
+    const mention = `@[${displayName}](${user.user_id})`;
+    const newValue = `${beforeMention}${mention} ${afterMention}`;
     
     onChange(newValue);
     setShowSuggestions(false);
     setMentionStart(-1);
     setMentionQuery('');
     
-    // Focus back to input
     setTimeout(() => {
       inputRef.current?.focus();
-      const newCursorPos = beforeMention.length + displayName.length + 2;
+      const newCursorPos = beforeMention.length + mention.length + 1;
       inputRef.current?.setSelectionRange(newCursorPos, newCursorPos);
     }, 0);
   }, [mentionStart, mentionQuery, value, onChange]);
@@ -133,7 +135,6 @@ export const MentionInput: React.FC<MentionInputProps> = ({
     onKeyDown?.(e);
   }, [showSuggestions, suggestions, selectedIndex, insertMention, onKeyDown]);
 
-  // Close suggestions when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
@@ -150,11 +151,20 @@ export const MentionInput: React.FC<MentionInputProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
+  // Display value: render @[Name](id) as @Name
+  const displayValue = value.replace(/@\[([^\]]+)\]\([^)]+\)/g, '@$1');
+
   return (
     <div className="relative flex-1">
       <Input
         ref={inputRef}
-        value={value}
+        value={displayValue}
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
@@ -198,23 +208,33 @@ export const MentionInput: React.FC<MentionInputProps> = ({
   );
 };
 
-// Utility function to extract mentioned user IDs from a message
+/**
+ * Extract mentioned user IDs from content using the unified @[Name](id) format.
+ * Falls back to legacy @Name matching for backward compatibility.
+ */
 export const extractMentions = (content: string, users: User[]): string[] => {
   const mentionedIds: string[] = [];
   
-  // Match @Name patterns
-  const mentionRegex = /@([\w\s]+?)(?=\s|$|@)/g;
+  // First try structured format @[Name](user_id)
+  const structuredRegex = /@\[([^\]]+)\]\(([^)]+)\)/g;
   let match;
+  while ((match = structuredRegex.exec(content)) !== null) {
+    if (match[2] && !mentionedIds.includes(match[2])) {
+      mentionedIds.push(match[2]);
+    }
+  }
   
+  if (mentionedIds.length > 0) return mentionedIds;
+
+  // Fallback: legacy @Name patterns
+  const mentionRegex = /@([\w\s]+?)(?=\s|$|@)/g;
   while ((match = mentionRegex.exec(content)) !== null) {
     const mentionedName = match[1].trim().toLowerCase();
-    
     const matchedUser = users.find(user => {
       const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim().toLowerCase();
       const username = (user.username || '').toLowerCase();
       return fullName === mentionedName || username === mentionedName;
     });
-    
     if (matchedUser && !mentionedIds.includes(matchedUser.user_id)) {
       mentionedIds.push(matchedUser.user_id);
     }
