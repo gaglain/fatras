@@ -12,6 +12,8 @@ import { EmailCampaignManager } from '@/components/EmailCampaignManager';
 import { CampaignContactStats } from '@/components/email/CampaignContactStats';
 import { EmailEngagementDashboard } from '@/components/email/EmailEngagementDashboard';
 import { useContactLists } from '@/hooks/useContactLists';
+import { useConfirm } from '@/components/ui/confirm-dialog';
+import { PageLoader } from '@/components/ui/page-loader';
 
 interface Campaign {
   id: string;
