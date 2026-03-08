@@ -42,6 +42,7 @@ export const UserManagement: React.FC = () => {
   const { sendUserWelcomeEmail, sending } = useEmailSender();
   const { users, loading, fetchUsers, createUser, updateUserProfile, deactivateUser } = useUserManagement();
   const { hasPermission, isSuperAdmin, loading: permissionsLoading } = usePermissions();
+  const confirmAction = useConfirm();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
