@@ -175,7 +175,13 @@ export const EmailCampaigns: React.FC = () => {
   };
 
   const handleDeleteCampaign = async (campaignId: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cette campagne ?')) return;
+    const ok = await confirm({
+      title: 'Supprimer la campagne',
+      description: 'Cette action est irréversible. Voulez-vous vraiment supprimer cette campagne ?',
+      confirmText: 'Supprimer',
+      variant: 'destructive',
+    });
+    if (!ok) return;
 
     try {
       const { error } = await supabase
