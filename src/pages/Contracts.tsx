@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -45,6 +46,7 @@ interface QuoteItemForm {
 }
 
 export const Contracts: React.FC = () => {
+  const confirm = useConfirm();
   const { currentUser } = useUser();
   const { quotes, loading, addQuote, updateQuote, deleteQuote, generateQuoteNumber } = useQuotes();
   const { contacts } = useContacts();
@@ -453,7 +455,13 @@ export const Contracts: React.FC = () => {
   };
 
   const handleDelete = async (quoteId: string) => {
-    if (confirm('Supprimer ce devis ?')) {
+    const ok = await confirm({
+      title: 'Supprimer le devis',
+      description: 'Cette action est irréversible. Voulez-vous vraiment supprimer ce devis ?',
+      confirmText: 'Supprimer',
+      variant: 'destructive',
+    });
+    if (ok) {
       await deleteQuote(quoteId);
       toast.success('Devis supprimé');
     }

@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -34,6 +35,7 @@ interface Task {
 }
 
 export const Tasks: React.FC = () => {
+  const confirm = useConfirm();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<string>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -83,7 +85,13 @@ export const Tasks: React.FC = () => {
   };
 
   const handleBulkDelete = async () => {
-    if (!confirm(`Supprimer ${selectedTaskIds.length} tâche(s) ?`)) return;
+    const ok = await confirm({
+      title: 'Supprimer les tâches',
+      description: `Voulez-vous vraiment supprimer ${selectedTaskIds.length} tâche(s) ? Cette action est irréversible.`,
+      confirmText: 'Supprimer',
+      variant: 'destructive',
+    });
+    if (!ok) return;
     for (const taskId of selectedTaskIds) {
       await deleteTask(taskId);
     }

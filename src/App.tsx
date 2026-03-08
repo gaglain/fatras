@@ -1,4 +1,5 @@
 import { Suspense, lazy } from "react";
+import { ConfirmProvider } from "@/components/ui/confirm-dialog";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -165,6 +166,7 @@ const App = () => {
               storageKey="lovable-theme"
             >
               <TooltipProvider>
+                <ConfirmProvider>
                 <BrowserRouter>
                   <WebsiteConfigProvider>
                     <PWAManifestSync />
@@ -240,6 +242,7 @@ const App = () => {
                     </Suspense>
                   </WebsiteConfigProvider>
                 </BrowserRouter>
+                </ConfirmProvider>
               </TooltipProvider>
             </ThemeProvider>
           </HelmetProvider>

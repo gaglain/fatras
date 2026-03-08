@@ -12,6 +12,8 @@ import { EmailCampaignManager } from '@/components/EmailCampaignManager';
 import { CampaignContactStats } from '@/components/email/CampaignContactStats';
 import { EmailEngagementDashboard } from '@/components/email/EmailEngagementDashboard';
 import { useContactLists } from '@/hooks/useContactLists';
+import { useConfirm } from '@/components/ui/confirm-dialog';
+import { PageLoader } from '@/components/ui/page-loader';
 
 interface Campaign {
   id: string;
@@ -24,6 +26,7 @@ interface Campaign {
 }
 
 export const EmailCampaigns: React.FC = () => {
+  const confirm = useConfirm();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -172,7 +175,13 @@ export const EmailCampaigns: React.FC = () => {
   };
 
   const handleDeleteCampaign = async (campaignId: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cette campagne ?')) return;
+    const ok = await confirm({
+      title: 'Supprimer la campagne',
+      description: 'Cette action est irréversible. Voulez-vous vraiment supprimer cette campagne ?',
+      confirmText: 'Supprimer',
+      variant: 'destructive',
+    });
+    if (!ok) return;
 
     try {
       const { error } = await supabase
@@ -377,11 +386,7 @@ export const EmailCampaigns: React.FC = () => {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
+    return <PageLoader message="Chargement des campagnes..." />;
   }
 
   return (
