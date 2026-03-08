@@ -15,6 +15,7 @@ import { Contact } from '@/types/contact.types';
 import { ContactRelatedEntities } from './ContactRelatedEntities';
 import { ContactCreationSuite } from './ContactCreationSuite';
 import { UniversalSearch, SearchItem } from '@/components/UniversalSearch';
+import { notifyMentionsIfNeeded } from '@/utils/mentionNotifier';
 
 interface Spectacle {
   id: string;
