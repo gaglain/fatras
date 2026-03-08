@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { MentionableTextarea } from '@/components/mentions';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { X, Plus, User } from 'lucide-react';
@@ -489,11 +489,11 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
 
           <div>
             <Label htmlFor="notes">Notes</Label>
-            <Textarea
-              id="notes"
+            <MentionableTextarea
               value={formData.notes || ''}
-              onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+              onChange={(val) => setFormData(prev => ({ ...prev, notes: val }))}
               rows={3}
+              placeholder="Ajoutez des notes... Tapez @ pour mentionner"
             />
           </div>
 

@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { MentionableTextarea } from '@/components/mentions';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { ViewToggle } from '@/components/ui/view-toggle';
@@ -688,11 +688,10 @@ export const Contracts: React.FC = () => {
 
             <div>
               <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
+              <MentionableTextarea
                 value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Description détaillée du devis"
+                onChange={(val) => setFormData(prev => ({ ...prev, description: val }))}
+                placeholder="Description détaillée du devis... Tapez @ pour mentionner"
                 rows={3}
               />
             </div>
@@ -866,10 +865,9 @@ export const Contracts: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="terms">Conditions générales</Label>
-                <Textarea
-                  id="terms"
+                <MentionableTextarea
                   value={formData.terms}
-                  onChange={(e) => setFormData(prev => ({ ...prev, terms: e.target.value }))}
+                  onChange={(val) => setFormData(prev => ({ ...prev, terms: val }))}
                   placeholder="Conditions de paiement, délais, etc."
                   rows={4}
                 />
@@ -877,11 +875,10 @@ export const Contracts: React.FC = () => {
 
               <div>
                 <Label htmlFor="notes">Notes internes</Label>
-                <Textarea
-                  id="notes"
+                <MentionableTextarea
                   value={formData.notes}
-                  onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                  placeholder="Notes privées non visibles par le client"
+                  onChange={(val) => setFormData(prev => ({ ...prev, notes: val }))}
+                  placeholder="Notes privées... Tapez @ pour mentionner"
                   rows={4}
                 />
               </div>

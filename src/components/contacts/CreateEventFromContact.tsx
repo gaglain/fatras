@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { MentionableTextarea } from '@/components/mentions';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Calendar } from 'lucide-react';
@@ -134,11 +134,11 @@ export const CreateEventFromContact: React.FC<CreateEventFromContactProps> = ({
 
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
+            <MentionableTextarea
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={(val) => setFormData({ ...formData, description: val })}
               rows={3}
+              placeholder="Tapez @ pour mentionner"
             />
           </div>
 
@@ -223,11 +223,11 @@ export const CreateEventFromContact: React.FC<CreateEventFromContactProps> = ({
 
           <div className="space-y-2">
             <Label htmlFor="requirements">Exigences particulières</Label>
-            <Textarea
-              id="requirements"
+            <MentionableTextarea
               value={formData.requirements}
-              onChange={(e) => setFormData({ ...formData, requirements: e.target.value })}
+              onChange={(val) => setFormData({ ...formData, requirements: val })}
               rows={3}
+              placeholder="Tapez @ pour mentionner"
             />
           </div>
 

@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { MentionableTextarea } from '@/components/mentions';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Edit } from 'lucide-react';
@@ -212,12 +212,11 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
 
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
+            <MentionableTextarea
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={(val) => setFormData({ ...formData, description: val })}
               rows={3}
-              placeholder="Description détaillée de la tâche"
+              placeholder="Description détaillée... Tapez @ pour mentionner"
             />
           </div>
 

@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { MentionableTextarea } from '@/components/mentions';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -259,11 +259,11 @@ export const EventDialog: React.FC<EventDialogProps> = ({
 
           <div>
             <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
+            <MentionableTextarea
               value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              onChange={(val) => setFormData(prev => ({ ...prev, description: val }))}
               rows={3}
+              placeholder="Tapez @ pour mentionner un utilisateur"
             />
           </div>
 
@@ -427,21 +427,21 @@ export const EventDialog: React.FC<EventDialogProps> = ({
 
           <div>
             <Label htmlFor="requirements">Exigences techniques</Label>
-            <Textarea
-              id="requirements"
+            <MentionableTextarea
               value={formData.requirements}
-              onChange={(e) => setFormData(prev => ({ ...prev, requirements: e.target.value }))}
+              onChange={(val) => setFormData(prev => ({ ...prev, requirements: val }))}
               rows={3}
+              placeholder="Tapez @ pour mentionner"
             />
           </div>
 
           <div>
             <Label htmlFor="notes">Notes</Label>
-            <Textarea
-              id="notes"
+            <MentionableTextarea
               value={formData.notes}
-              onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+              onChange={(val) => setFormData(prev => ({ ...prev, notes: val }))}
               rows={3}
+              placeholder="Tapez @ pour mentionner"
             />
           </div>
 

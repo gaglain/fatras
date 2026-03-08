@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { MentionableTextarea } from '@/components/mentions';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Stepper } from '@/components/ui/stepper';
 import { Calendar } from 'lucide-react';
@@ -322,11 +322,11 @@ export const ContactCreationSuite: React.FC<ContactCreationSuiteProps> = ({
 
             <div>
               <Label htmlFor="event-description">Description</Label>
-              <Textarea
-                id="event-description"
+              <MentionableTextarea
                 value={eventData.description}
-                onChange={(e) => setEventData(prev => ({ ...prev, description: e.target.value }))}
+                onChange={(val) => setEventData(prev => ({ ...prev, description: val }))}
                 rows={3}
+                placeholder="Tapez @ pour mentionner"
               />
             </div>
 
@@ -403,11 +403,11 @@ export const ContactCreationSuite: React.FC<ContactCreationSuiteProps> = ({
 
             <div>
               <Label htmlFor="task-description">Description</Label>
-              <Textarea
-                id="task-description"
+              <MentionableTextarea
                 value={taskData.description}
-                onChange={(e) => setTaskData(prev => ({ ...prev, description: e.target.value }))}
+                onChange={(val) => setTaskData(prev => ({ ...prev, description: val }))}
                 rows={3}
+                placeholder="Tapez @ pour mentionner"
               />
             </div>
 
@@ -491,21 +491,21 @@ export const ContactCreationSuite: React.FC<ContactCreationSuiteProps> = ({
 
             <div>
               <Label htmlFor="opp-description">Description</Label>
-              <Textarea
-                id="opp-description"
+              <MentionableTextarea
                 value={opportunityData.description}
-                onChange={(e) => setOpportunityData(prev => ({ ...prev, description: e.target.value }))}
+                onChange={(val) => setOpportunityData(prev => ({ ...prev, description: val }))}
                 rows={3}
+                placeholder="Tapez @ pour mentionner"
               />
             </div>
 
             <div>
               <Label htmlFor="requirements">Exigences</Label>
-              <Textarea
-                id="requirements"
+              <MentionableTextarea
                 value={opportunityData.requirements}
-                onChange={(e) => setOpportunityData(prev => ({ ...prev, requirements: e.target.value }))}
+                onChange={(val) => setOpportunityData(prev => ({ ...prev, requirements: val }))}
                 rows={2}
+                placeholder="Tapez @ pour mentionner"
               />
             </div>
 

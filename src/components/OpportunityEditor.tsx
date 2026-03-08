@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { MentionableTextarea } from '@/components/mentions';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { User } from 'lucide-react';
 import { UniversalSearch, SearchItem } from '@/components/UniversalSearch';
@@ -122,11 +122,11 @@ export const OpportunityEditor: React.FC<OpportunityEditorProps> = ({
 
           <div>
             <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
+            <MentionableTextarea
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={(val) => setFormData({ ...formData, description: val })}
               rows={3}
+              placeholder="Tapez @ pour mentionner un utilisateur"
             />
           </div>
 
