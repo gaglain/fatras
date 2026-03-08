@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,6 +12,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { FormData, FormField, FormSubmission } from './types';
 import { ChevronDown, ChevronUp, Check, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { FormThemeWrapper } from './FormThemeWrapper';
+import { evaluateFieldVisibility } from './conditionalLogic';
 
 interface FormRendererSteppedProps {
   form: FormData;
