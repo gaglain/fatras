@@ -8,6 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Users, Edit, Trash2, Search, Loader2, UserPlus, X } from 'lucide-react';
 import { useContactLists } from '@/hooks/useContactLists';
 import { ContactListMemberManager } from '@/components/contacts/ContactListMemberManager';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { UniversalSearch, SearchItem } from '@/components/UniversalSearch';
 
 export const ContactLists: React.FC = () => {
