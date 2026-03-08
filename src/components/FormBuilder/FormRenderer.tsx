@@ -11,6 +11,8 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { FormData, FormSubmission } from './types';
 import { FormRendererStepped } from './FormRendererStepped';
+import { FormThemeWrapper } from './FormThemeWrapper';
+import { evaluateFieldVisibility } from './conditionalLogic';
 
 interface FormRendererProps {
   form: FormData;
