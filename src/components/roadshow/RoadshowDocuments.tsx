@@ -7,6 +7,7 @@ import { Upload, Trash2, FileText, Download, File } from 'lucide-react';
 import { useRoadshowDocuments, RoadshowDocument } from '@/hooks/useRoadshowDocuments';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 
 interface RoadshowDocumentsProps {
   roadshowStopId?: string;
