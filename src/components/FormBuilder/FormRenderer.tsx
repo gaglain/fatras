@@ -18,6 +18,10 @@ interface FormRendererProps {
 }
 
 export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) => {
+  const [formData, setFormData] = useState<Record<string, any>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [honeypot, setHoneypot] = useState('');
+
   // Delegate to stepped renderer if display mode is "stepped"
   if (form.settings.displayMode === 'stepped') {
     return (
@@ -26,10 +30,6 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) =>
       </div>
     );
   }
-  const [formData, setFormData] = useState<Record<string, any>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  // Honeypot anti-spam field
-  const [honeypot, setHoneypot] = useState('');
 
   const updateFieldValue = (fieldId: string, value: any) => {
     setFormData(prev => ({
