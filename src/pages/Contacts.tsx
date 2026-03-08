@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Search, Filter, Users, UserCheck, UserX, Upload, Download, Mail, List, Grid, LayoutList, Loader2 } from 'lucide-react';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { ContactCard } from '@/components/contacts/ContactCard';
 import { ContactDialog } from '@/components/contacts/ContactDialog';
 import { CSVImporter } from '@/components/CSVImporter';
