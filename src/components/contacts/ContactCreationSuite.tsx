@@ -322,11 +322,11 @@ export const ContactCreationSuite: React.FC<ContactCreationSuiteProps> = ({
 
             <div>
               <Label htmlFor="event-description">Description</Label>
-              <Textarea
-                id="event-description"
+              <MentionableTextarea
                 value={eventData.description}
-                onChange={(e) => setEventData(prev => ({ ...prev, description: e.target.value }))}
+                onChange={(val) => setEventData(prev => ({ ...prev, description: val }))}
                 rows={3}
+                placeholder="Tapez @ pour mentionner"
               />
             </div>
 
