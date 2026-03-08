@@ -96,45 +96,46 @@ export const FrontArtists: React.FC = () => {
           <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" aria-label="Liste des spectacles">
             {artists.map((artist, index) => (
               <ScrollRevealCard key={artist.id} index={index}>
-              <article className="hover:shadow-lg transition-shadow">
-                  <CardContent className="p-6">
-                    {artist.photo_url && (
-                      <figure className="mb-4 bg-muted rounded-lg overflow-hidden">
-                        <img 
-                          src={artist.photo_url} 
-                          alt={`${artist.name} - Spectacle de rue musical`}
-                          className="w-full h-48 object-contain"
-                          loading="lazy"
-                        />
-                      </figure>
-                    )}
-                    <div className="text-center">
-                      <h2 className="text-xl font-semibold mb-2">{artist.name}</h2>
-                    <div className="flex items-center justify-center gap-2 mb-3">
-                      {artist.genre && (
-                        <Badge variant="outline">{artist.genre}</Badge>
+                <article className="hover:shadow-lg transition-shadow">
+                  <Card>
+                    <CardContent className="p-6">
+                      {artist.photo_url && (
+                        <figure className="mb-4 bg-muted rounded-lg overflow-hidden">
+                          <img 
+                            src={artist.photo_url} 
+                            alt={`${artist.name} - Spectacle de rue musical`}
+                            className="w-full h-48 object-contain"
+                            loading="lazy"
+                          />
+                        </figure>
                       )}
-                      {artist.is_touring && (
-                        <Badge className="bg-green-100 text-green-800 border-green-200">
-                          <Plane className="h-3 w-3 mr-1" />
-                          En tournée
-                        </Badge>
-                      )}
-                    </div>
-                    {artist.bio && (
-                      <p className="text-muted-foreground text-sm mb-4">{artist.bio}</p>
-                    )}
-                      <a 
-                        href={`/artistes/${artist.slug || artist.id}`}
-                        className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
-                        aria-label={`Découvrir le spectacle ${artist.name}`}
-                      >
-                        Découvrir le spectacle
-                      </a>
-                    </div>
-                  </CardContent>
-                </Card>
-              </article>
+                      <div className="text-center">
+                        <h2 className="text-xl font-semibold mb-2">{artist.name}</h2>
+                        <div className="flex items-center justify-center gap-2 mb-3">
+                          {artist.genre && (
+                            <Badge variant="outline">{artist.genre}</Badge>
+                          )}
+                          {artist.is_touring && (
+                            <Badge variant="secondary">
+                              <Plane className="h-3 w-3 mr-1" />
+                              En tournée
+                            </Badge>
+                          )}
+                        </div>
+                        {artist.bio && (
+                          <p className="text-muted-foreground text-sm mb-4">{artist.bio}</p>
+                        )}
+                        <a 
+                          href={`/artistes/${artist.slug || artist.id}`}
+                          className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+                          aria-label={`Découvrir le spectacle ${artist.name}`}
+                        >
+                          Découvrir le spectacle
+                        </a>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </article>
               </ScrollRevealCard>
             ))}
           </section>
