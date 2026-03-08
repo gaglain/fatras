@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Info, Upload, FileText, Image as ImageIcon, Trash2 } from 'lucide-react';
 import { useRoadshowExpenses, RoadshowExpense } from '@/hooks/useRoadshowExpenses';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 
 interface ExpensesFormProps {
   roadshowStopId?: string;
