@@ -1,5 +1,5 @@
-import { useActiveUsers } from '@/hooks/useActiveUsers';
 import { useMemo } from 'react';
+import { useActiveUsers } from '@/hooks/useActiveUsers';
 
 export interface MentionableUser {
   user_id: string;
