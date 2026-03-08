@@ -172,7 +172,7 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({ initialForm, onSave, o
         <div className="p-3 border-b">
           <h3 className="font-semibold text-sm">Types de champs</h3>
         </div>
-        <ScrollArea className="h-[calc(100%-52px)]">
+        <ScrollArea className="flex-1">
           <div className="p-2 grid grid-cols-2 gap-2">
             {FIELD_TYPES.map(({ type, label, icon }) => (
               <button
