@@ -46,6 +46,7 @@ interface QuoteItemForm {
 }
 
 export const Contracts: React.FC = () => {
+  const confirm = useConfirm();
   const { currentUser } = useUser();
   const { quotes, loading, addQuote, updateQuote, deleteQuote, generateQuoteNumber } = useQuotes();
   const { contacts } = useContacts();
