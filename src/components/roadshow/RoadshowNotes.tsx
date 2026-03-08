@@ -8,6 +8,7 @@ import { useUser } from '@/contexts/UserContext';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 
 interface RoadshowNotesProps {
   roadshowStopId?: string;
