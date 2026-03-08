@@ -13,6 +13,7 @@ import { FormData, FormSubmission } from './types';
 import { FormRendererStepped } from './FormRendererStepped';
 import { FormThemeWrapper } from './FormThemeWrapper';
 import { evaluateFieldVisibility } from './conditionalLogic';
+import { FormThankYou } from './FormThankYou';
 
 interface FormRendererProps {
   form: FormData;
@@ -22,6 +23,7 @@ interface FormRendererProps {
 export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) => {
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isComplete, setIsComplete] = useState(false);
   const [honeypot, setHoneypot] = useState('');
 
   // Delegate to stepped renderer if display mode is "stepped"
@@ -85,13 +87,8 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) =>
       };
 
       onSubmit?.(submission);
-      toast.success(form.settings.successMessage);
+      setIsComplete(true);
       setFormData({});
-      
-      // Redirect if configured
-      if (form.settings.redirectUrl) {
-        window.location.href = form.settings.redirectUrl;
-      }
     } catch {
       toast.error('Erreur lors de l\'envoi du formulaire');
     } finally {
@@ -230,6 +227,20 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) =>
     color: theme.buttonTextColor || '#ffffff',
     borderColor: theme.buttonColor,
   } : {};
+
+  if (isComplete) {
+    return (
+      <FormThemeWrapper theme={theme}>
+        <div className="max-w-2xl mx-auto">
+          <FormThankYou
+            config={form.settings.thankYouPage}
+            fallbackMessage={form.settings.successMessage}
+            redirectUrl={form.settings.redirectUrl}
+          />
+        </div>
+      </FormThemeWrapper>
+    );
+  }
 
   return (
     <FormThemeWrapper theme={theme}>

@@ -56,6 +56,16 @@ export interface FormTheme {
   borderRadius?: 'none' | 'sm' | 'md' | 'lg' | 'full';
 }
 
+export interface ThankYouPage {
+  title?: string;
+  message?: string;
+  imageUrl?: string;
+  showConfetti?: boolean;
+  ctaText?: string;
+  ctaUrl?: string;
+  redirectDelay?: number; // seconds before redirect, 0 = no auto redirect
+}
+
 export interface FormSettings {
   submitButtonText: string;
   successMessage: string;
@@ -68,6 +78,7 @@ export interface FormSettings {
   confirmationEmail?: boolean;
   displayMode?: FormDisplayMode;
   formTheme?: FormTheme;
+  thankYouPage?: ThankYouPage;
 }
 
 export interface FormData {
