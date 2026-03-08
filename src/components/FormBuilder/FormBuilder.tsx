@@ -166,9 +166,9 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({ initialForm, onSave, o
   const selectedField = form.fields.find(f => f.id === selectedFieldId);
 
   return (
-    <div className="flex h-[70vh] gap-4">
+    <div className="flex h-full gap-3">
       {/* Left Panel - Field Types */}
-      <div className="w-64 border rounded-lg bg-card">
+      <div className="w-52 shrink-0 border rounded-lg bg-card flex flex-col">
         <div className="p-3 border-b">
           <h3 className="font-semibold text-sm">Types de champs</h3>
         </div>
