@@ -166,13 +166,13 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({ initialForm, onSave, o
   const selectedField = form.fields.find(f => f.id === selectedFieldId);
 
   return (
-    <div className="flex h-[70vh] gap-4">
+    <div className="flex h-full gap-3">
       {/* Left Panel - Field Types */}
-      <div className="w-64 border rounded-lg bg-card">
+      <div className="w-52 shrink-0 border rounded-lg bg-card flex flex-col">
         <div className="p-3 border-b">
           <h3 className="font-semibold text-sm">Types de champs</h3>
         </div>
-        <ScrollArea className="h-[calc(100%-52px)]">
+        <ScrollArea className="flex-1">
           <div className="p-2 grid grid-cols-2 gap-2">
             {FIELD_TYPES.map(({ type, label, icon }) => (
               <button
@@ -189,7 +189,7 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({ initialForm, onSave, o
       </div>
 
       {/* Center Panel - Form Preview */}
-      <div className="flex-1 border rounded-lg bg-card overflow-hidden">
+      <div className="flex-1 min-w-0 border rounded-lg bg-card overflow-hidden flex flex-col">
         <div className="p-3 border-b flex items-center justify-between">
           <Input
             value={form.name}
@@ -208,7 +208,7 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({ initialForm, onSave, o
           </div>
         </div>
 
-        <ScrollArea className="h-[calc(100%-60px)]">
+        <ScrollArea className="flex-1">
           <div className="p-4 space-y-3">
             {form.description !== undefined && (
               <Textarea
@@ -300,7 +300,7 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({ initialForm, onSave, o
       </div>
 
       {/* Right Panel - Field Settings */}
-      <div className="w-72 border rounded-lg bg-card">
+      <div className="w-80 shrink-0 border rounded-lg bg-card flex flex-col">
         <Tabs defaultValue="field" className="h-full flex flex-col">
           <TabsList className="w-full justify-start rounded-none border-b bg-transparent h-auto p-0 flex-wrap">
             <TabsTrigger value="field" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary text-xs px-2">
