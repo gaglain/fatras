@@ -227,8 +227,9 @@ export const FrontEvents: React.FC = () => {
   return (
     <>
       <SEOHead 
-        title="Événements à Venir - MusiConnect"
-        description="Ne manquez aucun de nos événements exceptionnels"
+        title="Événements & Spectacles à Venir | Fatras"
+        description="Découvrez les prochaines dates de spectacles de Fatras - spectacles de rue musicaux, concerts-théâtre et arts de la rue partout en France."
+        keywords="spectacles, événements, dates, tournée, Fatras, arts de la rue, festivals"
       />
       
       <div className="py-12">

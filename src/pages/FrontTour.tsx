@@ -92,8 +92,9 @@ export const FrontTour: React.FC = () => {
   return (
     <>
       <SEOHead 
-        title="Tournée - MusiConnect"
-        description="Découvrez toutes les dates de notre tournée"
+        title="Tournée & Dates de Spectacles | Fatras"
+        description="Suivez la tournée de Fatras - toutes les dates de nos spectacles de rue musicaux et concerts-théâtre à travers la France."
+        keywords="tournée, dates spectacles, Fatras, spectacle de rue, concert-théâtre, festivals France"
       />
       
       <div className="py-12">
