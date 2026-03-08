@@ -103,8 +103,11 @@ export const Forms: React.FC = () => {
     }
   };
 
+  const confirmAction = useConfirm();
   const handleDeleteForm = async (formId: string) => {
-    if (!user || !window.confirm('Êtes-vous sûr de vouloir supprimer ce formulaire ?')) return;
+    if (!user) return;
+    const ok = await confirmAction({ title: 'Supprimer le formulaire', description: 'Êtes-vous sûr de vouloir supprimer ce formulaire ?', variant: 'destructive' });
+    if (!ok) return;
 
     try {
       const { error } = await supabase

@@ -18,8 +18,10 @@ export const MerchandiseBackoffice: React.FC = () => {
     setShowForm(true);
   };
 
+  const confirmAction = useConfirm();
   const handleDelete = async (id: string) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) {
+    const ok = await confirmAction({ title: 'Supprimer le produit', description: 'Êtes-vous sûr de vouloir supprimer ce produit ?', variant: 'destructive' });
+    if (ok) {
       await deleteProduct(id);
     }
   };

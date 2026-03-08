@@ -229,9 +229,10 @@ export const TaskKanbanView: React.FC<TaskKanbanViewProps> = ({
                               variant="ghost"
                               size="sm"
                               className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive ml-auto"
-                              onClick={(e) => {
+                              onClick={async (e) => {
                                 e.stopPropagation();
-                                if (window.confirm('Supprimer cette tâche ?')) {
+                                const ok = await confirmAction({ title: 'Supprimer', description: 'Supprimer cette tâche ?', variant: 'destructive' });
+                                if (ok) {
                                   onDeleteTask(task.id);
                                 }
                               }}

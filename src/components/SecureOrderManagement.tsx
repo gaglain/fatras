@@ -74,8 +74,10 @@ export const SecureOrderManagement: React.FC = () => {
     }
   };
 
+  const confirmAction = useConfirm();
   const handleDeleteOrder = async (orderId: string) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette commande ?')) {
+    const ok = await confirmAction({ title: 'Supprimer la commande', description: 'Êtes-vous sûr de vouloir supprimer cette commande ?', variant: 'destructive' });
+    if (ok) {
       const success = await deleteOrder(orderId);
       if (success && selectedOrder?.id === orderId) {
         setIsDetailModalOpen(false);

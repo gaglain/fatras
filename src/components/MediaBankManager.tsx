@@ -97,8 +97,10 @@ export const MediaBankManager: React.FC = () => {
     setUploadArtistId('none');
   };
 
+  const confirmAction = useConfirm();
   const handleDelete = async (image: BackgroundImage) => {
-    if (confirm('Supprimer cette image définitivement ?')) {
+    const ok = await confirmAction({ title: 'Supprimer', description: 'Supprimer cette image définitivement ?', variant: 'destructive' });
+    if (ok) {
       await deleteImage(image.id);
     }
   };

@@ -267,8 +267,10 @@ export const Contacts: React.FC = () => {
     setDialogOpen(true);
   };
 
+  const confirmAction = useConfirm();
   const handleDelete = async (id: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce contact ?')) return;
+    const ok = await confirmAction({ title: 'Supprimer le contact', description: 'Êtes-vous sûr de vouloir supprimer ce contact ?', variant: 'destructive' });
+    if (!ok) return;
 
     try {
       const { error } = await supabase

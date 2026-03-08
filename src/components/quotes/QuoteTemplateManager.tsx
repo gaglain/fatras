@@ -132,8 +132,10 @@ export const QuoteTemplateManager: React.FC<QuoteTemplateManagerProps> = ({
     }
   };
 
+  const confirmAction = useConfirm();
   const handleDeleteTemplate = async (templateId: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce modèle ?')) return;
+    const ok = await confirmAction({ title: 'Supprimer le modèle', description: 'Êtes-vous sûr de vouloir supprimer ce modèle ?', variant: 'destructive' });
+    if (!ok) return;
 
     try {
       const { error } = await supabase

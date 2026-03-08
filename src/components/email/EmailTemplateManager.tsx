@@ -82,8 +82,10 @@ export const EmailTemplateManager: React.FC = () => {
     setAttachmentFiles([]);
   };
 
+  const confirmAction = useConfirm();
   const handleDelete = async (id: string) => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer ce modèle ?')) {
+    const ok = await confirmAction({ title: 'Supprimer le modèle', description: 'Êtes-vous sûr de vouloir supprimer ce modèle ?', variant: 'destructive' });
+    if (ok) {
       await deleteTemplate(id);
     }
   };

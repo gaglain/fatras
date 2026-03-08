@@ -116,8 +116,10 @@ export const TourStopPreview: React.FC<TourStopPreviewProps> = ({
     }
   };
 
+  const confirmAction = useConfirm();
   const handleDeleteExpense = async (expense: RoadshowExpense) => {
-    if (confirm('Supprimer cette note de frais ?')) {
+    const ok = await confirmAction({ title: 'Supprimer', description: 'Supprimer cette note de frais ?', variant: 'destructive' });
+    if (ok) {
       const success = await deleteExpense(expense.id, expense.file_url);
       if (success) {
         loadData();
