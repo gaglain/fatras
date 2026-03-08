@@ -491,21 +491,21 @@ export const ContactCreationSuite: React.FC<ContactCreationSuiteProps> = ({
 
             <div>
               <Label htmlFor="opp-description">Description</Label>
-              <Textarea
-                id="opp-description"
+              <MentionableTextarea
                 value={opportunityData.description}
-                onChange={(e) => setOpportunityData(prev => ({ ...prev, description: e.target.value }))}
+                onChange={(val) => setOpportunityData(prev => ({ ...prev, description: val }))}
                 rows={3}
+                placeholder="Tapez @ pour mentionner"
               />
             </div>
 
             <div>
               <Label htmlFor="requirements">Exigences</Label>
-              <Textarea
-                id="requirements"
+              <MentionableTextarea
                 value={opportunityData.requirements}
-                onChange={(e) => setOpportunityData(prev => ({ ...prev, requirements: e.target.value }))}
+                onChange={(val) => setOpportunityData(prev => ({ ...prev, requirements: val }))}
                 rows={2}
+                placeholder="Tapez @ pour mentionner"
               />
             </div>
 
