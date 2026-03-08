@@ -7,6 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Mail, RefreshCw, Clock, User, ArrowLeft, Reply, Forward, Trash2, AlertOctagon, MoreVertical } from 'lucide-react';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useEmailSync } from '@/hooks/useEmailSync';
