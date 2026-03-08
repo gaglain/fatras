@@ -455,7 +455,13 @@ export const Contracts: React.FC = () => {
   };
 
   const handleDelete = async (quoteId: string) => {
-    if (confirm('Supprimer ce devis ?')) {
+    const ok = await confirm({
+      title: 'Supprimer le devis',
+      description: 'Cette action est irréversible. Voulez-vous vraiment supprimer ce devis ?',
+      confirmText: 'Supprimer',
+      variant: 'destructive',
+    });
+    if (ok) {
       await deleteQuote(quoteId);
       toast.success('Devis supprimé');
     }
