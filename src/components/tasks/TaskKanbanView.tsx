@@ -7,6 +7,7 @@ import { GripVertical, Calendar, AlertCircle, Trash, Plus } from 'lucide-react';
 import { Task } from '@/hooks/useTasks';
 import { TaskExecuteButton } from './TaskExecuteButton';
 import { cn } from '@/lib/utils';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 
 interface TaskKanbanViewProps {
   tasks: Task[];
