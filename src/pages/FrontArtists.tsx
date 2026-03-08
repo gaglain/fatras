@@ -83,7 +83,7 @@ export const FrontArtists: React.FC = () => {
       />
       <main className="min-h-screen py-12 px-4 bg-background">
         <div className="container mx-auto">
-          <header className="text-center mb-12">
+          <header className="text-center mb-12 animate-fade-in">
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
               Nos Spectacles de Rue Musicaux
             </h1>
