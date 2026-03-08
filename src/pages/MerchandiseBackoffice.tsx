@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { useProducts } from '@/hooks/useProducts';
 import { ProductForm } from '@/components/ProductForm';
 import { toast } from 'sonner';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 
 export const MerchandiseBackoffice: React.FC = () => {
   const { products, loading, deleteProduct } = useProducts();
