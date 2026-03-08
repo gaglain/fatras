@@ -15,6 +15,7 @@ import { Contact } from '@/types/contact.types';
 import { EventDraftManager, useEventDraft } from './EventDraftManager';
 import { UniversalSearch, SearchItem } from '@/components/UniversalSearch';
 import { logger } from '@/lib/logger';
+import { notifyMentionsIfNeeded } from '@/utils/mentionNotifier';
 
 interface EventType {
   id: string;
