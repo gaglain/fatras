@@ -14,6 +14,7 @@ import { ChevronDown, ChevronUp, Check, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FormThemeWrapper } from './FormThemeWrapper';
 import { evaluateFieldVisibility } from './conditionalLogic';
+import { FormThankYou } from './FormThankYou';
 
 interface FormRendererSteppedProps {
   form: FormData;
