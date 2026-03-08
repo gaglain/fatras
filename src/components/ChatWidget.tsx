@@ -18,6 +18,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { registerChatWidgetHandler, unregisterChatWidgetHandler, type ChatWidgetOpenEvent } from '@/lib/chatWidgetEvents';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 
 // Memoized message component to prevent re-renders
 const ChatMessage = memo(({ message, isMe }: { message: any; isMe: boolean }) => {
