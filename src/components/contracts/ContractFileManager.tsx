@@ -9,6 +9,7 @@ import { FileText, Upload, Link as LinkIcon, User, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 
 interface ContractFile {
   id: string;
