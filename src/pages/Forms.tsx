@@ -254,7 +254,7 @@ export const Forms: React.FC = () => {
 
       {/* Form Builder Dialog */}
       <Dialog open={showBuilder} onOpenChange={setShowBuilder}>
-        <DialogContent className="fixed inset-0 max-w-none w-screen h-screen translate-x-0 translate-y-0 top-0 left-0 rounded-none border-0 p-0 gap-0 [&>button]:z-50 data-[state=open]:slide-in-from-bottom-0">
+        <DialogContent className="fixed inset-0 max-w-none w-screen h-screen translate-x-0 translate-y-0 top-0 left-0 rounded-none border-0 p-0 gap-0 sm:inset-0 sm:left-0 sm:top-0 sm:translate-x-0 sm:translate-y-0 sm:!w-screen sm:!max-w-none sm:!h-screen sm:rounded-none sm:p-0 [&>button]:z-50 data-[state=open]:slide-in-from-bottom-0">
           <div className="flex flex-col h-screen">
             <DialogHeader className="px-4 py-2 border-b shrink-0">
               <DialogTitle className="text-base">
