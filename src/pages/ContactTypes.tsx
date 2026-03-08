@@ -128,8 +128,10 @@ export default function ContactTypes() {
     setIsOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer ce type de contact ?')) {
+  const confirmAction = useConfirm();
+  const handleDelete = async (id: string) => {
+    const ok = await confirmAction({ title: 'Supprimer', description: 'Êtes-vous sûr de vouloir supprimer ce type de contact ?', variant: 'destructive' });
+    if (ok) {
       deleteMutation.mutate(id);
     }
   };

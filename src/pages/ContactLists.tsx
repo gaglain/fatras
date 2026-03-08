@@ -121,8 +121,10 @@ export const ContactLists: React.FC = () => {
     }
   };
 
+  const confirmAction = useConfirm();
   const handleDeleteList = async (listId: string) => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer cette liste ?')) {
+    const ok = await confirmAction({ title: 'Supprimer la liste', description: 'Êtes-vous sûr de vouloir supprimer cette liste ?', variant: 'destructive' });
+    if (ok) {
       await deleteContactList(listId);
     }
   };

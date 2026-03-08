@@ -223,8 +223,10 @@ export const PublicationCalendar: React.FC = () => {
     setShowForm(true);
   };
 
+  const confirmAction = useConfirm();
   const handleDelete = async (id: string) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette publication ?')) {
+    const ok = await confirmAction({ title: 'Supprimer', description: 'Êtes-vous sûr de vouloir supprimer cette publication ?', variant: 'destructive' });
+    if (ok) {
       try {
         const { error } = await supabase
           .from('publications')
