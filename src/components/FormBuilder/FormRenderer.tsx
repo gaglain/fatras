@@ -11,6 +11,8 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { FormData, FormSubmission } from './types';
 import { FormRendererStepped } from './FormRendererStepped';
+import { FormThemeWrapper } from './FormThemeWrapper';
+import { evaluateFieldVisibility } from './conditionalLogic';
 
 interface FormRendererProps {
   form: FormData;
@@ -222,52 +224,67 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) =>
     }
   };
 
-  return (
-    <Card className="max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle>{form.name}</CardTitle>
-        {form.description && (
-          <p className="text-sm text-muted-foreground">{form.description}</p>
-        )}
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Honeypot field - hidden from humans, visible to bots */}
-          <div 
-            className="absolute left-[-9999px]" 
-            aria-hidden="true"
-            style={{ position: 'absolute', left: '-9999px' }}
-          >
-            <Input
-              type="text"
-              name="website_url"
-              value={honeypot}
-              onChange={(e) => setHoneypot(e.target.value)}
-              tabIndex={-1}
-              autoComplete="off"
-            />
-          </div>
+  const theme = form.settings.formTheme;
+  const buttonStyle: React.CSSProperties = theme?.buttonColor ? {
+    backgroundColor: theme.buttonColor,
+    color: theme.buttonTextColor || '#ffffff',
+    borderColor: theme.buttonColor,
+  } : {};
 
-          {form.fields.map((field) => (
+  return (
+    <FormThemeWrapper theme={theme}>
+      <Card className="max-w-2xl mx-auto" style={theme?.backgroundImage ? { background: 'transparent', border: 'none' } : undefined}>
+        <CardHeader>
+          <CardTitle>{form.name}</CardTitle>
+          {form.description && (
+            <p className="text-sm text-muted-foreground">{form.description}</p>
+          )}
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Honeypot field - hidden from humans, visible to bots */}
             <div 
-              key={field.id} 
-              className={`space-y-2 ${field.width === 'half' ? 'w-1/2 inline-block pr-2' : 'w-full'}`}
+              className="absolute left-[-9999px]" 
+              aria-hidden="true"
+              style={{ position: 'absolute', left: '-9999px' }}
             >
-              {field.type !== 'heading' && field.type !== 'paragraph' && (
-                <Label htmlFor={field.id}>
-                  {field.label}
-                  {field.required && <span className="text-destructive ml-1">*</span>}
-                </Label>
-              )}
-              {renderField(field)}
+              <Input
+                type="text"
+                name="website_url"
+                value={honeypot}
+                onChange={(e) => setHoneypot(e.target.value)}
+                tabIndex={-1}
+                autoComplete="off"
+              />
             </div>
-          ))}
-          
-          <Button type="submit" disabled={isSubmitting} className="w-full">
-            {isSubmitting ? 'Envoi en cours...' : form.settings.submitButtonText}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+
+            {form.fields.map((field) => {
+              // Evaluate conditional visibility
+              const isVisible = evaluateFieldVisibility(field, formData, form.fields);
+              if (!isVisible) return null;
+
+              return (
+                <div 
+                  key={field.id} 
+                  className={`space-y-2 ${field.width === 'half' ? 'w-1/2 inline-block pr-2' : 'w-full'}`}
+                >
+                  {field.type !== 'heading' && field.type !== 'paragraph' && (
+                    <Label htmlFor={field.id}>
+                      {field.label}
+                      {field.required && <span className="text-destructive ml-1">*</span>}
+                    </Label>
+                  )}
+                  {renderField(field)}
+                </div>
+              );
+            })}
+            
+            <Button type="submit" disabled={isSubmitting} className="w-full" style={buttonStyle}>
+              {isSubmitting ? 'Envoi en cours...' : form.settings.submitButtonText}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </FormThemeWrapper>
   );
 };

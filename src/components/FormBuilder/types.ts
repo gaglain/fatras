@@ -16,6 +16,12 @@ export type FieldType =
   | 'heading'
   | 'paragraph';
 
+export interface ConditionalRule {
+  fieldId: string;       // The field that triggers the condition
+  operator: 'equals' | 'not_equals' | 'contains' | 'not_empty' | 'is_empty';
+  value?: string;        // The value to compare against
+}
+
 export interface FormField {
   id: string;
   type: FieldType;
@@ -29,9 +35,26 @@ export interface FormField {
   maxLength?: number;
   acceptedFileTypes?: string[];
   width?: 'full' | 'half';
+  conditionalRules?: ConditionalRule[];
+  conditionalAction?: 'show' | 'hide';
 }
 
 export type FormDisplayMode = 'classic' | 'stepped';
+
+export type FormFont = 'outfit' | 'inter' | 'playfair' | 'space-grotesk' | 'dm-sans' | 'libre-baskerville';
+
+export interface FormTheme {
+  backgroundColor?: string;
+  textColor?: string;
+  buttonColor?: string;
+  buttonTextColor?: string;
+  accentColor?: string;
+  backgroundImage?: string;
+  logoUrl?: string;
+  font?: FormFont;
+  fullscreen?: boolean;
+  borderRadius?: 'none' | 'sm' | 'md' | 'lg' | 'full';
+}
 
 export interface FormSettings {
   submitButtonText: string;
@@ -44,6 +67,7 @@ export interface FormSettings {
   showProgressBar?: boolean;
   confirmationEmail?: boolean;
   displayMode?: FormDisplayMode;
+  formTheme?: FormTheme;
 }
 
 export interface FormData {
@@ -63,3 +87,12 @@ export interface FormSubmission {
   ipAddress?: string;
   userAgent?: string;
 }
+
+export const FONT_OPTIONS: { value: FormFont; label: string; family: string }[] = [
+  { value: 'outfit', label: 'Outfit', family: "'Outfit', sans-serif" },
+  { value: 'inter', label: 'Inter', family: "'Inter', sans-serif" },
+  { value: 'playfair', label: 'Playfair Display', family: "'Playfair Display', serif" },
+  { value: 'space-grotesk', label: 'Space Grotesk', family: "'Space Grotesk', sans-serif" },
+  { value: 'dm-sans', label: 'DM Sans', family: "'DM Sans', sans-serif" },
+  { value: 'libre-baskerville', label: 'Libre Baskerville', family: "'Libre Baskerville', serif" },
+];

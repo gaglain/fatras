@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,6 +12,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { FormData, FormField, FormSubmission } from './types';
 import { ChevronDown, ChevronUp, Check, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { FormThemeWrapper } from './FormThemeWrapper';
+import { evaluateFieldVisibility } from './conditionalLogic';
 
 interface FormRendererSteppedProps {
   form: FormData;
@@ -19,10 +21,6 @@ interface FormRendererSteppedProps {
 }
 
 export const FormRendererStepped: React.FC<FormRendererSteppedProps> = ({ form, onSubmit }) => {
-  // Filter out non-input fields (headings, paragraphs) from steps
-  const inputFields = form.fields.filter(f => !['heading', 'paragraph'].includes(f.type));
-  const totalSteps = inputFields.length;
-
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -31,8 +29,25 @@ export const FormRendererStepped: React.FC<FormRendererSteppedProps> = ({ form, 
   const [honeypot, setHoneypot] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const currentField = inputFields[currentStep];
+  // Filter fields: exclude headings/paragraphs AND conditionally hidden fields
+  const visibleInputFields = useMemo(() => {
+    return form.fields.filter(f => 
+      !['heading', 'paragraph'].includes(f.type) &&
+      evaluateFieldVisibility(f, formData, form.fields)
+    );
+  }, [form.fields, formData]);
+
+  const totalSteps = visibleInputFields.length;
+  const currentField = visibleInputFields[currentStep];
   const progress = totalSteps > 0 ? ((currentStep) / totalSteps) * 100 : 0;
+  const theme = form.settings.formTheme;
+
+  // Clamp currentStep when visible fields change due to conditional logic
+  useEffect(() => {
+    if (currentStep >= totalSteps && totalSteps > 0) {
+      setCurrentStep(totalSteps - 1);
+    }
+  }, [totalSteps, currentStep]);
 
   const updateFieldValue = useCallback((fieldId: string, value: any) => {
     setFormData(prev => ({ ...prev, [fieldId]: value }));
@@ -88,7 +103,7 @@ export const FormRendererStepped: React.FC<FormRendererSteppedProps> = ({ form, 
     }
 
     // Validate all required fields
-    const missingFields = inputFields
+    const missingFields = visibleInputFields
       .filter(field => field.required && !formData[field.id])
       .map(field => field.label);
 
@@ -321,19 +336,21 @@ export const FormRendererStepped: React.FC<FormRendererSteppedProps> = ({ form, 
   // Completion screen
   if (isComplete) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto animate-fade-in">
-          <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
-            <Check className="h-10 w-10 text-primary" />
+      <FormThemeWrapper theme={theme}>
+        <div className="min-h-[60vh] flex items-center justify-center">
+          <div className="text-center max-w-md mx-auto animate-fade-in">
+            <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
+              <Check className="h-10 w-10 text-primary" />
+            </div>
+            <h2 className="text-2xl font-bold mb-3">
+              {form.settings.successMessage}
+            </h2>
+            {form.settings.redirectUrl && (
+              <p className="text-sm opacity-70">Redirection en cours...</p>
+            )}
           </div>
-          <h2 className="text-2xl font-bold text-foreground mb-3">
-            {form.settings.successMessage}
-          </h2>
-          {form.settings.redirectUrl && (
-            <p className="text-muted-foreground text-sm">Redirection en cours...</p>
-          )}
         </div>
-      </div>
+      </FormThemeWrapper>
     );
   }
 
@@ -347,7 +364,14 @@ export const FormRendererStepped: React.FC<FormRendererSteppedProps> = ({ form, 
 
   const isLastStep = currentStep === totalSteps - 1;
 
+  const buttonStyle: React.CSSProperties = theme?.buttonColor ? {
+    backgroundColor: theme.buttonColor,
+    color: theme.buttonTextColor || '#ffffff',
+    borderColor: theme.buttonColor,
+  } : {};
+
   return (
+    <FormThemeWrapper theme={theme}>
     <div ref={containerRef} className="min-h-[60vh] flex flex-col">
       {/* Honeypot */}
       <div className="absolute left-[-9999px]" aria-hidden="true" style={{ position: 'absolute', left: '-9999px' }}>
@@ -422,6 +446,7 @@ export const FormRendererStepped: React.FC<FormRendererSteppedProps> = ({ form, 
                 onClick={isLastStep ? handleSubmit : goNext}
                 disabled={!canProceed() || isSubmitting}
                 className="gap-2"
+                style={buttonStyle}
               >
                 {isSubmitting
                   ? 'Envoi...'
@@ -436,6 +461,7 @@ export const FormRendererStepped: React.FC<FormRendererSteppedProps> = ({ form, 
                 onClick={handleSubmit}
                 disabled={!canProceed() || isSubmitting}
                 className="gap-2"
+                style={buttonStyle}
               >
                 {isSubmitting ? 'Envoi...' : form.settings.submitButtonText}
                 {!isSubmitting && <Check className="h-4 w-4" />}
@@ -475,5 +501,6 @@ export const FormRendererStepped: React.FC<FormRendererSteppedProps> = ({ form, 
         </span>
       </div>
     </div>
+    </FormThemeWrapper>
   );
 };

@@ -7,10 +7,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Trash2, Plus, Eye, GripVertical, Copy, Settings2, Type, Mail, Phone, FileText, ListOrdered, CheckSquare, Circle, Hash, Calendar, Clock, Link, Star, Upload, Heading, AlignLeft } from 'lucide-react';
+import { Trash2, Plus, Eye, GripVertical, Copy, Settings2, Type, Mail, Phone, FileText, ListOrdered, CheckSquare, Circle, Hash, Calendar, Clock, Link, Star, Upload, Heading, AlignLeft, Palette, GitBranch } from 'lucide-react';
 import { FormField, FormData, FieldType } from './types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { FormThemeEditor } from './FormThemeEditor';
+import { ConditionalLogicEditor } from './ConditionalLogicEditor';
 
 interface FormBuilderProps {
   initialForm?: FormData;
@@ -300,13 +302,21 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({ initialForm, onSave, o
       {/* Right Panel - Field Settings */}
       <div className="w-72 border rounded-lg bg-card">
         <Tabs defaultValue="field" className="h-full flex flex-col">
-          <TabsList className="w-full justify-start rounded-none border-b bg-transparent h-auto p-0">
-            <TabsTrigger value="field" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary">
+          <TabsList className="w-full justify-start rounded-none border-b bg-transparent h-auto p-0 flex-wrap">
+            <TabsTrigger value="field" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary text-xs px-2">
               Champ
             </TabsTrigger>
-            <TabsTrigger value="settings" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary">
-              <Settings2 className="h-4 w-4 mr-1" />
-              Paramètres
+            <TabsTrigger value="logic" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary text-xs px-2">
+              <GitBranch className="h-3 w-3 mr-1" />
+              Logique
+            </TabsTrigger>
+            <TabsTrigger value="theme" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary text-xs px-2">
+              <Palette className="h-3 w-3 mr-1" />
+              Thème
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary text-xs px-2">
+              <Settings2 className="h-3 w-3 mr-1" />
+              Params
             </TabsTrigger>
           </TabsList>
 
@@ -444,6 +454,39 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({ initialForm, onSave, o
                   <p className="text-sm">Sélectionnez un champ pour le configurer</p>
                 </div>
               )}
+            </TabsContent>
+
+            <TabsContent value="logic" className="p-4 mt-0 space-y-4">
+              {selectedField && !['heading', 'paragraph'].includes(selectedField.type) ? (
+                <ConditionalLogicEditor
+                  field={selectedField}
+                  allFields={form.fields}
+                  onChange={(rules, action) => {
+                    updateField(selectedField.id, {
+                      conditionalRules: rules,
+                      conditionalAction: action,
+                    });
+                  }}
+                />
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p className="text-sm">
+                    {selectedField
+                      ? 'Les titres et paragraphes ne supportent pas la logique conditionnelle'
+                      : 'Sélectionnez un champ pour configurer sa logique'}
+                  </p>
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="theme" className="p-4 mt-0">
+              <FormThemeEditor
+                theme={form.settings.formTheme || {}}
+                onChange={(formTheme) => setForm(prev => ({
+                  ...prev,
+                  settings: { ...prev.settings, formTheme }
+                }))}
+              />
             </TabsContent>
 
             <TabsContent value="settings" className="p-4 mt-0 space-y-4">
