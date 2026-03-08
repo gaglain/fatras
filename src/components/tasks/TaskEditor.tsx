@@ -14,6 +14,7 @@ import { useTasks, Task } from '@/hooks/useTasks';
 import { toast } from 'sonner';
 import { UniversalSearch } from '@/components/UniversalSearch';
 import { useCentralizedData } from '@/hooks/useCentralizedData';
+import { notifyMentionsIfNeeded } from '@/utils/mentionNotifier';
 
 interface TaskEditorProps {
   task: Task;
