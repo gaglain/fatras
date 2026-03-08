@@ -456,6 +456,39 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({ initialForm, onSave, o
               )}
             </TabsContent>
 
+            <TabsContent value="logic" className="p-4 mt-0 space-y-4">
+              {selectedField && !['heading', 'paragraph'].includes(selectedField.type) ? (
+                <ConditionalLogicEditor
+                  field={selectedField}
+                  allFields={form.fields}
+                  onChange={(rules, action) => {
+                    updateField(selectedField.id, {
+                      conditionalRules: rules,
+                      conditionalAction: action,
+                    });
+                  }}
+                />
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p className="text-sm">
+                    {selectedField
+                      ? 'Les titres et paragraphes ne supportent pas la logique conditionnelle'
+                      : 'Sélectionnez un champ pour configurer sa logique'}
+                  </p>
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="theme" className="p-4 mt-0">
+              <FormThemeEditor
+                theme={form.settings.formTheme || {}}
+                onChange={(formTheme) => setForm(prev => ({
+                  ...prev,
+                  settings: { ...prev.settings, formTheme }
+                }))}
+              />
+            </TabsContent>
+
             <TabsContent value="settings" className="p-4 mt-0 space-y-4">
               <div>
                 <Label>Texte du bouton</Label>
