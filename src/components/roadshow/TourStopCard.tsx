@@ -83,7 +83,10 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
   };
 
   const handleShareLink = async () => {
-    const shareUrl = `${window.location.origin}/front-tour?stop=${stop.id}`;
+    const publicOrigin = window.location.hostname.includes('fatras.net') 
+      ? 'https://fatras.net' 
+      : window.location.origin;
+    const shareUrl = `${publicOrigin}/front-tour?stop=${stop.id}`;
     try {
       await navigator.clipboard.writeText(shareUrl);
       setLinkCopied(true);
