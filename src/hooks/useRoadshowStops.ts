@@ -19,6 +19,9 @@ export interface RoadshowStop {
   event_time?: string;
   check_in_time?: string;
   departure_time?: string;
+  meeting_point_time?: string;
+  meeting_point_location?: string;
+  departure_to_show_time?: string;
   soundcheck_time?: string;
   doors_time?: string;
   show_start_time?: string;
@@ -76,6 +79,9 @@ export const useRoadshowStops = () => {
         event_time: stop.event_time,
         check_in_time: stop.check_in_time,
         departure_time: stop.departure_time,
+        meeting_point_time: (stop as any).meeting_point_time,
+        meeting_point_location: (stop as any).meeting_point_location,
+        departure_to_show_time: (stop as any).departure_to_show_time,
         soundcheck_time: (stop as any).soundcheck_time,
         doors_time: (stop as any).doors_time,
         show_start_time: (stop as any).show_start_time,
@@ -131,6 +137,9 @@ export const useRoadshowStops = () => {
           event_time: stopData.event_time || null,
           check_in_time: stopData.check_in_time || null,
           departure_time: stopData.departure_time || null,
+          meeting_point_time: stopData.meeting_point_time || null,
+          meeting_point_location: stopData.meeting_point_location || null,
+          departure_to_show_time: stopData.departure_to_show_time || null,
           soundcheck_time: stopData.soundcheck_time || null,
           doors_time: stopData.doors_time || null,
           show_start_time: stopData.show_start_time || null,
@@ -304,6 +313,9 @@ export const useRoadshowStops = () => {
           event_time: stopData.event_time || null,
           check_in_time: stopData.check_in_time || null,
           departure_time: stopData.departure_time || null,
+          meeting_point_time: stopData.meeting_point_time || null,
+          meeting_point_location: stopData.meeting_point_location || null,
+          departure_to_show_time: stopData.departure_to_show_time || null,
           soundcheck_time: stopData.soundcheck_time || null,
           doors_time: stopData.doors_time || null,
           show_start_time: stopData.show_start_time || null,
@@ -418,6 +430,9 @@ export const useRoadshowStops = () => {
     time: stop.event_time || '',
     checkInTime: stop.check_in_time || '',
     departureTime: stop.departure_time || '',
+    meetingPointTime: stop.meeting_point_time,
+    meetingPointLocation: stop.meeting_point_location,
+    departureToShowTime: stop.departure_to_show_time,
     soundcheckTime: stop.soundcheck_time,
     doorsTime: stop.doors_time,
     showStartTime: stop.show_start_time,
@@ -451,6 +466,9 @@ export const useRoadshowStops = () => {
     event_time: tourStop.time || null,
     check_in_time: tourStop.checkInTime || null,
     departure_time: tourStop.departureTime || null,
+    meeting_point_time: tourStop.meetingPointTime || null,
+    meeting_point_location: tourStop.meetingPointLocation || null,
+    departure_to_show_time: tourStop.departureToShowTime || null,
     soundcheck_time: tourStop.soundcheckTime || null,
     doors_time: tourStop.doorsTime || null,
     show_start_time: tourStop.showStartTime || null,

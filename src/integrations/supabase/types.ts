@@ -3130,6 +3130,7 @@ export type Database = {
           curfew_time: string | null
           departure_address: string | null
           departure_time: string | null
+          departure_to_show_time: string | null
           distance_km: number | null
           doors_time: string | null
           equipment: string[] | null
@@ -3141,6 +3142,8 @@ export type Database = {
           local_contact: string | null
           local_contact_phone: string | null
           longitude: number | null
+          meeting_point_location: string | null
+          meeting_point_time: string | null
           notes: string | null
           opportunity_id: string | null
           quote_id: string | null
@@ -3170,6 +3173,7 @@ export type Database = {
           curfew_time?: string | null
           departure_address?: string | null
           departure_time?: string | null
+          departure_to_show_time?: string | null
           distance_km?: number | null
           doors_time?: string | null
           equipment?: string[] | null
@@ -3181,6 +3185,8 @@ export type Database = {
           local_contact?: string | null
           local_contact_phone?: string | null
           longitude?: number | null
+          meeting_point_location?: string | null
+          meeting_point_time?: string | null
           notes?: string | null
           opportunity_id?: string | null
           quote_id?: string | null
@@ -3210,6 +3216,7 @@ export type Database = {
           curfew_time?: string | null
           departure_address?: string | null
           departure_time?: string | null
+          departure_to_show_time?: string | null
           distance_km?: number | null
           doors_time?: string | null
           equipment?: string[] | null
@@ -3221,6 +3228,8 @@ export type Database = {
           local_contact?: string | null
           local_contact_phone?: string | null
           longitude?: number | null
+          meeting_point_location?: string | null
+          meeting_point_time?: string | null
           notes?: string | null
           opportunity_id?: string | null
           quote_id?: string | null

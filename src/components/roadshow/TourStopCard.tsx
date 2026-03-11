@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Calendar, Clock, Users, Eye, Edit, Trash2, Download, MessageSquare, Leaf } from 'lucide-react';
+import { MapPin, Calendar, Clock, Users, Eye, Edit, Trash2, Download, MessageSquare, Leaf, Share2, Check } from 'lucide-react';
 import { Car } from 'lucide-react';
 import { TourStop, Artist } from '@/types/roadshow.types';
 import { TourStopPreview } from './TourStopPreview';
@@ -62,6 +62,7 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
   getUserById
 }) => {
   const [showPreview, setShowPreview] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   const handlePreview = () => {
     setShowPreview(true);
@@ -78,6 +79,27 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
       toast.success(`Feuille de route PDF téléchargée: ${stop.city}`);
     } catch {
       toast.error('Erreur lors de la génération du PDF');
+    }
+  };
+
+  const handleShareLink = async () => {
+    const shareUrl = `${window.location.origin}/front-tour?stop=${stop.id}`;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setLinkCopied(true);
+      toast.success('Lien copié dans le presse-papier');
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch {
+      // Fallback
+      const input = document.createElement('input');
+      input.value = shareUrl;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand('copy');
+      document.body.removeChild(input);
+      setLinkCopied(true);
+      toast.success('Lien copié dans le presse-papier');
+      setTimeout(() => setLinkCopied(false), 2000);
     }
   };
 
@@ -116,6 +138,15 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
               </div>
             )}
           </div>
+
+          {/* RDV équipe */}
+          {(stop.meetingPointTime || stop.meetingPointLocation || stop.departureToShowTime) && (
+            <div className="flex flex-wrap gap-2 sm:gap-3 mb-3 text-xs sm:text-sm text-muted-foreground bg-muted/50 rounded-md p-2">
+              {stop.meetingPointTime && <span>📍 RDV: {stop.meetingPointTime}</span>}
+              {stop.meetingPointLocation && <span>→ {stop.meetingPointLocation}</span>}
+              {stop.departureToShowTime && <span>🚗 Départ spectacle: {stop.departureToShowTime}</span>}
+            </div>
+          )}
 
           {/* Horaires détaillés */}
           {(stop.checkInTime || stop.departureTime || stop.soundcheckTime || stop.doorsTime || stop.showStartTime || stop.showEndTime || stop.curfewTime) && (
@@ -284,6 +315,14 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
               <Button
                 variant="outline-subtle"
                 size="icon-sm"
+                onClick={handleShareLink}
+                aria-label="Partager"
+              >
+                {linkCopied ? <Check className="h-4 w-4 text-green-600" /> : <Share2 className="h-4 w-4" />}
+              </Button>
+              <Button
+                variant="outline-subtle"
+                size="icon-sm"
                 onClick={handleDownloadPDF}
                 aria-label="Télécharger PDF"
               >
@@ -317,6 +356,10 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
               <Button variant="outline-subtle" size="sm" onClick={handlePreview}>
                 <Eye className="h-4 w-4" />
                 Aperçu
+              </Button>
+              <Button variant="outline-subtle" size="sm" onClick={handleShareLink}>
+                {linkCopied ? <Check className="h-4 w-4 text-green-600" /> : <Share2 className="h-4 w-4" />}
+                {linkCopied ? 'Copié !' : 'Partager'}
               </Button>
               <Button variant="outline-subtle" size="sm" onClick={handleDownloadPDF}>
                 <Download className="h-4 w-4" />

@@ -378,17 +378,30 @@ Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleT
                 day: 'numeric' 
               })}</p>
               <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
+                {(stop.meetingPointTime || stop.meetingPointLocation) && (
+                  <div className="w-full mb-1 bg-purple-50 dark:bg-purple-950/30 rounded px-2 py-1">
+                    <span className="text-[10px] sm:text-xs text-purple-600 dark:text-purple-400 uppercase font-medium">📍 RDV: </span>
+                    <span className="text-xs sm:text-sm font-medium text-foreground">
+                      {stop.meetingPointTime || ''} {stop.meetingPointLocation ? `— ${stop.meetingPointLocation}` : ''}
+                    </span>
+                    {stop.departureToShowTime && (
+                      <span className="ml-3 text-[10px] sm:text-xs text-muted-foreground">
+                        🚗 Départ spectacle: <span className="font-medium">{stop.departureToShowTime}</span>
+                      </span>
+                    )}
+                  </div>
+                )}
                 <div>
-                  <span className="text-[10px] sm:text-xs text-gray-500 uppercase">Spectacle: </span>
-                  <span className="text-xs sm:text-sm font-medium text-gray-700">{stop.time || '-'}</span>
+                  <span className="text-[10px] sm:text-xs text-muted-foreground uppercase">Spectacle: </span>
+                  <span className="text-xs sm:text-sm font-medium text-foreground">{stop.time || '-'}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] sm:text-xs text-gray-500 uppercase">Arrivée: </span>
-                  <span className="text-xs sm:text-sm font-medium text-gray-700">{stop.checkInTime || '-'}</span>
+                  <span className="text-[10px] sm:text-xs text-muted-foreground uppercase">Arrivée: </span>
+                  <span className="text-xs sm:text-sm font-medium text-foreground">{stop.checkInTime || '-'}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] sm:text-xs text-gray-500 uppercase">Départ: </span>
-                  <span className="text-xs sm:text-sm font-medium text-gray-700">{stop.departureTime || '-'}</span>
+                  <span className="text-[10px] sm:text-xs text-muted-foreground uppercase">Départ: </span>
+                  <span className="text-xs sm:text-sm font-medium text-foreground">{stop.departureTime || '-'}</span>
                 </div>
               </div>
             </div>

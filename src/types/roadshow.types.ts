@@ -8,6 +8,9 @@ export interface TourStop {
   time: string;
   checkInTime: string;
   departureTime: string;
+  meetingPointTime?: string;
+  meetingPointLocation?: string;
+  departureToShowTime?: string;
   soundcheckTime?: string;
   doorsTime?: string;
   showStartTime?: string;
@@ -46,6 +49,9 @@ export interface FormData {
   time: string;
   checkInTime: string;
   departureTime: string;
+  meetingPointTime?: string;
+  meetingPointLocation?: string;
+  departureToShowTime?: string;
   soundcheckTime?: string;
   doorsTime?: string;
   showStartTime?: string;
