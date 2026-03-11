@@ -315,6 +315,14 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
               <Button
                 variant="outline-subtle"
                 size="icon-sm"
+                onClick={handleShareLink}
+                aria-label="Partager"
+              >
+                {linkCopied ? <Check className="h-4 w-4 text-green-600" /> : <Share2 className="h-4 w-4" />}
+              </Button>
+              <Button
+                variant="outline-subtle"
+                size="icon-sm"
                 onClick={handleDownloadPDF}
                 aria-label="Télécharger PDF"
               >
