@@ -13,6 +13,37 @@ interface LogisticsFormProps {
 export const LogisticsForm: React.FC<LogisticsFormProps> = ({ formData, setFormData }) => {
   return (
     <div className="space-y-4">
+      {/* Rendez-vous */}
+      <div>
+        <h3 className="text-sm font-semibold text-foreground mb-3">📍 Rendez-vous équipe</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Heure de RDV</label>
+            <Input
+              type="time"
+              value={formData.meetingPointTime || ''}
+              onChange={(e) => setFormData({ ...formData, meetingPointTime: e.target.value })}
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Lieu de RDV</label>
+            <Input
+              value={formData.meetingPointLocation || ''}
+              onChange={(e) => setFormData({ ...formData, meetingPointLocation: e.target.value })}
+              placeholder="Ex: Parking du Zénith, Hall d'entrée..."
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Heure de départ vers le spectacle</label>
+            <Input
+              type="time"
+              value={formData.departureToShowTime || ''}
+              onChange={(e) => setFormData({ ...formData, departureToShowTime: e.target.value })}
+            />
+          </div>
+        </div>
+      </div>
+
       {/* Horaires détaillés */}
       <div>
         <h3 className="text-sm font-semibold text-foreground mb-3">🕐 Horaires détaillés</h3>

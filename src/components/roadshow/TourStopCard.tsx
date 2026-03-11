@@ -82,6 +82,27 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
     }
   };
 
+  const handleShareLink = async () => {
+    const shareUrl = `${window.location.origin}/front-tour?stop=${stop.id}`;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setLinkCopied(true);
+      toast.success('Lien copié dans le presse-papier');
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch {
+      // Fallback
+      const input = document.createElement('input');
+      input.value = shareUrl;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand('copy');
+      document.body.removeChild(input);
+      setLinkCopied(true);
+      toast.success('Lien copié dans le presse-papier');
+      setTimeout(() => setLinkCopied(false), 2000);
+    }
+  };
+
   return (
     <>
       <Card className="hover:shadow-lg transition-shadow">
