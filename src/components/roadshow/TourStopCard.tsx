@@ -139,6 +139,15 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
             )}
           </div>
 
+          {/* RDV équipe */}
+          {(stop.meetingPointTime || stop.meetingPointLocation || stop.departureToShowTime) && (
+            <div className="flex flex-wrap gap-2 sm:gap-3 mb-3 text-xs sm:text-sm text-muted-foreground bg-muted/50 rounded-md p-2">
+              {stop.meetingPointTime && <span>📍 RDV: {stop.meetingPointTime}</span>}
+              {stop.meetingPointLocation && <span>→ {stop.meetingPointLocation}</span>}
+              {stop.departureToShowTime && <span>🚗 Départ spectacle: {stop.departureToShowTime}</span>}
+            </div>
+          )}
+
           {/* Horaires détaillés */}
           {(stop.checkInTime || stop.departureTime || stop.soundcheckTime || stop.doorsTime || stop.showStartTime || stop.showEndTime || stop.curfewTime) && (
             <div className="flex flex-wrap gap-2 sm:gap-3 mb-3 text-xs sm:text-sm text-muted-foreground">
