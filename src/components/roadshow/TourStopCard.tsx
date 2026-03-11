@@ -62,6 +62,7 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
   getUserById
 }) => {
   const [showPreview, setShowPreview] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   const handlePreview = () => {
     setShowPreview(true);
