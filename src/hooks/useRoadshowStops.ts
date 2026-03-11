@@ -19,6 +19,9 @@ export interface RoadshowStop {
   event_time?: string;
   check_in_time?: string;
   departure_time?: string;
+  meeting_point_time?: string;
+  meeting_point_location?: string;
+  departure_to_show_time?: string;
   soundcheck_time?: string;
   doors_time?: string;
   show_start_time?: string;
