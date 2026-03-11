@@ -357,6 +357,10 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
                 <Eye className="h-4 w-4" />
                 Aperçu
               </Button>
+              <Button variant="outline-subtle" size="sm" onClick={handleShareLink}>
+                {linkCopied ? <Check className="h-4 w-4 text-green-600" /> : <Share2 className="h-4 w-4" />}
+                {linkCopied ? 'Copié !' : 'Partager'}
+              </Button>
               <Button variant="outline-subtle" size="sm" onClick={handleDownloadPDF}>
                 <Download className="h-4 w-4" />
                 PDF
