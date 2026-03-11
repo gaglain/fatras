@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Calendar, Clock, Users, Eye, Edit, Trash2, Download, MessageSquare, Leaf } from 'lucide-react';
+import { MapPin, Calendar, Clock, Users, Eye, Edit, Trash2, Download, MessageSquare, Leaf, Share2, Check } from 'lucide-react';
 import { Car } from 'lucide-react';
 import { TourStop, Artist } from '@/types/roadshow.types';
 import { TourStopPreview } from './TourStopPreview';
