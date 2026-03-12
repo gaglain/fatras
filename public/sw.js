@@ -81,14 +81,34 @@ self.addEventListener('push', (event) => {
   }
 
   event.waitUntil(
-    self.registration.showNotification(notificationData.title, {
-      body: notificationData.body,
-      icon: notificationData.icon,
-      badge: notificationData.badge,
-      tag: notificationData.tag,
-      data: notificationData.data,
-      vibrate: [200, 100, 200],
-    })
+    (async () => {
+      // Show the notification
+      await self.registration.showNotification(notificationData.title, {
+        body: notificationData.body,
+        icon: notificationData.icon,
+        badge: notificationData.badge,
+        tag: notificationData.tag,
+        data: notificationData.data,
+        vibrate: [200, 100, 200],
+      });
+
+      // Update PWA app badge count
+      if ('setAppBadge' in navigator) {
+        try {
+          const badgeCount = notificationData.data?.badgeCount;
+          if (typeof badgeCount === 'number') {
+            await navigator.setAppBadge(badgeCount);
+          } else {
+            // Increment: get current notifications and count
+            const notifications = await self.registration.getNotifications();
+            await navigator.setAppBadge(notifications.length + 1);
+          }
+          console.log('📛 App badge updated');
+        } catch (err) {
+          console.error('📛 Failed to set app badge:', err);
+        }
+      }
+    })()
   );
 });
 
@@ -96,7 +116,22 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   console.log('🔔 Notification clicked:', event);
   event.notification.close();
-  event.waitUntil(clients.openWindow(event.notification.data.url || '/'));
+  event.waitUntil(
+    (async () => {
+      // Update badge: decrement or clear
+      if ('setAppBadge' in navigator) {
+        try {
+          const remaining = await self.registration.getNotifications();
+          if (remaining.length > 0) {
+            await navigator.setAppBadge(remaining.length);
+          } else {
+            await navigator.clearAppBadge();
+          }
+        } catch (_) {}
+      }
+      await clients.openWindow(event.notification.data.url || '/');
+    })()
+  );
 });
 
 // Check if a Supabase API request is cacheable
