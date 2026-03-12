@@ -123,7 +123,9 @@ export const FrontTour: React.FC = () => {
 
           {tourStops.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-500 text-lg">Aucune date de tournée programmée pour le moment.</p>
+              <p className="text-gray-500 text-lg">
+                {selectedStopId ? 'La feuille de route demandée est introuvable.' : 'Aucune date de tournée programmée pour le moment.'}
+              </p>
             </div>
           ) : (
             <div className="space-y-6">
