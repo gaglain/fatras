@@ -81,14 +81,34 @@ self.addEventListener('push', (event) => {
   }
 
   event.waitUntil(
-    self.registration.showNotification(notificationData.title, {
-      body: notificationData.body,
-      icon: notificationData.icon,
-      badge: notificationData.badge,
-      tag: notificationData.tag,
-      data: notificationData.data,
-      vibrate: [200, 100, 200],
-    })
+    (async () => {
+      // Show the notification
+      await self.registration.showNotification(notificationData.title, {
+        body: notificationData.body,
+        icon: notificationData.icon,
+        badge: notificationData.badge,
+        tag: notificationData.tag,
+        data: notificationData.data,
+        vibrate: [200, 100, 200],
+      });
+
+      // Update PWA app badge count
+      if ('setAppBadge' in navigator) {
+        try {
+          const badgeCount = notificationData.data?.badgeCount;
+          if (typeof badgeCount === 'number') {
+            await navigator.setAppBadge(badgeCount);
+          } else {
+            // Increment: get current notifications and count
+            const notifications = await self.registration.getNotifications();
+            await navigator.setAppBadge(notifications.length + 1);
+          }
+          console.log('📛 App badge updated');
+        } catch (err) {
+          console.error('📛 Failed to set app badge:', err);
+        }
+      }
+    })()
   );
 });
 
