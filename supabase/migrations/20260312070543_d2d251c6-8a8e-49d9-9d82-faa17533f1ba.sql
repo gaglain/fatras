@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Anonymous can view confirmed roadshow stops" ON public.roadshow_stops;
