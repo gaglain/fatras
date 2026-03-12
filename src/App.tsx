@@ -40,6 +40,7 @@ const FrontContact = lazy(() => import("./pages/FrontContact").then(m => ({ defa
 const FrontShop = lazy(() => import("./pages/FrontShop").then(m => ({ default: m.FrontShop })));
 const FrontDynamicPage = lazy(() => import("./pages/FrontDynamicPage").then(m => ({ default: m.FrontDynamicPage })));
 const FrontArtistShowcase = lazy(() => import("./pages/FrontArtistShowcase").then(m => ({ default: m.FrontArtistShowcase })));
+const RoadsheetPublic = lazy(() => import("./pages/RoadsheetPublic").then(m => ({ default: m.RoadsheetPublic })));
 
 // Lazy loaded pages - BACK-OFFICE (protected)
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -189,6 +190,7 @@ const App = () => {
                         <Route path="/artistes/:id" element={<FrontLayout><FrontArtistDetail /></FrontLayout>} />
                         <Route path="/tournee" element={<FrontLayout><FrontTour /></FrontLayout>} />
                         <Route path="/front-tour" element={<FrontLayout><FrontTour /></FrontLayout>} />
+                        <Route path="/feuille-de-route/:id" element={<RoadsheetPublic />} />
                         <Route path="/spectacles" element={<FrontLayout><FrontArtists /></FrontLayout>} />
                         
                         <Route path="/artist-showcase" element={<FrontArtistShowcase />} />
