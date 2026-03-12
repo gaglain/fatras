@@ -8,24 +8,39 @@ import { Calendar, MapPin, Clock, Users } from 'lucide-react';
 export const FrontTour: React.FC = () => {
   const [tourStops, setTourStops] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const selectedStopId = new URLSearchParams(window.location.search).get('stop');
 
   useEffect(() => {
     loadTourStops();
-  }, []);
+  }, [selectedStopId]);
 
   const loadTourStops = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('roadshow_stops')
         .select('*')
-        .eq('status', 'confirmed')
-        .order('date', { ascending: true });
+        .order('event_date', { ascending: true });
+
+      if (selectedStopId) {
+        query = query.eq('id', selectedStopId);
+      } else {
+        query = query.eq('status', 'confirmed');
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
+
+      const normalizedStops = (data || []).map((stop: any) => ({
+        ...stop,
+        date: stop.event_date ?? stop.date,
+        time: stop.event_time ?? stop.time,
+        tickets_available: stop.tickets_available ?? stop.ticketsAvailable,
+      }));
       
       // Charger les artistes associés
-      const stopsWithArtists = await Promise.all((data || []).map(async (stop) => {
+      const stopsWithArtists = await Promise.all(normalizedStops.map(async (stop) => {
         if (stop.artist_lineup) {
           let artistIds: string[] = [];
           
@@ -108,7 +123,9 @@ export const FrontTour: React.FC = () => {
 
           {tourStops.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-500 text-lg">Aucune date de tournée programmée pour le moment.</p>
+              <p className="text-gray-500 text-lg">
+                {selectedStopId ? 'La feuille de route demandée est introuvable.' : 'Aucune date de tournée programmée pour le moment.'}
+              </p>
             </div>
           ) : (
             <div className="space-y-6">

@@ -165,6 +165,8 @@ export const generateTourStopPDF = (
   // HORAIRES
   // ==========================================
   const timeSlots = [
+    { label: 'RDV equipe', value: tourStop.meetingPointTime },
+    { label: 'Depart vers spectacle', value: tourStop.departureToShowTime },
     { label: 'Arrivee', value: tourStop.checkInTime },
     { label: 'Balance', value: tourStop.soundcheckTime },
     { label: 'Ouverture portes', value: tourStop.doorsTime },
@@ -192,6 +194,11 @@ export const generateTourStopPDF = (
       doc.text(slot.value!, m + 55, slotY);
     });
     y += timeSlots.length * 8 + 8;
+  }
+
+  if (tourStop.meetingPointLocation) {
+    drawField('Lieu RDV :', tourStop.meetingPointLocation);
+    y += 2;
   }
 
   // ==========================================
