@@ -116,7 +116,22 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   console.log('🔔 Notification clicked:', event);
   event.notification.close();
-  event.waitUntil(clients.openWindow(event.notification.data.url || '/'));
+  event.waitUntil(
+    (async () => {
+      // Update badge: decrement or clear
+      if ('setAppBadge' in navigator) {
+        try {
+          const remaining = await self.registration.getNotifications();
+          if (remaining.length > 0) {
+            await navigator.setAppBadge(remaining.length);
+          } else {
+            await navigator.clearAppBadge();
+          }
+        } catch (_) {}
+      }
+      await clients.openWindow(event.notification.data.url || '/');
+    })()
+  );
 });
 
 // Check if a Supabase API request is cacheable
