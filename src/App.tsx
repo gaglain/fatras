@@ -190,6 +190,7 @@ const App = () => {
                         <Route path="/artistes/:id" element={<FrontLayout><FrontArtistDetail /></FrontLayout>} />
                         <Route path="/tournee" element={<FrontLayout><FrontTour /></FrontLayout>} />
                         <Route path="/front-tour" element={<FrontLayout><FrontTour /></FrontLayout>} />
+                        <Route path="/feuille-de-route/:id" element={<RoadsheetPublic />} />
                         <Route path="/spectacles" element={<FrontLayout><FrontArtists /></FrontLayout>} />
                         
                         <Route path="/artist-showcase" element={<FrontArtistShowcase />} />
