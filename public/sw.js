@@ -114,17 +114,17 @@ self.addEventListener('push', (event) => {
       });
 
       // Update PWA app badge count
-      if ('setAppBadge' in navigator) {
+      const { setAppBadge } = getBadgeApi();
+      if (setAppBadge) {
         try {
-          const badgeCount = notificationData.data?.badgeCount;
-          if (typeof badgeCount === 'number') {
-            await navigator.setAppBadge(badgeCount);
-          } else {
-            // Increment: get current notifications and count
-            const notifications = await self.registration.getNotifications();
-            await navigator.setAppBadge(notifications.length + 1);
-          }
-          console.log('📛 App badge updated');
+          const rawBadgeCount = notificationData.data?.badgeCount;
+          const hasNumericBadgeCount = typeof rawBadgeCount === 'number' && Number.isFinite(rawBadgeCount);
+          const badgeCount = hasNumericBadgeCount
+            ? Math.max(0, Math.floor(rawBadgeCount))
+            : 1;
+
+          await setAppBadge(badgeCount);
+          console.log('📛 App badge updated:', badgeCount);
         } catch (err) {
           console.error('📛 Failed to set app badge:', err);
         }
