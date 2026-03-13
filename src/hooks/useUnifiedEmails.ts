@@ -584,15 +584,17 @@ export const useUnifiedEmails = (options: UseUnifiedEmailsOptions = {}) => {
 
   const markAsRead = async (emailId: string) => {
     try {
+      const readTimestamp = new Date().toISOString();
+
       const { error } = await supabase
         .from('emails')
-        .update({ read_at: new Date().toISOString() })
+        .update({ read_at: readTimestamp, is_read: true })
         .eq('id', emailId);
 
       if (error) throw error;
 
       setEmails(prev => prev.map(email => 
-        email.id === emailId ? { ...email, read_at: new Date().toISOString() } : email
+        email.id === emailId ? { ...email, read_at: readTimestamp, is_read: true } : email
       ));
     } catch (error: unknown) {
       logger.error('Erreur lors du marquage comme lu:', error);
