@@ -191,11 +191,21 @@ export const ChatWidget: React.FC = () => {
     prevMessagesLengthRef.current = localMessages.length;
   }, [localMessages.length]);
 
+  // Sync localMessages with query cache changes (realtime + own sends)
   useEffect(() => {
-    if (selectedChannel) {
+    if (!selectedChannel) return;
+    // Poll cache at short interval to catch realtime updates
+    const interval = setInterval(() => {
       const cachedMessages = getMessages(selectedChannel);
-      if (cachedMessages.length > 0) setLocalMessages(cachedMessages);
-    }
+      setLocalMessages(prev => {
+        if (cachedMessages.length !== prev.length || 
+            (cachedMessages.length > 0 && prev.length > 0 && cachedMessages[cachedMessages.length - 1]?.id !== prev[prev.length - 1]?.id)) {
+          return cachedMessages;
+        }
+        return prev;
+      });
+    }, 300);
+    return () => clearInterval(interval);
   }, [selectedChannel, getMessages]);
 
   const handleSendMessage = useCallback(async () => {
