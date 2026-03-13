@@ -380,7 +380,17 @@ export const EmailAnalytics: React.FC = () => {
                       }>
                         {formatEventType(event.event_type)}
                       </Badge>
-                      <span className="text-sm">Contact: {event.contact_id.slice(0, 8)}...</span>
+                      <button
+                        onClick={() => navigate(`/contacts/${event.contact_id}`)}
+                        className="text-sm text-left hover:underline text-primary"
+                      >
+                        {event.contact_first_name || event.contact_last_name
+                          ? `${event.contact_first_name || ''} ${event.contact_last_name || ''}`.trim()
+                          : event.contact_id.slice(0, 8) + '...'}
+                        {event.contact_email && (
+                          <span className="ml-1 text-muted-foreground">({event.contact_email})</span>
+                        )}
+                      </button>
                     </div>
                     <span className="text-xs text-muted-foreground">
                       {new Date(event.created_at).toLocaleString()}
