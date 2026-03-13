@@ -137,22 +137,23 @@ export const UnifiedNotificationCenter: React.FC = () => {
     ]);
   };
 
-  const handleNotificationClick = (notification: UnifiedNotification) => {
-    handleMarkAsRead(notification);
+  const handleNotificationClick = async (notification: UnifiedNotification) => {
+    await handleMarkAsRead(notification);
     setIsOpen(false); // Fermer le popover
-    
+
     // Navigation basée sur le type avec un petit délai pour laisser le popover se fermer
     setTimeout(() => {
       switch (notification.type) {
         case 'email':
           navigate('/email');
           break;
-        case 'task':
-          // Extraire le task_id de l'id de la notification (format: "task-{notif_id}-{task_id}")
-          const parts = notification.id.split('-');
-          const taskId = parts[parts.length - 1]; // Dernier élément = task_id
-          navigate(`/tasks?taskId=${taskId}`);
+        case 'task': {
+          const taskIdFromData = (notification.data as { task_id?: string } | undefined)?.task_id;
+          const fallbackTaskId = notification.id.split('-').at(-1);
+          const taskId = taskIdFromData || fallbackTaskId;
+          navigate(taskId ? `/tasks?taskId=${taskId}` : '/tasks');
           break;
+        }
         case 'event':
           navigate('/events');
           break;
@@ -170,13 +171,12 @@ export const UnifiedNotificationCenter: React.FC = () => {
           navigate(`/dashboard?${query.toString()}`);
           break;
         }
-        case 'public_chat':
-          // Navigate to messagerie with visitor_id to open the conversation
+        case 'public_chat': {
           const visitorId = notification.data?.visitor_id;
-          console.log('🔔 Public chat notification clicked, navigating with visitorId:', visitorId);
           navigate('/messagerie', { state: { tab: 'public', visitorId } });
           break;
-        case 'roadshow_assignment':
+        }
+        case 'roadshow_assignment': {
           const stopId = notification.data?.roadshow_stop_id;
           if (stopId) {
             navigate(`/roadshow?stop=${stopId}`);
@@ -184,6 +184,7 @@ export const UnifiedNotificationCenter: React.FC = () => {
             navigate('/roadshow');
           }
           break;
+        }
         default:
           break;
       }
