@@ -13,6 +13,7 @@ import { TourStopCard } from '@/components/roadshow/TourStopCard';
 import { RoadshowRouteMap } from '@/components/roadshow/RoadshowRouteMap';
 import { RoadshowTimeline } from '@/components/roadshow/RoadshowTimeline';
 import { VehicleRatesSettings } from '@/components/roadshow/VehicleRatesSettings';
+import { ArtistConfirmationPopup } from '@/components/roadshow/ArtistConfirmationPopup';
 import { useRoadshowForm } from '@/hooks/useRoadshowForm';
 import { useRoadshowStops } from '@/hooks/useRoadshowStops';
 import { useRoadshowSettings } from '@/hooks/useRoadshowSettings';
