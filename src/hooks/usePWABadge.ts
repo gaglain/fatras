@@ -6,6 +6,11 @@ type BadgeApi = {
   clearAppBadge?: () => Promise<void>;
 };
 
+type BadgeSyncMessage = {
+  type: 'PWA_BADGE_SYNC';
+  count: number;
+};
+
 async function getBadgeApi(): Promise<BadgeApi> {
   const nav = navigator as Navigator & BadgeApi;
 
@@ -30,6 +35,25 @@ async function getBadgeApi(): Promise<BadgeApi> {
   }
 
   return {};
+}
+
+async function postBadgeSyncMessage(count: number) {
+  if (!('serviceWorker' in navigator)) return;
+
+  const normalizedCount = Math.max(0, Math.floor(count));
+  const message: BadgeSyncMessage = { type: 'PWA_BADGE_SYNC', count: normalizedCount };
+
+  try {
+    if (navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage(message);
+      return;
+    }
+
+    const registration = await navigator.serviceWorker.ready;
+    registration.active?.postMessage(message);
+  } catch (error) {
+    logger.debug('PWA Badge - Impossible de synchroniser via SW:', error);
+  }
 }
 
 /**

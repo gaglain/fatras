@@ -21,7 +21,11 @@ interface UnifiedNotification {
   data?: Record<string, any>;
 }
 
-export const NotificationList: React.FC = () => {
+interface NotificationListProps {
+  onNotificationHandled?: () => void;
+}
+
+export const NotificationList: React.FC<NotificationListProps> = ({ onNotificationHandled }) => {
   const navigate = useNavigate();
   
   const { 
