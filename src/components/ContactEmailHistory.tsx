@@ -76,11 +76,12 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
   const handleSync = React.useCallback(async () => {
     setIsSyncing(true);
     try {
-      await syncNow();
+      await syncNow({ contactId, contactEmail: normalizedContactEmail, limit: 500 });
+      await loadEmails({ contactId, contactEmail: normalizedContactEmail, limit: 500 });
     } finally {
       setIsSyncing(false);
     }
-  }, [syncNow]);
+  }, [syncNow, loadEmails, contactId, normalizedContactEmail]);
 
 
   const formatDate = (dateString: string) => {
