@@ -31,6 +31,9 @@ interface EventData {
   created_at: string;
   contact_id: string;
   event_data: any;
+  contact_first_name?: string;
+  contact_last_name?: string;
+  contact_email?: string;
 }
 
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--muted))', 'hsl(var(--accent))'];
