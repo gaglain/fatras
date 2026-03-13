@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TourStop } from '@/types/roadshow.types';
-import { MapPin, Calendar, Clock, Users, Download, Printer, FileText, DollarSign, Contact, CalendarDays, Plus, Trash2, Image as ImageIcon, Eye, X, Music, Route } from 'lucide-react';
+import { MapPin, Calendar, Clock, Users, Download, Printer, FileText, DollarSign, Contact, CalendarDays, Plus, Trash2, Image as ImageIcon, Eye, X, Music, Route, CheckCircle } from 'lucide-react';
 import { useConfirm } from '@/components/ui/confirm-dialog';
 import { TourStopTravelInfo } from './TourStopTravelInfo';
 import { TourStopRouteMap } from './TourStopRouteMap';
@@ -15,6 +15,9 @@ import { useRoadshowEntityConnections, RoadshowEntityConnection } from '@/hooks/
 import { useShowBibleSetlists } from '@/hooks/useShowBibleSetlists';
 import { Badge } from '@/components/ui/badge';
 import { ShowBibleSetlistEditor } from '@/components/ShowBibleSetlistEditor';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface TourStopPreviewProps {
   stop: TourStop | null;
