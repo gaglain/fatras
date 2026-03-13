@@ -439,16 +439,53 @@ Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleT
           <div>
             <h3 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base">🎭 Casting</h3>
             {stop.artistLineup.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {stop.artistLineup.map((artist, index) => {
-                  const user = getUserById(artist.userId);
+              <div className="space-y-2">
+                <div className="flex flex-wrap gap-2">
+                  {stop.artistLineup.map((artist, index) => {
+                    const artistUser = getUserById(artist.userId);
+                    const isCurrentUser = artist.userId === user?.id;
+                    return (
+                      <div key={index} className={`flex items-center gap-2 px-2 py-1.5 rounded-full text-xs sm:text-sm ${isCurrentUser ? 'bg-primary/10 border border-primary/30' : 'bg-gray-50'}`}>
+                        <span className="text-gray-700">{artistUser?.name || 'Artiste inconnu'}</span>
+                        <span className={`w-2 h-2 rounded-full flex-shrink-0 ${artist.confirmed ? 'bg-green-500' : 'bg-yellow-500'}`} />
+                        {isCurrentUser && !artist.confirmed && (
+                          <span className="text-[10px] text-muted-foreground">(vous)</span>
+                        )}
+                        {isCurrentUser && artist.confirmed && (
+                          <span className="text-[10px] text-green-600">(confirmé)</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                {(() => {
+                  const currentUserInLineup = stop.artistLineup.find(a => a.userId === user?.id);
+                  if (!currentUserInLineup) return null;
                   return (
-                    <div key={index} className="flex items-center gap-2 px-2 py-1.5 bg-gray-50 rounded-full text-xs sm:text-sm">
-                      <span className="text-gray-700">{user?.name || 'Artiste inconnu'}</span>
-                      <span className={`w-2 h-2 rounded-full flex-shrink-0 ${artist.confirmed ? 'bg-green-500' : 'bg-yellow-500'}`} />
-                    </div>
+                    <Button
+                      size="sm"
+                      variant={currentUserInLineup.confirmed ? "outline" : "default"}
+                      className="mt-2"
+                      onClick={async () => {
+                        try {
+                          const { error } = await supabase.rpc('confirm_roadshow_attendance', {
+                            stop_id: stop.id,
+                            is_confirmed: !currentUserInLineup.confirmed
+                          });
+                          if (error) throw error;
+                          toast.success(currentUserInLineup.confirmed ? 'Présence annulée' : 'Présence confirmée !');
+                          currentUserInLineup.confirmed = !currentUserInLineup.confirmed;
+                          setExpenseTitle(prev => prev + '');
+                        } catch {
+                          toast.error('Erreur lors de la confirmation');
+                        }
+                      }}
+                    >
+                      <CheckCircle className="h-4 w-4 mr-1" />
+                      {currentUserInLineup.confirmed ? 'Annuler ma confirmation' : 'Confirmer ma présence'}
+                    </Button>
                   );
-                })}
+                })()}
               </div>
             ) : (
               <p className="text-gray-500 italic text-sm">Aucun artiste assigné</p>
