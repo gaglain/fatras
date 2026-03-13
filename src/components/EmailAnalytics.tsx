@@ -44,7 +44,7 @@ export const EmailAnalytics: React.FC = () => {
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData[]>([]);
   const [eventHistory, setEventHistory] = useState<EventData[]>([]);
   const [loading, setLoading] = useState(false);
-
+  const navigate = useNavigate();
   // Charger les données d'analytics
   const fetchAnalytics = async () => {
     setLoading(true);
