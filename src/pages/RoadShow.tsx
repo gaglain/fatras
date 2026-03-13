@@ -291,6 +291,16 @@ export const RoadShow: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Popup de confirmation de présence pour les artistes */}
+      {currentUser && !loading && (
+        <ArtistConfirmationPopup
+          userId={currentUser.id}
+          stops={tourStops}
+          getUserById={getUserById}
+          onConfirmed={fetchStops}
+        />
+      )}
     </div>
   );
 };
