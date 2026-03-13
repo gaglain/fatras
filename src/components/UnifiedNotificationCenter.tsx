@@ -16,7 +16,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 
 interface UnifiedNotification {
   id: string;
-  type: 'email' | 'task' | 'event' | 'contact' | 'message' | 'general' | 'public_chat';
+  type: 'email' | 'task' | 'event' | 'contact' | 'message' | 'general' | 'public_chat' | 'roadshow_assignment';
   title: string;
   message?: string;
   is_read: boolean;
@@ -156,6 +156,14 @@ export const UnifiedNotificationCenter: React.FC = () => {
           const visitorId = notification.data?.visitor_id;
           console.log('🔔 Public chat notification clicked, navigating with visitorId:', visitorId);
           navigate('/messagerie', { state: { tab: 'public', visitorId } });
+          break;
+        case 'roadshow_assignment':
+          const stopId = notification.data?.roadshow_stop_id;
+          if (stopId) {
+            navigate(`/roadshow?stop=${stopId}`);
+          } else {
+            navigate('/roadshow');
+          }
           break;
         default:
           break;

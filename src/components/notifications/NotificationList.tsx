@@ -11,13 +11,14 @@ import { useNavigate } from 'react-router-dom';
 
 interface UnifiedNotification {
   id: string;
-  type: 'email' | 'task' | 'event' | 'contact' | 'message' | 'general';
+  type: 'email' | 'task' | 'event' | 'contact' | 'message' | 'general' | 'roadshow_assignment';
   title: string;
   message?: string;
   is_read: boolean;
   created_at: string;
   source: 'email' | 'general' | 'task';
   priority?: 'high' | 'medium' | 'low';
+  data?: Record<string, any>;
 }
 
 export const NotificationList: React.FC = () => {
@@ -134,6 +135,14 @@ export const NotificationList: React.FC = () => {
         break;
       case 'message':
         navigate('/messagerie');
+        break;
+      case 'roadshow_assignment':
+        const stopId = notification.data?.roadshow_stop_id;
+        if (stopId) {
+          navigate(`/roadshow?stop=${stopId}`);
+        } else {
+          navigate('/roadshow');
+        }
         break;
       default:
         break;
