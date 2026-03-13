@@ -88,7 +88,7 @@ export const EmailAnalytics: React.FC = () => {
     try {
       let query = supabase
         .from('email_analytics')
-        .select('*, contacts:contact_id(id, first_name, last_name, email)')
+        .select('*')
         .order('created_at', { ascending: false })
         .limit(100);
 
@@ -97,14 +97,36 @@ export const EmailAnalytics: React.FC = () => {
       }
 
       const { data, error } = await query;
-      
       if (error) throw error;
-      setEventHistory((data || []).map((e: any) => ({
-        ...e,
-        contact_first_name: e.contacts?.first_name,
-        contact_last_name: e.contacts?.last_name,
-        contact_email: e.contacts?.email,
-      })));
+
+      const events = data || [];
+      const contactIds = Array.from(new Set(events.map((event) => event.contact_id).filter(Boolean)));
+
+      if (contactIds.length === 0) {
+        setEventHistory(events);
+        return;
+      }
+
+      const { data: contactsData, error: contactsError } = await supabase
+        .from('contacts')
+        .select('id, first_name, last_name, email')
+        .in('id', contactIds);
+
+      if (contactsError) throw contactsError;
+
+      const contactsById = new Map((contactsData || []).map((contact) => [contact.id, contact]));
+
+      setEventHistory(
+        events.map((event) => {
+          const contact = contactsById.get(event.contact_id);
+          return {
+            ...event,
+            contact_first_name: contact?.first_name,
+            contact_last_name: contact?.last_name,
+            contact_email: contact?.email,
+          };
+        })
+      );
     } catch (error) {
       console.error('Erreur lors du chargement de l\'historique:', error);
     }
