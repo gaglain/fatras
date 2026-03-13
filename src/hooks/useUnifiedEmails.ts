@@ -510,6 +510,9 @@ export const useUnifiedEmails = (options: UseUnifiedEmailsOptions = {}) => {
               sent_at: ie.sent_at ?? e.sent_at,
               received_at: ie.received_at ?? e.received_at,
               read_at: ie.read_at ?? e.read_at,
+              delivered_at: ie.received_at ?? e.delivered_at,
+              opened_at: e.opened_at,
+              is_read: ie.read_at ? true : e.is_read,
               updated_at: ie.updated_at ?? e.updated_at,
               status: e.status || 'delivered',
             };
