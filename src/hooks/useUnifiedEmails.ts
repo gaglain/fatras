@@ -532,7 +532,7 @@ export const useUnifiedEmails = (options: UseUnifiedEmailsOptions = {}) => {
     };
   };
 
-  const syncAllAccounts = async () => {
+  const syncAllAccounts = async (options: LoadEmailsOptions = {}) => {
     if (!user) return;
     try {
       logger.debug('🔄 Démarrage de la synchronisation automatique des emails...');
@@ -548,7 +548,7 @@ export const useUnifiedEmails = (options: UseUnifiedEmailsOptions = {}) => {
 
         if (!imapError && imapData?.success) {
           logger.debug('✅ Synchronisation IMAP réussie:', imapData);
-          await loadEmails();
+          await loadEmails(options);
           return;
         }
       } catch (imapSyncError: unknown) {
@@ -575,7 +575,7 @@ export const useUnifiedEmails = (options: UseUnifiedEmailsOptions = {}) => {
         }
       }
       
-      await loadEmails();
+      await loadEmails(options);
       logger.debug('✅ Synchronisation Nylas terminée');
     } catch (syncError: unknown) {
       logger.error('❌ Erreur synchro auto:', syncError);
