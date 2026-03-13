@@ -11,7 +11,7 @@ import { useNavigate } from 'react-router-dom';
 
 interface UnifiedNotification {
   id: string;
-  type: 'email' | 'task' | 'event' | 'contact' | 'message' | 'general';
+  type: 'email' | 'task' | 'event' | 'contact' | 'message' | 'general' | 'roadshow_assignment';
   title: string;
   message?: string;
   is_read: boolean;

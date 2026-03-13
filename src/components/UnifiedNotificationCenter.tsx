@@ -16,7 +16,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 
 interface UnifiedNotification {
   id: string;
-  type: 'email' | 'task' | 'event' | 'contact' | 'message' | 'general' | 'public_chat';
+  type: 'email' | 'task' | 'event' | 'contact' | 'message' | 'general' | 'public_chat' | 'roadshow_assignment';
   title: string;
   message?: string;
   is_read: boolean;
