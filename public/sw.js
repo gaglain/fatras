@@ -189,7 +189,24 @@ self.addEventListener('notificationclick', (event) => {
           await clearAppBadge();
         } catch (_) {}
       }
-      await clients.openWindow(event.notification.data.url || '/');
+
+      const targetUrl = new URL(resolveNotificationUrl(event.notification.data || {}), self.location.origin).toString();
+      const clientsList = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+
+      for (const client of clientsList) {
+        try {
+          const clientUrl = new URL(client.url);
+          if (clientUrl.origin === self.location.origin) {
+            if (typeof client.navigate === 'function') {
+              await client.navigate(targetUrl);
+            }
+            await client.focus();
+            return;
+          }
+        } catch (_) {}
+      }
+
+      await clients.openWindow(targetUrl);
     })()
   );
 });

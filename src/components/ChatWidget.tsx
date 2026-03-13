@@ -166,13 +166,13 @@ export const ChatWidget: React.FC = () => {
 
   useEffect(() => {
     const createDefault = async () => {
-      if (isOpen && !loading && channels.length === 0 && !pendingChannelName && !pendingRoadshowStopId) {
+      if (isOpen && !loading && channels.length === 0 && !pendingChannelName && !pendingChannelId && !pendingRoadshowStopId) {
         const id = await createChannel('general', 'Canal par défaut', 'public', []);
         if (id) { handleChannelSelect(id); await fetchChannels(); }
       }
     };
     createDefault();
-  }, [isOpen, loading, channels.length, createChannel, fetchChannels, pendingChannelName, pendingRoadshowStopId, handleChannelSelect]);
+  }, [isOpen, loading, channels.length, createChannel, fetchChannels, pendingChannelName, pendingChannelId, pendingRoadshowStopId, handleChannelSelect]);
 
   useEffect(() => {
     if (selectedChannel && isOpen) {

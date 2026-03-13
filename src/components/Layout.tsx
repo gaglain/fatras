@@ -33,15 +33,37 @@ interface LayoutProps {
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   const { unreadCount: generalUnreadCount } = useNotifications();
   const { getUnreadCount } = useEmailNotifications();
   const messagingUnreadCount = useMessagingUnreadCount();
-  
+
   // Badge PWA avec toutes les notifications (général + email + messagerie)
   const totalUnreadCount = generalUnreadCount + getUnreadCount() + messagingUnreadCount;
   usePWABadge(totalUnreadCount);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('openChat') !== '1') return;
+
+    const channelId = params.get('channelId');
+    const roadshowStopId = params.get('roadshowStopId');
+    const channelName = params.get('channelName');
+
+    if (channelId) {
+      openChatWithChannelId(channelId);
+    } else if (roadshowStopId) {
+      openChatWithRoadshowStop(roadshowStopId);
+    } else if (channelName) {
+      openChatWithChannel(channelName);
+    }
+
+    ['openChat', 'channelId', 'roadshowStopId', 'channelName', 'messageId'].forEach((key) => params.delete(key));
+    const nextSearch = params.toString();
+    navigate(`${location.pathname}${nextSearch ? `?${nextSearch}` : ''}`, { replace: true });
+  }, [location.pathname, location.search, navigate]);
 
   const handleRefresh = useCallback(async () => {
     await queryClient.invalidateQueries();
