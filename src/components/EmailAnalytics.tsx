@@ -88,7 +88,7 @@ export const EmailAnalytics: React.FC = () => {
     try {
       let query = supabase
         .from('email_analytics')
-        .select('*, contacts:contact_id(id, first_name, last_name, email)')
+        .select('*')
         .order('created_at', { ascending: false })
         .limit(100);
 
@@ -97,14 +97,39 @@ export const EmailAnalytics: React.FC = () => {
       }
 
       const { data, error } = await query;
-      
       if (error) throw error;
-      setEventHistory((data || []).map((e: any) => ({
-        ...e,
-        contact_first_name: e.contacts?.first_name,
-        contact_last_name: e.contacts?.last_name,
-        contact_email: e.contacts?.email,
-      })));
+
+      const events = data || [];
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      const contactIds = Array.from(
+        new Set(events.map((event) => event.contact_id).filter((id): id is string => typeof id === 'string' && uuidRegex.test(id)))
+      );
+
+      if (contactIds.length === 0) {
+        setEventHistory(events);
+        return;
+      }
+
+      const { data: contactsData, error: contactsError } = await supabase
+        .from('contacts')
+        .select('id, first_name, last_name, email')
+        .in('id', contactIds);
+
+      if (contactsError) throw contactsError;
+
+      const contactsById = new Map((contactsData || []).map((contact) => [contact.id, contact]));
+
+      setEventHistory(
+        events.map((event) => {
+          const contact = contactsById.get(event.contact_id);
+          return {
+            ...event,
+            contact_first_name: contact?.first_name,
+            contact_last_name: contact?.last_name,
+            contact_email: contact?.email,
+          };
+        })
+      );
     } catch (error) {
       console.error('Erreur lors du chargement de l\'historique:', error);
     }
@@ -387,9 +412,7 @@ export const EmailAnalytics: React.FC = () => {
                         {event.contact_first_name || event.contact_last_name
                           ? `${event.contact_first_name || ''} ${event.contact_last_name || ''}`.trim()
                           : event.contact_id.slice(0, 8) + '...'}
-                        {event.contact_email && (
-                          <span className="ml-1 text-muted-foreground">({event.contact_email})</span>
-                        )}
+                        {event.contact_email ? ` • ${event.contact_email}` : ''}
                       </button>
                     </div>
                     <span className="text-xs text-muted-foreground">
