@@ -18,6 +18,7 @@ interface UnifiedNotification {
   created_at: string;
   source: 'email' | 'general' | 'task';
   priority?: 'high' | 'medium' | 'low';
+  data?: Record<string, any>;
 }
 
 export const NotificationList: React.FC = () => {
