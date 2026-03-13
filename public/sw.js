@@ -20,6 +20,27 @@ const CACHEABLE_API_PATHS = [
 
 const API_CACHE_MAX_AGE = 30 * 60 * 1000; // 30 minutes
 
+function getBadgeApi() {
+  const swNavigator = self.navigator;
+  const registration = self.registration;
+
+  const setAppBadge =
+    registration && typeof registration.setAppBadge === 'function'
+      ? (count) => registration.setAppBadge(count)
+      : swNavigator && typeof swNavigator.setAppBadge === 'function'
+      ? (count) => swNavigator.setAppBadge(count)
+      : null;
+
+  const clearAppBadge =
+    registration && typeof registration.clearAppBadge === 'function'
+      ? () => registration.clearAppBadge()
+      : swNavigator && typeof swNavigator.clearAppBadge === 'function'
+      ? () => swNavigator.clearAppBadge()
+      : null;
+
+  return { setAppBadge, clearAppBadge };
+}
+
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
