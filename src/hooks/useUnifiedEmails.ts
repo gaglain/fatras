@@ -24,30 +24,49 @@ export interface UnifiedEmail {
   sent_at?: string;
   received_at?: string;
   read_at?: string;
+  delivered_at?: string;
+  opened_at?: string;
+  is_read?: boolean;
   created_at: string;
   updated_at: string;
 }
 
-export const useUnifiedEmails = () => {
+interface LoadEmailsOptions {
+  contactId?: string;
+  contactEmail?: string;
+  limit?: number;
+}
+
+interface UseUnifiedEmailsOptions {
+  autoLoad?: boolean;
+}
+
+export const useUnifiedEmails = (options: UseUnifiedEmailsOptions = {}) => {
   const { user } = useAuthContext();
+  const { autoLoad = true } = options;
   const [emails, setEmails] = useState<UnifiedEmail[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!user) return;
 
-    loadEmails();
+    if (autoLoad) {
+      void loadEmails();
+    }
+
     const cleanup = setupRealtimeSubscription();
 
     // Auto-sync toutes les 5 minutes (pas besoin de plus fréquent car le realtime gère les nouveaux emails)
     // On ne lance PAS de sync au montage pour éviter les appels excessifs
-    const interval = setInterval(syncAllAccounts, 5 * 60 * 1000);
+    const interval = setInterval(() => {
+      void syncAllAccounts();
+    }, 5 * 60 * 1000);
 
     return () => {
       cleanup?.();
       clearInterval(interval);
     };
-  }, [user]);
+  }, [user, autoLoad]);
 
   const loadEmails = async () => {
     if (!user) return;
