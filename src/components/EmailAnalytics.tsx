@@ -100,7 +100,7 @@ export const EmailAnalytics: React.FC = () => {
       if (error) throw error;
 
       const events = data || [];
-      const contactIds = Array.from(new Set(events.map((event) => event.contact_id).filter(Boolean)));
+      const contactIds = Array.from(new Set(events.map((event) => event.contact_id).filter((id): id is string => Boolean(id))));
 
       if (contactIds.length === 0) {
         setEventHistory(events);
