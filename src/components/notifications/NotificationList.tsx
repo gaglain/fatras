@@ -123,8 +123,8 @@ export const NotificationList: React.FC<NotificationListProps> = ({ onNotificati
   };
 
   const handleNotificationClick = async (notification: UnifiedNotification) => {
+    onNotificationHandled?.();
     await handleMarkAsRead(notification);
-    
     // Navigation basée sur le type
     switch (notification.type) {
       case 'email':
