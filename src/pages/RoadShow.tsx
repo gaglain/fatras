@@ -20,12 +20,26 @@ import { useVehicleRates } from '@/hooks/useVehicleRates';
 import { TourStop } from '@/types/roadshow.types';
 
 export const RoadShow: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const { users, getUserById, currentUser } = useUser();
   const { artists: artistsData } = useArtists();
   const { tourStops, stops, loading, createStop, updateStop, deleteStop, convertFromTourStop } = useRoadshowStops();
   const { settings } = useRoadshowSettings();
   const { rates, getRateByName, getDefaultRate } = useVehicleRates();
   const [viewMode, setViewMode] = useState<'list' | 'timeline' | 'map' | 'settings'>('list');
+
+  // Auto-open stop from query param (e.g., from notification click)
+  useEffect(() => {
+    const stopId = searchParams.get('stop');
+    if (stopId && !loading && tourStops.length > 0) {
+      const stop = tourStops.find(s => s.id === stopId);
+      if (stop) {
+        handleEditStop(stop);
+        // Clear the query param
+        setSearchParams({}, { replace: true });
+      }
+    }
+  }, [searchParams, loading, tourStops]);
   
   // Transformer les données des artistes pour correspondre au type roadshow
   const artists = artistsData.map(artist => ({
