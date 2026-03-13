@@ -217,8 +217,19 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
                     : (email.to_name || email.to_email)
                   }
                 </span>
-              </div>
             </div>
+
+            {email.direction === 'sent' && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Statut: {getTrackingLabel(email.status)}
+                {email.opened_at
+                  ? ` • Ouvert le ${formatDate(email.opened_at)}`
+                  : email.delivered_at
+                    ? ` • Livré le ${formatDate(email.delivered_at)}`
+                    : ''}
+              </p>
+            )}
+          </div>
           </div>
         </div>
       </div>
