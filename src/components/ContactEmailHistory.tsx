@@ -83,8 +83,39 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
     }
   }, [syncNow, loadEmails, contactId, normalizedContactEmail]);
 
+  const getTrackingLabel = (status?: string) => {
+    switch (status) {
+      case 'clicked':
+        return 'Cliqué';
+      case 'opened':
+        return 'Ouvert';
+      case 'delivered':
+        return 'Livré';
+      case 'sent':
+        return 'Envoyé';
+      case 'pending':
+        return 'En attente';
+      case 'bounced':
+        return 'Rebond';
+      default:
+        return status || 'Statut inconnu';
+    }
+  };
 
-  const formatDate = (dateString: string) => {
+  const getTrackingVariant = (status?: string): 'default' | 'secondary' | 'outline' | 'destructive' => {
+    switch (status) {
+      case 'clicked':
+      case 'opened':
+        return 'default';
+      case 'delivered':
+      case 'sent':
+        return 'secondary';
+      case 'bounced':
+        return 'destructive';
+      default:
+        return 'outline';
+    }
+  };
     const date = new Date(dateString);
     return date.toLocaleString('fr-FR', { 
       day: '2-digit', 
