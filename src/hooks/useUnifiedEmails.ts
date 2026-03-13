@@ -409,6 +409,9 @@ export const useUnifiedEmails = (options: UseUnifiedEmailsOptions = {}) => {
             sent_at: ie.sent_at,
             received_at: ie.received_at,
             read_at: ie.read_at,
+            delivered_at: ie.received_at,
+            opened_at: undefined,
+            is_read: Boolean(ie.read_at),
             created_at: ie.created_at ?? ie.received_at ?? new Date().toISOString(),
             updated_at: ie.updated_at ?? ie.received_at ?? new Date().toISOString(),
           };
