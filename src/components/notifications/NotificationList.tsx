@@ -21,7 +21,11 @@ interface UnifiedNotification {
   data?: Record<string, any>;
 }
 
-export const NotificationList: React.FC = () => {
+interface NotificationListProps {
+  onNotificationHandled?: () => void;
+}
+
+export const NotificationList: React.FC<NotificationListProps> = ({ onNotificationHandled }) => {
   const navigate = useNavigate();
   
   const { 
@@ -119,8 +123,8 @@ export const NotificationList: React.FC = () => {
   };
 
   const handleNotificationClick = async (notification: UnifiedNotification) => {
+    onNotificationHandled?.();
     await handleMarkAsRead(notification);
-    
     // Navigation basée sur le type
     switch (notification.type) {
       case 'email':

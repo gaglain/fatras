@@ -258,7 +258,7 @@ export const MobileTopBar: React.FC = () => {
             <div className="mx-auto w-12 h-1.5 rounded-full bg-muted mb-2" />
           </SheetHeader>
           <div className="flex-1 overflow-y-auto px-1 pb-safe min-h-0">
-            <NotificationList />
+            <NotificationList onNotificationHandled={() => setNotificationsOpen(false)} />
           </div>
         </SheetContent>
       </Sheet>

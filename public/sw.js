@@ -84,6 +84,36 @@ function resolveNotificationUrl(data = {}) {
   return '/dashboard';
 }
 
+async function syncAppBadgeFromClient(rawCount) {
+  const badgeCount = toPositiveInt(rawCount);
+  if (badgeCount === null) return;
+
+  const { setAppBadge, clearAppBadge } = getBadgeApi();
+
+  if (badgeCount > 0 && setAppBadge) {
+    try {
+      await setAppBadge(badgeCount);
+    } catch (err) {
+      console.error('📛 Failed to sync app badge from client:', err);
+    }
+    return;
+  }
+
+  if (badgeCount === 0 && clearAppBadge) {
+    try {
+      await clearAppBadge();
+    } catch (err) {
+      console.error('📛 Failed to clear app badge from client:', err);
+    }
+  }
+}
+
+self.addEventListener('message', (event) => {
+  const data = event.data || {};
+  if (data.type !== 'PWA_BADGE_SYNC') return;
+  event.waitUntil(syncAppBadgeFromClient(data.count));
+});
+
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(

@@ -6,6 +6,11 @@ type BadgeApi = {
   clearAppBadge?: () => Promise<void>;
 };
 
+type BadgeSyncMessage = {
+  type: 'PWA_BADGE_SYNC';
+  count: number;
+};
+
 async function getBadgeApi(): Promise<BadgeApi> {
   const nav = navigator as Navigator & BadgeApi;
 
@@ -32,6 +37,25 @@ async function getBadgeApi(): Promise<BadgeApi> {
   return {};
 }
 
+async function postBadgeSyncMessage(count: number) {
+  if (!('serviceWorker' in navigator)) return;
+
+  const normalizedCount = Math.max(0, Math.floor(count));
+  const message: BadgeSyncMessage = { type: 'PWA_BADGE_SYNC', count: normalizedCount };
+
+  try {
+    if (navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage(message);
+      return;
+    }
+
+    const registration = await navigator.serviceWorker.ready;
+    registration.active?.postMessage(message);
+  } catch (error) {
+    logger.debug('PWA Badge - Impossible de synchroniser via SW:', error);
+  }
+}
+
 /**
  * Hook pour gérer le badge PWA (nombre de notifications sur l'icône de l'app)
  * Utilise l'API Badging pour afficher le nombre de notifications non lues
@@ -44,23 +68,34 @@ export const usePWABadge = (count: number) => {
       const { setAppBadge, clearAppBadge } = await getBadgeApi();
       if (!isActive) return;
 
-      if (count > 0) {
+      const safeCount = Math.max(0, Math.floor(count));
+
+      if (safeCount > 0) {
         if (setAppBadge) {
           try {
-            await setAppBadge(Math.max(0, Math.floor(count)));
-            logger.debug('PWA Badge - Badge mis à jour:', count);
+            await setAppBadge(safeCount);
+            logger.debug('PWA Badge - Badge mis à jour:', safeCount);
+            return;
           } catch (error) {
             logger.error('PWA Badge - Erreur setAppBadge:', error);
           }
         }
-      } else if (clearAppBadge) {
+
+        await postBadgeSyncMessage(safeCount);
+        return;
+      }
+
+      if (clearAppBadge) {
         try {
           await clearAppBadge();
           logger.debug('PWA Badge - Badge effacé');
+          return;
         } catch (error) {
           logger.error('PWA Badge - Erreur clearAppBadge:', error);
         }
       }
+
+      await postBadgeSyncMessage(0);
     };
 
     void updateBadge();
