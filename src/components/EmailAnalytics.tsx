@@ -412,9 +412,7 @@ export const EmailAnalytics: React.FC = () => {
                         {event.contact_first_name || event.contact_last_name
                           ? `${event.contact_first_name || ''} ${event.contact_last_name || ''}`.trim()
                           : event.contact_id.slice(0, 8) + '...'}
-                        {event.contact_email && (
-                          <span className="ml-1 text-muted-foreground">({event.contact_email})</span>
-                        )}
+                        {event.contact_email ? ` • ${event.contact_email}` : ''}
                       </button>
                     </div>
                     <span className="text-xs text-muted-foreground">
