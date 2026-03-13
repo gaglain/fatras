@@ -411,7 +411,7 @@ Deno.serve(async (req) => {
       
       // If subscription expired, clean it up
       if (response.status === 404 || response.status === 410) {
-        await supabaseClient
+        await supabaseAdmin
           .from('app_settings')
           .delete()
           .eq('user_id', targetUserId)
