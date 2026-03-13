@@ -180,6 +180,11 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
               >
                 {email.direction === 'received' ? 'Reçu' : 'Envoyé'}
               </Badge>
+              {email.direction === 'sent' && (
+                <Badge variant={getTrackingVariant(email.status)} className="text-xs">
+                  {getTrackingLabel(email.status)}
+                </Badge>
+              )}
               {email.direction === 'received' && !email.read_at && (
                 <Badge variant="outline" className="text-xs">
                   Nouveau
