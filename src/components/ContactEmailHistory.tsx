@@ -116,6 +116,8 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
         return 'outline';
     }
   };
+
+  const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleString('fr-FR', { 
       day: '2-digit', 
