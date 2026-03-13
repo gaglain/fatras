@@ -88,7 +88,7 @@ export const EmailAnalytics: React.FC = () => {
     try {
       let query = supabase
         .from('email_analytics')
-        .select('*')
+        .select('*, contacts:contact_id(id, first_name, last_name, email)')
         .order('created_at', { ascending: false })
         .limit(100);
 
@@ -99,7 +99,12 @@ export const EmailAnalytics: React.FC = () => {
       const { data, error } = await query;
       
       if (error) throw error;
-      setEventHistory(data || []);
+      setEventHistory((data || []).map((e: any) => ({
+        ...e,
+        contact_first_name: e.contacts?.first_name,
+        contact_last_name: e.contacts?.last_name,
+        contact_email: e.contacts?.email,
+      })));
     } catch (error) {
       console.error('Erreur lors du chargement de l\'historique:', error);
     }
