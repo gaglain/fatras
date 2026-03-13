@@ -71,7 +71,8 @@ export const NotificationList: React.FC = () => {
         is_read: notif.read,
         created_at: notif.created_at,
         source: 'general',
-        priority: 'medium'
+        priority: 'medium',
+        data: (notif.data as Record<string, any>) || undefined,
       });
     });
 
