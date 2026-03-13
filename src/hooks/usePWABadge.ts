@@ -1,41 +1,73 @@
 import { useEffect } from 'react';
 import { logger } from '@/lib/logger';
 
+type BadgeApi = {
+  setAppBadge?: (count: number) => Promise<void>;
+  clearAppBadge?: () => Promise<void>;
+};
+
+async function getBadgeApi(): Promise<BadgeApi> {
+  const nav = navigator as Navigator & BadgeApi;
+
+  if (typeof nav.setAppBadge === 'function' || typeof nav.clearAppBadge === 'function') {
+    return {
+      setAppBadge: nav.setAppBadge?.bind(nav),
+      clearAppBadge: nav.clearAppBadge?.bind(nav),
+    };
+  }
+
+  if ('serviceWorker' in navigator) {
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      const reg = registration as ServiceWorkerRegistration & BadgeApi;
+      return {
+        setAppBadge: typeof reg.setAppBadge === 'function' ? reg.setAppBadge.bind(reg) : undefined,
+        clearAppBadge: typeof reg.clearAppBadge === 'function' ? reg.clearAppBadge.bind(reg) : undefined,
+      };
+    } catch (error) {
+      logger.debug('PWA Badge - Service worker ready indisponible:', error);
+    }
+  }
+
+  return {};
+}
+
 /**
  * Hook pour gérer le badge PWA (nombre de notifications sur l'icône de l'app)
  * Utilise l'API Badging pour afficher le nombre de notifications non lues
  */
 export const usePWABadge = (count: number) => {
   useEffect(() => {
-    logger.debug('PWA Badge - Count reçu:', count);
-    
-    // Vérifier si l'API Badge est supportée
-    if ('setAppBadge' in navigator && 'clearAppBadge' in navigator) {
-      logger.debug('PWA Badge - API Badge supportée');
-      
+    let isActive = true;
+
+    const updateBadge = async () => {
+      const { setAppBadge, clearAppBadge } = await getBadgeApi();
+      if (!isActive) return;
+
       if (count > 0) {
-        // Afficher le badge avec le nombre
-        logger.debug('PWA Badge - Mise à jour du badge avec:', count);
-        (navigator as Navigator & { setAppBadge: (count: number) => Promise<void> }).setAppBadge(count)
-          .then(() => {
-            logger.debug('PWA Badge - Badge mis à jour avec succès:', count);
-          })
-          .catch((error: Error) => {
-            logger.error('PWA Badge - Erreur lors de la mise à jour:', error);
-          });
-      } else {
-        // Effacer le badge si pas de notifications
-        logger.debug('PWA Badge - Effacement du badge');
-        (navigator as Navigator & { clearAppBadge: () => Promise<void> }).clearAppBadge()
-          .then(() => {
-            logger.debug('PWA Badge - Badge effacé avec succès');
-          })
-          .catch((error: Error) => {
-            logger.error('PWA Badge - Erreur lors de l\'effacement:', error);
-          });
+        if (setAppBadge) {
+          try {
+            await setAppBadge(Math.max(0, Math.floor(count)));
+            logger.debug('PWA Badge - Badge mis à jour:', count);
+          } catch (error) {
+            logger.error('PWA Badge - Erreur setAppBadge:', error);
+          }
+        }
+      } else if (clearAppBadge) {
+        try {
+          await clearAppBadge();
+          logger.debug('PWA Badge - Badge effacé');
+        } catch (error) {
+          logger.error('PWA Badge - Erreur clearAppBadge:', error);
+        }
       }
-    } else {
-      logger.warn('PWA Badge - API Badge non supportée sur ce navigateur/appareil');
-    }
+    };
+
+    void updateBadge();
+
+    return () => {
+      isActive = false;
+    };
   }, [count]);
 };
+
