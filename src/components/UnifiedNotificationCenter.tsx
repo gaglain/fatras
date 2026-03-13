@@ -148,9 +148,17 @@ export const UnifiedNotificationCenter: React.FC = () => {
         case 'contact':
           navigate('/contacts');
           break;
-        case 'message':
-          navigate('/messagerie');
+        case 'message': {
+          const channelId = notification.data?.channel_id;
+          const channelName = notification.data?.channel_name;
+          const messageId = notification.data?.message_id;
+          const query = new URLSearchParams({ openChat: '1' });
+          if (channelId) query.set('channelId', String(channelId));
+          if (channelName) query.set('channelName', String(channelName));
+          if (messageId) query.set('messageId', String(messageId));
+          navigate(`/dashboard?${query.toString()}`);
           break;
+        }
         case 'public_chat':
           // Navigate to messagerie with visitor_id to open the conversation
           const visitorId = notification.data?.visitor_id;
