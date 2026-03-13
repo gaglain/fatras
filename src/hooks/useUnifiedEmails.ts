@@ -213,6 +213,9 @@ export const useUnifiedEmails = (options: UseUnifiedEmailsOptions = {}) => {
           sent_at: ue.sent_at,
           received_at: ue.received_at,
           read_at: ue.read_at,
+          delivered_at: ue.delivered_at,
+          opened_at: ue.opened_at,
+          is_read: ue.is_read,
           created_at: ue.created_at,
           updated_at: ue.updated_at,
         } as UnifiedEmail;
