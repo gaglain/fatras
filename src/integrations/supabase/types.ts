@@ -4205,6 +4205,10 @@ export type Database = {
         Args: { channel_id_param: string; user_id_param: string }
         Returns: boolean
       }
+      confirm_roadshow_attendance: {
+        Args: { is_confirmed?: boolean; stop_id: string }
+        Returns: boolean
+      }
       create_direct_message_channel: {
         Args: { other_user_id: string }
         Returns: string
