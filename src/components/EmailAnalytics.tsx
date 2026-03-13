@@ -100,7 +100,10 @@ export const EmailAnalytics: React.FC = () => {
       if (error) throw error;
 
       const events = data || [];
-      const contactIds = Array.from(new Set(events.map((event) => event.contact_id).filter((id): id is string => Boolean(id))));
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      const contactIds = Array.from(
+        new Set(events.map((event) => event.contact_id).filter((id): id is string => typeof id === 'string' && uuidRegex.test(id)))
+      );
 
       if (contactIds.length === 0) {
         setEventHistory(events);
