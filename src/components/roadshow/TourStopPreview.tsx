@@ -32,6 +32,7 @@ export const TourStopPreview: React.FC<TourStopPreviewProps> = ({
   onClose,
   getUserById
 }) => {
+  const { user } = useAuth();
   const { getExpenses, createExpense, deleteExpense, loading: expenseLoading } = useRoadshowExpenses();
   const { getRoadshowConnections } = useRoadshowEntityConnections();
   
