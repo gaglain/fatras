@@ -11,19 +11,31 @@ export const Messagerie: React.FC = () => {
   const { user } = useAuth();
   const location = useLocation();
   const isMobile = useIsMobile();
-  
+
   const navigationState = location.state as { tab?: string; visitorId?: string } | null;
-  const [activeTab, setActiveTab] = useState(navigationState?.tab === 'public' ? 'public' : 'emails');
-  const [initialVisitorId, setInitialVisitorId] = useState<string | undefined>(navigationState?.visitorId);
+  const initialQuery = new URLSearchParams(location.search);
+  const initialQueryTab = initialQuery.get('tab');
+  const initialQueryVisitorId = initialQuery.get('visitorId') || undefined;
+
+  const [activeTab, setActiveTab] = useState(
+    navigationState?.tab === 'public' || initialQueryTab === 'public' ? 'public' : 'emails'
+  );
+  const [initialVisitorId, setInitialVisitorId] = useState<string | undefined>(
+    navigationState?.visitorId || initialQueryVisitorId
+  );
 
   useEffect(() => {
-    if (navigationState?.tab === 'public') {
+    const query = new URLSearchParams(location.search);
+    const queryTab = query.get('tab');
+    const queryVisitorId = query.get('visitorId') || undefined;
+
+    if (navigationState?.tab === 'public' || queryTab === 'public') {
       setActiveTab('public');
     }
-    if (navigationState?.visitorId) {
-      setInitialVisitorId(navigationState.visitorId);
+    if (navigationState?.visitorId || queryVisitorId) {
+      setInitialVisitorId(navigationState?.visitorId || queryVisitorId);
     }
-  }, [navigationState]);
+  }, [navigationState, location.search]);
 
   if (isMobile) {
     return (
@@ -81,3 +93,4 @@ export const Messagerie: React.FC = () => {
     </div>
   );
 };
+

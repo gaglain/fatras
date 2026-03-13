@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -70,6 +70,27 @@ export const UnifiedEmailManager: React.FC = () => {
       markAsRead(email.id);
     }
   };
+
+  useEffect(() => {
+    if (!emails.length || selectedEmail) return;
+
+    const params = new URLSearchParams(window.location.search);
+    const emailId = params.get('emailId');
+    if (!emailId) return;
+
+    const targetEmail = emails.find((email) => email.id === emailId);
+    if (!targetEmail) return;
+
+    setSelectedEmail(targetEmail);
+    if (targetEmail.direction === 'received' && !targetEmail.read_at) {
+      markAsRead(targetEmail.id);
+    }
+
+    params.delete('emailId');
+    params.delete('tab');
+    const nextSearch = params.toString();
+    window.history.replaceState({}, '', `/email${nextSearch ? `?${nextSearch}` : ''}`);
+  }, [emails, selectedEmail, markAsRead]);
 
   const handleSyncEmails = async () => {
     if (accounts.length > 0) {

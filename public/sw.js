@@ -41,6 +41,49 @@ function getBadgeApi() {
   return { setAppBadge, clearAppBadge };
 }
 
+function toPositiveInt(value) {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return Math.max(0, Math.floor(value));
+  }
+  if (typeof value === 'string' && /^\d+$/.test(value.trim())) {
+    return Math.max(0, Math.floor(Number(value.trim())));
+  }
+  return null;
+}
+
+function resolveNotificationUrl(data = {}) {
+  if (typeof data.url === 'string' && data.url.length > 0) return data.url;
+
+  if (data.roadshow_stop_id) {
+    return `/roadshow?stop=${encodeURIComponent(data.roadshow_stop_id)}`;
+  }
+
+  if (data.visitor_id || data.type === 'public_chat') {
+    const visitorId = data.visitor_id ? `&visitorId=${encodeURIComponent(data.visitor_id)}` : '';
+    return `/messagerie?tab=public${visitorId}`;
+  }
+
+  if (data.task_id || (typeof data.type === 'string' && data.type.startsWith('task'))) {
+    const taskId = data.task_id ? `?taskId=${encodeURIComponent(data.task_id)}` : '';
+    return `/tasks${taskId}`;
+  }
+
+  if (data.email_id || (typeof data.type === 'string' && data.type.includes('email'))) {
+    const emailId = data.email_id ? `&emailId=${encodeURIComponent(data.email_id)}` : '';
+    return `/email?tab=inbox${emailId}`;
+  }
+
+  if (data.channel_id || data.channel_name || data.type === 'message') {
+    const query = new URLSearchParams({ openChat: '1' });
+    if (data.channel_id) query.set('channelId', String(data.channel_id));
+    if (data.channel_name) query.set('channelName', String(data.channel_name));
+    if (data.message_id) query.set('messageId', String(data.message_id));
+    return `/dashboard?${query.toString()}`;
+  }
+
+  return '/dashboard';
+}
+
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
@@ -146,7 +189,24 @@ self.addEventListener('notificationclick', (event) => {
           await clearAppBadge();
         } catch (_) {}
       }
-      await clients.openWindow(event.notification.data.url || '/');
+
+      const targetUrl = new URL(resolveNotificationUrl(event.notification.data || {}), self.location.origin).toString();
+      const clientsList = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+
+      for (const client of clientsList) {
+        try {
+          const clientUrl = new URL(client.url);
+          if (clientUrl.origin === self.location.origin) {
+            if (typeof client.navigate === 'function') {
+              await client.navigate(targetUrl);
+            }
+            await client.focus();
+            return;
+          }
+        } catch (_) {}
+      }
+
+      await clients.openWindow(targetUrl);
     })()
   );
 });

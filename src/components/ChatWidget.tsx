@@ -59,6 +59,7 @@ export const ChatWidget: React.FC = () => {
   const [selectedChannel, setSelectedChannel] = useState('');
   const [inputValue, setInputValue] = useState('');
   const [pendingChannelName, setPendingChannelName] = useState<string | null>(null);
+  const [pendingChannelId, setPendingChannelId] = useState<string | null>(null);
   const [pendingRoadshowStopId, setPendingRoadshowStopId] = useState<string | null>(null);
   const [localMessages, setLocalMessages] = useState<any[]>([]);
   const { user } = useAuth();
@@ -81,14 +82,14 @@ export const ChatWidget: React.FC = () => {
 
   const messagingUnreadCount = useMessagingUnreadCountOptimized();
 
-  const { 
-    channels, 
+  const {
+    channels,
     loading,
     fetchChannels,
     fetchMessages,
     getMessages,
     ensureMembership,
-    sendMessage, 
+    sendMessage,
     markChannelAsRead,
     createChannel,
     archiveChannel,
@@ -100,10 +101,16 @@ export const ChatWidget: React.FC = () => {
     setIsOpen(true);
     if (event.kind === 'channelName') {
       setPendingChannelName(event.channelName);
+      setPendingChannelId(null);
+      setPendingRoadshowStopId(null);
+    } else if (event.kind === 'channelId') {
+      setPendingChannelId(event.channelId);
+      setPendingChannelName(null);
       setPendingRoadshowStopId(null);
     } else {
       setPendingRoadshowStopId(event.roadshowStopId);
       setPendingChannelName(null);
+      setPendingChannelId(null);
     }
     await fetchChannels();
   }, [fetchChannels]);
@@ -123,6 +130,15 @@ export const ChatWidget: React.FC = () => {
   }, [pendingRoadshowStopId, channels, handleChannelSelect]);
 
   useEffect(() => {
+    if (pendingChannelId && channels.length > 0) {
+      const matching = channels.find((c) => c.id === pendingChannelId);
+      if (matching) handleChannelSelect(matching.id);
+      else toast.error('Canal introuvable');
+      setPendingChannelId(null);
+    }
+  }, [pendingChannelId, channels, handleChannelSelect]);
+
+  useEffect(() => {
     if (pendingChannelName && channels.length > 0) {
       const matchingChannel = channels.find(c => c.name?.toLowerCase() === pendingChannelName.toLowerCase());
       if (matchingChannel) handleChannelSelect(matchingChannel.id);
@@ -133,10 +149,10 @@ export const ChatWidget: React.FC = () => {
 
   // Restore last used channel or fall back to first channel
   useEffect(() => {
-    if (isOpen && channels.length > 0 && !selectedChannel && !pendingChannelName && !pendingRoadshowStopId) {
+    if (isOpen && channels.length > 0 && !selectedChannel && !pendingChannelName && !pendingChannelId && !pendingRoadshowStopId) {
       const lastChannelId = localStorage.getItem(LAST_CHANNEL_KEY);
       const lastChannel = lastChannelId ? channels.find(c => c.id === lastChannelId) : null;
-      
+
       if (lastChannel) {
         // Restore the last used channel (don't call handleChannelSelect to avoid re-saving)
         setSelectedChannel(lastChannel.id);
@@ -146,17 +162,17 @@ export const ChatWidget: React.FC = () => {
         handleChannelSelect(channels[0].id);
       }
     }
-  }, [isOpen, channels, selectedChannel, pendingChannelName, pendingRoadshowStopId, handleChannelSelect]);
+  }, [isOpen, channels, selectedChannel, pendingChannelName, pendingChannelId, pendingRoadshowStopId, handleChannelSelect]);
 
   useEffect(() => {
     const createDefault = async () => {
-      if (isOpen && !loading && channels.length === 0 && !pendingChannelName && !pendingRoadshowStopId) {
+      if (isOpen && !loading && channels.length === 0 && !pendingChannelName && !pendingChannelId && !pendingRoadshowStopId) {
         const id = await createChannel('general', 'Canal par défaut', 'public', []);
         if (id) { handleChannelSelect(id); await fetchChannels(); }
       }
     };
     createDefault();
-  }, [isOpen, loading, channels.length, createChannel, fetchChannels, pendingChannelName, pendingRoadshowStopId, handleChannelSelect]);
+  }, [isOpen, loading, channels.length, createChannel, fetchChannels, pendingChannelName, pendingChannelId, pendingRoadshowStopId, handleChannelSelect]);
 
   useEffect(() => {
     if (selectedChannel && isOpen) {
