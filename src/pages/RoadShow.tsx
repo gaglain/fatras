@@ -13,6 +13,7 @@ import { TourStopCard } from '@/components/roadshow/TourStopCard';
 import { RoadshowRouteMap } from '@/components/roadshow/RoadshowRouteMap';
 import { RoadshowTimeline } from '@/components/roadshow/RoadshowTimeline';
 import { VehicleRatesSettings } from '@/components/roadshow/VehicleRatesSettings';
+import { ArtistConfirmationPopup } from '@/components/roadshow/ArtistConfirmationPopup';
 import { useRoadshowForm } from '@/hooks/useRoadshowForm';
 import { useRoadshowStops } from '@/hooks/useRoadshowStops';
 import { useRoadshowSettings } from '@/hooks/useRoadshowSettings';
@@ -23,7 +24,7 @@ export const RoadShow: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { users, getUserById, currentUser } = useUser();
   const { artists: artistsData } = useArtists();
-  const { tourStops, stops, loading, createStop, updateStop, deleteStop, convertFromTourStop } = useRoadshowStops();
+  const { tourStops, stops, loading, fetchStops, createStop, updateStop, deleteStop, convertFromTourStop } = useRoadshowStops();
   const { settings } = useRoadshowSettings();
   const { rates, getRateByName, getDefaultRate } = useVehicleRates();
   const [viewMode, setViewMode] = useState<'list' | 'timeline' | 'map' | 'settings'>('list');
@@ -290,6 +291,16 @@ export const RoadShow: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Popup de confirmation de présence pour les artistes */}
+      {currentUser && !loading && (
+        <ArtistConfirmationPopup
+          userId={currentUser.id}
+          stops={tourStops}
+          getUserById={getUserById}
+          onConfirmed={fetchStops}
+        />
+      )}
     </div>
   );
 };
