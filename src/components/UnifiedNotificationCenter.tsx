@@ -157,6 +157,14 @@ export const UnifiedNotificationCenter: React.FC = () => {
           console.log('🔔 Public chat notification clicked, navigating with visitorId:', visitorId);
           navigate('/messagerie', { state: { tab: 'public', visitorId } });
           break;
+        case 'roadshow_assignment':
+          const stopId = notification.data?.roadshow_stop_id;
+          if (stopId) {
+            navigate(`/roadshow?stop=${stopId}`);
+          } else {
+            navigate('/roadshow');
+          }
+          break;
         default:
           break;
       }

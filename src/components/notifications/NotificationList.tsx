@@ -135,6 +135,14 @@ export const NotificationList: React.FC = () => {
       case 'message':
         navigate('/messagerie');
         break;
+      case 'roadshow_assignment':
+        const stopId = notification.data?.roadshow_stop_id;
+        if (stopId) {
+          navigate(`/roadshow?stop=${stopId}`);
+        } else {
+          navigate('/roadshow');
+        }
+        break;
       default:
         break;
     }
