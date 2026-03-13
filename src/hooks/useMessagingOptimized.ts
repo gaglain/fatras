@@ -407,13 +407,22 @@ export const useMessagingOptimized = () => {
         event: 'INSERT',
         schema: 'public',
         table: 'messaging_messages'
-      }, (payload) => {
+      }, async (payload) => {
         const newMessage = payload.new as Message;
         
+        // Fetch user profile for the message sender
+        let userProfile: UserProfile | undefined;
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('user_id, first_name, last_name, username, avatar_url')
+          .eq('user_id', newMessage.user_id)
+          .maybeSingle();
+        if (profile) userProfile = profile;
+
         // Update cache
         queryClient.setQueryData<Message[]>(QUERY_KEYS.messages(newMessage.channel_id), (old = []) => {
           if (old.some(m => m.id === newMessage.id)) return old;
-          return [...old, newMessage];
+          return [...old, { ...newMessage, user_profile: userProfile }];
         });
 
         // Notification for others' messages
