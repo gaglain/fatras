@@ -19,17 +19,33 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
   contactId, 
   contactEmail 
 }) => {
-  const { emails, isLoading, loadEmails, markAsRead, syncNow } = useUnifiedEmails();
+  const { emails, isLoading, loadEmails, markAsRead, syncNow } = useUnifiedEmails({ autoLoad: false });
   const [selectedEmail, setSelectedEmail] = React.useState<any | null>(null);
   const [showReply, setShowReply] = React.useState(false);
   const [isSyncing, setIsSyncing] = React.useState(false);
 
-  // Recharger les emails quand le composant est monté et quand contactId change
+  const normalizeAddress = React.useCallback((value?: string) => {
+    if (!value) return '';
+    const match = value.match(/<([^>]+)>/);
+    const email = match ? match[1] : value;
+    return email.replace(/(^"|"$)/g, '').trim().toLowerCase();
+  }, []);
+
+  const normalizedContactEmail = React.useMemo(
+    () => normalizeAddress(contactEmail),
+    [contactEmail, normalizeAddress]
+  );
+
+  // Recharger les emails quand le composant est monté et quand contactId/contactEmail change
   React.useEffect(() => {
-    if (contactId || contactEmail) {
-      loadEmails();
+    if (contactId || normalizedContactEmail) {
+      loadEmails({
+        contactId,
+        contactEmail: normalizedContactEmail,
+        limit: 500,
+      });
     }
-  }, [contactId, contactEmail]);
+  }, [contactId, normalizedContactEmail]);
 
   const stripTags = (s: string) => s ? s.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '').replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim() : '';
   const getPreviewText = (email: any) => {
@@ -40,10 +56,14 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
 
   // Filter emails for this specific contact - memoized to avoid recalculating on every render
   const contactEmails = React.useMemo(() => 
-    emails.filter(email => 
-      email.contact_id === contactId || 
-      (contactEmail && (email.from_email === contactEmail || email.to_email === contactEmail))
-    ), [emails, contactId, contactEmail]);
+    emails.filter(email => {
+      if (email.contact_id === contactId) return true;
+      if (!normalizedContactEmail) return false;
+
+      const fromEmail = normalizeAddress(email.from_email);
+      const toEmail = normalizeAddress(email.to_email);
+      return fromEmail === normalizedContactEmail || toEmail === normalizedContactEmail;
+    }), [emails, contactId, normalizedContactEmail, normalizeAddress]);
 
   const receivedEmails = React.useMemo(() => 
     contactEmails.filter(email => email.direction === 'received'), 
@@ -56,12 +76,46 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
   const handleSync = React.useCallback(async () => {
     setIsSyncing(true);
     try {
-      await syncNow();
+      await syncNow({ contactId, contactEmail: normalizedContactEmail, limit: 500 });
+      await loadEmails({ contactId, contactEmail: normalizedContactEmail, limit: 500 });
     } finally {
       setIsSyncing(false);
     }
-  }, [syncNow]);
+  }, [syncNow, loadEmails, contactId, normalizedContactEmail]);
 
+  const getTrackingLabel = (status?: string) => {
+    switch (status) {
+      case 'clicked':
+        return 'Cliqué';
+      case 'opened':
+        return 'Ouvert';
+      case 'delivered':
+        return 'Livré';
+      case 'sent':
+        return 'Envoyé';
+      case 'pending':
+        return 'En attente';
+      case 'bounced':
+        return 'Rebond';
+      default:
+        return status || 'Statut inconnu';
+    }
+  };
+
+  const getTrackingVariant = (status?: string): 'default' | 'secondary' | 'outline' | 'destructive' => {
+    switch (status) {
+      case 'clicked':
+      case 'opened':
+        return 'default';
+      case 'delivered':
+      case 'sent':
+        return 'secondary';
+      case 'bounced':
+        return 'destructive';
+      default:
+        return 'outline';
+    }
+  };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -126,6 +180,11 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
               >
                 {email.direction === 'received' ? 'Reçu' : 'Envoyé'}
               </Badge>
+              {email.direction === 'sent' && (
+                <Badge variant={getTrackingVariant(email.status)} className="text-xs">
+                  {getTrackingLabel(email.status)}
+                </Badge>
+              )}
               {email.direction === 'received' && !email.read_at && (
                 <Badge variant="outline" className="text-xs">
                   Nouveau
@@ -158,8 +217,19 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
                     : (email.to_name || email.to_email)
                   }
                 </span>
-              </div>
             </div>
+
+            {email.direction === 'sent' && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Statut: {getTrackingLabel(email.status)}
+                {email.opened_at
+                  ? ` • Ouvert le ${formatDate(email.opened_at)}`
+                  : email.delivered_at
+                    ? ` • Livré le ${formatDate(email.delivered_at)}`
+                    : ''}
+              </p>
+            )}
+          </div>
           </div>
         </div>
       </div>
@@ -291,6 +361,16 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
                 <div><strong>À:</strong> {selectedEmail?.to_name || selectedEmail?.to_email}</div>
                 <div><strong>Date:</strong> {selectedEmail && formatDate(selectedEmail.received_at || selectedEmail.sent_at || selectedEmail.created_at)}</div>
                 <div><strong>Provider:</strong> {selectedEmail?.provider}</div>
+                {selectedEmail?.direction === 'sent' && (
+                  <div>
+                    <strong>Suivi:</strong> {getTrackingLabel(selectedEmail?.status)}
+                    {selectedEmail?.opened_at
+                      ? ` • Ouvert le ${formatDate(selectedEmail.opened_at)}`
+                      : selectedEmail?.delivered_at
+                        ? ` • Livré le ${formatDate(selectedEmail.delivered_at)}`
+                        : ''}
+                  </div>
+                )}
               </div>
             </DialogDescription>
           </DialogHeader>

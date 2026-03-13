@@ -24,56 +24,109 @@ export interface UnifiedEmail {
   sent_at?: string;
   received_at?: string;
   read_at?: string;
+  delivered_at?: string;
+  opened_at?: string;
+  is_read?: boolean;
   created_at: string;
   updated_at: string;
 }
 
-export const useUnifiedEmails = () => {
+interface LoadEmailsOptions {
+  contactId?: string;
+  contactEmail?: string;
+  limit?: number;
+}
+
+interface UseUnifiedEmailsOptions {
+  autoLoad?: boolean;
+}
+
+export const useUnifiedEmails = (options: UseUnifiedEmailsOptions = {}) => {
   const { user } = useAuthContext();
+  const { autoLoad = true } = options;
   const [emails, setEmails] = useState<UnifiedEmail[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!user) return;
 
-    loadEmails();
+    if (autoLoad) {
+      void loadEmails();
+    }
+
     const cleanup = setupRealtimeSubscription();
 
     // Auto-sync toutes les 5 minutes (pas besoin de plus fréquent car le realtime gère les nouveaux emails)
     // On ne lance PAS de sync au montage pour éviter les appels excessifs
-    const interval = setInterval(syncAllAccounts, 5 * 60 * 1000);
+    const interval = setInterval(() => {
+      void syncAllAccounts();
+    }, 5 * 60 * 1000);
 
     return () => {
       cleanup?.();
       clearInterval(interval);
     };
-  }, [user]);
+  }, [user, autoLoad]);
 
-  const loadEmails = async () => {
+  const loadEmails = async (options: LoadEmailsOptions = {}) => {
     if (!user) return;
+
+    const normalizeAddress = (value: string) => {
+      if (!value) return '';
+      const match = value.match(/<([^>]+)>/);
+      const email = match ? match[1] : value;
+      return email.replace(/(^"|"$)/g, '').trim().toLowerCase();
+    };
+
+    const normalizedContactEmail = normalizeAddress(options.contactEmail || '');
+    const isContactScope = Boolean(options.contactId || normalizedContactEmail);
+    const queryLimit = options.limit ?? (isContactScope ? 500 : 100);
 
     try {
       setIsLoading(true);
+
+      let unifiedQuery = supabase
+        .from('emails')
+        .select(`
+          *,
+          contacts (
+            id,
+            first_name,
+            last_name,
+            email,
+            company
+          )
+        `)
+        .order('created_at', { ascending: false })
+        .limit(queryLimit);
+
+      const unifiedFilters: string[] = [];
+      if (options.contactId) {
+        unifiedFilters.push(`contact_id.eq.${options.contactId}`);
+      }
+      if (normalizedContactEmail) {
+        unifiedFilters.push(`from_email.ilike.%${normalizedContactEmail}%`);
+        unifiedFilters.push(`to_email.ilike.%${normalizedContactEmail}%`);
+      }
+      if (unifiedFilters.length > 0) {
+        unifiedQuery = unifiedQuery.or(unifiedFilters.join(','));
+      }
+
+      const inboundQuery = !isContactScope || normalizedContactEmail
+        ? supabase
+            .from('inbound_emails')
+            .select('*')
+            .order('received_at', { ascending: false })
+            .limit(queryLimit)
+        : null;
+
       const [unifiedRes, inboundRes, accountsRes] = await Promise.all([
-        supabase
-          .from('emails')
-          .select(`
-            *,
-            contacts (
-              id,
-              first_name,
-              last_name,
-              email,
-              company
-            )
-          `)
-          .order('created_at', { ascending: false })
-          .limit(100),
-        supabase
-          .from('inbound_emails')
-          .select('*')
-          .order('received_at', { ascending: false })
-          .limit(100),
+        unifiedQuery,
+        inboundQuery
+          ? normalizedContactEmail
+            ? inboundQuery.or(`from_email.ilike.%${normalizedContactEmail}%,to_email.ilike.%${normalizedContactEmail}%`)
+            : inboundQuery
+          : Promise.resolve({ data: [], error: null } as any),
         supabase
           .from('email_accounts')
           .select('email')
@@ -85,12 +138,6 @@ export const useUnifiedEmails = () => {
       if (accountsRes.error) throw accountsRes.error;
 
       // Utilitaires
-      const normalizeAddress = (value: string) => {
-        if (!value) return '';
-        const match = value.match(/<([^>]+)>/);
-        const email = match ? match[1] : value;
-        return email.replace(/(^"|"$)/g, '').trim().toLowerCase();
-      };
 
       const myEmailsSet = new Set(
         [
@@ -166,6 +213,9 @@ export const useUnifiedEmails = () => {
           sent_at: ue.sent_at,
           received_at: ue.received_at,
           read_at: ue.read_at,
+          delivered_at: ue.delivered_at,
+          opened_at: ue.opened_at,
+          is_read: ue.is_read,
           created_at: ue.created_at,
           updated_at: ue.updated_at,
         } as UnifiedEmail;
@@ -203,6 +253,9 @@ export const useUnifiedEmails = () => {
           sent_at: ie.sent_at,
           received_at: ie.received_at,
           read_at: ie.read_at,
+          delivered_at: ie.received_at,
+          opened_at: undefined,
+          is_read: Boolean(ie.read_at),
           created_at: ie.created_at ?? ie.received_at ?? new Date().toISOString(),
           updated_at: ie.updated_at ?? ie.received_at ?? new Date().toISOString(),
         };
@@ -356,6 +409,9 @@ export const useUnifiedEmails = () => {
             sent_at: ie.sent_at,
             received_at: ie.received_at,
             read_at: ie.read_at,
+            delivered_at: ie.received_at,
+            opened_at: undefined,
+            is_read: Boolean(ie.read_at),
             created_at: ie.created_at ?? ie.received_at ?? new Date().toISOString(),
             updated_at: ie.updated_at ?? ie.received_at ?? new Date().toISOString(),
           };
@@ -454,6 +510,9 @@ export const useUnifiedEmails = () => {
               sent_at: ie.sent_at ?? e.sent_at,
               received_at: ie.received_at ?? e.received_at,
               read_at: ie.read_at ?? e.read_at,
+              delivered_at: ie.received_at ?? e.delivered_at,
+              opened_at: e.opened_at,
+              is_read: ie.read_at ? true : e.is_read,
               updated_at: ie.updated_at ?? e.updated_at,
               status: e.status || 'delivered',
             };
@@ -473,7 +532,7 @@ export const useUnifiedEmails = () => {
     };
   };
 
-  const syncAllAccounts = async () => {
+  const syncAllAccounts = async (options: LoadEmailsOptions = {}) => {
     if (!user) return;
     try {
       logger.debug('🔄 Démarrage de la synchronisation automatique des emails...');
@@ -489,7 +548,7 @@ export const useUnifiedEmails = () => {
 
         if (!imapError && imapData?.success) {
           logger.debug('✅ Synchronisation IMAP réussie:', imapData);
-          await loadEmails();
+          await loadEmails(options);
           return;
         }
       } catch (imapSyncError: unknown) {
@@ -516,7 +575,7 @@ export const useUnifiedEmails = () => {
         }
       }
       
-      await loadEmails();
+      await loadEmails(options);
       logger.debug('✅ Synchronisation Nylas terminée');
     } catch (syncError: unknown) {
       logger.error('❌ Erreur synchro auto:', syncError);
@@ -525,15 +584,17 @@ export const useUnifiedEmails = () => {
 
   const markAsRead = async (emailId: string) => {
     try {
+      const readTimestamp = new Date().toISOString();
+
       const { error } = await supabase
         .from('emails')
-        .update({ read_at: new Date().toISOString() })
+        .update({ read_at: readTimestamp, is_read: true })
         .eq('id', emailId);
 
       if (error) throw error;
 
       setEmails(prev => prev.map(email => 
-        email.id === emailId ? { ...email, read_at: new Date().toISOString() } : email
+        email.id === emailId ? { ...email, read_at: readTimestamp, is_read: true } : email
       ));
     } catch (error: unknown) {
       logger.error('Erreur lors du marquage comme lu:', error);
