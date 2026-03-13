@@ -68,31 +68,65 @@ export const useUnifiedEmails = (options: UseUnifiedEmailsOptions = {}) => {
     };
   }, [user, autoLoad]);
 
-  const loadEmails = async () => {
+  const loadEmails = async (options: LoadEmailsOptions = {}) => {
     if (!user) return;
+
+    const normalizeAddress = (value: string) => {
+      if (!value) return '';
+      const match = value.match(/<([^>]+)>/);
+      const email = match ? match[1] : value;
+      return email.replace(/(^"|"$)/g, '').trim().toLowerCase();
+    };
+
+    const normalizedContactEmail = normalizeAddress(options.contactEmail || '');
+    const isContactScope = Boolean(options.contactId || normalizedContactEmail);
+    const queryLimit = options.limit ?? (isContactScope ? 500 : 100);
 
     try {
       setIsLoading(true);
+
+      let unifiedQuery = supabase
+        .from('emails')
+        .select(`
+          *,
+          contacts (
+            id,
+            first_name,
+            last_name,
+            email,
+            company
+          )
+        `)
+        .order('created_at', { ascending: false })
+        .limit(queryLimit);
+
+      const unifiedFilters: string[] = [];
+      if (options.contactId) {
+        unifiedFilters.push(`contact_id.eq.${options.contactId}`);
+      }
+      if (normalizedContactEmail) {
+        unifiedFilters.push(`from_email.ilike.%${normalizedContactEmail}%`);
+        unifiedFilters.push(`to_email.ilike.%${normalizedContactEmail}%`);
+      }
+      if (unifiedFilters.length > 0) {
+        unifiedQuery = unifiedQuery.or(unifiedFilters.join(','));
+      }
+
+      const inboundQuery = !isContactScope || normalizedContactEmail
+        ? supabase
+            .from('inbound_emails')
+            .select('*')
+            .order('received_at', { ascending: false })
+            .limit(queryLimit)
+        : null;
+
       const [unifiedRes, inboundRes, accountsRes] = await Promise.all([
-        supabase
-          .from('emails')
-          .select(`
-            *,
-            contacts (
-              id,
-              first_name,
-              last_name,
-              email,
-              company
-            )
-          `)
-          .order('created_at', { ascending: false })
-          .limit(100),
-        supabase
-          .from('inbound_emails')
-          .select('*')
-          .order('received_at', { ascending: false })
-          .limit(100),
+        unifiedQuery,
+        inboundQuery
+          ? normalizedContactEmail
+            ? inboundQuery.or(`from_email.ilike.%${normalizedContactEmail}%,to_email.ilike.%${normalizedContactEmail}%`)
+            : inboundQuery
+          : Promise.resolve({ data: [], error: null } as any),
         supabase
           .from('email_accounts')
           .select('email')
@@ -104,12 +138,6 @@ export const useUnifiedEmails = (options: UseUnifiedEmailsOptions = {}) => {
       if (accountsRes.error) throw accountsRes.error;
 
       // Utilitaires
-      const normalizeAddress = (value: string) => {
-        if (!value) return '';
-        const match = value.match(/<([^>]+)>/);
-        const email = match ? match[1] : value;
-        return email.replace(/(^"|"$)/g, '').trim().toLowerCase();
-      };
 
       const myEmailsSet = new Set(
         [
