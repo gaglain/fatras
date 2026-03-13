@@ -361,6 +361,16 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
                 <div><strong>À:</strong> {selectedEmail?.to_name || selectedEmail?.to_email}</div>
                 <div><strong>Date:</strong> {selectedEmail && formatDate(selectedEmail.received_at || selectedEmail.sent_at || selectedEmail.created_at)}</div>
                 <div><strong>Provider:</strong> {selectedEmail?.provider}</div>
+                {selectedEmail?.direction === 'sent' && (
+                  <div>
+                    <strong>Suivi:</strong> {getTrackingLabel(selectedEmail?.status)}
+                    {selectedEmail?.opened_at
+                      ? ` • Ouvert le ${formatDate(selectedEmail.opened_at)}`
+                      : selectedEmail?.delivered_at
+                        ? ` • Livré le ${formatDate(selectedEmail.delivered_at)}`
+                        : ''}
+                  </div>
+                )}
               </div>
             </DialogDescription>
           </DialogHeader>
