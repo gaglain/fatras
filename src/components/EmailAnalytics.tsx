@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -30,6 +31,9 @@ interface EventData {
   created_at: string;
   contact_id: string;
   event_data: any;
+  contact_first_name?: string;
+  contact_last_name?: string;
+  contact_email?: string;
 }
 
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--muted))', 'hsl(var(--accent))'];
@@ -40,7 +44,7 @@ export const EmailAnalytics: React.FC = () => {
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData[]>([]);
   const [eventHistory, setEventHistory] = useState<EventData[]>([]);
   const [loading, setLoading] = useState(false);
-
+  const navigate = useNavigate();
   // Charger les données d'analytics
   const fetchAnalytics = async () => {
     setLoading(true);
@@ -84,7 +88,7 @@ export const EmailAnalytics: React.FC = () => {
     try {
       let query = supabase
         .from('email_analytics')
-        .select('*')
+        .select('*, contacts:contact_id(id, first_name, last_name, email)')
         .order('created_at', { ascending: false })
         .limit(100);
 
@@ -95,7 +99,12 @@ export const EmailAnalytics: React.FC = () => {
       const { data, error } = await query;
       
       if (error) throw error;
-      setEventHistory(data || []);
+      setEventHistory((data || []).map((e: any) => ({
+        ...e,
+        contact_first_name: e.contacts?.first_name,
+        contact_last_name: e.contacts?.last_name,
+        contact_email: e.contacts?.email,
+      })));
     } catch (error) {
       console.error('Erreur lors du chargement de l\'historique:', error);
     }
@@ -371,7 +380,17 @@ export const EmailAnalytics: React.FC = () => {
                       }>
                         {formatEventType(event.event_type)}
                       </Badge>
-                      <span className="text-sm">Contact: {event.contact_id.slice(0, 8)}...</span>
+                      <button
+                        onClick={() => navigate(`/contacts/${event.contact_id}`)}
+                        className="text-sm text-left hover:underline text-primary"
+                      >
+                        {event.contact_first_name || event.contact_last_name
+                          ? `${event.contact_first_name || ''} ${event.contact_last_name || ''}`.trim()
+                          : event.contact_id.slice(0, 8) + '...'}
+                        {event.contact_email && (
+                          <span className="ml-1 text-muted-foreground">({event.contact_email})</span>
+                        )}
+                      </button>
                     </div>
                     <span className="text-xs text-muted-foreground">
                       {new Date(event.created_at).toLocaleString()}
