@@ -134,9 +134,17 @@ export const NotificationList: React.FC = () => {
       case 'contact':
         navigate('/contacts');
         break;
-      case 'message':
-        navigate('/messagerie');
+      case 'message': {
+        const channelId = notification.data?.channel_id;
+        const channelName = notification.data?.channel_name;
+        const messageId = notification.data?.message_id;
+        const query = new URLSearchParams({ openChat: '1' });
+        if (channelId) query.set('channelId', String(channelId));
+        if (channelName) query.set('channelName', String(channelName));
+        if (messageId) query.set('messageId', String(messageId));
+        navigate(`/dashboard?${query.toString()}`);
         break;
+      }
       case 'roadshow_assignment':
         const stopId = notification.data?.roadshow_stop_id;
         if (stopId) {
