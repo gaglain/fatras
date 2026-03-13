@@ -81,7 +81,11 @@ export const UnifiedNotificationCenter: React.FC = () => {
           is_read: notif.read,
           created_at: notif.created_at,
           source: 'general',
-          priority: notif.type === 'task_overdue' ? 'high' : 'medium'
+          priority: notif.type === 'task_overdue' ? 'high' : 'medium',
+          data: {
+            ...(notif.data as Record<string, unknown>),
+            notification_id: notif.id,
+          },
         });
       } else {
         // Notification générale normale (incluant public_chat)

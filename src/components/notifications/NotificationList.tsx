@@ -101,12 +101,13 @@ export const NotificationList: React.FC = () => {
   }, [allNotifications]);
 
   const handleMarkAsRead = async (notification: UnifiedNotification) => {
-    const [source, id] = notification.id.split('-');
-    
-    if (source === 'email') {
-      await markEmailAsRead(id);
-    } else if (source === 'general') {
-      await markGeneralAsRead(id);
+    if (notification.source === 'email' && notification.id.startsWith('email-')) {
+      await markEmailAsRead(notification.id.slice('email-'.length));
+      return;
+    }
+
+    if (notification.source === 'general' && notification.id.startsWith('general-')) {
+      await markGeneralAsRead(notification.id.slice('general-'.length));
     }
   };
 
