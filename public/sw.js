@@ -20,6 +20,27 @@ const CACHEABLE_API_PATHS = [
 
 const API_CACHE_MAX_AGE = 30 * 60 * 1000; // 30 minutes
 
+function getBadgeApi() {
+  const swNavigator = self.navigator;
+  const registration = self.registration;
+
+  const setAppBadge =
+    registration && typeof registration.setAppBadge === 'function'
+      ? (count) => registration.setAppBadge(count)
+      : swNavigator && typeof swNavigator.setAppBadge === 'function'
+      ? (count) => swNavigator.setAppBadge(count)
+      : null;
+
+  const clearAppBadge =
+    registration && typeof registration.clearAppBadge === 'function'
+      ? () => registration.clearAppBadge()
+      : swNavigator && typeof swNavigator.clearAppBadge === 'function'
+      ? () => swNavigator.clearAppBadge()
+      : null;
+
+  return { setAppBadge, clearAppBadge };
+}
+
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
@@ -93,17 +114,17 @@ self.addEventListener('push', (event) => {
       });
 
       // Update PWA app badge count
-      if ('setAppBadge' in navigator) {
+      const { setAppBadge } = getBadgeApi();
+      if (setAppBadge) {
         try {
-          const badgeCount = notificationData.data?.badgeCount;
-          if (typeof badgeCount === 'number') {
-            await navigator.setAppBadge(badgeCount);
-          } else {
-            // Increment: get current notifications and count
-            const notifications = await self.registration.getNotifications();
-            await navigator.setAppBadge(notifications.length + 1);
-          }
-          console.log('📛 App badge updated');
+          const rawBadgeCount = notificationData.data?.badgeCount;
+          const hasNumericBadgeCount = typeof rawBadgeCount === 'number' && Number.isFinite(rawBadgeCount);
+          const badgeCount = hasNumericBadgeCount
+            ? Math.max(0, Math.floor(rawBadgeCount))
+            : 1;
+
+          await setAppBadge(badgeCount);
+          console.log('📛 App badge updated:', badgeCount);
         } catch (err) {
           console.error('📛 Failed to set app badge:', err);
         }
@@ -118,15 +139,11 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   event.waitUntil(
     (async () => {
-      // Update badge: decrement or clear
-      if ('setAppBadge' in navigator) {
+      // Update badge: clear on open (state recalculated when app resumes)
+      const { clearAppBadge } = getBadgeApi();
+      if (clearAppBadge) {
         try {
-          const remaining = await self.registration.getNotifications();
-          if (remaining.length > 0) {
-            await navigator.setAppBadge(remaining.length);
-          } else {
-            await navigator.clearAppBadge();
-          }
+          await clearAppBadge();
         } catch (_) {}
       }
       await clients.openWindow(event.notification.data.url || '/');
