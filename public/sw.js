@@ -139,15 +139,11 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   event.waitUntil(
     (async () => {
-      // Update badge: decrement or clear
-      if ('setAppBadge' in navigator) {
+      // Update badge: clear on open (state recalculated when app resumes)
+      const { clearAppBadge } = getBadgeApi();
+      if (clearAppBadge) {
         try {
-          const remaining = await self.registration.getNotifications();
-          if (remaining.length > 0) {
-            await navigator.setAppBadge(remaining.length);
-          } else {
-            await navigator.clearAppBadge();
-          }
+          await clearAppBadge();
         } catch (_) {}
       }
       await clients.openWindow(event.notification.data.url || '/');
