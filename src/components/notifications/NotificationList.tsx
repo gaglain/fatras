@@ -101,12 +101,13 @@ export const NotificationList: React.FC = () => {
   }, [allNotifications]);
 
   const handleMarkAsRead = async (notification: UnifiedNotification) => {
-    const [source, id] = notification.id.split('-');
-    
-    if (source === 'email') {
-      await markEmailAsRead(id);
-    } else if (source === 'general') {
-      await markGeneralAsRead(id);
+    if (notification.source === 'email' && notification.id.startsWith('email-')) {
+      await markEmailAsRead(notification.id.slice('email-'.length));
+      return;
+    }
+
+    if (notification.source === 'general' && notification.id.startsWith('general-')) {
+      await markGeneralAsRead(notification.id.slice('general-'.length));
     }
   };
 
@@ -117,8 +118,8 @@ export const NotificationList: React.FC = () => {
     ]);
   };
 
-  const handleNotificationClick = (notification: UnifiedNotification) => {
-    handleMarkAsRead(notification);
+  const handleNotificationClick = async (notification: UnifiedNotification) => {
+    await handleMarkAsRead(notification);
     
     // Navigation basée sur le type
     switch (notification.type) {
@@ -145,7 +146,7 @@ export const NotificationList: React.FC = () => {
         navigate(`/dashboard?${query.toString()}`);
         break;
       }
-      case 'roadshow_assignment':
+      case 'roadshow_assignment': {
         const stopId = notification.data?.roadshow_stop_id;
         if (stopId) {
           navigate(`/roadshow?stop=${stopId}`);
@@ -153,6 +154,7 @@ export const NotificationList: React.FC = () => {
           navigate('/roadshow');
         }
         break;
+      }
       default:
         break;
     }

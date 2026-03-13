@@ -3,23 +3,24 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/lib/logger';
 
+const FALLBACK_REFRESH_MS = 15000;
+
 export const useMessagingUnreadCount = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const { user } = useAuth();
+  const userId = user?.id;
 
   const fetchUnreadCount = useCallback(async () => {
-    if (!user?.id) {
+    if (!userId) {
       setUnreadCount(0);
       return;
     }
 
     try {
-      // Compter uniquement les notifications de type 'message' non lues (messagerie interne)
-      // Les notifications 'public_chat' sont gérées dans le UnifiedNotificationCenter
       const { count, error } = await supabase
         .from('notifications')
         .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .eq('type', 'message')
         .eq('read', false);
 
@@ -29,41 +30,60 @@ export const useMessagingUnreadCount = () => {
       logger.error('Error fetching messaging unread count:', error);
       setUnreadCount(0);
     }
-  }, [user?.id]);
+  }, [userId]);
 
   useEffect(() => {
-    if (!user?.id) {
+    if (!userId) {
       setUnreadCount(0);
       return;
     }
 
-    // Fetch initial count
-    fetchUnreadCount();
+    void fetchUnreadCount();
 
-    // Subscribe to realtime notifications changes
-    const channelName = `messaging-unread-${user.id}-${Date.now()}`;
+    const channelName = `messaging-unread-${userId}-${Date.now()}`;
     const channel = supabase
       .channel(channelName)
       .on(
         'postgres_changes',
         {
-          event: '*', // Listen to INSERT, UPDATE, DELETE
+          event: '*',
           schema: 'public',
           table: 'notifications',
-          filter: `user_id=eq.${user.id}`
+          filter: `user_id=eq.${userId}`,
         },
-        (payload) => {
-          logger.debug('Messaging notification change:', payload.eventType);
-          // Refetch count on any change
-          fetchUnreadCount();
+        () => {
+          void fetchUnreadCount();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          void fetchUnreadCount();
+        }
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          void fetchUnreadCount();
+        }
+      });
+
+    const intervalId = window.setInterval(() => {
+      void fetchUnreadCount();
+    }, FALLBACK_REFRESH_MS);
+
+    const handleVisibilityOrFocus = () => {
+      if (!document.hidden) {
+        void fetchUnreadCount();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityOrFocus);
+    window.addEventListener('focus', handleVisibilityOrFocus);
 
     return () => {
+      window.clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', handleVisibilityOrFocus);
+      window.removeEventListener('focus', handleVisibilityOrFocus);
       supabase.removeChannel(channel);
     };
-  }, [user?.id, fetchUnreadCount]);
+  }, [userId, fetchUnreadCount]);
 
   return unreadCount;
 };
