@@ -270,20 +270,36 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
-        },
-      }
-    );
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
-    
-    if (userError || !user) {
-      throw new Error('User not authenticated');
+    if (!supabaseUrl || !anonKey || !serviceRoleKey) {
+      throw new Error('Missing Supabase configuration');
+    }
+
+    const authHeader = req.headers.get('Authorization') ?? '';
+    const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+    const isServiceCall = bearerToken.length > 0 && bearerToken === serviceRoleKey;
+
+    let callerUserId: string | null = null;
+
+    if (!isServiceCall) {
+      if (!authHeader) {
+        throw new Error('Missing Authorization header');
+      }
+
+      const callerClient = createClient(supabaseUrl, anonKey, {
+        global: {
+          headers: { Authorization: authHeader },
+        },
+      });
+
+      const { data: { user }, error: userError } = await callerClient.auth.getUser();
+      if (userError || !user) {
+        throw new Error('User not authenticated');
+      }
+      callerUserId = user.id;
     }
 
     const { userId, notification } = await req.json() as {
@@ -291,10 +307,23 @@ Deno.serve(async (req) => {
       notification: PushPayload;
     };
 
-    const targetUserId = userId || user.id;
+    if (!notification?.title || !notification?.body) {
+      throw new Error('Invalid notification payload');
+    }
+
+    const targetUserId = userId || callerUserId;
+    if (!targetUserId) {
+      throw new Error('Missing target user');
+    }
+
+    if (!isServiceCall && userId && userId !== callerUserId) {
+      throw new Error('Not authorized to send push to another user');
+    }
+
+    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
     // Get user's push subscription from database
-    const { data: settings, error: settingsError } = await supabaseClient
+    const { data: settings, error: settingsError } = await supabaseAdmin
       .from('app_settings')
       .select('setting_value')
       .eq('user_id', targetUserId)
@@ -306,6 +335,32 @@ Deno.serve(async (req) => {
     }
 
     const subscription: PushSubscriptionData = JSON.parse(settings.setting_value);
+
+    const baseData =
+      notification.data && typeof notification.data === 'object' && notification.data !== null
+        ? { ...notification.data }
+        : {};
+
+    const rawBadgeCount = (baseData as Record<string, unknown>).badgeCount;
+    const parsedBadgeCount = typeof rawBadgeCount === 'number' && Number.isFinite(rawBadgeCount)
+      ? Math.max(0, Math.floor(rawBadgeCount))
+      : null;
+
+    let badgeCount = parsedBadgeCount ?? 0;
+
+    if (parsedBadgeCount === null) {
+      const { count, error: unreadCountError } = await supabaseAdmin
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', targetUserId)
+        .eq('read', false);
+
+      if (unreadCountError) {
+        console.warn('Could not fetch unread count for badge:', unreadCountError.message);
+      } else {
+        badgeCount = Math.max(0, count ?? 0);
+      }
+    }
 
     // Get VAPID keys
     const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY');
@@ -322,7 +377,10 @@ Deno.serve(async (req) => {
       icon: notification.icon || '/favicon.png',
       badge: notification.badge || '/favicon.png',
       tag: notification.tag || 'notification',
-      data: notification.data || {}
+      data: {
+        ...baseData,
+        badgeCount,
+      }
     });
 
     // Encrypt payload
@@ -353,7 +411,7 @@ Deno.serve(async (req) => {
       
       // If subscription expired, clean it up
       if (response.status === 404 || response.status === 410) {
-        await supabaseClient
+        await supabaseAdmin
           .from('app_settings')
           .delete()
           .eq('user_id', targetUserId)
@@ -374,9 +432,10 @@ Deno.serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error('Error sending push notification:', error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error('Error sending push notification:', errorMessage);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
