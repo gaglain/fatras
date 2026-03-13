@@ -19,17 +19,33 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
   contactId, 
   contactEmail 
 }) => {
-  const { emails, isLoading, loadEmails, markAsRead, syncNow } = useUnifiedEmails();
+  const { emails, isLoading, loadEmails, markAsRead, syncNow } = useUnifiedEmails({ autoLoad: false });
   const [selectedEmail, setSelectedEmail] = React.useState<any | null>(null);
   const [showReply, setShowReply] = React.useState(false);
   const [isSyncing, setIsSyncing] = React.useState(false);
 
-  // Recharger les emails quand le composant est monté et quand contactId change
+  const normalizeAddress = React.useCallback((value?: string) => {
+    if (!value) return '';
+    const match = value.match(/<([^>]+)>/);
+    const email = match ? match[1] : value;
+    return email.replace(/(^"|"$)/g, '').trim().toLowerCase();
+  }, []);
+
+  const normalizedContactEmail = React.useMemo(
+    () => normalizeAddress(contactEmail),
+    [contactEmail, normalizeAddress]
+  );
+
+  // Recharger les emails quand le composant est monté et quand contactId/contactEmail change
   React.useEffect(() => {
-    if (contactId || contactEmail) {
-      loadEmails();
+    if (contactId || normalizedContactEmail) {
+      loadEmails({
+        contactId,
+        contactEmail: normalizedContactEmail,
+        limit: 500,
+      });
     }
-  }, [contactId, contactEmail]);
+  }, [contactId, normalizedContactEmail]);
 
   const stripTags = (s: string) => s ? s.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '').replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim() : '';
   const getPreviewText = (email: any) => {
@@ -40,10 +56,14 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
 
   // Filter emails for this specific contact - memoized to avoid recalculating on every render
   const contactEmails = React.useMemo(() => 
-    emails.filter(email => 
-      email.contact_id === contactId || 
-      (contactEmail && (email.from_email === contactEmail || email.to_email === contactEmail))
-    ), [emails, contactId, contactEmail]);
+    emails.filter(email => {
+      if (email.contact_id === contactId) return true;
+      if (!normalizedContactEmail) return false;
+
+      const fromEmail = normalizeAddress(email.from_email);
+      const toEmail = normalizeAddress(email.to_email);
+      return fromEmail === normalizedContactEmail || toEmail === normalizedContactEmail;
+    }), [emails, contactId, normalizedContactEmail, normalizeAddress]);
 
   const receivedEmails = React.useMemo(() => 
     contactEmails.filter(email => email.direction === 'received'), 
