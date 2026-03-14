@@ -425,25 +425,109 @@ export const useRoadshowStops = () => {
     }
   };
 
-  // Delete a roadshow stop
-  const deleteStop = async (stopId: string) => {
+  // Archive a roadshow stop (soft delete)
+  const archiveStop = async (stopId: string) => {
     if (!user) return false;
 
     try {
-      logger.debug('Deleting roadshow stop:', stopId);
-      const { error } = await supabase
+      logger.debug('Archiving roadshow stop:', stopId);
+      const { error } = await (supabase
         .from('roadshow_stops')
-        .delete()
-        .eq('id', stopId);
+        .update({ is_archived: true } as any)
+        .eq('id', stopId)) as any;
 
       if (error) throw error;
 
-      logger.debug('Roadshow stop deleted');
+      logger.debug('Roadshow stop archived');
       setStops(prev => prev.filter(stop => stop.id !== stopId));
       return true;
     } catch (error) {
-      logger.error('Error deleting roadshow stop:', error);
+      logger.error('Error archiving roadshow stop:', error);
       return false;
+    }
+  };
+
+  // Restore an archived roadshow stop
+  const restoreStop = async (stopId: string) => {
+    if (!user) return false;
+
+    try {
+      logger.debug('Restoring roadshow stop:', stopId);
+      const { error } = await (supabase
+        .from('roadshow_stops')
+        .update({ is_archived: false } as any)
+        .eq('id', stopId)) as any;
+
+      if (error) throw error;
+
+      logger.debug('Roadshow stop restored');
+      await fetchStops();
+      return true;
+    } catch (error) {
+      logger.error('Error restoring roadshow stop:', error);
+      return false;
+    }
+  };
+
+  // Fetch archived stops
+  const fetchArchivedStops = async (): Promise<RoadshowStop[]> => {
+    if (!user) return [];
+
+    try {
+      const { data, error } = await supabase
+        .from('roadshow_stops')
+        .select('*')
+        .eq('is_archived', true)
+        .order('event_date', { ascending: false });
+
+      if (error) throw error;
+
+      return (data || []).map(stop => ({
+        id: stop.id,
+        user_id: stop.user_id,
+        city: stop.city,
+        venue: stop.venue,
+        address: stop.address,
+        event_date: stop.event_date,
+        event_time: stop.event_time,
+        check_in_time: stop.check_in_time,
+        departure_time: stop.departure_time,
+        meeting_point_time: (stop as any).meeting_point_time,
+        meeting_point_location: (stop as any).meeting_point_location,
+        departure_to_show_time: (stop as any).departure_to_show_time,
+        soundcheck_time: (stop as any).soundcheck_time,
+        doors_time: (stop as any).doors_time,
+        show_start_time: (stop as any).show_start_time,
+        show_end_time: (stop as any).show_end_time,
+        curfew_time: (stop as any).curfew_time,
+        capacity: stop.capacity,
+        tickets_available: stop.tickets_available,
+        status: stop.status as 'confirmed' | 'pending' | 'cancelled',
+        crew: stop.crew,
+        equipment: stop.equipment,
+        notes: stop.notes,
+        artists: stop.artists,
+        accommodation: stop.accommodation,
+        accommodation_address: stop.accommodation_address,
+        local_contact: stop.local_contact,
+        local_contact_phone: stop.local_contact_phone,
+        transport: stop.transport,
+        artist_lineup: Array.isArray(stop.artist_lineup) ? (stop.artist_lineup as unknown as ArtistLineupItem[]).map((item) => ({
+          userId: item.userId || '',
+          confirmed: item.confirmed || false
+        })) : [],
+        invitations: stop.invitations,
+        latitude: stop.latitude,
+        longitude: stop.longitude,
+        vehicle_type: stop.vehicle_type,
+        distance_km: stop.distance_km ? Number(stop.distance_km) : undefined,
+        is_archived: true,
+        created_at: stop.created_at,
+        updated_at: stop.updated_at
+      }));
+    } catch (error) {
+      logger.error('Error fetching archived stops:', error);
+      return [];
     }
   };
 
