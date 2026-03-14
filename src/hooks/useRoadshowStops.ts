@@ -278,6 +278,28 @@ export const useRoadshowStops = () => {
         logger.debug('Notification sent to:', artist.userId);
       }
 
+      // Send assignment emails to newly added users
+      if (newlyAdded.length > 0) {
+        const newUserIds = newlyAdded.map(a => a.userId);
+        try {
+          const { error: emailError } = await supabase.functions.invoke('send-roadshow-assignment-email', {
+            body: {
+              userIds: newUserIds,
+              stopId,
+              city: stopInfo.city,
+              venue: stopInfo.venue,
+            },
+          });
+          if (emailError) {
+            logger.error('Error sending assignment emails:', emailError);
+          } else {
+            logger.debug('Assignment emails sent to', newUserIds.length, 'users');
+          }
+        } catch (emailErr) {
+          logger.error('Failed to invoke assignment email function:', emailErr);
+        }
+      }
+
       // Remove members from channel (optional - you might want to keep them)
       for (const artist of removed) {
         await supabase
