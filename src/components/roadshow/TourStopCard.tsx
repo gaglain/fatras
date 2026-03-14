@@ -376,10 +376,10 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
                 variant="outline-subtle"
                 size="sm"
                 onClick={() => onDelete(stop.id)}
-                className="text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive hover:border-destructive"
+                className="text-amber-600 border-amber-400/40 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-500"
               >
-                <Trash2 className="h-4 w-4" />
-                Supprimer
+                <Archive className="h-4 w-4" />
+                Archiver
               </Button>
             </div>
           </div>
