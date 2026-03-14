@@ -2975,6 +2975,38 @@ export type Database = {
           },
         ]
       }
+      roadshow_reminder_logs: {
+        Row: {
+          id: string
+          reminder_type: string
+          roadshow_stop_id: string
+          sent_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          reminder_type: string
+          roadshow_stop_id: string
+          sent_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          reminder_type?: string
+          roadshow_stop_id?: string
+          sent_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roadshow_reminder_logs_roadshow_stop_id_fkey"
+            columns: ["roadshow_stop_id"]
+            isOneToOne: false
+            referencedRelation: "roadshow_stops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       roadshow_stop_contacts: {
         Row: {
           contact_id: string
