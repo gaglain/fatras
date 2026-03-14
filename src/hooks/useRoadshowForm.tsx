@@ -38,12 +38,12 @@ export const useRoadshowForm = (
   roadshowActions: {
     createStop: any;
     updateStop: any;
-    deleteStop: any;
+    archiveStop: any;
     convertFromTourStop: any;
   }
 ) => {
   const { createChannel, deleteChannelsByRoadshow } = useMessaging();
-  const { createStop, updateStop, deleteStop, convertFromTourStop } = roadshowActions;
+  const { createStop, updateStop, archiveStop, convertFromTourStop } = roadshowActions;
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [selectedStop, setSelectedStop] = useState<TourStop | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
