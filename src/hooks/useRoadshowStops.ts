@@ -201,6 +201,7 @@ export const useRoadshowStops = () => {
         longitude: data.longitude,
         vehicle_type: data.vehicle_type,
         distance_km: data.distance_km ? Number(data.distance_km) : undefined,
+        is_archived: data.is_archived || false,
         created_at: data.created_at,
         updated_at: data.updated_at
       };
