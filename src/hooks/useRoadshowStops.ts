@@ -64,6 +64,7 @@ export const useRoadshowStops = () => {
       const { data, error } = await supabase
         .from('roadshow_stops')
         .select('*')
+        .eq('is_archived', false)
         .order('event_date', { ascending: true });
 
       if (error) throw error;
