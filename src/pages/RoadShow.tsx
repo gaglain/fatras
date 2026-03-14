@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useUser } from '@/contexts/UserContext';
 import { useArtists } from '@/hooks/useArtists';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from 'sonner';
 
 import { SearchBar } from '@/components/roadshow/SearchBar';
 import { RoadShowForm } from '@/components/roadshow/RoadShowForm';
