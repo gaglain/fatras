@@ -205,6 +205,24 @@ export const RoadShow: React.FC = () => {
             <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             <span className="hidden xs:inline">Paramètres</span>
           </TabsTrigger>
+          <TabsTrigger value="archives" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3" onClick={async () => {
+            setLoadingArchives(true);
+            const archived = await fetchArchivedStops();
+            setArchivedStops(archived.map(s => ({
+              id: s.id, city: s.city, venue: s.venue, address: s.address || '', date: s.event_date || '', time: s.event_time || '',
+              checkInTime: s.check_in_time || '', departureTime: s.departure_time || '', capacity: s.capacity, ticketsAvailable: s.tickets_available,
+              status: s.status, crew: s.crew, equipment: s.equipment, notes: s.notes || '', artists: s.artists, createdBy: s.user_id,
+              accommodation: s.accommodation || '', accommodationAddress: s.accommodation_address || '', localContact: s.local_contact || '',
+              localContactPhone: s.local_contact_phone || '', transport: s.transport || '', artistLineup: s.artist_lineup, invitations: s.invitations || '',
+              meetingPointTime: s.meeting_point_time, meetingPointLocation: s.meeting_point_location, departureToShowTime: s.departure_to_show_time,
+              soundcheckTime: s.soundcheck_time, doorsTime: s.doors_time, showStartTime: s.show_start_time, showEndTime: s.show_end_time, curfewTime: s.curfew_time,
+              vehicleType: s.vehicle_type, distanceKm: s.distance_km,
+            })));
+            setLoadingArchives(false);
+          }}>
+            <Archive className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="hidden xs:inline">Archives</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="list">
