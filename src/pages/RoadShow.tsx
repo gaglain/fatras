@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Plus, Map, List, Settings, CalendarDays } from 'lucide-react';
+import { Plus, Map, List, Settings, CalendarDays, Archive, RotateCcw } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useUser } from '@/contexts/UserContext';
 import { useArtists } from '@/hooks/useArtists';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from 'sonner';
 
 import { SearchBar } from '@/components/roadshow/SearchBar';
 import { RoadShowForm } from '@/components/roadshow/RoadShowForm';
@@ -24,10 +25,12 @@ export const RoadShow: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { users, getUserById, currentUser } = useUser();
   const { artists: artistsData } = useArtists();
-  const { tourStops, stops, loading, fetchStops, createStop, updateStop, deleteStop, convertFromTourStop } = useRoadshowStops();
+  const { tourStops, stops, loading, fetchStops, createStop, updateStop, archiveStop, restoreStop, fetchArchivedStops, convertFromTourStop } = useRoadshowStops();
   const { settings } = useRoadshowSettings();
   const { rates, getRateByName, getDefaultRate } = useVehicleRates();
-  const [viewMode, setViewMode] = useState<'list' | 'timeline' | 'map' | 'settings'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'timeline' | 'map' | 'settings' | 'archives'>('list');
+  const [archivedStops, setArchivedStops] = useState<TourStop[]>([]);
+  const [loadingArchives, setLoadingArchives] = useState(false);
 
   // Auto-open stop from query param (e.g., from notification click)
   useEffect(() => {
@@ -66,8 +69,8 @@ export const RoadShow: React.FC = () => {
     handleCreateStop,
     handleEditStop,
     handleUpdateStop,
-    handleDeleteStop
-  } = useRoadshowForm(currentUser?.id, { createStop, updateStop, deleteStop, convertFromTourStop });
+    handleArchiveStop
+  } = useRoadshowForm(currentUser?.id, { createStop, updateStop, archiveStop, convertFromTourStop });
 
   // Enrichir les stops avec les données de coût de transport
   const stopsWithCosts = React.useMemo(() => {
@@ -203,6 +206,24 @@ export const RoadShow: React.FC = () => {
             <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             <span className="hidden xs:inline">Paramètres</span>
           </TabsTrigger>
+          <TabsTrigger value="archives" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3" onClick={async () => {
+            setLoadingArchives(true);
+            const archived = await fetchArchivedStops();
+            setArchivedStops(archived.map(s => ({
+              id: s.id, city: s.city, venue: s.venue, address: s.address || '', date: s.event_date || '', time: s.event_time || '',
+              checkInTime: s.check_in_time || '', departureTime: s.departure_time || '', capacity: s.capacity, ticketsAvailable: s.tickets_available,
+              status: s.status, crew: s.crew, equipment: s.equipment, notes: s.notes || '', artists: s.artists, createdBy: s.user_id,
+              accommodation: s.accommodation || '', accommodationAddress: s.accommodation_address || '', localContact: s.local_contact || '',
+              localContactPhone: s.local_contact_phone || '', transport: s.transport || '', artistLineup: s.artist_lineup, invitations: s.invitations || '',
+              meetingPointTime: s.meeting_point_time, meetingPointLocation: s.meeting_point_location, departureToShowTime: s.departure_to_show_time,
+              soundcheckTime: s.soundcheck_time, doorsTime: s.doors_time, showStartTime: s.show_start_time, showEndTime: s.show_end_time, curfewTime: s.curfew_time,
+              vehicleType: s.vehicle_type, distanceKm: s.distance_km,
+            })));
+            setLoadingArchives(false);
+          }}>
+            <Archive className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="hidden xs:inline">Archives</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="list">
@@ -225,7 +246,7 @@ export const RoadShow: React.FC = () => {
                     artists={artists}
                     creator={getUserById(stop.createdBy)}
                     onEdit={handleEditStop}
-                    onDelete={handleDeleteStop}
+                    onDelete={handleArchiveStop}
                     getUserById={getUserById}
                   />
                 ))
@@ -261,6 +282,51 @@ export const RoadShow: React.FC = () => {
 
         <TabsContent value="settings">
           <VehicleRatesSettings />
+        </TabsContent>
+
+        <TabsContent value="archives">
+          {loadingArchives ? (
+            <div className="text-center py-8 text-muted-foreground">Chargement des archives...</div>
+          ) : archivedStops.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Archive className="h-12 w-12 mx-auto mb-3 opacity-40" />
+              <p>Aucune étape archivée.</p>
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {archivedStops.map((stop) => (
+                <div key={stop.id} className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-medium">{stop.city}</span>
+                      <span className="text-muted-foreground">—</span>
+                      <span className="text-muted-foreground">{stop.venue}</span>
+                      {stop.date && (
+                        <span className="text-xs text-muted-foreground">
+                          ({new Date(stop.date + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })})
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      const success = await restoreStop(stop.id);
+                      if (success) {
+                        setArchivedStops(prev => prev.filter(s => s.id !== stop.id));
+                        toast.success(`"${stop.city} — ${stop.venue}" restaurée`);
+                      }
+                    }}
+                    className="ml-3 shrink-0"
+                  >
+                    <RotateCcw className="h-4 w-4 mr-1" />
+                    Restaurer
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 

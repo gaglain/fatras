@@ -3170,6 +3170,7 @@ export type Database = {
           event_time: string | null
           id: string
           invitations: string | null
+          is_archived: boolean
           latitude: number | null
           local_contact: string | null
           local_contact_phone: string | null
@@ -3213,6 +3214,7 @@ export type Database = {
           event_time?: string | null
           id?: string
           invitations?: string | null
+          is_archived?: boolean
           latitude?: number | null
           local_contact?: string | null
           local_contact_phone?: string | null
@@ -3256,6 +3258,7 @@ export type Database = {
           event_time?: string | null
           id?: string
           invitations?: string | null
+          is_archived?: boolean
           latitude?: number | null
           local_contact?: string | null
           local_contact_phone?: string | null

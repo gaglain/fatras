@@ -38,12 +38,12 @@ export const useRoadshowForm = (
   roadshowActions: {
     createStop: any;
     updateStop: any;
-    deleteStop: any;
+    archiveStop: any;
     convertFromTourStop: any;
   }
 ) => {
   const { createChannel, deleteChannelsByRoadshow } = useMessaging();
-  const { createStop, updateStop, deleteStop, convertFromTourStop } = roadshowActions;
+  const { createStop, updateStop, archiveStop, convertFromTourStop } = roadshowActions;
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [selectedStop, setSelectedStop] = useState<TourStop | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -189,18 +189,13 @@ export const useRoadshowForm = (
     }
   };
 
-  const handleDeleteStop = async (stopId: string) => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer cette étape ?')) {
-      const success = await deleteStop(stopId);
+  const handleArchiveStop = async (stopId: string) => {
+    if (confirm('Êtes-vous sûr de vouloir archiver cette étape et sa conversation liée ?')) {
+      const success = await archiveStop(stopId);
       if (success) {
-        // Also delete associated messaging channel if it exists
-        if (deleteChannelsByRoadshow) {
-          await deleteChannelsByRoadshow(stopId);
-        }
-        
-        toast.success("Étape de tournée supprimée");
+        toast.success("Étape de tournée archivée");
       } else {
-        toast.error("Erreur lors de la suppression");
+        toast.error("Erreur lors de l'archivage");
       }
     }
   };
@@ -220,6 +215,6 @@ export const useRoadshowForm = (
     handleCreateStop,
     handleEditStop,
     handleUpdateStop,
-    handleDeleteStop
+    handleArchiveStop
   };
 };

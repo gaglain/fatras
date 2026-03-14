@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Calendar, Clock, Users, Eye, Edit, Trash2, Download, MessageSquare, Leaf, Share2, Check } from 'lucide-react';
+import { MapPin, Calendar, Clock, Users, Eye, Edit, Archive, Download, MessageSquare, Leaf, Share2, Check } from 'lucide-react';
 import { Car } from 'lucide-react';
 import { TourStop, Artist } from '@/types/roadshow.types';
 import { TourStopPreview } from './TourStopPreview';
@@ -343,10 +343,10 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
                 variant="outline-subtle"
                 size="icon-sm"
                 onClick={() => onDelete(stop.id)}
-                aria-label="Supprimer"
-                className="text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive hover:border-destructive"
+                aria-label="Archiver"
+                className="text-amber-600 border-amber-400/40 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-500"
               >
-                <Trash2 className="h-4 w-4" />
+                <Archive className="h-4 w-4" />
               </Button>
             </div>
 
@@ -376,10 +376,10 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
                 variant="outline-subtle"
                 size="sm"
                 onClick={() => onDelete(stop.id)}
-                className="text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive hover:border-destructive"
+                className="text-amber-600 border-amber-400/40 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-500"
               >
-                <Trash2 className="h-4 w-4" />
-                Supprimer
+                <Archive className="h-4 w-4" />
+                Archiver
               </Button>
             </div>
           </div>
