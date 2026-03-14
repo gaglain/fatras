@@ -110,6 +110,7 @@ export const useRoadshowStops = () => {
         longitude: stop.longitude,
         vehicle_type: stop.vehicle_type,
         distance_km: stop.distance_km ? Number(stop.distance_km) : undefined,
+        is_archived: (stop as any).is_archived || false,
         created_at: stop.created_at,
         updated_at: stop.updated_at
       }));
