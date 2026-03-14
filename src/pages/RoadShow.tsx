@@ -24,7 +24,7 @@ export const RoadShow: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { users, getUserById, currentUser } = useUser();
   const { artists: artistsData } = useArtists();
-  const { tourStops, stops, loading, fetchStops, createStop, updateStop, deleteStop, convertFromTourStop } = useRoadshowStops();
+  const { tourStops, stops, loading, fetchStops, createStop, updateStop, archiveStop, restoreStop, fetchArchivedStops, convertFromTourStop } = useRoadshowStops();
   const { settings } = useRoadshowSettings();
   const { rates, getRateByName, getDefaultRate } = useVehicleRates();
   const [viewMode, setViewMode] = useState<'list' | 'timeline' | 'map' | 'settings'>('list');
