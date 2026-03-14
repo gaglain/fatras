@@ -615,7 +615,9 @@ export const useRoadshowStops = () => {
     fetchStops,
     createStop,
     updateStop,
-    deleteStop,
+    archiveStop,
+    restoreStop,
+    fetchArchivedStops,
     convertToTourStop,
     convertFromTourStop,
     // Helper to get stops as TourStop format
