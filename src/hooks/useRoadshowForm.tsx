@@ -215,6 +215,6 @@ export const useRoadshowForm = (
     handleCreateStop,
     handleEditStop,
     handleUpdateStop,
-    handleDeleteStop
+    handleArchiveStop
   };
 };
