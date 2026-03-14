@@ -45,6 +45,7 @@ export interface RoadshowStop {
   longitude?: number;
   vehicle_type?: string;
   distance_km?: number;
+  is_archived: boolean;
   created_at: string;
   updated_at: string;
 }
