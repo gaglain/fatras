@@ -225,7 +225,7 @@ export const RoadShow: React.FC = () => {
                     artists={artists}
                     creator={getUserById(stop.createdBy)}
                     onEdit={handleEditStop}
-                    onDelete={handleDeleteStop}
+                    onDelete={handleArchiveStop}
                     getUserById={getUserById}
                   />
                 ))
