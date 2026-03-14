@@ -189,18 +189,13 @@ export const useRoadshowForm = (
     }
   };
 
-  const handleDeleteStop = async (stopId: string) => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer cette étape ?')) {
-      const success = await deleteStop(stopId);
+  const handleArchiveStop = async (stopId: string) => {
+    if (confirm('Êtes-vous sûr de vouloir archiver cette étape et sa conversation liée ?')) {
+      const success = await archiveStop(stopId);
       if (success) {
-        // Also delete associated messaging channel if it exists
-        if (deleteChannelsByRoadshow) {
-          await deleteChannelsByRoadshow(stopId);
-        }
-        
-        toast.success("Étape de tournée supprimée");
+        toast.success("Étape de tournée archivée");
       } else {
-        toast.error("Erreur lors de la suppression");
+        toast.error("Erreur lors de l'archivage");
       }
     }
   };

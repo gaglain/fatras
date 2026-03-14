@@ -67,7 +67,7 @@ export const RoadShow: React.FC = () => {
     handleEditStop,
     handleUpdateStop,
     handleDeleteStop
-  } = useRoadshowForm(currentUser?.id, { createStop, updateStop, deleteStop, convertFromTourStop });
+  } = useRoadshowForm(currentUser?.id, { createStop, updateStop, archiveStop, convertFromTourStop });
 
   // Enrichir les stops avec les données de coût de transport
   const stopsWithCosts = React.useMemo(() => {
