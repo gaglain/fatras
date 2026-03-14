@@ -282,6 +282,51 @@ export const RoadShow: React.FC = () => {
         <TabsContent value="settings">
           <VehicleRatesSettings />
         </TabsContent>
+
+        <TabsContent value="archives">
+          {loadingArchives ? (
+            <div className="text-center py-8 text-muted-foreground">Chargement des archives...</div>
+          ) : archivedStops.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Archive className="h-12 w-12 mx-auto mb-3 opacity-40" />
+              <p>Aucune étape archivée.</p>
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {archivedStops.map((stop) => (
+                <div key={stop.id} className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-medium">{stop.city}</span>
+                      <span className="text-muted-foreground">—</span>
+                      <span className="text-muted-foreground">{stop.venue}</span>
+                      {stop.date && (
+                        <span className="text-xs text-muted-foreground">
+                          ({new Date(stop.date + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })})
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      const success = await restoreStop(stop.id);
+                      if (success) {
+                        setArchivedStops(prev => prev.filter(s => s.id !== stop.id));
+                        toast.success(`"${stop.city} — ${stop.venue}" restaurée`);
+                      }
+                    }}
+                    className="ml-3 shrink-0"
+                  >
+                    <RotateCcw className="h-4 w-4 mr-1" />
+                    Restaurer
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </TabsContent>
       </Tabs>
 
       {/* Dialog de modification */}
