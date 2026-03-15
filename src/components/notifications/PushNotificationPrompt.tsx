@@ -5,8 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useWebPushNotifications } from '@/hooks/useWebPushNotifications';
 
 export const PushNotificationPrompt: React.FC = () => {
-  const { permission, isSupported, requestPermission, isLoading } = useWebPushNotifications();
+  const { permission, isSupported, requestPermission, isLoading, isSubscribed } = useWebPushNotifications();
   const [isDismissed, setIsDismissed] = useState(false);
+
+  const needsResubscribe = permission === 'granted' && !isSubscribed;
 
   useEffect(() => {
     // Check if user has already dismissed the prompt
@@ -27,8 +29,8 @@ export const PushNotificationPrompt: React.FC = () => {
     localStorage.setItem('push-notification-prompt-dismissed', 'true');
   };
 
-  // Don't show if not supported, already granted, or dismissed
-  if (!isSupported || permission === 'granted' || isDismissed) {
+  // Show if permission is not granted OR permission granted but subscription missing
+  if (!isSupported || (permission === 'granted' && isSubscribed) || (!needsResubscribe && isDismissed)) {
     return null;
   }
 
@@ -48,12 +50,16 @@ export const PushNotificationPrompt: React.FC = () => {
             <div className="rounded-full bg-primary/10 p-2">
               <Bell className="h-5 w-5 text-primary" />
             </div>
-            <CardTitle className="text-lg">Activer les notifications</CardTitle>
+            <CardTitle className="text-lg">
+              {needsResubscribe ? 'Réactiver les notifications' : 'Activer les notifications'}
+            </CardTitle>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <CardDescription>
-            Recevez des notifications push sur votre appareil pour ne manquer aucun message ou mise à jour importante, même quand l'app est fermée.
+            {needsResubscribe
+              ? "L'autorisation est active, mais l'abonnement push est manquant. Réactivez-le pour recevoir les notifications sans ouvrir l'app."
+              : "Recevez des notifications push sur votre appareil pour ne manquer aucun message ou mise à jour importante, même quand l'app est fermée."}
           </CardDescription>
           <div className="flex gap-2">
             <Button 
@@ -61,7 +67,7 @@ export const PushNotificationPrompt: React.FC = () => {
               disabled={isLoading}
               className="flex-1"
             >
-              {isLoading ? 'Activation...' : 'Activer'}
+              {isLoading ? 'Activation...' : needsResubscribe ? 'Réactiver' : 'Activer'}
             </Button>
             <Button 
               variant="outline" 
