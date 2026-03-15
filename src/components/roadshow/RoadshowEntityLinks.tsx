@@ -429,6 +429,7 @@ useEffect(() => {
                         const manualIds = new Set(connections.events.map(e => e.entityId));
                         return !oppIds.has(event.id!) && !manualIds.has(event.id!);
                       })
+                      .filter(event => event.id)
                       .map(event => (
                         <SelectItem key={event.id} value={event.id!}>
                           {event.title}
