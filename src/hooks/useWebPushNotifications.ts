@@ -31,11 +31,54 @@ export const useWebPushNotifications = () => {
     }
   }, []);
 
+  const upsertSubscriptionToDatabase = async (pushSubscription: PushSubscription) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const p256dhKey = pushSubscription.getKey('p256dh');
+    const authKey = pushSubscription.getKey('auth');
+
+    if (!p256dhKey || !authKey) {
+      throw new Error('Clés de souscription push invalides');
+    }
+
+    const subscriptionData: PushSubscriptionData = {
+      endpoint: pushSubscription.endpoint,
+      keys: {
+        p256dh: arrayBufferToBase64(p256dhKey),
+        auth: arrayBufferToBase64(authKey),
+      },
+    };
+
+    const { error: dbError } = await supabase
+      .from('app_settings')
+      .upsert({
+        user_id: user.id,
+        setting_key: 'push_subscription',
+        setting_value: JSON.stringify(subscriptionData),
+      }, {
+        onConflict: 'user_id,setting_key',
+      });
+
+    if (dbError) {
+      logger.error('Error saving subscription to database:', dbError);
+      throw dbError;
+    }
+  };
+
   const loadExistingSubscription = async () => {
     try {
       const registration = await navigator.serviceWorker.ready;
-      const existingSubscription = await (registration as any).pushManager.getSubscription();
+      const existingSubscription = await (registration as ServiceWorkerRegistration).pushManager.getSubscription();
+
+      if (!existingSubscription) {
+        setSubscription(null);
+        return;
+      }
+
       setSubscription(existingSubscription);
+      await upsertSubscriptionToDatabase(existingSubscription);
+      logger.debug('Existing push subscription synced');
     } catch (error) {
       logger.error('Error loading existing subscription:', error);
     }
@@ -81,12 +124,20 @@ export const useWebPushNotifications = () => {
         throw new Error('Service Worker not supported');
       }
 
-      const registration = await navigator.serviceWorker.ready as any;
+      const registration = await navigator.serviceWorker.ready as ServiceWorkerRegistration;
       logger.debug('Service Worker ready');
       
       // Check if PushManager is available
       if (!registration.pushManager) {
         throw new Error('Push Manager not supported');
+      }
+
+      const existingSubscription = await registration.pushManager.getSubscription();
+      if (existingSubscription) {
+        setSubscription(existingSubscription);
+        await upsertSubscriptionToDatabase(existingSubscription);
+        logger.debug('Existing subscription reused');
+        return existingSubscription;
       }
 
       // For iOS, check if standalone mode (PWA installed)
@@ -115,36 +166,8 @@ export const useWebPushNotifications = () => {
 
       logger.debug('Push subscription created');
       setSubscription(pushSubscription);
-      
-      // Save subscription to database
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const subscriptionData: PushSubscriptionData = {
-          endpoint: pushSubscription.endpoint,
-          keys: {
-            p256dh: arrayBufferToBase64(pushSubscription.getKey('p256dh')!),
-            auth: arrayBufferToBase64(pushSubscription.getKey('auth')!)
-          }
-        };
-
-        const { error: dbError } = await supabase
-          .from('app_settings')
-          .upsert({
-            user_id: user.id,
-            setting_key: 'push_subscription',
-            setting_value: JSON.stringify(subscriptionData)
-          }, {
-            onConflict: 'user_id,setting_key'
-          });
-
-        if (dbError) {
-          logger.error('Error saving subscription to database:', dbError);
-          throw dbError;
-        }
-
-        logger.debug('Subscription saved to database');
-      }
-
+      await upsertSubscriptionToDatabase(pushSubscription);
+      logger.debug('Subscription saved to database');
       return pushSubscription;
     } catch (error) {
       logger.error('Error subscribing to push:', error);
