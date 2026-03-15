@@ -142,11 +142,10 @@ const App = () => {
             </button>
           </div>
 
-          {import.meta.env.DEV && (
-            <pre style={{ marginTop: 16, fontSize: 12, color: '#6b7280', whiteSpace: 'pre-wrap' }}>
-              {String(error?.message || '')}
-            </pre>
-          )}
+          <pre style={{ marginTop: 16, fontSize: 12, color: '#6b7280', whiteSpace: 'pre-wrap', maxWidth: '600px', margin: '16px auto 0', textAlign: 'left' }}>
+            {String(error?.message || error || 'Unknown error')}
+            {error?.stack ? '\n\n' + error.stack.split('\n').slice(0, 5).join('\n') : ''}
+          </pre>
         </div>
       )}
       onError={(error) => {
