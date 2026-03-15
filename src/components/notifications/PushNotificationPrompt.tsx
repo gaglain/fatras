@@ -5,8 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useWebPushNotifications } from '@/hooks/useWebPushNotifications';
 
 export const PushNotificationPrompt: React.FC = () => {
-  const { permission, isSupported, requestPermission, isLoading } = useWebPushNotifications();
+  const { permission, isSupported, requestPermission, isLoading, isSubscribed } = useWebPushNotifications();
   const [isDismissed, setIsDismissed] = useState(false);
+
+  const needsResubscribe = permission === 'granted' && !isSubscribed;
 
   useEffect(() => {
     // Check if user has already dismissed the prompt
@@ -27,8 +29,8 @@ export const PushNotificationPrompt: React.FC = () => {
     localStorage.setItem('push-notification-prompt-dismissed', 'true');
   };
 
-  // Don't show if not supported, already granted, or dismissed
-  if (!isSupported || permission === 'granted' || isDismissed) {
+  // Show if permission is not granted OR permission granted but subscription missing
+  if (!isSupported || (permission === 'granted' && isSubscribed) || (!needsResubscribe && isDismissed)) {
     return null;
   }
 
