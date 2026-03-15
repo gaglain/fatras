@@ -364,6 +364,7 @@ useEffect(() => {
                         const manualIds = new Set(connections.contacts.map(c => c.entityId));
                         return !oppIds.has(contact.id!) && !manualIds.has(contact.id!);
                       })
+                      .filter(contact => contact.id)
                       .map(contact => (
                         <SelectItem key={contact.id} value={contact.id!}>
                           {contact.first_name} {contact.last_name}
