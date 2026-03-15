@@ -484,6 +484,7 @@ useEffect(() => {
                         const manualIds = new Set(connections.quotes.map(q => q.entityId));
                         return !oppIds.has(quote.id!) && !manualIds.has(quote.id!);
                       })
+                      .filter(quote => quote.id)
                       .map(quote => (
                         <SelectItem key={quote.id} value={quote.id!}>
                           Devis {quote.quote_number} - {quote.total_amount}€
