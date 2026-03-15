@@ -152,13 +152,12 @@ export const UnifiedAuthProvider: React.FC<{ children: ReactNode }> = ({ childre
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [users, setUsers] = useState<UserProfile[]>([]);
 
-  // Fetch all users
+  // Fetch all users via security definer function (returns only basic non-sensitive fields)
   const refreshUsers = useCallback(async () => {
     try {
-      logger.log('🔄 Fetching all user profiles...');
+      logger.log('🔄 Fetching user profiles via secure function...');
       const { data: profiles, error } = await supabase
-        .from('user_profiles')
-        .select('*');
+        .rpc('get_active_users_basic');
       
       if (error) {
         logger.error('❌ Error fetching user profiles:', error);
@@ -166,7 +165,16 @@ export const UnifiedAuthProvider: React.FC<{ children: ReactNode }> = ({ childre
       }
       
       if (profiles) {
-        const usersData = profiles.map(mapProfileToUser);
+        const usersData = (profiles as any[]).map((p: any) => ({
+          id: p.user_id || '',
+          name: p.first_name || '',
+          lastName: p.last_name || '',
+          email: p.email || '',
+          role: p.role as UserRole,
+          isActive: p.is_active !== false,
+          username: p.username || '',
+          avatar: p.avatar_url || '',
+        } as UserProfile));
         setUsers(usersData);
         logger.log('✅ Loaded', usersData.length, 'user profiles');
       }
