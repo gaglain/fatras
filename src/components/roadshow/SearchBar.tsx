@@ -51,7 +51,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tous les spectacles</SelectItem>
-            {artists.map((artist) => (
+            {artists.filter(a => a.id).map((artist) => (
               <SelectItem key={artist.id} value={artist.id}>
                 {artist.name}
               </SelectItem>
