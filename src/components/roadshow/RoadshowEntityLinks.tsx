@@ -364,6 +364,7 @@ useEffect(() => {
                         const manualIds = new Set(connections.contacts.map(c => c.entityId));
                         return !oppIds.has(contact.id!) && !manualIds.has(contact.id!);
                       })
+                      .filter(contact => contact.id)
                       .map(contact => (
                         <SelectItem key={contact.id} value={contact.id!}>
                           {contact.first_name} {contact.last_name}
@@ -428,6 +429,7 @@ useEffect(() => {
                         const manualIds = new Set(connections.events.map(e => e.entityId));
                         return !oppIds.has(event.id!) && !manualIds.has(event.id!);
                       })
+                      .filter(event => event.id)
                       .map(event => (
                         <SelectItem key={event.id} value={event.id!}>
                           {event.title}
@@ -482,6 +484,7 @@ useEffect(() => {
                         const manualIds = new Set(connections.quotes.map(q => q.entityId));
                         return !oppIds.has(quote.id!) && !manualIds.has(quote.id!);
                       })
+                      .filter(quote => quote.id)
                       .map(quote => (
                         <SelectItem key={quote.id} value={quote.id!}>
                           Devis {quote.quote_number} - {quote.total_amount}€

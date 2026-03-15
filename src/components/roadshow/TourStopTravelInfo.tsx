@@ -186,7 +186,7 @@ export const TourStopTravelInfo: React.FC<TourStopTravelInfoProps> = ({
               <SelectValue placeholder="Véhicule" />
             </SelectTrigger>
             <SelectContent>
-              {rates.map(rate => (
+              {rates.filter(rate => rate.vehicle_name).map(rate => (
                 <SelectItem key={rate.id} value={rate.vehicle_name}>
                   <div className="flex items-center gap-2">
                     <span>{rate.vehicle_name}</span>

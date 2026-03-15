@@ -579,7 +579,7 @@ export const RoadshowRouteMap = ({ stops, height = '500px', onStopSelect, defaul
                                 <SelectValue placeholder="Véhicule" />
                               </SelectTrigger>
                               <SelectContent>
-                                {rates.map(rate => (
+                                {rates.filter(rate => rate.vehicle_name).map(rate => (
                                   <SelectItem key={rate.id} value={rate.vehicle_name}>
                                     {rate.vehicle_name}
                                   </SelectItem>
