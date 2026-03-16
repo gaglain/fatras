@@ -15,24 +15,12 @@ interface ExpensesFormProps {
 }
 
 export const ExpensesForm: React.FC<ExpensesFormProps> = ({ roadshowStopId }) => {
-  const { loading, getExpenses, createExpense, deleteExpense } = useRoadshowExpenses();
-  const [expenses, setExpenses] = useState<RoadshowExpense[]>([]);
+  const { expenses, loading, fetchExpenses, createExpense, deleteExpense } = useRoadshowExpenses(roadshowStopId);
   const [showDialog, setShowDialog] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
-
-  const loadExpenses = async () => {
-    if (roadshowStopId) {
-      const data = await getExpenses(roadshowStopId);
-      setExpenses(data);
-    }
-  };
-
-  useEffect(() => {
-    loadExpenses();
-  }, [roadshowStopId, loading]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

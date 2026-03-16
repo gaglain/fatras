@@ -33,10 +33,7 @@ export const TourStopPreview: React.FC<TourStopPreviewProps> = ({
   getUserById
 }) => {
   const { user } = useAuth();
-  const { getExpenses, createExpense, deleteExpense, loading: expenseLoading } = useRoadshowExpenses();
-  const { getRoadshowConnections } = useRoadshowEntityConnections();
-  
-  const [expenses, setExpenses] = useState<RoadshowExpense[]>([]);
+  const { expenses, createExpense, deleteExpense, loading: expenseLoading, fetchExpenses } = useRoadshowExpenses(stop?.id);
   const [connections, setConnections] = useState<{
     contacts: RoadshowEntityConnection[];
     events: RoadshowEntityConnection[];
