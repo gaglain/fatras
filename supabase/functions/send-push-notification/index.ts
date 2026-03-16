@@ -242,7 +242,12 @@ Deno.serve(async (req) => {
       notification: PushPayload;
     };
 
-    if (!notification?.title || !notification?.body) {
+    const baseData = notification?.data && typeof notification.data === 'object'
+      ? { ...notification.data }
+      : {};
+    const isSilentBadgeSync = baseData.silentBadgeSync === true;
+
+    if ((!notification?.title || !notification?.body) && !isSilentBadgeSync) {
       throw new Error('Invalid notification payload');
     }
 
