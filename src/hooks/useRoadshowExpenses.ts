@@ -185,8 +185,9 @@ export const useRoadshowExpenses = (roadshowStopId?: string) => {
   };
 
   return {
+    expenses,
     loading,
-    getExpenses,
+    fetchExpenses,
     createExpense,
     deleteExpense
   };
