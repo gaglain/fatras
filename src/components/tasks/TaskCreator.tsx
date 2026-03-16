@@ -183,7 +183,7 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
                   <SelectValue placeholder="Sélectionner un utilisateur" />
                 </SelectTrigger>
                 <SelectContent>
-                  {activeUsers.map((user) => (
+                  {activeUsers.filter(u => u.id).map((user) => (
                     <SelectItem key={user.id} value={user.id}>
                       {user.name}
                     </SelectItem>
@@ -270,7 +270,7 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">Aucun spectacle</SelectItem>
-                {spectacles.slice(0, 50).map((spectacle) => (
+                {spectacles.filter(s => s.id).slice(0, 50).map((spectacle) => (
                   <SelectItem key={spectacle.id} value={spectacle.id}>
                     {spectacle.name} - {spectacle.genre}
                   </SelectItem>

@@ -123,7 +123,7 @@ export const TaskBulkEditor: React.FC<TaskBulkEditorProps> = ({
                 <SelectValue placeholder="Ne pas modifier" />
               </SelectTrigger>
               <SelectContent>
-                {users.filter(u => u.isActive).map(user => (
+                {users.filter(u => u.isActive && u.id).map(user => (
                   <SelectItem key={user.id} value={user.id}>
                     {user.name}
                   </SelectItem>
