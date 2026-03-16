@@ -11,7 +11,7 @@ import { MobileTopBar } from '@/components/mobile/MobileTopBar';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useEmailNotifications } from '@/hooks/useEmailNotifications';
 import { usePWABadge } from '@/hooks/usePWABadge';
-import { useMessagingUnreadCount } from '@/hooks/useMessagingUnreadCount';
+import { useUnreadBadgeCount } from '@/hooks/useUnreadBadgeCount';
 import { PushNotificationPrompt } from '@/components/notifications/PushNotificationPrompt';
 import { OfflineBanner } from '@/components/OfflineBanner';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
@@ -36,13 +36,13 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
-  const { unreadCount: generalUnreadCount } = useNotifications();
-  const { getUnreadCount } = useEmailNotifications();
-  const messagingUnreadCount = useMessagingUnreadCount();
+  // Keep these hooks alive so the notification center still works
+  useNotifications();
+  useEmailNotifications();
 
-  // Badge PWA avec toutes les notifications (général + email + messagerie)
-  const totalUnreadCount = generalUnreadCount + getUnreadCount() + messagingUnreadCount;
-  usePWABadge(totalUnreadCount);
+  // Lightweight DB-count for the PWA system badge (icon dot)
+  const badgeCount = useUnreadBadgeCount();
+  usePWABadge(badgeCount);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
