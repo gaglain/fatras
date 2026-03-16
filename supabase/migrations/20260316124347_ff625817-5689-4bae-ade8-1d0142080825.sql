@@ -1,0 +1,1 @@
+DROP TRIGGER IF EXISTS trigger_dispatch_push_notification ON public.notifications;
