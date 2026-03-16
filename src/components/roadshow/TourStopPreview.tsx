@@ -110,7 +110,7 @@ export const TourStopPreview: React.FC<TourStopPreviewProps> = ({
 
     if (success) {
       resetExpenseForm();
-      loadData();
+      fetchExpenses();
     }
   };
 
