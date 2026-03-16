@@ -50,3 +50,6 @@ verify_jwt = false
 
 [functions.send-roadshow-assignment-email]
 verify_jwt = false
+
+[functions.send-push-notification]
+verify_jwt = false
