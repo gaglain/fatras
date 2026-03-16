@@ -68,7 +68,7 @@ export const ExpensesForm: React.FC<ExpensesFormProps> = ({ roadshowStopId }) =>
     if (ok) {
       const success = await deleteExpense(expense.id, expense.file_url);
       if (success) {
-        loadExpenses();
+        fetchExpenses();
       }
     }
   };
