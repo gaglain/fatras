@@ -58,7 +58,7 @@ export const ExpensesForm: React.FC<ExpensesFormProps> = ({ roadshowStopId }) =>
       setTitle('');
       setDescription('');
       setAmount('');
-      loadExpenses();
+      fetchExpenses();
     }
   };
 
