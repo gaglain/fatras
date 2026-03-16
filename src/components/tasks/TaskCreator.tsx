@@ -183,7 +183,7 @@ export const TaskCreator: React.FC<TaskCreatorProps> = ({
                   <SelectValue placeholder="Sélectionner un utilisateur" />
                 </SelectTrigger>
                 <SelectContent>
-                  {activeUsers.map((user) => (
+                  {activeUsers.filter(u => u.id).map((user) => (
                     <SelectItem key={user.id} value={user.id}>
                       {user.name}
                     </SelectItem>
