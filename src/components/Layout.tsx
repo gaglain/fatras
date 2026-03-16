@@ -11,7 +11,7 @@ import { MobileTopBar } from '@/components/mobile/MobileTopBar';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useEmailNotifications } from '@/hooks/useEmailNotifications';
 import { usePWABadge } from '@/hooks/usePWABadge';
-import { useMessagingUnreadCount } from '@/hooks/useMessagingUnreadCount';
+import { useUnreadBadgeCount } from '@/hooks/useUnreadBadgeCount';
 import { PushNotificationPrompt } from '@/components/notifications/PushNotificationPrompt';
 import { OfflineBanner } from '@/components/OfflineBanner';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
