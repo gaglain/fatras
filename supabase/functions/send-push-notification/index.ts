@@ -242,7 +242,12 @@ Deno.serve(async (req) => {
       notification: PushPayload;
     };
 
-    if (!notification?.title || !notification?.body) {
+    const baseData = notification?.data && typeof notification.data === 'object'
+      ? { ...notification.data }
+      : {};
+    const isSilentBadgeSync = baseData.silentBadgeSync === true;
+
+    if ((!notification?.title || !notification?.body) && !isSilentBadgeSync) {
       throw new Error('Invalid notification payload');
     }
 
@@ -275,9 +280,8 @@ Deno.serve(async (req) => {
 
     const subscription: PushSubscriptionData = JSON.parse(settings.setting_value);
 
-    const baseData = notification.data && typeof notification.data === 'object'
-      ? { ...notification.data }
-      : {};
+    const normalizedTitle = notification.title || 'Synchronisation badge';
+    const normalizedBody = notification.body || 'Mise à jour du badge en arrière-plan';
 
     const rawBadgeCount = (baseData as Record<string, unknown>).badgeCount;
     let badgeCount = typeof rawBadgeCount === 'number' && Number.isFinite(rawBadgeCount)
@@ -307,12 +311,12 @@ Deno.serve(async (req) => {
     if (!vapidPublicKey || !vapidPrivateKey) throw new Error('VAPID keys not configured');
 
     const pushPayload = JSON.stringify({
-      title: notification.title,
-      body: notification.body,
+      title: normalizedTitle,
+      body: normalizedBody,
       icon: notification.icon || '/favicon.png',
       badge: notification.badge || '/favicon.png',
       tag: notification.tag || 'notification',
-      data: { ...baseData, badgeCount },
+      data: { ...baseData, badgeCount, silentBadgeSync: isSilentBadgeSync },
     });
 
     const { ciphertext } = await encryptPayload(pushPayload, subscription.keys);

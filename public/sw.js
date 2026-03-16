@@ -176,7 +176,35 @@ self.addEventListener('push', (event) => {
 
   event.waitUntil(
     (async () => {
-      // Show the notification
+      const rawBadgeCount = notificationData.data?.badgeCount;
+      const hasNumericBadgeCount = typeof rawBadgeCount === 'number' && Number.isFinite(rawBadgeCount);
+      const badgeCount = hasNumericBadgeCount
+        ? Math.max(0, Math.floor(rawBadgeCount))
+        : 1;
+      const isSilentBadgeSync = notificationData.data?.silentBadgeSync === true;
+
+      const { setAppBadge, clearAppBadge } = getBadgeApi();
+
+      if (badgeCount > 0 && setAppBadge) {
+        try {
+          await setAppBadge(badgeCount);
+          console.log('📛 App badge updated:', badgeCount);
+        } catch (err) {
+          console.error('📛 Failed to set app badge:', err);
+        }
+      } else if (badgeCount === 0 && clearAppBadge) {
+        try {
+          await clearAppBadge();
+          console.log('📛 App badge cleared');
+        } catch (err) {
+          console.error('📛 Failed to clear app badge:', err);
+        }
+      }
+
+      if (isSilentBadgeSync) {
+        return;
+      }
+
       await self.registration.showNotification(notificationData.title, {
         body: notificationData.body,
         icon: notificationData.icon,
@@ -185,23 +213,6 @@ self.addEventListener('push', (event) => {
         data: notificationData.data,
         vibrate: [200, 100, 200],
       });
-
-      // Update PWA app badge count
-      const { setAppBadge } = getBadgeApi();
-      if (setAppBadge) {
-        try {
-          const rawBadgeCount = notificationData.data?.badgeCount;
-          const hasNumericBadgeCount = typeof rawBadgeCount === 'number' && Number.isFinite(rawBadgeCount);
-          const badgeCount = hasNumericBadgeCount
-            ? Math.max(0, Math.floor(rawBadgeCount))
-            : 1;
-
-          await setAppBadge(badgeCount);
-          console.log('📛 App badge updated:', badgeCount);
-        } catch (err) {
-          console.error('📛 Failed to set app badge:', err);
-        }
-      }
     })()
   );
 });
