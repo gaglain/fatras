@@ -33,10 +33,8 @@ export const TourStopPreview: React.FC<TourStopPreviewProps> = ({
   getUserById
 }) => {
   const { user } = useAuth();
-  const { getExpenses, createExpense, deleteExpense, loading: expenseLoading } = useRoadshowExpenses();
+  const { expenses, createExpense, deleteExpense, loading: expenseLoading, fetchExpenses } = useRoadshowExpenses(stop?.id);
   const { getRoadshowConnections } = useRoadshowEntityConnections();
-  
-  const [expenses, setExpenses] = useState<RoadshowExpense[]>([]);
   const [connections, setConnections] = useState<{
     contacts: RoadshowEntityConnection[];
     events: RoadshowEntityConnection[];
@@ -54,7 +52,7 @@ export const TourStopPreview: React.FC<TourStopPreviewProps> = ({
 
   useEffect(() => {
     if (stop && isOpen) {
-      loadData();
+      loadConnections();
     }
     // Reset form when dialog closes
     if (!isOpen) {
@@ -62,12 +60,8 @@ export const TourStopPreview: React.FC<TourStopPreviewProps> = ({
     }
   }, [stop?.id, isOpen]);
 
-  const loadData = async () => {
+  const loadConnections = async () => {
     if (!stop) return;
-    
-    const expensesData = await getExpenses(stop.id);
-    setExpenses(expensesData);
-    
     const connectionsData = await getRoadshowConnections(stop.id);
     setConnections(connectionsData);
   };
@@ -116,7 +110,7 @@ export const TourStopPreview: React.FC<TourStopPreviewProps> = ({
 
     if (success) {
       resetExpenseForm();
-      loadData();
+      fetchExpenses();
     }
   };
 
@@ -126,7 +120,7 @@ export const TourStopPreview: React.FC<TourStopPreviewProps> = ({
     if (ok) {
       const success = await deleteExpense(expense.id, expense.file_url);
       if (success) {
-        loadData();
+        fetchExpenses();
       }
     }
   };
