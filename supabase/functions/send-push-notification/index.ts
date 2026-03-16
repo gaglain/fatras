@@ -285,12 +285,20 @@ Deno.serve(async (req) => {
       : 0;
 
     if (badgeCount === 0) {
-      const { count } = await supabaseAdmin
-        .from('notifications')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', targetUserId)
-        .eq('read', false);
-      badgeCount = Math.max(0, count ?? 1);
+      const [generalRes, emailRes] = await Promise.all([
+        supabaseAdmin
+          .from('notifications')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', targetUserId)
+          .eq('read', false),
+        supabaseAdmin
+          .from('email_notifications')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', targetUserId)
+          .eq('is_read', false),
+      ]);
+      badgeCount = Math.max(0, (generalRes.count ?? 0) + (emailRes.count ?? 0));
+      if (badgeCount === 0) badgeCount = 1; // fallback: at least 1 since we're sending a notif
     }
 
     // VAPID keys
