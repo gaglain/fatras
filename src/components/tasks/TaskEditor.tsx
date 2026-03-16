@@ -381,7 +381,7 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">Aucun spectacle</SelectItem>
-                {artists.slice(0, 50).map((artist) => (
+                {artists.filter(a => a.id).slice(0, 50).map((artist) => (
                   <SelectItem key={artist.id} value={artist.id}>
                     {artist.name}
                   </SelectItem>
