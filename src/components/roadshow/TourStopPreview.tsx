@@ -34,6 +34,7 @@ export const TourStopPreview: React.FC<TourStopPreviewProps> = ({
 }) => {
   const { user } = useAuth();
   const { expenses, createExpense, deleteExpense, loading: expenseLoading, fetchExpenses } = useRoadshowExpenses(stop?.id);
+  const { getRoadshowConnections } = useRoadshowEntityConnections();
   const [connections, setConnections] = useState<{
     contacts: RoadshowEntityConnection[];
     events: RoadshowEntityConnection[];
@@ -51,7 +52,7 @@ export const TourStopPreview: React.FC<TourStopPreviewProps> = ({
 
   useEffect(() => {
     if (stop && isOpen) {
-      loadData();
+      loadConnections();
     }
     // Reset form when dialog closes
     if (!isOpen) {
@@ -59,12 +60,8 @@ export const TourStopPreview: React.FC<TourStopPreviewProps> = ({
     }
   }, [stop?.id, isOpen]);
 
-  const loadData = async () => {
+  const loadConnections = async () => {
     if (!stop) return;
-    
-    const expensesData = await getExpenses(stop.id);
-    setExpenses(expensesData);
-    
     const connectionsData = await getRoadshowConnections(stop.id);
     setConnections(connectionsData);
   };
