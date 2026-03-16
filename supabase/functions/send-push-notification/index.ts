@@ -280,9 +280,8 @@ Deno.serve(async (req) => {
 
     const subscription: PushSubscriptionData = JSON.parse(settings.setting_value);
 
-    const baseData = notification.data && typeof notification.data === 'object'
-      ? { ...notification.data }
-      : {};
+    const normalizedTitle = notification.title || 'Synchronisation badge';
+    const normalizedBody = notification.body || 'Mise à jour du badge en arrière-plan';
 
     const rawBadgeCount = (baseData as Record<string, unknown>).badgeCount;
     let badgeCount = typeof rawBadgeCount === 'number' && Number.isFinite(rawBadgeCount)
