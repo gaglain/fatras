@@ -120,7 +120,7 @@ export const TourStopPreview: React.FC<TourStopPreviewProps> = ({
     if (ok) {
       const success = await deleteExpense(expense.id, expense.file_url);
       if (success) {
-        loadData();
+        fetchExpenses();
       }
     }
   };
