@@ -323,7 +323,7 @@ export const Tasks: React.FC = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tous</SelectItem>
-              {users.filter(user => user.isActive).map((user) => (
+              {users.filter(user => user.isActive && user.id).map((user) => (
                 <SelectItem key={user.id} value={user.id}>
                   {user.name}
                 </SelectItem>
