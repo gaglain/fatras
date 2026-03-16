@@ -311,12 +311,12 @@ Deno.serve(async (req) => {
     if (!vapidPublicKey || !vapidPrivateKey) throw new Error('VAPID keys not configured');
 
     const pushPayload = JSON.stringify({
-      title: notification.title,
-      body: notification.body,
+      title: normalizedTitle,
+      body: normalizedBody,
       icon: notification.icon || '/favicon.png',
       badge: notification.badge || '/favicon.png',
       tag: notification.tag || 'notification',
-      data: { ...baseData, badgeCount },
+      data: { ...baseData, badgeCount, silentBadgeSync: isSilentBadgeSync },
     });
 
     const { ciphertext } = await encryptPayload(pushPayload, subscription.keys);
