@@ -246,7 +246,7 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Non assigné</SelectItem>
-                  {activeUsers.map((user) => (
+                  {activeUsers.filter(u => u.id).map((user) => (
                     <SelectItem key={user.id} value={user.id}>
                       {user.name}
                     </SelectItem>
