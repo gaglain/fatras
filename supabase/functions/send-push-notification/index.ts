@@ -2,7 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-trigger-secret, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
 interface PushPayload {
@@ -42,14 +42,6 @@ async function importVapidKeys(publicKeyB64: string, privateKeyB64: string) {
   const publicKeyBytes = base64UrlDecode(publicKeyB64);
   const privateKeyBytes = base64UrlDecode(privateKeyB64);
 
-  const publicKey = await crypto.subtle.importKey(
-    'raw',
-    publicKeyBytes,
-    { name: 'ECDSA', namedCurve: 'P-256' },
-    true,
-    []
-  );
-
   const privateKey = await crypto.subtle.importKey(
     'pkcs8',
     convertRawPrivateKeyToPKCS8(privateKeyBytes),
@@ -58,11 +50,10 @@ async function importVapidKeys(publicKeyB64: string, privateKeyB64: string) {
     ['sign']
   );
 
-  return { publicKey, privateKey, publicKeyBytes };
+  return { privateKey, publicKeyBytes };
 }
 
 function convertRawPrivateKeyToPKCS8(raw: Uint8Array): ArrayBuffer {
-  // PKCS8 wrapper for a P-256 private key (raw 32-byte scalar)
   const pkcs8Header = new Uint8Array([
     0x30, 0x81, 0x87, 0x02, 0x01, 0x00, 0x30, 0x13,
     0x06, 0x07, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x02,
@@ -70,10 +61,6 @@ function convertRawPrivateKeyToPKCS8(raw: Uint8Array): ArrayBuffer {
     0x03, 0x01, 0x07, 0x04, 0x6d, 0x30, 0x6b, 0x02,
     0x01, 0x01, 0x04, 0x20,
   ]);
-  const pkcs8Footer = new Uint8Array([
-    0xa1, 0x44, 0x03, 0x42, 0x00,
-  ]);
-  // We only need the private key scalar without the public key appended
   const result = new Uint8Array(pkcs8Header.length + 32);
   result.set(pkcs8Header);
   result.set(raw.slice(0, 32), pkcs8Header.length);
@@ -87,11 +74,7 @@ async function createVapidJwt(
 ): Promise<string> {
   const header = { typ: 'JWT', alg: 'ES256' };
   const now = Math.floor(Date.now() / 1000);
-  const payload = {
-    aud: audience,
-    exp: now + 12 * 3600,
-    sub: subject,
-  };
+  const payload = { aud: audience, exp: now + 12 * 3600, sub: subject };
 
   const encoder = new TextEncoder();
   const headerB64 = base64UrlEncode(encoder.encode(JSON.stringify(header)));
@@ -104,30 +87,21 @@ async function createVapidJwt(
     encoder.encode(unsigned)
   );
 
-  // Convert DER signature to raw r||s (64 bytes)
   const rawSig = derToRaw(new Uint8Array(signature));
   return `${unsigned}.${base64UrlEncode(rawSig)}`;
 }
 
 function derToRaw(der: Uint8Array): Uint8Array {
-  // If already 64 bytes, it's raw
   if (der.length === 64) return der;
-  
-  // Parse DER SEQUENCE
-  let offset = 2; // skip 0x30 + length
+  let offset = 2;
   if (der[1] & 0x80) offset += (der[1] & 0x7f);
-  
-  // Read r
-  offset++; // 0x02
+  offset++;
   const rLen = der[offset++];
   const r = der.slice(offset, offset + rLen);
   offset += rLen;
-  
-  // Read s
-  offset++; // 0x02
+  offset++;
   const sLen = der[offset++];
   const s = der.slice(offset, offset + sLen);
-  
   const raw = new Uint8Array(64);
   raw.set(r.length > 32 ? r.slice(r.length - 32) : r, 32 - Math.min(r.length, 32));
   raw.set(s.length > 32 ? s.slice(s.length - 32) : s, 64 - Math.min(s.length, 32));
@@ -139,14 +113,11 @@ function derToRaw(der: Uint8Array): Uint8Array {
 async function encryptPayload(
   payload: string,
   subscriptionKeys: { p256dh: string; auth: string }
-): Promise<{ ciphertext: Uint8Array; salt: Uint8Array; localPublicKey: Uint8Array }> {
+): Promise<{ ciphertext: Uint8Array }> {
   const encoder = new TextEncoder();
-
-  // Subscription keys
   const clientPublicKey = base64UrlDecode(subscriptionKeys.p256dh);
   const clientAuth = base64UrlDecode(subscriptionKeys.auth);
 
-  // Generate local ECDH key pair
   const localKeyPair = await crypto.subtle.generateKey(
     { name: 'ECDH', namedCurve: 'P-256' },
     true,
@@ -157,68 +128,43 @@ async function encryptPayload(
     await crypto.subtle.exportKey('raw', localKeyPair.publicKey)
   );
 
-  // Import client public key
   const clientKey = await crypto.subtle.importKey(
-    'raw',
-    clientPublicKey,
+    'raw', clientPublicKey,
     { name: 'ECDH', namedCurve: 'P-256' },
-    false,
-    []
+    false, []
   );
 
-  // ECDH shared secret
   const sharedSecret = new Uint8Array(
     await crypto.subtle.deriveBits(
       { name: 'ECDH', public: clientKey },
-      localKeyPair.privateKey,
-      256
+      localKeyPair.privateKey, 256
     )
   );
 
-  // Salt
   const salt = crypto.getRandomValues(new Uint8Array(16));
-
-  // HKDF to derive IKM
   const authInfo = encoder.encode('Content-Encoding: auth\0');
-  const ikmKey = await crypto.subtle.importKey('raw', clientAuth, { name: 'HKDF' }, false, ['deriveBits']);
-  // PRK from auth secret + shared secret
-  const prkKey = await crypto.subtle.importKey('raw', sharedSecret, { name: 'HKDF' }, false, ['deriveBits']);
-  
-  // Simplified: use HKDF with auth as salt and shared secret as IKM
   const ikm = await hkdfDerive(sharedSecret, clientAuth, authInfo, 32);
 
-  // Key info and nonce info
   const keyInfo = createInfo('aesgcm', clientPublicKey, localPublicKeyRaw);
   const nonceInfo = createInfo('nonce', clientPublicKey, localPublicKeyRaw);
-
   const contentKey = await hkdfDerive(ikm, salt, keyInfo, 16);
   const nonce = await hkdfDerive(ikm, salt, nonceInfo, 12);
 
-  // Encrypt with AES-128-GCM
   const paddedPayload = new Uint8Array(2 + encoder.encode(payload).length);
-  paddedPayload.set([0, 0]); // 2-byte padding length
+  paddedPayload.set([0, 0]);
   paddedPayload.set(encoder.encode(payload), 2);
 
   const cryptoKey = await crypto.subtle.importKey(
-    'raw',
-    contentKey,
-    { name: 'AES-GCM' },
-    false,
-    ['encrypt']
+    'raw', contentKey, { name: 'AES-GCM' }, false, ['encrypt']
   );
 
   const encrypted = new Uint8Array(
-    await crypto.subtle.encrypt(
-      { name: 'AES-GCM', iv: nonce },
-      cryptoKey,
-      paddedPayload
-    )
+    await crypto.subtle.encrypt({ name: 'AES-GCM', iv: nonce }, cryptoKey, paddedPayload)
   );
 
-  // Build aes128gcm body: salt(16) + rs(4) + idlen(1) + keyid(65) + ciphertext
   const rs = new Uint8Array(4);
   new DataView(rs.buffer).setUint32(0, 4096, false);
-  
+
   const body = new Uint8Array(16 + 4 + 1 + localPublicKeyRaw.length + encrypted.length);
   let offset = 0;
   body.set(salt, offset); offset += 16;
@@ -227,14 +173,13 @@ async function encryptPayload(
   body.set(localPublicKeyRaw, offset); offset += localPublicKeyRaw.length;
   body.set(encrypted, offset);
 
-  return { ciphertext: body, salt, localPublicKey: localPublicKeyRaw };
+  return { ciphertext: body };
 }
 
 function createInfo(type: string, clientPublicKey: Uint8Array, serverPublicKey: Uint8Array): Uint8Array {
   const encoder = new TextEncoder();
   const typeBytes = encoder.encode(`Content-Encoding: ${type}\0`);
   const header = encoder.encode('P-256\0');
-  
   const info = new Uint8Array(typeBytes.length + header.length + 2 + clientPublicKey.length + 2 + serverPublicKey.length);
   let offset = 0;
   info.set(typeBytes, offset); offset += typeBytes.length;
@@ -243,21 +188,13 @@ function createInfo(type: string, clientPublicKey: Uint8Array, serverPublicKey: 
   info.set(clientPublicKey, offset); offset += clientPublicKey.length;
   info[offset++] = 0; info[offset++] = serverPublicKey.length;
   info.set(serverPublicKey, offset);
-  
   return info;
 }
 
-async function hkdfDerive(
-  ikm: Uint8Array,
-  salt: Uint8Array,
-  info: Uint8Array,
-  length: number
-): Promise<Uint8Array> {
+async function hkdfDerive(ikm: Uint8Array, salt: Uint8Array, info: Uint8Array, length: number): Promise<Uint8Array> {
   const key = await crypto.subtle.importKey('raw', ikm, { name: 'HKDF' }, false, ['deriveBits']);
   const bits = await crypto.subtle.deriveBits(
-    { name: 'HKDF', hash: 'SHA-256', salt, info },
-    key,
-    length * 8
+    { name: 'HKDF', hash: 'SHA-256', salt, info }, key, length * 8
   );
   return new Uint8Array(bits);
 }
@@ -271,34 +208,32 @@ Deno.serve(async (req) => {
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
-    const anonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
-    if (!supabaseUrl || !anonKey || !serviceRoleKey) {
+    if (!supabaseUrl || !serviceRoleKey) {
       throw new Error('Missing Supabase configuration');
     }
 
+    // Auth: accept service role key OR internal trigger header
     const authHeader = req.headers.get('Authorization') ?? '';
     const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
-    const isServiceCall = bearerToken.length > 0 && bearerToken === serviceRoleKey;
+    const triggerSecret = req.headers.get('x-trigger-secret') ?? '';
+    
+    const isServiceCall = bearerToken === serviceRoleKey;
+    const isInternalTrigger = triggerSecret === 'internal-push-trigger';
 
     let callerUserId: string | null = null;
 
-    if (!isServiceCall) {
-      if (!authHeader) {
-        throw new Error('Missing Authorization header');
-      }
+    if (!isServiceCall && !isInternalTrigger) {
+      // Normal user call - verify JWT
+      const anonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+      if (!authHeader) throw new Error('Missing Authorization header');
 
       const callerClient = createClient(supabaseUrl, anonKey, {
-        global: {
-          headers: { Authorization: authHeader },
-        },
+        global: { headers: { Authorization: authHeader } },
       });
-
       const { data: { user }, error: userError } = await callerClient.auth.getUser();
-      if (userError || !user) {
-        throw new Error('User not authenticated');
-      }
+      if (userError || !user) throw new Error('User not authenticated');
       callerUserId = user.id;
     }
 
@@ -312,17 +247,17 @@ Deno.serve(async (req) => {
     }
 
     const targetUserId = userId || callerUserId;
-    if (!targetUserId) {
-      throw new Error('Missing target user');
-    }
+    if (!targetUserId) throw new Error('Missing target user');
 
-    if (!isServiceCall && userId && userId !== callerUserId) {
+    if (!isServiceCall && !isInternalTrigger && userId && userId !== callerUserId) {
       throw new Error('Not authorized to send push to another user');
     }
 
+    console.log(`📬 Sending push to user ${targetUserId}, type: ${notification.data?.type || 'unknown'}`);
+
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
-    // Get user's push subscription from database
+    // Get user's push subscription
     const { data: settings, error: settingsError } = await supabaseAdmin
       .from('app_settings')
       .select('setting_value')
@@ -331,68 +266,54 @@ Deno.serve(async (req) => {
       .single();
 
     if (settingsError || !settings) {
-      throw new Error('No push subscription found for user');
+      console.log('⚠️ No push subscription for user', targetUserId);
+      return new Response(
+        JSON.stringify({ success: false, message: 'No push subscription found' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      );
     }
 
     const subscription: PushSubscriptionData = JSON.parse(settings.setting_value);
 
-    const baseData =
-      notification.data && typeof notification.data === 'object' && notification.data !== null
-        ? { ...notification.data }
-        : {};
+    const baseData = notification.data && typeof notification.data === 'object'
+      ? { ...notification.data }
+      : {};
 
     const rawBadgeCount = (baseData as Record<string, unknown>).badgeCount;
-    const parsedBadgeCount = typeof rawBadgeCount === 'number' && Number.isFinite(rawBadgeCount)
+    let badgeCount = typeof rawBadgeCount === 'number' && Number.isFinite(rawBadgeCount)
       ? Math.max(0, Math.floor(rawBadgeCount))
-      : null;
+      : 0;
 
-    let badgeCount = parsedBadgeCount ?? 0;
-
-    if (parsedBadgeCount === null) {
-      const { count, error: unreadCountError } = await supabaseAdmin
+    if (badgeCount === 0) {
+      const { count } = await supabaseAdmin
         .from('notifications')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', targetUserId)
         .eq('read', false);
-
-      if (unreadCountError) {
-        console.warn('Could not fetch unread count for badge:', unreadCountError.message);
-      } else {
-        badgeCount = Math.max(0, count ?? 0);
-      }
+      badgeCount = Math.max(0, count ?? 1);
     }
 
-    // Get VAPID keys
+    // VAPID keys
     const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY');
     const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY');
+    if (!vapidPublicKey || !vapidPrivateKey) throw new Error('VAPID keys not configured');
 
-    if (!vapidPublicKey || !vapidPrivateKey) {
-      throw new Error('VAPID keys not configured');
-    }
-
-    // Build push payload
     const pushPayload = JSON.stringify({
       title: notification.title,
       body: notification.body,
       icon: notification.icon || '/favicon.png',
       badge: notification.badge || '/favicon.png',
       tag: notification.tag || 'notification',
-      data: {
-        ...baseData,
-        badgeCount,
-      }
+      data: { ...baseData, badgeCount },
     });
 
-    // Encrypt payload
     const { ciphertext } = await encryptPayload(pushPayload, subscription.keys);
 
-    // Create VAPID JWT
     const endpoint = new URL(subscription.endpoint);
     const audience = `${endpoint.protocol}//${endpoint.host}`;
     const { privateKey, publicKeyBytes } = await importVapidKeys(vapidPublicKey, vapidPrivateKey);
     const jwt = await createVapidJwt(audience, 'mailto:contact@fatras-booking.fr', privateKey);
 
-    // Send push notification
     const response = await fetch(subscription.endpoint, {
       method: 'POST',
       headers: {
@@ -408,38 +329,35 @@ Deno.serve(async (req) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Push service response:', response.status, errorText);
-      
-      // If subscription expired, clean it up
+
       if (response.status === 404 || response.status === 410) {
         await supabaseAdmin
           .from('app_settings')
           .delete()
           .eq('user_id', targetUserId)
           .eq('setting_key', 'push_subscription');
-        throw new Error('Push subscription expired or invalid');
+        console.log('🗑️ Cleaned up expired subscription');
+        return new Response(
+          JSON.stringify({ success: false, message: 'Subscription expired, cleaned up' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+        );
       }
-      
-      throw new Error(`Push notification failed: ${response.status} ${errorText}`);
+
+      throw new Error(`Push failed: ${response.status} ${errorText}`);
     }
 
-    console.log('✅ Push notification sent successfully');
+    console.log('✅ Push notification sent successfully, badge:', badgeCount);
 
     return new Response(
-      JSON.stringify({ success: true, message: 'Push notification sent' }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      }
+      JSON.stringify({ success: true, message: 'Push notification sent', badgeCount }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error('Error sending push notification:', errorMessage);
+    console.error('❌ Error sending push notification:', errorMessage);
     return new Response(
       JSON.stringify({ error: errorMessage }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
     );
   }
 });
