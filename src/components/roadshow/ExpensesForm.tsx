@@ -32,7 +32,7 @@ export const ExpensesForm: React.FC<ExpensesFormProps> = ({ roadshowStopId }) =>
 
   useEffect(() => {
     loadExpenses();
-  }, [roadshowStopId]);
+  }, [roadshowStopId, loading]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
