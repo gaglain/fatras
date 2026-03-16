@@ -201,9 +201,7 @@ self.addEventListener('push', (event) => {
         }
       }
 
-      if (isSilentBadgeSync) {
-        return;
-      }
+      // On iOS, silent pushes are not supported — always show notification
 
       await self.registration.showNotification(notificationData.title, {
         body: notificationData.body,
