@@ -17,12 +17,13 @@ export interface RoadshowExpense {
   updated_at: string;
 }
 
-export const useRoadshowExpenses = () => {
+export const useRoadshowExpenses = (roadshowStopId?: string) => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [expenses, setExpenses] = useState<RoadshowExpense[]>([]);
 
-  const getExpenses = async (roadshowStopId: string): Promise<RoadshowExpense[]> => {
-    if (!user) return [];
+  const fetchExpenses = async () => {
+    if (!user || !roadshowStopId) return;
 
     setLoading(true);
     try {
@@ -33,15 +34,18 @@ export const useRoadshowExpenses = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return (data || []) as RoadshowExpense[];
+      setExpenses((data || []) as RoadshowExpense[]);
     } catch (error: unknown) {
       logger.error('Error fetching expenses:', error);
       toast.error('Erreur lors du chargement des notes de frais');
-      return [];
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchExpenses();
+  }, [roadshowStopId, user?.id]);
 
   const uploadExpenseFile = async (file: File, roadshowStopId: string) => {
     if (!user) return null;
