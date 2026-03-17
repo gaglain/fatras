@@ -138,7 +138,7 @@ export function updatePWAManifest(config: {
     name: config.name,
     short_name: config.shortName,
     description: `${config.name} - Application de gestion professionnelle`,
-    start_url: "/",
+    start_url: "/dashboard",
     display: "standalone",
     background_color: backgroundColor,
     theme_color: themeColor,

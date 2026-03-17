@@ -25,9 +25,9 @@ interface PushSubscriptionData {
 // ---- Crypto helpers for VAPID / Web Push ----
 
 function base64UrlDecode(str: string): Uint8Array {
-  const base64 = str.replace(/-/g, '+').replace(/_/g, '/');
-  const pad = base64.length % 4 === 0 ? '' : '='.repeat(4 - (base64.length % 4));
-  const binary = atob(base64 + pad);
+  const normalized = str.replace(/\s+/g, '').replace(/-/g, '+').replace(/_/g, '/');
+  const pad = normalized.length % 4 === 0 ? '' : '='.repeat(4 - (normalized.length % 4));
+  const binary = atob(normalized + pad);
   return Uint8Array.from(binary, (c) => c.charCodeAt(0));
 }
 
@@ -38,33 +38,68 @@ function base64UrlEncode(buf: ArrayBuffer | Uint8Array): string {
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-async function importVapidKeys(publicKeyB64: string, privateKeyB64: string) {
-  const publicKeyBytes = base64UrlDecode(publicKeyB64);
-  const privateKeyBytes = base64UrlDecode(privateKeyB64);
+function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+}
 
-  const privateKey = await crypto.subtle.importKey(
+function extractPemBody(pem: string): string | null {
+  const match = pem.match(/-----BEGIN(?: EC)? PRIVATE KEY-----([\s\S]+?)-----END(?: EC)? PRIVATE KEY-----/);
+  return match?.[1]?.replace(/\s+/g, '') ?? null;
+}
+
+async function importPkcs8PrivateKey(privateKeyBytes: Uint8Array): Promise<CryptoKey> {
+  return crypto.subtle.importKey(
     'pkcs8',
-    convertRawPrivateKeyToPKCS8(privateKeyBytes),
+    toArrayBuffer(privateKeyBytes),
     { name: 'ECDSA', namedCurve: 'P-256' },
     true,
     ['sign']
   );
-
-  return { privateKey, publicKeyBytes };
 }
 
-function convertRawPrivateKeyToPKCS8(raw: Uint8Array): ArrayBuffer {
-  const pkcs8Header = new Uint8Array([
-    0x30, 0x81, 0x87, 0x02, 0x01, 0x00, 0x30, 0x13,
-    0x06, 0x07, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x02,
-    0x01, 0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d,
-    0x03, 0x01, 0x07, 0x04, 0x6d, 0x30, 0x6b, 0x02,
-    0x01, 0x01, 0x04, 0x20,
-  ]);
-  const result = new Uint8Array(pkcs8Header.length + 32);
-  result.set(pkcs8Header);
-  result.set(raw.slice(0, 32), pkcs8Header.length);
-  return result.buffer;
+async function importVapidKeys(publicKeyB64: string, privateKeyValue: string) {
+  const publicKeyBytes = base64UrlDecode(publicKeyB64);
+  const normalizedPrivateKey = privateKeyValue.trim();
+
+  const pemBody = extractPemBody(normalizedPrivateKey);
+  if (pemBody) {
+    const privateKey = await importPkcs8PrivateKey(base64UrlDecode(pemBody));
+    return { privateKey, publicKeyBytes };
+  }
+
+  const privateKeyBytes = base64UrlDecode(normalizedPrivateKey);
+
+  try {
+    const privateKey = await importPkcs8PrivateKey(privateKeyBytes);
+    return { privateKey, publicKeyBytes };
+  } catch (_) {
+    // Fallback for web-push style raw 32-byte VAPID private keys
+  }
+
+  if (privateKeyBytes.length === 32 && publicKeyBytes.length === 65 && publicKeyBytes[0] === 0x04) {
+    const x = publicKeyBytes.slice(1, 33);
+    const y = publicKeyBytes.slice(33, 65);
+
+    const privateKey = await crypto.subtle.importKey(
+      'jwk',
+      {
+        kty: 'EC',
+        crv: 'P-256',
+        d: base64UrlEncode(privateKeyBytes),
+        x: base64UrlEncode(x),
+        y: base64UrlEncode(y),
+        ext: true,
+        key_ops: ['sign'],
+      },
+      { name: 'ECDSA', namedCurve: 'P-256' },
+      true,
+      ['sign']
+    );
+
+    return { privateKey, publicKeyBytes };
+  }
+
+  throw new Error('Unsupported VAPID private key format');
 }
 
 async function createVapidJwt(

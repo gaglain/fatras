@@ -16,7 +16,7 @@ export const usePWAManifest = () => {
         name: data.name,
         short_name: data.shortName,
         description: `${data.name} - Application de gestion professionnelle`,
-        start_url: "/",
+        start_url: "/dashboard",
         display: "standalone",
         background_color: data.backgroundColor || "#ffffff",
         theme_color: data.themeColor || "#8b5cf6",
