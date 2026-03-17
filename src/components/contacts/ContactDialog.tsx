@@ -109,6 +109,8 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
     setShowCreationSuite(false);
     setCreatedContactId(null);
 
+    let restored = false;
+
     if (!contact) {
       try {
         const rawDraft = sessionStorage.getItem(draftKey);
