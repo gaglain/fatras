@@ -257,8 +257,11 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
         }
       }
 
+      if (!contact) {
+        clearDraft();
+      }
       onSave();
-      onClose();
+      handleCloseDialog();
     } catch {
       toast.error('Erreur lors de la sauvegarde du contact');
     } finally {
