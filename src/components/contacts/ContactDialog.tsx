@@ -106,9 +106,6 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
 
     if (!justOpened) return;
 
-    setShowCreationSuite(false);
-    setCreatedContactId(null);
-
     let restored = false;
 
     if (!contact) {
@@ -127,6 +124,12 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
       } catch {
         sessionStorage.removeItem(draftKey);
       }
+    }
+
+    // Only reset if no draft was restored (truly fresh open)
+    if (!restored) {
+      setShowCreationSuite(false);
+      setCreatedContactId(null);
     }
 
     if (!restored) {
