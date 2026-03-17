@@ -330,13 +330,18 @@ export const ContactCreationSuite: React.FC<ContactCreationSuiteProps> = ({
               />
             </div>
 
-            <div className="flex justify-end space-x-2">
-              <Button type="button" variant="outline" onClick={onClose}>
-                Annuler
+            <div className="flex justify-between">
+              <Button type="button" variant="ghost" onClick={() => setCurrentStep(2)}>
+                Passer cette étape →
               </Button>
-              <Button onClick={handleCreateEvent} disabled={loading || !eventData.title}>
-                {loading ? 'Création...' : 'Créer l\'événement'}
-              </Button>
+              <div className="flex space-x-2">
+                <Button type="button" variant="outline" onClick={onClose}>
+                  Annuler
+                </Button>
+                <Button onClick={handleCreateEvent} disabled={loading || !eventData.title}>
+                  {loading ? 'Création...' : 'Créer l\'événement'}
+                </Button>
+              </div>
             </div>
           </div>
         );
