@@ -98,14 +98,22 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
     }
   };
 
+  // Only reset form when dialog transitions from closed to open
   useEffect(() => {
+    const justOpened = isOpen && !prevIsOpenRef.current;
+    prevIsOpenRef.current = isOpen;
+
+    if (!justOpened) return;
+
+    // Reset creation suite state on every open
+    setShowCreationSuite(false);
+    setCreatedContactId(null);
+
     if (contact) {
       setFormData(contact);
-      // Charger l'artiste lié s'il existe
       if (contact.id) {
         loadContactArtist(contact.id);
       }
-      // Load owner_id from contact
       setSelectedOwnerId((contact as any).owner_id || '');
     } else {
       setFormData({
@@ -130,7 +138,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
     }
     fetchSpectacles();
     fetchContactTypes();
-  }, [contact]);
+  }, [isOpen, contact]);
 
   const loadContactArtist = async (contactId: string) => {
     try {
