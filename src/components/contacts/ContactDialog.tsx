@@ -352,7 +352,8 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
 
   return (
     <>
-    <Dialog open={isOpen && !showCreationSuite} onOpenChange={(open) => { if (!open && !showCreationSuite) handleCloseDialog(); }}>
+    {!showCreationSuite && (
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleCloseDialog(); }}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>
@@ -606,11 +607,12 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
         )}
       </DialogContent>
     </Dialog>
+    )}
 
-    {/* Suite de création */}
-    {createdContactId && (
+    {/* Suite de création - rendu uniquement quand showCreationSuite est true */}
+    {showCreationSuite && createdContactId && (
       <ContactCreationSuite
-        isOpen={showCreationSuite}
+        isOpen={true}
         onClose={() => {
           setShowCreationSuite(false);
           setCreatedContactId(null);
