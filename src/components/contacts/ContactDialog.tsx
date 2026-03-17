@@ -63,6 +63,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
   const [loading, setLoading] = useState(false);
   const [showCreationSuite, setShowCreationSuite] = useState(false);
   const [createdContactId, setCreatedContactId] = useState<string | null>(null);
+  const prevIsOpenRef = useRef(false);
 
   const fetchSpectacles = async () => {
     if (!user) return;
