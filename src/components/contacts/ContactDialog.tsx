@@ -585,7 +585,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={handleCloseDialog}>
               Annuler
             </Button>
             <Button type="submit" disabled={loading}>
@@ -609,7 +609,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
         onClose={() => {
           setShowCreationSuite(false);
           setCreatedContactId(null);
-          onClose();
+          handleCloseDialog();
         }}
         contactId={createdContactId}
         contactName={`${formData.first_name} ${formData.last_name}`}
