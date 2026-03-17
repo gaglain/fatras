@@ -44,13 +44,18 @@ async function postBadgeSyncMessage(count: number) {
   const message: BadgeSyncMessage = { type: 'PWA_BADGE_SYNC', count: normalizedCount };
 
   try {
+    const targets = new Set<ServiceWorker>();
+
     if (navigator.serviceWorker.controller) {
-      navigator.serviceWorker.controller.postMessage(message);
-      return;
+      targets.add(navigator.serviceWorker.controller);
     }
 
     const registration = await navigator.serviceWorker.ready;
-    registration.active?.postMessage(message);
+    if (registration.active) targets.add(registration.active);
+    if (registration.waiting) targets.add(registration.waiting);
+    if (registration.installing) targets.add(registration.installing);
+
+    targets.forEach((worker) => worker.postMessage(message));
   } catch (error) {
     logger.debug('PWA Badge - Impossible de synchroniser via SW:', error);
   }
@@ -75,7 +80,6 @@ export const usePWABadge = (count: number) => {
           try {
             await setAppBadge(safeCount);
             logger.debug('PWA Badge - Badge mis à jour:', safeCount);
-            return;
           } catch (error) {
             logger.error('PWA Badge - Erreur setAppBadge:', error);
           }
@@ -89,7 +93,6 @@ export const usePWABadge = (count: number) => {
         try {
           await clearAppBadge();
           logger.debug('PWA Badge - Badge effacé');
-          return;
         } catch (error) {
           logger.error('PWA Badge - Erreur clearAppBadge:', error);
         }
