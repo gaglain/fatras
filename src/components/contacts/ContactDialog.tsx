@@ -109,7 +109,6 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
     setShowCreationSuite(false);
     setCreatedContactId(null);
 
-    let restored = false;
     if (!contact) {
       try {
         const rawDraft = sessionStorage.getItem(draftKey);
@@ -119,6 +118,8 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
           setSelectedArtistId(draft.selectedArtistId || '');
           setSelectedOwnerId(draft.selectedOwnerId || '');
           setNewTag(draft.newTag || '');
+          setShowCreationSuite(Boolean(draft.showCreationSuite));
+          setCreatedContactId(draft.createdContactId || null);
           restored = true;
         }
       } catch {
