@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -63,6 +63,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
   const [loading, setLoading] = useState(false);
   const [showCreationSuite, setShowCreationSuite] = useState(false);
   const [createdContactId, setCreatedContactId] = useState<string | null>(null);
+  const prevIsOpenRef = useRef(false);
 
   const fetchSpectacles = async () => {
     if (!user) return;
@@ -97,14 +98,22 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
     }
   };
 
+  // Only reset form when dialog transitions from closed to open
   useEffect(() => {
+    const justOpened = isOpen && !prevIsOpenRef.current;
+    prevIsOpenRef.current = isOpen;
+
+    if (!justOpened) return;
+
+    // Reset creation suite state on every open
+    setShowCreationSuite(false);
+    setCreatedContactId(null);
+
     if (contact) {
       setFormData(contact);
-      // Charger l'artiste lié s'il existe
       if (contact.id) {
         loadContactArtist(contact.id);
       }
-      // Load owner_id from contact
       setSelectedOwnerId((contact as any).owner_id || '');
     } else {
       setFormData({
@@ -129,7 +138,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
     }
     fetchSpectacles();
     fetchContactTypes();
-  }, [contact]);
+  }, [isOpen, contact]);
 
   const loadContactArtist = async (contactId: string) => {
     try {
@@ -274,7 +283,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
   return (
     <>
     <Dialog open={isOpen && !showCreationSuite} onOpenChange={(open) => { if (!open && !showCreationSuite) onClose(); }}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>
             {contact ? 'Modifier le contact' : 'Nouveau contact'}

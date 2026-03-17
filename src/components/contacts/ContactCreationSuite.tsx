@@ -330,13 +330,18 @@ export const ContactCreationSuite: React.FC<ContactCreationSuiteProps> = ({
               />
             </div>
 
-            <div className="flex justify-end space-x-2">
-              <Button type="button" variant="outline" onClick={onClose}>
-                Annuler
+            <div className="flex justify-between">
+              <Button type="button" variant="ghost" onClick={() => setCurrentStep(2)}>
+                Passer cette étape →
               </Button>
-              <Button onClick={handleCreateEvent} disabled={loading || !eventData.title}>
-                {loading ? 'Création...' : 'Créer l\'événement'}
-              </Button>
+              <div className="flex space-x-2">
+                <Button type="button" variant="outline" onClick={onClose}>
+                  Annuler
+                </Button>
+                <Button onClick={handleCreateEvent} disabled={loading || !eventData.title}>
+                  {loading ? 'Création...' : 'Créer l\'événement'}
+                </Button>
+              </div>
             </div>
           </div>
         );
@@ -411,13 +416,18 @@ export const ContactCreationSuite: React.FC<ContactCreationSuiteProps> = ({
               />
             </div>
 
-            <div className="flex justify-end space-x-2">
-              <Button type="button" variant="outline" onClick={() => setCurrentStep(1)}>
-                Retour
+            <div className="flex justify-between">
+              <Button type="button" variant="ghost" onClick={() => setCurrentStep(3)}>
+                Passer cette étape →
               </Button>
-              <Button onClick={handleCreateTask} disabled={loading || !taskData.title}>
-                {loading ? 'Création...' : 'Créer la tâche'}
-              </Button>
+              <div className="flex space-x-2">
+                <Button type="button" variant="outline" onClick={() => setCurrentStep(1)}>
+                  Retour
+                </Button>
+                <Button onClick={handleCreateTask} disabled={loading || !taskData.title}>
+                  {loading ? 'Création...' : 'Créer la tâche'}
+                </Button>
+              </div>
             </div>
           </div>
         );
@@ -526,8 +536,8 @@ export const ContactCreationSuite: React.FC<ContactCreationSuiteProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
