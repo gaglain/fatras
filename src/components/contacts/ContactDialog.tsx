@@ -64,6 +64,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
   const [showCreationSuite, setShowCreationSuite] = useState(false);
   const [createdContactId, setCreatedContactId] = useState<string | null>(null);
   const prevIsOpenRef = useRef(false);
+  const draftKey = contact?.id ? `contact-dialog-edit-${contact.id}` : 'contact-dialog-create-draft';
 
   const fetchSpectacles = async () => {
     if (!user) return;
@@ -98,47 +99,70 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
     }
   };
 
-  // Only reset form when dialog transitions from closed to open
+  // Restore draft only when dialog transitions from closed to open
   useEffect(() => {
     const justOpened = isOpen && !prevIsOpenRef.current;
     prevIsOpenRef.current = isOpen;
 
     if (!justOpened) return;
 
-    // Reset creation suite state on every open
     setShowCreationSuite(false);
     setCreatedContactId(null);
 
-    if (contact) {
-      setFormData(contact);
-      if (contact.id) {
-        loadContactArtist(contact.id);
+    let restored = false;
+
+    if (!contact) {
+      try {
+        const rawDraft = sessionStorage.getItem(draftKey);
+        if (rawDraft) {
+          const draft = JSON.parse(rawDraft);
+          setFormData(draft.formData);
+          setSelectedArtistId(draft.selectedArtistId || '');
+          setSelectedOwnerId(draft.selectedOwnerId || '');
+          setNewTag(draft.newTag || '');
+          setShowCreationSuite(Boolean(draft.showCreationSuite));
+          setCreatedContactId(draft.createdContactId || null);
+          restored = true;
+        }
+      } catch {
+        sessionStorage.removeItem(draftKey);
       }
-      setSelectedOwnerId((contact as any).owner_id || '');
-    } else {
-      setFormData({
-        first_name: '',
-        last_name: '',
-        email: '',
-        phone: '',
-        position: '',
-        company: '',
-        address: '',
-        city: '',
-        postal_code: '',
-        country: 'France',
-        status: 'prospect',
-        source: '',
-        notes: '',
-        tags: [],
-        role: 'contact'
-      });
-      setSelectedArtistId('');
-      setSelectedOwnerId('');
     }
+
+    if (!restored) {
+      if (contact) {
+        setFormData(contact);
+        if (contact.id) {
+          loadContactArtist(contact.id);
+        }
+        setSelectedOwnerId((contact as any).owner_id || '');
+      } else {
+        setFormData({
+          first_name: '',
+          last_name: '',
+          email: '',
+          phone: '',
+          position: '',
+          company: '',
+          address: '',
+          city: '',
+          postal_code: '',
+          country: 'France',
+          status: 'prospect',
+          source: '',
+          notes: '',
+          tags: [],
+          role: 'contact'
+        });
+        setSelectedArtistId('');
+        setSelectedOwnerId('');
+        setNewTag('');
+      }
+    }
+
     fetchSpectacles();
     fetchContactTypes();
-  }, [isOpen, contact]);
+  }, [isOpen, contact, draftKey]);
 
   const loadContactArtist = async (contactId: string) => {
     try {
@@ -235,8 +259,11 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
         }
       }
 
+      if (!contact) {
+        clearDraft();
+      }
       onSave();
-      onClose();
+      handleCloseDialog();
     } catch {
       toast.error('Erreur lors de la sauvegarde du contact');
     } finally {
@@ -280,9 +307,49 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
     }
   };
 
+  const clearDraft = () => {
+    try {
+      sessionStorage.removeItem(draftKey);
+    } catch {
+      // Ignore storage errors
+    }
+  };
+
+  const handleCloseDialog = () => {
+    clearDraft();
+    onClose();
+  };
+
+  useEffect(() => {
+    if (!isOpen || contact) return;
+
+    try {
+      sessionStorage.setItem(draftKey, JSON.stringify({
+        formData,
+        selectedArtistId,
+        selectedOwnerId,
+        newTag,
+        showCreationSuite,
+        createdContactId,
+      }));
+    } catch {
+      // Ignore storage quota / privacy errors
+    }
+  }, [
+    isOpen,
+    contact,
+    draftKey,
+    formData,
+    selectedArtistId,
+    selectedOwnerId,
+    newTag,
+    showCreationSuite,
+    createdContactId,
+  ]);
+
   return (
     <>
-    <Dialog open={isOpen && !showCreationSuite} onOpenChange={(open) => { if (!open && !showCreationSuite) onClose(); }}>
+    <Dialog open={isOpen && !showCreationSuite} onOpenChange={(open) => { if (!open && !showCreationSuite) handleCloseDialog(); }}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>
@@ -520,7 +587,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={handleCloseDialog}>
               Annuler
             </Button>
             <Button type="submit" disabled={loading}>
@@ -544,7 +611,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
         onClose={() => {
           setShowCreationSuite(false);
           setCreatedContactId(null);
-          onClose();
+          handleCloseDialog();
         }}
         contactId={createdContactId}
         contactName={`${formData.first_name} ${formData.last_name}`}

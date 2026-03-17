@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,6 +46,8 @@ export const ContactCreationSuite: React.FC<ContactCreationSuiteProps> = ({
     opportunityId?: string;
     taskId?: string;
   }>({});
+  const prevIsOpenRef = useRef(false);
+  const draftKey = `contact-creation-suite-${contactId}`;
 
   // Données communes partagées
   const [commonData, setCommonData] = useState({
@@ -97,6 +99,28 @@ export const ContactCreationSuite: React.FC<ContactCreationSuiteProps> = ({
     };
     fetchArtists();
   }, [user]);
+
+  useEffect(() => {
+    const justOpened = isOpen && !prevIsOpenRef.current;
+    prevIsOpenRef.current = isOpen;
+
+    if (!justOpened) return;
+
+    try {
+      const rawDraft = sessionStorage.getItem(draftKey);
+      if (!rawDraft) return;
+
+      const draft = JSON.parse(rawDraft);
+      setCurrentStep(draft.currentStep ?? 1);
+      setCreatedIds(draft.createdIds ?? {});
+      setCommonData(draft.commonData ?? { address: '', postal_code: '', city: '', artist_id: '' });
+      setEventData(draft.eventData ?? { title: '', description: '', event_type: 'concert', venue: '', start_date: '', budget_min: 0, budget_max: 0 });
+      setOpportunityData(draft.opportunityData ?? { title: '', description: '', venue: '', budget: 0, probability_percentage: 50, deadline: '', requirements: '' });
+      setTaskData(draft.taskData ?? { title: '', description: '', task_type: 'Autre', priority: 'medium', due_date: '' });
+    } catch {
+      sessionStorage.removeItem(draftKey);
+    }
+  }, [isOpen, draftKey]);
 
   const handleCreateEvent = async () => {
     if (!user) return;
@@ -157,9 +181,10 @@ export const ContactCreationSuite: React.FC<ContactCreationSuiteProps> = ({
 
       if (opportunity) {
         setCreatedIds(prev => ({ ...prev, opportunityId: opportunity.id }));
+        clearDraft();
         toast.success('Opportunité créée avec succès');
         toast.success('Suite de création terminée !');
-        onClose();
+        handleCloseSuite();
       }
     } catch (error) {
       toast.error('Erreur lors de la création de l\'opportunité');
@@ -197,6 +222,45 @@ export const ContactCreationSuite: React.FC<ContactCreationSuiteProps> = ({
       setLoading(false);
     }
   };
+
+  const clearDraft = () => {
+    try {
+      sessionStorage.removeItem(draftKey);
+    } catch {
+      // Ignore storage errors
+    }
+  };
+
+  const handleCloseSuite = () => {
+    clearDraft();
+    onClose();
+  };
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    try {
+      sessionStorage.setItem(draftKey, JSON.stringify({
+        currentStep,
+        createdIds,
+        commonData,
+        eventData,
+        opportunityData,
+        taskData,
+      }));
+    } catch {
+      // Ignore storage quota / privacy errors
+    }
+  }, [
+    isOpen,
+    draftKey,
+    currentStep,
+    createdIds,
+    commonData,
+    eventData,
+    opportunityData,
+    taskData,
+  ]);
 
   const renderStepContent = () => {
     switch (currentStep) {
@@ -536,7 +600,7 @@ export const ContactCreationSuite: React.FC<ContactCreationSuiteProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleCloseSuite(); }}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
