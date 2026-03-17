@@ -222,7 +222,31 @@ export const ContactCreationSuite: React.FC<ContactCreationSuiteProps> = ({
     }
   };
 
-  const renderStepContent = () => {
+  useEffect(() => {
+    if (!isOpen) return;
+
+    try {
+      sessionStorage.setItem(draftKey, JSON.stringify({
+        currentStep,
+        createdIds,
+        commonData,
+        eventData,
+        opportunityData,
+        taskData,
+      }));
+    } catch {
+      // Ignore storage quota / privacy errors
+    }
+  }, [
+    isOpen,
+    draftKey,
+    currentStep,
+    createdIds,
+    commonData,
+    eventData,
+    opportunityData,
+    taskData,
+  ]);
     switch (currentStep) {
       case 1:
         return (

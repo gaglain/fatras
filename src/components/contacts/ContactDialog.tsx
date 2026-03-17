@@ -301,6 +301,21 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
     }
   };
 
+  useEffect(() => {
+    if (!isOpen || contact) return;
+
+    try {
+      sessionStorage.setItem(draftKey, JSON.stringify({
+        formData,
+        selectedArtistId,
+        selectedOwnerId,
+        newTag,
+      }));
+    } catch {
+      // Ignore storage quota / privacy errors
+    }
+  }, [isOpen, contact, draftKey, formData, selectedArtistId, selectedOwnerId, newTag]);
+
   return (
     <>
     <Dialog open={isOpen && !showCreationSuite} onOpenChange={(open) => { if (!open && !showCreationSuite) onClose(); }}>
