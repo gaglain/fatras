@@ -301,6 +301,19 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
     }
   };
 
+  const clearDraft = () => {
+    try {
+      sessionStorage.removeItem(draftKey);
+    } catch {
+      // Ignore storage errors
+    }
+  };
+
+  const handleCloseDialog = () => {
+    clearDraft();
+    onClose();
+  };
+
   useEffect(() => {
     if (!isOpen || contact) return;
 
@@ -310,11 +323,23 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
         selectedArtistId,
         selectedOwnerId,
         newTag,
+        showCreationSuite,
+        createdContactId,
       }));
     } catch {
       // Ignore storage quota / privacy errors
     }
-  }, [isOpen, contact, draftKey, formData, selectedArtistId, selectedOwnerId, newTag]);
+  }, [
+    isOpen,
+    contact,
+    draftKey,
+    formData,
+    selectedArtistId,
+    selectedOwnerId,
+    newTag,
+    showCreationSuite,
+    createdContactId,
+  ]);
 
   return (
     <>
