@@ -416,13 +416,18 @@ export const ContactCreationSuite: React.FC<ContactCreationSuiteProps> = ({
               />
             </div>
 
-            <div className="flex justify-end space-x-2">
-              <Button type="button" variant="outline" onClick={() => setCurrentStep(1)}>
-                Retour
+            <div className="flex justify-between">
+              <Button type="button" variant="ghost" onClick={() => setCurrentStep(3)}>
+                Passer cette étape →
               </Button>
-              <Button onClick={handleCreateTask} disabled={loading || !taskData.title}>
-                {loading ? 'Création...' : 'Créer la tâche'}
-              </Button>
+              <div className="flex space-x-2">
+                <Button type="button" variant="outline" onClick={() => setCurrentStep(1)}>
+                  Retour
+                </Button>
+                <Button onClick={handleCreateTask} disabled={loading || !taskData.title}>
+                  {loading ? 'Création...' : 'Créer la tâche'}
+                </Button>
+              </div>
             </div>
           </div>
         );
