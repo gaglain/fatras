@@ -155,6 +155,8 @@ self.addEventListener('push', (event) => {
     badge: '/favicon.png',
     icon: '/favicon.png',
     tag: 'notification',
+    requireInteraction: false,
+    renotify: false,
     data: {},
   };
 
@@ -167,6 +169,8 @@ self.addEventListener('push', (event) => {
         badge: payload.badge || notificationData.badge,
         icon: payload.icon || notificationData.icon,
         tag: payload.tag || notificationData.tag,
+        requireInteraction: payload.requireInteraction === true,
+        renotify: payload.renotify === true,
         data: payload.data || {},
       };
     } catch (error) {

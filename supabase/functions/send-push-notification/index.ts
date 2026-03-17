@@ -11,6 +11,8 @@ interface PushPayload {
   icon?: string;
   badge?: string;
   tag?: string;
+  requireInteraction?: boolean;
+  renotify?: boolean;
   data?: Record<string, unknown>;
 }
 
