@@ -222,6 +222,19 @@ export const ContactCreationSuite: React.FC<ContactCreationSuiteProps> = ({
     }
   };
 
+  const clearDraft = () => {
+    try {
+      sessionStorage.removeItem(draftKey);
+    } catch {
+      // Ignore storage errors
+    }
+  };
+
+  const handleCloseSuite = () => {
+    clearDraft();
+    onClose();
+  };
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -247,6 +260,8 @@ export const ContactCreationSuite: React.FC<ContactCreationSuiteProps> = ({
     opportunityData,
     taskData,
   ]);
+
+  const renderStepContent = () => {
     switch (currentStep) {
       case 1:
         return (
