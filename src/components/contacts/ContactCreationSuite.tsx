@@ -181,9 +181,10 @@ export const ContactCreationSuite: React.FC<ContactCreationSuiteProps> = ({
 
       if (opportunity) {
         setCreatedIds(prev => ({ ...prev, opportunityId: opportunity.id }));
+        clearDraft();
         toast.success('Opportunité créée avec succès');
         toast.success('Suite de création terminée !');
-        onClose();
+        handleCloseSuite();
       }
     } catch (error) {
       toast.error('Erreur lors de la création de l\'opportunité');
