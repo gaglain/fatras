@@ -11,6 +11,8 @@ interface PushPayload {
   icon?: string;
   badge?: string;
   tag?: string;
+  requireInteraction?: boolean;
+  renotify?: boolean;
   data?: Record<string, unknown>;
 }
 
@@ -351,6 +353,8 @@ Deno.serve(async (req) => {
       icon: notification.icon || '/favicon.png',
       badge: notification.badge || '/favicon.png',
       tag: notification.tag || 'notification',
+      requireInteraction: notification.requireInteraction ?? !isSilentBadgeSync,
+      renotify: notification.renotify ?? !isSilentBadgeSync,
       data: { ...baseData, badgeCount, silentBadgeSync: isSilentBadgeSync },
     });
 
@@ -368,6 +372,7 @@ Deno.serve(async (req) => {
         'Content-Encoding': 'aes128gcm',
         'Content-Length': ciphertext.length.toString(),
         'TTL': '86400',
+        'Urgency': isSilentBadgeSync ? 'normal' : 'high',
         'Authorization': `vapid t=${jwt}, k=${base64UrlEncode(publicKeyBytes)}`,
       },
       body: ciphertext,
