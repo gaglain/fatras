@@ -99,47 +99,67 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
     }
   };
 
-  // Only reset form when dialog transitions from closed to open
+  // Restore draft only when dialog transitions from closed to open
   useEffect(() => {
     const justOpened = isOpen && !prevIsOpenRef.current;
     prevIsOpenRef.current = isOpen;
 
     if (!justOpened) return;
 
-    // Reset creation suite state on every open
     setShowCreationSuite(false);
     setCreatedContactId(null);
 
-    if (contact) {
-      setFormData(contact);
-      if (contact.id) {
-        loadContactArtist(contact.id);
+    let restored = false;
+    if (!contact) {
+      try {
+        const rawDraft = sessionStorage.getItem(draftKey);
+        if (rawDraft) {
+          const draft = JSON.parse(rawDraft);
+          setFormData(draft.formData);
+          setSelectedArtistId(draft.selectedArtistId || '');
+          setSelectedOwnerId(draft.selectedOwnerId || '');
+          setNewTag(draft.newTag || '');
+          restored = true;
+        }
+      } catch {
+        sessionStorage.removeItem(draftKey);
       }
-      setSelectedOwnerId((contact as any).owner_id || '');
-    } else {
-      setFormData({
-        first_name: '',
-        last_name: '',
-        email: '',
-        phone: '',
-        position: '',
-        company: '',
-        address: '',
-        city: '',
-        postal_code: '',
-        country: 'France',
-        status: 'prospect',
-        source: '',
-        notes: '',
-        tags: [],
-        role: 'contact'
-      });
-      setSelectedArtistId('');
-      setSelectedOwnerId('');
     }
+
+    if (!restored) {
+      if (contact) {
+        setFormData(contact);
+        if (contact.id) {
+          loadContactArtist(contact.id);
+        }
+        setSelectedOwnerId((contact as any).owner_id || '');
+      } else {
+        setFormData({
+          first_name: '',
+          last_name: '',
+          email: '',
+          phone: '',
+          position: '',
+          company: '',
+          address: '',
+          city: '',
+          postal_code: '',
+          country: 'France',
+          status: 'prospect',
+          source: '',
+          notes: '',
+          tags: [],
+          role: 'contact'
+        });
+        setSelectedArtistId('');
+        setSelectedOwnerId('');
+        setNewTag('');
+      }
+    }
+
     fetchSpectacles();
     fetchContactTypes();
-  }, [isOpen, contact]);
+  }, [isOpen, contact, draftKey]);
 
   const loadContactArtist = async (contactId: string) => {
     try {

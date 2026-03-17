@@ -100,6 +100,28 @@ export const ContactCreationSuite: React.FC<ContactCreationSuiteProps> = ({
     fetchArtists();
   }, [user]);
 
+  useEffect(() => {
+    const justOpened = isOpen && !prevIsOpenRef.current;
+    prevIsOpenRef.current = isOpen;
+
+    if (!justOpened) return;
+
+    try {
+      const rawDraft = sessionStorage.getItem(draftKey);
+      if (!rawDraft) return;
+
+      const draft = JSON.parse(rawDraft);
+      setCurrentStep(draft.currentStep ?? 1);
+      setCreatedIds(draft.createdIds ?? {});
+      setCommonData(draft.commonData ?? { address: '', postal_code: '', city: '', artist_id: '' });
+      setEventData(draft.eventData ?? { title: '', description: '', event_type: 'concert', venue: '', start_date: '', budget_min: 0, budget_max: 0 });
+      setOpportunityData(draft.opportunityData ?? { title: '', description: '', venue: '', budget: 0, probability_percentage: 50, deadline: '', requirements: '' });
+      setTaskData(draft.taskData ?? { title: '', description: '', task_type: 'Autre', priority: 'medium', due_date: '' });
+    } catch {
+      sessionStorage.removeItem(draftKey);
+    }
+  }, [isOpen, draftKey]);
+
   const handleCreateEvent = async () => {
     if (!user) return;
 
