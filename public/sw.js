@@ -213,6 +213,8 @@ self.addEventListener('push', (event) => {
         badge: notificationData.badge,
         tag: notificationData.tag,
         data: notificationData.data,
+        renotify: notificationData.renotify,
+        requireInteraction: notificationData.requireInteraction,
         vibrate: [200, 100, 200],
       });
     })()
