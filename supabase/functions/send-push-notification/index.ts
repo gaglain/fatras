@@ -372,7 +372,9 @@ Deno.serve(async (req) => {
         'Content-Encoding': 'aes128gcm',
         'Content-Length': ciphertext.length.toString(),
         'TTL': '86400',
-        'Urgency': isSilentBadgeSync ? 'normal' : 'high',
+        // iOS / installed PWAs can defer background pushes marked as "normal",
+        // which prevents visible delivery and badge refresh while the app is closed.
+        'Urgency': 'high',
         'Authorization': `vapid t=${jwt}, k=${base64UrlEncode(publicKeyBytes)}`,
       },
       body: ciphertext,
