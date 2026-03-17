@@ -46,6 +46,8 @@ export const ContactCreationSuite: React.FC<ContactCreationSuiteProps> = ({
     opportunityId?: string;
     taskId?: string;
   }>({});
+  const prevIsOpenRef = useRef(false);
+  const draftKey = `contact-creation-suite-${contactId}`;
 
   // Données communes partagées
   const [commonData, setCommonData] = useState({

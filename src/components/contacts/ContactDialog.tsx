@@ -64,6 +64,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
   const [showCreationSuite, setShowCreationSuite] = useState(false);
   const [createdContactId, setCreatedContactId] = useState<string | null>(null);
   const prevIsOpenRef = useRef(false);
+  const draftKey = contact?.id ? `contact-dialog-edit-${contact.id}` : 'contact-dialog-create-draft';
 
   const fetchSpectacles = async () => {
     if (!user) return;
