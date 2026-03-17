@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
       name: config.company_name || 'Fatras Booking',
       short_name: (config.company_name || 'Fatras').substring(0, 12),
       description: `${config.company_name || 'Fatras Booking'} - Application de gestion professionnelle`,
-      start_url: '/',
+      start_url: '/dashboard',
       display: 'standalone',
       background_color: config.background_color || '#ffffff',
       theme_color: config.theme_color || '#8b5cf6',
