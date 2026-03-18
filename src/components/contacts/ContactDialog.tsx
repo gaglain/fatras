@@ -61,6 +61,8 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
   });
   const [newTag, setNewTag] = useState('');
   const [loading, setLoading] = useState(false);
+  const [duplicateWarning, setDuplicateWarning] = useState<{ id: string; name: string } | null>(null);
+  const emailCheckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showCreationSuite, setShowCreationSuite] = useState(false);
   const [createdContactId, setCreatedContactId] = useState<string | null>(null);
   const prevIsOpenRef = useRef(false);
