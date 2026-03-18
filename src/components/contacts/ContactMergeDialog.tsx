@@ -93,55 +93,75 @@ export const ContactMergeDialog: React.FC<ContactMergeDialogProps> = ({
     setMerging(true);
 
     try {
-      // The primary contact is the newest one (index 0)
       const primaryContact = sortedContacts[0];
       const secondaryIds = sortedContacts.slice(1).map(c => c.id!);
 
-      // Build merged data from selections
-      const mergedData: Partial<Contact> = {};
+      // Build merged data from selections — only include non-undefined fields
+      const mergedData: Record<string, any> = {};
       for (const field of MERGE_FIELDS) {
         const sourceIdx = selections[field] ?? 0;
-        mergedData[field] = sortedContacts[sourceIdx][field] as any;
+        const value = sortedContacts[sourceIdx][field];
+        // Set value, converting empty strings to null for nullable DB fields
+        mergedData[field] = value === '' ? null : value ?? null;
       }
 
-      // Merge tags: combine all tags
+      // Merge tags
       const allTags = new Set<string>();
       for (const c of sortedContacts) {
         (c.tags || []).forEach(t => allTags.add(t));
       }
-      (mergedData as any).tags = Array.from(allTags);
+      mergedData.tags = Array.from(allTags);
 
-      // Update the primary contact
+      console.log('[Merge] Updating primary contact', primaryContact.id, mergedData);
+
       const { error: updateError } = await supabase
         .from('contacts')
         .update(mergedData)
         .eq('id', primaryContact.id!);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('[Merge] Update error:', updateError);
+        throw updateError;
+      }
 
-      // Re-assign relationships from secondary contacts to primary
+      // Re-assign relationships — use delete+insert pattern instead of upsert 
+      // to avoid issues with missing unique constraints
       for (const secId of secondaryIds) {
+        console.log('[Merge] Reassigning relationships from', secId, 'to', primaryContact.id);
+
         // contact_events
         const { data: events } = await supabase
           .from('contact_events')
           .select('event_id')
           .eq('contact_id', secId);
-        for (const ev of events || []) {
-          await supabase
-            .from('contact_events')
-            .upsert({ contact_id: primaryContact.id!, event_id: ev.event_id }, { onConflict: 'contact_id,event_id', ignoreDuplicates: true });
+        if (events?.length) {
+          // Delete secondary's links, then insert for primary (ignore if already exists)
+          await supabase.from('contact_events').delete().eq('contact_id', secId);
+          for (const ev of events) {
+            const { error } = await supabase
+              .from('contact_events')
+              .insert({ contact_id: primaryContact.id!, event_id: ev.event_id });
+            if (error && !error.message?.includes('duplicate')) {
+              console.warn('[Merge] contact_events insert warning:', error.message);
+            }
+          }
         }
 
-        // contact_artists (no unique constraint — insert and ignore errors)
+        // contact_artists
         const { data: artists } = await supabase
           .from('contact_artists')
           .select('artist_id, role')
           .eq('contact_id', secId);
-        for (const art of artists || []) {
-          await supabase
-            .from('contact_artists')
-            .insert({ contact_id: primaryContact.id!, artist_id: art.artist_id, role: art.role })
-            .then(() => {});  // ignore duplicates
+        if (artists?.length) {
+          await supabase.from('contact_artists').delete().eq('contact_id', secId);
+          for (const art of artists) {
+            const { error } = await supabase
+              .from('contact_artists')
+              .insert({ contact_id: primaryContact.id!, artist_id: art.artist_id, role: art.role });
+            if (error && !error.message?.includes('duplicate')) {
+              console.warn('[Merge] contact_artists insert warning:', error.message);
+            }
+          }
         }
 
         // contact_opportunities
@@ -149,10 +169,16 @@ export const ContactMergeDialog: React.FC<ContactMergeDialogProps> = ({
           .from('contact_opportunities')
           .select('opportunity_id, role')
           .eq('contact_id', secId);
-        for (const opp of opps || []) {
-          await supabase
-            .from('contact_opportunities')
-            .upsert({ contact_id: primaryContact.id!, opportunity_id: opp.opportunity_id, role: opp.role }, { onConflict: 'contact_id,opportunity_id,role', ignoreDuplicates: true });
+        if (opps?.length) {
+          await supabase.from('contact_opportunities').delete().eq('contact_id', secId);
+          for (const opp of opps) {
+            const { error } = await supabase
+              .from('contact_opportunities')
+              .insert({ contact_id: primaryContact.id!, opportunity_id: opp.opportunity_id, role: opp.role });
+            if (error && !error.message?.includes('duplicate')) {
+              console.warn('[Merge] contact_opportunities insert warning:', error.message);
+            }
+          }
         }
 
         // contact_quotes
@@ -160,10 +186,16 @@ export const ContactMergeDialog: React.FC<ContactMergeDialogProps> = ({
           .from('contact_quotes')
           .select('quote_id, role')
           .eq('contact_id', secId);
-        for (const q of quotes || []) {
-          await supabase
-            .from('contact_quotes')
-            .upsert({ contact_id: primaryContact.id!, quote_id: q.quote_id, role: q.role }, { onConflict: 'contact_id,quote_id,role', ignoreDuplicates: true });
+        if (quotes?.length) {
+          await supabase.from('contact_quotes').delete().eq('contact_id', secId);
+          for (const q of quotes) {
+            const { error } = await supabase
+              .from('contact_quotes')
+              .insert({ contact_id: primaryContact.id!, quote_id: q.quote_id, role: q.role });
+            if (error && !error.message?.includes('duplicate')) {
+              console.warn('[Merge] contact_quotes insert warning:', error.message);
+            }
+          }
         }
 
         // contact_list_members
@@ -171,10 +203,16 @@ export const ContactMergeDialog: React.FC<ContactMergeDialogProps> = ({
           .from('contact_list_members')
           .select('contact_list_id')
           .eq('contact_id', secId);
-        for (const m of members || []) {
-          await supabase
-            .from('contact_list_members')
-            .upsert({ contact_id: primaryContact.id!, contact_list_id: m.contact_list_id }, { onConflict: 'contact_list_id,contact_id', ignoreDuplicates: true });
+        if (members?.length) {
+          await supabase.from('contact_list_members').delete().eq('contact_id', secId);
+          for (const m of members) {
+            const { error } = await supabase
+              .from('contact_list_members')
+              .insert({ contact_id: primaryContact.id!, contact_list_id: m.contact_list_id });
+            if (error && !error.message?.includes('duplicate')) {
+              console.warn('[Merge] contact_list_members insert warning:', error.message);
+            }
+          }
         }
 
         // emails & interactions: reassign
@@ -188,13 +226,16 @@ export const ContactMergeDialog: React.FC<ContactMergeDialogProps> = ({
         .delete()
         .in('id', secondaryIds);
 
-      if (deleteError) throw deleteError;
+      if (deleteError) {
+        console.error('[Merge] Delete error:', deleteError);
+        throw deleteError;
+      }
 
       toast.success(`${sortedContacts.length} contacts fusionnés avec succès`);
       onMergeComplete();
     } catch (err: any) {
-      console.error('Merge error:', err);
-      toast.error('Erreur lors de la fusion des contacts');
+      console.error('[Merge] Error:', err);
+      toast.error(`Erreur lors de la fusion: ${err?.message || 'Erreur inconnue'}`);
     } finally {
       setMerging(false);
     }
