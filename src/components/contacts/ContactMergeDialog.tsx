@@ -120,93 +120,66 @@ export const ContactMergeDialog: React.FC<ContactMergeDialogProps> = ({
       if (updateError) throw updateError;
 
       // Re-assign relationships from secondary contacts to primary
-      // contact_events
       for (const secId of secondaryIds) {
+        // contact_events
         const { data: events } = await supabase
           .from('contact_events')
           .select('event_id')
           .eq('contact_id', secId);
-
         for (const ev of events || []) {
           await supabase
             .from('contact_events')
             .upsert({ contact_id: primaryContact.id!, event_id: ev.event_id }, { onConflict: 'contact_id,event_id', ignoreDuplicates: true });
         }
-      }
 
-      // contact_artists
-      for (const secId of secondaryIds) {
+        // contact_artists (no unique constraint — insert and ignore errors)
         const { data: artists } = await supabase
           .from('contact_artists')
-          .select('artist_id')
+          .select('artist_id, role')
           .eq('contact_id', secId);
-
         for (const art of artists || []) {
           await supabase
             .from('contact_artists')
-            .upsert({ contact_id: primaryContact.id!, artist_id: art.artist_id }, { onConflict: 'contact_id,artist_id', ignoreDuplicates: true });
+            .insert({ contact_id: primaryContact.id!, artist_id: art.artist_id, role: art.role })
+            .then(() => {});  // ignore duplicates
         }
-      }
 
-      // contact_opportunities
-      for (const secId of secondaryIds) {
+        // contact_opportunities
         const { data: opps } = await supabase
           .from('contact_opportunities')
-          .select('opportunity_id')
+          .select('opportunity_id, role')
           .eq('contact_id', secId);
-
         for (const opp of opps || []) {
           await supabase
             .from('contact_opportunities')
-            .upsert({ contact_id: primaryContact.id!, opportunity_id: opp.opportunity_id }, { onConflict: 'contact_id,opportunity_id', ignoreDuplicates: true });
+            .upsert({ contact_id: primaryContact.id!, opportunity_id: opp.opportunity_id, role: opp.role }, { onConflict: 'contact_id,opportunity_id,role', ignoreDuplicates: true });
         }
-      }
 
-      // contact_quotes
-      for (const secId of secondaryIds) {
+        // contact_quotes
         const { data: quotes } = await supabase
           .from('contact_quotes')
-          .select('quote_id')
+          .select('quote_id, role')
           .eq('contact_id', secId);
-
         for (const q of quotes || []) {
           await supabase
             .from('contact_quotes')
-            .upsert({ contact_id: primaryContact.id!, quote_id: q.quote_id }, { onConflict: 'contact_id,quote_id', ignoreDuplicates: true });
+            .upsert({ contact_id: primaryContact.id!, quote_id: q.quote_id, role: q.role }, { onConflict: 'contact_id,quote_id,role', ignoreDuplicates: true });
         }
-      }
 
-      // contact_list_members
-      for (const secId of secondaryIds) {
+        // contact_list_members
         const { data: members } = await supabase
           .from('contact_list_members')
           .select('contact_list_id')
           .eq('contact_id', secId);
-
         for (const m of members || []) {
           await supabase
             .from('contact_list_members')
-            .upsert(
-              { contact_id: primaryContact.id!, contact_list_id: m.contact_list_id },
-              { onConflict: 'contact_id,contact_list_id', ignoreDuplicates: true }
-            );
+            .upsert({ contact_id: primaryContact.id!, contact_list_id: m.contact_list_id }, { onConflict: 'contact_list_id,contact_id', ignoreDuplicates: true });
         }
-      }
 
-      // emails: reassign to primary
-      for (const secId of secondaryIds) {
-        await supabase
-          .from('emails')
-          .update({ contact_id: primaryContact.id! })
-          .eq('contact_id', secId);
-      }
-
-      // interactions: reassign to primary
-      for (const secId of secondaryIds) {
-        await supabase
-          .from('interactions')
-          .update({ contact_id: primaryContact.id! })
-          .eq('contact_id', secId);
+        // emails & interactions: reassign
+        await supabase.from('emails').update({ contact_id: primaryContact.id! }).eq('contact_id', secId);
+        await supabase.from('interactions').update({ contact_id: primaryContact.id! }).eq('contact_id', secId);
       }
 
       // Delete secondary contacts
