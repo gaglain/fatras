@@ -392,8 +392,34 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
                 id="email"
                 type="email"
                 value={formData.email || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                onChange={(e) => {
+                  const newEmail = e.target.value;
+                  setFormData(prev => ({ ...prev, email: newEmail }));
+                  setDuplicateWarning(null);
+                  if (emailCheckTimerRef.current) clearTimeout(emailCheckTimerRef.current);
+                  if (newEmail.trim() && newEmail.includes('@')) {
+                    emailCheckTimerRef.current = setTimeout(async () => {
+                      try {
+                        let query = supabase
+                          .from('contacts')
+                          .select('id, first_name, last_name')
+                          .ilike('email', newEmail.trim());
+                        if (contact?.id) query = query.neq('id', contact.id);
+                        const { data } = await query.maybeSingle();
+                        if (data) {
+                          setDuplicateWarning({ id: data.id, name: `${data.first_name} ${data.last_name}` });
+                        }
+                      } catch { /* silent */ }
+                    }, 500);
+                  }
+                }}
               />
+              {duplicateWarning && (
+                <div className="flex items-center gap-1.5 mt-1 text-xs text-amber-600">
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  <span>Doublon : <strong>{duplicateWarning.name}</strong> a déjà cet email</span>
+                </div>
+              )}
             </div>
             <div>
               <Label htmlFor="phone">Téléphone</Label>
