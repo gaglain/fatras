@@ -215,9 +215,10 @@ export const ContactMergeDialog: React.FC<ContactMergeDialogProps> = ({
           }
         }
 
-        // emails & interactions: reassign
+        // emails, interactions & tasks: reassign
         await supabase.from('emails').update({ contact_id: primaryContact.id! }).eq('contact_id', secId);
         await supabase.from('interactions').update({ contact_id: primaryContact.id! }).eq('contact_id', secId);
+        await supabase.from('tasks').update({ contact_id: primaryContact.id! }).eq('contact_id', secId);
       }
 
       // Delete secondary contacts
