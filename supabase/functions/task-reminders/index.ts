@@ -147,56 +147,53 @@ async function encryptPayload(payload: string, subscriptionKeys: { p256dh: strin
 }
 
 async function sendPushToUser(
-  supabase: any,
+  _supabase: any,
   userId: string,
   notification: { title: string; body: string; tag: string; data?: Record<string, unknown> },
-  vapidPublicKey: string,
-  vapidPrivateKey: string
+  _vapidPublicKey: string,
+  _vapidPrivateKey: string
 ): Promise<boolean> {
   try {
-    const { data: settings } = await supabase
-      .from('app_settings')
-      .select('setting_value')
-      .eq('user_id', userId)
-      .eq('setting_key', 'push_subscription')
-      .single();
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
-    if (!settings) return false;
-
-    const subscription: PushSubscriptionData = JSON.parse(settings.setting_value);
-    const pushPayload = JSON.stringify({
-      title: notification.title,
-      body: notification.body,
-      icon: '/favicon.png',
-      badge: '/favicon.png',
-      tag: notification.tag,
-      data: notification.data || {},
-    });
-
-    const ciphertext = await encryptPayload(pushPayload, subscription.keys);
-    const endpoint = new URL(subscription.endpoint);
-    const audience = `${endpoint.protocol}//${endpoint.host}`;
-    const { privateKey, publicKeyBytes } = await importVapidKeys(vapidPublicKey, vapidPrivateKey);
-    const jwt = await createVapidJwt(audience, 'mailto:contact@fatras.net', privateKey);
-
-    const response = await fetch(subscription.endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/octet-stream',
-        'Content-Encoding': 'aes128gcm',
-        'Content-Length': ciphertext.length.toString(),
-        'TTL': '86400',
-        'Authorization': `vapid t=${jwt}, k=${base64UrlEncode(publicKeyBytes)}`,
-      },
-      body: ciphertext,
-    });
-
-    if (response.status === 404 || response.status === 410) {
-      await supabase.from('app_settings').delete().eq('user_id', userId).eq('setting_key', 'push_subscription');
+    if (!supabaseUrl || !serviceRoleKey) {
+      console.error(`Push failed for user ${userId}: missing Supabase credentials`);
       return false;
     }
 
-    return response.ok;
+    const response = await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${serviceRoleKey}`,
+      },
+      body: JSON.stringify({
+        userId,
+        notification: {
+          title: notification.title,
+          body: notification.body,
+          tag: notification.tag,
+          data: notification.data || {},
+        },
+      }),
+    });
+
+    const responseText = await response.text();
+
+    if (!response.ok) {
+      console.error(`Push failed for user ${userId}:`, response.status, responseText);
+      return false;
+    }
+
+    if (!responseText) return true;
+
+    try {
+      const payload = JSON.parse(responseText) as { success?: boolean };
+      return payload.success !== false;
+    } catch {
+      return true;
+    }
   } catch (e) {
     console.error(`Push failed for user ${userId}:`, e);
     return false;
