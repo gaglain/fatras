@@ -630,6 +630,10 @@ export const Contacts: React.FC = () => {
         <TabsContent value="lists" className="space-y-6">
           <ContactLists />
         </TabsContent>
+
+        <TabsContent value="duplicates" className="space-y-6">
+          <ContactDuplicateScanner onMergeComplete={() => fetchContacts({ reset: true })} />
+        </TabsContent>
       </Tabs>
 
       <ContactDialog
