@@ -13,6 +13,7 @@ import { ContactLists } from '@/pages/ContactLists';
 import { ContactFilters } from '@/components/contacts/ContactFilters';
 import { BulkContactActions } from '@/components/contacts/BulkContactActions';
 import { BulkContactListAssignment } from '@/components/contacts/BulkContactListAssignment';
+import { ContactDuplicateScanner } from '@/components/contacts/ContactDuplicateScanner';
 import { EmailComposer } from '@/components/email/EmailComposer';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
