@@ -24,6 +24,11 @@ interface PushSubscriptionData {
   };
 }
 
+interface StoredPushSubscription extends PushSubscriptionData {
+  id?: string;
+  legacy?: boolean;
+}
+
 // ---- Crypto helpers for VAPID / Web Push ----
 
 function base64UrlDecode(str: string): Uint8Array {
@@ -236,6 +241,103 @@ async function hkdfDerive(ikm: Uint8Array, salt: Uint8Array, info: Uint8Array, l
   return new Uint8Array(bits);
 }
 
+function toStoredPushSubscription(record: any): StoredPushSubscription | null {
+  const endpoint = typeof record?.endpoint === 'string' ? record.endpoint : '';
+  const p256dh = typeof record?.keys?.p256dh === 'string' ? record.keys.p256dh : '';
+  const auth = typeof record?.keys?.auth === 'string' ? record.keys.auth : '';
+
+  if (!endpoint || !p256dh || !auth) return null;
+
+  return {
+    id: typeof record?.id === 'string' ? record.id : undefined,
+    legacy: record?.legacy === true,
+    endpoint,
+    keys: { p256dh, auth },
+  };
+}
+
+async function getStoredPushSubscriptions(supabaseAdmin: any, targetUserId: string): Promise<StoredPushSubscription[]> {
+  const { data: rows, error } = await supabaseAdmin
+    .from('push_subscriptions')
+    .select('id, endpoint, p256dh, auth_key')
+    .eq('user_id', targetUserId)
+    .eq('is_active', true);
+
+  if (error) {
+    console.error('⚠️ Failed to fetch push_subscriptions:', error.message ?? error);
+  }
+
+  const normalizedRows = Array.isArray(rows)
+    ? rows
+        .map((row) => toStoredPushSubscription({
+          id: row.id,
+          endpoint: row.endpoint,
+          keys: { p256dh: row.p256dh, auth: row.auth_key },
+        }))
+        .filter((row): row is StoredPushSubscription => row !== null)
+    : [];
+
+  if (normalizedRows.length > 0) return normalizedRows;
+
+  const { data: settings, error: settingsError } = await supabaseAdmin
+    .from('app_settings')
+    .select('setting_value')
+    .eq('user_id', targetUserId)
+    .eq('setting_key', 'push_subscription')
+    .maybeSingle();
+
+  if (settingsError || !settings?.setting_value) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(settings.setting_value);
+    const legacySubscription = toStoredPushSubscription({ ...parsed, legacy: true });
+    return legacySubscription ? [legacySubscription] : [];
+  } catch (error) {
+    console.error('⚠️ Failed to parse legacy push subscription:', error);
+    return [];
+  }
+}
+
+async function deactivateStoredPushSubscription(
+  supabaseAdmin: any,
+  targetUserId: string,
+  subscription: StoredPushSubscription
+) {
+  if (subscription.legacy) {
+    await supabaseAdmin
+      .from('app_settings')
+      .delete()
+      .eq('user_id', targetUserId)
+      .eq('setting_key', 'push_subscription');
+    return;
+  }
+
+  if (subscription.id) {
+    await supabaseAdmin
+      .from('push_subscriptions')
+      .update({ is_active: false, last_seen_at: new Date().toISOString() })
+      .eq('id', subscription.id);
+    return;
+  }
+
+  await supabaseAdmin
+    .from('push_subscriptions')
+    .delete()
+    .eq('user_id', targetUserId)
+    .eq('endpoint', subscription.endpoint);
+}
+
+async function markStoredPushSubscriptionSeen(supabaseAdmin: any, subscription: StoredPushSubscription) {
+  if (!subscription.id || subscription.legacy) return;
+
+  await supabaseAdmin
+    .from('push_subscriptions')
+    .update({ last_seen_at: new Date().toISOString(), is_active: true })
+    .eq('id', subscription.id);
+}
+
 // ---- Main handler ----
 
 Deno.serve(async (req) => {
@@ -255,7 +357,7 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get('Authorization') ?? '';
     const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
     const triggerSecret = req.headers.get('x-trigger-secret') ?? '';
-    
+
     const isServiceCall = bearerToken === serviceRoleKey;
     const isInternalTrigger = triggerSecret === 'internal-push-trigger';
 
@@ -298,24 +400,15 @@ Deno.serve(async (req) => {
     console.log(`📬 Sending push to user ${targetUserId}, type: ${notification.data?.type || 'unknown'}`);
 
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
+    const subscriptions = await getStoredPushSubscriptions(supabaseAdmin, targetUserId);
 
-    // Get user's push subscription
-    const { data: settings, error: settingsError } = await supabaseAdmin
-      .from('app_settings')
-      .select('setting_value')
-      .eq('user_id', targetUserId)
-      .eq('setting_key', 'push_subscription')
-      .single();
-
-    if (settingsError || !settings) {
+    if (subscriptions.length === 0) {
       console.log('⚠️ No push subscription for user', targetUserId);
       return new Response(
         JSON.stringify({ success: false, message: 'No push subscription found' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       );
     }
-
-    const subscription: PushSubscriptionData = JSON.parse(settings.setting_value);
 
     const normalizedTitle = notification.title || 'Synchronisation badge';
     const normalizedBody = notification.body || 'Mise à jour du badge en arrière-plan';
@@ -339,7 +432,7 @@ Deno.serve(async (req) => {
           .eq('is_read', false),
       ]);
       badgeCount = Math.max(0, (generalRes.count ?? 0) + (emailRes.count ?? 0));
-      if (badgeCount === 0) badgeCount = 1; // fallback: at least 1 since we're sending a notif
+      if (badgeCount === 0 && !isSilentBadgeSync) badgeCount = 1;
     }
 
     // VAPID keys
@@ -358,52 +451,75 @@ Deno.serve(async (req) => {
       data: { ...baseData, badgeCount, silentBadgeSync: isSilentBadgeSync },
     });
 
-    const { ciphertext } = await encryptPayload(pushPayload, subscription.keys);
-
-    const endpoint = new URL(subscription.endpoint);
-    const audience = `${endpoint.protocol}//${endpoint.host}`;
     const { privateKey, publicKeyBytes } = await importVapidKeys(vapidPublicKey, vapidPrivateKey);
-    const jwt = await createVapidJwt(audience, 'mailto:contact@fatras-booking.fr', privateKey);
+    const deliveryErrors: string[] = [];
+    let deliveredCount = 0;
 
-    const response = await fetch(subscription.endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/octet-stream',
-        'Content-Encoding': 'aes128gcm',
-        'Content-Length': ciphertext.length.toString(),
-        'TTL': '86400',
-        // iOS / installed PWAs can defer background pushes marked as "normal",
-        // which prevents visible delivery and badge refresh while the app is closed.
-        'Urgency': 'high',
-        'Authorization': `vapid t=${jwt}, k=${base64UrlEncode(publicKeyBytes)}`,
-      },
-      body: ciphertext,
-    });
+    for (const subscription of subscriptions) {
+      try {
+        const { ciphertext } = await encryptPayload(pushPayload, subscription.keys);
+        const endpoint = new URL(subscription.endpoint);
+        const audience = `${endpoint.protocol}//${endpoint.host}`;
+        const jwt = await createVapidJwt(audience, 'mailto:contact@fatras-booking.fr', privateKey);
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Push service response:', response.status, errorText);
+        const response = await fetch(subscription.endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/octet-stream',
+            'Content-Encoding': 'aes128gcm',
+            'Content-Length': ciphertext.length.toString(),
+            'TTL': '86400',
+            // iOS / installed PWAs can defer background pushes marked as "normal",
+            // which prevents visible delivery and badge refresh while the app is closed.
+            'Urgency': 'high',
+            'Authorization': `vapid t=${jwt}, k=${base64UrlEncode(publicKeyBytes)}`,
+          },
+          body: ciphertext,
+        });
 
-      if (response.status === 404 || response.status === 410) {
-        await supabaseAdmin
-          .from('app_settings')
-          .delete()
-          .eq('user_id', targetUserId)
-          .eq('setting_key', 'push_subscription');
-        console.log('🗑️ Cleaned up expired subscription');
-        return new Response(
-          JSON.stringify({ success: false, message: 'Subscription expired, cleaned up' }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
-        );
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Push service response:', response.status, errorText);
+
+          if (response.status === 404 || response.status === 410) {
+            await deactivateStoredPushSubscription(supabaseAdmin, targetUserId, subscription);
+            console.log('🗑️ Cleaned up expired subscription');
+            continue;
+          }
+
+          deliveryErrors.push(`Push failed (${response.status}) for ${subscription.endpoint}`);
+          continue;
+        }
+
+        deliveredCount += 1;
+        await markStoredPushSubscriptionSeen(supabaseAdmin, subscription);
+      } catch (error) {
+        console.error('❌ Error delivering to subscription:', error);
+        deliveryErrors.push(`Push failed for ${subscription.endpoint}`);
       }
-
-      throw new Error(`Push failed: ${response.status} ${errorText}`);
     }
 
-    console.log('✅ Push notification sent successfully, badge:', badgeCount);
+    if (deliveredCount === 0) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          message: deliveryErrors[0] || 'No active push subscriptions delivered',
+          badgeCount,
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      );
+    }
+
+    console.log('✅ Push notification sent successfully, badge:', badgeCount, 'deliveries:', deliveredCount);
 
     return new Response(
-      JSON.stringify({ success: true, message: 'Push notification sent', badgeCount }),
+      JSON.stringify({
+        success: true,
+        message: 'Push notification sent',
+        badgeCount,
+        deliveredCount,
+        totalSubscriptions: subscriptions.length,
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );
   } catch (error) {

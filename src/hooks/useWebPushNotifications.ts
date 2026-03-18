@@ -19,12 +19,12 @@ export const useWebPushNotifications = () => {
 
   useEffect(() => {
     // Check if push notifications are supported
-    const supported = 'Notification' in window && 
-                     'serviceWorker' in navigator && 
+    const supported = 'Notification' in window &&
+                     'serviceWorker' in navigator &&
                      'PushManager' in window;
-    
+
     setIsSupported(supported);
-    
+
     if (supported) {
       setPermission(Notification.permission);
       loadExistingSubscription();
@@ -51,19 +51,32 @@ export const useWebPushNotifications = () => {
     };
 
     const { error: dbError } = await supabase
-      .from('app_settings')
+      .from('push_subscriptions')
       .upsert({
         user_id: user.id,
-        setting_key: 'push_subscription',
-        setting_value: JSON.stringify(subscriptionData),
+        endpoint: subscriptionData.endpoint,
+        p256dh: subscriptionData.keys.p256dh,
+        auth_key: subscriptionData.keys.auth,
+        user_agent: navigator.userAgent,
+        platform: detectPushPlatform(),
+        is_active: true,
+        last_seen_at: new Date().toISOString(),
       }, {
-        onConflict: 'user_id,setting_key',
+        onConflict: 'endpoint',
       });
 
     if (dbError) {
       logger.error('Error saving subscription to database:', dbError);
       throw dbError;
     }
+
+    // Legacy single-subscription storage can overwrite the installed PWA device.
+    // Keep it cleaned up once the new multi-device storage is in place.
+    await supabase
+      .from('app_settings')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('setting_key', 'push_subscription');
   };
 
   const loadExistingSubscription = async () => {
@@ -91,7 +104,7 @@ export const useWebPushNotifications = () => {
     }
 
     setIsLoading(true);
-    
+
     try {
       const result = await Notification.requestPermission();
       setPermission(result);
@@ -104,7 +117,7 @@ export const useWebPushNotifications = () => {
         toast.error('Permission refusée pour les notifications');
         return false;
       }
-      
+
       return false;
     } catch (error) {
       logger.error('Error requesting permission:', error);
@@ -118,7 +131,7 @@ export const useWebPushNotifications = () => {
   const subscribeToPush = async () => {
     try {
       logger.debug('Attempting to subscribe to push notifications...');
-      
+
       // Check if service worker is registered
       if (!('serviceWorker' in navigator)) {
         throw new Error('Service Worker not supported');
@@ -126,7 +139,7 @@ export const useWebPushNotifications = () => {
 
       const registration = await navigator.serviceWorker.ready as ServiceWorkerRegistration;
       logger.debug('Service Worker ready');
-      
+
       // Check if PushManager is available
       if (!registration.pushManager) {
         throw new Error('Push Manager not supported');
@@ -147,18 +160,18 @@ export const useWebPushNotifications = () => {
       // Fetch VAPID public key from Edge Function
       logger.debug('Fetching VAPID public key...');
       const { data: vapidData, error: vapidError } = await supabase.functions.invoke('get-vapid-key');
-      
+
       if (vapidError || !vapidData?.success || !vapidData?.publicKey) {
         logger.error('Failed to fetch VAPID key:', vapidError || vapidData?.error);
         throw new Error('Clé VAPID non configurée. Contactez l\'administrateur.');
       }
-      
+
       const vapidPublicKey = vapidData.publicKey;
       logger.debug('VAPID key received');
-      
+
       const convertedKey = urlBase64ToUint8Array(vapidPublicKey);
       logger.debug('VAPID key converted successfully');
-      
+
       const pushSubscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: convertedKey as BufferSource
@@ -171,7 +184,7 @@ export const useWebPushNotifications = () => {
       return pushSubscription;
     } catch (error) {
       logger.error('Error subscribing to push:', error);
-      
+
       // Provide more specific error messages
       if (error instanceof Error) {
         if (error.message.includes('not supported')) {
@@ -184,7 +197,7 @@ export const useWebPushNotifications = () => {
           toast.error(`Erreur: ${error.message}`);
         }
       }
-      
+
       throw error;
     }
   };
@@ -193,19 +206,27 @@ export const useWebPushNotifications = () => {
     if (!subscription) return;
 
     try {
+      const endpoint = subscription.endpoint;
       await subscription.unsubscribe();
       setSubscription(null);
-      
+
       // Remove from database
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        await supabase
-          .from('app_settings')
-          .delete()
-          .eq('user_id', user.id)
-          .eq('setting_key', 'push_subscription');
+        await Promise.all([
+          supabase
+            .from('push_subscriptions')
+            .delete()
+            .eq('user_id', user.id)
+            .eq('endpoint', endpoint),
+          supabase
+            .from('app_settings')
+            .delete()
+            .eq('user_id', user.id)
+            .eq('setting_key', 'push_subscription')
+        ]);
       }
-      
+
       toast.success('Notifications désactivées');
     } catch (error) {
       logger.error('Error unsubscribing:', error);
@@ -247,4 +268,16 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
     binary += String.fromCharCode(bytes[i]);
   }
   return window.btoa(binary);
+}
+
+function detectPushPlatform(): string {
+  const nav = window.navigator as Navigator & { standalone?: boolean };
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || nav.standalone === true;
+
+  if (isStandalone) return 'pwa';
+
+  const userAgent = navigator.userAgent.toLowerCase();
+  if (/iphone|ipad|ipod/.test(userAgent)) return 'ios_browser';
+  if (/android/.test(userAgent)) return 'android_browser';
+  return 'browser';
 }
