@@ -445,14 +445,18 @@ export const Contacts: React.FC = () => {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="contacts" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             Contacts ({stats.total})
           </TabsTrigger>
           <TabsTrigger value="lists" className="flex items-center gap-2">
             <List className="h-4 w-4" />
-            Listes de contacts
+            Listes
+          </TabsTrigger>
+          <TabsTrigger value="duplicates" className="flex items-center gap-2">
+            <Merge className="h-4 w-4" />
+            Doublons
           </TabsTrigger>
         </TabsList>
 
