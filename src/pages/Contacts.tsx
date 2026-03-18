@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Search, Filter, Users, UserCheck, UserX, Upload, Download, Mail, List, Grid, LayoutList, Loader2 } from 'lucide-react';
+import { Plus, Search, Filter, Users, UserCheck, UserX, Upload, Download, Mail, List, Grid, LayoutList, Loader2, Merge } from 'lucide-react';
 import { useConfirm } from '@/components/ui/confirm-dialog';
 import { ContactCard } from '@/components/contacts/ContactCard';
 import { ContactDialog } from '@/components/contacts/ContactDialog';
@@ -13,6 +13,7 @@ import { ContactLists } from '@/pages/ContactLists';
 import { ContactFilters } from '@/components/contacts/ContactFilters';
 import { BulkContactActions } from '@/components/contacts/BulkContactActions';
 import { BulkContactListAssignment } from '@/components/contacts/BulkContactListAssignment';
+import { ContactDuplicateScanner } from '@/components/contacts/ContactDuplicateScanner';
 import { EmailComposer } from '@/components/email/EmailComposer';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -444,14 +445,18 @@ export const Contacts: React.FC = () => {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="contacts" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             Contacts ({stats.total})
           </TabsTrigger>
           <TabsTrigger value="lists" className="flex items-center gap-2">
             <List className="h-4 w-4" />
-            Listes de contacts
+            Listes
+          </TabsTrigger>
+          <TabsTrigger value="duplicates" className="flex items-center gap-2">
+            <Merge className="h-4 w-4" />
+            Doublons
           </TabsTrigger>
         </TabsList>
 
@@ -624,6 +629,10 @@ export const Contacts: React.FC = () => {
 
         <TabsContent value="lists" className="space-y-6">
           <ContactLists />
+        </TabsContent>
+
+        <TabsContent value="duplicates" className="space-y-6">
+          <ContactDuplicateScanner onMergeComplete={() => fetchContacts({ reset: true })} />
         </TabsContent>
       </Tabs>
 
