@@ -236,6 +236,26 @@ Deno.serve(async (req) => {
       )
     }
 
+    // Fetch artist name if artist_id is set
+    let artistName: string | null = null
+    if (event.artist_id) {
+      const { data: artist } = await supabase
+        .from('centralized_artists')
+        .select('name')
+        .eq('id', event.artist_id)
+        .single()
+      if (artist) {
+        artistName = artist.name
+      }
+    }
+
+    // Build title: "Nom événement (statut) - Spectacle"
+    const statusLabel = status === 'option' ? 'Option' : status === 'confirmé' || status === 'confirmed' ? 'Confirmé' : status
+    let eventTitle = `${event.title} (${statusLabel})`
+    if (artistName) {
+      eventTitle += ` - ${artistName}`
+    }
+
     // Build start/end times
     const startTime = event.start_date ? toUnixTimestamp(event.start_date) : Math.floor(Date.now() / 1000)
     const endTime = event.end_date ? toUnixTimestamp(event.end_date) : startTime + 3600
@@ -245,29 +265,48 @@ Deno.serve(async (req) => {
     const isConfirmed = status === 'confirmé' || status === 'confirmed'
 
     if (isConfirmed && event.route_sheet_id) {
-      const { data: routeSheet } = await supabase
+      console.log(`📋 Loading route sheet ${event.route_sheet_id} for confirmed event`)
+      const { data: routeSheet, error: rsError } = await supabase
         .from('roadshow_stops')
         .select('*')
         .eq('id', event.route_sheet_id)
         .single()
 
+      if (rsError) {
+        console.error('Route sheet fetch error:', rsError)
+      }
+
       if (routeSheet) {
+        console.log(`📋 Route sheet found: ${routeSheet.venue || routeSheet.city || 'no venue/city'}`)
         description = buildRouteSheetDescription(event, routeSheet as RouteSheet)
       } else {
+        console.log(`📋 No route sheet found for id ${event.route_sheet_id}`)
         description = buildGenericDescription(event)
       }
     } else {
+      if (isConfirmed && !event.route_sheet_id) {
+        console.log(`📋 Event is confirmed but has no route_sheet_id`)
+      }
       description = buildGenericDescription(event)
     }
 
+    // Build full location string
+    const locationParts: string[] = []
+    if (event.venue) locationParts.push(event.venue)
+    if (event.address) locationParts.push(event.address)
+    if (event.postal_code) locationParts.push(event.postal_code)
+    if (event.city) locationParts.push(event.city)
+    if (event.country) locationParts.push(event.country)
+    const fullLocation = locationParts.join(', ')
+
     const nylasEventBody = {
-      title: event.title,
+      title: eventTitle,
       description,
       when: {
         start_time: startTime,
         end_time: endTime,
       },
-      location: event.venue || event.address || event.city || '',
+      location: fullLocation,
     }
 
     // CREATE or UPDATE
