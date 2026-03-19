@@ -158,8 +158,12 @@ export const useEvents = () => {
 
       return mapDbToEvent(data);
     },
-    onSuccess: () => {
+    onSuccess: (createdEvent) => {
       queryClient.invalidateQueries({ queryKey: ['events'] });
+      // Auto-sync to Nylas if status is option or confirmed
+      if (createdEvent.status === 'option' || createdEvent.status === 'confirmé' || createdEvent.status === 'confirmed') {
+        syncEventToNylas(createdEvent.id, 'event_created');
+      }
     }
   });
 
