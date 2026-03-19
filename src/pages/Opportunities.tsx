@@ -415,6 +415,18 @@ setNewOpportunity({
             className="pl-10"
           />
         </div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[160px]">
+            <SelectValue placeholder="Tous les statuts" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tous les statuts</SelectItem>
+            <SelectItem value="open">Ouvertes</SelectItem>
+            <SelectItem value="applied">Candidature</SelectItem>
+            <SelectItem value="won">Gagnées</SelectItem>
+            <SelectItem value="lost">Perdues</SelectItem>
+          </SelectContent>
+        </Select>
         <div className="flex items-center space-x-1 border border-border rounded-md p-1">
           <Button
             variant={viewMode === 'compact' ? 'default' : 'ghost'}
