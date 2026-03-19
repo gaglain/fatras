@@ -1513,9 +1513,12 @@ export type Database = {
           latitude: number | null
           longitude: number | null
           notes: string | null
+          nylas_event_id: string | null
+          nylas_grant_id: string | null
           owner_id: string | null
           postal_code: string | null
           requirements: string | null
+          route_sheet_id: string | null
           start_date: string | null
           status: string | null
           title: string
@@ -1543,9 +1546,12 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           notes?: string | null
+          nylas_event_id?: string | null
+          nylas_grant_id?: string | null
           owner_id?: string | null
           postal_code?: string | null
           requirements?: string | null
+          route_sheet_id?: string | null
           start_date?: string | null
           status?: string | null
           title: string
@@ -1573,9 +1579,12 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           notes?: string | null
+          nylas_event_id?: string | null
+          nylas_grant_id?: string | null
           owner_id?: string | null
           postal_code?: string | null
           requirements?: string | null
+          route_sheet_id?: string | null
           start_date?: string | null
           status?: string | null
           title?: string
@@ -1596,6 +1605,13 @@ export type Database = {
             columns: ["contact_id"]
             isOneToOne: false
             referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_route_sheet_id_fkey"
+            columns: ["route_sheet_id"]
+            isOneToOne: false
+            referencedRelation: "roadshow_stops"
             referencedColumns: ["id"]
           },
         ]
