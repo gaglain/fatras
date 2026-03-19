@@ -275,9 +275,9 @@ Deno.serve(async (req) => {
       eventTitle += ` - ${artistName}`
     }
 
-    // Build start/end times
-    const startTime = event.start_date ? toUnixTimestamp(event.start_date) : Math.floor(Date.now() / 1000)
-    const endTime = event.end_date ? toUnixTimestamp(event.end_date) : startTime + 3600
+    // Build all-day date(s) — extract YYYY-MM-DD only
+    const startDateStr = event.start_date ? event.start_date.substring(0, 10) : new Date().toISOString().substring(0, 10)
+    const endDateStr = event.end_date ? event.end_date.substring(0, 10) : startDateStr
 
     // Load quote amount for this event
     let quoteAmount: number | null = null
