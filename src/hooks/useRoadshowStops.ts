@@ -453,6 +453,10 @@ export const useRoadshowStops = () => {
       }
 
       setStops(prev => prev.map(stop => stop.id === stopId ? transformedStop : stop));
+      
+      // Auto-sync linked events to Nylas (Google Agenda)
+      syncLinkedEventsToNylas(stopId);
+      
       return transformedStop;
     } catch (error) {
       logger.error('Error updating roadshow stop:', error);
