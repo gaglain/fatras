@@ -351,6 +351,10 @@ export const useRoadshowEntityConnections = () => {
         .insert({ roadshow_stop_id: roadshowStopId, event_id: eventId });
 
       if (error) throw error;
+      
+      // Auto-sync to Nylas after linking (the DB trigger sets route_sheet_id)
+      syncEventToNylas(eventId, 'route_sheet_linked');
+      
       return true;
     } catch (error) {
       logger.error('Error linking event:', error);
