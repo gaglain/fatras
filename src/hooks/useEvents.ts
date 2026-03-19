@@ -24,6 +24,22 @@ const syncToGoogleCalendar = async (eventId: string) => {
   }
 };
 
+// Sync event to Nylas (Google Agenda) - non-blocking
+const syncEventToNylas = async (eventId: string, trigger: string) => {
+  try {
+    const { data, error } = await supabase.functions.invoke('sync-event-to-nylas', {
+      body: { event_id: eventId, trigger }
+    });
+    if (error) {
+      logger.warn('Nylas sync failed (non-blocking):', error);
+    } else if (data?.success) {
+      logger.info(`Nylas sync ${data.action}: event ${eventId}`);
+    }
+  } catch (err) {
+    logger.warn('Nylas sync error (non-blocking):', err);
+  }
+};
+
 type DbEvent = Database['public']['Tables']['events']['Row'];
 
 export interface Event {
@@ -142,8 +158,12 @@ export const useEvents = () => {
 
       return mapDbToEvent(data);
     },
-    onSuccess: () => {
+    onSuccess: (createdEvent) => {
       queryClient.invalidateQueries({ queryKey: ['events'] });
+      // Auto-sync to Nylas if status is option or confirmed
+      if (createdEvent.status === 'option' || createdEvent.status === 'confirmé' || createdEvent.status === 'confirmed') {
+        syncEventToNylas(createdEvent.id, 'event_created');
+      }
     }
   });
 
@@ -177,11 +197,10 @@ export const useEvents = () => {
 
       if (error) throw error;
       
-      // Auto-sync to Google Calendar when status is 'option' or 'confirmé' (non-blocking)
-      if (updates.status === 'option' || updates.status === 'confirmé') {
-        logger.info(`Auto-syncing event ${id} to Google Calendar (status: ${updates.status})`);
-        // Appel asynchrone non-bloquant
-        syncToGoogleCalendar(id);
+      // Auto-sync to Nylas (Google Agenda) - non-blocking
+      if (updates.status === 'option' || updates.status === 'confirmé' || updates.status === 'confirmed') {
+        logger.info(`Auto-syncing event ${id} to Nylas (status: ${updates.status})`);
+        syncEventToNylas(id, 'event_updated');
       }
       
       return mapDbToEvent(data);
