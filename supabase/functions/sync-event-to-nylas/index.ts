@@ -111,10 +111,11 @@ function buildRouteSheetDescription(event: any, routeSheet: RouteSheet, quoteAmo
     lines.push('')
   }
 
-  // 👥 Équipe
-  if (routeSheet.crew && routeSheet.crew.length > 0) {
+  // 👥 Équipe (resolved names)
+  const resolvedCrew = crewNames && crewNames.length > 0 ? crewNames : routeSheet.crew
+  if (resolvedCrew && resolvedCrew.length > 0) {
     lines.push('👥 ÉQUIPE')
-    routeSheet.crew.forEach(member => lines.push(`  • ${member}`))
+    resolvedCrew.forEach(member => lines.push(`  • ${member}`))
     lines.push('')
   }
 
