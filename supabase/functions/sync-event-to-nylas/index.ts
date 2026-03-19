@@ -278,6 +278,21 @@ Deno.serve(async (req) => {
     const startTime = event.start_date ? toUnixTimestamp(event.start_date) : Math.floor(Date.now() / 1000)
     const endTime = event.end_date ? toUnixTimestamp(event.end_date) : startTime + 3600
 
+    // Load quote amount for this event
+    let quoteAmount: number | null = null
+    const { data: quote } = await supabase
+      .from('quotes')
+      .select('total_amount, status')
+      .eq('event_id', event_id)
+      .in('status', ['accepted', 'sent', 'signed'])
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single()
+    if (quote?.total_amount) {
+      quoteAmount = quote.total_amount
+      console.log(`💰 Quote found: ${quoteAmount} € (${quote.status})`)
+    }
+
     // Load route sheet if confirmed and route_sheet_id exists
     let description: string
     const isConfirmed = status === 'confirmé' || status === 'confirmed'
@@ -296,7 +311,7 @@ Deno.serve(async (req) => {
 
       if (routeSheet) {
         console.log(`📋 Route sheet found: ${routeSheet.venue || routeSheet.city || 'no venue/city'}`)
-        description = buildRouteSheetDescription(event, routeSheet as RouteSheet)
+        description = buildRouteSheetDescription(event, routeSheet as RouteSheet, quoteAmount)
       } else {
         console.log(`📋 No route sheet found for id ${event.route_sheet_id}`)
         description = buildGenericDescription(event)
