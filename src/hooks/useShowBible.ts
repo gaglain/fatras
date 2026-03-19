@@ -37,6 +37,67 @@ export interface CreateDocumentData {
   artists: string[];
 }
 
+const STORAGE_BUCKETS = ['publication-media', 'app-files', 'avatars', 'email-attachments', 'artist-documents'];
+
+function getFileType(name: string): ShowBibleDocument['type'] {
+  const ext = name.split('.').pop()?.toLowerCase() || '';
+  if (['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(ext)) return 'image';
+  if (['pdf'].includes(ext)) return 'pdf';
+  if (['mp3', 'wav', 'ogg', 'aac', 'm4a', 'flac'].includes(ext)) return 'audio';
+  if (['mp4', 'webm', 'mov', 'avi', 'mkv'].includes(ext)) return 'video';
+  if (['txt', 'md', 'csv', 'json'].includes(ext)) return 'text';
+  return 'other';
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+async function fetchBucketFiles(): Promise<ShowBibleDocument[]> {
+  const allItems: ShowBibleDocument[] = [];
+
+  for (const bucket of STORAGE_BUCKETS) {
+    try {
+      const { data, error } = await supabase.storage.from(bucket).list('', {
+        limit: 1000,
+        sortBy: { column: 'created_at', order: 'desc' },
+      } as any);
+
+      if (error || !data) continue;
+
+      for (const f of data) {
+        if (!f.name || f.name.endsWith('/')) continue;
+        const { data: pub } = supabase.storage.from(bucket).getPublicUrl(f.name);
+        const meta = f as any;
+        const sizeBytes = meta.metadata?.size || 0;
+        allItems.push({
+          id: `bucket-${bucket}-${f.name}`,
+          name: f.name.split('/').pop() || f.name,
+          type: getFileType(f.name),
+          url: pub.publicUrl,
+          file_path: f.name,
+          bucket_name: bucket,
+          file_size_bytes: sizeBytes,
+          file_size_display: formatFileSize(sizeBytes),
+          category: bucket,
+          description: null,
+          tags: [],
+          version: '1',
+          artists: [],
+          created_at: meta.created_at || '',
+          updated_at: meta.updated_at || meta.created_at || '',
+        });
+      }
+    } catch {
+      // silently skip bucket errors
+    }
+  }
+
+  return allItems;
+}
+
 export const useShowBible = () => {
   const { user } = useAuth();
   const [documents, setDocuments] = useState<ShowBibleDocument[]>([]);
@@ -50,6 +111,7 @@ export const useShowBible = () => {
     }
 
     try {
+      // Fetch from show_bible_documents table
       const { data, error } = await supabase
         .from('show_bible_documents')
         .select('*')
@@ -57,11 +119,18 @@ export const useShowBible = () => {
 
       if (error) {
         logger.error('Erreur lors du chargement des documents:', error);
-        toast.error('Erreur lors du chargement des documents');
-        return;
       }
 
-      setDocuments((data || []) as ShowBibleDocument[]);
+      const dbDocs = (data || []) as ShowBibleDocument[];
+
+      // Fetch from storage buckets
+      const bucketDocs = await fetchBucketFiles();
+
+      // Deduplicate: if a bucket file URL matches a DB doc URL, keep the DB version (richer metadata)
+      const dbUrls = new Set(dbDocs.map(d => d.url));
+      const uniqueBucketDocs = bucketDocs.filter(bd => !dbUrls.has(bd.url));
+
+      setDocuments([...dbDocs, ...uniqueBucketDocs]);
     } catch (error: unknown) {
       logger.error('Erreur lors du chargement des documents:', error);
       toast.error('Erreur lors du chargement des documents');
@@ -109,26 +178,26 @@ export const useShowBible = () => {
     }
 
     try {
-      // Supprimer le fichier du storage
       const { error: storageError } = await supabase.storage
         .from(bucketName)
         .remove([filePath]);
 
       if (storageError) {
         logger.error('Erreur lors de la suppression du fichier:', storageError);
-        // On continue même si la suppression du fichier échoue
       }
 
-      // Supprimer l'entrée de la base de données
-      const { error: dbError } = await supabase
-        .from('show_bible_documents')
-        .delete()
-        .eq('id', documentId);
+      // Only delete from DB if it's a real DB document
+      if (!documentId.startsWith('bucket-')) {
+        const { error: dbError } = await supabase
+          .from('show_bible_documents')
+          .delete()
+          .eq('id', documentId);
 
-      if (dbError) {
-        logger.error('Erreur lors de la suppression du document:', dbError);
-        toast.error('Erreur lors de la suppression du document');
-        return false;
+        if (dbError) {
+          logger.error('Erreur lors de la suppression du document:', dbError);
+          toast.error('Erreur lors de la suppression du document');
+          return false;
+        }
       }
 
       setDocuments(prev => prev.filter(doc => doc.id !== documentId));
