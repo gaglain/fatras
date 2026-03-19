@@ -36,7 +36,7 @@ interface RouteSheet {
   invitations?: string
 }
 
-function buildRouteSheetDescription(event: any, routeSheet: RouteSheet, quoteAmount?: number | null): string {
+function buildRouteSheetDescription(event: any, routeSheet: RouteSheet, quoteAmount?: number | null, crewNames?: string[]): string {
   const lines: string[] = []
 
   lines.push(`🎤 ${event.title}`)
@@ -111,10 +111,11 @@ function buildRouteSheetDescription(event: any, routeSheet: RouteSheet, quoteAmo
     lines.push('')
   }
 
-  // 👥 Équipe
-  if (routeSheet.crew && routeSheet.crew.length > 0) {
+  // 👥 Équipe (resolved names)
+  const resolvedCrew = crewNames && crewNames.length > 0 ? crewNames : routeSheet.crew
+  if (resolvedCrew && resolvedCrew.length > 0) {
     lines.push('👥 ÉQUIPE')
-    routeSheet.crew.forEach(member => lines.push(`  • ${member}`))
+    resolvedCrew.forEach(member => lines.push(`  • ${member}`))
     lines.push('')
   }
 
@@ -311,7 +312,38 @@ Deno.serve(async (req) => {
 
       if (routeSheet) {
         console.log(`📋 Route sheet found: ${routeSheet.venue || routeSheet.city || 'no venue/city'}`)
-        description = buildRouteSheetDescription(event, routeSheet as RouteSheet, quoteAmount)
+        
+        // Resolve crew UUIDs to names
+        let crewNames: string[] = []
+        const crewIds = routeSheet.crew as string[] | undefined
+        if (crewIds && crewIds.length > 0) {
+          // Check if they look like UUIDs
+          const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+          const areUuids = crewIds.every((id: string) => uuidPattern.test(id))
+          
+          if (areUuids) {
+            const { data: profiles } = await supabase
+              .from('user_profiles')
+              .select('user_id, first_name, last_name, function_title')
+              .in('user_id', crewIds)
+            
+            if (profiles && profiles.length > 0) {
+              // Map in original order
+              const profileMap = new Map(profiles.map((p: any) => [p.user_id, p]))
+              crewNames = crewIds.map((id: string) => {
+                const p = profileMap.get(id)
+                if (p) {
+                  const name = [p.first_name, p.last_name].filter(Boolean).join(' ') || 'Membre'
+                  return p.function_title ? `${name} (${p.function_title})` : name
+                }
+                return id // fallback to UUID if not found
+              })
+              console.log(`👥 Resolved ${crewNames.length} crew members`)
+            }
+          }
+        }
+        
+        description = buildRouteSheetDescription(event, routeSheet as RouteSheet, quoteAmount, crewNames)
       } else {
         console.log(`📋 No route sheet found for id ${event.route_sheet_id}`)
         description = buildGenericDescription(event)
