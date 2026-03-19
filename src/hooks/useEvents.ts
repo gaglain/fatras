@@ -24,6 +24,22 @@ const syncToGoogleCalendar = async (eventId: string) => {
   }
 };
 
+// Sync event to Nylas (Google Agenda) - non-blocking
+const syncEventToNylas = async (eventId: string, trigger: string) => {
+  try {
+    const { data, error } = await supabase.functions.invoke('sync-event-to-nylas', {
+      body: { event_id: eventId, trigger }
+    });
+    if (error) {
+      logger.warn('Nylas sync failed (non-blocking):', error);
+    } else if (data?.success) {
+      logger.info(`Nylas sync ${data.action}: event ${eventId}`);
+    }
+  } catch (err) {
+    logger.warn('Nylas sync error (non-blocking):', err);
+  }
+};
+
 type DbEvent = Database['public']['Tables']['events']['Row'];
 
 export interface Event {
