@@ -28,7 +28,7 @@ const syncToGoogleCalendar = async (eventId: string) => {
 const syncEventToNylas = async (eventId: string, trigger: string) => {
   try {
     const { data, error } = await supabase.functions.invoke('sync-event-to-nylas', {
-      body: { event_id: eventId, trigger }
+      body: { event_id: eventId, trigger, grant_id_override: '1689aa22-c0cc-48b2-ac09-6f221aff790f' }
     });
     if (error) {
       logger.warn('Nylas sync failed (non-blocking):', error);
