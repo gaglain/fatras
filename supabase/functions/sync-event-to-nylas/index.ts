@@ -192,8 +192,7 @@ Deno.serve(async (req) => {
       )
     }
 
-    const { status, nylas_event_id } = event
-    let grantId = event.nylas_grant_id
+    let grantId = grant_id_override || event.nylas_grant_id
 
     // If no grant_id configured, try to find one from email_accounts
     if (!grantId) {
