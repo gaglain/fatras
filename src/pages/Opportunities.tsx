@@ -54,6 +54,7 @@ export const Opportunities: React.FC = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingOpportunity, setEditingOpportunity] = useState<Opportunity | null>(null);
   const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   const createRoadshowFromOpportunity = async (opportunityId: string, oppData: typeof newOpportunity) => {
     if (!user) return;
@@ -169,11 +170,13 @@ const formattedOpportunities = data.map(opp => ({
     fetchOpportunities();
   }, [user]);
 
-  const filteredOpportunities = opportunities.filter(opp =>
-    opp.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    opp.venue.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    opp.location.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredOpportunities = opportunities.filter(opp => {
+    const matchesSearch = opp.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      opp.venue.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      opp.location.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || opp.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
   const handleAddOpportunity = async () => {
     if (!newOpportunity.title || !newOpportunity.venue || !user) {
@@ -412,6 +415,18 @@ setNewOpportunity({
             className="pl-10"
           />
         </div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[160px]">
+            <SelectValue placeholder="Tous les statuts" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tous les statuts</SelectItem>
+            <SelectItem value="open">Ouvertes</SelectItem>
+            <SelectItem value="applied">Candidature</SelectItem>
+            <SelectItem value="won">Gagnées</SelectItem>
+            <SelectItem value="lost">Perdues</SelectItem>
+          </SelectContent>
+        </Select>
         <div className="flex items-center space-x-1 border border-border rounded-md p-1">
           <Button
             variant={viewMode === 'compact' ? 'default' : 'ghost'}
