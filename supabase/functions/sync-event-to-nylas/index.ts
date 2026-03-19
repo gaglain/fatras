@@ -364,13 +364,14 @@ Deno.serve(async (req) => {
     if (event.country) locationParts.push(event.country)
     const fullLocation = locationParts.join(', ')
 
+    const nylasWhen = startDateStr === endDateStr
+      ? { date: startDateStr }
+      : { start_date: startDateStr, end_date: endDateStr }
+
     const nylasEventBody = {
       title: eventTitle,
       description,
-      when: {
-        start_time: startTime,
-        end_time: endTime,
-      },
+      when: nylasWhen,
       location: fullLocation,
     }
 
