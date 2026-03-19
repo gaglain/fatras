@@ -33,9 +33,10 @@ interface RouteSheet {
   notes?: string
   crew?: string[]
   equipment?: string[]
+  invitations?: string
 }
 
-function buildRouteSheetDescription(event: any, routeSheet: RouteSheet): string {
+function buildRouteSheetDescription(event: any, routeSheet: RouteSheet, quoteAmount?: number | null): string {
   const lines: string[] = []
 
   lines.push(`🎤 ${event.title}`)
@@ -43,6 +44,13 @@ function buildRouteSheetDescription(event: any, routeSheet: RouteSheet): string 
   lines.push('📋 FEUILLE DE ROUTE')
   lines.push('')
 
+  // 💰 Prix devis/contrat
+  if (quoteAmount) {
+    lines.push(`💰 CONTRAT : ${quoteAmount.toFixed(2)} €`)
+    lines.push('')
+  }
+
+  // 📍 Lieu / Salle
   if (routeSheet.venue || routeSheet.address || routeSheet.city) {
     lines.push('📍 LIEU')
     if (routeSheet.venue) lines.push(`  Salle : ${routeSheet.venue}`)
@@ -51,6 +59,7 @@ function buildRouteSheetDescription(event: any, routeSheet: RouteSheet): string 
     lines.push('')
   }
 
+  // 🕐 Horaires
   const timings: string[] = []
   if (routeSheet.meeting_point_time) timings.push(`  Point de RDV : ${routeSheet.meeting_point_time}${routeSheet.meeting_point_location ? ' - ' + routeSheet.meeting_point_location : ''}`)
   if (routeSheet.departure_to_show_time) timings.push(`  Départ vers le lieu : ${routeSheet.departure_to_show_time}`)
@@ -68,6 +77,7 @@ function buildRouteSheetDescription(event: any, routeSheet: RouteSheet): string 
     lines.push('')
   }
 
+  // 👤 Contact local
   if (routeSheet.local_contact || routeSheet.local_contact_phone) {
     lines.push('👤 CONTACT LOCAL')
     if (routeSheet.local_contact) lines.push(`  Nom : ${routeSheet.local_contact}`)
@@ -75,6 +85,7 @@ function buildRouteSheetDescription(event: any, routeSheet: RouteSheet): string 
     lines.push('')
   }
 
+  // 🚗 Transport
   if (routeSheet.transport || routeSheet.departure_address) {
     lines.push('🚗 TRANSPORT')
     if (routeSheet.transport) lines.push(`  Mode : ${routeSheet.transport}`)
@@ -82,6 +93,7 @@ function buildRouteSheetDescription(event: any, routeSheet: RouteSheet): string 
     lines.push('')
   }
 
+  // 🏨 Hébergement
   if (routeSheet.accommodation || routeSheet.accommodation_address) {
     lines.push('🏨 HÉBERGEMENT')
     if (routeSheet.accommodation) lines.push(`  ${routeSheet.accommodation}`)
@@ -89,18 +101,24 @@ function buildRouteSheetDescription(event: any, routeSheet: RouteSheet): string 
     lines.push('')
   }
 
+  // 🎫 Invitations
+  if (routeSheet.invitations) {
+    lines.push('🎫 INVITATIONS')
+    // Split by newlines for multi-line invitations
+    routeSheet.invitations.split('\n').forEach(line => {
+      if (line.trim()) lines.push(`  ${line.trim()}`)
+    })
+    lines.push('')
+  }
+
+  // 👥 Équipe
   if (routeSheet.crew && routeSheet.crew.length > 0) {
     lines.push('👥 ÉQUIPE')
     routeSheet.crew.forEach(member => lines.push(`  • ${member}`))
     lines.push('')
   }
 
-  if (routeSheet.equipment && routeSheet.equipment.length > 0) {
-    lines.push('🎸 MATÉRIEL')
-    routeSheet.equipment.forEach(item => lines.push(`  • ${item}`))
-    lines.push('')
-  }
-
+  // 📝 Notes
   if (routeSheet.notes) {
     lines.push('📝 NOTES')
     lines.push(`  ${routeSheet.notes}`)
