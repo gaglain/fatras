@@ -170,11 +170,13 @@ const formattedOpportunities = data.map(opp => ({
     fetchOpportunities();
   }, [user]);
 
-  const filteredOpportunities = opportunities.filter(opp =>
-    opp.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    opp.venue.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    opp.location.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredOpportunities = opportunities.filter(opp => {
+    const matchesSearch = opp.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      opp.venue.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      opp.location.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || opp.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
   const handleAddOpportunity = async () => {
     if (!newOpportunity.title || !newOpportunity.venue || !user) {
