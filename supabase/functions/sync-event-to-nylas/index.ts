@@ -294,12 +294,11 @@ Deno.serve(async (req) => {
       console.log(`💰 Quote found: ${quoteAmount} € (${quote.status})`)
     }
 
-    // Load route sheet if confirmed and route_sheet_id exists
+    // Load route sheet if route_sheet_id exists (for any synced status)
     let description: string
-    const isConfirmed = status === 'confirmé' || status === 'confirmed'
 
-    if (isConfirmed && event.route_sheet_id) {
-      console.log(`📋 Loading route sheet ${event.route_sheet_id} for confirmed event`)
+    if (event.route_sheet_id) {
+      console.log(`📋 Loading route sheet ${event.route_sheet_id} for event (status: ${status})`)
       const { data: routeSheet, error: rsError } = await supabase
         .from('roadshow_stops')
         .select('*')
@@ -317,7 +316,6 @@ Deno.serve(async (req) => {
         let crewNames: string[] = []
         const crewIds = routeSheet.crew as string[] | undefined
         if (crewIds && crewIds.length > 0) {
-          // Check if they look like UUIDs
           const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
           const areUuids = crewIds.every((id: string) => uuidPattern.test(id))
           
@@ -328,7 +326,6 @@ Deno.serve(async (req) => {
               .in('user_id', crewIds)
             
             if (profiles && profiles.length > 0) {
-              // Map in original order
               const profileMap = new Map(profiles.map((p: any) => [p.user_id, p]))
               crewNames = crewIds.map((id: string) => {
                 const p = profileMap.get(id)
@@ -336,7 +333,7 @@ Deno.serve(async (req) => {
                   const name = [p.first_name, p.last_name].filter(Boolean).join(' ') || 'Membre'
                   return p.function_title ? `${name} (${p.function_title})` : name
                 }
-                return id // fallback to UUID if not found
+                return id
               })
               console.log(`👥 Resolved ${crewNames.length} crew members`)
             }
@@ -349,9 +346,6 @@ Deno.serve(async (req) => {
         description = buildGenericDescription(event)
       }
     } else {
-      if (isConfirmed && !event.route_sheet_id) {
-        console.log(`📋 Event is confirmed but has no route_sheet_id`)
-      }
       description = buildGenericDescription(event)
     }
 
