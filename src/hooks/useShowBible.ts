@@ -55,46 +55,62 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+async function listBucketRecursive(bucket: string, prefix: string): Promise<ShowBibleDocument[]> {
+  const items: ShowBibleDocument[] = [];
+  try {
+    const { data, error } = await supabase.storage.from(bucket).list(prefix, {
+      limit: 1000,
+      sortBy: { column: 'created_at', order: 'desc' },
+    } as any);
+
+    if (error || !data) return items;
+
+    for (const f of data) {
+      if (!f.name) continue;
+      const fullPath = prefix ? `${prefix}/${f.name}` : f.name;
+      const meta = f as any;
+
+      // If it's a folder (no metadata / id is null), recurse into it
+      if (meta.id === null || (!meta.metadata && f.name && !f.name.includes('.'))) {
+        const subItems = await listBucketRecursive(bucket, fullPath);
+        items.push(...subItems);
+        continue;
+      }
+
+      if (f.name.endsWith('/')) continue;
+
+      const { data: pub } = supabase.storage.from(bucket).getPublicUrl(fullPath);
+      const sizeBytes = meta.metadata?.size || 0;
+      items.push({
+        id: `bucket-${bucket}-${fullPath}`,
+        name: f.name.split('/').pop() || f.name,
+        type: getFileType(f.name),
+        url: pub.publicUrl,
+        file_path: fullPath,
+        bucket_name: bucket,
+        file_size_bytes: sizeBytes,
+        file_size_display: formatFileSize(sizeBytes),
+        category: bucket,
+        description: null,
+        tags: [],
+        version: '1',
+        artists: [],
+        created_at: meta.created_at || '',
+        updated_at: meta.updated_at || meta.created_at || '',
+      });
+    }
+  } catch {
+    // silently skip bucket errors
+  }
+  return items;
+}
+
 async function fetchBucketFiles(): Promise<ShowBibleDocument[]> {
   const allItems: ShowBibleDocument[] = [];
-
   for (const bucket of STORAGE_BUCKETS) {
-    try {
-      const { data, error } = await supabase.storage.from(bucket).list('', {
-        limit: 1000,
-        sortBy: { column: 'created_at', order: 'desc' },
-      } as any);
-
-      if (error || !data) continue;
-
-      for (const f of data) {
-        if (!f.name || f.name.endsWith('/')) continue;
-        const { data: pub } = supabase.storage.from(bucket).getPublicUrl(f.name);
-        const meta = f as any;
-        const sizeBytes = meta.metadata?.size || 0;
-        allItems.push({
-          id: `bucket-${bucket}-${f.name}`,
-          name: f.name.split('/').pop() || f.name,
-          type: getFileType(f.name),
-          url: pub.publicUrl,
-          file_path: f.name,
-          bucket_name: bucket,
-          file_size_bytes: sizeBytes,
-          file_size_display: formatFileSize(sizeBytes),
-          category: bucket,
-          description: null,
-          tags: [],
-          version: '1',
-          artists: [],
-          created_at: meta.created_at || '',
-          updated_at: meta.updated_at || meta.created_at || '',
-        });
-      }
-    } catch {
-      // silently skip bucket errors
-    }
+    const bucketItems = await listBucketRecursive(bucket, '');
+    allItems.push(...bucketItems);
   }
-
   return allItems;
 }
 
