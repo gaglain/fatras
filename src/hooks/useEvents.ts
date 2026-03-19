@@ -197,11 +197,10 @@ export const useEvents = () => {
 
       if (error) throw error;
       
-      // Auto-sync to Google Calendar when status is 'option' or 'confirmé' (non-blocking)
-      if (updates.status === 'option' || updates.status === 'confirmé') {
-        logger.info(`Auto-syncing event ${id} to Google Calendar (status: ${updates.status})`);
-        // Appel asynchrone non-bloquant
-        syncToGoogleCalendar(id);
+      // Auto-sync to Nylas (Google Agenda) - non-blocking
+      if (updates.status === 'option' || updates.status === 'confirmé' || updates.status === 'confirmed') {
+        logger.info(`Auto-syncing event ${id} to Nylas (status: ${updates.status})`);
+        syncEventToNylas(id, 'event_updated');
       }
       
       return mapDbToEvent(data);
