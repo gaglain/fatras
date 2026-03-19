@@ -173,7 +173,7 @@ Deno.serve(async (req) => {
     const nylasApiKey = Deno.env.get('NYLAS_API_KEY')!
 
     const supabase = createClient(supabaseUrl, supabaseKey)
-    const { event_id, trigger } = await req.json()
+    const { event_id, trigger, grant_id_override } = await req.json()
 
     console.log(`🔄 sync-event-to-nylas: event_id=${event_id}, trigger=${trigger}`)
 
