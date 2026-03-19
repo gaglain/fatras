@@ -5,6 +5,41 @@ import { TourStop } from '@/types/roadshow.types';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
 
+// Sync event to Nylas (Google Agenda) - non-blocking
+const syncEventToNylas = async (eventId: string, trigger: string) => {
+  try {
+    const { data, error } = await supabase.functions.invoke('sync-event-to-nylas', {
+      body: { event_id: eventId, trigger, grant_id_override: '1689aa22-c0cc-48b2-ac09-6f221aff790f' }
+    });
+    if (error) {
+      logger.warn('Nylas sync failed (non-blocking):', error);
+    } else if (data?.success) {
+      logger.info(`Nylas sync ${data.action}: event ${eventId}`);
+    }
+  } catch (err) {
+    logger.warn('Nylas sync error (non-blocking):', err);
+  }
+};
+
+// Sync all events linked to a roadshow stop
+const syncLinkedEventsToNylas = async (stopId: string) => {
+  try {
+    const { data: links } = await supabase
+      .from('roadshow_stop_events')
+      .select('event_id')
+      .eq('roadshow_stop_id', stopId);
+    
+    if (links && links.length > 0) {
+      for (const link of links) {
+        syncEventToNylas(link.event_id, 'route_sheet_updated');
+      }
+      logger.info(`Triggered Nylas sync for ${links.length} linked events of stop ${stopId}`);
+    }
+  } catch (err) {
+    logger.warn('Error syncing linked events:', err);
+  }
+};
+
 interface ArtistLineupItem {
   userId: string;
   confirmed: boolean;
