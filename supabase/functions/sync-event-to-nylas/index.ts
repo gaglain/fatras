@@ -173,7 +173,7 @@ Deno.serve(async (req) => {
     const nylasApiKey = Deno.env.get('NYLAS_API_KEY')!
 
     const supabase = createClient(supabaseUrl, supabaseKey)
-    const { event_id, trigger } = await req.json()
+    const { event_id, trigger, grant_id_override } = await req.json()
 
     console.log(`🔄 sync-event-to-nylas: event_id=${event_id}, trigger=${trigger}`)
 
@@ -193,7 +193,7 @@ Deno.serve(async (req) => {
     }
 
     const { status, nylas_event_id } = event
-    let grantId = event.nylas_grant_id
+    let grantId = grant_id_override || event.nylas_grant_id
 
     // If no grant_id configured, try to find one from email_accounts
     if (!grantId) {
