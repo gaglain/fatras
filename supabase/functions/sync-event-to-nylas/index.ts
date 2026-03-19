@@ -43,7 +43,6 @@ function buildRouteSheetDescription(event: any, routeSheet: RouteSheet): string 
   lines.push('📋 FEUILLE DE ROUTE')
   lines.push('')
 
-  // Lieu
   if (routeSheet.venue || routeSheet.address || routeSheet.city) {
     lines.push('📍 LIEU')
     if (routeSheet.venue) lines.push(`  Salle : ${routeSheet.venue}`)
@@ -52,7 +51,6 @@ function buildRouteSheetDescription(event: any, routeSheet: RouteSheet): string 
     lines.push('')
   }
 
-  // Horaires
   const timings: string[] = []
   if (routeSheet.meeting_point_time) timings.push(`  Point de RDV : ${routeSheet.meeting_point_time}${routeSheet.meeting_point_location ? ' - ' + routeSheet.meeting_point_location : ''}`)
   if (routeSheet.departure_to_show_time) timings.push(`  Départ vers le lieu : ${routeSheet.departure_to_show_time}`)
@@ -70,7 +68,6 @@ function buildRouteSheetDescription(event: any, routeSheet: RouteSheet): string 
     lines.push('')
   }
 
-  // Contact local
   if (routeSheet.local_contact || routeSheet.local_contact_phone) {
     lines.push('👤 CONTACT LOCAL')
     if (routeSheet.local_contact) lines.push(`  Nom : ${routeSheet.local_contact}`)
@@ -78,7 +75,6 @@ function buildRouteSheetDescription(event: any, routeSheet: RouteSheet): string 
     lines.push('')
   }
 
-  // Transport
   if (routeSheet.transport || routeSheet.departure_address) {
     lines.push('🚗 TRANSPORT')
     if (routeSheet.transport) lines.push(`  Mode : ${routeSheet.transport}`)
@@ -86,7 +82,6 @@ function buildRouteSheetDescription(event: any, routeSheet: RouteSheet): string 
     lines.push('')
   }
 
-  // Hébergement
   if (routeSheet.accommodation || routeSheet.accommodation_address) {
     lines.push('🏨 HÉBERGEMENT')
     if (routeSheet.accommodation) lines.push(`  ${routeSheet.accommodation}`)
@@ -94,21 +89,18 @@ function buildRouteSheetDescription(event: any, routeSheet: RouteSheet): string 
     lines.push('')
   }
 
-  // Équipe
   if (routeSheet.crew && routeSheet.crew.length > 0) {
     lines.push('👥 ÉQUIPE')
     routeSheet.crew.forEach(member => lines.push(`  • ${member}`))
     lines.push('')
   }
 
-  // Matériel
   if (routeSheet.equipment && routeSheet.equipment.length > 0) {
     lines.push('🎸 MATÉRIEL')
     routeSheet.equipment.forEach(item => lines.push(`  • ${item}`))
     lines.push('')
   }
 
-  // Notes
   if (routeSheet.notes) {
     lines.push('📝 NOTES')
     lines.push(`  ${routeSheet.notes}`)
@@ -128,6 +120,46 @@ function buildGenericDescription(event: any): string {
 
 function toUnixTimestamp(dateStr: string): number {
   return Math.floor(new Date(dateStr).getTime() / 1000)
+}
+
+// Fetch the primary calendar ID for a grant
+async function getPrimaryCalendarId(grantId: string, nylasApiKey: string): Promise<string | null> {
+  try {
+    const response = await fetch(`${NYLAS_API_BASE}/grants/${grantId}/calendars`, {
+      headers: {
+        'Authorization': `Bearer ${nylasApiKey}`,
+        'Accept': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('Failed to list calendars:', response.status, errorText)
+      return null
+    }
+
+    const result = await response.json()
+    const calendars = result.data || []
+    
+    // Find primary calendar
+    const primary = calendars.find((c: any) => c.is_primary === true)
+    if (primary) {
+      console.log(`📅 Using primary calendar: ${primary.name} (${primary.id})`)
+      return primary.id
+    }
+    
+    // Fallback to first calendar
+    if (calendars.length > 0) {
+      console.log(`📅 Using first calendar: ${calendars[0].name} (${calendars[0].id})`)
+      return calendars[0].id
+    }
+
+    console.error('No calendars found for this grant')
+    return null
+  } catch (err) {
+    console.error('Error fetching calendars:', err)
+    return null
+  }
 }
 
 Deno.serve(async (req) => {
@@ -160,11 +192,11 @@ Deno.serve(async (req) => {
       )
     }
 
-    const { status, nylas_event_id, nylas_grant_id } = event
+    const { status, nylas_event_id } = event
+    let grantId = event.nylas_grant_id
 
-    // If no grant_id configured, we can't sync
-    if (!nylas_grant_id) {
-      // Try to find a grant_id from email_accounts
+    // If no grant_id configured, try to find one from email_accounts
+    if (!grantId) {
       const { data: account } = await supabase
         .from('email_accounts')
         .select('grant_id')
@@ -182,12 +214,9 @@ Deno.serve(async (req) => {
         )
       }
 
-      // Save grant_id on the event
-      await supabase.from('events').update({ nylas_grant_id: account.grant_id }).eq('id', event_id)
-      event.nylas_grant_id = account.grant_id
+      grantId = account.grant_id
+      await supabase.from('events').update({ nylas_grant_id: grantId }).eq('id', event_id)
     }
-
-    const grantId = event.nylas_grant_id
 
     // Only sync if status is option or confirmed
     if (status !== 'option' && status !== 'confirmé' && status !== 'confirmed') {
@@ -195,6 +224,15 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({ success: true, message: 'No sync needed for this status' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      )
+    }
+
+    // Get primary calendar ID (required by Nylas v3)
+    const calendarId = await getPrimaryCalendarId(grantId, nylasApiKey)
+    if (!calendarId) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Could not find a calendar for this grant' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       )
     }
 
@@ -235,8 +273,9 @@ Deno.serve(async (req) => {
     // CREATE or UPDATE
     if (!nylas_event_id) {
       // Create new Nylas event
-      console.log('Creating Nylas event...')
-      const response = await fetch(`${NYLAS_API_BASE}/grants/${grantId}/events`, {
+      console.log(`Creating Nylas event for "${event.title}" on calendar ${calendarId}...`)
+      const url = `${NYLAS_API_BASE}/grants/${grantId}/events?calendar_id=${encodeURIComponent(calendarId)}`
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${nylasApiKey}`,
@@ -253,7 +292,7 @@ Deno.serve(async (req) => {
         const errorText = await response.text()
         console.error('Nylas create error:', response.status, errorText)
         return new Response(
-          JSON.stringify({ success: false, error: `Nylas create failed: ${response.status}` }),
+          JSON.stringify({ success: false, error: `Nylas create failed: ${response.status}`, details: errorText }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
         )
       }
@@ -264,15 +303,16 @@ Deno.serve(async (req) => {
       // Save nylas_event_id back to event
       await supabase.from('events').update({ nylas_event_id: createdId }).eq('id', event_id)
 
-      console.log(`✅ Nylas event created: ${createdId}`)
+      console.log(`✅ Nylas event created: ${createdId} for "${event.title}"`)
       return new Response(
         JSON.stringify({ success: true, action: 'created', nylas_event_id: createdId }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       )
     } else {
       // Update existing Nylas event
-      console.log(`Updating Nylas event ${nylas_event_id}...`)
-      const response = await fetch(`${NYLAS_API_BASE}/grants/${grantId}/events/${nylas_event_id}`, {
+      console.log(`Updating Nylas event ${nylas_event_id} for "${event.title}"...`)
+      const url = `${NYLAS_API_BASE}/grants/${grantId}/events/${nylas_event_id}?calendar_id=${encodeURIComponent(calendarId)}`
+      const response = await fetch(url, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${nylasApiKey}`,
@@ -286,12 +326,14 @@ Deno.serve(async (req) => {
         const errorText = await response.text()
         console.error('Nylas update error:', response.status, errorText)
         return new Response(
-          JSON.stringify({ success: false, error: `Nylas update failed: ${response.status}` }),
+          JSON.stringify({ success: false, error: `Nylas update failed: ${response.status}`, details: errorText }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
         )
       }
 
-      console.log(`✅ Nylas event updated: ${nylas_event_id}`)
+      const _body = await response.text() // consume response body
+
+      console.log(`✅ Nylas event updated: ${nylas_event_id} for "${event.title}"`)
       return new Response(
         JSON.stringify({ success: true, action: 'updated', nylas_event_id }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
