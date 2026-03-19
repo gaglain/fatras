@@ -54,6 +54,7 @@ export const Opportunities: React.FC = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingOpportunity, setEditingOpportunity] = useState<Opportunity | null>(null);
   const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   const createRoadshowFromOpportunity = async (opportunityId: string, oppData: typeof newOpportunity) => {
     if (!user) return;
