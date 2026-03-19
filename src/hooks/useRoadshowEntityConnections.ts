@@ -3,6 +3,22 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/lib/logger';
 
+// Sync event to Nylas (Google Agenda) - non-blocking
+const syncEventToNylas = async (eventId: string, trigger: string) => {
+  try {
+    const { data, error } = await supabase.functions.invoke('sync-event-to-nylas', {
+      body: { event_id: eventId, trigger, grant_id_override: '1689aa22-c0cc-48b2-ac09-6f221aff790f' }
+    });
+    if (error) {
+      logger.warn('Nylas sync failed (non-blocking):', error);
+    } else if (data?.success) {
+      logger.info(`Nylas sync ${data.action}: event ${eventId}`);
+    }
+  } catch (err) {
+    logger.warn('Nylas sync error (non-blocking):', err);
+  }
+};
+
 interface ContactLink {
   id: string;
   contact_id: string;
@@ -335,6 +351,10 @@ export const useRoadshowEntityConnections = () => {
         .insert({ roadshow_stop_id: roadshowStopId, event_id: eventId });
 
       if (error) throw error;
+      
+      // Auto-sync to Nylas after linking (the DB trigger sets route_sheet_id)
+      syncEventToNylas(eventId, 'route_sheet_linked');
+      
       return true;
     } catch (error) {
       logger.error('Error linking event:', error);
