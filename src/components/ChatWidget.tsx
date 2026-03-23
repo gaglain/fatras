@@ -259,16 +259,18 @@ export const ChatWidget: React.FC = () => {
   }, []);
 
   return (
-    <div className={cn("fixed z-50", isMobile && isOpen ? "inset-0 p-2" : isMobile ? "bottom-20 right-4" : "bottom-6 right-6")}>
+    <div className={cn("fixed z-50", isMobile && isOpen ? "inset-0" : isMobile ? "bottom-20 right-4" : "bottom-6 right-6")}>
       {isOpen && (
-        <div className={cn("shadow-2xl overflow-hidden border bg-card text-card-foreground flex flex-col", isMobile ? "h-full w-full rounded-lg" : "mb-4 rounded-xl")} style={!isMobile ? { width: '420px', height: '600px' } : undefined}>
-          <div className={cn("border-b bg-primary text-primary-foreground shrink-0", isMobile ? "p-2" : "p-4")}>
+        <div className={cn("shadow-2xl overflow-hidden border bg-card text-card-foreground flex flex-col", isMobile ? "h-full w-full" : "mb-4 rounded-xl")} style={!isMobile ? { width: '420px', height: '600px' } : undefined}>
+          <div className={cn("border-b bg-primary text-primary-foreground shrink-0", isMobile ? "p-3" : "p-4")}>
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center space-x-2">
                 <MessageSquare className="h-5 w-5" />
                 <span className="font-medium">Chat Interne</span>
               </div>
-              <Button variant="ghost" size="sm" onClick={() => setIsOpen(false)} className="text-primary-foreground hover:bg-primary-foreground/20">Masquer</Button>
+              <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="text-primary-foreground hover:bg-primary-foreground/20 h-8 w-8">
+                <X className="h-5 w-5" />
+              </Button>
             </div>
             <div className="space-y-2">
               <Select value={selectedChannel} onValueChange={handleChannelSelect}>
