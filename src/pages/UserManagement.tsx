@@ -464,10 +464,21 @@ export const UserManagement: React.FC = () => {
                     <p className="text-muted-foreground text-xs sm:text-sm truncate">@{user.username || user.email?.split('@')[0]}</p>
                   </div>
                 </div>
-                <Badge className={getRoleColor(user.role)} variant="secondary">
-                  <span className="hidden sm:inline">{roleLabels[user.role as UserRole] || user.role}</span>
-                  <span className="sm:hidden">{(roleLabels[user.role as UserRole] || user.role).substring(0, 3)}</span>
-                </Badge>
+                <div className="flex flex-col items-end gap-1">
+                  <Badge className={getRoleColor(user.role)} variant="secondary">
+                    <span className="hidden sm:inline">{roleLabels[user.role as UserRole] || user.role}</span>
+                    <span className="sm:hidden">{(roleLabels[user.role as UserRole] || user.role).substring(0, 3)}</span>
+                  </Badge>
+                  {user.user_id ? (
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-green-50 text-green-700 border-green-200">
+                      ✓ Compte actif
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-amber-50 text-amber-700 border-amber-200">
+                      ⏳ En attente
+                    </Badge>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-2 mb-4">
