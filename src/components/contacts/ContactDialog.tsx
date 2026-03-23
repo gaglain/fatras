@@ -257,6 +257,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
         // Proposer la suite de création - NE PAS fermer le dialog principal
         if (data && data[0]) {
           setCreatedContactId(data[0].id);
+          clearDraft(); // Supprimer le brouillon du formulaire contact
           onSave(); // Rafraîchir la liste
           setShowCreationSuite(true);
           setLoading(false);
