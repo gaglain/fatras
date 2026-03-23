@@ -327,7 +327,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
   };
 
   useEffect(() => {
-    if (!isOpen || contact) return;
+    if (!isOpen || contact || showCreationSuite) return;
 
     try {
       sessionStorage.setItem(draftKey, JSON.stringify({
