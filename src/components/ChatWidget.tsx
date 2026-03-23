@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MessageSquare, Send, Hash, Plus, Archive } from 'lucide-react';
+import { MessageSquare, Send, Hash, Plus, Archive, X } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useMessagingOptimized } from '@/hooks/useMessagingOptimized';
 import { useAuth } from '@/hooks/useAuth';
