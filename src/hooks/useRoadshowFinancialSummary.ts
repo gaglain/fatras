@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useVehicleRates } from '@/hooks/useVehicleRates';
 import { logger } from '@/lib/logger';
 
 export interface StopFinancialSummary {
