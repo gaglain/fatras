@@ -300,6 +300,14 @@ export const RoadShow: React.FC = () => {
           />
         </TabsContent>
 
+        <TabsContent value="finances">
+          <RoadshowFinancialSummary
+            stopSummaries={stopSummaries}
+            globalSummary={globalSummary}
+            loading={financialLoading}
+          />
+        </TabsContent>
+
         <TabsContent value="settings">
           <VehicleRatesSettings />
         </TabsContent>
