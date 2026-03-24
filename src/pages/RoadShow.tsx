@@ -101,6 +101,20 @@ export const RoadShow: React.FC = () => {
     });
   }, [tourStops, stops, rates, getRateByName, getDefaultRate]);
 
+  // Financial summary data
+  const financialStopsData = React.useMemo(() => 
+    stopsWithCosts.map(s => ({
+      id: s.id,
+      city: s.city,
+      venue: s.venue,
+      date: s.date,
+      travelCost: s.travelCost,
+    })),
+    [stopsWithCosts]
+  );
+  const financialStopIds = React.useMemo(() => stopsWithCosts.map(s => s.id), [stopsWithCosts]);
+  const { stopSummaries, globalSummary, loading: financialLoading } = useRoadshowFinancialSummary(financialStopIds, financialStopsData);
+
   const filteredAndSortedStops = React.useMemo(() => {
     // Filtrage
     const filtered = stopsWithCosts.filter(stop => {
