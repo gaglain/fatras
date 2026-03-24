@@ -30,7 +30,7 @@ export const RoadShow: React.FC = () => {
   const { tourStops, stops, loading, fetchStops, createStop, updateStop, archiveStop, restoreStop, fetchArchivedStops, convertFromTourStop } = useRoadshowStops();
   const { settings } = useRoadshowSettings();
   const { rates, getRateByName, getDefaultRate } = useVehicleRates();
-  const [viewMode, setViewMode] = useState<'list' | 'timeline' | 'map' | 'settings' | 'archives'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'timeline' | 'map' | 'finances' | 'settings' | 'archives'>('list');
   const [archivedStops, setArchivedStops] = useState<TourStop[]>([]);
   const [loadingArchives, setLoadingArchives] = useState(false);
 
