@@ -108,11 +108,21 @@ export const useRoadshowFinancialSummary = (
         quotesByStop[ql.roadshow_stop_id].count += 1;
       });
 
+      // Compute travel costs from vehicles table
+      const travelByStop: Record<string, number> = {};
+      (vehiclesData as any[] || []).forEach((v: any) => {
+        const rate = rates.find(r => r.vehicle_name === v.vehicle_name);
+        if (rate && v.distance_km > 0) {
+          const cost = (Number(v.distance_km) * rate.rate_per_km) + rate.fixed_cost;
+          travelByStop[v.roadshow_stop_id] = (travelByStop[v.roadshow_stop_id] || 0) + cost;
+        }
+      });
+
       // Build per-stop summaries
       const summaries: StopFinancialSummary[] = stopsData.map(stop => {
         const expData = expensesByStop[stop.id] || { total: 0, count: 0 };
         const quoteData = quotesByStop[stop.id] || { total: 0, count: 0 };
-        const travel = stop.travelCost || 0;
+        const travel = travelByStop[stop.id] || stop.travelCost || 0;
         const totalCosts = expData.total + travel;
         const margin = quoteData.total - totalCosts;
 
