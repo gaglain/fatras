@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Plus, Map, List, Settings, CalendarDays, Archive, RotateCcw } from 'lucide-react';
+import { Plus, Map, List, Settings, CalendarDays, Archive, RotateCcw, Calculator } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useUser } from '@/contexts/UserContext';
 import { useArtists } from '@/hooks/useArtists';
@@ -19,6 +19,8 @@ import { useRoadshowForm } from '@/hooks/useRoadshowForm';
 import { useRoadshowStops } from '@/hooks/useRoadshowStops';
 import { useRoadshowSettings } from '@/hooks/useRoadshowSettings';
 import { useVehicleRates } from '@/hooks/useVehicleRates';
+import { useRoadshowFinancialSummary } from '@/hooks/useRoadshowFinancialSummary';
+import { RoadshowFinancialSummary } from '@/components/roadshow/RoadshowFinancialSummary';
 import { TourStop } from '@/types/roadshow.types';
 
 export const RoadShow: React.FC = () => {
@@ -28,7 +30,7 @@ export const RoadShow: React.FC = () => {
   const { tourStops, stops, loading, fetchStops, createStop, updateStop, archiveStop, restoreStop, fetchArchivedStops, convertFromTourStop } = useRoadshowStops();
   const { settings } = useRoadshowSettings();
   const { rates, getRateByName, getDefaultRate } = useVehicleRates();
-  const [viewMode, setViewMode] = useState<'list' | 'timeline' | 'map' | 'settings' | 'archives'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'timeline' | 'map' | 'finances' | 'settings' | 'archives'>('list');
   const [archivedStops, setArchivedStops] = useState<TourStop[]>([]);
   const [loadingArchives, setLoadingArchives] = useState(false);
 
@@ -98,6 +100,20 @@ export const RoadShow: React.FC = () => {
       };
     });
   }, [tourStops, stops, rates, getRateByName, getDefaultRate]);
+
+  // Financial summary data
+  const financialStopsData = React.useMemo(() => 
+    stopsWithCosts.map(s => ({
+      id: s.id,
+      city: s.city,
+      venue: s.venue,
+      date: s.date,
+      travelCost: s.travelCost,
+    })),
+    [stopsWithCosts]
+  );
+  const financialStopIds = React.useMemo(() => stopsWithCosts.map(s => s.id), [stopsWithCosts]);
+  const { stopSummaries, globalSummary, loading: financialLoading } = useRoadshowFinancialSummary(financialStopIds, financialStopsData);
 
   const filteredAndSortedStops = React.useMemo(() => {
     // Filtrage
@@ -188,21 +204,25 @@ export const RoadShow: React.FC = () => {
       />
 
       {/* Onglets Liste / Carte */}
-      <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'list' | 'timeline' | 'map' | 'settings')} className="w-full">
-        <TabsList className="mb-4 w-full grid grid-cols-4">
-          <TabsTrigger value="list" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
+      <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as typeof viewMode)} className="w-full">
+        <TabsList className="mb-4 w-full grid grid-cols-6">
+          <TabsTrigger value="list" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-1 sm:px-3">
             <List className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             <span className="hidden xs:inline">Liste</span>
           </TabsTrigger>
-          <TabsTrigger value="timeline" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
+          <TabsTrigger value="timeline" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-1 sm:px-3">
             <CalendarDays className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             <span className="hidden xs:inline">Timeline</span>
           </TabsTrigger>
-          <TabsTrigger value="map" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
+          <TabsTrigger value="map" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-1 sm:px-3">
             <Map className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             <span className="hidden xs:inline">Carte</span>
           </TabsTrigger>
-          <TabsTrigger value="settings" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
+          <TabsTrigger value="finances" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-1 sm:px-3">
+            <Calculator className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="hidden xs:inline">Finances</span>
+          </TabsTrigger>
+          <TabsTrigger value="settings" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-1 sm:px-3">
             <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             <span className="hidden xs:inline">Paramètres</span>
           </TabsTrigger>
@@ -277,6 +297,14 @@ export const RoadShow: React.FC = () => {
             }) as any}
             height="600px"
             defaultDepartureAddress={settings.default_departure_address}
+          />
+        </TabsContent>
+
+        <TabsContent value="finances">
+          <RoadshowFinancialSummary
+            stopSummaries={stopSummaries}
+            globalSummary={globalSummary}
+            loading={financialLoading}
           />
         </TabsContent>
 
