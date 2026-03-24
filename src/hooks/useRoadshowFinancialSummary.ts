@@ -169,7 +169,7 @@ export const useRoadshowFinancialSummary = (
     } finally {
       setLoading(false);
     }
-  }, [user, stopIds.join(','), stopsData.length]);
+  }, [user, stopIds.join(','), stopsData.length, rates]);
 
   useEffect(() => {
     fetchSummary();
