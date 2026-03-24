@@ -19,6 +19,8 @@ import { useRoadshowForm } from '@/hooks/useRoadshowForm';
 import { useRoadshowStops } from '@/hooks/useRoadshowStops';
 import { useRoadshowSettings } from '@/hooks/useRoadshowSettings';
 import { useVehicleRates } from '@/hooks/useVehicleRates';
+import { useRoadshowFinancialSummary } from '@/hooks/useRoadshowFinancialSummary';
+import { RoadshowFinancialSummary } from '@/components/roadshow/RoadshowFinancialSummary';
 import { TourStop } from '@/types/roadshow.types';
 
 export const RoadShow: React.FC = () => {
