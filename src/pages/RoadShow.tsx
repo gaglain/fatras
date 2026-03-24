@@ -204,21 +204,25 @@ export const RoadShow: React.FC = () => {
       />
 
       {/* Onglets Liste / Carte */}
-      <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'list' | 'timeline' | 'map' | 'settings')} className="w-full">
-        <TabsList className="mb-4 w-full grid grid-cols-4">
-          <TabsTrigger value="list" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
+      <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as typeof viewMode)} className="w-full">
+        <TabsList className="mb-4 w-full grid grid-cols-6">
+          <TabsTrigger value="list" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-1 sm:px-3">
             <List className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             <span className="hidden xs:inline">Liste</span>
           </TabsTrigger>
-          <TabsTrigger value="timeline" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
+          <TabsTrigger value="timeline" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-1 sm:px-3">
             <CalendarDays className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             <span className="hidden xs:inline">Timeline</span>
           </TabsTrigger>
-          <TabsTrigger value="map" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
+          <TabsTrigger value="map" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-1 sm:px-3">
             <Map className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             <span className="hidden xs:inline">Carte</span>
           </TabsTrigger>
-          <TabsTrigger value="settings" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
+          <TabsTrigger value="finances" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-1 sm:px-3">
+            <Calculator className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="hidden xs:inline">Finances</span>
+          </TabsTrigger>
+          <TabsTrigger value="settings" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-1 sm:px-3">
             <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             <span className="hidden xs:inline">Paramètres</span>
           </TabsTrigger>
