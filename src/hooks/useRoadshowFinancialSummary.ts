@@ -32,6 +32,7 @@ export const useRoadshowFinancialSummary = (
   stopIds: string[],
   stopsData: { id: string; city: string; venue: string; date: string; travelCost?: number }[]
 ) => {
+  const { rates } = useVehicleRates();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [stopSummaries, setStopSummaries] = useState<StopFinancialSummary[]>([]);
