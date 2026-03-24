@@ -57,6 +57,12 @@ export const useRoadshowFinancialSummary = (
 
       if (expError) throw expError;
 
+      // Fetch all vehicles from new table for travel costs
+      const { data: vehiclesData } = await supabase
+        .from('roadshow_stop_vehicles' as any)
+        .select('roadshow_stop_id, vehicle_name, distance_km')
+        .in('roadshow_stop_id', stopIds);
+
       // Fetch all linked quotes via roadshow_stop_quotes
       const { data: quoteLinks, error: qlError } = await supabase
         .from('roadshow_stop_quotes')
