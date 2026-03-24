@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useVehicleRates } from '@/hooks/useVehicleRates';
 import { logger } from '@/lib/logger';
 
 export interface StopFinancialSummary {
@@ -31,6 +32,7 @@ export const useRoadshowFinancialSummary = (
   stopIds: string[],
   stopsData: { id: string; city: string; venue: string; date: string; travelCost?: number }[]
 ) => {
+  const { rates } = useVehicleRates();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [stopSummaries, setStopSummaries] = useState<StopFinancialSummary[]>([]);
@@ -56,6 +58,12 @@ export const useRoadshowFinancialSummary = (
         .in('roadshow_stop_id', stopIds);
 
       if (expError) throw expError;
+
+      // Fetch all vehicles from new table for travel costs
+      const { data: vehiclesData } = await supabase
+        .from('roadshow_stop_vehicles' as any)
+        .select('roadshow_stop_id, vehicle_name, distance_km')
+        .in('roadshow_stop_id', stopIds);
 
       // Fetch all linked quotes via roadshow_stop_quotes
       const { data: quoteLinks, error: qlError } = await supabase
@@ -100,11 +108,21 @@ export const useRoadshowFinancialSummary = (
         quotesByStop[ql.roadshow_stop_id].count += 1;
       });
 
+      // Compute travel costs from vehicles table
+      const travelByStop: Record<string, number> = {};
+      (vehiclesData as any[] || []).forEach((v: any) => {
+        const rate = rates.find(r => r.vehicle_name === v.vehicle_name);
+        if (rate && v.distance_km > 0) {
+          const cost = (Number(v.distance_km) * rate.rate_per_km) + rate.fixed_cost;
+          travelByStop[v.roadshow_stop_id] = (travelByStop[v.roadshow_stop_id] || 0) + cost;
+        }
+      });
+
       // Build per-stop summaries
       const summaries: StopFinancialSummary[] = stopsData.map(stop => {
         const expData = expensesByStop[stop.id] || { total: 0, count: 0 };
         const quoteData = quotesByStop[stop.id] || { total: 0, count: 0 };
-        const travel = stop.travelCost || 0;
+        const travel = travelByStop[stop.id] || stop.travelCost || 0;
         const totalCosts = expData.total + travel;
         const margin = quoteData.total - totalCosts;
 
@@ -151,7 +169,7 @@ export const useRoadshowFinancialSummary = (
     } finally {
       setLoading(false);
     }
-  }, [user, stopIds.join(','), stopsData.length]);
+  }, [user, stopIds.join(','), stopsData.length, rates]);
 
   useEffect(() => {
     fetchSummary();

@@ -3205,6 +3205,47 @@ export type Database = {
           },
         ]
       }
+      roadshow_stop_vehicles: {
+        Row: {
+          created_at: string | null
+          departure_address: string | null
+          distance_km: number | null
+          id: string
+          notes: string | null
+          roadshow_stop_id: string
+          updated_at: string | null
+          vehicle_name: string
+        }
+        Insert: {
+          created_at?: string | null
+          departure_address?: string | null
+          distance_km?: number | null
+          id?: string
+          notes?: string | null
+          roadshow_stop_id: string
+          updated_at?: string | null
+          vehicle_name: string
+        }
+        Update: {
+          created_at?: string | null
+          departure_address?: string | null
+          distance_km?: number | null
+          id?: string
+          notes?: string | null
+          roadshow_stop_id?: string
+          updated_at?: string | null
+          vehicle_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roadshow_stop_vehicles_roadshow_stop_id_fkey"
+            columns: ["roadshow_stop_id"]
+            isOneToOne: false
+            referencedRelation: "roadshow_stops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       roadshow_stops: {
         Row: {
           accommodation: string | null
