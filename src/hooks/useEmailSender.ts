@@ -17,6 +17,7 @@ export const useEmailSender = () => {
   const { injectEmailTracking } = useIndividualEmailTracking();
 
   const sendEmail = async (emailData: EmailData) => {
+    let emailRecordId: string | null = null;
     setSending(true);
     try {
       // Récupérer l'utilisateur connecté
@@ -51,6 +52,8 @@ export const useEmailSender = () => {
       if (emailError || !emailRecord) {
         throw new Error('Erreur lors de la création de l\'enregistrement email');
       }
+
+      emailRecordId = emailRecord.id;
 
       // Injecter le pixel de tracking et les liens trackés
       const trackedHtml = injectEmailTracking(emailRecord.id, emailData.html);
@@ -92,8 +95,21 @@ export const useEmailSender = () => {
               attachments: emailData.attachments,
             }
           });
+
+          if (resendResult.error) {
+            throw new Error(resendResult.error.message);
+          }
+
+          if (!resendResult.data?.success) {
+            throw new Error(resendResult.data?.error || 'Échec de l\'envoi via Resend');
+          }
+
           result = resendResult.data;
         } else {
+          if (!data?.success) {
+            throw new Error(data?.error || 'Échec de l\'envoi via SMTP');
+          }
+
           result = data;
           provider = 'smtp';
         }
@@ -114,6 +130,11 @@ export const useEmailSender = () => {
         if (error) {
           throw new Error(error.message);
         }
+
+        if (!data?.success) {
+          throw new Error(data?.error || 'Échec de l\'envoi via Resend');
+        }
+
         result = data;
       }
 
@@ -130,6 +151,16 @@ export const useEmailSender = () => {
       return result;
     } catch (error: unknown) {
       logger.error('Error sending email:', error);
+
+      if (emailRecordId) {
+        await supabase
+          .from('emails')
+          .update({
+            status: 'failed'
+          })
+          .eq('id', emailRecordId);
+      }
+
       throw error;
     } finally {
       setSending(false);

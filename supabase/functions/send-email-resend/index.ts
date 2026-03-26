@@ -23,6 +23,18 @@ interface EmailRequest {
   }>;
 }
 
+const toBase64 = (input: Uint8Array): string => {
+  let binary = '';
+  const chunkSize = 0x8000;
+
+  for (let i = 0; i < input.length; i += chunkSize) {
+    const chunk = input.subarray(i, i + chunkSize);
+    binary += String.fromCharCode(...chunk);
+  }
+
+  return btoa(binary);
+};
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -124,25 +136,26 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     // Préparer les pièces jointes si fournies
-    let resendAttachments: Array<{ filename: string; content: Uint8Array | string; contentType?: string }> | undefined;
+    let resendAttachments: Array<{ filename: string; content: string; contentType?: string }> | undefined;
     if (attachments && attachments.length > 0) {
       console.log(`📎 Préparation de ${attachments.length} pièce(s) jointe(s)`);
       resendAttachments = [];
       for (const att of attachments) {
         const filename = att.filename || att.name || 'attachment';
         if (att.content) {
-          // Supporte base64 (data URL) ou contenu brut
-          let content: string | Uint8Array = att.content;
+          let content = att.content;
           if (att.content.startsWith('data:')) {
-            const base64 = att.content.split(',')[1] || '';
-            content = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+            content = att.content.split(',')[1] || '';
           }
           resendAttachments.push({ filename, content, contentType: att.contentType });
         } else if (att.url) {
           const res = await fetch(att.url);
+          if (!res.ok) {
+            throw new Error(`Impossible de récupérer la pièce jointe: ${filename}`);
+          }
           const buf = new Uint8Array(await res.arrayBuffer());
           const contentType = att.contentType || res.headers.get('content-type') || undefined;
-          resendAttachments.push({ filename, content: buf, contentType });
+          resendAttachments.push({ filename, content: toBase64(buf), contentType });
         }
       }
     }
@@ -155,6 +168,21 @@ const handler = async (req: Request): Promise<Response> => {
       html: html,
       attachments: resendAttachments,
     });
+
+    if (emailResponse.error) {
+      console.error('❌ Resend a rejeté l\'email:', emailResponse.error);
+      return new Response(JSON.stringify({
+        success: false,
+        error: emailResponse.error.message,
+        details: emailResponse.error,
+      }), {
+        status: emailResponse.error.statusCode || 400,
+        headers: {
+          'Content-Type': 'application/json',
+          ...corsHeaders,
+        },
+      });
+    }
 
     console.log('✅ Email envoyé avec succès:', emailResponse);
 
