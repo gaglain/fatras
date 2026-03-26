@@ -331,7 +331,7 @@ export const EmailTab: React.FC = () => {
                   <TestTube className="w-4 h-4 mr-2" />
                   {isSyncing ? 'Test...' : 'Tester la connexion'}
                 </Button>
-                <Button onClick={syncEmails} disabled={isSyncing}>
+                <Button onClick={() => syncEmails()} disabled={isSyncing}>
                   <RefreshCw className="w-4 h-4 mr-2" />
                   {isSyncing ? 'Synchronisation...' : 'Synchroniser maintenant'}
                 </Button>
