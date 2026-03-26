@@ -9,7 +9,13 @@ export interface EmailData {
   html: string;
   from?: string;
   replyTo?: string;
-  attachments?: Array<{ name: string; url: string }>; // public URLs in storage
+  attachments?: Array<{
+    name: string;
+    url?: string;
+    content?: string;
+    contentType?: string;
+    filename?: string;
+  }>;
 }
 
 export const useEmailSender = () => {
