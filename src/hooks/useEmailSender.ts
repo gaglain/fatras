@@ -114,6 +114,11 @@ export const useEmailSender = () => {
         if (error) {
           throw new Error(error.message);
         }
+
+        if (!data?.success) {
+          throw new Error(data?.error || 'Échec de l\'envoi via Resend');
+        }
+
         result = data;
       }
 
@@ -130,6 +135,19 @@ export const useEmailSender = () => {
       return result;
     } catch (error: unknown) {
       logger.error('Error sending email:', error);
+
+      if ((error as { message?: string }) && 'message' in (error as object)) {
+        await supabase
+          .from('emails')
+          .update({
+            status: 'failed',
+            provider: 'resend'
+          })
+          .eq('to_email', emailData.to[0])
+          .eq('subject', emailData.subject)
+          .eq('status', 'sending');
+      }
+
       throw error;
     } finally {
       setSending(false);
