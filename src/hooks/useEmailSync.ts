@@ -8,21 +8,24 @@ export const useEmailSync = () => {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
-  const syncEmails = async () => {
+  const syncEmails = async (forceSyncSince?: string) => {
     if (!user) {
       throw new Error('User must be authenticated');
     }
 
     setIsLoading(true);
     try {
-      logger.debug('Starting email sync...');
+      logger.debug('Starting email sync...', forceSyncSince ? `(forced since ${forceSyncSince})` : '');
       
-      const { data, error } = await supabase.functions.invoke('sync-imap-emails', {
-        body: {
-          userId: user.id,
-          action: 'sync'
-        }
-      });
+      const body: Record<string, string> = {
+        userId: user.id,
+        action: 'sync'
+      };
+      if (forceSyncSince) {
+        body.forceSyncSince = forceSyncSince;
+      }
+
+      const { data, error } = await supabase.functions.invoke('sync-imap-emails', { body });
 
       if (error) {
         logger.error('Email sync error:', error);
