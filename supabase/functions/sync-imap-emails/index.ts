@@ -8,6 +8,7 @@ const corsHeaders = {
 interface ImapSyncRequest {
   userId: string;
   action: 'sync' | 'test_connection';
+  forceSyncSince?: string; // ISO date string to force sync from a specific date
 }
 
 const handler = async (req: Request): Promise<Response> => {
