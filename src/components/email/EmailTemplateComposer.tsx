@@ -42,6 +42,14 @@ interface EmailTemplateComposerProps {
   quoteData?: any;
 }
 
+const fileToDataUrl = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error(`Impossible de lire le fichier ${file.name}`));
+    reader.readAsDataURL(file);
+  });
+
 export const EmailTemplateComposer: React.FC<EmailTemplateComposerProps> = ({ 
   defaultRecipient = '', 
   defaultSubject = '',
@@ -171,22 +179,35 @@ export const EmailTemplateComposer: React.FC<EmailTemplateComposerProps> = ({
         </div>
       `;
 
-      // Upload attachments to Supabase Storage if any
+      const resendAttachments: Array<{ name: string; content: string; contentType?: string; filename?: string }> = [];
       const attachmentUrls: Array<{name: string; url: string}> = [];
       if (attachments.length > 0) {
-        for (const file of attachments) {
-          const fileName = `${Date.now()}-${file.name}`;
-          const { data, error } = await supabase.storage
-            .from('email-attachments')
-            .upload(fileName, file);
+        if (selectedAccount) {
+          for (const file of attachments) {
+            const fileName = `${Date.now()}-${file.name}`;
+            const { error } = await supabase.storage
+              .from('email-attachments')
+              .upload(fileName, file);
 
-          if (error) throw error;
+            if (error) throw error;
 
-          const { data: { publicUrl } } = supabase.storage
-            .from('email-attachments')
-            .getPublicUrl(fileName);
+            const { data: { publicUrl } } = supabase.storage
+              .from('email-attachments')
+              .getPublicUrl(fileName);
 
-          attachmentUrls.push({ name: file.name, url: publicUrl });
+            attachmentUrls.push({ name: file.name, url: publicUrl });
+          }
+        } else {
+          const encodedAttachments = await Promise.all(
+            attachments.map(async (file) => ({
+              name: file.name,
+              filename: file.name,
+              content: await fileToDataUrl(file),
+              contentType: file.type || undefined,
+            }))
+          );
+
+          resendAttachments.push(...encodedAttachments);
         }
       }
 
@@ -204,7 +225,7 @@ export const EmailTemplateComposer: React.FC<EmailTemplateComposerProps> = ({
           subject: processedSubject,
           html: htmlContent,
           from: fromName || 'Application',
-          attachments: attachmentUrls,
+          attachments: resendAttachments,
         });
       }
 

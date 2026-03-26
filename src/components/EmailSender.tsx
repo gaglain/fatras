@@ -9,6 +9,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Send, Plus, X, Paperclip } from 'lucide-react';
 
+const fileToDataUrl = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error(`Impossible de lire le fichier ${file.name}`));
+    reader.readAsDataURL(file);
+  });
+
 interface EmailRecipient {
   email: string;
   name?: string;
@@ -50,6 +58,8 @@ export const EmailSender: React.FC = () => {
   };
 
   const handleSend = async () => {
+    let createdEmailId: string | null = null;
+
     // Validate form
     const validRecipients = recipients.filter(r => r.email && r.email.includes('@'));
     if (validRecipients.length === 0) {
@@ -74,25 +84,15 @@ export const EmailSender: React.FC = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
-      // Upload attachments to Supabase Storage if any
       setUploading(true);
-      const attachmentUrls: Array<{name: string; url: string}> = [];
-      if (attachments.length > 0) {
-        for (const file of attachments) {
-          const fileName = `${Date.now()}-${file.name}`;
-          const { data, error } = await supabase.storage
-            .from('email-attachments')
-            .upload(fileName, file);
-
-          if (error) throw error;
-
-          const { data: { publicUrl } } = supabase.storage
-            .from('email-attachments')
-            .getPublicUrl(fileName);
-
-          attachmentUrls.push({ name: file.name, url: publicUrl });
-        }
-      }
+      const attachmentPayload = await Promise.all(
+        attachments.map(async (file) => ({
+          name: file.name,
+          filename: file.name,
+          content: await fileToDataUrl(file),
+          contentType: file.type || undefined,
+        }))
+      );
       setUploading(false);
 
       // Create email record
@@ -111,18 +111,31 @@ export const EmailSender: React.FC = () => {
         .single();
 
       if (emailError) throw emailError;
+      createdEmailId = emailData.id;
 
       // Send via edge function
-      const { error: sendError } = await supabase.functions.invoke('send-email', {
+      const { data: sendResult, error: sendError } = await supabase.functions.invoke('send-email-resend', {
         body: {
           to: validRecipients.map(r => r.email),
           subject,
           html: content,
-          emailId: emailData.id
+          attachments: attachmentPayload,
         }
       });
 
       if (sendError) throw sendError;
+      if (!sendResult?.success) {
+        throw new Error(sendResult?.error || 'Échec de l\'envoi de l\'email');
+      }
+
+      await supabase
+        .from('emails')
+        .update({
+          status: 'sent',
+          sent_at: new Date().toISOString(),
+          provider: 'resend'
+        })
+        .eq('id', emailData.id);
 
       toast.success(`Email envoyé à ${validRecipients.length} destinataire(s)`);
       
@@ -133,6 +146,13 @@ export const EmailSender: React.FC = () => {
       setAttachments([]);
 
     } catch (error: unknown) {
+      if (createdEmailId) {
+        await supabase
+          .from('emails')
+          .update({ status: 'failed', provider: 'resend' })
+          .eq('id', createdEmailId);
+      }
+
       const message = error instanceof Error ? error.message : 'Erreur inconnue';
       toast.error('Erreur lors de l\'envoi: ' + message);
     } finally {
