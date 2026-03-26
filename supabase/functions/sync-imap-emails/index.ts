@@ -18,7 +18,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { userId, action }: ImapSyncRequest = await req.json();
+    const { userId, action, forceSyncSince }: ImapSyncRequest = await req.json();
     
     if (!userId) {
       throw new Error('userId is required');
@@ -339,9 +339,16 @@ const handler = async (req: Request): Promise<Response> => {
         .limit(1)
         .maybeSingle();
 
-      const lastSyncDate = lastEmail?.received_at 
-        ? new Date(lastEmail.received_at) 
-        : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // 30 jours par défaut
+      // If forceSyncSince is provided, use it instead of the last email date
+      let lastSyncDate: Date;
+      if (forceSyncSince) {
+        lastSyncDate = new Date(forceSyncSince);
+        console.log(`🔄 Force sync since: ${forceSyncSince}`);
+      } else {
+        lastSyncDate = lastEmail?.received_at 
+          ? new Date(lastEmail.received_at) 
+          : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // 30 jours par défaut
+      }
 
       // Fonction pour synchroniser un dossier avec SEARCH SINCE
       const syncFolder = async (folderName: string): Promise<{ syncedCount: number; totalMessages: number; emails: any[] }> => {
