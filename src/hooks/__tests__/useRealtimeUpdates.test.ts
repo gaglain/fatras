@@ -1,46 +1,40 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
-import { useRealtimeUpdates } from '../useRealtimeUpdates';
 
-// Mock supabase
-const mockSubscribe = vi.fn().mockReturnValue(undefined);
+const mockSubscribe = vi.fn();
+const mockOn = vi.fn().mockReturnThis();
 const mockRemoveChannel = vi.fn();
-
-const mockChannelBuilder = {
-  on: vi.fn().mockReturnThis(),
-  subscribe: mockSubscribe,
-};
+const mockChannel = vi.fn(() => ({ on: mockOn, subscribe: mockSubscribe }));
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    channel: vi.fn(() => mockChannelBuilder),
+    channel: mockChannel,
     removeChannel: mockRemoveChannel,
   },
 }));
 
+import { useRealtimeUpdates } from '../useRealtimeUpdates';
+
 describe('useRealtimeUpdates', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Re-wire mockReturnThis after clear
+    mockOn.mockReturnThis();
   });
 
   it('creates a channel with deterministic name', () => {
-    const { supabase } = require('@/integrations/supabase/client');
-
     renderHook(() =>
       useRealtimeUpdates([{ table: 'contacts' }, { table: 'events' }])
     );
-
-    // Channel name should be deterministic (sorted tables)
-    expect(supabase.channel).toHaveBeenCalledWith('rt-contacts-events');
+    expect(mockChannel).toHaveBeenCalledWith('rt-contacts-events');
   });
 
   it('subscribes to postgres_changes for each table', () => {
     renderHook(() =>
       useRealtimeUpdates([{ table: 'contacts' }])
     );
-
-    // Should have 3 .on() calls (INSERT, UPDATE, DELETE)
-    expect(mockChannelBuilder.on).toHaveBeenCalledTimes(3);
+    // 3 .on() calls: INSERT, UPDATE, DELETE
+    expect(mockOn).toHaveBeenCalledTimes(3);
     expect(mockSubscribe).toHaveBeenCalled();
   });
 
@@ -48,30 +42,17 @@ describe('useRealtimeUpdates', () => {
     const { unmount } = renderHook(() =>
       useRealtimeUpdates([{ table: 'contacts' }])
     );
-
     unmount();
-
     expect(mockRemoveChannel).toHaveBeenCalled();
   });
 
   it('does not recreate channel if tables unchanged', () => {
-    const { supabase } = require('@/integrations/supabase/client');
-
     const { rerender } = renderHook(
       ({ configs }) => useRealtimeUpdates(configs),
-      {
-        initialProps: {
-          configs: [{ table: 'contacts' }],
-        },
-      }
+      { initialProps: { configs: [{ table: 'contacts' as const }] } }
     );
-
-    const callCount = supabase.channel.mock.calls.length;
-
-    // Rerender with same tables
-    rerender({ configs: [{ table: 'contacts' }] });
-
-    // Should not create a new channel
-    expect(supabase.channel.mock.calls.length).toBe(callCount);
+    const callCount = mockChannel.mock.calls.length;
+    rerender({ configs: [{ table: 'contacts' as const }] });
+    expect(mockChannel.mock.calls.length).toBe(callCount);
   });
 });
