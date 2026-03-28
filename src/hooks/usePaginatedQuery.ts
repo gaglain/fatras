@@ -1,9 +1,12 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/logger';
+import type { Database } from '@/integrations/supabase/types';
+
+type TableName = keyof Database['public']['Tables'];
 
 interface UsePaginatedQueryOptions<T> {
-  table: string;
+  table: TableName;
   pageSize?: number;
   orderBy?: string;
   ascending?: boolean;
