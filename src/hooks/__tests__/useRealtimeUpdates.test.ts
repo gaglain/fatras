@@ -1,10 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
 
-const mockSubscribe = vi.fn();
-const mockOn = vi.fn().mockReturnThis();
-const mockRemoveChannel = vi.fn();
-const mockChannel = vi.fn(() => ({ on: mockOn, subscribe: mockSubscribe }));
+const { mockSubscribe, mockOn, mockRemoveChannel, mockChannel } = vi.hoisted(() => {
+  const mockSubscribe = vi.fn();
+  const mockOn = vi.fn().mockReturnThis();
+  const mockRemoveChannel = vi.fn();
+  const mockChannel = vi.fn(() => ({ on: mockOn, subscribe: mockSubscribe }));
+  return { mockSubscribe, mockOn, mockRemoveChannel, mockChannel };
+});
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
@@ -18,7 +21,6 @@ import { useRealtimeUpdates } from '../useRealtimeUpdates';
 describe('useRealtimeUpdates', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Re-wire mockReturnThis after clear
     mockOn.mockReturnThis();
   });
 
@@ -30,10 +32,7 @@ describe('useRealtimeUpdates', () => {
   });
 
   it('subscribes to postgres_changes for each table', () => {
-    renderHook(() =>
-      useRealtimeUpdates([{ table: 'contacts' }])
-    );
-    // 3 .on() calls: INSERT, UPDATE, DELETE
+    renderHook(() => useRealtimeUpdates([{ table: 'contacts' }]));
     expect(mockOn).toHaveBeenCalledTimes(3);
     expect(mockSubscribe).toHaveBeenCalled();
   });
