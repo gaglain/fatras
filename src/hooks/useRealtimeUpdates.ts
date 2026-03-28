@@ -10,87 +10,62 @@ interface RealtimeConfig {
   onDelete?: (payload: RealtimePostgresChangesPayload<Record<string, unknown>>) => void;
 }
 
+/**
+ * Stable realtime subscription hook.
+ * Uses deterministic channel names (no Date.now/Math.random) to prevent connection leaks.
+ * Only re-subscribes when the set of watched tables actually changes.
+ */
 export const useRealtimeUpdates = (configs: RealtimeConfig[]) => {
-  const channelsRef = useRef<Map<string, ReturnType<typeof supabase.channel>>>(new Map());
-  const configsStringRef = useRef<string>('');
+  // Store latest callbacks in a ref so channels don't need to re-subscribe
+  const configsRef = useRef<RealtimeConfig[]>(configs);
+  configsRef.current = configs;
+
+  // Stable key based on table names
+  const tablesKey = configs.map(c => c.table).sort().join(',');
 
   useEffect(() => {
-    // Créer une clé stable basée sur les tables surveillées
-    const configsString = configs.map(c => c.table).sort().join(',');
-    
-    // Ne rien faire si la configuration n'a pas changé
-    if (configsString === configsStringRef.current && channelsRef.current.size > 0) {
-      return;
-    }
-    
-    configsStringRef.current = configsString;
+    if (!tablesKey) return;
 
-    // Nettoyer les anciens canaux de manière asynchrone
-    const cleanup = async () => {
-      const oldChannels = Array.from(channelsRef.current.values());
-      channelsRef.current.clear();
-      
-      for (const channel of oldChannels) {
-        try {
-          await supabase.removeChannel(channel);
-        } catch (error: unknown) {
-          logger.warn('Erreur lors de la suppression du canal:', error);
-        }
-      }
-    };
+    const channelName = `rt-${tablesKey.replace(/,/g, '-')}`;
 
-    cleanup().then(() => {
-      // Créer de nouveaux canaux après nettoyage
-      configs.forEach((config, index) => {
-        const channelName = `realtime-${config.table}-${Date.now()}-${index}-${Math.random().toString(36).slice(2)}`;
-        
-        try {
-          const channel = supabase
-            .channel(channelName)
-            .on('postgres_changes', {
-              event: 'INSERT',
-              schema: 'public',
-              table: config.table
-            }, (payload) => {
-              config.onInsert?.(payload);
-            })
-            .on('postgres_changes', {
-              event: 'UPDATE',
-              schema: 'public',
-              table: config.table
-            }, (payload) => {
-              config.onUpdate?.(payload);
-            })
-            .on('postgres_changes', {
-              event: 'DELETE',
-              schema: 'public',
-              table: config.table
-            }, (payload) => {
-              config.onDelete?.(payload);
-            })
-            .subscribe();
+    let channel = supabase.channel(channelName);
 
-          channelsRef.current.set(channelName, channel);
-        } catch (error: unknown) {
-          logger.error(`Erreur lors de la création du canal pour ${config.table}:`, error);
-        }
-      });
+    configsRef.current.forEach((config) => {
+      channel = channel
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: config.table,
+        }, (payload) => {
+          const current = configsRef.current.find(c => c.table === config.table);
+          current?.onInsert?.(payload);
+        })
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: config.table,
+        }, (payload) => {
+          const current = configsRef.current.find(c => c.table === config.table);
+          current?.onUpdate?.(payload);
+        })
+        .on('postgres_changes', {
+          event: 'DELETE',
+          schema: 'public',
+          table: config.table,
+        }, (payload) => {
+          const current = configsRef.current.find(c => c.table === config.table);
+          current?.onDelete?.(payload);
+        });
     });
 
-    // Fonction de nettoyage
+    channel.subscribe((status) => {
+      if (status === 'CHANNEL_ERROR') {
+        logger.warn(`Realtime channel error for: ${tablesKey}`);
+      }
+    });
+
     return () => {
-      const channels = Array.from(channelsRef.current.values());
-      channelsRef.current.clear();
-      
-      channels.forEach(channel => {
-        setTimeout(() => {
-          try {
-            supabase.removeChannel(channel);
-          } catch (err: unknown) {
-            logger.warn('Warning during realtime cleanup:', err);
-          }
-        }, 100);
-      });
+      supabase.removeChannel(channel);
     };
-  }, [configs.map(c => c.table).join(',')]);
+  }, [tablesKey]);
 };
