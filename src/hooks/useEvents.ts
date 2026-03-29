@@ -204,7 +204,19 @@ export const useEvents = () => {
       
       return mapDbToEvent(data);
     },
-    onSuccess: () => {
+    // Optimistic update: apply changes immediately in the cache
+    onMutate: async ({ id, updates }) => {
+      await queryClient.cancelQueries({ queryKey: ['events'] });
+      const previous = queryClient.getQueryData<Event[]>(['events']);
+      queryClient.setQueryData<Event[]>(['events'], (old = []) =>
+        old.map(e => e.id === id ? { ...e, ...updates, updated_at: new Date().toISOString() } : e)
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) queryClient.setQueryData(['events'], context.previous);
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['events'] });
     }
   });
@@ -219,7 +231,19 @@ export const useEvents = () => {
       if (error) throw error;
       return id;
     },
-    onSuccess: () => {
+    // Optimistic delete: remove from cache immediately
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['events'] });
+      const previous = queryClient.getQueryData<Event[]>(['events']);
+      queryClient.setQueryData<Event[]>(['events'], (old = []) =>
+        old.filter(e => e.id !== id)
+      );
+      return { previous };
+    },
+    onError: (_err, _id, context) => {
+      if (context?.previous) queryClient.setQueryData(['events'], context.previous);
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['events'] });
     }
   });
