@@ -62,17 +62,30 @@ const mapDbToContact = (data: DbContact): Contact => ({
 
 // Fetch contacts from Supabase
 const fetchContacts = async (): Promise<Contact[]> => {
-  const { data, error } = await supabase
-    .from('contacts')
-    .select('*')
-    .order('created_at', { ascending: false });
+  // Paginated fetch to bypass the 1000-row default limit
+  const PAGE_SIZE = 1000;
+  let allData: DbContact[] = [];
+  let from = 0;
+  let hasMore = true;
 
-  if (error) {
-    logger.error('Error fetching contacts:', error);
-    throw error;
+  while (hasMore) {
+    const { data, error } = await supabase
+      .from('contacts')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .range(from, from + PAGE_SIZE - 1);
+
+    if (error) {
+      logger.error('Error fetching contacts:', error);
+      throw error;
+    }
+
+    allData = [...allData, ...(data || [])];
+    hasMore = (data || []).length === PAGE_SIZE;
+    from += PAGE_SIZE;
   }
 
-  return (data || []).map(mapDbToContact);
+  return allData.map(mapDbToContact);
 };
 
 export const useContacts = () => {
