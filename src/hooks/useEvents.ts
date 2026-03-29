@@ -4,40 +4,26 @@ import { useAuthContext } from '@/contexts/UnifiedAuthContext';
 import { logger } from '@/lib/logger';
 import type { Database } from '@/integrations/supabase/types';
 
-// Fonction standalone pour sync Google Calendar (évite les problèmes de hooks)
+import { invokeEdgeFunction } from '@/lib/edgeFunctionClient';
+
+// Sync event to Google Calendar - non-blocking
 const syncToGoogleCalendar = async (eventId: string) => {
-  try {
-    const { data, error } = await supabase.functions.invoke('sync-google-calendar', {
-      body: {
-        action: 'sync_event',
-        event_id: eventId
-      }
-    });
-    if (error) {
-      logger.warn('Google Calendar sync failed (non-blocking):', error);
-    } else if (data?.success) {
-      logger.info('Event synced to Google Calendar:', eventId);
-    }
-  } catch (err) {
-    // Non-blocking - on log l'erreur mais on ne propage pas
-    logger.warn('Google Calendar sync error (non-blocking):', err);
-  }
+  await invokeEdgeFunction({
+    functionName: 'sync-google-calendar',
+    body: { action: 'sync_event', event_id: eventId },
+    nonBlocking: true,
+    retries: 1,
+  });
 };
 
 // Sync event to Nylas (Google Agenda) - non-blocking
 const syncEventToNylas = async (eventId: string, trigger: string) => {
-  try {
-    const { data, error } = await supabase.functions.invoke('sync-event-to-nylas', {
-      body: { event_id: eventId, trigger, grant_id_override: '1689aa22-c0cc-48b2-ac09-6f221aff790f' }
-    });
-    if (error) {
-      logger.warn('Nylas sync failed (non-blocking):', error);
-    } else if (data?.success) {
-      logger.info(`Nylas sync ${data.action}: event ${eventId}`);
-    }
-  } catch (err) {
-    logger.warn('Nylas sync error (non-blocking):', err);
-  }
+  await invokeEdgeFunction({
+    functionName: 'sync-event-to-nylas',
+    body: { event_id: eventId, trigger, grant_id_override: '1689aa22-c0cc-48b2-ac09-6f221aff790f' },
+    nonBlocking: true,
+    retries: 1,
+  });
 };
 
 type DbEvent = Database['public']['Tables']['events']['Row'];
@@ -95,17 +81,30 @@ const mapDbToEvent = (event: DbEvent): Event => ({
 });
 
 const fetchEvents = async (): Promise<Event[]> => {
-  const { data, error } = await supabase
-    .from('events')
-    .select('*')
-    .order('created_at', { ascending: false });
+  // Paginated fetch to bypass the 1000-row default limit
+  const PAGE_SIZE = 1000;
+  let allData: DbEvent[] = [];
+  let from = 0;
+  let hasMore = true;
 
-  if (error) {
-    logger.error('Error fetching events:', error);
-    throw error;
+  while (hasMore) {
+    const { data, error } = await supabase
+      .from('events')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .range(from, from + PAGE_SIZE - 1);
+
+    if (error) {
+      logger.error('Error fetching events:', error);
+      throw error;
+    }
+
+    allData = [...allData, ...(data || [])];
+    hasMore = (data || []).length === PAGE_SIZE;
+    from += PAGE_SIZE;
   }
 
-  return (data || []).map(mapDbToEvent);
+  return allData.map(mapDbToEvent);
 };
 
 export const useEvents = () => {
