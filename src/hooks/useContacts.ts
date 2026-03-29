@@ -189,7 +189,7 @@ export const useContacts = () => {
     }
   });
 
-  // Update contact mutation
+  // Update contact mutation with optimistic update
   const updateContactMutation = useMutation({
     mutationFn: async ({ id, updates, oldContact }: { id: string; updates: Partial<Contact>; oldContact?: Contact }) => {
       const { data, error } = await supabase
@@ -243,12 +243,23 @@ export const useContacts = () => {
 
       return mapDbToContact(data);
     },
-    onSuccess: () => {
+    onMutate: async ({ id, updates }) => {
+      await queryClient.cancelQueries({ queryKey: ['contacts'] });
+      const previous = queryClient.getQueryData<Contact[]>(['contacts']);
+      queryClient.setQueryData<Contact[]>(['contacts'], (old = []) =>
+        old.map(c => c.id === id ? { ...c, ...updates, updated_at: new Date().toISOString() } : c)
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) queryClient.setQueryData(['contacts'], context.previous);
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['contacts'] });
     }
   });
 
-  // Delete contact mutation
+  // Delete contact mutation with optimistic delete
   const deleteContactMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
@@ -259,7 +270,18 @@ export const useContacts = () => {
       if (error) throw error;
       return id;
     },
-    onSuccess: () => {
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['contacts'] });
+      const previous = queryClient.getQueryData<Contact[]>(['contacts']);
+      queryClient.setQueryData<Contact[]>(['contacts'], (old = []) =>
+        old.filter(c => c.id !== id)
+      );
+      return { previous };
+    },
+    onError: (_err, _id, context) => {
+      if (context?.previous) queryClient.setQueryData(['contacts'], context.previous);
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['contacts'] });
     }
   });
