@@ -93,10 +93,7 @@ export const SmtpTab = () => {
       });
 
       if (!result.success || !result.data?.success) throw new Error(result.error || result.data?.error || 'Échec du test');
-        toast.success('Email de test envoyé avec succès !');
-      } else {
-        throw new Error(data.error || 'Échec du test');
-      }
+      toast.success('Email de test envoyé avec succès !');
     } catch (error: any) {
       toast.error(`Échec du test: ${error.message}`);
     } finally {
