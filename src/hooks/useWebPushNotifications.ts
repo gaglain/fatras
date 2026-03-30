@@ -159,14 +159,17 @@ export const useWebPushNotifications = () => {
 
       // Fetch VAPID public key from Edge Function
       logger.debug('Fetching VAPID public key...');
-      const { data: vapidData, error: vapidError } = await supabase.functions.invoke('get-vapid-key');
+      const { default: { invokeEdgeFunction } } = await import('@/lib/edgeFunctionClient');
+      const vapidResult = await invokeEdgeFunction<{ success: boolean; publicKey?: string; error?: string }>({
+        functionName: 'get-vapid-key',
+      });
 
-      if (vapidError || !vapidData?.success || !vapidData?.publicKey) {
-        logger.error('Failed to fetch VAPID key:', vapidError || vapidData?.error);
+      if (!vapidResult.success || !vapidResult.data?.success || !vapidResult.data?.publicKey) {
+        logger.error('Failed to fetch VAPID key:', vapidResult.error);
         throw new Error('Clé VAPID non configurée. Contactez l\'administrateur.');
       }
 
-      const vapidPublicKey = vapidData.publicKey;
+      const vapidPublicKey = vapidResult.data.publicKey;
       logger.debug('VAPID key received');
 
       const convertedKey = urlBase64ToUint8Array(vapidPublicKey);

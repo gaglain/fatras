@@ -179,11 +179,9 @@ export const EmailProviderConfig: React.FC = () => {
                           providerId === 'resend' ? 'send-email-resend' : 
                           'send-email';
 
-      const { data, error } = await supabase.functions.invoke(functionName, {
-        body: testEmail
-      });
-
-      if (error) throw error;
+      const { invokeEdgeFunction } = await import('@/lib/edgeFunctionClient');
+      const result = await invokeEdgeFunction({ functionName, body: testEmail });
+      if (!result.success) throw new Error(result.error || 'Erreur test');
 
       toast.success(`Email de test envoyé avec succès via ${EMAIL_PROVIDERS.find(p => p.id === providerId)?.name}`);
     } catch (error) {

@@ -277,11 +277,9 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({
       }
 
       // Send campaign via edge function
-      const { error } = await supabase.functions.invoke('send-campaign-emails', {
-        body: { campaignId: finalCampaignId }
-      });
-
-      if (error) throw error;
+      const { invokeEdgeFunction } = await import('@/lib/edgeFunctionClient');
+      const result = await invokeEdgeFunction({ functionName: 'send-campaign-emails', body: { campaignId: finalCampaignId } });
+      if (!result.success) throw new Error(result.error || 'Erreur envoi campagne');
 
       toast.success('Campagne envoyée avec succès !');
       onBack?.();
@@ -315,15 +313,14 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({
 
     setSendingTest(true);
     try {
-      const { data, error } = await supabase.functions.invoke('send-test-email', {
-        body: {
-          blocks: campaignData.content,
-          subject: campaignData.subject,
-          testEmails: emails
-        }
+      const { invokeEdgeFunction } = await import('@/lib/edgeFunctionClient');
+      const result = await invokeEdgeFunction<{ success: boolean; sent?: number; failed?: number }>({
+        functionName: 'send-test-email',
+        body: { blocks: campaignData.content, subject: campaignData.subject, testEmails: emails }
       });
 
-      if (error) throw error;
+      if (!result.success) throw new Error(result.error || 'Erreur test');
+      const data = result.data;
 
       if (data.success) {
         toast.success(`Email de test envoyé à ${data.sent} destinataire(s)`);

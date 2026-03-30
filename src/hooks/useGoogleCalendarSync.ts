@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
+import { invokeEdgeFunction } from '@/lib/edgeFunctionClient';
 
 interface SyncResult {
   success: boolean;
@@ -19,22 +19,17 @@ export const useGoogleCalendarSync = () => {
   ): Promise<SyncResult> => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('sync-google-calendar', {
-        body: {
-          action: 'sync_event',
-          event_id: eventId,
-          attendee_emails: attendeeEmails
-        }
+      const result = await invokeEdgeFunction<SyncResult>({
+        functionName: 'sync-google-calendar',
+        body: { action: 'sync_event', event_id: eventId, attendee_emails: attendeeEmails },
       });
 
-      if (error) throw error;
-
-      if (data.success) {
-        toast.success(data.message || 'Événement synchronisé avec Google Calendar');
-        return data;
-      } else {
-        throw new Error(data.error);
+      if (!result.success || !result.data?.success) {
+        throw new Error(result.error || result.data?.error || 'Erreur inconnue');
       }
+
+      toast.success(result.data.message || 'Événement synchronisé avec Google Calendar');
+      return result.data;
     } catch (error: unknown) {
       logger.error('Erreur sync Google Calendar:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
@@ -48,21 +43,17 @@ export const useGoogleCalendarSync = () => {
   const deleteEventFromCalendar = async (eventId: string): Promise<SyncResult> => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('sync-google-calendar', {
-        body: {
-          action: 'delete_event',
-          event_id: eventId
-        }
+      const result = await invokeEdgeFunction<SyncResult>({
+        functionName: 'sync-google-calendar',
+        body: { action: 'delete_event', event_id: eventId },
       });
 
-      if (error) throw error;
-
-      if (data.success) {
-        toast.success('Événement supprimé de Google Calendar');
-        return data;
-      } else {
-        throw new Error(data.error);
+      if (!result.success || !result.data?.success) {
+        throw new Error(result.error || result.data?.error || 'Erreur inconnue');
       }
+
+      toast.success('Événement supprimé de Google Calendar');
+      return result.data;
     } catch (error: unknown) {
       logger.error('Erreur suppression Google Calendar:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
@@ -75,12 +66,12 @@ export const useGoogleCalendarSync = () => {
 
   const listCalendars = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('sync-google-calendar', {
-        body: { action: 'list_calendars' }
+      const result = await invokeEdgeFunction<{ calendars?: unknown[] }>({
+        functionName: 'sync-google-calendar',
+        body: { action: 'list_calendars' },
+        nonBlocking: true,
       });
-
-      if (error) throw error;
-      return data.calendars || [];
+      return result.data?.calendars || [];
     } catch (error) {
       logger.error('Erreur liste calendriers:', error);
       return [];
