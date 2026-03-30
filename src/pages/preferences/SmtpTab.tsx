@@ -80,7 +80,9 @@ export const SmtpTab = () => {
 
     setTesting(true);
     try {
-      const { data, error } = await supabase.functions.invoke('send-email-smtp', {
+      const { invokeEdgeFunction } = await import('@/lib/edgeFunctionClient');
+      const result = await invokeEdgeFunction<{ success: boolean; error?: string }>({
+        functionName: 'send-email-smtp',
         body: {
           to: [config.smtp_from],
           subject: 'Test SMTP Fatras',
@@ -90,13 +92,8 @@ export const SmtpTab = () => {
         }
       });
 
-      if (error) throw error;
-
-      if (data.success) {
-        toast.success('Email de test envoyé avec succès !');
-      } else {
-        throw new Error(data.error || 'Échec du test');
-      }
+      if (!result.success || !result.data?.success) throw new Error(result.error || result.data?.error || 'Échec du test');
+      toast.success('Email de test envoyé avec succès !');
     } catch (error: any) {
       toast.error(`Échec du test: ${error.message}`);
     } finally {

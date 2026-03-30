@@ -154,11 +154,9 @@ export const EmailCampaigns: React.FC = () => {
 
   const handleSendCampaign = async (campaignId: string) => {
     try {
-      const { error } = await supabase.functions.invoke('send-campaign-emails', {
-        body: { campaignId }
-      });
-
-      if (error) throw error;
+      const { invokeEdgeFunction } = await import('@/lib/edgeFunctionClient');
+      const result = await invokeEdgeFunction({ functionName: 'send-campaign-emails', body: { campaignId } });
+      if (!result.success) throw new Error(result.error || 'Erreur envoi');
 
       toast({
         title: "Succès",
