@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
+import { invokeEdgeFunction } from '@/lib/edgeFunctionClient';
 
 export interface EmailMessage {
   to: string[];
@@ -34,7 +35,6 @@ export const useEmailSystem = () => {
   const [sending, setSending] = useState(false);
   const [providers, setProviders] = useState<EmailProvider[]>([]);
 
-  // Obtenir les fournisseurs d'email actifs
   const getActiveProviders = async (): Promise<EmailProvider[]> => {
     if (!user) return [];
 
@@ -51,11 +51,9 @@ export const useEmailSystem = () => {
       if (settings?.some(s => s.setting_key === 'email_ovh_active')) {
         activeProviders.push({ id: 'ovh', name: 'OVH SMTP', isActive: true, priority: 1 });
       }
-      
       if (settings?.some(s => s.setting_key === 'email_resend_active')) {
         activeProviders.push({ id: 'resend', name: 'Resend', isActive: true, priority: 2 });
       }
-      
       if (settings?.some(s => s.setting_key === 'email_gmail_active')) {
         activeProviders.push({ id: 'gmail', name: 'Gmail', isActive: true, priority: 3 });
       }
@@ -67,7 +65,6 @@ export const useEmailSystem = () => {
     }
   };
 
-  // Envoyer un email via le meilleur fournisseur disponible
   const sendEmail = async (
     message: EmailMessage, 
     preferredProvider?: string
@@ -85,7 +82,6 @@ export const useEmailSystem = () => {
         throw new Error('Aucun fournisseur d\'email configuré');
       }
 
-      // Choisir le fournisseur
       let selectedProvider = activeProviders[0];
       if (preferredProvider) {
         const preferred = activeProviders.find(p => p.id === preferredProvider);
@@ -94,59 +90,35 @@ export const useEmailSystem = () => {
 
       logger.debug('Envoi email via:', selectedProvider.name);
 
-      // Préparer les données de l'email
-      const emailData = {
-        ...message,
-        userId: user.id
-      };
+      const emailData = { ...message, userId: user.id };
 
-      // Sélectionner la fonction edge appropriée
       let functionName = 'send-email';
-      if (selectedProvider.id === 'ovh') {
-        functionName = 'send-email-ovh';
-      } else if (selectedProvider.id === 'resend') {
-        functionName = 'send-email-resend';
-      }
+      if (selectedProvider.id === 'ovh') functionName = 'send-email-ovh';
+      else if (selectedProvider.id === 'resend') functionName = 'send-email-resend';
 
-      // Envoyer l'email
-      const { data, error } = await supabase.functions.invoke(functionName, {
-        body: emailData
+      const result = await invokeEdgeFunction<{ success: boolean; id?: string; error?: string }>({
+        functionName,
+        body: emailData,
       });
 
-      if (error) {
-        throw error;
+      if (!result.success || !result.data?.success) {
+        throw new Error(result.error || result.data?.error || 'Erreur lors de l\'envoi');
       }
 
-      if (!data?.success) {
-        throw new Error(data?.error || 'Erreur lors de l\'envoi');
-      }
-
-      // Enregistrer l'email dans la base de données
-      await saveEmailToDatabase(message, selectedProvider.id, data.id);
+      await saveEmailToDatabase(message, selectedProvider.id, result.data.id);
 
       toast.success(`Email envoyé avec succès via ${selectedProvider.name}`);
-      
-      return {
-        success: true,
-        messageId: data.id
-      };
-
+      return { success: true, messageId: result.data.id };
     } catch (error: unknown) {
       logger.error('Erreur lors de l\'envoi:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
-      
       toast.error(`Erreur lors de l'envoi: ${errorMessage}`);
-      
-      return {
-        success: false,
-        error: errorMessage
-      };
+      return { success: false, error: errorMessage };
     } finally {
       setSending(false);
     }
   };
 
-  // Envoyer via un fournisseur spécifique
   const sendViaProvider = async (
     message: EmailMessage,
     providerId: string
@@ -154,7 +126,6 @@ export const useEmailSystem = () => {
     return sendEmail(message, providerId);
   };
 
-  // Sauvegarder l'email dans la base de données
   const saveEmailToDatabase = async (
     message: EmailMessage,
     provider: string,
@@ -170,25 +141,15 @@ export const useEmailSystem = () => {
         content: message.text || '',
         html_content: message.html,
         status: 'sent',
-        metadata: {
-          provider,
-          messageId,
-          fromName: message.fromName,
-          replyTo: message.replyTo
-        }
+        metadata: { provider, messageId, fromName: message.fromName, replyTo: message.replyTo }
       };
 
-      await supabase
-        .from('emails')
-        .insert([emailRecord]);
-
+      await supabase.from('emails').insert([emailRecord]);
     } catch (error: unknown) {
       logger.error('Erreur lors de la sauvegarde:', error);
-      // Ne pas faire échouer l'envoi pour une erreur de sauvegarde
     }
   };
 
-  // Obtenir l'historique des emails
   const getEmailHistory = async (limit = 50) => {
     if (!user) return [];
 
@@ -207,7 +168,6 @@ export const useEmailSystem = () => {
     }
   };
 
-  // Tester la configuration d'un fournisseur
   const testProvider = async (providerId: string): Promise<boolean> => {
     if (!user?.email) return false;
 

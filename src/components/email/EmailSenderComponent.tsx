@@ -4,19 +4,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Mail, Send, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useEmailSender } from '@/hooks/useEmailSender';
-import { supabase } from '@/integrations/supabase/client';
+import { invokeEdgeFunction } from '@/lib/edgeFunctionClient';
 
 export const EmailSenderComponent: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [to, setTo] = useState('');
   const [subject, setSubject] = useState('');
   const [content, setContent] = useState('');
-  const { sendEmail, sending } = useEmailSender();
+  const { sending } = useEmailSender();
 
   const handleSendEmail = async () => {
     if (!to.trim() || !subject.trim() || !content.trim()) {
@@ -25,8 +24,8 @@ export const EmailSenderComponent: React.FC = () => {
     }
 
     try {
-      // Utiliser directement la fonction Supabase send-email avec Resend
-      const { data, error } = await supabase.functions.invoke('send-email', {
+      const result = await invokeEdgeFunction<{ success: boolean; error?: string }>({
+        functionName: 'send-email',
         body: {
           to: [to],
           subject,
@@ -43,13 +42,11 @@ export const EmailSenderComponent: React.FC = () => {
         }
       });
 
-      if (error) {
-        throw error;
+      if (!result.success) {
+        throw new Error(result.error || 'Erreur inconnue');
       }
       
       toast.success('Email envoyé avec succès !');
-      
-      // Reset form
       setTo('');
       setSubject('');
       setContent('');
@@ -96,44 +93,19 @@ export const EmailSenderComponent: React.FC = () => {
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="to">Destinataire(s)</Label>
-                  <Input
-                    id="to"
-                    value={to}
-                    onChange={(e) => setTo(e.target.value)}
-                    placeholder="email@example.com"
-                    type="email"
-                  />
+                  <Input id="to" value={to} onChange={(e) => setTo(e.target.value)} placeholder="email@example.com" type="email" />
                 </div>
-
                 <div>
                   <Label htmlFor="subject">Sujet</Label>
-                  <Input
-                    id="subject"
-                    value={subject}
-                    onChange={(e) => setSubject(e.target.value)}
-                    placeholder="Sujet de l'email"
-                  />
+                  <Input id="subject" value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Sujet de l'email" />
                 </div>
-
                 <div>
                   <Label htmlFor="content">Message</Label>
-                  <Textarea
-                    id="content"
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    placeholder="Votre message..."
-                    rows={8}
-                  />
+                  <Textarea id="content" value={content} onChange={(e) => setContent(e.target.value)} placeholder="Votre message..." rows={8} />
                 </div>
-
                 <div className="flex justify-end space-x-3">
-                  <Button variant="outline" onClick={() => setIsOpen(false)}>
-                    Annuler
-                  </Button>
-                  <Button 
-                    onClick={handleSendEmail}
-                    disabled={sending}
-                  >
+                  <Button variant="outline" onClick={() => setIsOpen(false)}>Annuler</Button>
+                  <Button onClick={handleSendEmail} disabled={sending}>
                     {sending ? 'Envoi...' : 'Envoyer'}
                   </Button>
                 </div>
