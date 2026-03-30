@@ -159,7 +159,7 @@ export const useWebPushNotifications = () => {
 
       // Fetch VAPID public key from Edge Function
       logger.debug('Fetching VAPID public key...');
-      const { default: { invokeEdgeFunction } } = await import('@/lib/edgeFunctionClient');
+      const { invokeEdgeFunction } = await import('@/lib/edgeFunctionClient');
       const vapidResult = await invokeEdgeFunction<{ success: boolean; publicKey?: string; error?: string }>({
         functionName: 'get-vapid-key',
       });
