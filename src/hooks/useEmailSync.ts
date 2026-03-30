@@ -1,45 +1,32 @@
 import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
+import { invokeEdgeFunction } from '@/lib/edgeFunctionClient';
 
 export const useEmailSync = () => {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const syncEmails = async (forceSyncSince?: string) => {
-    if (!user) {
-      throw new Error('User must be authenticated');
-    }
+    if (!user) throw new Error('User must be authenticated');
 
     setIsLoading(true);
     try {
-      logger.debug('Starting email sync...', forceSyncSince ? `(forced since ${forceSyncSince})` : '');
-      
-      const body: Record<string, string> = {
-        userId: user.id,
-        action: 'sync'
-      };
-      if (forceSyncSince) {
-        body.forceSyncSince = forceSyncSince;
+      const body: Record<string, string> = { userId: user.id, action: 'sync' };
+      if (forceSyncSince) body.forceSyncSince = forceSyncSince;
+
+      const result = await invokeEdgeFunction<{ success: boolean; syncedCount?: number; error?: string }>({
+        functionName: 'sync-imap-emails',
+        body,
+      });
+
+      if (!result.success || !result.data?.success) {
+        throw new Error(result.error || result.data?.error || 'Échec de la synchronisation');
       }
 
-      const { data, error } = await supabase.functions.invoke('sync-imap-emails', { body });
-
-      if (error) {
-        logger.error('Email sync error:', error);
-        throw error;
-      }
-
-      logger.debug('Email sync result:', data);
-      
-      if (data.success) {
-        toast.success(`${data.syncedCount} nouveaux emails synchronisés`);
-        return data;
-      } else {
-        throw new Error(data.error || 'Échec de la synchronisation');
-      }
+      toast.success(`${result.data.syncedCount} nouveaux emails synchronisés`);
+      return result.data;
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Erreur inconnue';
       logger.error('Error in email sync:', error);
@@ -51,34 +38,21 @@ export const useEmailSync = () => {
   };
 
   const testImapConnection = async () => {
-    if (!user) {
-      throw new Error('User must be authenticated');
-    }
+    if (!user) throw new Error('User must be authenticated');
 
     setIsLoading(true);
     try {
-      logger.debug('Testing IMAP connection...');
-      
-      const { data, error } = await supabase.functions.invoke('sync-imap-emails', {
-        body: {
-          userId: user.id,
-          action: 'test_connection'
-        }
+      const result = await invokeEdgeFunction<{ success: boolean; error?: string }>({
+        functionName: 'sync-imap-emails',
+        body: { userId: user.id, action: 'test_connection' },
       });
 
-      if (error) {
-        logger.error('IMAP test error:', error);
-        throw error;
+      if (!result.success || !result.data?.success) {
+        throw new Error(result.error || result.data?.error || 'Test de connexion échoué');
       }
 
-      logger.debug('IMAP test result:', data);
-      
-      if (data.success) {
-        toast.success('Connexion IMAP réussie !');
-        return data;
-      } else {
-        throw new Error(data.error || 'Test de connexion échoué');
-      }
+      toast.success('Connexion IMAP réussie !');
+      return result.data;
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Erreur inconnue';
       logger.error('Error in IMAP test:', error);
@@ -89,9 +63,5 @@ export const useEmailSync = () => {
     }
   };
 
-  return {
-    syncEmails,
-    testImapConnection,
-    isLoading
-  };
+  return { syncEmails, testImapConnection, isLoading };
 };
