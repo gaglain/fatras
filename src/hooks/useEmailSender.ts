@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useIndividualEmailTracking } from './useIndividualEmailTracking';
 import { logger } from '@/lib/logger';
+import { invokeEdgeFunction } from '@/lib/edgeFunctionClient';
 
 export interface EmailData {
   to: string[];
