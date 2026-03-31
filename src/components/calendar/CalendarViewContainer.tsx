@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { CalendarView, CalendarEvent, CalendarSource } from './CalendarView';
 import { useCalendarData } from '@/hooks/useCalendarData';
 import { useAppSettings } from '@/hooks/useAppSettings';
@@ -9,7 +9,7 @@ export const CalendarViewContainer: React.FC = () => {
   const { setSetting } = useAppSettings();
   const [calendars, setCalendars] = useState<CalendarSource[]>([]);
 
-  // Rebuild calendar sources when data changes
+  // Rebuild calendar sources when data changes — memoized via allEvents ref
   useEffect(() => {
     setCalendars(buildCalendarSources());
   }, [allEvents]);
