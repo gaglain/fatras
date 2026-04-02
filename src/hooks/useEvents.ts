@@ -159,9 +159,9 @@ export const useEvents = () => {
     },
     onSuccess: (createdEvent) => {
       queryClient.invalidateQueries({ queryKey: ['events'] });
-      // Auto-sync to Nylas if status is option or confirmed
+      // Auto-sync to Nylas if status is option or confirmed — small delay to ensure DB commit
       if (createdEvent.status === 'option' || createdEvent.status === 'confirmé' || createdEvent.status === 'confirmed') {
-        syncEventToNylas(createdEvent.id, 'event_created');
+        setTimeout(() => syncEventToNylas(createdEvent.id, 'event_created'), 1500);
       }
     }
   });
