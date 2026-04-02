@@ -22,7 +22,7 @@ const syncEventToNylas = async (eventId: string, trigger: string) => {
     functionName: 'sync-event-to-nylas',
     body: { event_id: eventId, trigger, grant_id_override: '1689aa22-c0cc-48b2-ac09-6f221aff790f' },
     nonBlocking: true,
-    retries: 1,
+    retries: 2,
   });
 };
 
