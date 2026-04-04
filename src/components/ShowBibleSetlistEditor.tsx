@@ -293,7 +293,7 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
             <Button onClick={async () => {
               if (!selectedSetlist) return;
               const result = await updateSetlist(selectedSetlist.id, { title: newSetlistData.title, description: newSetlistData.description, sacem_program_number: newSetlistData.sacem_program_number || undefined });
-              if (result) { setIsEditSetlistDialogOpen(false); setSelectedSetlist(result); }
+              if (result) { setIsEditSetlistDialogOpen(false); setSelectedSetlist(prev => prev ? { ...prev, title: newSetlistData.title, description: newSetlistData.description, sacem_program_number: newSetlistData.sacem_program_number || undefined } : prev); }
             }} className="w-full">Enregistrer</Button>
           </div>
         </DialogContent>
