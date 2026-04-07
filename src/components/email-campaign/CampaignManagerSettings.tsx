@@ -18,7 +18,7 @@ interface Template {
 interface ContactList {
   id: string;
   name: string;
-  contactCount: number;
+  contactCount?: number;
 }
 
 interface CampaignData {
