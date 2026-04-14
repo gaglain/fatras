@@ -118,6 +118,22 @@ serve(async (req: Request) => {
         ? JSON.parse(formRow.settings)
         : formRow.settings || {};
 
+    // Build a map of field ID -> label from form fields definition
+    const rawFields = typeof formRow.fields === "string"
+      ? JSON.parse(formRow.fields)
+      : formRow.fields || [];
+    const fieldLabels: Record<string, string> = {};
+    if (Array.isArray(rawFields)) {
+      for (const f of rawFields) {
+        if (f.id && f.label) {
+          fieldLabels[f.id] = f.label;
+        }
+      }
+    }
+
+    // Helper to get human-readable key
+    const getFieldLabel = (key: string) => fieldLabels[key] || key;
+
     const sendNotification = settings.sendNotification !== false;
     const notificationEmail: string | undefined = settings.notificationEmail;
     const addToContacts = settings.addToContacts !== false; // default true
