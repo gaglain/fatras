@@ -125,6 +125,27 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) =>
           />
         );
 
+      case 'time':
+        return (
+          <Input
+            type="time"
+            value={formData[field.id] || ''}
+            onChange={(e) => updateFieldValue(field.id, e.target.value)}
+            required={field.required}
+          />
+        );
+
+      case 'url':
+        return (
+          <Input
+            type="url"
+            value={formData[field.id] || ''}
+            onChange={(e) => updateFieldValue(field.id, e.target.value)}
+            placeholder={field.placeholder}
+            required={field.required}
+          />
+        );
+
       case 'textarea':
         return (
           <Textarea
