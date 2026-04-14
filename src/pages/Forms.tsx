@@ -254,6 +254,14 @@ export const Forms: React.FC = () => {
                         <Button
                           variant="ghost"
                           size="sm"
+                          onClick={() => handleDuplicateForm(form)}
+                          title="Dupliquer"
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           onClick={() => handleDeleteForm(form.id)}
                           className="text-destructive hover:text-destructive"
                           title="Supprimer"
