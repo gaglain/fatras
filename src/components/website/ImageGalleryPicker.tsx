@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Image as ImageIcon, Search, Loader2, Check, FileText, Music, Video, File, FileSpreadsheet } from 'lucide-react';
 import { useShowBible } from '@/hooks/useShowBible';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ImageGalleryPickerProps {
   onSelect: (url: string, type?: 'image' | 'pdf' | 'audio' | 'video' | 'text' | 'other') => void;
@@ -105,11 +106,32 @@ export const ImageGalleryPicker: React.FC<ImageGalleryPickerProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedArtist, setSelectedArtist] = useState<string>('all');
+  const [artistNames, setArtistNames] = useState<Record<string, string>>({});
 
-  const allArtists = useMemo(
-    () => Array.from(new Set(documents.flatMap((doc) => doc.artists || []))),
+  const allArtistIds = useMemo(
+    () => Array.from(new Set(documents.flatMap((doc) => doc.artists || []).filter(Boolean))),
     [documents]
   );
+
+  // Fetch artist names for IDs
+  useEffect(() => {
+    if (allArtistIds.length === 0) return;
+    const idsToFetch = allArtistIds.filter(id => !artistNames[id]);
+    if (idsToFetch.length === 0) return;
+    supabase
+      .from('centralized_artists')
+      .select('id, name')
+      .in('id', idsToFetch)
+      .then(({ data }) => {
+        if (data) {
+          setArtistNames(prev => {
+            const next = { ...prev };
+            data.forEach(a => { next[a.id] = a.name; });
+            return next;
+          });
+        }
+      });
+  }, [allArtistIds]);
 
   const filteredDocuments = useMemo(
     () =>
@@ -161,9 +183,9 @@ export const ImageGalleryPicker: React.FC<ImageGalleryPickerProps> = ({
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               <option value="all">Tous les spectacles</option>
-              {allArtists.map((artist) => (
-                <option key={artist} value={artist}>
-                  {artist}
+              {allArtistIds.map((artistId) => (
+                <option key={artistId} value={artistId}>
+                  {artistNames[artistId] || artistId}
                 </option>
               ))}
             </select>
