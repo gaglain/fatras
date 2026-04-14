@@ -213,7 +213,7 @@ serve(async (req: Request) => {
     const taskDescription =
       "Détails de la soumission:\n" +
       Object.entries(data)
-        .map(([k, v]) => `${k}: ${String(v)}`)
+        .map(([k, v]) => `${getFieldLabel(k)}: ${String(v)}`)
         .join("\n");
 
     const { error: taskError } = await supabase.from("tasks").insert({
@@ -247,7 +247,7 @@ serve(async (req: Request) => {
                   .map(
                     ([k, v]) => `
                   <tr>
-                    <td style="border: 1px solid #E5E7EB; padding: 8px; font-weight: 600; background: #F9FAFB;">${k}</td>
+                    <td style="border: 1px solid #E5E7EB; padding: 8px; font-weight: 600; background: #F9FAFB;">${getFieldLabel(k)}</td>
                     <td style="border: 1px solid #E5E7EB; padding: 8px;">${String(v)}</td>
                   </tr>`
                   )
