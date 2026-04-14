@@ -4,6 +4,8 @@ import { toast } from 'sonner';
 import { useNylasEmail } from './useNylasEmail';
 import { useEmailSender } from './useEmailSender';
 import { logger } from '@/lib/logger';
+import { createUserAuth, upsertUserProfile, updateProfileFields, deleteUserCompletely } from './useUserManagementOperations';
+
 export interface ExtendedUserProfile {
   id: string;
   user_id: string | null;
@@ -44,414 +46,78 @@ export const useUserManagement = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        logger.error('Erreur lors du chargement des utilisateurs:', error);
-        toast.error('Erreur lors du chargement des utilisateurs');
-        return;
-      }
-
+      const { data, error } = await supabase.from('user_profiles').select('*').order('created_at', { ascending: false });
+      if (error) { logger.error('Erreur chargement utilisateurs:', error); toast.error('Erreur chargement utilisateurs'); return; }
       setUsers((data || []) as ExtendedUserProfile[]);
-    } catch (error) {
-      logger.error('Erreur:', error);
-      toast.error('Erreur lors du chargement des utilisateurs');
-    } finally {
-      setLoading(false);
-    }
+    } catch (error) { logger.error('Erreur:', error); toast.error('Erreur chargement utilisateurs'); } finally { setLoading(false); }
   };
 
-  const createUser = async (userData: {
-    email: string;
-    password: string;
-    first_name: string;
-    last_name: string;
-    username?: string;
-    phone?: string;
-    role?: string;
-    address?: string;
-    city?: string;
-    function_title?: string;
-    show_name?: string;
-    birth_date?: string;
-    birth_place?: string;
-    social_security_number?: string;
-    guso_id?: string;
-    nationality?: string;
-    entertainment_leave_number?: string;
-    tax_reduction?: boolean;
-    bank_details?: any;
-    contracts_fees?: any[];
-    availability?: any;
-    skills?: string[];
-    identity_documents?: any[];
-  }): Promise<{ success: boolean; authCreated: boolean; profileCreated: boolean; emailSent: boolean; errors: string[] }> => {
-    const result = {
-      success: false,
-      authCreated: false,
-      profileCreated: false,
-      emailSent: false,
-      errors: [] as string[]
-    };
-
+  const createUser = async (userData: any): Promise<{ success: boolean; authCreated: boolean; profileCreated: boolean; emailSent: boolean; errors: string[] }> => {
+    const result = { success: false, authCreated: false, profileCreated: false, emailSent: false, errors: [] as string[] };
     try {
       setLoading(true);
-      logger.debug('Création utilisateur:', { email: userData.email, role: userData.role });
 
-      // ÉTAPE 1: Créer le compte Auth via Edge Function d'abord
-      logger.debug('Étape 1: Création du compte Auth...');
+      // Step 1: Auth
       let authUserId: string | undefined;
-      
-      try {
-        const { data: createData, error: createError } = await supabase.functions.invoke('admin-create-user', {
-          body: {
-            action: 'create',
-            email: userData.email,
-            password: userData.password,
-            metadata: {
-              first_name: userData.first_name,
-              last_name: userData.last_name,
-              username: userData.username || userData.email.split('@')[0],
-              role: userData.role || 'utilisateur'
-            }
-          }
-        });
+      try { authUserId = await createUserAuth(userData); result.authCreated = true; }
+      catch (e: any) { result.errors.push(`Auth: ${e.message}`); }
 
-        logger.debug('Réponse admin-create-user:', createData);
+      // Step 2: Profile
+      try { await upsertUserProfile(authUserId, userData); result.profileCreated = true; }
+      catch (e: any) { result.errors.push(`Profil: ${e.message}`); }
 
-        if (createError) {
-          logger.error('Erreur Edge Function:', createError);
-          result.errors.push(`Erreur création auth: ${createError.message}`);
-        } else if (!createData?.success) {
-          logger.error('Échec création auth:', createData?.error);
-          result.errors.push(`Échec création auth: ${createData?.error || 'erreur inconnue'}`);
-        } else {
-          authUserId = createData?.user?.id;
-          result.authCreated = true;
-          logger.debug('Compte Auth créé:', authUserId);
-        }
-      } catch (authError: unknown) {
-        const msg = authError instanceof Error ? authError.message : 'erreur inconnue';
-        logger.error('Exception création auth:', authError);
-        result.errors.push(`Exception auth: ${msg}`);
-      }
-
-      // ÉTAPE 2: Créer ou mettre à jour le profil
-      logger.debug('Étape 2: Création/mise à jour du profil...');
-      
-      try {
-        // Vérifier si un profil existe déjà pour cet email
-        const { data: existingProfile } = await supabase
-          .from('user_profiles')
-          .select('id, user_id')
-          .eq('email', userData.email)
-          .maybeSingle();
-
-        if (existingProfile) {
-          // Mettre à jour le profil existant
-          const { error: updateError } = await supabase
-            .from('user_profiles')
-            .update({
-              user_id: authUserId || existingProfile.user_id,
-              first_name: userData.first_name,
-              last_name: userData.last_name,
-              username: userData.username || userData.email.split('@')[0],
-              phone: userData.phone,
-              role: userData.role || 'utilisateur',
-              address: userData.address,
-              city: userData.city,
-              function_title: userData.function_title,
-              show_name: userData.show_name,
-              is_active: true,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', existingProfile.id);
-
-          if (updateError) {
-            logger.error('Erreur mise à jour profil:', updateError);
-            result.errors.push(`Erreur mise à jour profil: ${updateError.message}`);
-          } else {
-            result.profileCreated = true;
-            logger.debug('Profil mis à jour');
-          }
-        } else {
-          // Créer un nouveau profil
-          const { error: insertError } = await supabase
-            .from('user_profiles')
-            .insert({
-              user_id: authUserId,
-              email: userData.email,
-              first_name: userData.first_name,
-              last_name: userData.last_name,
-              username: userData.username || userData.email.split('@')[0],
-              phone: userData.phone,
-              role: userData.role || 'utilisateur',
-              address: userData.address,
-              city: userData.city,
-              function_title: userData.function_title,
-              show_name: userData.show_name,
-              is_active: true
-            });
-
-          if (insertError) {
-            logger.error('Erreur création profil:', insertError);
-            result.errors.push(`Erreur création profil: ${insertError.message}`);
-          } else {
-            result.profileCreated = true;
-            logger.debug('Profil créé');
-          }
-        }
-      } catch (profileError: unknown) {
-        const msg = profileError instanceof Error ? profileError.message : 'erreur inconnue';
-        logger.error('Exception profil:', profileError);
-        result.errors.push(`Exception profil: ${msg}`);
-      }
-
-      // ÉTAPE 3: Envoyer l'email de bienvenue (seulement si auth créé)
+      // Step 3: Welcome email
       if (result.authCreated) {
-        logger.debug('Étape 3: Envoi email de bienvenue...');
-        
         try {
           let emailSent = false;
-          
           if (accounts.length > 0) {
             try {
-              const activeAccount = accounts.find(acc => acc.is_active) || accounts[0];
-              
+              const activeAccount = accounts.find(a => a.is_active) || accounts[0];
               await sendEmailViaNylas(activeAccount.id, {
-                to: userData.email,
-                subject: 'Bienvenue - Votre accès a été créé',
-                content: `Bonjour ${userData.first_name} ${userData.last_name},\n\nVotre compte a été créé.\n\nIdentifiants:\n- Email: ${userData.email}\n- Mot de passe: ${userData.password}\n\nCordialement`,
-                html: `<h2>Bienvenue ${userData.first_name} ${userData.last_name}!</h2><p>Votre compte a été créé.</p><p><strong>Email:</strong> ${userData.email}<br><strong>Mot de passe:</strong> <code>${userData.password}</code></p>`
+                to: userData.email, subject: 'Bienvenue - Votre accès a été créé',
+                content: `Bonjour ${userData.first_name},\nCompte créé.\nEmail: ${userData.email}\nMot de passe: ${userData.password}`,
+                html: `<h2>Bienvenue ${userData.first_name}!</h2><p>Email: ${userData.email}<br>Mot de passe: <code>${userData.password}</code></p>`
               });
               emailSent = true;
-              logger.debug('Email envoyé via Nylas');
-            } catch (nylasError) {
-              logger.warn('Échec Nylas, tentative Resend...');
-            }
+            } catch { logger.warn('Nylas failed, trying Resend...'); }
           }
-          
-          if (!emailSent) {
-            await sendUserWelcomeEmail(userData.email, `${userData.first_name} ${userData.last_name}`, userData.password);
-            emailSent = true;
-            logger.debug('Email envoyé via Resend');
-          }
-          
+          if (!emailSent) { await sendUserWelcomeEmail(userData.email, `${userData.first_name} ${userData.last_name}`, userData.password); emailSent = true; }
           result.emailSent = emailSent;
-        } catch (emailError: unknown) {
-          const msg = emailError instanceof Error ? emailError.message : 'envoi échoué';
-          logger.error('Erreur envoi email:', emailError);
-          result.errors.push(`Erreur email: ${msg}`);
-        }
-      } else {
-        result.errors.push('Email non envoyé car le compte auth n\'a pas été créé');
+        } catch (e: any) { result.errors.push(`Email: ${e.message}`); }
       }
 
-      // Résultat final
       result.success = result.authCreated && result.profileCreated;
-
-      // Afficher le résumé
-      if (result.success) {
-        if (result.emailSent) {
-          toast.success('✅ Utilisateur créé et email envoyé !');
-        } else {
-          toast.warning('⚠️ Utilisateur créé mais email non envoyé');
-        }
-      } else {
-        const errorSummary = result.errors.join(' | ');
-        if (result.profileCreated && !result.authCreated) {
-          toast.error(`❌ Profil créé mais compte auth échoué: ${errorSummary}`);
-        } else if (result.authCreated && !result.profileCreated) {
-          toast.error(`❌ Auth créé mais profil échoué: ${errorSummary}`);
-        } else {
-          toast.error(`❌ Création échouée: ${errorSummary}`);
-        }
-      }
-
-      logger.debug('Résultat création:', result);
+      if (result.success) { toast.success(result.emailSent ? '✅ Utilisateur créé et email envoyé !' : '⚠️ Utilisateur créé mais email non envoyé'); }
+      else { toast.error(`❌ Création échouée: ${result.errors.join(' | ')}`); }
       await fetchUsers();
       return result;
-
-    } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : 'inconnue';
-      logger.error('Erreur générale:', error);
-      result.errors.push(`Erreur générale: ${msg}`);
-      toast.error('Erreur lors de la création de l\'utilisateur');
-      return result;
-    } finally {
-      setLoading(false);
-    }
+    } catch (e: any) { result.errors.push(e.message); toast.error('Erreur création utilisateur'); return result; } finally { setLoading(false); }
   };
 
-  // Fonction pour réessayer la création auth pour un profil existant sans user_id
   const retryAuthCreation = async (email: string, password: string): Promise<boolean> => {
     try {
       setLoading(true);
-      logger.debug('Réessai création auth pour:', email);
-
-      const { data: createData, error: createError } = await supabase.functions.invoke('admin-create-user', {
-        body: { email, password }
-      });
-
-      if (createError || !createData?.success) {
-        logger.error('Échec réessai:', createError || createData?.error);
-        toast.error(`Échec: ${createError?.message || createData?.error}`);
-        return false;
-      }
-
-      const authUserId = createData?.user?.id;
-      if (authUserId) {
-        await supabase
-          .from('user_profiles')
-          .update({ user_id: authUserId })
-          .eq('email', email);
-        
-        toast.success('✅ Compte auth créé et lié !');
-        await fetchUsers();
-        return true;
-      }
-
+      const { data, error } = await supabase.functions.invoke('admin-create-user', { body: { email, password } });
+      if (error || !data?.success) { toast.error(`Échec: ${error?.message || data?.error}`); return false; }
+      if (data?.user?.id) { await supabase.from('user_profiles').update({ user_id: data.user.id }).eq('email', email); toast.success('✅ Compte auth créé !'); await fetchUsers(); return true; }
       return false;
-    } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : 'inconnue';
-      logger.error('Erreur réessai:', error);
-      toast.error(`Erreur: ${msg}`);
-      return false;
-    } finally {
-      setLoading(false);
-    }
+    } catch (e: any) { toast.error(`Erreur: ${e.message}`); return false; } finally { setLoading(false); }
   };
 
   const updateUserProfile = async (userId: string, userData: Partial<ExtendedUserProfile>) => {
-    try {
-      setLoading(true);
-      
-      // Mise à jour directe de la table user_profiles
-      const { error } = await supabase
-        .from('user_profiles')
-        .update({
-          first_name: userData.first_name,
-          last_name: userData.last_name,
-          username: userData.username,
-          phone: userData.phone,
-          role: userData.role,
-          address: userData.address,
-          city: userData.city,
-          function_title: userData.function_title,
-          show_name: userData.show_name,
-          avatar_url: userData.avatar_url,
-          birth_date: userData.birth_date || null,
-          birth_place: userData.birth_place,
-          social_security_number: userData.social_security_number,
-          guso_id: userData.guso_id,
-          nationality: userData.nationality,
-          entertainment_leave_number: userData.entertainment_leave_number,
-          tax_reduction: userData.tax_reduction,
-          bank_details: userData.bank_details,
-          contracts_fees: userData.contracts_fees,
-          availability: userData.availability,
-          skills: userData.skills,
-          identity_documents: userData.identity_documents,
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', userId);
-
-      if (error) {
-        logger.error('Erreur mise à jour:', error);
-        toast.error('Erreur lors de la mise à jour');
-        return false;
-      }
-
-      toast.success('Profil mis à jour avec succès');
-      await fetchUsers();
-      return true;
-    } catch (error) {
-      logger.error('Erreur:', error);
-      toast.error('Erreur lors de la mise à jour');
-      return false;
-    } finally {
-      setLoading(false);
-    }
+    try { setLoading(true); await updateProfileFields(userId, userData); toast.success('Profil mis à jour'); await fetchUsers(); return true; }
+    catch { toast.error('Erreur mise à jour'); return false; } finally { setLoading(false); }
   };
 
   const deactivateUser = async (userId: string) => {
     try {
       setLoading(true);
-      logger.debug('Suppression utilisateur:', userId);
-
       const target = users.find(u => u.user_id === userId || u.id === userId);
-      const email = target?.email;
-
-      // 1) Supprimer aussi l'utilisateur dans Supabase Auth (si existant)
-      if (email) {
-        const { data: delAuthData, error: delAuthError } = await supabase.functions.invoke('admin-delete-user', {
-          body: { userId, email },
-        });
-
-        if (delAuthError) {
-          logger.error('Erreur suppression Auth:', delAuthError);
-          toast.error(`Erreur suppression Auth: ${delAuthError.message}`);
-          return false;
-        }
-
-        if (delAuthData?.success === false) {
-          logger.error('Échec suppression Auth:', delAuthData?.error);
-          toast.error(`Erreur suppression Auth: ${delAuthData?.error || 'inconnue'}`);
-          return false;
-        }
-
-        if (delAuthData?.deletedAuth) {
-          logger.debug('Utilisateur supprimé dans Auth');
-        } else {
-          logger.debug('Aucun utilisateur Auth trouvé (probablement profil sans compte)');
-        }
-      }
-
-      // 2) Supprimer le profil applicatif (table public.user_profiles)
-      const { data, error } = await supabase.rpc('delete_user_completely', {
-        target_user_id: userId,
-      });
-
-      if (error) {
-        logger.error('Erreur suppression profil:', error);
-        toast.error('Erreur lors de la suppression du profil');
-        return false;
-      }
-
-      if (data && typeof data === 'object' && 'success' in data && !data.success) {
-        logger.error('Erreur suppression profil:', data.error);
-        toast.error(String(data.error || 'Erreur inconnue'));
-        return false;
-      }
-
-      // Mettre à jour immédiatement la liste locale
-      setUsers(prev => prev.filter(user => user.user_id !== userId && user.id !== userId));
-      logger.debug('Utilisateur supprimé avec succès');
-      toast.success('Utilisateur supprimé définitivement');
-      await fetchUsers();
-      return true;
-    } catch (error) {
-      logger.error('Erreur suppression:', error);
-      toast.error('Erreur lors de la suppression');
-      return false;
-    } finally {
-      setLoading(false);
-    }
+      await deleteUserCompletely(userId, target?.email);
+      setUsers(prev => prev.filter(u => u.user_id !== userId && u.id !== userId));
+      toast.success('Utilisateur supprimé'); await fetchUsers(); return true;
+    } catch (e: any) { toast.error(`Erreur suppression: ${e.message}`); return false; } finally { setLoading(false); }
   };
 
-  const deleteUser = deactivateUser; // Alias pour compatibilité
-
-  return {
-    users,
-    loading,
-    fetchUsers,
-    createUser,
-    updateUserProfile,
-    deactivateUser,
-    deleteUser,
-    retryAuthCreation
-  };
+  return { users, loading, fetchUsers, createUser, updateUserProfile, deactivateUser, deleteUser: deactivateUser, retryAuthCreation };
 };
