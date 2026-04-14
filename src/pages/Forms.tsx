@@ -226,10 +226,11 @@ export const Forms: React.FC = () => {
                       )}
                     </CardHeader>
                     <CardContent>
-                      <div className="flex items-center justify-end gap-1">
+                      <div className="flex items-center justify-end gap-0.5 flex-wrap">
                         <Button
                           variant="ghost"
-                          size="sm"
+                          size="icon"
+                          className="h-8 w-8"
                           onClick={() => setPreviewForm(form)}
                           title="Aperçu"
                         >
@@ -237,7 +238,8 @@ export const Forms: React.FC = () => {
                         </Button>
                         <Button
                           variant="ghost"
-                          size="sm"
+                          size="icon"
+                          className="h-8 w-8"
                           onClick={() => setEmbedForm(form)}
                           title="Code d'intégration"
                         >
@@ -245,7 +247,8 @@ export const Forms: React.FC = () => {
                         </Button>
                         <Button
                           variant="ghost"
-                          size="sm"
+                          size="icon"
+                          className="h-8 w-8"
                           onClick={() => handleEditForm(form)}
                           title="Modifier"
                         >
@@ -253,7 +256,8 @@ export const Forms: React.FC = () => {
                         </Button>
                         <Button
                           variant="ghost"
-                          size="sm"
+                          size="icon"
+                          className="h-8 w-8"
                           onClick={() => handleDuplicateForm(form)}
                           title="Dupliquer"
                         >
@@ -261,9 +265,9 @@ export const Forms: React.FC = () => {
                         </Button>
                         <Button
                           variant="ghost"
-                          size="sm"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:text-destructive"
                           onClick={() => handleDeleteForm(form.id)}
-                          className="text-destructive hover:text-destructive"
                           title="Supprimer"
                         >
                           <Trash2 className="h-4 w-4" />
