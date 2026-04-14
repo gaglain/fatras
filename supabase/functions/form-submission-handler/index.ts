@@ -101,7 +101,7 @@ serve(async (req: Request) => {
     // Fetch form meta (owner, settings, name)
     const { data: formRow, error: formError } = await supabase
       .from("forms")
-      .select("id, user_id, name, settings, description")
+      .select("id, user_id, name, settings, description, fields")
       .eq("id", formId)
       .single();
 
