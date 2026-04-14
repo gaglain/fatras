@@ -23,6 +23,7 @@ export const LogisticsForm: React.FC<LogisticsFormProps> = ({ formData, setFormD
               type="time"
               value={formData.meetingPointTime || ''}
               onChange={(e) => setFormData({ ...formData, meetingPointTime: e.target.value })}
+              className="pointer-events-auto"
             />
           </div>
           <div className="sm:col-span-2">
@@ -39,6 +40,7 @@ export const LogisticsForm: React.FC<LogisticsFormProps> = ({ formData, setFormD
               type="time"
               value={formData.departureToShowTime || ''}
               onChange={(e) => setFormData({ ...formData, departureToShowTime: e.target.value })}
+              className="pointer-events-auto"
             />
           </div>
         </div>
@@ -54,6 +56,7 @@ export const LogisticsForm: React.FC<LogisticsFormProps> = ({ formData, setFormD
               type="time"
               value={formData.checkInTime}
               onChange={(e) => setFormData({ ...formData, checkInTime: e.target.value })}
+              className="pointer-events-auto"
             />
           </div>
           <div>
@@ -62,6 +65,7 @@ export const LogisticsForm: React.FC<LogisticsFormProps> = ({ formData, setFormD
               type="time"
               value={formData.soundcheckTime || ''}
               onChange={(e) => setFormData({ ...formData, soundcheckTime: e.target.value })}
+              className="pointer-events-auto"
             />
           </div>
           <div>
@@ -70,6 +74,7 @@ export const LogisticsForm: React.FC<LogisticsFormProps> = ({ formData, setFormD
               type="time"
               value={formData.doorsTime || ''}
               onChange={(e) => setFormData({ ...formData, doorsTime: e.target.value })}
+              className="pointer-events-auto"
             />
           </div>
           <div>
@@ -78,6 +83,7 @@ export const LogisticsForm: React.FC<LogisticsFormProps> = ({ formData, setFormD
               type="time"
               value={formData.showStartTime || ''}
               onChange={(e) => setFormData({ ...formData, showStartTime: e.target.value })}
+              className="pointer-events-auto"
             />
           </div>
           <div>
@@ -86,6 +92,7 @@ export const LogisticsForm: React.FC<LogisticsFormProps> = ({ formData, setFormD
               type="time"
               value={formData.showEndTime || ''}
               onChange={(e) => setFormData({ ...formData, showEndTime: e.target.value })}
+              className="pointer-events-auto"
             />
           </div>
           <div>
@@ -94,6 +101,7 @@ export const LogisticsForm: React.FC<LogisticsFormProps> = ({ formData, setFormD
               type="time"
               value={formData.curfewTime || ''}
               onChange={(e) => setFormData({ ...formData, curfewTime: e.target.value })}
+              className="pointer-events-auto"
             />
           </div>
         </div>
@@ -106,6 +114,7 @@ export const LogisticsForm: React.FC<LogisticsFormProps> = ({ formData, setFormD
             type="time"
             value={formData.departureTime}
             onChange={(e) => setFormData({ ...formData, departureTime: e.target.value })}
+            className="pointer-events-auto"
           />
         </div>
         <div>

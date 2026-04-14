@@ -56,6 +56,7 @@ export const GeneralForm: React.FC<GeneralFormProps> = ({ formData, setFormData 
             type="time"
             value={formData.time}
             onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+            className="pointer-events-auto"
           />
         </div>
       </div>
