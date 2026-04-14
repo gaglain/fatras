@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Edit, Trash2, Eye, Code, FileText, BarChart3 } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, Code, FileText, BarChart3, Copy } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -125,6 +125,28 @@ export const Forms: React.FC = () => {
     }
   };
 
+  const handleDuplicateForm = async (form: FormData) => {
+    if (!user) return;
+
+    try {
+      const dbData = {
+        name: `${form.name} (copie)`,
+        description: form.description,
+        fields: JSON.stringify(form.fields),
+        settings: JSON.stringify(form.settings),
+        user_id: user.id
+      };
+
+      const { error } = await supabase.from('forms').insert(dbData);
+      if (error) throw error;
+
+      toast.success('Formulaire dupliqué avec succès');
+      await fetchForms();
+    } catch {
+      toast.error('Erreur lors de la duplication');
+    }
+  };
+
   const handleEditForm = (form: FormData) => {
     setEditingForm(form);
     setShowBuilder(true);
@@ -228,6 +250,14 @@ export const Forms: React.FC = () => {
                           title="Modifier"
                         >
                           <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDuplicateForm(form)}
+                          title="Dupliquer"
+                        >
+                          <Copy className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
