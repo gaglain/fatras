@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,11 +7,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Plus, Trash2, GitBranch, Palette, Settings2 } from 'lucide-react';
+import { Plus, Trash2, GitBranch, Palette, Settings2, Upload, X, Folder } from 'lucide-react';
 import { FormField, FormData } from './types';
 import { FormThemeEditor } from './FormThemeEditor';
 import { ConditionalLogicEditor } from './ConditionalLogicEditor';
 import { FIELD_WITH_OPTIONS } from './constants';
+import { ImageGalleryPicker } from '@/components/website/ImageGalleryPicker';
+import { useFileUpload } from '@/hooks/useFileUpload';
 
 interface FieldSettingsPanelProps {
   form: FormData;
@@ -177,8 +179,27 @@ export const FieldSettingsPanel: React.FC<FieldSettingsPanelProps> = ({
                 <Input value={form.settings.thankYouPage?.title || ''} onChange={(e) => setForm((prev) => ({ ...prev, settings: { ...prev.settings, thankYouPage: { ...prev.settings.thankYouPage, title: e.target.value } } }))} placeholder="Merci !" />
               </div>
               <div>
-                <Label className="text-xs">Image (URL)</Label>
-                <Input value={form.settings.thankYouPage?.imageUrl || ''} onChange={(e) => setForm((prev) => ({ ...prev, settings: { ...prev.settings, thankYouPage: { ...prev.settings.thankYouPage, imageUrl: e.target.value } } }))} placeholder="https://..." />
+                <Label className="text-xs">Image</Label>
+                {form.settings.thankYouPage?.imageUrl ? (
+                  <div className="relative group w-full h-24 rounded-md overflow-hidden border border-input mb-2">
+                    <img src={form.settings.thankYouPage.imageUrl} alt="Thank you" className="w-full h-full object-contain" />
+                    <button
+                      type="button"
+                      className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => setForm((prev) => ({ ...prev, settings: { ...prev.settings, thankYouPage: { ...prev.settings.thankYouPage, imageUrl: '' } } }))}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ) : null}
+                <div className="flex gap-2">
+                  <ImageGalleryPicker
+                    onSelect={(url) => setForm((prev) => ({ ...prev, settings: { ...prev.settings, thankYouPage: { ...prev.settings.thankYouPage, imageUrl: url } } }))}
+                    selectedUrl={form.settings.thankYouPage?.imageUrl}
+                    buttonText="Bibliothèque"
+                    acceptedTypes={['image']}
+                  />
+                </div>
               </div>
               <div className="flex items-center justify-between">
                 <Label className="text-xs">Confetti 🎉</Label>
