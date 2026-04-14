@@ -101,7 +101,7 @@ serve(async (req: Request) => {
     // Fetch form meta (owner, settings, name)
     const { data: formRow, error: formError } = await supabase
       .from("forms")
-      .select("id, user_id, name, settings, description")
+      .select("id, user_id, name, settings, description, fields")
       .eq("id", formId)
       .single();
 
@@ -117,6 +117,22 @@ serve(async (req: Request) => {
       typeof formRow.settings === "string"
         ? JSON.parse(formRow.settings)
         : formRow.settings || {};
+
+    // Build a map of field ID -> label from form fields definition
+    const rawFields = typeof formRow.fields === "string"
+      ? JSON.parse(formRow.fields)
+      : formRow.fields || [];
+    const fieldLabels: Record<string, string> = {};
+    if (Array.isArray(rawFields)) {
+      for (const f of rawFields) {
+        if (f.id && f.label) {
+          fieldLabels[f.id] = f.label;
+        }
+      }
+    }
+
+    // Helper to get human-readable key
+    const getFieldLabel = (key: string) => fieldLabels[key] || key;
 
     const sendNotification = settings.sendNotification !== false;
     const notificationEmail: string | undefined = settings.notificationEmail;
@@ -197,7 +213,7 @@ serve(async (req: Request) => {
     const taskDescription =
       "Détails de la soumission:\n" +
       Object.entries(data)
-        .map(([k, v]) => `${k}: ${String(v)}`)
+        .map(([k, v]) => `${getFieldLabel(k)}: ${String(v)}`)
         .join("\n");
 
     const { error: taskError } = await supabase.from("tasks").insert({
@@ -231,7 +247,7 @@ serve(async (req: Request) => {
                   .map(
                     ([k, v]) => `
                   <tr>
-                    <td style="border: 1px solid #E5E7EB; padding: 8px; font-weight: 600; background: #F9FAFB;">${k}</td>
+                    <td style="border: 1px solid #E5E7EB; padding: 8px; font-weight: 600; background: #F9FAFB;">${getFieldLabel(k)}</td>
                     <td style="border: 1px solid #E5E7EB; padding: 8px;">${String(v)}</td>
                   </tr>`
                   )
