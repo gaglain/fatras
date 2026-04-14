@@ -128,22 +128,49 @@ export const useShowBible = () => {
 
     try {
       // Fetch from show_bible_documents table
-      const { data, error } = await supabase
-        .from('show_bible_documents')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const [{ data, error }, { data: bgImages }] = await Promise.all([
+        supabase
+          .from('show_bible_documents')
+          .select('*')
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('background_images')
+          .select('url, source_id')
+          .not('source_id', 'is', null)
+      ]);
 
       if (error) {
         logger.error('Erreur lors du chargement des documents:', error);
       }
 
-      const dbDocs = (data || []) as ShowBibleDocument[];
+      // Build a map of URL -> source_id from background_images
+      const urlToArtistMap = new Map<string, string>();
+      (bgImages || []).forEach((img: { url: string; source_id: string | null }) => {
+        if (img.source_id) urlToArtistMap.set(img.url, img.source_id);
+      });
+
+      const dbDocs = (data || []).map((doc: any) => {
+        const d = doc as ShowBibleDocument;
+        // Enrich DB docs with background_images artist association if not already set
+        if ((!d.artists || d.artists.length === 0) && urlToArtistMap.has(d.url)) {
+          d.artists = [urlToArtistMap.get(d.url)!];
+        }
+        return d;
+      });
 
       // Fetch from storage buckets
       const bucketDocs = await fetchBucketFiles();
 
+      // Enrich bucket docs with background_images artist associations
+      for (const bd of bucketDocs) {
+        const artistId = urlToArtistMap.get(bd.url);
+        if (artistId) {
+          bd.artists = [artistId];
+        }
+      }
+
       // Deduplicate: if a bucket file URL matches a DB doc URL, keep the DB version (richer metadata)
-      const dbUrls = new Set(dbDocs.map(d => d.url));
+      const dbUrls = new Set(dbDocs.map((d: ShowBibleDocument) => d.url));
       const uniqueBucketDocs = bucketDocs.filter(bd => !dbUrls.has(bd.url));
 
       setDocuments([...dbDocs, ...uniqueBucketDocs]);
