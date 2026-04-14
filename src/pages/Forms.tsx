@@ -125,6 +125,28 @@ export const Forms: React.FC = () => {
     }
   };
 
+  const handleDuplicateForm = async (form: FormData) => {
+    if (!user) return;
+
+    try {
+      const dbData = {
+        name: `${form.name} (copie)`,
+        description: form.description,
+        fields: JSON.stringify(form.fields),
+        settings: JSON.stringify(form.settings),
+        user_id: user.id
+      };
+
+      const { error } = await supabase.from('forms').insert(dbData);
+      if (error) throw error;
+
+      toast.success('Formulaire dupliqué avec succès');
+      await fetchForms();
+    } catch {
+      toast.error('Erreur lors de la duplication');
+    }
+  };
+
   const handleEditForm = (form: FormData) => {
     setEditingForm(form);
     setShowBuilder(true);
