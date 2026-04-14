@@ -215,16 +215,7 @@ serve(async (req: Request) => {
     // Send notification email if configured
     let emailSent = false;
     if (sendNotification) {
-      let toEmail = notificationEmail?.trim();
-
-      if (!toEmail) {
-        const { data: ownerProfile } = await supabase
-          .from("profiles")
-          .select("email, first_name")
-          .eq("id", formRow.user_id)
-          .single();
-        toEmail = ownerProfile?.email || undefined;
-      }
+      let toEmail = notificationEmail?.trim() || "booking@fatras.net";
 
       if (toEmail && resendApiKey) {
         try {
