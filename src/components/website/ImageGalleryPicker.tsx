@@ -2,11 +2,15 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Image as ImageIcon, Search, Loader2, Check, FileText, Music, Video, File, FileSpreadsheet } from 'lucide-react';
-import { useShowBible } from '@/hooks/useShowBible';
+import { Image as ImageIcon, Search, Loader2, Check, FileText, Music, Video, File, FileSpreadsheet, Filter, Tag, FolderOpen } from 'lucide-react';
+import { useBackgroundImages, BackgroundImage, MEDIA_CATEGORIES } from '@/hooks/useBackgroundImages';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { getDocumentUrl } from '@/utils/documentPermalinks';
 
 interface ImageGalleryPickerProps {
   onSelect: (url: string, type?: 'image' | 'pdf' | 'audio' | 'video' | 'text' | 'other') => void;
@@ -15,86 +19,24 @@ interface ImageGalleryPickerProps {
   acceptedTypes?: ('image' | 'pdf' | 'audio' | 'video' | 'text' | 'other')[];
 }
 
-let pdfWorkerConfigured = false;
-
-async function ensurePdfWorker() {
-  if (pdfWorkerConfigured) return;
-  const pdfjs = await import('pdfjs-dist');
-  // Vite/Esm worker config
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (pdfjs as any).GlobalWorkerOptions.workerSrc = new URL(
-    'pdfjs-dist/build/pdf.worker.mjs',
-    import.meta.url
-  ).toString();
-  pdfWorkerConfigured = true;
+function getFileType(name: string, url: string): 'image' | 'pdf' | 'audio' | 'video' | 'text' | 'other' {
+  const lower = (name || url).toLowerCase();
+  if (lower.match(/\.(jpg|jpeg|png|gif|webp|svg|bmp|ico)$/)) return 'image';
+  if (lower.match(/\.pdf$/)) return 'pdf';
+  if (lower.match(/\.(mp3|wav|ogg|m4a|flac|aac)$/)) return 'audio';
+  if (lower.match(/\.(mp4|mov|avi|webm|mkv)$/)) return 'video';
+  if (lower.match(/\.(txt|md|csv|json|xml)$/)) return 'text';
+  return 'other';
 }
 
-function PdfThumbnail({ url, title }: { url: string; title: string }) {
-  const [status, setStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
-
-  // Render the PDF first page into a canvas (works even when iframe is blocked)
-  return (
-    <div className="w-full h-full">
-      <canvas
-        ref={(canvas) => {
-          if (!canvas) return;
-          if (!url) return;
-          if (status !== 'idle') return;
-
-          (async () => {
-            try {
-              setStatus('loading');
-              await ensurePdfWorker();
-              const pdfjs = await import('pdfjs-dist');
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const loadingTask = (pdfjs as any).getDocument({ url });
-              const pdf = await loadingTask.promise;
-              const page = await pdf.getPage(1);
-
-              // Compute scale to fit width (canvas will be resized to the container by CSS)
-              const viewport = page.getViewport({ scale: 1 });
-              const desiredWidth = 640;
-              const scale = desiredWidth / viewport.width;
-              const scaledViewport = page.getViewport({ scale });
-
-              const dpr = window.devicePixelRatio || 1;
-              canvas.width = Math.floor(scaledViewport.width * dpr);
-              canvas.height = Math.floor(scaledViewport.height * dpr);
-              canvas.style.width = '100%';
-              canvas.style.height = '100%';
-
-              const ctx = canvas.getContext('2d');
-              if (!ctx) throw new Error('Canvas context not available');
-              ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-              await page.render({ canvasContext: ctx, viewport: scaledViewport }).promise;
-              setStatus('ready');
-            } catch {
-              setStatus('error');
-            }
-          })();
-        }}
-        aria-label={`Aperçu PDF: ${title}`}
-        className="w-full h-full object-cover"
-      />
-
-      {status === 'loading' && (
-        <div className="absolute inset-0 grid place-items-center bg-background/60">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
-        </div>
-      )}
-
-      {status === 'error' && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-muted">
-          <div className="p-4 bg-background rounded-full">
-            <FileText className="h-8 w-8 text-muted-foreground" />
-          </div>
-          <p className="text-xs text-muted-foreground line-clamp-1 px-2">{title}</p>
-        </div>
-      )}
-    </div>
-  );
+function getResolvedUrl(img: BackgroundImage): string {
+  if (img.bucket_name && img.file_path) {
+    return getDocumentUrl(img.bucket_name, img.file_path, img.category);
+  }
+  return img.url;
 }
+
+interface Artist { id: string; name: string; }
 
 export const ImageGalleryPicker: React.FC<ImageGalleryPickerProps> = ({
   onSelect,
@@ -102,56 +44,71 @@ export const ImageGalleryPicker: React.FC<ImageGalleryPickerProps> = ({
   buttonText = 'Choisir depuis la bibliothèque',
   acceptedTypes = ['image', 'pdf', 'audio', 'video', 'text', 'other'],
 }) => {
-  const { documents, loading } = useShowBible();
+  const { user } = useAuth();
+  const { images, loading } = useBackgroundImages();
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedArtist, setSelectedArtist] = useState<string>('all');
-  const [artistNames, setArtistNames] = useState<Record<string, string>>({});
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [artistFilter, setArtistFilter] = useState<string>('all');
+  const [tagFilter, setTagFilter] = useState<string>('all');
+  const [artists, setArtists] = useState<Artist[]>([]);
 
-  const allArtistIds = useMemo(
-    () => Array.from(new Set(documents.flatMap((doc) => doc.artists || []).filter(Boolean))),
-    [documents]
-  );
-
-  // Fetch artist names for IDs
+  // Fetch artists for filter
   useEffect(() => {
-    if (allArtistIds.length === 0) return;
-    const idsToFetch = allArtistIds.filter(id => !artistNames[id]);
-    if (idsToFetch.length === 0) return;
+    if (!user || !isOpen) return;
     supabase
       .from('centralized_artists')
       .select('id, name')
-      .in('id', idsToFetch)
+      .eq('user_id', user.id)
+      .order('name')
       .then(({ data }) => {
-        if (data) {
-          setArtistNames(prev => {
-            const next = { ...prev };
-            data.forEach(a => { next[a.id] = a.name; });
-            return next;
-          });
-        }
+        if (data) setArtists(data);
       });
-  }, [allArtistIds]);
+  }, [user, isOpen]);
 
-  const filteredDocuments = useMemo(
-    () =>
-      documents.filter((doc) => {
-        const matchesSearch =
-          doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          doc.description?.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesType = acceptedTypes.includes(doc.type);
-        const matchesArtist =
-          selectedArtist === 'all' || (doc.artists && doc.artists.includes(selectedArtist));
-        return matchesSearch && matchesType && matchesArtist;
-      }),
-    [documents, searchTerm, acceptedTypes, selectedArtist]
+  const allTags = useMemo(() => {
+    const tagSet = new Set<string>();
+    images.forEach(img => (img.tags || []).forEach(t => tagSet.add(t)));
+    return Array.from(tagSet).sort();
+  }, [images]);
+
+  const filteredImages = useMemo(() =>
+    images.filter((img) => {
+      const type = getFileType(img.name, img.url);
+      if (!acceptedTypes.includes(type)) return false;
+      if (searchTerm && !img.name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+      if (categoryFilter !== 'all' && img.category !== categoryFilter) return false;
+      if (artistFilter !== 'all' && img.source_id !== artistFilter) return false;
+      if (tagFilter !== 'all' && !(img.tags || []).includes(tagFilter)) return false;
+      return true;
+    }),
+    [images, searchTerm, acceptedTypes, categoryFilter, artistFilter, tagFilter]
   );
 
-  const handleSelect = (doc: any) => {
-    onSelect(doc.url, doc.type);
+  const handleSelect = (img: BackgroundImage) => {
+    const url = getResolvedUrl(img);
+    const type = getFileType(img.name, img.url);
+    onSelect(url, type);
     setIsOpen(false);
-    toast.success(`${doc.name} sélectionné`);
+    toast.success(`${img.name} sélectionné`);
   };
+
+  const getArtistName = (sourceId?: string) => sourceId ? artists.find(a => a.id === sourceId)?.name : null;
+  const getCategoryLabel = (category: string) => MEDIA_CATEGORIES.find(c => c.value === category)?.label || category;
+  const getCategoryColor = (category: string) => {
+    const colors: Record<string, string> = {
+      general: 'bg-muted text-muted-foreground',
+      notes_de_frais: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+      spectacles: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+      artistes: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+      documents: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+      photos: 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400',
+      logos: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
+    };
+    return colors[category] || colors.general;
+  };
+
+  const hasActiveFilters = categoryFilter !== 'all' || artistFilter !== 'all' || tagFilter !== 'all';
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -163,12 +120,16 @@ export const ImageGalleryPicker: React.FC<ImageGalleryPickerProps> = ({
       </DialogTrigger>
       <DialogContent className="max-w-5xl max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle>Sélectionner depuis la banque de médias</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <FolderOpen className="h-5 w-5" />
+            Banque de Médias
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="relative">
+          {/* Search + Filters - matching MediaBankManager */}
+          <div className="flex flex-wrap gap-3">
+            <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
                 placeholder="Rechercher un fichier..."
@@ -177,147 +138,139 @@ export const ImageGalleryPicker: React.FC<ImageGalleryPickerProps> = ({
                 className="pl-10"
               />
             </div>
-            <select
-              value={selectedArtist}
-              onChange={(e) => setSelectedArtist(e.target.value)}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            >
-              <option value="all">Tous les spectacles</option>
-              {allArtistIds.map((artistId) => (
-                <option key={artistId} value={artistId}>
-                  {artistNames[artistId] || artistId}
-                </option>
-              ))}
-            </select>
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-[160px]"><SelectValue placeholder="Toutes catégories" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toutes catégories</SelectItem>
+                  {MEDIA_CATEGORIES.map(cat => (
+                    <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {artists.length > 0 && (
+              <div className="flex items-center gap-2">
+                <Music className="h-4 w-4 text-muted-foreground" />
+                <Select value={artistFilter} onValueChange={setArtistFilter}>
+                  <SelectTrigger className="w-[160px]"><SelectValue placeholder="Tous les spectacles" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tous les spectacles</SelectItem>
+                    {artists.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            {allTags.length > 0 && (
+              <div className="flex items-center gap-2">
+                <Tag className="h-4 w-4 text-muted-foreground" />
+                <Select value={tagFilter} onValueChange={setTagFilter}>
+                  <SelectTrigger className="w-[140px]"><SelectValue placeholder="Tous les tags" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tous les tags</SelectItem>
+                    {allTags.map(tag => <SelectItem key={tag} value={tag}>{tag}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            {hasActiveFilters && (
+              <Button variant="ghost" size="sm" onClick={() => { setCategoryFilter('all'); setArtistFilter('all'); setTagFilter('all'); }}>
+                Réinitialiser
+              </Button>
+            )}
           </div>
 
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
-          ) : filteredDocuments.length === 0 ? (
+          ) : filteredImages.length === 0 ? (
             <div className="text-center py-12">
+              <ImageIcon className="h-12 w-12 mx-auto mb-4 opacity-50 text-muted-foreground" />
               <p className="text-muted-foreground">Aucun fichier trouvé</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[60vh] overflow-y-auto pr-2">
-              {filteredDocuments.map((doc) => (
-                <Card
-                  key={doc.id}
-                  className={`relative cursor-pointer hover:shadow-lg transition-all group ${
-                    selectedUrl === doc.url ? 'ring-2 ring-primary' : ''
-                  }`}
-                  onClick={() => handleSelect(doc)}
-                >
-                  <div className="p-4 space-y-3">
-                    {doc.type === 'image' ? (
-                      <div className="aspect-video rounded overflow-hidden bg-muted">
-                        <img
-                          src={doc.url}
-                          alt={doc.name}
-                          className="w-full h-full object-cover"
-                          loading="lazy"
-                        />
-                      </div>
-                    ) : doc.type === 'video' ? (
-                      <div className="aspect-video rounded overflow-hidden bg-muted relative">
-                        <video src={doc.url} className="w-full h-full object-cover" preload="metadata" />
-                        <div className="absolute inset-0 flex items-center justify-center bg-foreground/20">
-                          <Video className="h-8 w-8 text-background" />
-                        </div>
-                      </div>
-                    ) : doc.type === 'pdf' ? (
-                      <div className="aspect-video rounded overflow-hidden bg-muted relative">
-                        <div className="absolute inset-0">
-                          <PdfThumbnail url={doc.url} title={doc.name} />
-                        </div>
-                        <div className="absolute bottom-1 right-1 bg-destructive text-destructive-foreground text-[10px] font-bold px-1.5 py-0.5 rounded">
-                          PDF
-                        </div>
-                      </div>
-                    ) : doc.type === 'audio' ? (
-                      <div className="aspect-video rounded bg-muted flex flex-col items-center justify-center gap-2">
-                        <div className="p-4 bg-background rounded-full">
-                          <Music className="h-8 w-8 text-muted-foreground" />
-                        </div>
-                        <p className="text-xs font-medium text-muted-foreground">Audio</p>
-                      </div>
-                    ) : doc.type === 'text' ? (
-                      <div className="aspect-video rounded bg-muted flex flex-col items-center justify-center gap-2">
-                        <div className="p-4 bg-background rounded-full">
-                          <FileText className="h-8 w-8 text-muted-foreground" />
-                        </div>
-                        <p className="text-xs font-medium text-muted-foreground">Document</p>
-                      </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 max-h-[55vh] overflow-y-auto pr-2">
+              {filteredImages.map((img) => {
+                const resolvedUrl = getResolvedUrl(img);
+                const isImage = img.url.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i);
+                const isSelected = selectedUrl === resolvedUrl || selectedUrl === img.url;
+
+                return (
+                  <div
+                    key={img.id}
+                    className={`group relative bg-muted rounded-lg overflow-hidden aspect-square cursor-pointer transition-all hover:ring-2 hover:ring-primary/50 ${
+                      isSelected ? 'ring-2 ring-primary' : ''
+                    }`}
+                    onClick={() => handleSelect(img)}
+                  >
+                    {/* Thumbnail */}
+                    {isImage ? (
+                      <img src={resolvedUrl} alt={img.name} className="w-full h-full object-cover" loading="lazy" />
                     ) : (
-                      // Fichiers autres (docx, xlsx, etc.) - affichage amélioré
-                      <div className="aspect-video rounded bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 flex flex-col items-center justify-center gap-2 relative">
-                        <div className="p-4 bg-background rounded-full shadow-sm">
-                          {doc.name.toLowerCase().endsWith('.docx') || doc.name.toLowerCase().endsWith('.doc') ? (
-                            <FileText className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-                          ) : doc.name.toLowerCase().endsWith('.xlsx') || doc.name.toLowerCase().endsWith('.xls') ? (
-                            <FileSpreadsheet className="h-8 w-8 text-green-600 dark:text-green-400" />
-                          ) : (
-                            <File className="h-8 w-8 text-muted-foreground" />
-                          )}
-                        </div>
-                        <p className="text-xs font-medium text-muted-foreground line-clamp-1 px-2">{doc.name.split('.').pop()?.toUpperCase()}</p>
-                        {(doc.name.toLowerCase().endsWith('.docx') || doc.name.toLowerCase().endsWith('.doc')) && (
-                          <div className="absolute bottom-1 right-1 bg-blue-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
-                            WORD
-                          </div>
+                      <div className="w-full h-full flex flex-col items-center justify-center gap-2">
+                        {img.url.match(/\.(mp3|wav|ogg|m4a)$/i) ? (
+                          <Music className="h-8 w-8 text-muted-foreground" />
+                        ) : img.url.match(/\.(mp4|mov|avi|webm)$/i) ? (
+                          <Video className="h-8 w-8 text-muted-foreground" />
+                        ) : img.url.match(/\.pdf$/i) ? (
+                          <FileText className="h-8 w-8 text-destructive" />
+                        ) : img.url.match(/\.(xlsx?|csv)$/i) ? (
+                          <FileSpreadsheet className="h-8 w-8 text-green-600" />
+                        ) : img.url.match(/\.(docx?|odt)$/i) ? (
+                          <FileText className="h-8 w-8 text-blue-600" />
+                        ) : (
+                          <File className="h-8 w-8 text-muted-foreground" />
                         )}
-                        {(doc.name.toLowerCase().endsWith('.xlsx') || doc.name.toLowerCase().endsWith('.xls')) && (
-                          <div className="absolute bottom-1 right-1 bg-green-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
-                            EXCEL
-                          </div>
-                        )}
+                        <p className="text-[10px] text-muted-foreground px-1 text-center line-clamp-1">
+                          {img.name.split('.').pop()?.toUpperCase()}
+                        </p>
                       </div>
                     )}
 
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium line-clamp-1">{doc.name}</p>
-                      {doc.description && (
-                        <p className="text-xs text-muted-foreground line-clamp-2">{doc.description}</p>
-                      )}
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs text-muted-foreground">{doc.file_size_display}</p>
-                        {doc.artists && doc.artists.length > 0 && (
-                          <p className="text-xs text-primary font-medium truncate max-w-[120px]">
-                            {doc.artists[0]}
-                          </p>
-                        )}
-                      </div>
-                      {doc.tags && doc.tags.length > 0 && (
-                        <div className="flex gap-1 flex-wrap">
-                          {doc.tags.slice(0, 2).map((tag: string, idx: number) => (
-                            <span key={idx} className="text-xs px-2 py-0.5 bg-muted rounded-full">
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      )}
+                    {/* Category badge */}
+                    <div className="absolute top-1 left-1">
+                      <Badge className={`text-[10px] px-1 py-0 ${getCategoryColor(img.category || 'general')}`}>
+                        {getCategoryLabel(img.category || 'general')}
+                      </Badge>
                     </div>
-                  </div>
 
-                  {selectedUrl === doc.url && (
-                    <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1">
-                      <Check className="h-4 w-4" />
+                    {/* Artist badge */}
+                    {img.source_id && (
+                      <div className="absolute top-1 right-1">
+                        <Badge variant="secondary" className="text-[10px] px-1 py-0 max-w-[80px] truncate">
+                          <Music className="h-2.5 w-2.5 mr-0.5 flex-shrink-0" />
+                          {getArtistName(img.source_id) || '...'}
+                        </Badge>
+                      </div>
+                    )}
+
+                    {/* Hover overlay with name */}
+                    <div className="absolute inset-0 bg-foreground/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
+                      <p className="text-background text-xs truncate w-full">{img.name}</p>
                     </div>
-                  )}
-                </Card>
-              ))}
+
+                    {/* Selected indicator */}
+                    {isSelected && (
+                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-primary text-primary-foreground rounded-full p-1.5">
+                        <Check className="h-5 w-5" />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
 
-        <div className="flex justify-end space-x-2 border-t pt-4">
+        <div className="flex justify-between items-center border-t pt-4">
+          <p className="text-sm text-muted-foreground">{filteredImages.length} fichier{filteredImages.length !== 1 ? 's' : ''}</p>
           <Button variant="outline" onClick={() => setIsOpen(false)}>
-            Annuler
+            Fermer
           </Button>
         </div>
       </DialogContent>
     </Dialog>
   );
 };
-
