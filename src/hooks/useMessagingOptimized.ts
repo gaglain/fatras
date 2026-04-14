@@ -6,8 +6,6 @@ import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
 import { QUERY_KEYS, fetchChannelsData, fetchMessagesData, fetchAvailableUsersData } from './useMessagingData';
 
-export type { Channel, ChannelMember, Message } from './useMessagingData';
-
 export interface Channel {
   id: string;
   name: string;
