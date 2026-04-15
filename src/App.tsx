@@ -238,6 +238,9 @@ const App = () => {
                         <Route path="/Admin" element={<Navigate to="/dashboard" replace />} />
                         
                         {/* Pages dynamiques du site web */}
+                        {/* Formulaire public */}
+                        <Route path="/form/:id" element={<PublicForm />} />
+                        
                         <Route path="/:slug" element={<FrontDynamicPage />} />
                         
                         <Route path="*" element={<NotFound />} />
