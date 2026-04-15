@@ -45,16 +45,13 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) =>
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Honeypot check - if filled, it's a bot
     if (honeypot) {
-      // Fake success to not alert the bot
       toast.success(form.settings.successMessage);
       return;
     }
     
     setIsSubmitting(true);
 
-    // Validate required fields
     const missingFields = form.fields
       .filter(field => field.required && !formData[field.id])
       .map(field => field.label);
@@ -66,12 +63,11 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) =>
     }
 
     try {
-      // Call edge function to handle submission, contact creation, and notification
       const { data: response, error } = await supabase.functions.invoke('form-submission-handler', {
         body: {
           formId: form.id,
           data: formData,
-          honeypot: honeypot, // Send honeypot for server-side check too
+          honeypot: honeypot,
         }
       });
 
@@ -96,6 +92,8 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) =>
     }
   };
 
+  const inputClass = "w-full max-w-full box-border";
+
   const renderField = (field: any) => {
     switch (field.type) {
       case 'text':
@@ -104,16 +102,17 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) =>
       case 'number':
         return (
           <Input
-107:             type={field.type}
-108:             value={formData[field.id] || ''}
-109:             onChange={(e) => updateFieldValue(field.id, e.target.value)}
-110:             placeholder={field.placeholder}
-111:             required={field.required}
-112:             min={field.min}
-113:             max={field.max}
-114:             maxLength={field.maxLength}
-115:             className="w-full max-w-full"
-116:           />
+            type={field.type}
+            value={formData[field.id] || ''}
+            onChange={(e) => updateFieldValue(field.id, e.target.value)}
+            placeholder={field.placeholder}
+            required={field.required}
+            min={field.min}
+            max={field.max}
+            maxLength={field.maxLength}
+            className={inputClass}
+          />
+        );
 
       case 'date':
         return (
@@ -122,6 +121,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) =>
             value={formData[field.id] || ''}
             onChange={(e) => updateFieldValue(field.id, e.target.value)}
             required={field.required}
+            className={inputClass}
           />
         );
 
@@ -132,6 +132,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) =>
             value={formData[field.id] || ''}
             onChange={(e) => updateFieldValue(field.id, e.target.value)}
             required={field.required}
+            className={inputClass}
           />
         );
 
@@ -143,6 +144,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) =>
             onChange={(e) => updateFieldValue(field.id, e.target.value)}
             placeholder={field.placeholder}
             required={field.required}
+            className={inputClass}
           />
         );
 
@@ -155,6 +157,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) =>
             required={field.required}
             maxLength={field.maxLength}
             rows={4}
+            className="w-full max-w-full box-border"
           />
         );
 
@@ -164,7 +167,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) =>
             value={formData[field.id] || ''}
             onValueChange={(value) => updateFieldValue(field.id, value)}
           >
-            <SelectTrigger>
+            <SelectTrigger className="w-full max-w-full">
               <SelectValue placeholder={field.placeholder} />
             </SelectTrigger>
             <SelectContent>
@@ -266,15 +269,14 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) =>
   return (
     <FormThemeWrapper theme={theme}>
       <Card className="max-w-2xl mx-auto overflow-hidden" style={theme?.backgroundImage ? { background: 'transparent', border: 'none' } : undefined}>
-        <CardHeader>
-          <CardTitle>{form.name}</CardTitle>
+        <CardHeader className="px-4 sm:px-6">
+          <CardTitle className="text-xl sm:text-2xl">{form.name}</CardTitle>
           {form.description && (
             <p className="text-sm text-muted-foreground">{form.description}</p>
           )}
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-4 sm:px-6">
           <form onSubmit={handleSubmit} className="space-y-6 overflow-hidden">
-            {/* Honeypot field - hidden from humans, visible to bots */}
             <div 
               className="absolute left-[-9999px]" 
               aria-hidden="true"
@@ -291,7 +293,6 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) =>
             </div>
 
             {form.fields.map((field) => {
-              // Evaluate conditional visibility
               const isVisible = evaluateFieldVisibility(field, formData, form.fields);
               if (!isVisible) return null;
 
