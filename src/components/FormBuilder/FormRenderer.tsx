@@ -29,7 +29,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) =>
   // Delegate to stepped renderer if display mode is "stepped"
   if (form.settings.displayMode === 'stepped') {
     return (
-      <div className="max-w-2xl mx-auto p-6">
+      <div className="max-w-2xl mx-auto px-3 sm:px-6 py-4 sm:py-6">
         <FormRendererStepped form={form} onSubmit={onSubmit} />
       </div>
     );
@@ -298,7 +298,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) =>
               return (
                 <div 
                   key={field.id} 
-                  className={`space-y-2 ${field.width === 'half' ? 'w-1/2 inline-block pr-2' : 'w-full'}`}
+                  className={`space-y-2 ${field.width === 'half' ? 'w-full sm:w-1/2 sm:inline-block sm:pr-2' : 'w-full'}`}
                 >
                   {field.type !== 'heading' && field.type !== 'paragraph' && (
                     <Label htmlFor={field.id}>

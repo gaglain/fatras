@@ -62,7 +62,7 @@ const PublicForm: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background py-8 px-4">
+    <div className="min-h-screen bg-background py-4 sm:py-8 px-3 sm:px-4">
       <div className="max-w-2xl mx-auto">
         <FormRenderer form={form} />
       </div>
