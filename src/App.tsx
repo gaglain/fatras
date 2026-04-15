@@ -28,6 +28,7 @@ const PageLoader = () => (
 const Index = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));
 const Install = lazy(() => import("./pages/Install"));
+const PublicForm = lazy(() => import("./pages/PublicForm"));
 const NotFound = lazy(() => import("./pages/NotFound").then(m => ({ default: m.NotFound })));
 
 // Lazy loaded pages - FRONT (public website)
