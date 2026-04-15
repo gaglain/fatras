@@ -104,16 +104,16 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) =>
       case 'number':
         return (
           <Input
-            type={field.type}
-            value={formData[field.id] || ''}
-            onChange={(e) => updateFieldValue(field.id, e.target.value)}
-            placeholder={field.placeholder}
-            required={field.required}
-            min={field.min}
-            max={field.max}
-            maxLength={field.maxLength}
-          />
-        );
+107:             type={field.type}
+108:             value={formData[field.id] || ''}
+109:             onChange={(e) => updateFieldValue(field.id, e.target.value)}
+110:             placeholder={field.placeholder}
+111:             required={field.required}
+112:             min={field.min}
+113:             max={field.max}
+114:             maxLength={field.maxLength}
+115:             className="w-full max-w-full"
+116:           />
 
       case 'date':
         return (
@@ -265,7 +265,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) =>
 
   return (
     <FormThemeWrapper theme={theme}>
-      <Card className="max-w-2xl mx-auto" style={theme?.backgroundImage ? { background: 'transparent', border: 'none' } : undefined}>
+      <Card className="max-w-2xl mx-auto overflow-hidden" style={theme?.backgroundImage ? { background: 'transparent', border: 'none' } : undefined}>
         <CardHeader>
           <CardTitle>{form.name}</CardTitle>
           {form.description && (
@@ -273,7 +273,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) =>
           )}
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6 overflow-hidden">
             {/* Honeypot field - hidden from humans, visible to bots */}
             <div 
               className="absolute left-[-9999px]" 
