@@ -29,48 +29,26 @@ export const FormEmbedCode: React.FC<FormEmbedCodeProps> = ({ form }) => {
   };
 
   const generateEmailCode = () => {
+    const formUrl = `${window.location.origin}/form/${form.id}`;
     return `<!-- Formulaire ${form.name} pour Email -->
-<table cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width: 600px; margin: 0 auto;">
+<table cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width: 600px; margin: 0 auto; font-family: Arial, Helvetica, sans-serif;">
   <tr>
-    <td style="padding: 20px; background-color: #ffffff; border: 1px solid #e5e5e5; border-radius: 8px;">
-      <h2 style="color: #333333; font-family: Arial, sans-serif; margin: 0 0 20px 0;">${form.name}</h2>
-      ${form.description ? `<p style="color: #666666; font-family: Arial, sans-serif; margin: 0 0 20px 0;">${form.description}</p>` : ''}
-      <table cellpadding="0" cellspacing="0" border="0" width="100%">
-        ${form.fields.map(field => {
-          if (field.type === 'text' || field.type === 'email') {
-            return `
+    <td style="padding: 30px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; text-align: center;">
+      <h2 style="color: #1a1a2e; font-size: 22px; margin: 0 0 12px 0;">${form.name}</h2>
+      ${form.description ? `<p style="color: #64748b; font-size: 15px; line-height: 1.5; margin: 0 0 24px 0;">${form.description}</p>` : '<div style="height: 12px;"></div>'}
+      <table cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto;">
         <tr>
-          <td style="padding: 10px 0;">
-            <label style="display: block; color: #333333; font-family: Arial, sans-serif; font-weight: bold; margin-bottom: 5px;">
-              ${field.label}${field.required ? ' *' : ''}
-            </label>
-            <input type="${field.type}" name="${field.id}" placeholder="${field.placeholder || ''}" required="${field.required}" 
-                   style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-family: Arial, sans-serif; box-sizing: border-box;">
-          </td>
-        </tr>`;
-          } else if (field.type === 'textarea') {
-            return `
-        <tr>
-          <td style="padding: 10px 0;">
-            <label style="display: block; color: #333333; font-family: Arial, sans-serif; font-weight: bold; margin-bottom: 5px;">
-              ${field.label}${field.required ? ' *' : ''}
-            </label>
-            <textarea name="${field.id}" placeholder="${field.placeholder || ''}" required="${field.required}" rows="4"
-                      style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-family: Arial, sans-serif; box-sizing: border-box; resize: vertical;"></textarea>
-          </td>
-        </tr>`;
-          }
-          return '';
-        }).join('')}
-        <tr>
-          <td style="padding: 20px 0 0 0;">
-            <a href="${window.location.origin}/form/${form.id}" 
-               style="display: inline-block; background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-family: Arial, sans-serif; font-weight: bold;">
-              ${form.settings.submitButtonText}
+          <td style="border-radius: 6px; background-color: #4f46e5;" align="center">
+            <a href="${formUrl}" target="_blank"
+               style="display: inline-block; padding: 14px 32px; color: #ffffff; font-size: 16px; font-weight: bold; text-decoration: none; border-radius: 6px;">
+              ${form.settings?.submitButtonText || 'Remplir le formulaire'}
             </a>
           </td>
         </tr>
       </table>
+      <p style="color: #94a3b8; font-size: 12px; margin: 20px 0 0 0;">
+        Cliquez sur le bouton pour accéder au formulaire en ligne.
+      </p>
     </td>
   </tr>
 </table>`;
