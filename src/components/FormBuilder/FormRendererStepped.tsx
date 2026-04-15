@@ -107,7 +107,7 @@ export const FormRendererStepped: React.FC<FormRendererSteppedProps> = ({ form, 
 
   return (
     <FormThemeWrapper theme={theme}>
-      <div ref={containerRef} className="min-h-[60vh] flex flex-col">
+      <div ref={containerRef} className="min-h-[50vh] sm:min-h-[60vh] flex flex-col">
         <div className="absolute left-[-9999px]" aria-hidden="true" style={{ position: 'absolute', left: '-9999px' }}>
           <Input type="text" name="website_url" value={honeypot} onChange={(e) => setHoneypot(e.target.value)} tabIndex={-1} autoComplete="off" />
         </div>
@@ -124,8 +124,8 @@ export const FormRendererStepped: React.FC<FormRendererSteppedProps> = ({ form, 
 
         {currentStep === 0 && form.name && (
           <div className="mb-8 animate-fade-in">
-            <h1 className="text-3xl font-bold text-foreground">{form.name}</h1>
-            {form.description && <p className="text-muted-foreground mt-2 text-lg">{form.description}</p>}
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{form.name}</h1>
+            {form.description && <p className="text-muted-foreground mt-2 text-base sm:text-lg">{form.description}</p>}
           </div>
         )}
 
@@ -135,18 +135,18 @@ export const FormRendererStepped: React.FC<FormRendererSteppedProps> = ({ form, 
               <div className="flex items-baseline gap-2 mb-2">
                 <span className="text-primary font-bold text-lg">{currentStep + 1}</span>
                 <ArrowRight className="h-4 w-4 text-primary" />
-                <Label className="text-xl font-semibold text-foreground">
+                <Label className="text-lg sm:text-xl font-semibold text-foreground">
                   {currentField.label}{currentField.required && <span className="text-destructive ml-1">*</span>}
                 </Label>
               </div>
-              {currentField.description && <p className="text-muted-foreground text-sm ml-8">{currentField.description}</p>}
+              {currentField.description && <p className="text-muted-foreground text-sm ml-0 sm:ml-8">{currentField.description}</p>}
             </div>
 
-            <div className="ml-8">
+            <div className="ml-0 sm:ml-8">
               <SteppedFieldRenderer field={currentField} value={formData[currentField.id]} onChange={updateFieldValue} onAutoAdvance={handleAutoAdvance} />
             </div>
 
-            <div className="ml-8 flex items-center gap-3 pt-4">
+            <div className="ml-0 sm:ml-8 flex flex-col sm:flex-row items-start sm:items-center gap-3 pt-4">
               {!['select', 'radio', 'rating'].includes(currentField.type) && (
                 <Button onClick={isLastStep ? handleSubmit : goNext} disabled={!canProceed() || isSubmitting} className="gap-2" style={buttonStyle}>
                   {isSubmitting ? 'Envoi...' : isLastStep ? form.settings.submitButtonText : 'OK'}
@@ -159,7 +159,7 @@ export const FormRendererStepped: React.FC<FormRendererSteppedProps> = ({ form, 
                   {!isSubmitting && <Check className="h-4 w-4" />}
                 </Button>
               )}
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-muted-foreground hidden sm:inline">
                 appuyez sur <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono">Entrée ↵</kbd>
               </span>
             </div>
