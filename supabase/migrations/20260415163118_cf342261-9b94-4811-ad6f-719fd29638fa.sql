@@ -1,0 +1,1 @@
+CREATE POLICY "Public can view forms" ON public.forms FOR SELECT TO anon USING (true);
