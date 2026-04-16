@@ -225,7 +225,7 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <Upload className="h-5 w-5" />
@@ -233,6 +233,7 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
           </DialogTitle>
         </DialogHeader>
 
+        <div className="flex-1 min-h-0 overflow-y-auto">
         {step === 'upload' && (
           <UploadStep
             dragActive={dragActive} onDrag={handleDrag} onDrop={handleDrop}
@@ -261,6 +262,7 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
             onAssign={handleAssignToList} onSkip={() => { resetImporter(); onClose(); }}
           />
         )}
+        </div>
       </DialogContent>
     </Dialog>
   );
