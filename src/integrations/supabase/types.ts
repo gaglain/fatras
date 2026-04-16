@@ -3274,6 +3274,8 @@ export type Database = {
           local_contact: string | null
           local_contact_phone: string | null
           longitude: number | null
+          meal_location: string | null
+          meal_time: string | null
           meeting_point_location: string | null
           meeting_point_time: string | null
           notes: string | null
@@ -3318,6 +3320,8 @@ export type Database = {
           local_contact?: string | null
           local_contact_phone?: string | null
           longitude?: number | null
+          meal_location?: string | null
+          meal_time?: string | null
           meeting_point_location?: string | null
           meeting_point_time?: string | null
           notes?: string | null
@@ -3362,6 +3366,8 @@ export type Database = {
           local_contact?: string | null
           local_contact_phone?: string | null
           longitude?: number | null
+          meal_location?: string | null
+          meal_time?: string | null
           meeting_point_location?: string | null
           meeting_point_time?: string | null
           notes?: string | null

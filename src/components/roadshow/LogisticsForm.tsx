@@ -107,6 +107,31 @@ export const LogisticsForm: React.FC<LogisticsFormProps> = ({ formData, setFormD
         </div>
       </div>
 
+      {/* Repas */}
+      <div>
+        <h3 className="text-sm font-semibold text-foreground mb-3">🍽️ Repas</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Heure du repas</label>
+            <Input
+              type="time"
+              value={formData.mealTime || ''}
+              onChange={(e) => setFormData({ ...formData, mealTime: e.target.value })}
+              className="pointer-events-auto"
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Lieu du repas</label>
+            <Input
+              value={formData.mealLocation || ''}
+              onChange={(e) => setFormData({ ...formData, mealLocation: e.target.value })}
+              placeholder="Ex: Catering sur place, Restaurant à côté..."
+            />
+          </div>
+        </div>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-xs font-medium text-muted-foreground mb-1">Heure de départ</label>

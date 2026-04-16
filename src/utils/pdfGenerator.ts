@@ -173,6 +173,7 @@ export const generateTourStopPDF = (
     { label: 'Debut show', value: tourStop.showStartTime },
     { label: 'Fin show', value: tourStop.showEndTime },
     { label: 'Couvre-feu', value: tourStop.curfewTime },
+    { label: 'Repas', value: tourStop.mealTime ? `${tourStop.mealTime}${tourStop.mealLocation ? ' - ' + tourStop.mealLocation : ''}` : undefined },
     { label: 'Depart', value: tourStop.departureTime },
   ].filter(t => t.value);
 

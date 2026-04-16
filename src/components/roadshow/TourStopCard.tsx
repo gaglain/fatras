@@ -152,10 +152,11 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
           )}
 
           {/* Horaires détaillés */}
-          {(stop.checkInTime || stop.departureTime || stop.soundcheckTime || stop.doorsTime || stop.showStartTime || stop.showEndTime || stop.curfewTime) && (
+          {(stop.checkInTime || stop.departureTime || stop.soundcheckTime || stop.doorsTime || stop.showStartTime || stop.showEndTime || stop.curfewTime || stop.mealTime) && (
             <div className="flex flex-wrap gap-2 sm:gap-3 mb-3 text-xs sm:text-sm text-muted-foreground">
               {stop.checkInTime && <span>🚪 Arrivée: {stop.checkInTime}</span>}
               {stop.soundcheckTime && <span>🎵 Balance: {stop.soundcheckTime}</span>}
+              {stop.mealTime && <span>🍽️ Repas: {stop.mealTime}{stop.mealLocation ? ` (${stop.mealLocation})` : ''}</span>}
               {stop.doorsTime && <span>🚪 Portes: {stop.doorsTime}</span>}
               {stop.showStartTime && <span>🎭 Début: {stop.showStartTime}</span>}
               {stop.showEndTime && <span>🏁 Fin: {stop.showEndTime}</span>}

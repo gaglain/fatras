@@ -237,6 +237,7 @@ export const RoadShow: React.FC = () => {
               localContactPhone: s.local_contact_phone || '', transport: s.transport || '', artistLineup: s.artist_lineup, invitations: s.invitations || '',
               meetingPointTime: s.meeting_point_time, meetingPointLocation: s.meeting_point_location, departureToShowTime: s.departure_to_show_time,
               soundcheckTime: s.soundcheck_time, doorsTime: s.doors_time, showStartTime: s.show_start_time, showEndTime: s.show_end_time, curfewTime: s.curfew_time,
+              mealTime: s.meal_time, mealLocation: s.meal_location,
               vehicleType: s.vehicle_type, distanceKm: s.distance_km,
             })));
             setLoadingArchives(false);
