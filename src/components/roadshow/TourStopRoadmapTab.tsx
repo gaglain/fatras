@@ -116,9 +116,15 @@ export const TourStopRoadmapTab: React.FC<TourStopRoadmapTabProps> = ({
                 {stop.departureToShowTime && <span className="ml-3 text-[10px] sm:text-xs text-muted-foreground">🚗 Départ spectacle: <span className="font-medium">{stop.departureToShowTime}</span></span>}
               </div>
             )}
+            {stop.checkInTime && <div><span className="text-[10px] sm:text-xs text-muted-foreground uppercase">Arrivée: </span><span className="text-xs sm:text-sm font-medium text-foreground">{stop.checkInTime}</span></div>}
+            {stop.soundcheckTime && <div><span className="text-[10px] sm:text-xs text-muted-foreground uppercase">Balance: </span><span className="text-xs sm:text-sm font-medium text-foreground">{stop.soundcheckTime}</span></div>}
+            {stop.doorsTime && <div><span className="text-[10px] sm:text-xs text-muted-foreground uppercase">Portes: </span><span className="text-xs sm:text-sm font-medium text-foreground">{stop.doorsTime}</span></div>}
+            {stop.showStartTime && <div><span className="text-[10px] sm:text-xs text-muted-foreground uppercase">Début show: </span><span className="text-xs sm:text-sm font-medium text-foreground">{stop.showStartTime}</span></div>}
             <div><span className="text-[10px] sm:text-xs text-muted-foreground uppercase">Spectacle: </span><span className="text-xs sm:text-sm font-medium text-foreground">{stop.time || '-'}</span></div>
-            <div><span className="text-[10px] sm:text-xs text-muted-foreground uppercase">Arrivée: </span><span className="text-xs sm:text-sm font-medium text-foreground">{stop.checkInTime || '-'}</span></div>
-            <div><span className="text-[10px] sm:text-xs text-muted-foreground uppercase">Départ: </span><span className="text-xs sm:text-sm font-medium text-foreground">{stop.departureTime || '-'}</span></div>
+            {stop.showEndTime && <div><span className="text-[10px] sm:text-xs text-muted-foreground uppercase">Fin show: </span><span className="text-xs sm:text-sm font-medium text-foreground">{stop.showEndTime}</span></div>}
+            {stop.curfewTime && <div><span className="text-[10px] sm:text-xs text-muted-foreground uppercase">Couvre-feu: </span><span className="text-xs sm:text-sm font-medium text-foreground">{stop.curfewTime}</span></div>}
+            {(stop.mealTime || stop.mealLocation) && <div><span className="text-[10px] sm:text-xs text-muted-foreground uppercase">🍽️ Repas: </span><span className="text-xs sm:text-sm font-medium text-foreground">{stop.mealTime || ''}{stop.mealLocation ? ` — ${stop.mealLocation}` : ''}</span></div>}
+            {stop.departureTime && <div><span className="text-[10px] sm:text-xs text-muted-foreground uppercase">Départ: </span><span className="text-xs sm:text-sm font-medium text-foreground">{stop.departureTime}</span></div>}
           </div>
         </div>
 

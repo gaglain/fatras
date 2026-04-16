@@ -3,7 +3,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TourStop } from '@/types/roadshow.types';
-import { Download, Printer, FileText, Contact, CalendarDays, DollarSign, Music, Route } from 'lucide-react';
+import { Download, FileText, Contact, CalendarDays, DollarSign, Music, Route } from 'lucide-react';
+import { generateTourStopPDF } from '@/utils/pdfGenerator';
 import { useRoadshowExpenses } from '@/hooks/useRoadshowExpenses';
 import { useRoadshowEntityConnections, RoadshowEntityConnection } from '@/hooks/useRoadshowEntityConnections';
 import { Badge } from '@/components/ui/badge';
@@ -37,22 +38,7 @@ export const TourStopPreview: React.FC<TourStopPreviewProps> = ({ stop, isOpen, 
   if (!stop) return null;
 
   const handleDownloadPDF = () => {
-    const content = `FEUILLE DE ROUTE - ${stop.city.toUpperCase()}\n\n📍 ${stop.venue}\n${stop.address}\n📅 ${new Date(stop.date).toLocaleDateString('fr-FR')}\n🕐 ${stop.time}\n\n🎭 CASTING\n${stop.artistLineup.map(a => `• ${getUserById(a.userId)?.name || 'Inconnu'}`).join('\n')}\n\n📊 STATUT: ${stop.status}`;
-    const element = document.createElement('a');
-    element.href = URL.createObjectURL(new Blob([content], { type: 'text/plain;charset=utf-8' }));
-    element.download = `feuille-route-${stop.city}-${stop.date}.txt`;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
-  };
-
-  const handlePrint = () => {
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      printWindow.document.write(`<html><head><title>Feuille de Route - ${stop.city}</title><style>body{font-family:Arial,sans-serif;margin:20px;}.header{text-align:center;border-bottom:2px solid #333;padding-bottom:10px;}</style></head><body><div class="header"><h1>FEUILLE DE ROUTE</h1><h2>${stop.city} - ${stop.venue}</h2></div></body></html>`);
-      printWindow.document.close();
-      printWindow.print();
-    }
+    generateTourStopPDF(stop, getUserById);
   };
 
   return (
@@ -62,11 +48,8 @@ export const TourStopPreview: React.FC<TourStopPreviewProps> = ({ stop, isOpen, 
           <DialogTitle className="flex flex-col gap-3">
             <span className="text-base sm:text-xl font-semibold">Aperçu - {stop.city}</span>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={handlePrint} className="flex-1 sm:flex-none h-9 text-xs sm:text-sm">
-                <Printer className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Imprimer</span>
-              </Button>
               <Button variant="outline" size="sm" onClick={handleDownloadPDF} className="flex-1 sm:flex-none h-9 text-xs sm:text-sm">
-                <Download className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Télécharger</span>
+                <Download className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Télécharger PDF</span>
               </Button>
             </div>
           </DialogTitle>
