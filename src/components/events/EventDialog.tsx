@@ -97,10 +97,17 @@ export const EventDialog: React.FC<EventDialogProps> = ({ open, onOpenChange, ev
         const { error } = await supabase.from('events').update(eventData).eq('id', event.id).select();
         if (error) throw error;
         toast.success('Événement mis à jour');
+        // Auto-sync to Nylas (Google Agenda) when status is option or confirmed
+        if (formData.status === 'option' || formData.status === 'confirmed' || formData.status === 'confirmé') {
+          setTimeout(() => syncEventToNylas(event.id, 'event_updated'), 1500);
+        }
       } else {
-        const { error } = await supabase.from('events').insert([eventData]).select();
+        const { data: created, error } = await supabase.from('events').insert([eventData]).select().single();
         if (error) throw error;
         toast.success('Événement créé');
+        if (created && (formData.status === 'option' || formData.status === 'confirmed' || formData.status === 'confirmé')) {
+          setTimeout(() => syncEventToNylas(created.id, 'event_created'), 1500);
+        }
       }
 
       [formData.description, formData.requirements, formData.notes].filter(Boolean).forEach(text => {
