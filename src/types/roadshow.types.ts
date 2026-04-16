@@ -16,6 +16,8 @@ export interface TourStop {
   showStartTime?: string;
   showEndTime?: string;
   curfewTime?: string;
+  mealTime?: string;
+  mealLocation?: string;
   capacity: number;
   ticketsAvailable: number;
   status: 'confirmed' | 'pending' | 'cancelled';
@@ -57,6 +59,8 @@ export interface FormData {
   showStartTime?: string;
   showEndTime?: string;
   curfewTime?: string;
+  mealTime?: string;
+  mealLocation?: string;
   capacity: string;
   ticketsAvailable: string;
   status: 'confirmed' | 'pending' | 'cancelled';
