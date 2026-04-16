@@ -180,7 +180,7 @@ export const Tasks: React.FC = () => {
         </Tabs>
       )}
 
-      {selectedTask && <TaskEditor task={selectedTask} isOpen={!!selectedTask} onClose={() => setSelectedTask(null)} onTaskUpdated={() => setSelectedTask(null)} />}
+      {selectedTask && <TaskEditor task={selectedTask} isOpen={!!selectedTask} onClose={() => setSelectedTask(null)} onTaskUpdated={() => setSelectedTask(null)} updateTaskFn={updateTask} />}
       <EmailComposer isOpen={emailComposer.isOpen} onClose={() => setEmailComposer({ isOpen: false, to: '', subject: '', preText: '' })} toEmail={emailComposer.to} subject={emailComposer.subject} preText={emailComposer.preText} />
       <TaskBulkEditor isOpen={bulkEditorOpen} onClose={() => setBulkEditorOpen(false)} selectedTasks={tasks.filter(t => selectedTaskIds.includes(t.id))} onBulkUpdate={handleBulkUpdate} />
     </div>
