@@ -10,6 +10,15 @@ import { EventDraftManager, useEventDraft } from './EventDraftManager';
 import { EventFormFields } from './EventFormFields';
 import { logger } from '@/lib/logger';
 import { notifyMentionsIfNeeded } from '@/utils/mentionNotifier';
+import { invokeEdgeFunction } from '@/lib/edgeFunctionClient';
+
+const syncEventToNylas = (eventId: string, trigger: string) => {
+  invokeEdgeFunction({
+    functionName: 'sync-event-to-nylas',
+    body: { event_id: eventId, trigger, grant_id_override: '1689aa22-c0cc-48b2-ac09-6f221aff790f' },
+    nonBlocking: true,
+  });
+};
 
 interface EventDialogProps {
   open: boolean;
