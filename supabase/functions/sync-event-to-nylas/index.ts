@@ -24,6 +24,8 @@ interface RouteSheet {
   meeting_point_time?: string
   meeting_point_location?: string
   departure_to_show_time?: string
+  meal_time?: string
+  meal_location?: string
   departure_address?: string
   local_contact?: string
   local_contact_phone?: string
@@ -69,6 +71,7 @@ function buildRouteSheetDescription(event: any, routeSheet: RouteSheet, quoteAmo
   if (routeSheet.show_start_time) timings.push(`  Début concert : ${routeSheet.show_start_time}`)
   if (routeSheet.show_end_time) timings.push(`  Fin concert : ${routeSheet.show_end_time}`)
   if (routeSheet.curfew_time) timings.push(`  Couvre-feu : ${routeSheet.curfew_time}`)
+  if (routeSheet.meal_time) timings.push(`  🍽️ Repas : ${routeSheet.meal_time}${routeSheet.meal_location ? ' - ' + routeSheet.meal_location : ''}`)
   if (routeSheet.departure_time) timings.push(`  Départ : ${routeSheet.departure_time}`)
 
   if (timings.length > 0) {
