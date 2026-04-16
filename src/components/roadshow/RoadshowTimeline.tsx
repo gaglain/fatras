@@ -118,9 +118,10 @@ export const RoadshowTimeline: React.FC<RoadshowTimelineProps> = ({ stops, getUs
                 </div>
 
                 {/* Detailed schedule row */}
-                {(stop.soundcheckTime || stop.doorsTime || stop.showStartTime) && (
+                {(stop.soundcheckTime || stop.doorsTime || stop.showStartTime || stop.mealTime) && (
                   <div className="flex flex-wrap gap-2 mt-1 text-xs text-muted-foreground pl-5">
                     {stop.soundcheckTime && <span>🎵 {stop.soundcheckTime}</span>}
+                    {stop.mealTime && <span>🍽️ {stop.mealTime}</span>}
                     {stop.doorsTime && <span>🚪 {stop.doorsTime}</span>}
                     {stop.showStartTime && <span>🎭 {stop.showStartTime}</span>}
                     {stop.showEndTime && <span>🏁 {stop.showEndTime}</span>}
