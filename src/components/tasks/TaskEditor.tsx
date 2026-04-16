@@ -21,20 +21,23 @@ interface TaskEditorProps {
   isOpen: boolean;
   onClose: () => void;
   onTaskUpdated?: (task: Task) => void;
+  updateTaskFn?: (id: string, updates: Partial<Task>) => Promise<Task>;
 }
 
 export const TaskEditor: React.FC<TaskEditorProps> = ({ 
   task,
   isOpen,
   onClose,
-  onTaskUpdated
+  onTaskUpdated,
+  updateTaskFn
 }) => {
   const [loading, setLoading] = useState(false);
   const { users, currentUser } = useUser();
   const { contacts } = useContacts();
   const { events } = useEvents();
   const { artists } = useCentralizedData();
-  const { updateTask } = useTasks();
+  const { updateTask: hookUpdateTask } = useTasks();
+  const updateTask = updateTaskFn || hookUpdateTask;
   
   const [formData, setFormData] = useState({
     title: task.title,
