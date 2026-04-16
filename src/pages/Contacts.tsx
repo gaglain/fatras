@@ -211,7 +211,7 @@ export const Contacts: React.FC = () => {
       </Tabs>
 
       <ContactDialog isOpen={dialogOpen} onClose={() => { setDialogOpen(false); setEditingContact(null); }} contact={editingContact} onSave={() => fetchContacts({ reset: true })} />
-      <CSVImporter isOpen={csvImportOpen} onClose={() => setCsvImportOpen(false)} onImport={() => { fetchContacts({ reset: true }); setCsvImportOpen(false); }} contactLists={contactLists} onCreateList={async (listName, contactIds) => { await createContactList({ name: listName, contactIds }); }} />
+      <CSVImporter isOpen={csvImportOpen} onClose={() => setCsvImportOpen(false)} onImport={() => { fetchContacts({ reset: true }); }} contactLists={contactLists} onCreateList={async (listName, contactIds) => { await createContactList({ name: listName, contactIds }); }} />
       <CSVExporter isOpen={csvExportOpen} onClose={() => setCsvExportOpen(false)} contacts={filteredContacts} />
       <BulkContactListAssignment isOpen={bulkListAssignmentOpen} onClose={() => setBulkListAssignmentOpen(false)} selectedContactIds={selectedContactIds} contactLists={contactLists} onListCreated={() => { setSelectedContactIds([]); setBulkListAssignmentOpen(false); }} />
       <EmailComposer isOpen={emailComposer.isOpen} onClose={() => setEmailComposer({ isOpen: false, to: '', toName: '' })} toEmail={emailComposer.to} subject="" preText="" />
