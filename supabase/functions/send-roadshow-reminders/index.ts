@@ -99,6 +99,8 @@ Deno.serve(async (req) => {
             doorsTime: stop.doors_time,
             showStartTime: stop.show_start_time,
             showEndTime: stop.show_end_time,
+            mealTime: stop.meal_time,
+            mealLocation: stop.meal_location,
             accommodation: stop.accommodation,
             accommodationAddress: stop.accommodation_address,
             transport: stop.transport,
@@ -176,6 +178,8 @@ interface EmailParams {
   doorsTime: string | null;
   showStartTime: string | null;
   showEndTime: string | null;
+  mealTime: string | null;
+  mealLocation: string | null;
   accommodation: string | null;
   accommodationAddress: string | null;
   transport: string | null;
@@ -223,6 +227,7 @@ function buildEmailHtml(p: EmailParams): string {
         ${timeRow("Ouverture portes", p.doorsTime)}
         ${timeRow("Début show", p.showStartTime)}
         ${timeRow("Fin show", p.showEndTime)}
+        ${p.mealTime ? timeRow("🍽️ Repas", p.mealTime + (p.mealLocation ? ' - ' + p.mealLocation : '')) : ''}
       </table>
 
       ${(p.accommodation || p.transport || p.localContact) ? `
