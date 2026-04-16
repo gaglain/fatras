@@ -23,6 +23,8 @@ export interface RoadshowStop {
   show_start_time?: string;
   show_end_time?: string;
   curfew_time?: string;
+  meal_time?: string;
+  meal_location?: string;
   capacity: number;
   tickets_available: number;
   status: 'confirmed' | 'pending' | 'cancelled';
@@ -64,6 +66,8 @@ export const transformStopFromDB = (stop: any): RoadshowStop => ({
   show_start_time: (stop as any).show_start_time,
   show_end_time: (stop as any).show_end_time,
   curfew_time: (stop as any).curfew_time,
+  meal_time: (stop as any).meal_time,
+  meal_location: (stop as any).meal_location,
   capacity: stop.capacity,
   tickets_available: stop.tickets_available,
   status: stop.status as 'confirmed' | 'pending' | 'cancelled',
@@ -109,6 +113,8 @@ export const convertToTourStop = (stop: RoadshowStop): TourStop => ({
   showStartTime: stop.show_start_time,
   showEndTime: stop.show_end_time,
   curfewTime: stop.curfew_time,
+  mealTime: stop.meal_time,
+  mealLocation: stop.meal_location,
   capacity: stop.capacity,
   ticketsAvailable: stop.tickets_available,
   status: stop.status,
@@ -144,6 +150,8 @@ export const convertFromTourStop = (tourStop: Partial<TourStop>): Partial<Roadsh
   show_start_time: tourStop.showStartTime || null,
   show_end_time: tourStop.showEndTime || null,
   curfew_time: tourStop.curfewTime || null,
+  meal_time: tourStop.mealTime || null,
+  meal_location: tourStop.mealLocation || null,
   capacity: tourStop.capacity,
   tickets_available: tourStop.ticketsAvailable,
   status: tourStop.status,

@@ -31,6 +31,8 @@ export const useRoadshowStopEdit = (
       showStartTime: stop.showStartTime || '',
       showEndTime: stop.showEndTime || '',
       curfewTime: stop.curfewTime || '',
+      mealTime: stop.mealTime || '',
+      mealLocation: stop.mealLocation || '',
       capacity: stop.capacity.toString(),
       ticketsAvailable: stop.ticketsAvailable.toString(),
       status: stop.status,
