@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { ExpenseFileLink, ExpenseImage } from './ExpenseFileLink';
 
 interface TourStopRoadmapTabProps {
   stop: TourStop;
@@ -271,7 +272,7 @@ export const TourStopRoadmapTab: React.FC<TourStopRoadmapTabProps> = ({
               <div key={expense.id} className="bg-gray-50 rounded-lg overflow-hidden border">
                 <div className="aspect-square bg-gray-200 relative overflow-hidden">
                   {expense.file_type === 'image' ? (
-                    <img src={expense.file_url} alt={expense.title} className="w-full h-full object-cover" />
+                    <ExpenseImage fileUrl={expense.file_url} alt={expense.title} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gray-100">
                       <FileText className="h-8 w-8 sm:h-12 sm:w-12 text-gray-400" />
@@ -279,7 +280,7 @@ export const TourStopRoadmapTab: React.FC<TourStopRoadmapTabProps> = ({
                     </div>
                   )}
                   <div className="absolute top-1 right-1 flex gap-0.5">
-                    <a href={expense.file_url} target="_blank" rel="noopener noreferrer" className="p-1 bg-white/90 rounded-full hover:bg-white transition-colors"><Eye className="h-3 w-3 sm:h-4 sm:w-4 text-gray-700" /></a>
+                    <ExpenseFileLink fileUrl={expense.file_url} className="p-1 bg-white/90 rounded-full hover:bg-white transition-colors"><Eye className="h-3 w-3 sm:h-4 sm:w-4 text-gray-700" /></ExpenseFileLink>
                     <button onClick={() => handleDeleteExpense(expense)} className="p-1 bg-white/90 rounded-full hover:bg-red-100 transition-colors"><Trash2 className="h-3 w-3 sm:h-4 sm:w-4 text-red-600" /></button>
                   </div>
                 </div>

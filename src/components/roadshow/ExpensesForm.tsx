@@ -9,6 +9,7 @@ import { Info, Upload, FileText, Image as ImageIcon, Trash2 } from 'lucide-react
 import { useRoadshowExpenses, RoadshowExpense } from '@/hooks/useRoadshowExpenses';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useConfirm } from '@/components/ui/confirm-dialog';
+import { ExpenseFileLink } from './ExpenseFileLink';
 
 interface ExpensesFormProps {
   roadshowStopId?: string;
@@ -118,14 +119,12 @@ export const ExpensesForm: React.FC<ExpensesFormProps> = ({ roadshowStopId }) =>
                     {expense.amount && (
                       <p className="text-sm font-semibold mt-2">{expense.amount}€</p>
                     )}
-                    <a 
-                      href={expense.file_url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
+                    <ExpenseFileLink
+                      fileUrl={expense.file_url}
                       className="text-sm text-primary hover:underline mt-2 inline-block"
                     >
                       Voir le fichier
-                    </a>
+                    </ExpenseFileLink>
                   </div>
                 </div>
                 <Button
