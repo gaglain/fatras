@@ -214,6 +214,7 @@ export const useRoadshowExpenses = (roadshowStopId?: string) => {
     loading,
     fetchExpenses,
     createExpense,
-    deleteExpense
+    deleteExpense,
+    getFileSignedUrl
   };
 };
