@@ -144,6 +144,31 @@ export const useRoadshowExpenses = (roadshowStopId?: string) => {
     }
   };
 
+  // Extract storage path from a stored file_url (which may be a legacy public URL or a path)
+  const getFilePath = (fileUrl: string): string | null => {
+    if (!fileUrl) return null;
+    if (fileUrl.includes('/roadshow-expenses/')) {
+      return fileUrl.split('/roadshow-expenses/')[1] || null;
+    }
+    return fileUrl; // already a path
+  };
+
+  // Generate a fresh signed URL for a private bucket file (1 hour expiry)
+  const getFileSignedUrl = async (fileUrl: string): Promise<string | null> => {
+    const path = getFilePath(fileUrl);
+    if (!path) return null;
+    try {
+      const { data, error } = await supabase.storage
+        .from('roadshow-expenses')
+        .createSignedUrl(path, 3600);
+      if (error) throw error;
+      return data?.signedUrl || null;
+    } catch (error) {
+      logger.error('Error creating signed URL:', error);
+      return null;
+    }
+  };
+
   const deleteExpense = async (expenseId: string, fileUrl: string) => {
     if (!user) return false;
 
