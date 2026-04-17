@@ -174,8 +174,8 @@ export const useRoadshowExpenses = (roadshowStopId?: string) => {
 
     setLoading(true);
     try {
-      // Extract file path from URL
-      const filePath = fileUrl.split('/roadshow-expenses/')[1];
+      // Extract file path from URL (supports legacy public URLs and raw paths)
+      const filePath = getFilePath(fileUrl);
       
       // Delete file from storage
       if (filePath) {
