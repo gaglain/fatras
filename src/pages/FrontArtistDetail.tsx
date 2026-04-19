@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { SEOHead } from '@/components/SEOHead';
+import { sanitizeHtml } from '@/lib/sanitize';
 import { 
   Mail, 
   Phone, 
@@ -168,7 +169,7 @@ export const FrontArtistDetail: React.FC = () => {
                 </div>
 
                 {artist.short_description && (
-                  <div className="text-xl text-muted-foreground leading-relaxed prose prose-lg max-w-none" dangerouslySetInnerHTML={{ __html: artist.short_description }} />
+                  <div className="text-xl text-muted-foreground leading-relaxed prose prose-lg max-w-none" dangerouslySetInnerHTML={{ __html: sanitizeHtml(artist.short_description) }} />
                 )}
 
                 {/* Contact & Social */}
@@ -244,7 +245,7 @@ export const FrontArtistDetail: React.FC = () => {
               <Card>
                 <CardContent className="p-8">
                   <h2 className="text-2xl font-bold mb-4">Présentation</h2>
-                  <div className="prose prose-lg max-w-none" dangerouslySetInnerHTML={{ __html: artist.presentation_text || artist.bio || "Aucune présentation disponible." }} />
+                  <div className="prose prose-lg max-w-none" dangerouslySetInnerHTML={{ __html: sanitizeHtml(artist.presentation_text || artist.bio || "Aucune présentation disponible.") }} />
                 </CardContent>
               </Card>
             </TabsContent>
