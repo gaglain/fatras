@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { OptimizedImage } from '@/components/OptimizedImage';
+import { sanitizeHtml } from '@/lib/sanitize';
 
 interface FrontArtistsSectionProps {
   artists: any[];
@@ -48,7 +49,7 @@ export const FrontArtistsSection: React.FC<FrontArtistsSectionProps> = ({ artist
                 )}
                 {artist.short_description && (
                   <CardContent className="p-4">
-                    <div className="text-muted-foreground text-sm prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: artist.short_description }} />
+                    <div className="text-muted-foreground text-sm prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: sanitizeHtml(artist.short_description) }} />
                   </CardContent>
                 )}
               </Card>

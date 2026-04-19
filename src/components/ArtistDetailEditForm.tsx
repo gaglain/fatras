@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RichTextEditor } from '@/components/RichTextEditor';
+import { sanitizeHtml } from '@/lib/sanitize';
 import { Download, Play, Plus, X } from 'lucide-react';
 
 interface ArtistDetailEditFormProps {
@@ -36,7 +37,7 @@ export const ArtistDetailEditForm: React.FC<ArtistDetailEditFormProps> = ({
               placeholder="Texte de présentation de l'artiste..."
             />
           ) : (
-            <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: artistData.presentation_text || 'Aucun texte de présentation disponible' }} />
+            <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: sanitizeHtml(artistData.presentation_text || 'Aucun texte de présentation disponible') }} />
           )}
         </CardContent>
       </Card>
