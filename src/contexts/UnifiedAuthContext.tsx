@@ -209,7 +209,7 @@ export const UnifiedAuthProvider: React.FC<{ children: ReactNode }> = ({ childre
             email: userEmail,
             first_name: '',
             last_name: '',
-            role: 'admin'
+            role: 'utilisateur'
           })
           .select()
           .single();
