@@ -45,7 +45,7 @@ export async function fetchRoadshowConnections(roadshowStopId: string) {
 
   let quotes: RoadshowEntityConnection[] = ((quoteRes.data || []) as QuoteLink[]).map(link => ({
     id: link.id, entityId: link.quote_id, entityType: 'quote',
-    title: link.quotes ? `Devis ${link.quotes.quote_number} - ${link.quotes.total_amount}€` : 'Devis inconnu',
+    title: link.quotes?.title || (link.quotes ? `Devis ${link.quotes.quote_number}` : 'Devis inconnu'),
   }));
 
   const contracts: RoadshowEntityConnection[] = ((contractRes.data || []) as ContractLink[]).map(link => ({
