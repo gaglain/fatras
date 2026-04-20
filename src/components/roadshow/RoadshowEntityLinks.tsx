@@ -123,14 +123,7 @@ export const RoadshowEntityLinks: React.FC<RoadshowEntityLinksProps> = ({ roadsh
         <div className="flex items-center gap-2"><Icon className="h-4 w-4" /><h4 className="font-semibold">{title}</h4></div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild><Button variant="outline" size="sm"><Plus className="h-3 w-3 mr-1" />Ajouter</Button></DialogTrigger>
-          <DialogContent
-            onInteractOutside={(event) => {
-              const target = event.target as HTMLElement | null;
-              if (target?.closest(POPOVER_PORTAL_SELECTOR)) {
-                event.preventDefault();
-              }
-            }}
-          ><DialogHeader><DialogTitle>{dialogTitle}</DialogTitle></DialogHeader><div className="space-y-4">{children}</div></DialogContent>
+          <DialogContent><DialogHeader><DialogTitle>{dialogTitle}</DialogTitle></DialogHeader><div className="space-y-4">{children}</div></DialogContent>
         </Dialog>
       </div>
       <div className="flex flex-wrap gap-2">
