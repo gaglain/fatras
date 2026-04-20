@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 interface OpportunityEntities {
   contacts: Array<{ id: string; name: string; role?: string }>;
   events: Array<{ id: string; title: string }>;
-  quotes: Array<{ id: string; quote_number: string; total_amount?: number }>;
+  quotes: Array<{ id: string; quote_number: string; title?: string; total_amount?: number }>;
 }
 
 export const useRoadshowOpportunityEntities = (roadshowStopId: string) => {
