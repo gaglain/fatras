@@ -6,7 +6,7 @@ import { Separator } from '@/components/ui/separator';
 interface OpportunityEntities {
   contacts: Array<{ id: string; name: string; role?: string }>;
   events: Array<{ id: string; title: string }>;
-  quotes: Array<{ id: string; quote_number: string; total_amount?: number }>;
+  quotes: Array<{ id: string; quote_number: string; title?: string; total_amount?: number }>;
 }
 
 interface RoadshowOpportunityEntitiesProps {
