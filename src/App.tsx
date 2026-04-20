@@ -190,7 +190,8 @@ const App = () => {
             {error?.stack ? '\n\n' + error.stack.split('\n').slice(0, 5).join('\n') : ''}
           </pre>
         </div>
-      )}
+        );
+      }}
       onError={(error) => {
         logger.error('💥 React Error Boundary caught error:', error);
         try {
