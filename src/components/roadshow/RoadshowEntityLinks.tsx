@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { X, Plus, Users, Calendar, FileText, Check } from 'lucide-react';
@@ -123,7 +123,7 @@ export const RoadshowEntityLinks: React.FC<RoadshowEntityLinksProps> = ({ roadsh
         <div className="flex items-center gap-2"><Icon className="h-4 w-4" /><h4 className="font-semibold">{title}</h4></div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild><Button variant="outline" size="sm"><Plus className="h-3 w-3 mr-1" />Ajouter</Button></DialogTrigger>
-          <DialogContent><DialogHeader><DialogTitle>{dialogTitle}</DialogTitle></DialogHeader><div className="space-y-4">{children}</div></DialogContent>
+          <DialogContent><DialogHeader><DialogTitle>{dialogTitle}</DialogTitle><DialogDescription>Sélectionnez une entité puis confirmez la liaison à cette étape.</DialogDescription></DialogHeader><div className="space-y-4">{children}</div></DialogContent>
         </Dialog>
       </div>
       <div className="flex flex-wrap gap-2">
