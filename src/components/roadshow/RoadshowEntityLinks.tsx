@@ -3,7 +3,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { X, Plus, Users, Calendar, FileText } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { X, Plus, Users, Calendar, FileText, ChevronsUpDown, Check } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { useRoadshowEntityConnections, RoadshowEntityConnection } from '@/hooks/useRoadshowEntityConnections';
 import { useContacts } from '@/hooks/useContacts';
 import { useEvents } from '@/hooks/useEvents';
@@ -15,6 +18,45 @@ import { useRoadshowOpportunityEntities } from './useRoadshowOpportunityEntities
 interface RoadshowEntityLinksProps {
   roadshowStopId: string;
 }
+
+interface SearchOption { value: string; label: string; }
+
+const SearchableCombobox: React.FC<{
+  options: SearchOption[];
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+  emptyText?: string;
+}> = ({ options, value, onChange, placeholder, emptyText = 'Aucun résultat' }) => {
+  const [open, setOpen] = useState(false);
+  const selected = options.find(o => o.value === value);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between font-normal">
+          <span className="truncate text-left">{selected ? selected.label : placeholder}</span>
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0 z-[100] bg-popover" align="start">
+        <Command>
+          <CommandInput placeholder="Rechercher..." />
+          <CommandList>
+            <CommandEmpty>{emptyText}</CommandEmpty>
+            <CommandGroup>
+              {options.map(opt => (
+                <CommandItem key={opt.value} value={opt.label} onSelect={() => { onChange(opt.value); setOpen(false); }}>
+                  <Check className={cn('mr-2 h-4 w-4', value === opt.value ? 'opacity-100' : 'opacity-0')} />
+                  <span className="truncate">{opt.label}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+};
 
 export const RoadshowEntityLinks: React.FC<RoadshowEntityLinksProps> = ({ roadshowStopId }) => {
   const { getRoadshowConnections, linkContact, linkEvent, linkQuote, unlinkEntity } = useRoadshowEntityConnections();
@@ -100,19 +142,33 @@ export const RoadshowEntityLinks: React.FC<RoadshowEntityLinksProps> = ({ roadsh
   const oppEventIds = new Set(opportunityEntities?.events.map(e => e.id) || []);
   const oppQuoteIds = new Set(opportunityEntities?.quotes.map(q => q.id) || []);
 
+  const contactOptions: SearchOption[] = allContacts
+    .filter(c => c.id && !oppContactIds.has(c.id) && !connections.contacts.some(cc => cc.entityId === c.id))
+    .map(c => ({
+      value: c.id!,
+      label: `${c.first_name} ${c.last_name}${c.company ? ` — ${c.company}` : ''}${c.email ? ` (${c.email})` : ''}`,
+    }));
+
+  const eventOptions: SearchOption[] = allEvents
+    .filter(e => e.id && !oppEventIds.has(e.id) && !connections.events.some(ce => ce.entityId === e.id))
+    .map(e => ({
+      value: e.id!,
+      label: `${e.title}${e.city ? ` — ${e.city}` : ''}${e.start_date ? ` (${new Date(e.start_date).toLocaleDateString('fr-FR')})` : ''}`,
+    }));
+
+  const quoteOptions: SearchOption[] = allQuotes
+    .filter(q => q.id && !oppQuoteIds.has(q.id) && !connections.quotes.some(cq => cq.entityId === q.id))
+    .map(q => ({
+      value: q.id!,
+      label: q.title || `Devis ${q.quote_number}`,
+    }));
+
   return (
     <div className="space-y-4">
       {opportunityEntities && <RoadshowOpportunityEntities opportunityEntities={opportunityEntities} />}
 
       <LinkSection icon={Users} title="Contacts" entities={connections.contacts} dialogOpen={showContactDialog} setDialogOpen={setShowContactDialog} dialogTitle="Lier un contact" entityType="contact">
-        <Select value={selectedContact} onValueChange={setSelectedContact}>
-          <SelectTrigger><SelectValue placeholder="Sélectionner un contact" /></SelectTrigger>
-          <SelectContent>
-            {allContacts.filter(c => c.id && !oppContactIds.has(c.id) && !connections.contacts.some(cc => cc.entityId === c.id)).map(c => (
-              <SelectItem key={c.id} value={c.id!}>{c.first_name} {c.last_name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <SearchableCombobox options={contactOptions} value={selectedContact} onChange={setSelectedContact} placeholder="Rechercher un contact..." emptyText="Aucun contact trouvé" />
         <Select value={contactRole} onValueChange={setContactRole}>
           <SelectTrigger><SelectValue placeholder="Rôle (optionnel)" /></SelectTrigger>
           <SelectContent>
@@ -121,31 +177,17 @@ export const RoadshowEntityLinks: React.FC<RoadshowEntityLinksProps> = ({ roadsh
             <SelectItem value="local">Contact local</SelectItem>
           </SelectContent>
         </Select>
-        <Button onClick={() => handleLink('contact')} className="w-full">Lier</Button>
+        <Button onClick={() => handleLink('contact')} className="w-full" disabled={!selectedContact}>Lier</Button>
       </LinkSection>
 
       <LinkSection icon={Calendar} title="Événements" entities={connections.events} dialogOpen={showEventDialog} setDialogOpen={setShowEventDialog} dialogTitle="Lier un événement" entityType="event">
-        <Select value={selectedEvent} onValueChange={setSelectedEvent}>
-          <SelectTrigger><SelectValue placeholder="Sélectionner un événement" /></SelectTrigger>
-          <SelectContent>
-            {allEvents.filter(e => e.id && !oppEventIds.has(e.id) && !connections.events.some(ce => ce.entityId === e.id)).map(e => (
-              <SelectItem key={e.id} value={e.id!}>{e.title}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Button onClick={() => handleLink('event')} className="w-full">Lier</Button>
+        <SearchableCombobox options={eventOptions} value={selectedEvent} onChange={setSelectedEvent} placeholder="Rechercher un événement..." emptyText="Aucun événement trouvé" />
+        <Button onClick={() => handleLink('event')} className="w-full" disabled={!selectedEvent}>Lier</Button>
       </LinkSection>
 
       <LinkSection icon={FileText} title="Devis" entities={connections.quotes} dialogOpen={showQuoteDialog} setDialogOpen={setShowQuoteDialog} dialogTitle="Lier un devis" entityType="quote">
-        <Select value={selectedQuote} onValueChange={setSelectedQuote}>
-          <SelectTrigger><SelectValue placeholder="Sélectionner un devis" /></SelectTrigger>
-          <SelectContent>
-            {allQuotes.filter(q => q.id && !oppQuoteIds.has(q.id) && !connections.quotes.some(cq => cq.entityId === q.id)).map(q => (
-              <SelectItem key={q.id} value={q.id!}>Devis {q.quote_number} - {q.total_amount}€</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Button onClick={() => handleLink('quote')} className="w-full">Lier</Button>
+        <SearchableCombobox options={quoteOptions} value={selectedQuote} onChange={setSelectedQuote} placeholder="Rechercher un devis..." emptyText="Aucun devis trouvé" />
+        <Button onClick={() => handleLink('quote')} className="w-full" disabled={!selectedQuote}>Lier</Button>
       </LinkSection>
     </div>
   );
