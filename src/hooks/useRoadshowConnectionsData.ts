@@ -16,7 +16,7 @@ interface EventLink {
 interface QuoteLink {
   id: string;
   quote_id: string;
-  quotes: { id: string; quote_number: string; total_amount: number; status?: string } | null;
+  quotes: { id: string; quote_number: string; title: string; total_amount: number; status?: string } | null;
 }
 interface ContractLink { id: string; contract_id: string; }
 
