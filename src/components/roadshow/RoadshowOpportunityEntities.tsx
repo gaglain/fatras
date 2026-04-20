@@ -48,7 +48,7 @@ export const RoadshowOpportunityEntities: React.FC<RoadshowOpportunityEntitiesPr
             <div className="flex items-center gap-2 text-sm font-medium"><FileText className="h-4 w-4" /><span>Devis</span></div>
             <div className="flex flex-wrap gap-2">
               {opportunityEntities.quotes.map(q => (
-                <Badge key={q.id} variant="secondary">Devis {q.quote_number}{q.total_amount && <span className="ml-1">- {q.total_amount}€</span>}</Badge>
+                <Badge key={q.id} variant="secondary">{q.title || `Devis ${q.quote_number}`}</Badge>
               ))}
             </div>
           </div>
