@@ -56,10 +56,10 @@ export async function fetchRoadshowConnections(roadshowStopId: string) {
   const { data: stopRow } = await supabase.from('roadshow_stops').select('id, quote_id, opportunity_id').eq('id', roadshowStopId).maybeSingle();
 
   if (stopRow?.quote_id) {
-    const { data: directQuote } = await supabase.from('quotes').select('id, quote_number, total_amount').eq('id', stopRow.quote_id).maybeSingle();
+    const { data: directQuote } = await supabase.from('quotes').select('id, quote_number, title, total_amount').eq('id', stopRow.quote_id).maybeSingle();
     quotes.push({
       id: `rsq_${stopRow.quote_id}`, entityId: directQuote?.id || stopRow.quote_id, entityType: 'quote',
-      title: directQuote ? `Devis ${directQuote.quote_number} - ${directQuote.total_amount}€` : `Devis lié (${String(stopRow.quote_id).slice(0, 8)}…)`,
+      title: directQuote?.title || (directQuote ? `Devis ${directQuote.quote_number}` : `Devis lié (${String(stopRow.quote_id).slice(0, 8)}…)`),
     });
   }
 
