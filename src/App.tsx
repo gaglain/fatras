@@ -94,7 +94,49 @@ const App = () => {
   
   return (
     <ErrorBoundary
-      fallbackRender={({ error, resetErrorBoundary }) => (
+      fallbackRender={({ error, resetErrorBoundary }) => {
+        // Detect stale chunk errors (after a new deploy, lazy() imports return HTML instead of JS)
+        const msg = String(error?.message || '');
+        const isChunkLoadError =
+          msg.includes("Unexpected token '<'") ||
+          msg.includes('Failed to fetch dynamically imported module') ||
+          msg.includes('Loading chunk') ||
+          msg.includes('Loading CSS chunk') ||
+          msg.includes('Importing a module script failed') ||
+          (error as any)?.name === 'ChunkLoadError';
+
+        if (isChunkLoadError) {
+          // Auto-recover: bust caches + SW, then hard-reload once
+          const flag = 'chunk_reload_attempted_at';
+          const last = Number(sessionStorage.getItem(flag) || '0');
+          const now = Date.now();
+          if (now - last > 10000) {
+            sessionStorage.setItem(flag, String(now));
+            (async () => {
+              try {
+                if ('caches' in window) {
+                  const keys = await caches.keys();
+                  await Promise.all(keys.map((k) => caches.delete(k)));
+                }
+                if ('serviceWorker' in navigator) {
+                  const regs = await navigator.serviceWorker.getRegistrations();
+                  await Promise.all(regs.map((r) => r.unregister()));
+                }
+              } catch {}
+              const url = new URL(window.location.href);
+              url.searchParams.set('_r', String(now));
+              window.location.replace(url.toString());
+            })();
+            return (
+              <div style={{ padding: '24px', textAlign: 'center' }}>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
+                <p style={{ marginTop: 12, color: '#6b7280' }}>Mise à jour de l'application…</p>
+              </div>
+            );
+          }
+        }
+
+        return (
         <div style={{ padding: '24px', textAlign: 'center' }}>
           <h1 style={{ marginBottom: 8, color: 'var(--destructive, #ef4444)' }}>Application Error</h1>
           <p>Something went wrong loading the application.</p>
@@ -148,7 +190,8 @@ const App = () => {
             {error?.stack ? '\n\n' + error.stack.split('\n').slice(0, 5).join('\n') : ''}
           </pre>
         </div>
-      )}
+        );
+      }}
       onError={(error) => {
         logger.error('💥 React Error Boundary caught error:', error);
         try {
