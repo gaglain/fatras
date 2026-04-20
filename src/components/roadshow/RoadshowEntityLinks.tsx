@@ -37,28 +37,28 @@ const SearchableCombobox: React.FC<{
   return (
     <div className="space-y-3">
       {selected && (
-        <div className="rounded-lg border border-input bg-muted/30 px-4 py-3 text-sm text-foreground">
+        <div className="rounded-md border border-border bg-muted/20 px-4 py-3 text-sm text-foreground shadow-sm">
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Sélection actuelle</p>
-          <p className="truncate font-medium">{selected.label}</p>
-          {selected.description && <p className="truncate text-sm text-muted-foreground">{selected.description}</p>}
+          <p className="mt-1 break-words font-medium leading-snug">{selected.label}</p>
+          {selected.description && <p className="mt-1 break-words text-sm leading-snug text-muted-foreground">{selected.description}</p>}
         </div>
       )}
-      <Command className="overflow-hidden rounded-lg border border-input bg-background shadow-sm">
-        <CommandInput autoFocus placeholder={placeholder} className="h-12 text-base" />
-        <CommandList className="max-h-72">
+      <Command className="overflow-hidden rounded-md border border-border bg-background shadow-sm">
+        <CommandInput autoFocus placeholder={placeholder} className="h-14 px-0 text-base" />
+        <CommandList className="max-h-80 scroll-py-2 px-2 py-2">
           <CommandEmpty>{emptyText}</CommandEmpty>
-          <CommandGroup className="p-2">
+          <CommandGroup className="p-0">
             {options.map((opt) => (
               <CommandItem
                 key={opt.value}
                 value={opt.searchText || `${opt.label} ${opt.description || ''}`}
                 onSelect={() => onChange(opt.value)}
-                className="gap-3 rounded-md px-3 py-3"
+                className="items-start gap-3 rounded-md border border-transparent px-4 py-3.5 aria-selected:border-border aria-selected:bg-accent/60"
               >
                 <Check className={cn('mt-0.5 h-4 w-4 shrink-0', value === opt.value ? 'opacity-100' : 'opacity-0')} />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium">{opt.label}</p>
-                  {opt.description && <p className="truncate text-sm text-muted-foreground">{opt.description}</p>}
+                  <p className="break-words font-medium leading-snug">{opt.label}</p>
+                  {opt.description && <p className="mt-1 break-words text-sm leading-snug text-muted-foreground">{opt.description}</p>}
                 </div>
               </CommandItem>
             ))}
@@ -138,17 +138,18 @@ export const RoadshowEntityLinks: React.FC<RoadshowEntityLinksProps> = ({ roadsh
         <div className="flex items-center gap-2"><Icon className="h-4 w-4" /><h4 className="font-semibold">{title}</h4></div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild><Button variant="outline" size="sm"><Plus className="h-3 w-3 mr-1" />Ajouter</Button></DialogTrigger>
-          <DialogContent className="gap-0 overflow-hidden p-0 sm:!max-w-2xl sm:max-h-[85vh] sm:p-0">
-            <div className="flex max-h-[85vh] flex-col bg-background">
-              <DialogHeader className="shrink-0 border-b border-border px-8 py-6 pr-16 text-left">
-                <DialogTitle className="text-2xl leading-tight">{dialogTitle}</DialogTitle>
+          <DialogContent className="gap-0 overflow-hidden border-border p-0 sm:!max-w-3xl sm:p-0">
+            <div className="grid max-h-[min(88vh,760px)] grid-rows-[auto_minmax(0,1fr)_auto] bg-background">
+              <DialogHeader className="shrink-0 border-b border-border px-6 py-5 pr-16 text-left sm:px-7">
+                <DialogTitle className="text-xl leading-tight sm:text-2xl">{dialogTitle}</DialogTitle>
                 <DialogDescription className="mt-2 text-base leading-relaxed">
                   Sélectionnez une entité puis confirmez la liaison à cette étape.
                 </DialogDescription>
               </DialogHeader>
-              <div className="flex-1 overflow-y-auto px-8 py-6">
-                <div className="space-y-5">{children}</div>
+              <div className="min-h-0 overflow-y-auto px-6 py-5 sm:px-7">
+                <div className="space-y-4">{children}</div>
               </div>
+              <div className="shrink-0 border-t border-border bg-muted/20 px-6 py-4 sm:px-7" />
             </div>
           </DialogContent>
         </Dialog>
@@ -199,29 +200,29 @@ export const RoadshowEntityLinks: React.FC<RoadshowEntityLinksProps> = ({ roadsh
       <LinkSection icon={Users} title="Contacts" entities={connections.contacts} dialogOpen={showContactDialog} setDialogOpen={setShowContactDialog} dialogTitle="Lier un contact" entityType="contact">
         <SearchableCombobox options={contactOptions} value={selectedContact} onChange={setSelectedContact} placeholder="Rechercher un contact..." emptyText="Aucun contact trouvé" />
         <Select value={contactRole} onValueChange={setContactRole}>
-          <SelectTrigger className="h-12 border-input bg-background text-base"><SelectValue placeholder="Rôle (optionnel)" /></SelectTrigger>
+          <SelectTrigger className="h-12 rounded-md border-border bg-background text-base shadow-sm"><SelectValue placeholder="Rôle (optionnel)" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="organizer">Organisateur</SelectItem>
             <SelectItem value="technical">Contact technique</SelectItem>
             <SelectItem value="local">Contact local</SelectItem>
           </SelectContent>
         </Select>
-        <div className="border-t border-border pt-4">
-          <Button onClick={() => handleLink('contact')} className="h-12 w-full text-base" disabled={!selectedContact}>Lier</Button>
+        <div className="flex justify-end border-t border-border pt-4">
+          <Button onClick={() => handleLink('contact')} className="h-11 min-w-32 px-6 text-base" disabled={!selectedContact}>Lier</Button>
         </div>
       </LinkSection>
 
       <LinkSection icon={Calendar} title="Événements" entities={connections.events} dialogOpen={showEventDialog} setDialogOpen={setShowEventDialog} dialogTitle="Lier un événement" entityType="event">
         <SearchableCombobox options={eventOptions} value={selectedEvent} onChange={setSelectedEvent} placeholder="Rechercher un événement..." emptyText="Aucun événement trouvé" />
-        <div className="border-t border-border pt-4">
-          <Button onClick={() => handleLink('event')} className="h-12 w-full text-base" disabled={!selectedEvent}>Lier</Button>
+        <div className="flex justify-end border-t border-border pt-4">
+          <Button onClick={() => handleLink('event')} className="h-11 min-w-32 px-6 text-base" disabled={!selectedEvent}>Lier</Button>
         </div>
       </LinkSection>
 
       <LinkSection icon={FileText} title="Devis" entities={connections.quotes} dialogOpen={showQuoteDialog} setDialogOpen={setShowQuoteDialog} dialogTitle="Lier un devis" entityType="quote">
         <SearchableCombobox options={quoteOptions} value={selectedQuote} onChange={setSelectedQuote} placeholder="Rechercher un devis..." emptyText="Aucun devis trouvé" />
-        <div className="border-t border-border pt-4">
-          <Button onClick={() => handleLink('quote')} className="h-12 w-full text-base" disabled={!selectedQuote}>Lier</Button>
+        <div className="flex justify-end border-t border-border pt-4">
+          <Button onClick={() => handleLink('quote')} className="h-11 min-w-32 px-6 text-base" disabled={!selectedQuote}>Lier</Button>
         </div>
       </LinkSection>
     </div>
