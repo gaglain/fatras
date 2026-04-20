@@ -24,7 +24,7 @@ export async function fetchRoadshowConnections(roadshowStopId: string) {
   const [contactRes, eventRes, quoteRes, contractRes] = await Promise.all([
     supabase.from('roadshow_stop_contacts').select('id, contact_id, role, contacts (id, first_name, last_name, email, company)').eq('roadshow_stop_id', roadshowStopId),
     supabase.from('roadshow_stop_events').select('id, event_id, events (id, title, start_date, venue)').eq('roadshow_stop_id', roadshowStopId),
-    supabase.from('roadshow_stop_quotes').select('id, quote_id, quotes (id, quote_number, total_amount, status)').eq('roadshow_stop_id', roadshowStopId),
+    supabase.from('roadshow_stop_quotes').select('id, quote_id, quotes (id, quote_number, title, total_amount, status)').eq('roadshow_stop_id', roadshowStopId),
     supabase.from('roadshow_stop_contracts').select('id, contract_id').eq('roadshow_stop_id', roadshowStopId),
   ]);
 
