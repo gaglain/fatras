@@ -31,18 +31,38 @@ const SearchableCombobox: React.FC<{
   emptyText?: string;
 }> = ({ options, value, onChange, placeholder, emptyText = 'Aucun résultat' }) => {
   const [open, setOpen] = useState(false);
+  const inputRef = React.useRef<HTMLInputElement>(null);
   const selected = options.find(o => o.value === value);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const frame = window.requestAnimationFrame(() => {
+      inputRef.current?.focus();
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [open]);
+
   return (
-    <Popover open={open} onOpenChange={setOpen} modal={false}>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between font-normal">
+        <Button type="button" variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between font-normal">
           <span className="truncate text-left">{selected ? selected.label : placeholder}</span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[--radix-popover-trigger-width] p-0 z-[9999] bg-popover" align="start" onOpenAutoFocus={(e) => e.preventDefault()}>
+      <PopoverContent
+        className="w-[--radix-popover-trigger-width] p-0 z-[9999] bg-popover"
+        align="start"
+        onOpenAutoFocus={(e) => {
+          e.preventDefault();
+          inputRef.current?.focus();
+        }}
+        onCloseAutoFocus={(e) => e.preventDefault()}
+      >
         <Command>
-          <CommandInput placeholder="Rechercher..." />
+          <CommandInput ref={inputRef} autoFocus placeholder="Rechercher..." />
           <CommandList>
             <CommandEmpty>{emptyText}</CommandEmpty>
             <CommandGroup>
