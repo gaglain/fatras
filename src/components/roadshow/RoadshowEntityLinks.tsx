@@ -18,7 +18,12 @@ interface RoadshowEntityLinksProps {
   roadshowStopId: string;
 }
 
-interface SearchOption { value: string; label: string; }
+interface SearchOption {
+  value: string;
+  label: string;
+  description?: string;
+  searchText?: string;
+}
 
 const SearchableCombobox: React.FC<{
   options: SearchOption[];
@@ -30,21 +35,31 @@ const SearchableCombobox: React.FC<{
   const selected = options.find((option) => option.value === value);
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {selected && (
-        <div className="rounded-md border border-border bg-muted/40 px-3 py-2 text-sm text-foreground">
-          Sélectionné : <span className="font-medium">{selected.label}</span>
+        <div className="rounded-lg border border-border bg-muted/30 px-4 py-3 text-sm text-foreground">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Sélection actuelle</p>
+          <p className="truncate font-medium">{selected.label}</p>
+          {selected.description && <p className="truncate text-sm text-muted-foreground">{selected.description}</p>}
         </div>
       )}
-      <Command className="rounded-md border border-border bg-background">
-        <CommandInput autoFocus placeholder={placeholder} />
-        <CommandList className="max-h-64">
+      <Command className="overflow-hidden rounded-lg border border-border bg-background shadow-sm">
+        <CommandInput autoFocus placeholder={placeholder} className="h-12 text-base" />
+        <CommandList className="max-h-72">
           <CommandEmpty>{emptyText}</CommandEmpty>
-          <CommandGroup>
+          <CommandGroup className="p-2">
             {options.map((opt) => (
-              <CommandItem key={opt.value} value={opt.label} onSelect={() => onChange(opt.value)}>
-                <Check className={cn('mr-2 h-4 w-4', value === opt.value ? 'opacity-100' : 'opacity-0')} />
-                <span className="truncate">{opt.label}</span>
+              <CommandItem
+                key={opt.value}
+                value={opt.searchText || `${opt.label} ${opt.description || ''}`}
+                onSelect={() => onChange(opt.value)}
+                className="gap-3 rounded-md px-3 py-3"
+              >
+                <Check className={cn('mt-0.5 h-4 w-4 shrink-0', value === opt.value ? 'opacity-100' : 'opacity-0')} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium">{opt.label}</p>
+                  {opt.description && <p className="truncate text-sm text-muted-foreground">{opt.description}</p>}
+                </div>
               </CommandItem>
             ))}
           </CommandGroup>
@@ -123,7 +138,7 @@ export const RoadshowEntityLinks: React.FC<RoadshowEntityLinksProps> = ({ roadsh
         <div className="flex items-center gap-2"><Icon className="h-4 w-4" /><h4 className="font-semibold">{title}</h4></div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild><Button variant="outline" size="sm"><Plus className="h-3 w-3 mr-1" />Ajouter</Button></DialogTrigger>
-          <DialogContent><DialogHeader><DialogTitle>{dialogTitle}</DialogTitle><DialogDescription>Sélectionnez une entité puis confirmez la liaison à cette étape.</DialogDescription></DialogHeader><div className="space-y-4">{children}</div></DialogContent>
+          <DialogContent className="gap-0 overflow-hidden p-0 sm:!max-w-2xl sm:p-0"><DialogHeader className="border-b border-border px-6 py-5"><DialogTitle>{dialogTitle}</DialogTitle><DialogDescription>Sélectionnez une entité puis confirmez la liaison à cette étape.</DialogDescription></DialogHeader><div className="space-y-4 px-6 py-5">{children}</div></DialogContent>
         </Dialog>
       </div>
       <div className="flex flex-wrap gap-2">
@@ -142,14 +157,18 @@ export const RoadshowEntityLinks: React.FC<RoadshowEntityLinksProps> = ({ roadsh
     .filter(c => c.id && !oppContactIds.has(c.id) && !connections.contacts.some(cc => cc.entityId === c.id))
     .map(c => ({
       value: c.id!,
-      label: `${c.first_name} ${c.last_name}${c.email ? ` — ${c.email}` : ''}${c.position ? ` (${c.position})` : ''}`,
+      label: `${c.first_name} ${c.last_name}`.trim(),
+      description: [c.email, c.position].filter(Boolean).join(' • '),
+      searchText: [c.first_name, c.last_name, c.email, c.position].filter(Boolean).join(' '),
     }));
 
   const eventOptions: SearchOption[] = allEvents
     .filter(e => e.id && !oppEventIds.has(e.id) && !connections.events.some(ce => ce.entityId === e.id))
     .map(e => ({
       value: e.id!,
-      label: `${e.title}${e.city ? ` — ${e.city}` : ''}${e.start_date ? ` (${new Date(e.start_date).toLocaleDateString('fr-FR')})` : ''}`,
+      label: e.title,
+      description: [e.city, e.start_date ? new Date(e.start_date).toLocaleDateString('fr-FR') : null].filter(Boolean).join(' • '),
+      searchText: [e.title, e.city, e.venue].filter(Boolean).join(' '),
     }));
 
   const quoteOptions: SearchOption[] = allQuotes
@@ -157,6 +176,8 @@ export const RoadshowEntityLinks: React.FC<RoadshowEntityLinksProps> = ({ roadsh
     .map(q => ({
       value: q.id!,
       label: q.title || `Devis ${q.quote_number}`,
+      description: q.quote_number ? `Réf. ${q.quote_number}` : undefined,
+      searchText: [q.title, q.quote_number].filter(Boolean).join(' '),
     }));
 
   return (
