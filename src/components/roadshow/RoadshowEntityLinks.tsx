@@ -139,7 +139,7 @@ export const RoadshowEntityLinks: React.FC<RoadshowEntityLinksProps> = ({ roadsh
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild><Button variant="outline" size="sm"><Plus className="h-3 w-3 mr-1" />Ajouter</Button></DialogTrigger>
           <DialogContent className="gap-0 overflow-hidden border-border p-0 sm:!max-w-3xl sm:p-0">
-            <div className="grid max-h-[min(88vh,760px)] grid-rows-[auto_minmax(0,1fr)_auto] bg-background">
+            <div className="grid max-h-[min(88vh,760px)] grid-rows-[auto_minmax(0,1fr)] bg-background">
               <DialogHeader className="shrink-0 border-b border-border px-6 py-5 pr-16 text-left sm:px-7">
                 <DialogTitle className="text-xl leading-tight sm:text-2xl">{dialogTitle}</DialogTitle>
                 <DialogDescription className="mt-2 text-base leading-relaxed">
@@ -149,7 +149,6 @@ export const RoadshowEntityLinks: React.FC<RoadshowEntityLinksProps> = ({ roadsh
               <div className="min-h-0 overflow-y-auto px-6 py-5 sm:px-7">
                 <div className="space-y-4">{children}</div>
               </div>
-              <div className="shrink-0 border-t border-border bg-muted/20 px-6 py-4 sm:px-7" />
             </div>
           </DialogContent>
         </Dialog>
