@@ -16,7 +16,7 @@ interface EventLink {
 interface QuoteLink {
   id: string;
   quote_id: string;
-  quotes: { id: string; quote_number: string; total_amount: number; status?: string } | null;
+  quotes: { id: string; quote_number: string; title: string; total_amount: number; status?: string } | null;
 }
 interface ContractLink { id: string; contract_id: string; }
 
@@ -24,7 +24,7 @@ export async function fetchRoadshowConnections(roadshowStopId: string) {
   const [contactRes, eventRes, quoteRes, contractRes] = await Promise.all([
     supabase.from('roadshow_stop_contacts').select('id, contact_id, role, contacts (id, first_name, last_name, email, company)').eq('roadshow_stop_id', roadshowStopId),
     supabase.from('roadshow_stop_events').select('id, event_id, events (id, title, start_date, venue)').eq('roadshow_stop_id', roadshowStopId),
-    supabase.from('roadshow_stop_quotes').select('id, quote_id, quotes (id, quote_number, total_amount, status)').eq('roadshow_stop_id', roadshowStopId),
+    supabase.from('roadshow_stop_quotes').select('id, quote_id, quotes (id, quote_number, title, total_amount, status)').eq('roadshow_stop_id', roadshowStopId),
     supabase.from('roadshow_stop_contracts').select('id, contract_id').eq('roadshow_stop_id', roadshowStopId),
   ]);
 
@@ -45,7 +45,7 @@ export async function fetchRoadshowConnections(roadshowStopId: string) {
 
   let quotes: RoadshowEntityConnection[] = ((quoteRes.data || []) as QuoteLink[]).map(link => ({
     id: link.id, entityId: link.quote_id, entityType: 'quote',
-    title: link.quotes ? `Devis ${link.quotes.quote_number} - ${link.quotes.total_amount}€` : 'Devis inconnu',
+    title: link.quotes?.title || (link.quotes ? `Devis ${link.quotes.quote_number}` : 'Devis inconnu'),
   }));
 
   const contracts: RoadshowEntityConnection[] = ((contractRes.data || []) as ContractLink[]).map(link => ({
@@ -56,10 +56,10 @@ export async function fetchRoadshowConnections(roadshowStopId: string) {
   const { data: stopRow } = await supabase.from('roadshow_stops').select('id, quote_id, opportunity_id').eq('id', roadshowStopId).maybeSingle();
 
   if (stopRow?.quote_id) {
-    const { data: directQuote } = await supabase.from('quotes').select('id, quote_number, total_amount').eq('id', stopRow.quote_id).maybeSingle();
+    const { data: directQuote } = await supabase.from('quotes').select('id, quote_number, title, total_amount').eq('id', stopRow.quote_id).maybeSingle();
     quotes.push({
       id: `rsq_${stopRow.quote_id}`, entityId: directQuote?.id || stopRow.quote_id, entityType: 'quote',
-      title: directQuote ? `Devis ${directQuote.quote_number} - ${directQuote.total_amount}€` : `Devis lié (${String(stopRow.quote_id).slice(0, 8)}…)`,
+      title: directQuote?.title || (directQuote ? `Devis ${directQuote.quote_number}` : `Devis lié (${String(stopRow.quote_id).slice(0, 8)}…)`),
     });
   }
 
@@ -89,18 +89,18 @@ export async function fetchRoadshowConnections(roadshowStopId: string) {
       })));
     }
 
-    const { data: oppQuotes } = await supabase.from('quote_opportunities').select('quotes (id, quote_number, total_amount)').eq('opportunity_id', opportunityId);
-    type OQ = { quotes: { id: string; quote_number: string; total_amount: number } | null };
+    const { data: oppQuotes } = await supabase.from('quote_opportunities').select('quotes (id, quote_number, title, total_amount)').eq('opportunity_id', opportunityId);
+    type OQ = { quotes: { id: string; quote_number: string; title: string; total_amount: number } | null };
     if (oppQuotes && oppQuotes.length > 0) {
       quotes.push(...(oppQuotes as OQ[]).map(q => q.quotes).filter((q): q is NonNullable<typeof q> => q !== null).map(q => ({
-        id: `opq_${q.id}`, entityId: q.id, entityType: 'quote' as const, title: `Devis ${q.quote_number} - ${q.total_amount}€`,
+        id: `opq_${q.id}`, entityId: q.id, entityType: 'quote' as const, title: q.title || `Devis ${q.quote_number}`,
       })));
     } else if (oppEventIds.length > 0) {
-      const { data: evQuotes } = await supabase.from('quotes').select('id, quote_number, total_amount, event_id').in('event_id', oppEventIds);
-      type EQ = { id: string; quote_number: string; total_amount: number };
+      const { data: evQuotes } = await supabase.from('quotes').select('id, quote_number, title, total_amount, event_id').in('event_id', oppEventIds);
+      type EQ = { id: string; quote_number: string; title: string; total_amount: number };
       if (evQuotes) {
         quotes.push(...(evQuotes as EQ[]).map(q => ({
-          id: `evq_${q.id}`, entityId: q.id, entityType: 'quote' as const, title: `Devis ${q.quote_number} - ${q.total_amount}€`,
+          id: `evq_${q.id}`, entityId: q.id, entityType: 'quote' as const, title: q.title || `Devis ${q.quote_number}`,
         })));
       }
     }

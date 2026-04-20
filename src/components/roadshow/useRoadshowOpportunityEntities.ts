@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 interface OpportunityEntities {
   contacts: Array<{ id: string; name: string; role?: string }>;
   events: Array<{ id: string; title: string }>;
-  quotes: Array<{ id: string; quote_number: string; total_amount?: number }>;
+  quotes: Array<{ id: string; quote_number: string; title?: string; total_amount?: number }>;
 }
 
 export const useRoadshowOpportunityEntities = (roadshowStopId: string) => {
@@ -109,7 +109,7 @@ export const useRoadshowOpportunityEntities = (roadshowStopId: string) => {
       try {
         const qoResp: any = await supabase
           .from('quote_opportunities')
-          .select(`quotes (id, quote_number, total_amount)`)
+          .select(`quotes (id, quote_number, title, total_amount)`)
           .eq('opportunity_id', opportunityId);
         quotesData = (qoResp?.data || []).map((row: any) => row.quotes).filter(Boolean);
       } catch {}
@@ -120,7 +120,7 @@ export const useRoadshowOpportunityEntities = (roadshowStopId: string) => {
           if (eventIds.length > 0) {
             const quotesResp: any = await (supabase
               .from('quotes')
-              .select('id, quote_number, total_amount, event_id') as any)
+              .select('id, quote_number, title, total_amount, event_id') as any)
               .in('event_id', eventIds);
             quotesData = quotesResp.data || [];
           }
@@ -133,6 +133,7 @@ export const useRoadshowOpportunityEntities = (roadshowStopId: string) => {
         quotes: quotesData.map((quote: any) => ({
           id: quote.id || '',
           quote_number: quote.quote_number || 'N/A',
+          title: quote.title,
           total_amount: quote.total_amount,
         })),
       });
