@@ -146,7 +146,7 @@ export const RoadshowEntityLinks: React.FC<RoadshowEntityLinksProps> = ({ roadsh
     .filter(c => c.id && !oppContactIds.has(c.id) && !connections.contacts.some(cc => cc.entityId === c.id))
     .map(c => ({
       value: c.id!,
-      label: `${c.first_name} ${c.last_name}${c.company ? ` — ${c.company}` : ''}${c.email ? ` (${c.email})` : ''}`,
+      label: `${c.first_name} ${c.last_name}${c.email ? ` — ${c.email}` : ''}${c.position ? ` (${c.position})` : ''}`,
     }));
 
   const eventOptions: SearchOption[] = allEvents
