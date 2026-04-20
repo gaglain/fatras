@@ -3,9 +3,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { X, Plus, Users, Calendar, FileText, ChevronsUpDown, Check } from 'lucide-react';
+import { X, Plus, Users, Calendar, FileText, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRoadshowEntityConnections, RoadshowEntityConnection } from '@/hooks/useRoadshowEntityConnections';
 import { useContacts } from '@/hooks/useContacts';
@@ -21,8 +20,6 @@ interface RoadshowEntityLinksProps {
 
 interface SearchOption { value: string; label: string; }
 
-const POPOVER_PORTAL_SELECTOR = '[data-radix-popper-content-wrapper]';
-
 const SearchableCombobox: React.FC<{
   options: SearchOption[];
   value: string;
@@ -30,53 +27,30 @@ const SearchableCombobox: React.FC<{
   placeholder: string;
   emptyText?: string;
 }> = ({ options, value, onChange, placeholder, emptyText = 'Aucun résultat' }) => {
-  const [open, setOpen] = useState(false);
-  const inputRef = React.useRef<HTMLInputElement>(null);
-  const selected = options.find(o => o.value === value);
-
-  useEffect(() => {
-    if (!open) return;
-
-    const frame = window.requestAnimationFrame(() => {
-      inputRef.current?.focus();
-    });
-
-    return () => window.cancelAnimationFrame(frame);
-  }, [open]);
+  const selected = options.find((option) => option.value === value);
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button type="button" variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between font-normal">
-          <span className="truncate text-left">{selected ? selected.label : placeholder}</span>
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent
-        className="w-[--radix-popover-trigger-width] p-0 z-[9999] bg-popover"
-        align="start"
-        onOpenAutoFocus={(e) => {
-          e.preventDefault();
-          inputRef.current?.focus();
-        }}
-        onCloseAutoFocus={(e) => e.preventDefault()}
-      >
-        <Command>
-          <CommandInput ref={inputRef} autoFocus placeholder="Rechercher..." />
-          <CommandList>
-            <CommandEmpty>{emptyText}</CommandEmpty>
-            <CommandGroup>
-              {options.map(opt => (
-                <CommandItem key={opt.value} value={opt.label} onSelect={() => { onChange(opt.value); setOpen(false); }}>
-                  <Check className={cn('mr-2 h-4 w-4', value === opt.value ? 'opacity-100' : 'opacity-0')} />
-                  <span className="truncate">{opt.label}</span>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
+    <div className="space-y-2">
+      {selected && (
+        <div className="rounded-md border border-border bg-muted/40 px-3 py-2 text-sm text-foreground">
+          Sélectionné : <span className="font-medium">{selected.label}</span>
+        </div>
+      )}
+      <Command className="rounded-md border border-border bg-background">
+        <CommandInput autoFocus placeholder={placeholder} />
+        <CommandList className="max-h-64">
+          <CommandEmpty>{emptyText}</CommandEmpty>
+          <CommandGroup>
+            {options.map((opt) => (
+              <CommandItem key={opt.value} value={opt.label} onSelect={() => onChange(opt.value)}>
+                <Check className={cn('mr-2 h-4 w-4', value === opt.value ? 'opacity-100' : 'opacity-0')} />
+                <span className="truncate">{opt.label}</span>
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        </CommandList>
+      </Command>
+    </div>
   );
 };
 
