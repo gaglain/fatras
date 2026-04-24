@@ -45,28 +45,37 @@ export const UnifiedEmailManager: React.FC = () => {
   const [composerSourceEmail, setComposerSourceEmail] = useState<UnifiedEmail | null>(null);
   const [isLookingUpContact, setIsLookingUpContact] = useState(false);
 
-  // Utils: clean preview from HTML
+  // Utils: clean preview/body from HTML
   const decodeHtmlEntities = (str: string) => {
     if (!str) return '';
     const textarea = document.createElement('textarea');
     textarea.innerHTML = str;
     return textarea.value || textarea.textContent || str;
   };
+
+  const extractPlainText = (raw: string) => {
+    if (!raw) return '';
+    const decoded = /&lt;|&gt;|&amp;|&#/i.test(raw) ? decodeHtmlEntities(raw) : raw;
+    return decoded
+      .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
+      .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '')
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  };
+
+  const getEmailBodyText = (email: UnifiedEmail) => {
+    const fromHtml = extractPlainText(email.html_content || '');
+    if (fromHtml) return fromHtml;
+    const fromContent = extractPlainText(email.content || '');
+    if (fromContent) return fromContent;
+    return '';
+  };
+
   const getEmailPreview = (email: UnifiedEmail, maxLen = 140) => {
-    let raw = email.html_content || email.content || '';
-    if (!raw) return '(Aucun contenu)';
-    try {
-      if (/&lt;|&gt;|&amp;|&#/i.test(raw)) raw = decodeHtmlEntities(raw);
-      const plain = raw.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
-        .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '')
-        .replace(/<[^>]*>/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-      return plain.length > maxLen ? `${plain.slice(0, maxLen)}…` : (plain || '(Aucun contenu)');
-    } catch {
-      const fallback = (email.content || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-      return fallback.length > maxLen ? `${fallback.slice(0, maxLen)}…` : (fallback || '(Aucun contenu)');
-    }
+    const plain = getEmailBodyText(email);
+    if (!plain) return '(Aucun contenu)';
+    return plain.length > maxLen ? `${plain.slice(0, maxLen)}…` : plain;
   };
 
   const handleEmailClick = (email: UnifiedEmail) => {
@@ -408,15 +417,15 @@ export const UnifiedEmailManager: React.FC = () => {
 
               {/* Email content */}
               <div className="prose prose-sm max-w-none dark:prose-invert email-content-wrapper">
-                {selectedEmail.html_content ? (
+                {selectedEmail.html_content && sanitizeEmailHtml(selectedEmail.html_content).replace(/<[^>]*>/g, '').trim() ? (
                   <div
                     className="break-words [&_*]:max-w-full [&_img]:h-auto [&_table]:!w-full"
                     dangerouslySetInnerHTML={{ __html: sanitizeEmailHtml(selectedEmail.html_content) }}
                   />
-                ) : selectedEmail.content ? (
-                  <div className="whitespace-pre-wrap break-words text-sm">{selectedEmail.content}</div>
+                ) : getEmailBodyText(selectedEmail) ? (
+                  <div className="whitespace-pre-wrap break-words text-sm">{getEmailBodyText(selectedEmail)}</div>
                 ) : (
-                  <div className="text-muted-foreground italic text-sm">(Aucun contenu)</div>
+                  <div className="text-muted-foreground italic text-sm">Contenu indisponible pour cet email déjà synchronisé.</div>
                 )}
               </div>
             </div>
