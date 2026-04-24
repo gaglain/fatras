@@ -36,12 +36,14 @@ export const UnifiedEmailManager: React.FC = () => {
   const { emails, isLoading, loadEmails, markAsRead, getEmailsByDirection, getUnreadCount } = useUnifiedEmails();
   const { notifications, markAsRead: markNotificationAsRead, markAllAsRead, getUnreadCount: getNotificationUnreadCount } = useEmailNotifications();
   const { syncEmails, accounts, isLoading: isSyncing } = useNylasEmail();
+  const navigate = useNavigate();
   const [selectedEmail, setSelectedEmail] = useState<UnifiedEmail | null>(null);
   const [activeTab, setActiveTab] = useState('inbox');
   const [filter, setFilter] = useState<'all' | 'spam'>('all');
   const [showComposer, setShowComposer] = useState(false);
   const [composerMode, setComposerMode] = useState<'reply' | 'forward' | null>(null);
   const [composerSourceEmail, setComposerSourceEmail] = useState<UnifiedEmail | null>(null);
+  const [isLookingUpContact, setIsLookingUpContact] = useState(false);
 
   // Utils: clean preview from HTML
   const decodeHtmlEntities = (str: string) => {
