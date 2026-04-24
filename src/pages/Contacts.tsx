@@ -19,13 +19,14 @@ import { useAuth } from '@/hooks/useAuth';
 import { useContactLists } from '@/hooks/useContactLists';
 import { toast } from 'sonner';
 import { Contact } from '@/types/contact.types';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const PAGE_SIZE = 200;
 
 export const Contacts: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { contactLists, createContactList } = useContactLists();
 
   const [contacts, setContacts] = useState<Contact[]>([]);
