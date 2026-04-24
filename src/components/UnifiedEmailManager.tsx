@@ -285,58 +285,170 @@ export const UnifiedEmailManager: React.FC = () => {
     );
   };
 
+  const openContactFiche = async (email: UnifiedEmail) => {
+    if (email.contact_id) {
+      navigate(`/contacts/${email.contact_id}`);
+      return;
+    }
+    const targetEmail = (email.direction === 'received' ? email.from_email : email.to_email) || '';
+    if (!targetEmail) {
+      toast.error("Aucune adresse email exploitable");
+      return;
+    }
+    try {
+      setIsLookingUpContact(true);
+      const { data, error } = await supabase
+        .from('contacts')
+        .select('id, first_name, last_name, email')
+        .ilike('email', targetEmail)
+        .maybeSingle();
+      if (error) throw error;
+      if (data?.id) {
+        navigate(`/contacts/${data.id}`);
+      } else {
+        toast.info("Aucun contact existant — création", { description: targetEmail });
+        navigate(`/contacts?prefillEmail=${encodeURIComponent(targetEmail)}&prefillName=${encodeURIComponent(email.from_name || email.to_name || '')}`);
+      }
+    } catch (err) {
+      toast.error("Erreur lors de la recherche du contact");
+    } finally {
+      setIsLookingUpContact(false);
+    }
+  };
+
   if (selectedEmail) {
+    const correspondentEmail = selectedEmail.direction === 'received'
+      ? selectedEmail.from_email
+      : selectedEmail.to_email;
+    const correspondentName = selectedEmail.direction === 'received'
+      ? (selectedEmail.from_name || selectedEmail.from_email)
+      : (selectedEmail.to_name || selectedEmail.to_email);
+
     return (
-      <Card className="h-full">
-        <CardHeader className="pb-3">
-          <div className="flex items-center gap-2">
+      <Card className="h-full flex flex-col">
+        <CardHeader className="pb-3 px-3 sm:px-6 shrink-0">
+          <div className="flex items-start gap-2">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setSelectedEmail(null)}
+              className="shrink-0"
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <div className="flex-1">
-              <h3 className="font-semibold truncate">{selectedEmail.subject}</h3>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <User className="h-3 w-3" />
-                <span>
-                  {selectedEmail.direction === 'received' 
-                    ? `De: ${selectedEmail.from_name || selectedEmail.from_email}`
-                    : `À: ${selectedEmail.to_name || selectedEmail.to_email}`
-                  }
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-base sm:text-lg break-words">{selectedEmail.subject || '(Aucun sujet)'}</h3>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm text-muted-foreground mt-1">
+                <span className="flex items-center gap-1 min-w-0">
+                  <User className="h-3 w-3 shrink-0" />
+                  <span className="truncate">
+                    {selectedEmail.direction === 'received' ? 'De: ' : 'À: '}{correspondentName}
+                  </span>
                 </span>
-                <Clock className="h-3 w-3 ml-2" />
-                <span>
-                  {new Date(selectedEmail.received_at || selectedEmail.sent_at || selectedEmail.created_at)
-                    .toLocaleString('fr-FR')}
+                <span className="flex items-center gap-1">
+                  <Clock className="h-3 w-3 shrink-0" />
+                  <span>
+                    {new Date(selectedEmail.received_at || selectedEmail.sent_at || selectedEmail.created_at)
+                      .toLocaleString('fr-FR')}
+                  </span>
                 </span>
               </div>
             </div>
+          </div>
+
+          {/* Actions bar */}
+          <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t">
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => handleReply(selectedEmail)}
+            >
+              <Reply className="h-4 w-4 mr-2" />
+              Répondre
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleForward(selectedEmail)}
+            >
+              <Forward className="h-4 w-4 mr-2" />
+              Transférer
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => openContactFiche(selectedEmail)}
+              disabled={isLookingUpContact}
+            >
+              <UserCircle2 className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Fiche contact</span>
+              <span className="sm:hidden">Contact</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleDelete(selectedEmail)}
+              className="text-destructive hover:text-destructive ml-auto"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Supprimer</span>
+            </Button>
           </div>
         </CardHeader>
         <Separator />
-        <CardContent className="p-6">
-          <div className="space-y-4">
-            <div className="bg-muted p-4 rounded-lg">
-              <div className="text-sm space-y-1">
-                <div><strong>De :</strong> {selectedEmail.from_name ? `${selectedEmail.from_name} <${selectedEmail.from_email}>` : selectedEmail.from_email}</div>
-                <div><strong>À :</strong> {selectedEmail.to_email}</div>
-                <div><strong>Sujet :</strong> {selectedEmail.subject}</div>
-                <div><strong>Date :</strong> {new Date(selectedEmail.received_at || selectedEmail.sent_at || selectedEmail.created_at).toLocaleString('fr-FR')}</div>
+        <CardContent className="p-0 flex-1 overflow-hidden">
+          <ScrollArea className="h-[60vh] sm:h-[70vh]">
+            <div className="p-4 sm:p-6 space-y-4">
+              {/* Headers compact */}
+              <div className="bg-muted/40 p-3 sm:p-4 rounded-lg text-xs sm:text-sm space-y-1 border">
+                <div className="break-all"><strong>De :</strong> {selectedEmail.from_name ? `${selectedEmail.from_name} <${selectedEmail.from_email}>` : selectedEmail.from_email}</div>
+                <div className="break-all"><strong>À :</strong> {selectedEmail.to_email}</div>
+                <div className="break-words"><strong>Sujet :</strong> {selectedEmail.subject || '(Aucun sujet)'}</div>
+              </div>
+
+              {/* Email content */}
+              <div className="prose prose-sm max-w-none dark:prose-invert email-content-wrapper">
+                {selectedEmail.html_content ? (
+                  <div
+                    className="break-words [&_*]:max-w-full [&_img]:h-auto [&_table]:!w-full"
+                    dangerouslySetInnerHTML={{ __html: sanitizeEmailHtml(selectedEmail.html_content) }}
+                  />
+                ) : selectedEmail.content ? (
+                  <div className="whitespace-pre-wrap break-words text-sm">{selectedEmail.content}</div>
+                ) : (
+                  <div className="text-muted-foreground italic text-sm">(Aucun contenu)</div>
+                )}
               </div>
             </div>
-            
-            <div className="prose prose-sm max-w-none">
-              {selectedEmail.html_content ? (
-                <div dangerouslySetInnerHTML={{ __html: sanitizeEmailHtml(selectedEmail.html_content) }} />
-              ) : (
-                <div className="whitespace-pre-wrap">{selectedEmail.content}</div>
-              )}
-            </div>
-          </div>
+          </ScrollArea>
         </CardContent>
+
+        {/* Composer modal */}
+        {showComposer && (
+          <EmailComposer
+            isOpen={showComposer}
+            onClose={() => {
+              setShowComposer(false);
+              setComposerMode(null);
+              setComposerSourceEmail(null);
+            }}
+            toEmail={composerMode === 'reply' ? (composerSourceEmail?.from_email ?? '') : ''}
+            subject={
+              composerMode === 'reply'
+                ? `Re: ${composerSourceEmail?.subject ?? ''}`
+                : composerMode === 'forward'
+                ? `Fwd: ${composerSourceEmail?.subject ?? ''}`
+                : ''
+            }
+            preText={
+              composerMode === 'forward'
+                ? `\n\n---------- Message transféré ----------\nDe: ${composerSourceEmail?.from_email ?? ''}\nDate: ${composerSourceEmail ? new Date(composerSourceEmail.received_at || composerSourceEmail.sent_at || composerSourceEmail.created_at).toLocaleString('fr-FR') : ''}\nObjet: ${composerSourceEmail?.subject ?? ''}\n\n${composerSourceEmail?.content ?? ''}`
+                : composerMode === 'reply'
+                ? `\n\n---------- Message original ----------\nDe: ${composerSourceEmail?.from_email ?? ''}\nDate: ${composerSourceEmail ? new Date(composerSourceEmail.received_at || composerSourceEmail.sent_at || composerSourceEmail.created_at).toLocaleString('fr-FR') : ''}\n\n${composerSourceEmail?.content ?? ''}`
+                : ''
+            }
+          />
+        )}
       </Card>
     );
   }
