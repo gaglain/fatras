@@ -19,13 +19,14 @@ import { useAuth } from '@/hooks/useAuth';
 import { useContactLists } from '@/hooks/useContactLists';
 import { toast } from 'sonner';
 import { Contact } from '@/types/contact.types';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const PAGE_SIZE = 200;
 
 export const Contacts: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { contactLists, createContactList } = useContactLists();
 
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -62,6 +63,35 @@ export const Contacts: React.FC = () => {
 
   useEffect(() => { if (user) { fetchContacts({ reset: true }); fetchEvents(); fetchArtists(); } }, [user]);
   useEffect(() => { filterContacts(); }, [contacts, searchTerm, statusFilter, roleFilter, tagFilters, sourceFilter, cityFilter, departmentFilter, eventFilter, artistFilter, contactEvents, contactArtists]);
+
+  // Open the contact creation dialog with prefilled data when arriving with ?prefillEmail / ?prefillName
+  useEffect(() => {
+    const prefillEmail = searchParams.get('prefillEmail');
+    const prefillName = searchParams.get('prefillName') || '';
+    if (!prefillEmail) return;
+
+    const cleanName = prefillName.replace(/<[^>]+>/g, '').replace(/"/g, '').trim();
+    const parts = cleanName.split(/\s+/).filter(Boolean);
+    const first_name = parts[0] || '';
+    const last_name = parts.slice(1).join(' ') || '';
+
+    setActiveTab('contacts');
+    setEditingContact({
+      first_name,
+      last_name,
+      email: prefillEmail,
+      phone: '', position: '', company: '',
+      address: '', city: '', postal_code: '', country: 'France',
+      status: 'prospect', source: 'email', notes: '', tags: [], role: 'contact',
+    } as Contact);
+    setDialogOpen(true);
+
+    // Clean URL so refreshing doesn't re-open the dialog
+    const next = new URLSearchParams(searchParams);
+    next.delete('prefillEmail');
+    next.delete('prefillName');
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
   useEffect(() => {
     const fetchStats = async () => {
       if (!user) return;

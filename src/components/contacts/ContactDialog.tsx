@@ -206,7 +206,7 @@ export const ContactDialog: React.FC<ContactDialogProps> = ({
         <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleCloseDialog(); }}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => e.preventDefault()}>
             <DialogHeader>
-              <DialogTitle>{contact ? 'Modifier le contact' : 'Nouveau contact'}</DialogTitle>
+              <DialogTitle>{contact?.id ? 'Modifier le contact' : 'Nouveau contact'}</DialogTitle>
             </DialogHeader>
 
             <ContactDialogForm
