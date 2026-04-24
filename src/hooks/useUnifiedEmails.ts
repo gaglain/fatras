@@ -80,6 +80,59 @@ const mapInboundRow = (ie: any, myEmailsSet: Set<string>, myDomainsSet: Set<stri
   };
 };
 
+const getEmailCompletenessScore = (email: UnifiedEmail): number => {
+  const htmlLength = email.html_content?.trim().length ?? 0;
+  const textLength = email.content?.trim().length ?? 0;
+  const labelsCount = email.labels?.length ?? 0;
+
+  return (
+    htmlLength * 3 +
+    textLength * 2 +
+    (email.subject ? 20 : 0) +
+    (email.from_name ? 10 : 0) +
+    (email.to_name ? 10 : 0) +
+    (email.contact_id ? 10 : 0) +
+    (email.attachments ? 10 : 0) +
+    (email.read_at ? 5 : 0) +
+    labelsCount
+  );
+};
+
+const mergeEmailRecords = (current: UnifiedEmail, incoming: UnifiedEmail): UnifiedEmail => {
+  const incomingWins = getEmailCompletenessScore(incoming) >= getEmailCompletenessScore(current);
+  const preferred = incomingWins ? incoming : current;
+  const fallback = incomingWins ? current : incoming;
+
+  return {
+    ...fallback,
+    ...preferred,
+    id: preferred.id || fallback.id,
+    message_id: preferred.message_id || fallback.message_id,
+    direction: preferred.direction || fallback.direction,
+    from_email: preferred.from_email || fallback.from_email,
+    from_name: preferred.from_name || fallback.from_name,
+    to_email: preferred.to_email || fallback.to_email,
+    to_name: preferred.to_name || fallback.to_name,
+    subject: preferred.subject || fallback.subject,
+    content: preferred.content || fallback.content,
+    html_content: preferred.html_content || fallback.html_content,
+    status: preferred.status || fallback.status,
+    provider: preferred.provider || fallback.provider,
+    thread_id: preferred.thread_id || fallback.thread_id,
+    labels: preferred.labels?.length ? preferred.labels : fallback.labels,
+    attachments: preferred.attachments ?? fallback.attachments,
+    contact_id: preferred.contact_id || fallback.contact_id,
+    sent_at: preferred.sent_at || fallback.sent_at,
+    received_at: preferred.received_at || fallback.received_at,
+    read_at: preferred.read_at || fallback.read_at,
+    delivered_at: preferred.delivered_at || fallback.delivered_at,
+    opened_at: preferred.opened_at || fallback.opened_at,
+    is_read: preferred.is_read ?? fallback.is_read,
+    created_at: preferred.created_at || fallback.created_at,
+    updated_at: preferred.updated_at || fallback.updated_at,
+  };
+};
+
 export const useUnifiedEmails = (options: UseUnifiedEmailsOptions = {}) => {
   const { user } = useAuthContext();
   const { autoLoad = true } = options;
