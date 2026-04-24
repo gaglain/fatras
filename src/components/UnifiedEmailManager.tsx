@@ -28,6 +28,9 @@ import { useEmailNotifications } from '@/hooks/useEmailNotifications';
 import { useNylasEmail } from '@/hooks/useNylasEmail';
 import { supabase } from '@/integrations/supabase/client';
 import { sanitizeEmailHtml } from '@/lib/sanitize';
+import { useNavigate } from 'react-router-dom';
+import { UserCircle2, UserPlus } from 'lucide-react';
+import { toast } from 'sonner';
 
 export const UnifiedEmailManager: React.FC = () => {
   const { emails, isLoading, loadEmails, markAsRead, getEmailsByDirection, getUnreadCount } = useUnifiedEmails();
