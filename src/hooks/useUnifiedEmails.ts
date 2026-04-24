@@ -147,7 +147,8 @@ export const useUnifiedEmails = (options: UseUnifiedEmailsOptions = {}) => {
       const emailMap = new Map<string, UnifiedEmail>();
       [...unified, ...inboundMapped].forEach(email => {
         const key = email.message_id || email.id;
-        if (!emailMap.has(key)) emailMap.set(key, email);
+        const existing = emailMap.get(key);
+        emailMap.set(key, existing ? mergeEmailRecords(existing, email) : email);
       });
 
       const combined = Array.from(emailMap.values()).sort((a, b) => {
