@@ -280,7 +280,12 @@ Deno.serve(async (req) => {
 
     // Build all-day date(s) — extract YYYY-MM-DD only
     const startDateStr = event.start_date ? event.start_date.substring(0, 10) : new Date().toISOString().substring(0, 10)
-    const endDateStr = event.end_date ? event.end_date.substring(0, 10) : startDateStr
+    let endDateStr = event.end_date ? event.end_date.substring(0, 10) : startDateStr
+    // Guard: if end is before start (data error), fall back to start to avoid Nylas "timeRangeEmpty" error
+    if (endDateStr < startDateStr) {
+      console.warn(`⚠️ end_date (${endDateStr}) is before start_date (${startDateStr}), using start_date for both`)
+      endDateStr = startDateStr
+    }
 
     // Load quote amount for this event
     let quoteAmount: number | null = null
