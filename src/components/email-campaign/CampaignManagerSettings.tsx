@@ -29,6 +29,7 @@ interface CampaignData {
   templateId: string;
   artistId: string | null;
   eventId: string | null;
+  includeSignature?: boolean;
 }
 
 interface CampaignManagerSettingsProps {
