@@ -55,6 +55,7 @@ const ContactTypes = lazy(() => import("./pages/ContactTypes"));
 const ContactLists = lazy(() => import("./pages/ContactLists").then(m => ({ default: m.ContactLists })));
 const Tasks = lazy(() => import("./pages/Tasks").then(m => ({ default: m.Tasks })));
 const RoadShow = lazy(() => import("./pages/RoadShow").then(m => ({ default: m.RoadShow })));
+const RoadshowAudit = lazy(() => import("./pages/RoadshowAudit").then(m => ({ default: m.RoadshowAudit })));
 const Messagerie = lazy(() => import("./pages/Messagerie").then(m => ({ default: m.Messagerie })));
 const ShowBible = lazy(() => import("./pages/ShowBible").then(m => ({ default: m.ShowBible })));
 const Contracts = lazy(() => import("./pages/Contracts").then(m => ({ default: m.Contracts })));
@@ -252,6 +253,7 @@ const App = () => {
                         <Route path="/contact-types" element={<ProtectedRoute><Layout><ContactTypes /></Layout></ProtectedRoute>} />
                         <Route path="/tasks" element={<ProtectedRoute><Layout><Tasks /></Layout></ProtectedRoute>} />
                         <Route path="/roadshow" element={<ProtectedRoute><Layout><RoadShow /></Layout></ProtectedRoute>} />
+                        <Route path="/roadshow/audit" element={<ProtectedRoute><Layout><RoadshowAudit /></Layout></ProtectedRoute>} />
                         <Route path="/messagerie" element={<ProtectedRoute><Layout><Messagerie /></Layout></ProtectedRoute>} />
                         <Route path="/show-bible" element={<ProtectedRoute><Layout><ShowBible /></Layout></ProtectedRoute>} />
                         <Route path="/contracts" element={<ProtectedRoute><Layout><Contracts /></Layout></ProtectedRoute>} />
