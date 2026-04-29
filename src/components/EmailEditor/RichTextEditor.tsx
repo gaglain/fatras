@@ -51,7 +51,13 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     ],
     content,
     onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
+      // Preserve empty paragraphs (visual blank lines) in both browser preview and email clients.
+      // TipTap emits <p></p> for blank lines which collapse in most renderers — replace with &nbsp;.
+      const raw = editor.getHTML();
+      const normalized = raw
+        .replace(/<p><\/p>/g, '<p>&nbsp;</p>')
+        .replace(/<p>(\s*<br\s*\/?>\s*)<\/p>/g, '<p>&nbsp;</p>');
+      onChange(normalized);
     },
     editorProps: {
       attributes: {
