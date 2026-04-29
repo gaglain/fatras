@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -33,7 +33,7 @@ import { UserCircle2, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const UnifiedEmailManager: React.FC = () => {
-  const { emails, isLoading, loadEmails, markAsRead, getEmailsByDirection, getUnreadCount } = useUnifiedEmails();
+  const { emails, isLoading, loadEmails, markAsRead, getEmailsByDirection, getUnreadCount, syncNow } = useUnifiedEmails();
   const { notifications, markAsRead: markNotificationAsRead, markAllAsRead, getUnreadCount: getNotificationUnreadCount } = useEmailNotifications();
   const { syncEmails, accounts, isLoading: isSyncing } = useNylasEmail();
   const navigate = useNavigate();
@@ -44,6 +44,8 @@ export const UnifiedEmailManager: React.FC = () => {
   const [composerMode, setComposerMode] = useState<'reply' | 'forward' | null>(null);
   const [composerSourceEmail, setComposerSourceEmail] = useState<UnifiedEmail | null>(null);
   const [isLookingUpContact, setIsLookingUpContact] = useState(false);
+  const [isLoadingSelectedContent, setIsLoadingSelectedContent] = useState(false);
+  const contentLookupAttempted = useRef<Set<string>>(new Set());
 
   // Utils: clean preview/body from HTML
   const decodeHtmlEntities = (str: string) => {
@@ -71,6 +73,11 @@ export const UnifiedEmailManager: React.FC = () => {
     if (fromContent) return fromContent;
     return '';
   };
+
+  const emailHasVisibleContent = (email: UnifiedEmail) => Boolean(
+    (email.html_content && sanitizeEmailHtml(email.html_content).replace(/<[^>]*>/g, '').trim())
+    || getEmailBodyText(email)
+  );
 
   const getEmailPreview = (email: UnifiedEmail, maxLen = 140) => {
     const plain = getEmailBodyText(email);
