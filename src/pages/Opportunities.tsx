@@ -132,7 +132,8 @@ export const Opportunities: React.FC = () => {
         event_id: newOpportunity.event_id || null, task_id: newOpportunity.task_id || null, owner_id: newOpportunity.owner_id || null
       }).eq('id', editingOpportunity.id).eq('user_id', user.id);
       if (error) throw error;
-      if (newOpportunity.status === 'won' && previousStatus !== 'won') await createRoadshowFromOpportunity(editingOpportunity.id, newOpportunity);
+      // Feuille de route + canal créés automatiquement par trigger DB (anti-doublon centralisé)
+      if (newOpportunity.status === 'won' && previousStatus !== 'won') toast.success('Feuille de route et canal générés automatiquement');
       setOpportunities(prev => prev.map(o => o.id === editingOpportunity.id ? { ...o, ...newOpportunity } : o));
       resetForm(); toast.success('Opportunité mise à jour');
     } catch (error: unknown) { logger.error('Erreur mise à jour:', error); toast.error("Erreur lors de la mise à jour"); }
