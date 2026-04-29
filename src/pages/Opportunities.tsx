@@ -53,26 +53,7 @@ export const Opportunities: React.FC = () => {
   const [viewMode, setViewMode] = useState<'compact' | 'list'>('compact');
   const [newOpportunity, setNewOpportunity] = useState<OpportunityFormData>({ ...defaultOpportunityForm });
 
-  const createRoadshowFromOpportunity = async (opportunityId: string, oppData: OpportunityFormData) => {
-    if (!user) return;
-    try {
-      const artist = artists.find(a => a.id === oppData.artist_id);
-      const { data: roadshow, error: roadshowError } = await supabase.from('roadshow_stops').insert({
-        user_id: user.id, opportunity_id: opportunityId, city: oppData.location || '', venue: oppData.venue || '',
-        event_date: oppData.date || null, status: 'confirmed', capacity: 0, tickets_available: 0,
-        crew: [], equipment: [], artists: artist ? [artist.id] : [], artist_lineup: [],
-        notes: `Créé automatiquement à partir de l'opportunité ${oppData.title}`
-      }).select().single();
-      if (roadshowError) throw roadshowError;
-      if (roadshow) {
-        const { error: channelError } = await supabase.rpc('create_messaging_channel', {
-          channel_name: `🎭 ${oppData.title}`, channel_description: `Organisation du spectacle - ${oppData.venue || 'Lieu à définir'}`,
-          channel_type: 'private', member_user_ids: [], roadshow_ref_id: roadshow.id
-        });
-        if (!channelError) toast.success('Feuille de route et canal de messagerie créés !');
-      }
-    } catch (error: unknown) { logger.error('Erreur feuille de route:', error); toast.error(`Erreur lors de la création de la feuille de route`); }
-  };
+  // Création de feuille de route + canal déléguée aux triggers DB (anti-doublon centralisé)
 
   useEffect(() => {
     if (!user) return;
@@ -132,7 +113,8 @@ export const Opportunities: React.FC = () => {
         event_id: newOpportunity.event_id || null, task_id: newOpportunity.task_id || null, owner_id: newOpportunity.owner_id || null
       }).eq('id', editingOpportunity.id).eq('user_id', user.id);
       if (error) throw error;
-      if (newOpportunity.status === 'won' && previousStatus !== 'won') await createRoadshowFromOpportunity(editingOpportunity.id, newOpportunity);
+      // Feuille de route + canal créés automatiquement par trigger DB (anti-doublon centralisé)
+      if (newOpportunity.status === 'won' && previousStatus !== 'won') toast.success('Feuille de route et canal générés automatiquement');
       setOpportunities(prev => prev.map(o => o.id === editingOpportunity.id ? { ...o, ...newOpportunity } : o));
       resetForm(); toast.success('Opportunité mise à jour');
     } catch (error: unknown) { logger.error('Erreur mise à jour:', error); toast.error("Erreur lors de la mise à jour"); }
