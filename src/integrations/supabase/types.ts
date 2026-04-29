@@ -3266,6 +3266,7 @@ export type Database = {
           doors_time: string | null
           equipment: string[] | null
           event_date: string | null
+          event_id: string | null
           event_time: string | null
           id: string
           invitations: string | null
@@ -3312,6 +3313,7 @@ export type Database = {
           doors_time?: string | null
           equipment?: string[] | null
           event_date?: string | null
+          event_id?: string | null
           event_time?: string | null
           id?: string
           invitations?: string | null
@@ -3358,6 +3360,7 @@ export type Database = {
           doors_time?: string | null
           equipment?: string[] | null
           event_date?: string | null
+          event_id?: string | null
           event_time?: string | null
           id?: string
           invitations?: string | null
@@ -3386,6 +3389,13 @@ export type Database = {
           waypoints?: Json | null
         }
         Relationships: [
+          {
+            foreignKeyName: "roadshow_stops_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "roadshow_stops_opportunity_id_fkey"
             columns: ["opportunity_id"]
@@ -4386,6 +4396,22 @@ export type Database = {
         Returns: Json
       }
       encrypt_token: { Args: { plain_text: string }; Returns: string }
+      ensure_roadshow_for_entity: {
+        Args: {
+          p_address?: string
+          p_artist_id?: string
+          p_capacity?: number
+          p_city?: string
+          p_event_date?: string
+          p_event_id?: string
+          p_opportunity_id?: string
+          p_quote_id?: string
+          p_title?: string
+          p_user_id: string
+          p_venue?: string
+        }
+        Returns: string
+      }
       get_active_users_basic: {
         Args: never
         Returns: {
