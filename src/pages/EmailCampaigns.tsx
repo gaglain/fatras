@@ -59,11 +59,11 @@ export const EmailCampaigns: React.FC = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
       if (selectedCampaign) {
-        const { error } = await supabase.from('email_campaigns').update({ name: campaignData.name, subject: campaignData.subject, content: JSON.stringify(campaignData.blocks), artist_id: campaignData.artist_id || null, event_id: campaignData.event_id || null }).eq('id', selectedCampaign.id);
+        const { error } = await supabase.from('email_campaigns').update({ name: campaignData.name, subject: campaignData.subject, content: JSON.stringify(campaignData.blocks), artist_id: campaignData.artist_id || null, event_id: campaignData.event_id || null, include_signature: !!campaignData.include_signature }).eq('id', selectedCampaign.id);
         if (error) throw error;
         toast({ title: "Succès", description: "Campagne mise à jour avec succès" });
       } else {
-        const { error } = await supabase.from('email_campaigns').insert({ name: campaignData.name, subject: campaignData.subject, status: 'draft', content: JSON.stringify(campaignData.blocks), artist_id: campaignData.artist_id || null, event_id: campaignData.event_id || null, user_id: user.id });
+        const { error } = await supabase.from('email_campaigns').insert({ name: campaignData.name, subject: campaignData.subject, status: 'draft', content: JSON.stringify(campaignData.blocks), artist_id: campaignData.artist_id || null, event_id: campaignData.event_id || null, include_signature: !!campaignData.include_signature, user_id: user.id });
         if (error) throw error;
         if (campaignData.contactListIds?.length > 0) {
           const { data: newCampaign } = await supabase.from('email_campaigns').select('id').eq('user_id', user.id).order('created_at', { ascending: false }).limit(1).single();
