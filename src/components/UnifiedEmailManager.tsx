@@ -93,6 +93,28 @@ export const UnifiedEmailManager: React.FC = () => {
   };
 
   useEffect(() => {
+    if (!selectedEmail || emailHasVisibleContent(selectedEmail)) return;
+    if (contentLookupAttempted.current.has(selectedEmail.id)) return;
+
+    contentLookupAttempted.current.add(selectedEmail.id);
+    setIsLoadingSelectedContent(true);
+    void syncNow({ forceSyncSince: selectedEmail.received_at || selectedEmail.sent_at || selectedEmail.created_at })
+      .then(() => loadEmails())
+      .catch((error) => {
+        console.error('Erreur récupération contenu email:', error);
+      })
+      .finally(() => setIsLoadingSelectedContent(false));
+  }, [selectedEmail, syncNow, loadEmails]);
+
+  useEffect(() => {
+    if (!selectedEmail) return;
+    const refreshedEmail = emails.find((email) => email.id === selectedEmail.id || (email.message_id && email.message_id === selectedEmail.message_id));
+    if (refreshedEmail && refreshedEmail !== selectedEmail && emailHasVisibleContent(refreshedEmail)) {
+      setSelectedEmail(refreshedEmail);
+    }
+  }, [emails, selectedEmail]);
+
+  useEffect(() => {
     if (!emails.length || selectedEmail) return;
 
     const params = new URLSearchParams(window.location.search);
@@ -431,8 +453,13 @@ export const UnifiedEmailManager: React.FC = () => {
                   />
                 ) : getEmailBodyText(selectedEmail) ? (
                   <div className="whitespace-pre-wrap break-words text-sm">{getEmailBodyText(selectedEmail)}</div>
+                ) : isLoadingSelectedContent ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                    Chargement du contenu de l'email…
+                  </div>
                 ) : (
-                  <div className="text-muted-foreground italic text-sm">Contenu indisponible pour cet email déjà synchronisé.</div>
+                  <div className="text-muted-foreground italic text-sm">Contenu non récupéré lors de la synchronisation. Cliquez sur Sync pour relancer la récupération complète.</div>
                 )}
               </div>
             </div>
