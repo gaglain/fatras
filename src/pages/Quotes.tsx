@@ -66,28 +66,6 @@ export const Quotes: React.FC = () => {
     setFormData({ title: q.title, description: q.description || '', contact_id: q.contact_id ?? 'none', event_id: q.event_id ?? 'none', artist_id: q.artist_id ?? 'none', status: q.status, valid_until: q.valid_until || '', terms: q.terms || '', notes: q.notes || '', vat_rate: (q as any).vat_rate ?? 0 });
   };
 
-  const createRoadshowFromQuote = async (quoteId: string, quoteData: typeof formData) => {
-    if (!user) return;
-    try {
-      const event = events.find(e => e.id === (quoteData.event_id !== 'none' ? quoteData.event_id : ''));
-      const artist = artists.find(a => a.id === (quoteData.artist_id !== 'none' ? quoteData.artist_id : ''));
-      if (!event) { toast.error('Un événement doit être associé'); return; }
-      let opportunityId: string | null = null;
-      if (event.id) {
-        const { data: oppEvent } = await supabase.from('opportunity_events').select('opportunity_id').eq('event_id', event.id).maybeSingle();
-        if (oppEvent?.opportunity_id) opportunityId = oppEvent.opportunity_id;
-        else { const { data: opp } = await supabase.from('opportunities').select('id').eq('event_id', event.id).maybeSingle(); opportunityId = opp?.id || null; }
-      }
-      const { data: roadshow, error } = await supabase.from('roadshow_stops').insert({ user_id: user.id, quote_id: quoteId, opportunity_id: opportunityId, city: event.city || 'Ville à définir', venue: event.venue || 'Lieu à définir', address: event.address || '', event_date: event.start_date || null, status: 'confirmed', capacity: event.attendees_count || 0, tickets_available: event.attendees_count || 0, crew: [], equipment: [], artists: artist ? [artist.id] : [], artist_lineup: [], notes: `Créé à partir du devis ${quoteData.title}` }).select().single();
-      if (error) throw error;
-      if (roadshow) {
-        const { error: channelError } = await supabase.rpc('create_messaging_channel', { channel_name: `🎭 ${quoteData.title}`, channel_description: `Organisation - ${event.venue || ''}`, channel_type: 'private', member_user_ids: [], roadshow_ref_id: roadshow.id });
-        if (channelError) toast.error('Feuille de route créée mais erreur canal: ' + channelError.message);
-        else toast.success('Feuille de route et canal créés !');
-      }
-    } catch { toast.error('Erreur lors de la création de la feuille de route'); }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title.trim()) { toast.error('Le titre est requis'); return; }
@@ -95,7 +73,8 @@ export const Quotes: React.FC = () => {
     try {
       if (selectedQuote) {
         const updated = await updateQuote(selectedQuote.id, { title: formData.title, description: formData.description, contact_id: formData.contact_id !== 'none' ? formData.contact_id : null, event_id: formData.event_id !== 'none' ? formData.event_id : null, artist_id: formData.artist_id !== 'none' ? formData.artist_id : null, status: formData.status, valid_until: formData.valid_until || null, terms: formData.terms, notes: formData.notes, vat_rate: formData.vat_rate ?? 0 });
-        if (formData.status === 'accepted' && selectedQuote.status !== 'accepted') await createRoadshowFromQuote(selectedQuote.id, formData);
+        // Feuille de route + canal créés automatiquement par trigger DB (anti-doublon centralisé)
+        if (formData.status === 'accepted' && selectedQuote.status !== 'accepted') toast.success('Feuille de route et canal générés automatiquement');
         toast.success('Devis mis à jour');
         setSelectedQuote(updated || selectedQuote);
         setDialogOpen(false);
