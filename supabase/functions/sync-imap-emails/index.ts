@@ -278,11 +278,12 @@ const handler = async (req: Request): Promise<Response> => {
       };
 
       const parseMimeContent = (rawEmail: string): { content: string; html_content: string } => {
-        const splitIndex = rawEmail.search(/\r?\n\r?\n/);
+        const headerSeparator = rawEmail.match(/\r?\n\r?\n/);
+        const splitIndex = headerSeparator?.index ?? -1;
         if (splitIndex < 0) return { content: '', html_content: '' };
 
         const rawHeaders = rawEmail.slice(0, splitIndex);
-        const body = rawEmail.slice(rawEmail.match(/\r?\n\r?\n/)?.index! + (rawEmail.match(/\r?\n\r?\n/)?.[0].length || 0));
+        const body = rawEmail.slice(splitIndex + headerSeparator![0].length);
         const contentType = rawHeaders.match(/^Content-Type:\s*([^\r\n]+(?:\r?\n[ \t]+[^\r\n]+)*)/im)?.[1]?.replace(/\r?\n[ \t]+/g, ' ') || 'text/plain';
         const transferEncoding = rawHeaders.match(/^Content-Transfer-Encoding:\s*([^\r\n]+)/im)?.[1] || '';
         const charset = contentType.match(/charset="?([^";\s]+)"?/i)?.[1] || 'utf-8';
@@ -326,13 +327,14 @@ const handler = async (req: Request): Promise<Response> => {
           const end = i + 1 < fetchPositions.length ? fetchPositions[i + 1] : fetchResponse.length;
           const block = fetchResponse.substring(start, end);
 
-          // Extract raw headers from BODY[HEADER] literal
-          const headerLiteralMatch = block.match(/BODY\[HEADER\]\s*\{(\d+)\}\r\n/);
-          if (!headerLiteralMatch) continue;
+          const literalMatch = block.match(/(?:BODY\[\]|RFC822|BODY\[HEADER\])\s*\{(\d+)\}\r\n/);
+          if (!literalMatch) continue;
 
-          const headerSize = parseInt(headerLiteralMatch[1]);
-          const headerStart = block.indexOf(headerLiteralMatch[0]) + headerLiteralMatch[0].length;
-          const rawHeaders = block.substring(headerStart, headerStart + headerSize);
+          const literalSize = parseInt(literalMatch[1]);
+          const literalStart = block.indexOf(literalMatch[0]) + literalMatch[0].length;
+          const rawEmail = block.substring(literalStart, literalStart + literalSize);
+          const rawHeaders = rawEmail.split(/\r?\n\r?\n/, 1)[0];
+          const parsedContent = parseMimeContent(rawEmail);
 
           // Parse fields from raw headers
           const messageIdMatch = rawHeaders.match(/^Message-ID:\s*<?([^>\s\r\n]+)>?/im);
@@ -367,8 +369,8 @@ const handler = async (req: Request): Promise<Response> => {
             from_name: fromName,
             to_email: toMatch?.[2]?.trim().toLowerCase() || '',
             subject,
-            content: '',
-            html_content: '',
+            content: parsedContent.content,
+            html_content: parsedContent.html_content,
             received_at: receivedAt,
             direction: isSentFolder ? 'sent' : 'received',
             labels: [folder]
@@ -439,7 +441,7 @@ const handler = async (req: Request): Promise<Response> => {
           const fetchRange = msgsToFetch.join(',');
           
           console.log(`🔍 Fetching ${msgsToFetch.length} messages from ${folderName}`);
-          response = await sendCommand(`FETCH ${fetchRange} (FLAGS ENVELOPE BODY.PEEK[HEADER])`);
+          response = await sendCommand(`FETCH ${fetchRange} (FLAGS ENVELOPE BODY.PEEK[])`);
           
           const emails = parseEmailsFromResponse(response, folderName);
           console.log(`📧 ${emails.length} emails parsés depuis ${folderName}`);
