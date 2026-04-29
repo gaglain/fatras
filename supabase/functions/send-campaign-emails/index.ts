@@ -116,7 +116,30 @@ const handler = async (req: Request): Promise<Response> => {
       : campaign.content || [];
     
     console.log('Content blocks:', JSON.stringify(contentBlocks, null, 2));
-    const htmlContent = convertBlocksToHtml(contentBlocks);
+    let htmlContent = convertBlocksToHtml(contentBlocks);
+
+    // Optionally append the user's email signature
+    if (campaign.include_signature && campaign.user_id) {
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('email_signature')
+        .eq('user_id', campaign.user_id)
+        .maybeSingle();
+      const signatureHtml = profile?.email_signature?.trim();
+      if (signatureHtml) {
+        // Inject signature before closing the inner content cell so styling stays consistent
+        const injection = `<div style="margin-top:24px;padding-top:16px;border-top:1px solid #eee;font-size:14px;color:#333;">${signatureHtml}</div>`;
+        if (htmlContent.includes('</td>\n              </tr>\n            </table>')) {
+          htmlContent = htmlContent.replace(
+            '</td>\n              </tr>\n            </table>',
+            `${injection}</td>\n              </tr>\n            </table>`
+          );
+        } else {
+          htmlContent = htmlContent.replace('</body>', `${injection}</body>`);
+        }
+      }
+    }
+
     console.log('Generated HTML length:', htmlContent.length);
 
     // Split contacts into batches of 100 (Resend batch API limit)
