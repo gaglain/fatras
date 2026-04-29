@@ -256,6 +256,56 @@ const handler = async (req: Request): Promise<Response> => {
         });
       };
 
+      const decodeBodyContent = (body: string, encoding = '', charset = 'utf-8'): string => {
+        try {
+          const normalizedEncoding = encoding.toLowerCase();
+          let bytes: Uint8Array;
+          if (normalizedEncoding.includes('base64')) {
+            const binary = atob(body.replace(/\s/g, ''));
+            bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+          } else if (normalizedEncoding.includes('quoted-printable')) {
+            const qp = body.replace(/=\r?\n/g, '').replace(/=([0-9A-F]{2})/gi, (_m, hex) => String.fromCharCode(parseInt(hex, 16)));
+            bytes = new Uint8Array(qp.length);
+            for (let i = 0; i < qp.length; i++) bytes[i] = qp.charCodeAt(i);
+          } else {
+            bytes = new TextEncoder().encode(body);
+          }
+          return new TextDecoder(charset.toLowerCase().replace('windows-', 'windows').replace('iso-8859-1', 'latin1'), { fatal: false }).decode(bytes).trim();
+        } catch (_e) {
+          return body.trim();
+        }
+      };
+
+      const parseMimeContent = (rawEmail: string): { content: string; html_content: string } => {
+        const splitIndex = rawEmail.search(/\r?\n\r?\n/);
+        if (splitIndex < 0) return { content: '', html_content: '' };
+
+        const rawHeaders = rawEmail.slice(0, splitIndex);
+        const body = rawEmail.slice(rawEmail.match(/\r?\n\r?\n/)?.index! + (rawEmail.match(/\r?\n\r?\n/)?.[0].length || 0));
+        const contentType = rawHeaders.match(/^Content-Type:\s*([^\r\n]+(?:\r?\n[ \t]+[^\r\n]+)*)/im)?.[1]?.replace(/\r?\n[ \t]+/g, ' ') || 'text/plain';
+        const transferEncoding = rawHeaders.match(/^Content-Transfer-Encoding:\s*([^\r\n]+)/im)?.[1] || '';
+        const charset = contentType.match(/charset="?([^";\s]+)"?/i)?.[1] || 'utf-8';
+        const boundary = contentType.match(/boundary="?([^";]+)"?/i)?.[1];
+
+        if (!boundary) {
+          const decoded = decodeBodyContent(body, transferEncoding, charset);
+          return /text\/html/i.test(contentType)
+            ? { content: decoded.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim(), html_content: decoded }
+            : { content: decoded, html_content: '' };
+        }
+
+        const parts = body.split(`--${boundary}`).filter(part => part.trim() && !part.trim().startsWith('--'));
+        let text = '';
+        let html = '';
+        for (const part of parts) {
+          const nested = parseMimeContent(part.replace(/^\r?\n/, ''));
+          if (nested.html_content && !html) html = nested.html_content;
+          if (nested.content && !text) text = nested.content;
+        }
+        return { content: text || html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim(), html_content: html };
+      };
+
       // Fonction pour parser les emails d'une réponse FETCH
       const parseEmailsFromResponse = (fetchResponse: string, folder: string): any[] => {
         const emails: any[] = [];
