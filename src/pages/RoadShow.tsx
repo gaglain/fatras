@@ -194,6 +194,7 @@ export const RoadShow: React.FC = () => {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {/* Filtres */}
