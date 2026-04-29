@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -33,7 +33,7 @@ import { UserCircle2, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const UnifiedEmailManager: React.FC = () => {
-  const { emails, isLoading, loadEmails, markAsRead, getEmailsByDirection, getUnreadCount } = useUnifiedEmails();
+  const { emails, isLoading, loadEmails, markAsRead, getEmailsByDirection, getUnreadCount, syncNow } = useUnifiedEmails();
   const { notifications, markAsRead: markNotificationAsRead, markAllAsRead, getUnreadCount: getNotificationUnreadCount } = useEmailNotifications();
   const { syncEmails, accounts, isLoading: isSyncing } = useNylasEmail();
   const navigate = useNavigate();
@@ -44,6 +44,8 @@ export const UnifiedEmailManager: React.FC = () => {
   const [composerMode, setComposerMode] = useState<'reply' | 'forward' | null>(null);
   const [composerSourceEmail, setComposerSourceEmail] = useState<UnifiedEmail | null>(null);
   const [isLookingUpContact, setIsLookingUpContact] = useState(false);
+  const [isLoadingSelectedContent, setIsLoadingSelectedContent] = useState(false);
+  const contentLookupAttempted = useRef<Set<string>>(new Set());
 
   // Utils: clean preview/body from HTML
   const decodeHtmlEntities = (str: string) => {
@@ -72,6 +74,11 @@ export const UnifiedEmailManager: React.FC = () => {
     return '';
   };
 
+  const emailHasVisibleContent = (email: UnifiedEmail) => Boolean(
+    (email.html_content && sanitizeEmailHtml(email.html_content).replace(/<[^>]*>/g, '').trim())
+    || getEmailBodyText(email)
+  );
+
   const getEmailPreview = (email: UnifiedEmail, maxLen = 140) => {
     const plain = getEmailBodyText(email);
     if (!plain) return '(Aucun contenu)';
@@ -84,6 +91,28 @@ export const UnifiedEmailManager: React.FC = () => {
       markAsRead(email.id);
     }
   };
+
+  useEffect(() => {
+    if (!selectedEmail || emailHasVisibleContent(selectedEmail)) return;
+    if (contentLookupAttempted.current.has(selectedEmail.id)) return;
+
+    contentLookupAttempted.current.add(selectedEmail.id);
+    setIsLoadingSelectedContent(true);
+    void syncNow({ forceSyncSince: selectedEmail.received_at || selectedEmail.sent_at || selectedEmail.created_at })
+      .then(() => loadEmails())
+      .catch((error) => {
+        console.error('Erreur récupération contenu email:', error);
+      })
+      .finally(() => setIsLoadingSelectedContent(false));
+  }, [selectedEmail, syncNow, loadEmails]);
+
+  useEffect(() => {
+    if (!selectedEmail) return;
+    const refreshedEmail = emails.find((email) => email.id === selectedEmail.id || (email.message_id && email.message_id === selectedEmail.message_id));
+    if (refreshedEmail && refreshedEmail !== selectedEmail && emailHasVisibleContent(refreshedEmail)) {
+      setSelectedEmail(refreshedEmail);
+    }
+  }, [emails, selectedEmail]);
 
   useEffect(() => {
     if (!emails.length || selectedEmail) return;
@@ -424,8 +453,13 @@ export const UnifiedEmailManager: React.FC = () => {
                   />
                 ) : getEmailBodyText(selectedEmail) ? (
                   <div className="whitespace-pre-wrap break-words text-sm">{getEmailBodyText(selectedEmail)}</div>
+                ) : isLoadingSelectedContent ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                    Chargement du contenu de l'email…
+                  </div>
                 ) : (
-                  <div className="text-muted-foreground italic text-sm">Contenu indisponible pour cet email déjà synchronisé.</div>
+                  <div className="text-muted-foreground italic text-sm">Contenu non récupéré lors de la synchronisation. Cliquez sur Sync pour relancer la récupération complète.</div>
                 )}
               </div>
             </div>

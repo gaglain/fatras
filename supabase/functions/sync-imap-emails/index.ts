@@ -256,6 +256,57 @@ const handler = async (req: Request): Promise<Response> => {
         });
       };
 
+      const decodeBodyContent = (body: string, encoding = '', charset = 'utf-8'): string => {
+        try {
+          const normalizedEncoding = encoding.toLowerCase();
+          let bytes: Uint8Array;
+          if (normalizedEncoding.includes('base64')) {
+            const binary = atob(body.replace(/\s/g, ''));
+            bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+          } else if (normalizedEncoding.includes('quoted-printable')) {
+            const qp = body.replace(/=\r?\n/g, '').replace(/=([0-9A-F]{2})/gi, (_m, hex) => String.fromCharCode(parseInt(hex, 16)));
+            bytes = new Uint8Array(qp.length);
+            for (let i = 0; i < qp.length; i++) bytes[i] = qp.charCodeAt(i);
+          } else {
+            bytes = new TextEncoder().encode(body);
+          }
+          return new TextDecoder(charset.toLowerCase().replace('windows-', 'windows').replace('iso-8859-1', 'latin1'), { fatal: false }).decode(bytes).trim();
+        } catch (_e) {
+          return body.trim();
+        }
+      };
+
+      const parseMimeContent = (rawEmail: string): { content: string; html_content: string } => {
+        const headerSeparator = rawEmail.match(/\r?\n\r?\n/);
+        const splitIndex = headerSeparator?.index ?? -1;
+        if (splitIndex < 0) return { content: '', html_content: '' };
+
+        const rawHeaders = rawEmail.slice(0, splitIndex);
+        const body = rawEmail.slice(splitIndex + headerSeparator![0].length);
+        const contentType = rawHeaders.match(/^Content-Type:\s*([^\r\n]+(?:\r?\n[ \t]+[^\r\n]+)*)/im)?.[1]?.replace(/\r?\n[ \t]+/g, ' ') || 'text/plain';
+        const transferEncoding = rawHeaders.match(/^Content-Transfer-Encoding:\s*([^\r\n]+)/im)?.[1] || '';
+        const charset = contentType.match(/charset="?([^";\s]+)"?/i)?.[1] || 'utf-8';
+        const boundary = contentType.match(/boundary="?([^";]+)"?/i)?.[1];
+
+        if (!boundary) {
+          const decoded = decodeBodyContent(body, transferEncoding, charset);
+          return /text\/html/i.test(contentType)
+            ? { content: decoded.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim(), html_content: decoded }
+            : { content: decoded, html_content: '' };
+        }
+
+        const parts = body.split(`--${boundary}`).filter(part => part.trim() && !part.trim().startsWith('--'));
+        let text = '';
+        let html = '';
+        for (const part of parts) {
+          const nested = parseMimeContent(part.replace(/^\r?\n/, ''));
+          if (nested.html_content && !html) html = nested.html_content;
+          if (nested.content && !text) text = nested.content;
+        }
+        return { content: text || html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim(), html_content: html };
+      };
+
       // Fonction pour parser les emails d'une réponse FETCH
       const parseEmailsFromResponse = (fetchResponse: string, folder: string): any[] => {
         const emails: any[] = [];
@@ -276,13 +327,14 @@ const handler = async (req: Request): Promise<Response> => {
           const end = i + 1 < fetchPositions.length ? fetchPositions[i + 1] : fetchResponse.length;
           const block = fetchResponse.substring(start, end);
 
-          // Extract raw headers from BODY[HEADER] literal
-          const headerLiteralMatch = block.match(/BODY\[HEADER\]\s*\{(\d+)\}\r\n/);
-          if (!headerLiteralMatch) continue;
+          const literalMatch = block.match(/(?:BODY\[\]|RFC822|BODY\[HEADER\])\s*\{(\d+)\}\r\n/);
+          if (!literalMatch) continue;
 
-          const headerSize = parseInt(headerLiteralMatch[1]);
-          const headerStart = block.indexOf(headerLiteralMatch[0]) + headerLiteralMatch[0].length;
-          const rawHeaders = block.substring(headerStart, headerStart + headerSize);
+          const literalSize = parseInt(literalMatch[1]);
+          const literalStart = block.indexOf(literalMatch[0]) + literalMatch[0].length;
+          const rawEmail = block.substring(literalStart, literalStart + literalSize);
+          const rawHeaders = rawEmail.split(/\r?\n\r?\n/, 1)[0];
+          const parsedContent = parseMimeContent(rawEmail);
 
           // Parse fields from raw headers
           const messageIdMatch = rawHeaders.match(/^Message-ID:\s*<?([^>\s\r\n]+)>?/im);
@@ -317,8 +369,8 @@ const handler = async (req: Request): Promise<Response> => {
             from_name: fromName,
             to_email: toMatch?.[2]?.trim().toLowerCase() || '',
             subject,
-            content: '',
-            html_content: '',
+            content: parsedContent.content,
+            html_content: parsedContent.html_content,
             received_at: receivedAt,
             direction: isSentFolder ? 'sent' : 'received',
             labels: [folder]
@@ -389,7 +441,7 @@ const handler = async (req: Request): Promise<Response> => {
           const fetchRange = msgsToFetch.join(',');
           
           console.log(`🔍 Fetching ${msgsToFetch.length} messages from ${folderName}`);
-          response = await sendCommand(`FETCH ${fetchRange} (FLAGS ENVELOPE BODY.PEEK[HEADER])`);
+          response = await sendCommand(`FETCH ${fetchRange} (FLAGS ENVELOPE BODY.PEEK[])`);
           
           const emails = parseEmailsFromResponse(response, folderName);
           console.log(`📧 ${emails.length} emails parsés depuis ${folderName}`);
@@ -458,13 +510,21 @@ const handler = async (req: Request): Promise<Response> => {
       let syncedInbox = 0;
       for (const email of inboxEmails) {
         try {
-          // Upsert dans inbound_emails (ignore si message_id existe déjà)
-          const { error: inboundError } = await supabase
+          const { data: existingInbound } = await supabase
             .from('inbound_emails')
-            .upsert(email, { 
-              onConflict: 'message_id,user_id',
-              ignoreDuplicates: true 
-            });
+            .select('id, content, html_content')
+            .eq('message_id', email.message_id)
+            .eq('user_id', userId)
+            .maybeSingle();
+
+          const { error: inboundError } = existingInbound
+            ? await supabase
+              .from('inbound_emails')
+              .update({ content: email.content || existingInbound.content, html_content: email.html_content || existingInbound.html_content })
+              .eq('id', existingInbound.id)
+            : await supabase
+            .from('inbound_emails')
+            .insert(email);
           
           if (inboundError && !inboundError.message?.includes('duplicate')) {
             console.error('⚠️ Erreur upsert inbound_email:', inboundError);
@@ -477,10 +537,23 @@ const handler = async (req: Request): Promise<Response> => {
             .ilike('email', email.from_email)
             .maybeSingle();
 
-          // Upsert dans emails - utiliser insert avec check pour voir si c'est nouveau
-          const { data: insertedEmail, error: emailError } = await supabase
+          const { data: existingEmail } = await supabase
             .from('emails')
-            .upsert({
+            .select('id, content, html_content')
+            .eq('message_id', email.message_id)
+            .eq('user_id', userId)
+            .maybeSingle();
+
+          const { data: insertedEmail, error: emailError } = existingEmail
+            ? await supabase
+              .from('emails')
+              .update({ content: email.content || existingEmail.content, html_content: email.html_content || existingEmail.html_content })
+              .eq('id', existingEmail.id)
+              .select('id')
+              .maybeSingle()
+            : await supabase
+            .from('emails')
+            .insert({
               user_id: userId,
               message_id: email.message_id,
               from_email: email.from_email,
@@ -496,9 +569,6 @@ const handler = async (req: Request): Promise<Response> => {
               contact_id: contact?.id || null,
               labels: email.labels,
               is_read: false
-            }, { 
-              onConflict: 'message_id,user_id',
-              ignoreDuplicates: true 
             })
             .select('id')
             .maybeSingle();
@@ -517,12 +587,19 @@ const handler = async (req: Request): Promise<Response> => {
         try {
           const { data: existing } = await supabase
             .from('emails')
-            .select('id')
+            .select('id, content, html_content')
             .eq('message_id', email.message_id)
             .eq('user_id', userId)
             .single();
           
-          if (!existing) {
+          if (existing) {
+            if ((!existing.content && email.content) || (!existing.html_content && email.html_content)) {
+              await supabase
+                .from('emails')
+                .update({ content: email.content || existing.content, html_content: email.html_content || existing.html_content })
+                .eq('id', existing.id);
+            }
+          } else {
             const { data: contact } = await supabase
               .from('contacts')
               .select('id')

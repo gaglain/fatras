@@ -42,6 +42,7 @@ interface LoadEmailsOptions {
   contactId?: string;
   contactEmail?: string;
   limit?: number;
+  forceSyncSince?: string;
 }
 
 interface UseUnifiedEmailsOptions {
@@ -280,7 +281,9 @@ export const useUnifiedEmails = (options: UseUnifiedEmailsOptions = {}) => {
     try {
       logger.debug('🔄 Démarrage de la synchronisation automatique des emails...');
       try {
-        const { data: imapData, error: imapError } = await supabase.functions.invoke('sync-imap-emails', { body: { userId: user.id, action: 'sync' } });
+        const { data: imapData, error: imapError } = await supabase.functions.invoke('sync-imap-emails', {
+          body: { userId: user.id, action: 'sync', forceSyncSince: opts.forceSyncSince }
+        });
         if (!imapError && imapData?.success) { logger.debug('✅ Synchronisation IMAP réussie:', imapData); await loadEmails(opts); return; }
       } catch { logger.debug('📧 IMAP sync non disponible, essai avec Nylas...'); }
 
