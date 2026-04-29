@@ -514,8 +514,7 @@ const handler = async (req: Request): Promise<Response> => {
           const { error: inboundError } = await supabase
             .from('inbound_emails')
             .upsert(email, { 
-              onConflict: 'message_id,user_id',
-              ignoreDuplicates: true 
+              onConflict: 'message_id,user_id'
             });
           
           if (inboundError && !inboundError.message?.includes('duplicate')) {
@@ -549,8 +548,7 @@ const handler = async (req: Request): Promise<Response> => {
               labels: email.labels,
               is_read: false
             }, { 
-              onConflict: 'message_id,user_id',
-              ignoreDuplicates: true 
+              onConflict: 'message_id,user_id'
             })
             .select('id')
             .maybeSingle();
@@ -569,12 +567,19 @@ const handler = async (req: Request): Promise<Response> => {
         try {
           const { data: existing } = await supabase
             .from('emails')
-            .select('id')
+            .select('id, content, html_content')
             .eq('message_id', email.message_id)
             .eq('user_id', userId)
             .single();
           
-          if (!existing) {
+          if (existing) {
+            if ((!existing.content && email.content) || (!existing.html_content && email.html_content)) {
+              await supabase
+                .from('emails')
+                .update({ content: email.content || existing.content, html_content: email.html_content || existing.html_content })
+                .eq('id', existing.id);
+            }
+          } else {
             const { data: contact } = await supabase
               .from('contacts')
               .select('id')
