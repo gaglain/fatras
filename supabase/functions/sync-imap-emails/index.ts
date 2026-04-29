@@ -510,12 +510,21 @@ const handler = async (req: Request): Promise<Response> => {
       let syncedInbox = 0;
       for (const email of inboxEmails) {
         try {
-          // Upsert dans inbound_emails (ignore si message_id existe déjà)
-          const { error: inboundError } = await supabase
+          const { data: existingInbound } = await supabase
             .from('inbound_emails')
-            .upsert(email, { 
-              onConflict: 'message_id,user_id'
-            });
+            .select('id, content, html_content')
+            .eq('message_id', email.message_id)
+            .eq('user_id', userId)
+            .maybeSingle();
+
+          const { error: inboundError } = existingInbound
+            ? await supabase
+              .from('inbound_emails')
+              .update({ content: email.content || existingInbound.content, html_content: email.html_content || existingInbound.html_content })
+              .eq('id', existingInbound.id)
+            : await supabase
+            .from('inbound_emails')
+            .insert(email);
           
           if (inboundError && !inboundError.message?.includes('duplicate')) {
             console.error('⚠️ Erreur upsert inbound_email:', inboundError);
@@ -528,10 +537,23 @@ const handler = async (req: Request): Promise<Response> => {
             .ilike('email', email.from_email)
             .maybeSingle();
 
-          // Upsert dans emails - utiliser insert avec check pour voir si c'est nouveau
-          const { data: insertedEmail, error: emailError } = await supabase
+          const { data: existingEmail } = await supabase
             .from('emails')
-            .upsert({
+            .select('id, content, html_content')
+            .eq('message_id', email.message_id)
+            .eq('user_id', userId)
+            .maybeSingle();
+
+          const { data: insertedEmail, error: emailError } = existingEmail
+            ? await supabase
+              .from('emails')
+              .update({ content: email.content || existingEmail.content, html_content: email.html_content || existingEmail.html_content })
+              .eq('id', existingEmail.id)
+              .select('id')
+              .maybeSingle()
+            : await supabase
+            .from('emails')
+            .insert({
               user_id: userId,
               message_id: email.message_id,
               from_email: email.from_email,
@@ -547,8 +569,6 @@ const handler = async (req: Request): Promise<Response> => {
               contact_id: contact?.id || null,
               labels: email.labels,
               is_read: false
-            }, { 
-              onConflict: 'message_id,user_id'
             })
             .select('id')
             .maybeSingle();
