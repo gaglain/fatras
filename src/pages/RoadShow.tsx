@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Plus, Map, List, Settings, CalendarDays, Archive, RotateCcw, Calculator } from 'lucide-react';
+import { Plus, Map, List, Settings, CalendarDays, Archive, RotateCcw, Calculator, ShieldCheck } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useUser } from '@/contexts/UserContext';
 import { useArtists } from '@/hooks/useArtists';
