@@ -23,6 +23,7 @@ interface EmailCampaign {
   attachments?: Array<{name: string; url: string}>;
   artist_id?: string | null;
   event_id?: string | null;
+  include_signature?: boolean;
 }
 
 interface ContactList {
