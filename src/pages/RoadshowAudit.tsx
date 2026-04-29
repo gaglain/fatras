@@ -386,21 +386,21 @@ const RoadshowAudit: React.FC = () => {
       )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center justify-between gap-2 flex-wrap">
-              <span>
-                Lier {dialogKind === 'event' ? 'un événement' : dialogKind === 'opportunity' ? 'une opportunité' : 'un devis'}
-                {dialogStop && ` à ${dialogStop.city} - ${dialogStop.venue}`}
-              </span>
+        <DialogContent className="max-w-2xl flex flex-col max-h-[90vh] p-0">
+          <DialogHeader className="p-6 pb-2 shrink-0">
+            <DialogTitle className="pr-8 text-base sm:text-lg leading-snug">
+              Lier {dialogKind === 'event' ? 'un événement' : dialogKind === 'opportunity' ? 'une opportunité' : 'un devis'}
+              {dialogStop && ` à ${dialogStop.city} - ${dialogStop.venue}`}
+            </DialogTitle>
+            <div className="pt-2">
               <Button size="sm" variant={universalMode ? 'default' : 'outline'} onClick={() => setUniversalMode(!universalMode)} className="gap-1">
                 <Sparkles className="h-3 w-3" />
                 {universalMode ? 'Recherche universelle ON' : 'Recherche universelle'}
               </Button>
-            </DialogTitle>
+            </div>
           </DialogHeader>
-          <div className="space-y-3">
-            <div className="relative">
+          <div className="space-y-3 px-6 flex-1 overflow-hidden flex flex-col min-h-0">
+            <div className="relative shrink-0">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 autoFocus
@@ -411,7 +411,7 @@ const RoadshowAudit: React.FC = () => {
               />
             </div>
 
-            <div className="max-h-96 overflow-y-auto border-2 border-foreground rounded">
+            <div className="flex-1 min-h-0 overflow-y-auto border-2 border-foreground rounded">
               {dialogOptions.length === 0 ? (
                 <p className="p-4 text-sm text-muted-foreground text-center">Aucun résultat</p>
               ) : (
@@ -444,11 +444,11 @@ const RoadshowAudit: React.FC = () => {
               )}
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="p-4 border-t-2 border-foreground shrink-0 bg-background flex-row justify-end gap-2">
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Annuler</Button>
-            <Button onClick={confirmLink} disabled={!dialogSelected || !!busyId}>
+            <Button onClick={confirmLink} disabled={!dialogSelected || !!busyId} className="bg-primary text-primary-foreground">
               {busyId && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Lier
+              Lier la sélection
             </Button>
           </DialogFooter>
         </DialogContent>
