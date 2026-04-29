@@ -55,6 +55,7 @@ const ContactTypes = lazy(() => import("./pages/ContactTypes"));
 const ContactLists = lazy(() => import("./pages/ContactLists").then(m => ({ default: m.ContactLists })));
 const Tasks = lazy(() => import("./pages/Tasks").then(m => ({ default: m.Tasks })));
 const RoadShow = lazy(() => import("./pages/RoadShow").then(m => ({ default: m.RoadShow })));
+const RoadshowAudit = lazy(() => import("./pages/RoadshowAudit").then(m => ({ default: m.RoadshowAudit })));
 const Messagerie = lazy(() => import("./pages/Messagerie").then(m => ({ default: m.Messagerie })));
 const ShowBible = lazy(() => import("./pages/ShowBible").then(m => ({ default: m.ShowBible })));
 const Contracts = lazy(() => import("./pages/Contracts").then(m => ({ default: m.Contracts })));
