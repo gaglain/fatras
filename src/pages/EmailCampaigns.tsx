@@ -23,6 +23,7 @@ interface Campaign {
   created_at: string;
   updated_at: string;
   content?: string;
+  include_signature?: boolean;
 }
 
 export const EmailCampaigns: React.FC = () => {
@@ -59,11 +60,11 @@ export const EmailCampaigns: React.FC = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
       if (selectedCampaign) {
-        const { error } = await supabase.from('email_campaigns').update({ name: campaignData.name, subject: campaignData.subject, content: JSON.stringify(campaignData.blocks), artist_id: campaignData.artist_id || null, event_id: campaignData.event_id || null }).eq('id', selectedCampaign.id);
+        const { error } = await supabase.from('email_campaigns').update({ name: campaignData.name, subject: campaignData.subject, content: JSON.stringify(campaignData.blocks), artist_id: campaignData.artist_id || null, event_id: campaignData.event_id || null, include_signature: !!campaignData.include_signature }).eq('id', selectedCampaign.id);
         if (error) throw error;
         toast({ title: "Succès", description: "Campagne mise à jour avec succès" });
       } else {
-        const { error } = await supabase.from('email_campaigns').insert({ name: campaignData.name, subject: campaignData.subject, status: 'draft', content: JSON.stringify(campaignData.blocks), artist_id: campaignData.artist_id || null, event_id: campaignData.event_id || null, user_id: user.id });
+        const { error } = await supabase.from('email_campaigns').insert({ name: campaignData.name, subject: campaignData.subject, status: 'draft', content: JSON.stringify(campaignData.blocks), artist_id: campaignData.artist_id || null, event_id: campaignData.event_id || null, include_signature: !!campaignData.include_signature, user_id: user.id });
         if (error) throw error;
         if (campaignData.contactListIds?.length > 0) {
           const { data: newCampaign } = await supabase.from('email_campaigns').select('id').eq('user_id', user.id).order('created_at', { ascending: false }).limit(1).single();
@@ -120,7 +121,7 @@ export const EmailCampaigns: React.FC = () => {
   const filteredCampaigns = campaigns.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()) || (c.subject && c.subject.toLowerCase().includes(searchTerm.toLowerCase())));
 
   if (showCampaignManager) return <EmailCampaignManager campaignId={selectedCampaign?.id} onBack={() => { setShowCampaignManager(false); setSelectedCampaign(null); }} />;
-  if (showEditor) return <EmailCampaignEditor campaign={selectedCampaign ? { id: selectedCampaign.id, name: selectedCampaign.name, subject: selectedCampaign.subject || '', contactListIds: [], blocks: selectedCampaign.content ? JSON.parse(selectedCampaign.content) : [], status: selectedCampaign.status as any, scheduledDate: undefined } : { id: '', name: '', subject: '', contactListIds: [], blocks: [], status: 'draft', scheduledDate: undefined }} contactLists={contactLists.map(l => ({ id: l.id, name: l.name, contactCount: l.contactCount || 0 }))} onSave={handleSaveCampaign} onBack={() => setShowEditor(false)} />;
+  if (showEditor) return <EmailCampaignEditor campaign={selectedCampaign ? { id: selectedCampaign.id, name: selectedCampaign.name, subject: selectedCampaign.subject || '', contactListIds: [], blocks: selectedCampaign.content ? JSON.parse(selectedCampaign.content) : [], status: selectedCampaign.status as any, scheduledDate: undefined, include_signature: selectedCampaign.include_signature ?? false } : { id: '', name: '', subject: '', contactListIds: [], blocks: [], status: 'draft', scheduledDate: undefined, include_signature: false }} contactLists={contactLists.map(l => ({ id: l.id, name: l.name, contactCount: l.contactCount || 0 }))} onSave={handleSaveCampaign} onBack={() => setShowEditor(false)} />;
   if (showEngagementDashboard) return (<div className="space-y-6"><div className="flex items-center space-x-4"><Button variant="ghost" onClick={() => setShowEngagementDashboard(false)}><ArrowLeft className="h-4 w-4 mr-2" />Retour</Button><div><h1 className="text-3xl font-bold">Engagement des contacts</h1><p className="text-muted-foreground">Score de fiabilité et classement par engagement email</p></div></div><EmailEngagementDashboard /></div>);
   if (showContactStats && selectedCampaign) return (<div className="space-y-6"><div className="flex items-center space-x-4"><Button variant="ghost" onClick={() => { setShowContactStats(false); setSelectedCampaign(null); }}><ArrowLeft className="h-4 w-4 mr-2" />Retour</Button><div><h1 className="text-3xl font-bold">{selectedCampaign.name}</h1><p className="text-muted-foreground">Statistiques par contact</p></div></div><CampaignContactStats campaignId={selectedCampaign.id} campaignName={selectedCampaign.name} /></div>);
   if (showAnalytics) return (<div className="space-y-6"><div className="flex items-center justify-between"><div className="flex items-center space-x-4"><Button variant="ghost" onClick={() => setShowAnalytics(false)}><ArrowLeft className="h-4 w-4 mr-2" />Retour</Button><div><h1 className="text-3xl font-bold">{selectedCampaign ? selectedCampaign.name : 'Statistiques globales'}</h1><p className="text-muted-foreground">{selectedCampaign ? 'Analytics de la campagne' : 'Vue d\'ensemble de toutes vos campagnes'}</p></div></div></div><EmailAnalytics /></div>);

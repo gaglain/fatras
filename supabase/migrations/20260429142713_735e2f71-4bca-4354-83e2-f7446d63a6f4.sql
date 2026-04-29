@@ -1,0 +1,1 @@
+ALTER TABLE public.email_campaigns ADD COLUMN IF NOT EXISTS include_signature boolean NOT NULL DEFAULT false;

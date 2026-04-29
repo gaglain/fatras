@@ -1133,6 +1133,7 @@ export type Database = {
           delivered_count: number | null
           event_id: string | null
           id: string
+          include_signature: boolean
           name: string
           open_rate: number | null
           opened_count: number | null
@@ -1159,6 +1160,7 @@ export type Database = {
           delivered_count?: number | null
           event_id?: string | null
           id?: string
+          include_signature?: boolean
           name: string
           open_rate?: number | null
           opened_count?: number | null
@@ -1185,6 +1187,7 @@ export type Database = {
           delivered_count?: number | null
           event_id?: string | null
           id?: string
+          include_signature?: boolean
           name?: string
           open_rate?: number | null
           opened_count?: number | null

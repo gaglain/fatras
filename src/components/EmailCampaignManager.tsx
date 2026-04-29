@@ -26,7 +26,7 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({ camp
   const existingCampaign = campaignId ? campaigns.find(c => c.id === campaignId) : null;
 
   const [campaignData, setCampaignData] = useState({
-    name: '', subject: '', content: [] as any[], selectedLists: [] as string[], templateId: '', artistId: '' as string | null, eventId: '' as string | null,
+    name: '', subject: '', content: [] as any[], selectedLists: [] as string[], templateId: '', artistId: '' as string | null, eventId: '' as string | null, includeSignature: false,
   });
 
   useEffect(() => {
@@ -41,8 +41,8 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({ camp
   useEffect(() => {
     const loadLinks = async () => {
       if (!campaignId) return;
-      const { data } = await supabase.from('email_campaigns').select('artist_id,event_id').eq('id', campaignId).single();
-      if (data) setCampaignData(prev => ({ ...prev, artistId: data.artist_id || null, eventId: data.event_id || null }));
+      const { data } = await supabase.from('email_campaigns').select('artist_id,event_id,include_signature').eq('id', campaignId).single();
+      if (data) setCampaignData(prev => ({ ...prev, artistId: data.artist_id || null, eventId: data.event_id || null, includeSignature: !!(data as any).include_signature }));
     };
     loadLinks();
   }, [campaignId]);
@@ -69,7 +69,7 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({ camp
   const handleSave = async () => {
     if (!campaignData.name || !campaignData.subject) { toast.error('Nom et sujet requis'); return; }
     try {
-      const payload: any = { name: campaignData.name, subject: campaignData.subject, content: JSON.stringify(campaignData.content), status: 'draft' as const, artist_id: campaignData.artistId || null, event_id: campaignData.eventId || null };
+      const payload: any = { name: campaignData.name, subject: campaignData.subject, content: JSON.stringify(campaignData.content), status: 'draft' as const, artist_id: campaignData.artistId || null, event_id: campaignData.eventId || null, include_signature: !!campaignData.includeSignature };
       let finalId = campaignId;
       if (campaignId) { await updateCampaign(campaignId, payload); await supabase.from('campaign_contact_lists').delete().eq('campaign_id', campaignId); }
       else { const campaign = await createCampaign(payload); finalId = (campaign as any).id; }
@@ -94,7 +94,7 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({ camp
     if (!campaignData.selectedLists.length) { toast.error('Sélectionnez au moins une liste de contacts'); return; }
     try {
       let finalId = campaignId;
-      if (!finalId) { const campaign = await createCampaign({ name: campaignData.name, subject: campaignData.subject, content: JSON.stringify(campaignData.content), status: 'scheduled', artist_id: campaignData.artistId || null, event_id: campaignData.eventId || null } as any); finalId = (campaign as any).id; }
+      if (!finalId) { const campaign = await createCampaign({ name: campaignData.name, subject: campaignData.subject, content: JSON.stringify(campaignData.content), status: 'scheduled', artist_id: campaignData.artistId || null, event_id: campaignData.eventId || null, include_signature: !!campaignData.includeSignature } as any); finalId = (campaign as any).id; }
       for (const listId of campaignData.selectedLists) { await supabase.from('campaign_contact_lists').insert({ campaign_id: finalId, contact_list_id: listId }); }
       await supabase.from('email_campaigns').update({ status: 'scheduled', scheduled_for: scheduledFor.toISOString(), auto_send: autoSend }).eq('id', finalId);
     } catch (error: any) { throw new Error('Erreur lors de la programmation: ' + error.message); }
@@ -105,8 +105,8 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({ camp
     setSending(true);
     try {
       let finalId = campaignId;
-      if (!finalId) { const campaign = await createCampaign({ name: campaignData.name, subject: campaignData.subject, content: JSON.stringify(campaignData.content), status: 'draft' }); finalId = campaign.id; }
-      else { await supabase.from('email_campaigns').update({ name: campaignData.name, subject: campaignData.subject, content: JSON.stringify(campaignData.content), status: 'draft' }).eq('id', finalId); await supabase.from('campaign_contact_lists').delete().eq('campaign_id', finalId); }
+      if (!finalId) { const campaign = await createCampaign({ name: campaignData.name, subject: campaignData.subject, content: JSON.stringify(campaignData.content), status: 'draft', include_signature: !!campaignData.includeSignature } as any); finalId = campaign.id; }
+      else { await supabase.from('email_campaigns').update({ name: campaignData.name, subject: campaignData.subject, content: JSON.stringify(campaignData.content), status: 'draft', include_signature: !!campaignData.includeSignature }).eq('id', finalId); await supabase.from('campaign_contact_lists').delete().eq('campaign_id', finalId); }
       for (const listId of campaignData.selectedLists) { await supabase.from('campaign_contact_lists').insert({ campaign_id: finalId, contact_list_id: listId }); }
       const { invokeEdgeFunction } = await import('@/lib/edgeFunctionClient');
       const result = await invokeEdgeFunction({ functionName: 'send-campaign-emails', body: { campaignId: finalId } });

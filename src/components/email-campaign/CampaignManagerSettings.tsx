@@ -29,6 +29,7 @@ interface CampaignData {
   templateId: string;
   artistId: string | null;
   eventId: string | null;
+  includeSignature?: boolean;
 }
 
 interface CampaignManagerSettingsProps {
@@ -117,6 +118,29 @@ export const CampaignManagerSettings: React.FC<CampaignManagerSettingsProps> = (
               </div>
             </div>
           ))}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle>Signature email</CardTitle></CardHeader>
+        <CardContent>
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="campaign-include-signature"
+              checked={!!campaignData.includeSignature}
+              onCheckedChange={(checked) =>
+                setCampaignData(prev => ({ ...prev, includeSignature: !!checked }))
+              }
+            />
+            <div className="flex-1">
+              <Label htmlFor="campaign-include-signature" className="font-medium cursor-pointer">
+                Inclure ma signature email
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                Votre signature personnelle (définie dans Préférences) sera ajoutée à la fin de chaque email envoyé.
+              </p>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -23,6 +23,7 @@ interface EmailCampaign {
   attachments?: Array<{name: string; url: string}>;
   artist_id?: string | null;
   event_id?: string | null;
+  include_signature?: boolean;
 }
 
 interface ContactList {
@@ -392,6 +393,19 @@ export const EmailCampaignEditor: React.FC<EmailCampaignEditorProps> = ({
                   ))}
                 </div>
               )}
+            </div>
+
+            <div className="flex items-center gap-2 p-3 border rounded-md bg-muted/30">
+              <input
+                type="checkbox"
+                id="campaign-include-signature"
+                checked={editedCampaign.include_signature ?? false}
+                onChange={(e) => setEditedCampaign({ ...editedCampaign, include_signature: e.target.checked })}
+                className="h-4 w-4"
+              />
+              <label htmlFor="campaign-include-signature" className="text-sm cursor-pointer">
+                Inclure ma signature email à la fin de la campagne
+              </label>
             </div>
           </CardContent>
         </Card>
