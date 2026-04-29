@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Plus, Map, List, Settings, CalendarDays, Archive, RotateCcw, Calculator } from 'lucide-react';
+import { Plus, Map, List, Settings, CalendarDays, Archive, RotateCcw, Calculator, ShieldCheck } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useUser } from '@/contexts/UserContext';
 import { useArtists } from '@/hooks/useArtists';
@@ -156,13 +156,20 @@ export const RoadShow: React.FC = () => {
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Feuille de Route</h1>
           <p className="text-sm sm:text-base text-muted-foreground mt-1 sm:mt-2">Gérez votre tournée et planifiez vos dates</p>
         </div>
-        <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-          <DialogTrigger asChild>
-            <Button className="w-full sm:w-auto">
-              <Plus className="h-4 w-4 mr-2" />
-              Nouvelle
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Link to="/roadshow/audit" className="w-full sm:w-auto">
+            <Button variant="outline" className="w-full sm:w-auto border-2 border-foreground">
+              <ShieldCheck className="h-4 w-4 mr-2" />
+              Audit des liens
             </Button>
-          </DialogTrigger>
+          </Link>
+          <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+            <DialogTrigger asChild>
+              <Button className="w-full sm:w-auto">
+                <Plus className="h-4 w-4 mr-2" />
+                Nouvelle
+              </Button>
+            </DialogTrigger>
          <DialogContent className="sm:!max-w-3xl overflow-x-hidden" onPointerDownOutside={(e) => e.preventDefault()}>
             <DialogHeader>
               <DialogTitle>Créer une nouvelle étape de tournée</DialogTitle>
@@ -187,6 +194,7 @@ export const RoadShow: React.FC = () => {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {/* Filtres */}
