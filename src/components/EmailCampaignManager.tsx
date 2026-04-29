@@ -26,7 +26,7 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({ camp
   const existingCampaign = campaignId ? campaigns.find(c => c.id === campaignId) : null;
 
   const [campaignData, setCampaignData] = useState({
-    name: '', subject: '', content: [] as any[], selectedLists: [] as string[], templateId: '', artistId: '' as string | null, eventId: '' as string | null,
+    name: '', subject: '', content: [] as any[], selectedLists: [] as string[], templateId: '', artistId: '' as string | null, eventId: '' as string | null, includeSignature: false,
   });
 
   useEffect(() => {
@@ -41,8 +41,8 @@ export const EmailCampaignManager: React.FC<EmailCampaignManagerProps> = ({ camp
   useEffect(() => {
     const loadLinks = async () => {
       if (!campaignId) return;
-      const { data } = await supabase.from('email_campaigns').select('artist_id,event_id').eq('id', campaignId).single();
-      if (data) setCampaignData(prev => ({ ...prev, artistId: data.artist_id || null, eventId: data.event_id || null }));
+      const { data } = await supabase.from('email_campaigns').select('artist_id,event_id,include_signature').eq('id', campaignId).single();
+      if (data) setCampaignData(prev => ({ ...prev, artistId: data.artist_id || null, eventId: data.event_id || null, includeSignature: !!(data as any).include_signature }));
     };
     loadLinks();
   }, [campaignId]);
