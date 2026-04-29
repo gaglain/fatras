@@ -23,6 +23,7 @@ interface Campaign {
   created_at: string;
   updated_at: string;
   content?: string;
+  include_signature?: boolean;
 }
 
 export const EmailCampaigns: React.FC = () => {
