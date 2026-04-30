@@ -56,10 +56,32 @@ export const EmailTemplateComposer: React.FC<EmailTemplateComposerProps> = ({ de
   const [uploading, setUploading] = useState(false);
   const [includeSignature, setIncludeSignature] = useState(true);
   const [addingFromMediaBank, setAddingFromMediaBank] = useState(false);
+  const [contactArtistIds, setContactArtistIds] = useState<string[]>([]);
 
   React.useEffect(() => { loadAccounts(); }, []);
   React.useEffect(() => { if (accounts.length > 0 && !selectedAccount) setSelectedAccount(accounts[0].id); }, [accounts, selectedAccount]);
   React.useEffect(() => { if (defaultRecipient) setTo(defaultRecipient); if (defaultSubject) setSubject(defaultSubject); }, [defaultRecipient, defaultSubject]);
+
+  // Load artists linked to the contact (for template prioritization)
+  React.useEffect(() => {
+    const contactId = contactData?.id;
+    if (!contactId) { setContactArtistIds([]); return; }
+    (async () => {
+      const { data } = await supabase
+        .from('contact_artists')
+        .select('artist_id')
+        .eq('contact_id', contactId);
+      setContactArtistIds((data || []).map((r: any) => r.artist_id).filter(Boolean));
+    })();
+  }, [contactData?.id]);
+
+  // Sort templates: contact-artist templates first, then others
+  const sortedTemplates = React.useMemo(() => {
+    if (!contactArtistIds.length) return templates;
+    const linked = templates.filter(t => t.artist_id && contactArtistIds.includes(t.artist_id));
+    const others = templates.filter(t => !t.artist_id || !contactArtistIds.includes(t.artist_id));
+    return [...linked, ...others];
+  }, [templates, contactArtistIds]);
 
   const handleMediaBankSelect = async (url: string) => {
     if (!url) return;
@@ -133,7 +155,7 @@ export const EmailTemplateComposer: React.FC<EmailTemplateComposerProps> = ({ de
           to={to} onToChange={setTo} subject={subject} onSubjectChange={setSubject}
           content={content} onContentChange={setContent}
           selectedTemplate={selectedTemplate} onClearTemplate={() => { setSelectedTemplate(null); setSubject(''); setContent(''); }}
-          templates={templates} showTemplates={showTemplates} onShowTemplatesChange={setShowTemplates} onApplyTemplate={applyTemplate}
+          templates={sortedTemplates} highlightedArtistIds={contactArtistIds} showTemplates={showTemplates} onShowTemplatesChange={setShowTemplates} onApplyTemplate={applyTemplate}
           attachments={attachments} onFileSelect={(e) => { if (e.target.files) setAttachments(prev => [...prev, ...Array.from(e.target.files!)]); }}
           onRemoveAttachment={(i) => setAttachments(prev => prev.filter((_, idx) => idx !== i))}
           onMediaBankSelect={handleMediaBankSelect} addingFromMediaBank={addingFromMediaBank}

@@ -20,6 +20,7 @@ interface EmailTemplate {
   category: string;
   variables: string[];
   attachments?: Array<{ name: string; url: string; size: number }>;
+  artist_id?: string | null;
 }
 
 interface EmailComposerFormProps {
@@ -37,6 +38,7 @@ interface EmailComposerFormProps {
   selectedTemplate: EmailTemplate | null;
   onClearTemplate: () => void;
   templates: EmailTemplate[];
+  highlightedArtistIds?: string[];
   showTemplates: boolean;
   onShowTemplatesChange: (v: boolean) => void;
   onApplyTemplate: (t: EmailTemplate) => void;
@@ -98,16 +100,22 @@ export const EmailComposerForm: React.FC<EmailComposerFormProps> = (props) => {
                 {props.templates.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-4">Aucun modèle disponible.</p>
                 ) : (
-                  props.templates.map((template) => (
-                    <div key={template.id} className="p-3 border rounded-lg cursor-pointer hover:bg-muted/50" onClick={() => props.onApplyTemplate(template)}>
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-medium">{template.name}</h4>
-                        <Badge variant="outline">{template.category}</Badge>
+                  props.templates.map((template) => {
+                    const isSuggested = !!template.artist_id && (props.highlightedArtistIds || []).includes(template.artist_id);
+                    return (
+                      <div key={template.id} className={`p-3 border rounded-lg cursor-pointer hover:bg-muted/50 ${isSuggested ? 'border-primary bg-primary/5' : ''}`} onClick={() => props.onApplyTemplate(template)}>
+                        <div className="flex items-center justify-between mb-2 flex-wrap gap-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className="font-medium">{template.name}</h4>
+                            {isSuggested && <Badge className="text-xs">Suggéré</Badge>}
+                          </div>
+                          <Badge variant="outline">{template.category}</Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-2">{template.subject}</p>
+                        <p className="text-xs text-muted-foreground line-clamp-2">{template.content.substring(0, 100)}...</p>
                       </div>
-                      <p className="text-sm text-muted-foreground mb-2">{template.subject}</p>
-                      <p className="text-xs text-muted-foreground line-clamp-2">{template.content.substring(0, 100)}...</p>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </DialogContent>
