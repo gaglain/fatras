@@ -1,0 +1,1 @@
+ALTER TABLE public.email_analytics ALTER COLUMN campaign_id DROP NOT NULL;

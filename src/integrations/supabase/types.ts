@@ -1093,7 +1093,7 @@ export type Database = {
       }
       email_analytics: {
         Row: {
-          campaign_id: string
+          campaign_id: string | null
           contact_id: string
           created_at: string
           event_data: Json | null
@@ -1102,7 +1102,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          campaign_id: string
+          campaign_id?: string | null
           contact_id: string
           created_at?: string
           event_data?: Json | null
@@ -1111,7 +1111,7 @@ export type Database = {
           user_id: string
         }
         Update: {
-          campaign_id?: string
+          campaign_id?: string | null
           contact_id?: string
           created_at?: string
           event_data?: Json | null

@@ -122,11 +122,12 @@ export const useNylasEmail = () => {
 
     setIsLoading(true);
     try {
-      const { data: contact } = await supabase
+      const { data: contactRows } = await supabase
         .from('contacts')
         .select('id')
-        .eq('email', email.to)
-        .single();
+        .ilike('email', email.to)
+        .limit(1);
+      const contact = contactRows && contactRows[0] ? contactRows[0] : null;
 
       const { data: emailRecord, error: emailError } = await supabase
         .from('emails')
@@ -192,6 +193,16 @@ export const useNylasEmail = () => {
           .from('emails')
           .update({ status: 'sent', sent_at: new Date().toISOString(), provider: 'resend' })
           .eq('id', emailRecord.id);
+      }
+      if (contact?.id) {
+        try {
+          await supabase.from('email_analytics').insert({
+            user_id: user.id,
+            contact_id: contact.id,
+            event_type: 'sent',
+            event_data: { email_id: emailRecord?.id, subject: email.subject, source: 'individual' }
+          });
+        } catch (e) { logger.warn('Analytics insert failed', e); }
       }
       toast.success('Email envoyé avec succès!');
       return { ...resendResult.data, provider: 'resend' };
