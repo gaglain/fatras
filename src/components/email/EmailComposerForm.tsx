@@ -38,6 +38,7 @@ interface EmailComposerFormProps {
   selectedTemplate: EmailTemplate | null;
   onClearTemplate: () => void;
   templates: EmailTemplate[];
+  highlightedArtistIds?: string[];
   showTemplates: boolean;
   onShowTemplatesChange: (v: boolean) => void;
   onApplyTemplate: (t: EmailTemplate) => void;
