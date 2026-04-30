@@ -79,6 +79,19 @@ export const EmailTemplateFormDialog: React.FC<Props> = ({
             </Select>
           </div>
           <div>
+            <Label>Artiste (optionnel)</Label>
+            <Select
+              value={formData.artist_id || '__none__'}
+              onValueChange={v => onFormDataChange({ ...formData, artist_id: v === '__none__' ? null : v })}
+            >
+              <SelectTrigger><SelectValue placeholder="Aucun artiste" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">Aucun artiste</SelectItem>
+                {artists.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
             <Label>Objet *</Label>
             <Input value={formData.subject} onChange={e => handleSubjectChange(e.target.value)} placeholder="Ex: Suivi du contrat pour {{event_name}}" />
           </div>
