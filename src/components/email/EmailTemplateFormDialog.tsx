@@ -40,6 +40,7 @@ interface Props {
   categories: { value: string; label: string }[];
   fileInputId: string;
   showExistingAttachments?: boolean;
+  artists?: Array<{ id: string; name: string }>;
 }
 
 const extractVariables = (text: string): string[] => {
