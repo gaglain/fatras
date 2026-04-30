@@ -24,6 +24,7 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
   const [selectedEmail, setSelectedEmail] = React.useState<any | null>(null);
   const [showReply, setShowReply] = React.useState(false);
   const [isSyncing, setIsSyncing] = React.useState(false);
+  const [campaignEmails, setCampaignEmails] = React.useState<any[]>([]);
 
   const normalizeAddress = React.useCallback((value?: string) => {
     if (!value) return '';
@@ -37,6 +38,73 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
     [contactEmail, normalizeAddress]
   );
 
+  // Load campaign emails sent to this contact (from email_analytics + email_campaigns)
+  const loadCampaignEmails = React.useCallback(async () => {
+    if (!contactId) { setCampaignEmails([]); return; }
+    try {
+      const { data: analytics } = await supabase
+        .from('email_analytics')
+        .select('id, campaign_id, contact_id, event_type, event_data, created_at')
+        .eq('contact_id', contactId)
+        .in('event_type', ['sent', 'delivered', 'opened', 'clicked', 'bounced'])
+        .order('created_at', { ascending: false })
+        .limit(500);
+
+      if (!analytics || analytics.length === 0) { setCampaignEmails([]); return; }
+
+      // Collapse multiple events per campaign into one entry, with the most engaged status
+      const campaignIds = Array.from(new Set(analytics.map((a: any) => a.campaign_id).filter(Boolean)));
+      const { data: campaigns } = await supabase
+        .from('email_campaigns')
+        .select('id, name, subject, content, sent_at, created_at')
+        .in('id', campaignIds.length ? campaignIds : ['00000000-0000-0000-0000-000000000000']);
+
+      const campaignMap = new Map<string, any>();
+      (campaigns || []).forEach((c: any) => campaignMap.set(c.id, c));
+
+      const STATUS_RANK: Record<string, number> = { sent: 1, delivered: 2, opened: 3, clicked: 4, bounced: 5 };
+      const grouped = new Map<string, any>();
+
+      for (const ev of analytics as any[]) {
+        const key = `${ev.campaign_id}-${ev.contact_id}`;
+        const existing = grouped.get(key);
+        const camp = campaignMap.get(ev.campaign_id);
+        const candidate = {
+          id: `campaign-${key}`,
+          message_id: `campaign-${key}`,
+          direction: 'sent' as const,
+          source: 'campaign',
+          campaign_name: camp?.name,
+          from_email: 'booking@fatras.net',
+          from_name: 'Campagne',
+          to_email: contactEmail || '',
+          to_name: '',
+          subject: camp?.subject || camp?.name || '(Campagne sans sujet)',
+          content: camp?.content || '',
+          html_content: camp?.content || '',
+          status: ev.event_type,
+          provider: 'campaign',
+          sent_at: camp?.sent_at || ev.created_at,
+          created_at: ev.created_at,
+          updated_at: ev.created_at,
+          opened_at: ev.event_type === 'opened' ? ev.created_at : null,
+          delivered_at: ev.event_type === 'delivered' ? ev.created_at : null,
+        };
+        if (!existing || (STATUS_RANK[ev.event_type] ?? 0) > (STATUS_RANK[existing.status] ?? 0)) {
+          grouped.set(key, { ...(existing || {}), ...candidate });
+        } else {
+          // keep best status, but pick up timestamps
+          if (ev.event_type === 'opened' && !existing.opened_at) existing.opened_at = ev.created_at;
+          if (ev.event_type === 'delivered' && !existing.delivered_at) existing.delivered_at = ev.created_at;
+        }
+      }
+      setCampaignEmails(Array.from(grouped.values()));
+    } catch (err) {
+      console.error('Erreur chargement emails campagnes:', err);
+      setCampaignEmails([]);
+    }
+  }, [contactId, contactEmail]);
+
   // Recharger les emails quand le composant est monté et quand contactId/contactEmail change
   React.useEffect(() => {
     if (contactId || normalizedContactEmail) {
@@ -46,7 +114,8 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
         limit: 500,
       });
     }
-  }, [contactId, normalizedContactEmail]);
+    loadCampaignEmails();
+  }, [contactId, normalizedContactEmail, loadCampaignEmails]);
 
   const stripTags = (s: string) => s ? s.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '').replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim() : '';
   const getPreviewText = (email: any) => {
