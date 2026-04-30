@@ -53,7 +53,7 @@ export const EmailTemplateFormDialog: React.FC<Props> = ({
   open, onOpenChange, title, formData, onFormDataChange, attachmentFiles,
   onFileSelect, onRemoveAttachment, onRemoveExistingAttachment, onMediaBankSelect,
   addingFromMediaBank, uploading, onSubmit, onCancel, submitLabel, categories,
-  fileInputId, showExistingAttachments
+  fileInputId, showExistingAttachments, artists = []
 }) => {
   const handleContentChange = (value: string) => {
     onFormDataChange({ ...formData, content: value, variables: extractVariables(value + ' ' + formData.subject) });
