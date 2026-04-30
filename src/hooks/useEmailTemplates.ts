@@ -144,6 +144,7 @@ export const useEmailTemplates = () => {
     createTemplate,
     updateTemplate,
     deleteTemplate,
+    duplicateTemplate,
     refreshTemplates: fetchTemplates
   };
 };
