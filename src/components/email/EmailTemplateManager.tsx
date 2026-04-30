@@ -20,11 +20,21 @@ const categories = [
   { value: 'confirmation', label: 'Confirmation' }
 ];
 
-const emptyForm = {
+type FormState = {
+  name: string;
+  subject: string;
+  content: string;
+  category: string;
+  variables: string[];
+  attachments: Array<{ name: string; url: string; size: number }>;
+  artist_id: string | null;
+};
+
+const emptyForm: FormState = {
   name: '', subject: '', content: '', category: 'general',
-  variables: [] as string[],
-  attachments: [] as Array<{ name: string; url: string; size: number }>,
-  artist_id: null as string | null,
+  variables: [],
+  attachments: [],
+  artist_id: null,
 };
 
 export const EmailTemplateManager: React.FC = () => {
