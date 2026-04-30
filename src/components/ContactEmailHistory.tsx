@@ -125,15 +125,30 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
   // Using sanitizeEmailHtml from @/lib/sanitize instead of inline function
 
   // Filter emails for this specific contact - memoized to avoid recalculating on every render
-  const contactEmails = React.useMemo(() => 
-    emails.filter(email => {
+  const contactEmails = React.useMemo(() => {
+    const direct = emails.filter(email => {
       if (email.contact_id === contactId) return true;
       if (!normalizedContactEmail) return false;
 
       const fromEmail = normalizeAddress(email.from_email);
       const toEmail = normalizeAddress(email.to_email);
       return fromEmail === normalizedContactEmail || toEmail === normalizedContactEmail;
-    }), [emails, contactId, normalizedContactEmail, normalizeAddress]);
+    });
+
+    // Merge campaign emails (from email_analytics) — dedupe on message_id
+    const seen = new Set(direct.map(e => e.message_id || e.id));
+    const merged = [...direct];
+    for (const ce of campaignEmails) {
+      const key = ce.message_id || ce.id;
+      if (!seen.has(key)) { merged.push(ce); seen.add(key); }
+    }
+
+    return merged.sort((a, b) => {
+      const da = new Date(a.received_at || a.sent_at || a.created_at).getTime();
+      const db = new Date(b.received_at || b.sent_at || b.created_at).getTime();
+      return db - da;
+    });
+  }, [emails, campaignEmails, contactId, normalizedContactEmail, normalizeAddress]);
 
   const receivedEmails = React.useMemo(() => 
     contactEmails.filter(email => email.direction === 'received'), 
@@ -148,10 +163,11 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
     try {
       await syncNow({ contactId, contactEmail: normalizedContactEmail, limit: 500 });
       await loadEmails({ contactId, contactEmail: normalizedContactEmail, limit: 500 });
+      await loadCampaignEmails();
     } finally {
       setIsSyncing(false);
     }
-  }, [syncNow, loadEmails, contactId, normalizedContactEmail]);
+  }, [syncNow, loadEmails, loadCampaignEmails, contactId, normalizedContactEmail]);
 
   const getTrackingLabel = (status?: string) => {
     switch (status) {
