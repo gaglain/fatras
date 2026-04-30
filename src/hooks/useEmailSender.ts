@@ -142,6 +142,18 @@ export const useEmailSender = () => {
         })
         .eq('id', emailRecord.id);
 
+      // Tracer aussi dans email_analytics pour l'historique unifié des contacts
+      if (contact?.id) {
+        try {
+          await supabase.from('email_analytics').insert({
+            user_id: user.id,
+            contact_id: contact.id,
+            event_type: 'sent',
+            event_data: { email_id: emailRecord.id, subject: emailData.subject, provider, source: 'individual' }
+          });
+        } catch (e) { logger.warn('Analytics insert failed', e); }
+      }
+
       return result;
     } catch (error: unknown) {
       logger.error('Error sending email:', error);
