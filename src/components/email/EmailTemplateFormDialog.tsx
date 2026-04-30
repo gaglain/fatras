@@ -81,16 +81,24 @@ export const EmailTemplateFormDialog: React.FC<Props> = ({
           </div>
           <div>
             <Label>Artiste (optionnel)</Label>
-            <Select
-              value={formData.artist_id || '__none__'}
-              onValueChange={v => onFormDataChange({ ...formData, artist_id: v === '__none__' ? null : v })}
-            >
-              <SelectTrigger><SelectValue placeholder="Aucun artiste" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__none__">Aucun artiste</SelectItem>
-                {artists.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            {formData.artist_id ? (
+              <div className="flex items-center justify-between p-2 bg-muted rounded-md">
+                <span className="text-sm flex items-center gap-2">
+                  <Music className="h-4 w-4" />
+                  {artists.find(a => a.id === formData.artist_id)?.name || 'Artiste sélectionné'}
+                </span>
+                <Button type="button" variant="ghost" size="sm" onClick={() => onFormDataChange({ ...formData, artist_id: null })}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <UniversalSearch
+                filterTypes={['artist']}
+                placeholder="Rechercher un artiste..."
+                triggerText="Sélectionner un artiste"
+                onSelect={(item: SearchItem) => onFormDataChange({ ...formData, artist_id: item.id })}
+              />
+            )}
           </div>
           <div>
             <Label>Objet *</Label>
