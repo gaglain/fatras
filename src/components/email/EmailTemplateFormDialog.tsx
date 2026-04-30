@@ -6,8 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { RichTextEditor } from '@/components/RichTextEditor';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Save, X, Paperclip } from 'lucide-react';
+import { Save, X, Paperclip, Music } from 'lucide-react';
 import { ImageGalleryPicker } from '@/components/website/ImageGalleryPicker';
+import { UniversalSearch, SearchItem } from '@/components/UniversalSearch';
 
 interface Attachment { name: string; url: string; size: number; }
 
