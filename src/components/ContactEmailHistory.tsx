@@ -3,12 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Mail, Send, Inbox, Clock, User, RefreshCw, Reply } from 'lucide-react';
+import { Mail, Send, Inbox, Clock, User, RefreshCw, Reply, Megaphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUnifiedEmails } from '@/hooks/useUnifiedEmails';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { EmailComposer } from '@/components/email/EmailComposer';
 import { sanitizeEmailHtml } from '@/lib/sanitize';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ContactEmailHistoryProps {
   contactId: string;
