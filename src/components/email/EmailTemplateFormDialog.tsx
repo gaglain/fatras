@@ -18,6 +18,7 @@ interface FormData {
   category: string;
   variables: string[];
   attachments: Attachment[];
+  artist_id: string | null;
 }
 
 interface Props {
@@ -39,6 +40,7 @@ interface Props {
   categories: { value: string; label: string }[];
   fileInputId: string;
   showExistingAttachments?: boolean;
+  artists?: Array<{ id: string; name: string }>;
 }
 
 const extractVariables = (text: string): string[] => {
@@ -51,7 +53,7 @@ export const EmailTemplateFormDialog: React.FC<Props> = ({
   open, onOpenChange, title, formData, onFormDataChange, attachmentFiles,
   onFileSelect, onRemoveAttachment, onRemoveExistingAttachment, onMediaBankSelect,
   addingFromMediaBank, uploading, onSubmit, onCancel, submitLabel, categories,
-  fileInputId, showExistingAttachments
+  fileInputId, showExistingAttachments, artists = []
 }) => {
   const handleContentChange = (value: string) => {
     onFormDataChange({ ...formData, content: value, variables: extractVariables(value + ' ' + formData.subject) });
@@ -74,6 +76,19 @@ export const EmailTemplateFormDialog: React.FC<Props> = ({
             <Select value={formData.category} onValueChange={v => onFormDataChange({ ...formData, category: v })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>{categories.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Artiste (optionnel)</Label>
+            <Select
+              value={formData.artist_id || '__none__'}
+              onValueChange={v => onFormDataChange({ ...formData, artist_id: v === '__none__' ? null : v })}
+            >
+              <SelectTrigger><SelectValue placeholder="Aucun artiste" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">Aucun artiste</SelectItem>
+                {artists.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
+              </SelectContent>
             </Select>
           </div>
           <div>

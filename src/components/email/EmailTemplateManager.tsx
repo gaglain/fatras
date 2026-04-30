@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogTrigger } from '@/components/ui/dialog';
-import { FileText, Plus, Edit2, Trash2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { FileText, Plus, Edit2, Trash2, Copy, Music } from 'lucide-react';
 import { useConfirm } from '@/components/ui/confirm-dialog';
 import { useEmailTemplates, EmailTemplate } from '@/hooks/useEmailTemplates';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 import { EmailTemplateFormDialog } from './EmailTemplateFormDialog';
 
 const categories = [
@@ -18,17 +20,62 @@ const categories = [
   { value: 'confirmation', label: 'Confirmation' }
 ];
 
-const emptyForm = { name: '', subject: '', content: '', category: 'general', variables: [] as string[], attachments: [] as Array<{ name: string; url: string; size: number }> };
+type FormState = {
+  name: string;
+  subject: string;
+  content: string;
+  category: string;
+  variables: string[];
+  attachments: Array<{ name: string; url: string; size: number }>;
+  artist_id: string | null;
+};
+
+const emptyForm: FormState = {
+  name: '', subject: '', content: '', category: 'general',
+  variables: [],
+  attachments: [],
+  artist_id: null,
+};
 
 export const EmailTemplateManager: React.FC = () => {
-  const { templates, loading, createTemplate, updateTemplate, deleteTemplate } = useEmailTemplates();
+  const { templates, loading, createTemplate, updateTemplate, deleteTemplate, duplicateTemplate } = useEmailTemplates();
+  const { user } = useAuth();
   const [editingTemplate, setEditingTemplate] = useState<EmailTemplate | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [formData, setFormData] = useState(emptyForm);
   const [attachmentFiles, setAttachmentFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const [addingFromMediaBank, setAddingFromMediaBank] = useState(false);
+  const [artists, setArtists] = useState<Array<{ id: string; name: string }>>([]);
+  const [filterArtist, setFilterArtist] = useState<string>('all');
+  const [filterCategory, setFilterCategory] = useState<string>('all');
   const confirmAction = useConfirm();
+
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('centralized_artists')
+          .select('id, name')
+          .eq('status', 'active')
+          .order('name');
+        if (error) throw error;
+        setArtists(data || []);
+      } catch (e) { logger.error('Error loading artists', e); }
+    })();
+  }, [user]);
+
+  const artistMap = useMemo(() => Object.fromEntries(artists.map(a => [a.id, a.name])), [artists]);
+
+  const filteredTemplates = useMemo(() => {
+    return templates.filter(t => {
+      if (filterCategory !== 'all' && t.category !== filterCategory) return false;
+      if (filterArtist === 'all') return true;
+      if (filterArtist === 'none') return !t.artist_id;
+      return t.artist_id === filterArtist;
+    });
+  }, [templates, filterArtist, filterCategory]);
 
   const resetForm = () => { setFormData({ ...emptyForm }); setAttachmentFiles([]); };
 
@@ -57,7 +104,10 @@ export const EmailTemplateManager: React.FC = () => {
 
   const handleEdit = (t: EmailTemplate) => {
     setEditingTemplate(t);
-    setFormData({ name: t.name, subject: t.subject, content: t.content, category: t.category, variables: t.variables, attachments: t.attachments || [] });
+    setFormData({
+      name: t.name, subject: t.subject, content: t.content, category: t.category,
+      variables: t.variables, attachments: t.attachments || [], artist_id: t.artist_id ?? null,
+    });
     setAttachmentFiles([]);
   };
 
@@ -73,21 +123,46 @@ export const EmailTemplateManager: React.FC = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h2 className="text-2xl font-bold">Modèles d'email</h2>
         <Button onClick={() => setShowCreateDialog(true)}><Plus className="h-4 w-4 mr-2" />Nouveau modèle</Button>
       </div>
 
-      {loading ? <p className="text-muted-foreground">Chargement...</p> : templates.length === 0 ? (
-        <Card><CardContent className="p-8 text-center"><FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" /><p className="text-muted-foreground">Aucun modèle créé</p></CardContent></Card>
+      <div className="flex flex-col sm:flex-row gap-2">
+        <Select value={filterArtist} onValueChange={setFilterArtist}>
+          <SelectTrigger className="sm:w-64"><SelectValue placeholder="Filtrer par artiste" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tous les artistes</SelectItem>
+            <SelectItem value="none">Sans artiste</SelectItem>
+            {artists.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={filterCategory} onValueChange={setFilterCategory}>
+          <SelectTrigger className="sm:w-56"><SelectValue placeholder="Filtrer par catégorie" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Toutes les catégories</SelectItem>
+            {categories.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {loading ? <p className="text-muted-foreground">Chargement...</p> : filteredTemplates.length === 0 ? (
+        <Card><CardContent className="p-8 text-center"><FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" /><p className="text-muted-foreground">Aucun modèle</p></CardContent></Card>
       ) : (
         <div className="grid gap-4">
-          {templates.map(t => (
+          {filteredTemplates.map(t => (
             <Card key={t.id}>
               <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2"><CardTitle className="text-lg">{t.name}</CardTitle><Badge variant="outline">{categories.find(c => c.value === t.category)?.label}</Badge></div>
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <CardTitle className="text-lg">{t.name}</CardTitle>
+                    <Badge variant="outline">{categories.find(c => c.value === t.category)?.label}</Badge>
+                    {t.artist_id && artistMap[t.artist_id] && (
+                      <Badge variant="secondary" className="gap-1"><Music className="h-3 w-3" />{artistMap[t.artist_id]}</Badge>
+                    )}
+                  </div>
                   <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => duplicateTemplate(t.id)} title="Dupliquer"><Copy className="h-4 w-4" /></Button>
                     <Button variant="ghost" size="sm" onClick={() => handleEdit(t)}><Edit2 className="h-4 w-4" /></Button>
                     <Button variant="ghost" size="sm" onClick={() => handleDelete(t.id)}><Trash2 className="h-4 w-4" /></Button>
                   </div>
@@ -110,7 +185,7 @@ export const EmailTemplateManager: React.FC = () => {
         onRemoveAttachment={i => setAttachmentFiles(p => p.filter((_, j) => j !== i))}
         onMediaBankSelect={handleMediaBankSelect} addingFromMediaBank={addingFromMediaBank}
         uploading={uploading} onSubmit={handleCreate} onCancel={() => { setShowCreateDialog(false); resetForm(); }}
-        submitLabel="Créer" categories={categories} fileInputId="template-attachments" />
+        submitLabel="Créer" categories={categories} fileInputId="template-attachments" artists={artists} />
 
       <EmailTemplateFormDialog open={!!editingTemplate} onOpenChange={o => { if (!o) setEditingTemplate(null); }} title="Modifier le modèle"
         formData={formData} onFormDataChange={setFormData} attachmentFiles={attachmentFiles}
@@ -119,7 +194,7 @@ export const EmailTemplateManager: React.FC = () => {
         onRemoveExistingAttachment={i => setFormData(p => ({ ...p, attachments: p.attachments.filter((_, j) => j !== i) }))}
         onMediaBankSelect={handleMediaBankSelect} addingFromMediaBank={addingFromMediaBank}
         uploading={uploading} onSubmit={handleUpdate} onCancel={() => { setEditingTemplate(null); resetForm(); }}
-        submitLabel="Enregistrer" categories={categories} fileInputId="template-attachments-edit" showExistingAttachments />
+        submitLabel="Enregistrer" categories={categories} fileInputId="template-attachments-edit" showExistingAttachments artists={artists} />
     </div>
   );
 };

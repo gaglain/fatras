@@ -1,0 +1,2 @@
+ALTER TABLE public.email_templates ADD COLUMN IF NOT EXISTS artist_id uuid REFERENCES public.centralized_artists(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_email_templates_artist_id ON public.email_templates(artist_id);
