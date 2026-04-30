@@ -60,8 +60,9 @@ export const useEmailTemplates = () => {
           category: template.category,
           variables: template.variables,
           attachments: template.attachments || [],
+          artist_id: template.artist_id ?? null,
           user_id: user.id
-        }])
+        } as any])
         .select()
         .single();
 
@@ -73,6 +74,31 @@ export const useEmailTemplates = () => {
       logger.error('Error creating template:', error);
       toast.error('Erreur lors de la création du modèle');
       return null;
+    }
+  };
+
+  const duplicateTemplate = async (id: string) => {
+    try {
+      const original = templates.find(t => t.id === id);
+      if (!original) throw new Error('Template introuvable');
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+      const { error } = await supabase.from('email_templates').insert([{
+        name: `${original.name} (copie)`,
+        subject: original.subject,
+        content: original.content,
+        category: original.category,
+        variables: original.variables,
+        attachments: original.attachments || [],
+        artist_id: original.artist_id ?? null,
+        user_id: user.id,
+      } as any]);
+      if (error) throw error;
+      toast.success('Modèle dupliqué');
+      fetchTemplates();
+    } catch (error: unknown) {
+      logger.error('Error duplicating template:', error);
+      toast.error('Erreur lors de la duplication');
     }
   };
 
