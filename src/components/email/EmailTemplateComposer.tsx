@@ -155,7 +155,7 @@ export const EmailTemplateComposer: React.FC<EmailTemplateComposerProps> = ({ de
           to={to} onToChange={setTo} subject={subject} onSubjectChange={setSubject}
           content={content} onContentChange={setContent}
           selectedTemplate={selectedTemplate} onClearTemplate={() => { setSelectedTemplate(null); setSubject(''); setContent(''); }}
-          templates={templates} showTemplates={showTemplates} onShowTemplatesChange={setShowTemplates} onApplyTemplate={applyTemplate}
+          templates={sortedTemplates} highlightedArtistIds={contactArtistIds} showTemplates={showTemplates} onShowTemplatesChange={setShowTemplates} onApplyTemplate={applyTemplate}
           attachments={attachments} onFileSelect={(e) => { if (e.target.files) setAttachments(prev => [...prev, ...Array.from(e.target.files!)]); }}
           onRemoveAttachment={(i) => setAttachments(prev => prev.filter((_, idx) => idx !== i))}
           onMediaBankSelect={handleMediaBankSelect} addingFromMediaBank={addingFromMediaBank}
