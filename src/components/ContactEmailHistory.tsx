@@ -161,6 +161,8 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
   const handleSync = React.useCallback(async () => {
     setIsSyncing(true);
     try {
+      // Rattache les emails existants aux contacts (par adresse email) côté DB
+      try { await supabase.rpc('update_email_contact_links'); } catch (e) { console.warn('relink failed', e); }
       await syncNow({ contactId, contactEmail: normalizedContactEmail, limit: 500 });
       await loadEmails({ contactId, contactEmail: normalizedContactEmail, limit: 500 });
       await loadCampaignEmails();
