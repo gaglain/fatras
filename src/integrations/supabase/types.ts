@@ -1305,6 +1305,7 @@ export type Database = {
       }
       email_templates: {
         Row: {
+          artist_id: string | null
           attachments: Json | null
           category: string
           content: string
@@ -1318,6 +1319,7 @@ export type Database = {
           variables: Json | null
         }
         Insert: {
+          artist_id?: string | null
           attachments?: Json | null
           category: string
           content: string
@@ -1331,6 +1333,7 @@ export type Database = {
           variables?: Json | null
         }
         Update: {
+          artist_id?: string | null
           attachments?: Json | null
           category?: string
           content?: string
@@ -1343,7 +1346,15 @@ export type Database = {
           user_id?: string
           variables?: Json | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "email_templates_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "centralized_artists"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       emails: {
         Row: {
