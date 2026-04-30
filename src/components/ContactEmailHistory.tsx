@@ -3,12 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Mail, Send, Inbox, Clock, User, RefreshCw, Reply } from 'lucide-react';
+import { Mail, Send, Inbox, Clock, User, RefreshCw, Reply, Megaphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUnifiedEmails } from '@/hooks/useUnifiedEmails';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { EmailComposer } from '@/components/email/EmailComposer';
 import { sanitizeEmailHtml } from '@/lib/sanitize';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ContactEmailHistoryProps {
   contactId: string;
@@ -23,6 +24,7 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
   const [selectedEmail, setSelectedEmail] = React.useState<any | null>(null);
   const [showReply, setShowReply] = React.useState(false);
   const [isSyncing, setIsSyncing] = React.useState(false);
+  const [campaignEmails, setCampaignEmails] = React.useState<any[]>([]);
 
   const normalizeAddress = React.useCallback((value?: string) => {
     if (!value) return '';
@@ -36,6 +38,73 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
     [contactEmail, normalizeAddress]
   );
 
+  // Load campaign emails sent to this contact (from email_analytics + email_campaigns)
+  const loadCampaignEmails = React.useCallback(async () => {
+    if (!contactId) { setCampaignEmails([]); return; }
+    try {
+      const { data: analytics } = await supabase
+        .from('email_analytics')
+        .select('id, campaign_id, contact_id, event_type, event_data, created_at')
+        .eq('contact_id', contactId)
+        .in('event_type', ['sent', 'delivered', 'opened', 'clicked', 'bounced'])
+        .order('created_at', { ascending: false })
+        .limit(500);
+
+      if (!analytics || analytics.length === 0) { setCampaignEmails([]); return; }
+
+      // Collapse multiple events per campaign into one entry, with the most engaged status
+      const campaignIds = Array.from(new Set(analytics.map((a: any) => a.campaign_id).filter(Boolean)));
+      const { data: campaigns } = await supabase
+        .from('email_campaigns')
+        .select('id, name, subject, content, sent_at, created_at')
+        .in('id', campaignIds.length ? campaignIds : ['00000000-0000-0000-0000-000000000000']);
+
+      const campaignMap = new Map<string, any>();
+      (campaigns || []).forEach((c: any) => campaignMap.set(c.id, c));
+
+      const STATUS_RANK: Record<string, number> = { sent: 1, delivered: 2, opened: 3, clicked: 4, bounced: 5 };
+      const grouped = new Map<string, any>();
+
+      for (const ev of analytics as any[]) {
+        const key = `${ev.campaign_id}-${ev.contact_id}`;
+        const existing = grouped.get(key);
+        const camp = campaignMap.get(ev.campaign_id);
+        const candidate = {
+          id: `campaign-${key}`,
+          message_id: `campaign-${key}`,
+          direction: 'sent' as const,
+          source: 'campaign',
+          campaign_name: camp?.name,
+          from_email: 'booking@fatras.net',
+          from_name: 'Campagne',
+          to_email: contactEmail || '',
+          to_name: '',
+          subject: camp?.subject || camp?.name || '(Campagne sans sujet)',
+          content: camp?.content || '',
+          html_content: camp?.content || '',
+          status: ev.event_type,
+          provider: 'campaign',
+          sent_at: camp?.sent_at || ev.created_at,
+          created_at: ev.created_at,
+          updated_at: ev.created_at,
+          opened_at: ev.event_type === 'opened' ? ev.created_at : null,
+          delivered_at: ev.event_type === 'delivered' ? ev.created_at : null,
+        };
+        if (!existing || (STATUS_RANK[ev.event_type] ?? 0) > (STATUS_RANK[existing.status] ?? 0)) {
+          grouped.set(key, { ...(existing || {}), ...candidate });
+        } else {
+          // keep best status, but pick up timestamps
+          if (ev.event_type === 'opened' && !existing.opened_at) existing.opened_at = ev.created_at;
+          if (ev.event_type === 'delivered' && !existing.delivered_at) existing.delivered_at = ev.created_at;
+        }
+      }
+      setCampaignEmails(Array.from(grouped.values()));
+    } catch (err) {
+      console.error('Erreur chargement emails campagnes:', err);
+      setCampaignEmails([]);
+    }
+  }, [contactId, contactEmail]);
+
   // Recharger les emails quand le composant est monté et quand contactId/contactEmail change
   React.useEffect(() => {
     if (contactId || normalizedContactEmail) {
@@ -45,7 +114,8 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
         limit: 500,
       });
     }
-  }, [contactId, normalizedContactEmail]);
+    loadCampaignEmails();
+  }, [contactId, normalizedContactEmail, loadCampaignEmails]);
 
   const stripTags = (s: string) => s ? s.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '').replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim() : '';
   const getPreviewText = (email: any) => {
@@ -55,15 +125,30 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
   // Using sanitizeEmailHtml from @/lib/sanitize instead of inline function
 
   // Filter emails for this specific contact - memoized to avoid recalculating on every render
-  const contactEmails = React.useMemo(() => 
-    emails.filter(email => {
+  const contactEmails = React.useMemo(() => {
+    const direct = emails.filter(email => {
       if (email.contact_id === contactId) return true;
       if (!normalizedContactEmail) return false;
 
       const fromEmail = normalizeAddress(email.from_email);
       const toEmail = normalizeAddress(email.to_email);
       return fromEmail === normalizedContactEmail || toEmail === normalizedContactEmail;
-    }), [emails, contactId, normalizedContactEmail, normalizeAddress]);
+    });
+
+    // Merge campaign emails (from email_analytics) — dedupe on message_id
+    const seen = new Set(direct.map(e => e.message_id || e.id));
+    const merged = [...direct];
+    for (const ce of campaignEmails) {
+      const key = ce.message_id || ce.id;
+      if (!seen.has(key)) { merged.push(ce); seen.add(key); }
+    }
+
+    return merged.sort((a, b) => {
+      const da = new Date(a.received_at || a.sent_at || a.created_at).getTime();
+      const db = new Date(b.received_at || b.sent_at || b.created_at).getTime();
+      return db - da;
+    });
+  }, [emails, campaignEmails, contactId, normalizedContactEmail, normalizeAddress]);
 
   const receivedEmails = React.useMemo(() => 
     contactEmails.filter(email => email.direction === 'received'), 
@@ -78,10 +163,11 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
     try {
       await syncNow({ contactId, contactEmail: normalizedContactEmail, limit: 500 });
       await loadEmails({ contactId, contactEmail: normalizedContactEmail, limit: 500 });
+      await loadCampaignEmails();
     } finally {
       setIsSyncing(false);
     }
-  }, [syncNow, loadEmails, contactId, normalizedContactEmail]);
+  }, [syncNow, loadEmails, loadCampaignEmails, contactId, normalizedContactEmail]);
 
   const getTrackingLabel = (status?: string) => {
     switch (status) {
@@ -183,6 +269,12 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
               {email.direction === 'sent' && (
                 <Badge variant={getTrackingVariant(email.status)} className="text-xs">
                   {getTrackingLabel(email.status)}
+                </Badge>
+              )}
+              {email.source === 'campaign' && (
+                <Badge variant="outline" className="text-xs gap-1">
+                  <Megaphone className="h-3 w-3" />
+                  {email.campaign_name || 'Campagne'}
                 </Badge>
               )}
               {email.direction === 'received' && !email.read_at && (
