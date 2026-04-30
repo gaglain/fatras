@@ -18,7 +18,7 @@ interface FormData {
   category: string;
   variables: string[];
   attachments: Attachment[];
-  artist_id?: string | null;
+  artist_id: string | null;
 }
 
 interface Props {
