@@ -271,6 +271,12 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
                   {getTrackingLabel(email.status)}
                 </Badge>
               )}
+              {email.source === 'campaign' && (
+                <Badge variant="outline" className="text-xs gap-1">
+                  <Megaphone className="h-3 w-3" />
+                  {email.campaign_name || 'Campagne'}
+                </Badge>
+              )}
               {email.direction === 'received' && !email.read_at && (
                 <Badge variant="outline" className="text-xs">
                   Nouveau
