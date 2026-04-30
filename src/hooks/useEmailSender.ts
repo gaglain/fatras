@@ -33,12 +33,13 @@ export const useEmailSender = () => {
         throw new Error('Utilisateur non connecté');
       }
 
-      // Trouver le contact correspondant à l'email destinataire
-      const { data: contact } = await supabase
+      // Trouver le contact correspondant à l'email destinataire (peut renvoyer 0 ou n résultats)
+      const { data: contactRows } = await supabase
         .from('contacts')
         .select('id')
-        .eq('email', emailData.to[0])
-        .single();
+        .ilike('email', emailData.to[0])
+        .limit(1);
+      const contact = contactRows && contactRows[0] ? contactRows[0] : null;
 
       // Créer un enregistrement email pour obtenir l'ID de tracking
       const { data: emailRecord, error: emailError } = await supabase
