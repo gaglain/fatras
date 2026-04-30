@@ -129,15 +129,28 @@ export const EmailTemplateManager: React.FC = () => {
         <Button onClick={() => setShowCreateDialog(true)}><Plus className="h-4 w-4 mr-2" />Nouveau modèle</Button>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-2">
-        <Select value={filterArtist} onValueChange={setFilterArtist}>
-          <SelectTrigger className="sm:w-64"><SelectValue placeholder="Filtrer par artiste" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tous les artistes</SelectItem>
-            <SelectItem value="none">Sans artiste</SelectItem>
-            {artists.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
-          </SelectContent>
-        </Select>
+      <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center flex-wrap">
+        <div className="flex items-center gap-2">
+          {filterArtist !== 'all' ? (
+            <div className="flex items-center gap-1 px-2 py-1.5 bg-muted rounded-md text-sm">
+              <Music className="h-3 w-3" />
+              {filterArtist === 'none' ? 'Sans artiste' : (artistMap[filterArtist] || 'Artiste')}
+              <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={() => setFilterArtist('all')}>
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            </div>
+          ) : (
+            <UniversalSearch
+              filterTypes={['artist']}
+              placeholder="Filtrer par artiste..."
+              triggerText="Filtrer par artiste"
+              onSelect={(item: SearchItem) => setFilterArtist(item.id)}
+            />
+          )}
+          <Button variant="ghost" size="sm" onClick={() => setFilterArtist('none')} disabled={filterArtist === 'none'}>
+            Sans artiste
+          </Button>
+        </div>
         <Select value={filterCategory} onValueChange={setFilterCategory}>
           <SelectTrigger className="sm:w-56"><SelectValue placeholder="Filtrer par catégorie" /></SelectTrigger>
           <SelectContent>
