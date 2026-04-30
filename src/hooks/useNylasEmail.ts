@@ -122,11 +122,12 @@ export const useNylasEmail = () => {
 
     setIsLoading(true);
     try {
-      const { data: contact } = await supabase
+      const { data: contactRows } = await supabase
         .from('contacts')
         .select('id')
-        .eq('email', email.to)
-        .single();
+        .ilike('email', email.to)
+        .limit(1);
+      const contact = contactRows && contactRows[0] ? contactRows[0] : null;
 
       const { data: emailRecord, error: emailError } = await supabase
         .from('emails')
