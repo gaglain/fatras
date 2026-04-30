@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
 import { EmailTemplateFormDialog } from './EmailTemplateFormDialog';
+import { UniversalSearch, SearchItem } from '@/components/UniversalSearch';
 
 const categories = [
   { value: 'general', label: 'Général' },
