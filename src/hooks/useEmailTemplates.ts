@@ -12,6 +12,7 @@ export interface EmailTemplate {
   category: string;
   variables: string[];
   attachments?: Array<{ name: string; url: string; size: number }>;
+  artist_id?: string | null;
   is_system?: boolean;
   created_at: string;
   updated_at: string;
