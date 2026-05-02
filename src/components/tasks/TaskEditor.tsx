@@ -399,22 +399,31 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
 
           <div className="space-y-2">
             <Label htmlFor="artistId">Spectacle lié</Label>
-            <Select 
-              value={formData.artist_id || 'none'} 
-              onValueChange={(value) => setFormData({ ...formData, artist_id: value === 'none' ? 'none' : value })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un spectacle" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Aucun spectacle</SelectItem>
-                {artists.filter(a => a.id).slice(0, 50).map((artist) => (
-                  <SelectItem key={artist.id} value={artist.id}>
-                    {artist.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <UniversalSearch
+              filterTypes={['artist']}
+              onSelect={(item) => {
+                setSelectedArtist(item.data);
+                setArtistCleared(false);
+              }}
+              placeholder="Rechercher un spectacle..."
+              triggerText={selectedArtist ? selectedArtist.name : (task.artist_id && !artistCleared ? "Spectacle lié (chargement...)" : "Rechercher un spectacle...")}
+            />
+            {selectedArtist && (
+              <div className="text-sm text-muted-foreground mt-1">
+                Spectacle sélectionné: {selectedArtist.name}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedArtist(null);
+                    setArtistCleared(true);
+                  }}
+                  className="ml-2 h-auto p-1"
+                >
+                  ✕
+                </Button>
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
