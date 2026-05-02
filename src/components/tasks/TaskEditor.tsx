@@ -56,8 +56,10 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
   // États pour les éléments sélectionnés via recherche
   const [selectedContact, setSelectedContact] = useState<any>(null);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [selectedArtist, setSelectedArtist] = useState<any>(null);
   const [contactCleared, setContactCleared] = useState(false);
   const [eventCleared, setEventCleared] = useState(false);
+  const [artistCleared, setArtistCleared] = useState(false);
 
   // Réinitialiser les états quand la tâche change
   useEffect(() => {
@@ -78,8 +80,10 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
     // Reset states when task changes
     setContactCleared(false);
     setEventCleared(false);
+    setArtistCleared(false);
     setSelectedContact(null);
     setSelectedEvent(null);
+    setSelectedArtist(null);
   }, [task.id]); // Only reset when task ID changes
 
   // Mettre à jour selectedContact quand les contacts sont chargés ou la tâche change
@@ -125,6 +129,16 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
     }
   }, [task.id, task.event_id, events, eventCleared]);
 
+  // Mettre à jour selectedArtist quand les artistes sont chargés ou la tâche change
+  useEffect(() => {
+    if (task.artist_id && Array.isArray(artists) && artists.length > 0 && !artistCleared) {
+      const foundArtist = (artists as any[]).find((a: any) => a.id === task.artist_id);
+      if (foundArtist) {
+        setSelectedArtist(foundArtist);
+      }
+    }
+  }, [task.id, task.artist_id, artists, artistCleared]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -159,13 +173,23 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
         finalEventId = task.event_id;
       }
 
+      // Même logique pour artist_id
+      let finalArtistId: string | null = null;
+      if (artistCleared) {
+        finalArtistId = null;
+      } else if (selectedArtist) {
+        finalArtistId = selectedArtist.id;
+      } else if (task.artist_id) {
+        finalArtistId = task.artist_id;
+      }
+
       const updates = {
         title: formData.title,
         description: formData.description,
         assigned_to: formData.assigned_to && formData.assigned_to !== 'none' ? formData.assigned_to : null,
         contact_id: finalContactId,
         event_id: finalEventId,
-        artist_id: formData.artist_id && formData.artist_id !== 'none' ? formData.artist_id : null,
+        artist_id: finalArtistId,
         priority: formData.priority,
         status: formData.status,
         task_type: formData.task_type,
@@ -375,22 +399,31 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
 
           <div className="space-y-2">
             <Label htmlFor="artistId">Spectacle lié</Label>
-            <Select 
-              value={formData.artist_id || 'none'} 
-              onValueChange={(value) => setFormData({ ...formData, artist_id: value === 'none' ? 'none' : value })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un spectacle" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Aucun spectacle</SelectItem>
-                {artists.filter(a => a.id).slice(0, 50).map((artist) => (
-                  <SelectItem key={artist.id} value={artist.id}>
-                    {artist.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <UniversalSearch
+              filterTypes={['artist']}
+              onSelect={(item) => {
+                setSelectedArtist(item.data);
+                setArtistCleared(false);
+              }}
+              placeholder="Rechercher un spectacle..."
+              triggerText={selectedArtist ? selectedArtist.name : (task.artist_id && !artistCleared ? "Spectacle lié (chargement...)" : "Rechercher un spectacle...")}
+            />
+            {selectedArtist && (
+              <div className="text-sm text-muted-foreground mt-1">
+                Spectacle sélectionné: {selectedArtist.name}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedArtist(null);
+                    setArtistCleared(true);
+                  }}
+                  className="ml-2 h-auto p-1"
+                >
+                  ✕
+                </Button>
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
