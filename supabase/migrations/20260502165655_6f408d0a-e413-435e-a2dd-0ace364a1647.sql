@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Allow authenticated read show_bible_documents" ON public.show_bible_documents;
