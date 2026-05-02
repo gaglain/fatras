@@ -56,8 +56,10 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
   // États pour les éléments sélectionnés via recherche
   const [selectedContact, setSelectedContact] = useState<any>(null);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [selectedArtist, setSelectedArtist] = useState<any>(null);
   const [contactCleared, setContactCleared] = useState(false);
   const [eventCleared, setEventCleared] = useState(false);
+  const [artistCleared, setArtistCleared] = useState(false);
 
   // Réinitialiser les états quand la tâche change
   useEffect(() => {
