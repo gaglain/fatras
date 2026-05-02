@@ -129,6 +129,16 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
     }
   }, [task.id, task.event_id, events, eventCleared]);
 
+  // Mettre à jour selectedArtist quand les artistes sont chargés ou la tâche change
+  useEffect(() => {
+    if (task.artist_id && Array.isArray(artists) && artists.length > 0 && !artistCleared) {
+      const foundArtist = (artists as any[]).find((a: any) => a.id === task.artist_id);
+      if (foundArtist) {
+        setSelectedArtist(foundArtist);
+      }
+    }
+  }, [task.id, task.artist_id, artists, artistCleared]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
