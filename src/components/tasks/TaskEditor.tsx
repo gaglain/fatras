@@ -80,8 +80,10 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
     // Reset states when task changes
     setContactCleared(false);
     setEventCleared(false);
+    setArtistCleared(false);
     setSelectedContact(null);
     setSelectedEvent(null);
+    setSelectedArtist(null);
   }, [task.id]); // Only reset when task ID changes
 
   // Mettre à jour selectedContact quand les contacts sont chargés ou la tâche change
