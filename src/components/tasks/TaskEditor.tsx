@@ -173,13 +173,23 @@ export const TaskEditor: React.FC<TaskEditorProps> = ({
         finalEventId = task.event_id;
       }
 
+      // Même logique pour artist_id
+      let finalArtistId: string | null = null;
+      if (artistCleared) {
+        finalArtistId = null;
+      } else if (selectedArtist) {
+        finalArtistId = selectedArtist.id;
+      } else if (task.artist_id) {
+        finalArtistId = task.artist_id;
+      }
+
       const updates = {
         title: formData.title,
         description: formData.description,
         assigned_to: formData.assigned_to && formData.assigned_to !== 'none' ? formData.assigned_to : null,
         contact_id: finalContactId,
         event_id: finalEventId,
-        artist_id: formData.artist_id && formData.artist_id !== 'none' ? formData.artist_id : null,
+        artist_id: finalArtistId,
         priority: formData.priority,
         status: formData.status,
         task_type: formData.task_type,
