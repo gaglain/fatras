@@ -336,7 +336,7 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
             <h4 className={`text-sm font-medium line-clamp-2 mb-1 ${
               email.direction === 'received' && !email.read_at ? 'font-semibold' : ''
             }`}>
-              {email.subject || '(Aucun sujet)'}
+              {decodeMimeHeader(email.subject) || '(Aucun sujet)'}
             </h4>
             
             <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
