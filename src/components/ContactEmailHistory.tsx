@@ -539,6 +539,77 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
               <p className="text-sm">Les échanges d'emails avec ce contact apparaîtront ici</p>
             </div>
           ) : (
+            <>
+              {/* Barre de recherche & filtres */}
+              <div className="mb-4 space-y-2">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Rechercher par objet, contenu, expéditeur…"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-full sm:w-44">
+                      <SelectValue placeholder="Statut" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tous les statuts</SelectItem>
+                      <SelectItem value="received">Reçus</SelectItem>
+                      <SelectItem value="unread">Non lus</SelectItem>
+                      <SelectItem value="sent">Envoyés</SelectItem>
+                      <SelectItem value="delivered">Livrés</SelectItem>
+                      <SelectItem value="opened">Ouverts</SelectItem>
+                      <SelectItem value="clicked">Cliqués</SelectItem>
+                      <SelectItem value="bounced">Rebonds</SelectItem>
+                      <SelectItem value="campaign">Campagnes</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={dateFilter} onValueChange={setDateFilter}>
+                    <SelectTrigger className="w-full sm:w-44">
+                      <SelectValue placeholder="Date" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Toutes les dates</SelectItem>
+                      <SelectItem value="7d">7 derniers jours</SelectItem>
+                      <SelectItem value="30d">30 derniers jours</SelectItem>
+                      <SelectItem value="90d">90 derniers jours</SelectItem>
+                      <SelectItem value="365d">12 derniers mois</SelectItem>
+                      <SelectItem value="custom">Période personnalisée</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {hasActiveFilters && (
+                    <Button variant="ghost" size="sm" onClick={resetFilters} className="shrink-0">
+                      <X className="h-4 w-4 mr-1" /> Réinitialiser
+                    </Button>
+                  )}
+                </div>
+                {dateFilter === 'custom' && (
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Input
+                      type="date"
+                      value={dateFrom}
+                      onChange={(e) => setDateFrom(e.target.value)}
+                      className="sm:w-44"
+                    />
+                    <Input
+                      type="date"
+                      value={dateTo}
+                      onChange={(e) => setDateTo(e.target.value)}
+                      className="sm:w-44"
+                    />
+                  </div>
+                )}
+                {hasActiveFilters && (
+                  <p className="text-xs text-muted-foreground">
+                    {filteredEmails.length} résultat{filteredEmails.length > 1 ? 's' : ''} sur {contactEmails.length}
+                  </p>
+                )}
+              </div>
+
             <Tabs defaultValue="threads" className="w-full">
               <TabsList className="grid w-full grid-cols-4 h-auto">
                 <TabsTrigger value="threads" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2">
@@ -547,7 +618,7 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
                 </TabsTrigger>
                 <TabsTrigger value="all" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2">
                   <Mail className="h-3 w-3 shrink-0" />
-                  <span className="text-xs sm:text-sm">Tous ({contactEmails.length})</span>
+                  <span className="text-xs sm:text-sm">Tous ({filteredEmails.length})</span>
                 </TabsTrigger>
                 <TabsTrigger value="received" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2">
                   <Inbox className="h-3 w-3 shrink-0" />
