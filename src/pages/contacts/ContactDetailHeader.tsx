@@ -9,7 +9,7 @@ import { ContactEngagementBadge } from '@/components/contacts/ContactEngagementB
 
 interface Props {
   contact: Contact;
-  engagementStats: Array<{ score: number; grade: 'A' | 'B' | 'C' | 'D' }>;
+  engagementStats: Array<{ score: number; grade: 'A' | 'B' | 'C' | 'D'; totalBounced?: number; totalSent?: number }>;
   onEdit: () => void;
 }
 
