@@ -678,7 +678,14 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
               <TabsContent value="all" className="mt-4">
                 <ScrollArea className="h-[400px] w-full">
                   <div className="space-y-3 pr-4">
-                    {contactEmails.map(renderEmailItem)}
+                    {filteredEmails.length === 0 ? (
+                      <div className="text-center text-muted-foreground py-8">
+                        <Mail className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                        <p className="text-sm">Aucun email ne correspond aux filtres</p>
+                      </div>
+                    ) : (
+                      filteredEmails.map(renderEmailItem)
+                    )}
                   </div>
                 </ScrollArea>
               </TabsContent>
@@ -713,6 +720,7 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
                 </ScrollArea>
               </TabsContent>
             </Tabs>
+            </>
           )}
         </CardContent>
       </Card>
