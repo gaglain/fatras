@@ -29,22 +29,26 @@ const computeScore = (stats: {
   totalClicked: number;
   totalBounced: number;
 }): number => {
-  if (stats.totalSent === 0) return 50; // neutral for no data
+  if (stats.totalSent === 0) return 50; // neutre pour absence de données
 
   const deliveryRate = stats.totalDelivered / stats.totalSent;
   const openRate = stats.totalSent > 0 ? stats.totalOpened / stats.totalSent : 0;
   const clickRate = stats.totalSent > 0 ? stats.totalClicked / stats.totalSent : 0;
   const bounceRate = stats.totalSent > 0 ? stats.totalBounced / stats.totalSent : 0;
 
-  // Weighted score: delivery (30%), opens (30%), clicks (25%), bounce penalty (15%)
-  const score = Math.round(
+  // Score pondéré : livraison (30%), ouvertures (30%), clics (25%), pénalité bounce (15%)
+  const rawScore =
     (deliveryRate * 30) +
     (openRate * 30) +
     (clickRate * 25) +
-    ((1 - bounceRate) * 15)
-  );
+    ((1 - bounceRate) * 15);
 
-  return Math.max(0, Math.min(100, score));
+  // Si aucun bounce ET au moins une ouverture/livraison, garantir au moins un grade C (>=20)
+  const hasPositiveSignal = stats.totalDelivered > 0 || stats.totalOpened > 0 || stats.totalClicked > 0;
+  const score = Math.round(rawScore);
+  const adjusted = (stats.totalBounced === 0 && hasPositiveSignal) ? Math.max(score, 45) : score;
+
+  return Math.max(0, Math.min(100, adjusted));
 };
 
 const getGrade = (score: number): 'A' | 'B' | 'C' | 'D' => {
