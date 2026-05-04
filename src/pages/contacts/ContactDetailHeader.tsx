@@ -38,6 +38,8 @@ export const ContactDetailHeader: React.FC<Props> = ({ contact, engagementStats,
                 <ContactEngagementBadge
                   score={engagementStats[0].score}
                   grade={engagementStats[0].grade}
+                  totalBounced={engagementStats[0].totalBounced}
+                  totalSent={engagementStats[0].totalSent}
                 />
               )}
             </div>
