@@ -171,6 +171,40 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
     contactEmails.filter(email => email.direction === 'sent'), 
     [contactEmails]);
 
+  // Group by normalized subject for Gmail-style conversation view
+  const threads = React.useMemo(() => {
+    const map = new Map<string, any[]>();
+    for (const e of contactEmails) {
+      const key = normalizeSubject(e.subject) || `__no_subject_${e.id}`;
+      const arr = map.get(key) || [];
+      arr.push(e);
+      map.set(key, arr);
+    }
+    const result = Array.from(map.entries()).map(([key, items]) => {
+      const sorted = [...items].sort((a, b) => {
+        const da = new Date(a.received_at || a.sent_at || a.created_at).getTime();
+        const db = new Date(b.received_at || b.sent_at || b.created_at).getTime();
+        return db - da;
+      });
+      return {
+        key,
+        subject: decodeMimeHeader(sorted[0].subject) || '(Aucun sujet)',
+        latestAt: sorted[0].received_at || sorted[0].sent_at || sorted[0].created_at,
+        items: sorted,
+        unreadCount: sorted.filter((e) => e.direction === 'received' && !e.read_at).length,
+      };
+    });
+    return result.sort((a, b) => new Date(b.latestAt).getTime() - new Date(a.latestAt).getTime());
+  }, [contactEmails]);
+
+  const [expandedThreads, setExpandedThreads] = React.useState<Set<string>>(new Set());
+  const toggleThread = (key: string) =>
+    setExpandedThreads((prev) => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+
   const handleSync = React.useCallback(async () => {
     setIsSyncing(true);
     try {
