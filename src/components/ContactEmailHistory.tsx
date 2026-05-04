@@ -67,24 +67,37 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
       const grouped = new Map<string, any>();
 
       for (const ev of analytics as any[]) {
-        const key = `${ev.campaign_id}-${ev.contact_id}`;
+        const camp = ev.campaign_id ? campaignMap.get(ev.campaign_id) : null;
+        const evData = (ev.event_data || {}) as any;
+        const isIndividual = !ev.campaign_id || evData.source === 'individual';
+        // Subject precedence: campaign subject > campaign name > event_data.subject > fallback
+        const subjectFromEvent = typeof evData.subject === 'string' ? evData.subject : '';
+        const resolvedSubject =
+          camp?.subject ||
+          camp?.name ||
+          subjectFromEvent ||
+          (isIndividual ? '(Email individuel sans sujet)' : '(Campagne sans sujet)');
+
+        // Group individual emails by event_data.subject (so multiple events for the
+        // same individual email collapse together); group campaign emails by campaign_id.
+        const groupingId = ev.campaign_id || `individual-${subjectFromEvent || ev.id}`;
+        const key = `${groupingId}-${ev.contact_id}`;
         const existing = grouped.get(key);
-        const camp = campaignMap.get(ev.campaign_id);
         const candidate = {
-          id: `campaign-${key}`,
-          message_id: `campaign-${key}`,
+          id: `analytics-${key}`,
+          message_id: `analytics-${key}`,
           direction: 'sent' as const,
-          source: 'campaign',
+          source: isIndividual ? 'individual' : 'campaign',
           campaign_name: camp?.name,
           from_email: 'booking@fatras.net',
-          from_name: 'Campagne',
+          from_name: isIndividual ? 'Email envoyé' : 'Campagne',
           to_email: contactEmail || '',
           to_name: '',
-          subject: camp?.subject || camp?.name || '(Campagne sans sujet)',
-          content: camp?.content || '',
-          html_content: camp?.content || '',
+          subject: resolvedSubject,
+          content: camp?.content || evData.content || '',
+          html_content: camp?.content || evData.html || '',
           status: ev.event_type,
-          provider: 'campaign',
+          provider: isIndividual ? 'resend' : 'campaign',
           sent_at: camp?.sent_at || ev.created_at,
           created_at: ev.created_at,
           updated_at: ev.created_at,
@@ -94,7 +107,6 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
         if (!existing || (STATUS_RANK[ev.event_type] ?? 0) > (STATUS_RANK[existing.status] ?? 0)) {
           grouped.set(key, { ...(existing || {}), ...candidate });
         } else {
-          // keep best status, but pick up timestamps
           if (ev.event_type === 'opened' && !existing.opened_at) existing.opened_at = ev.created_at;
           if (ev.event_type === 'delivered' && !existing.delivered_at) existing.delivered_at = ev.created_at;
         }
