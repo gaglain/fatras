@@ -287,7 +287,7 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
   // Group by normalized subject for Gmail-style conversation view
   const threads = React.useMemo(() => {
     const map = new Map<string, any[]>();
-    for (const e of contactEmails) {
+    for (const e of filteredEmails) {
       const key = normalizeSubject(e.subject) || `__no_subject_${e.id}`;
       const arr = map.get(key) || [];
       arr.push(e);
