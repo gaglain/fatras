@@ -207,13 +207,82 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
     });
   }, [emails, campaignEmails, contactId, normalizedContactEmail, normalizeAddress]);
 
+  // === Recherche & filtres ===
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [statusFilter, setStatusFilter] = React.useState<string>('all');
+  const [dateFilter, setDateFilter] = React.useState<string>('all');
+  const [dateFrom, setDateFrom] = React.useState<string>('');
+  const [dateTo, setDateTo] = React.useState<string>('');
+
+  const filteredEmails = React.useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    const now = Date.now();
+    const ranges: Record<string, number> = {
+      '7d': 7 * 24 * 3600 * 1000,
+      '30d': 30 * 24 * 3600 * 1000,
+      '90d': 90 * 24 * 3600 * 1000,
+      '365d': 365 * 24 * 3600 * 1000,
+    };
+    const fromTs = dateFrom ? new Date(dateFrom).getTime() : null;
+    const toTs = dateTo ? new Date(dateTo).getTime() + 24 * 3600 * 1000 - 1 : null;
+
+    return contactEmails.filter((e) => {
+      // Texte (sujet + contenu + expéditeur/destinataire)
+      if (q) {
+        const subj = decodeMimeHeader(e.subject || '').toLowerCase();
+        const body = stripTags(e.html_content || e.content || '').toLowerCase();
+        const from = `${e.from_name || ''} ${e.from_email || ''}`.toLowerCase();
+        const to = `${e.to_name || ''} ${e.to_email || ''}`.toLowerCase();
+        if (!subj.includes(q) && !body.includes(q) && !from.includes(q) && !to.includes(q)) {
+          return false;
+        }
+      }
+      // Statut
+      if (statusFilter !== 'all') {
+        if (statusFilter === 'received' && e.direction !== 'received') return false;
+        if (statusFilter === 'unread' && !(e.direction === 'received' && !e.read_at)) return false;
+        if (['sent', 'delivered', 'opened', 'clicked', 'bounced'].includes(statusFilter)) {
+          if (e.direction !== 'sent') return false;
+          if (statusFilter === 'sent') {
+            // OK: tout email envoyé
+          } else if (e.status !== statusFilter) {
+            return false;
+          }
+        }
+        if (statusFilter === 'campaign' && e.source !== 'campaign') return false;
+      }
+      // Date
+      const ts = new Date(e.received_at || e.sent_at || e.created_at).getTime();
+      if (dateFilter !== 'all' && dateFilter !== 'custom') {
+        const span = ranges[dateFilter];
+        if (span && now - ts > span) return false;
+      }
+      if (dateFilter === 'custom') {
+        if (fromTs && ts < fromTs) return false;
+        if (toTs && ts > toTs) return false;
+      }
+      return true;
+    });
+  }, [contactEmails, searchQuery, statusFilter, dateFilter, dateFrom, dateTo]);
+
+  const hasActiveFilters =
+    !!searchQuery || statusFilter !== 'all' || dateFilter !== 'all';
+
+  const resetFilters = () => {
+    setSearchQuery('');
+    setStatusFilter('all');
+    setDateFilter('all');
+    setDateFrom('');
+    setDateTo('');
+  };
+
   const receivedEmails = React.useMemo(() => 
-    contactEmails.filter(email => email.direction === 'received'), 
-    [contactEmails]);
+    filteredEmails.filter(email => email.direction === 'received'), 
+    [filteredEmails]);
   
   const sentEmails = React.useMemo(() => 
-    contactEmails.filter(email => email.direction === 'sent'), 
-    [contactEmails]);
+    filteredEmails.filter(email => email.direction === 'sent'), 
+    [filteredEmails]);
 
   // Group by normalized subject for Gmail-style conversation view
   const threads = React.useMemo(() => {
