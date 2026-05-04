@@ -8,6 +8,8 @@ interface ContactEngagementBadgeProps {
   grade: 'A' | 'B' | 'C' | 'D';
   compact?: boolean;
   showScore?: boolean;
+  totalBounced?: number;
+  totalSent?: number;
 }
 
 const gradeConfig = {
@@ -27,7 +29,7 @@ const gradeConfig = {
     icon: Minus,
   },
   D: {
-    label: 'Inactif / Bounced',
+    label: 'Faible engagement',
     className: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800',
     icon: AlertTriangle,
   },
@@ -38,8 +40,15 @@ export const ContactEngagementBadge: React.FC<ContactEngagementBadgeProps> = ({
   grade,
   compact = false,
   showScore = true,
+  totalBounced = 0,
+  totalSent = 0,
 }) => {
-  const config = gradeConfig[grade];
+  const baseConfig = gradeConfig[grade];
+  // N'afficher "Bounced" que si un vrai bounce est constaté
+  const hasRealBounce = totalBounced > 0;
+  const config = hasRealBounce
+    ? { ...baseConfig, label: `Bounced (${totalBounced}/${totalSent || '?'})` }
+    : baseConfig;
   const Icon = config.icon;
 
   return (

@@ -215,6 +215,8 @@ const handler = async (req: Request): Promise<Response> => {
 
       const rows = recipientList.map((recipient: string) => ({
         user_id: effectiveUserId,
+        // Utiliser l'email_id Resend comme message_id pour que le webhook
+        // (delivered/opened/clicked/bounced) puisse retrouver et mettre à jour cette ligne.
         message_id: messageId,
         from_email: fromEmailClean,
         from_name: fromName,

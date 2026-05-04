@@ -29,22 +29,26 @@ const computeScore = (stats: {
   totalClicked: number;
   totalBounced: number;
 }): number => {
-  if (stats.totalSent === 0) return 50; // neutral for no data
+  if (stats.totalSent === 0) return 50; // neutre pour absence de données
 
   const deliveryRate = stats.totalDelivered / stats.totalSent;
   const openRate = stats.totalSent > 0 ? stats.totalOpened / stats.totalSent : 0;
   const clickRate = stats.totalSent > 0 ? stats.totalClicked / stats.totalSent : 0;
   const bounceRate = stats.totalSent > 0 ? stats.totalBounced / stats.totalSent : 0;
 
-  // Weighted score: delivery (30%), opens (30%), clicks (25%), bounce penalty (15%)
-  const score = Math.round(
+  // Score pondéré : livraison (30%), ouvertures (30%), clics (25%), pénalité bounce (15%)
+  const rawScore =
     (deliveryRate * 30) +
     (openRate * 30) +
     (clickRate * 25) +
-    ((1 - bounceRate) * 15)
-  );
+    ((1 - bounceRate) * 15);
 
-  return Math.max(0, Math.min(100, score));
+  // Si aucun bounce ET au moins une ouverture/livraison, garantir au moins un grade C (>=20)
+  const hasPositiveSignal = stats.totalDelivered > 0 || stats.totalOpened > 0 || stats.totalClicked > 0;
+  const score = Math.round(rawScore);
+  const adjusted = (stats.totalBounced === 0 && hasPositiveSignal) ? Math.max(score, 45) : score;
+
+  return Math.max(0, Math.min(100, adjusted));
 };
 
 const getGrade = (score: number): 'A' | 'B' | 'C' | 'D' => {
@@ -73,14 +77,19 @@ export const useContactEngagement = (contactId?: string) => {
 
       if (!contact) return null;
 
-      // Get analytics events for this contact
-      const { data: events } = await supabase
+      const contactEmailLc = (contact.email || '').toLowerCase().trim();
+
+      // Get analytics events for this contact (par contact_id OU par adresse email)
+      let analyticsQuery = supabase
         .from('email_analytics')
-        .select('event_type, created_at')
-        .eq('contact_id', cId)
+        .select('event_type, created_at, event_data')
         .eq('user_id', user.id);
 
-      const evts = events || [];
+      // Inclure les events liés directement au contact
+      const { data: eventsByContact } = await analyticsQuery
+        .eq('contact_id', cId);
+
+      const evts = eventsByContact || [];
       const totalSent = evts.filter(e => e.event_type === 'sent').length;
       const totalDelivered = evts.filter(e => e.event_type === 'delivered').length;
       const totalOpened = evts.filter(e => e.event_type === 'opened').length;
@@ -88,27 +97,32 @@ export const useContactEngagement = (contactId?: string) => {
       const totalBounced = evts.filter(e => e.event_type === 'bounced').length;
       const totalUnsubscribed = evts.filter(e => e.event_type === 'unsubscribed').length;
 
-      // Also check emails table for this contact
-      const { data: emails } = await supabase
+      // Croiser avec la table emails par contact_id ET par adresse (pour rattraper les emails sans contact_id)
+      let emailsQuery = supabase
         .from('emails')
-        .select('status, sent_at, delivered_at, opened_at')
-        .eq('contact_id', cId)
+        .select('status, sent_at, delivered_at, opened_at, to_email, contact_id')
         .eq('user_id', user.id);
 
+      const filters: string[] = [`contact_id.eq.${cId}`];
+      if (contactEmailLc) filters.push(`to_email.ilike.%${contactEmailLc}%`);
+      const { data: emails } = await emailsQuery.or(filters.join(','));
+
       const emailsSent = (emails || []).filter(e => e.sent_at).length;
-      const emailsDelivered = (emails || []).filter(e => e.delivered_at).length;
-      const emailsOpened = (emails || []).filter(e => e.opened_at).length;
+      const emailsDelivered = (emails || []).filter(e => e.delivered_at || e.status === 'delivered' || e.status === 'sent').length;
+      const emailsOpened = (emails || []).filter(e => e.opened_at || e.status === 'opened').length;
+      const emailsBounced = (emails || []).filter(e => e.status === 'bounced' || e.status === 'failed').length;
 
       const finalSent = Math.max(totalSent, emailsSent);
       const finalDelivered = Math.max(totalDelivered, emailsDelivered);
       const finalOpened = Math.max(totalOpened, emailsOpened);
+      const finalBounced = Math.max(totalBounced, emailsBounced);
 
       const score = computeScore({
         totalSent: finalSent,
         totalDelivered: finalDelivered,
         totalOpened: finalOpened,
         totalClicked,
-        totalBounced,
+        totalBounced: finalBounced,
       });
 
       const lastEvent = evts.sort((a, b) => 
@@ -123,12 +137,12 @@ export const useContactEngagement = (contactId?: string) => {
         totalDelivered: finalDelivered,
         totalOpened: finalOpened,
         totalClicked,
-        totalBounced,
+        totalBounced: finalBounced,
         totalUnsubscribed,
         openRate: finalSent > 0 ? (finalOpened / finalSent) * 100 : 0,
         clickRate: finalSent > 0 ? (totalClicked / finalSent) * 100 : 0,
         deliveryRate: finalSent > 0 ? (finalDelivered / finalSent) * 100 : 0,
-        bounceRate: finalSent > 0 ? (totalBounced / finalSent) * 100 : 0,
+        bounceRate: finalSent > 0 ? (finalBounced / finalSent) * 100 : 0,
         score,
         grade: getGrade(score),
         lastEventAt: lastEvent?.created_at,

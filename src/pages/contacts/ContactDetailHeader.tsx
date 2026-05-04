@@ -9,7 +9,7 @@ import { ContactEngagementBadge } from '@/components/contacts/ContactEngagementB
 
 interface Props {
   contact: Contact;
-  engagementStats: Array<{ score: number; grade: 'A' | 'B' | 'C' | 'D' }>;
+  engagementStats: Array<{ score: number; grade: 'A' | 'B' | 'C' | 'D'; totalBounced?: number; totalSent?: number }>;
   onEdit: () => void;
 }
 
@@ -38,6 +38,8 @@ export const ContactDetailHeader: React.FC<Props> = ({ contact, engagementStats,
                 <ContactEngagementBadge
                   score={engagementStats[0].score}
                   grade={engagementStats[0].grade}
+                  totalBounced={engagementStats[0].totalBounced}
+                  totalSent={engagementStats[0].totalSent}
                 />
               )}
             </div>
