@@ -63,6 +63,42 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
       const campaignMap = new Map<string, any>();
       (campaigns || []).forEach((c: any) => campaignMap.set(c.id, c));
 
+      // Enrich individual analytics entries with HTML/content from `emails` table.
+      // Try lookup by event_data.email_id first, then fallback to subject+recipient.
+      const emailIdsFromEvents = Array.from(new Set(
+        analytics
+          .map((a: any) => a?.event_data?.email_id)
+          .filter((id: any) => typeof id === 'string' && id.length > 0)
+      ));
+      const subjectsFromEvents = Array.from(new Set(
+        analytics
+          .map((a: any) => a?.event_data?.subject)
+          .filter((s: any) => typeof s === 'string' && s.length > 0)
+      ));
+
+      const emailContentById = new Map<string, any>();
+      const emailContentBySubject = new Map<string, any>();
+
+      if (emailIdsFromEvents.length > 0) {
+        const { data: byId } = await supabase
+          .from('emails')
+          .select('id, subject, content, html_content, to_email')
+          .in('id', emailIdsFromEvents);
+        (byId || []).forEach((e: any) => emailContentById.set(e.id, e));
+      }
+
+      if (subjectsFromEvents.length > 0 && contactEmail) {
+        const { data: bySubj } = await supabase
+          .from('emails')
+          .select('id, subject, content, html_content, to_email, created_at')
+          .in('subject', subjectsFromEvents)
+          .ilike('to_email', `%${contactEmail}%`)
+          .order('created_at', { ascending: false });
+        (bySubj || []).forEach((e: any) => {
+          if (!emailContentBySubject.has(e.subject)) emailContentBySubject.set(e.subject, e);
+        });
+      }
+
       const STATUS_RANK: Record<string, number> = { sent: 1, delivered: 2, opened: 3, clicked: 4, bounced: 5 };
       const grouped = new Map<string, any>();
 
@@ -83,6 +119,12 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
         const groupingId = ev.campaign_id || `individual-${subjectFromEvent || ev.id}`;
         const key = `${groupingId}-${ev.contact_id}`;
         const existing = grouped.get(key);
+        // Try to enrich with real HTML/content from the `emails` table
+        const linkedEmail =
+          (evData.email_id && emailContentById.get(evData.email_id)) ||
+          (subjectFromEvent && emailContentBySubject.get(subjectFromEvent)) ||
+          null;
+
         const candidate = {
           id: `analytics-${key}`,
           message_id: `analytics-${key}`,
@@ -91,11 +133,11 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
           campaign_name: camp?.name,
           from_email: 'booking@fatras.net',
           from_name: isIndividual ? 'Email envoyé' : 'Campagne',
-          to_email: contactEmail || '',
+          to_email: contactEmail || linkedEmail?.to_email || '',
           to_name: '',
           subject: resolvedSubject,
-          content: camp?.content || evData.content || '',
-          html_content: camp?.content || evData.html || '',
+          content: linkedEmail?.content || camp?.content || evData.content || '',
+          html_content: linkedEmail?.html_content || camp?.content || evData.html || '',
           status: ev.event_type,
           provider: isIndividual ? 'resend' : 'campaign',
           sent_at: camp?.sent_at || ev.created_at,
