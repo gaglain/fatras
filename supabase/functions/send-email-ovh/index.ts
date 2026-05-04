@@ -246,7 +246,41 @@ const handler = async (req: Request): Promise<Response> => {
       await sendCommand('QUIT');
 
       console.log('✅ Email sent successfully');
-      
+
+      // Persistance dans la table emails pour historique contact
+      try {
+        const sentAt = new Date().toISOString();
+        const lowerRecipients = to.map((r) => r.toLowerCase().trim());
+        const { data: contactsData } = await supabase
+          .from('contacts')
+          .select('id, email')
+          .in('email', lowerRecipients);
+        const contactsByEmail = new Map<string, string>();
+        for (const c of (contactsData || [])) {
+          if (c.email) contactsByEmail.set(c.email.toLowerCase().trim(), c.id);
+        }
+        const plainContent = html.replace(/<[^>]*>/g, '').trim();
+        const rows = to.map((recipient) => ({
+          user_id: userId,
+          from_email: fromEmail,
+          from_name: fromName || null,
+          to_email: recipient,
+          subject,
+          html_content: html,
+          content: plainContent,
+          status: 'sent',
+          sent_at: sentAt,
+          direction: 'sent',
+          provider: 'smtp',
+          contact_id: contactsByEmail.get(recipient.toLowerCase().trim()) || null,
+        }));
+        const { error: dbError } = await supabase.from('emails').insert(rows);
+        if (dbError) console.error('⚠️ Failed to persist email rows:', dbError);
+        else console.log(`💾 Persisted ${rows.length} email row(s) to history`);
+      } catch (persistError) {
+        console.error('⚠️ Persistence error (non-blocking):', persistError);
+      }
+
       return new Response(JSON.stringify({ 
         success: true,
         message: 'Email sent successfully via OVH SMTP'
