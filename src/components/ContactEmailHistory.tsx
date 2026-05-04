@@ -426,8 +426,12 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
               <p className="text-sm">Les échanges d'emails avec ce contact apparaîtront ici</p>
             </div>
           ) : (
-            <Tabs defaultValue="all" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 h-auto">
+            <Tabs defaultValue="threads" className="w-full">
+              <TabsList className="grid w-full grid-cols-4 h-auto">
+                <TabsTrigger value="threads" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2">
+                  <MessagesSquare className="h-3 w-3 shrink-0" />
+                  <span className="text-xs sm:text-sm">Conversations ({threads.length})</span>
+                </TabsTrigger>
                 <TabsTrigger value="all" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2">
                   <Mail className="h-3 w-3 shrink-0" />
                   <span className="text-xs sm:text-sm">Tous ({contactEmails.length})</span>
@@ -441,7 +445,52 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
                   <span className="text-xs sm:text-sm">Envoyés ({sentEmails.length})</span>
                 </TabsTrigger>
               </TabsList>
-              
+
+              <TabsContent value="threads" className="mt-4">
+                <ScrollArea className="h-[400px] w-full">
+                  <div className="space-y-2 pr-4">
+                    {threads.map((t) => {
+                      const isOpen = expandedThreads.has(t.key);
+                      return (
+                        <div key={t.key} className="border rounded-lg">
+                          <button
+                            type="button"
+                            onClick={() => toggleThread(t.key)}
+                            className="w-full flex items-center gap-2 p-3 text-left hover:bg-muted/50 rounded-lg"
+                          >
+                            {isOpen ? <ChevronDown className="h-4 w-4 shrink-0" /> : <ChevronRight className="h-4 w-4 shrink-0" />}
+                            <MessagesSquare className="h-4 w-4 shrink-0 text-muted-foreground" />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <h4 className={`text-sm truncate ${t.unreadCount > 0 ? 'font-semibold' : 'font-medium'}`}>
+                                  {t.subject}
+                                </h4>
+                                <Badge variant="secondary" className="text-xs shrink-0">
+                                  {t.items.length}
+                                </Badge>
+                                {t.unreadCount > 0 && (
+                                  <Badge variant="default" className="text-xs shrink-0">
+                                    {t.unreadCount} nouveau{t.unreadCount > 1 ? 'x' : ''}
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                Dernier message: {formatDate(t.latestAt)}
+                              </p>
+                            </div>
+                          </button>
+                          {isOpen && (
+                            <div className="px-3 pb-3 space-y-2 border-t pt-3">
+                              {t.items.map(renderEmailItem)}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </ScrollArea>
+              </TabsContent>
+
               <TabsContent value="all" className="mt-4">
                 <ScrollArea className="h-[400px] w-full">
                   <div className="space-y-3 pr-4">
