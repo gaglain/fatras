@@ -3,13 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Mail, Send, Inbox, Clock, User, RefreshCw, Reply, Megaphone } from 'lucide-react';
+import { Mail, Send, Inbox, Clock, User, RefreshCw, Reply, Megaphone, MessagesSquare, ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUnifiedEmails } from '@/hooks/useUnifiedEmails';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { EmailComposer } from '@/components/email/EmailComposer';
 import { sanitizeEmailHtml } from '@/lib/sanitize';
 import { supabase } from '@/integrations/supabase/client';
+import { decodeMimeHeader, normalizeSubject } from '@/lib/mimeDecoder';
 
 interface ContactEmailHistoryProps {
   contactId: string;
@@ -66,24 +67,37 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
       const grouped = new Map<string, any>();
 
       for (const ev of analytics as any[]) {
-        const key = `${ev.campaign_id}-${ev.contact_id}`;
+        const camp = ev.campaign_id ? campaignMap.get(ev.campaign_id) : null;
+        const evData = (ev.event_data || {}) as any;
+        const isIndividual = !ev.campaign_id || evData.source === 'individual';
+        // Subject precedence: campaign subject > campaign name > event_data.subject > fallback
+        const subjectFromEvent = typeof evData.subject === 'string' ? evData.subject : '';
+        const resolvedSubject =
+          camp?.subject ||
+          camp?.name ||
+          subjectFromEvent ||
+          (isIndividual ? '(Email individuel sans sujet)' : '(Campagne sans sujet)');
+
+        // Group individual emails by event_data.subject (so multiple events for the
+        // same individual email collapse together); group campaign emails by campaign_id.
+        const groupingId = ev.campaign_id || `individual-${subjectFromEvent || ev.id}`;
+        const key = `${groupingId}-${ev.contact_id}`;
         const existing = grouped.get(key);
-        const camp = campaignMap.get(ev.campaign_id);
         const candidate = {
-          id: `campaign-${key}`,
-          message_id: `campaign-${key}`,
+          id: `analytics-${key}`,
+          message_id: `analytics-${key}`,
           direction: 'sent' as const,
-          source: 'campaign',
+          source: isIndividual ? 'individual' : 'campaign',
           campaign_name: camp?.name,
           from_email: 'booking@fatras.net',
-          from_name: 'Campagne',
+          from_name: isIndividual ? 'Email envoyé' : 'Campagne',
           to_email: contactEmail || '',
           to_name: '',
-          subject: camp?.subject || camp?.name || '(Campagne sans sujet)',
-          content: camp?.content || '',
-          html_content: camp?.content || '',
+          subject: resolvedSubject,
+          content: camp?.content || evData.content || '',
+          html_content: camp?.content || evData.html || '',
           status: ev.event_type,
-          provider: 'campaign',
+          provider: isIndividual ? 'resend' : 'campaign',
           sent_at: camp?.sent_at || ev.created_at,
           created_at: ev.created_at,
           updated_at: ev.created_at,
@@ -93,7 +107,6 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
         if (!existing || (STATUS_RANK[ev.event_type] ?? 0) > (STATUS_RANK[existing.status] ?? 0)) {
           grouped.set(key, { ...(existing || {}), ...candidate });
         } else {
-          // keep best status, but pick up timestamps
           if (ev.event_type === 'opened' && !existing.opened_at) existing.opened_at = ev.created_at;
           if (ev.event_type === 'delivered' && !existing.delivered_at) existing.delivered_at = ev.created_at;
         }
@@ -157,6 +170,40 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
   const sentEmails = React.useMemo(() => 
     contactEmails.filter(email => email.direction === 'sent'), 
     [contactEmails]);
+
+  // Group by normalized subject for Gmail-style conversation view
+  const threads = React.useMemo(() => {
+    const map = new Map<string, any[]>();
+    for (const e of contactEmails) {
+      const key = normalizeSubject(e.subject) || `__no_subject_${e.id}`;
+      const arr = map.get(key) || [];
+      arr.push(e);
+      map.set(key, arr);
+    }
+    const result = Array.from(map.entries()).map(([key, items]) => {
+      const sorted = [...items].sort((a, b) => {
+        const da = new Date(a.received_at || a.sent_at || a.created_at).getTime();
+        const db = new Date(b.received_at || b.sent_at || b.created_at).getTime();
+        return db - da;
+      });
+      return {
+        key,
+        subject: decodeMimeHeader(sorted[0].subject) || '(Aucun sujet)',
+        latestAt: sorted[0].received_at || sorted[0].sent_at || sorted[0].created_at,
+        items: sorted,
+        unreadCount: sorted.filter((e) => e.direction === 'received' && !e.read_at).length,
+      };
+    });
+    return result.sort((a, b) => new Date(b.latestAt).getTime() - new Date(a.latestAt).getTime());
+  }, [contactEmails]);
+
+  const [expandedThreads, setExpandedThreads] = React.useState<Set<string>>(new Set());
+  const toggleThread = (key: string) =>
+    setExpandedThreads((prev) => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
 
   const handleSync = React.useCallback(async () => {
     setIsSyncing(true);
@@ -289,7 +336,7 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
             <h4 className={`text-sm font-medium line-clamp-2 mb-1 ${
               email.direction === 'received' && !email.read_at ? 'font-semibold' : ''
             }`}>
-              {email.subject || '(Aucun sujet)'}
+              {decodeMimeHeader(email.subject) || '(Aucun sujet)'}
             </h4>
             
             <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
@@ -379,8 +426,12 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
               <p className="text-sm">Les échanges d'emails avec ce contact apparaîtront ici</p>
             </div>
           ) : (
-            <Tabs defaultValue="all" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 h-auto">
+            <Tabs defaultValue="threads" className="w-full">
+              <TabsList className="grid w-full grid-cols-4 h-auto">
+                <TabsTrigger value="threads" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2">
+                  <MessagesSquare className="h-3 w-3 shrink-0" />
+                  <span className="text-xs sm:text-sm">Conversations ({threads.length})</span>
+                </TabsTrigger>
                 <TabsTrigger value="all" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2">
                   <Mail className="h-3 w-3 shrink-0" />
                   <span className="text-xs sm:text-sm">Tous ({contactEmails.length})</span>
@@ -394,7 +445,52 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
                   <span className="text-xs sm:text-sm">Envoyés ({sentEmails.length})</span>
                 </TabsTrigger>
               </TabsList>
-              
+
+              <TabsContent value="threads" className="mt-4">
+                <ScrollArea className="h-[400px] w-full">
+                  <div className="space-y-2 pr-4">
+                    {threads.map((t) => {
+                      const isOpen = expandedThreads.has(t.key);
+                      return (
+                        <div key={t.key} className="border rounded-lg">
+                          <button
+                            type="button"
+                            onClick={() => toggleThread(t.key)}
+                            className="w-full flex items-center gap-2 p-3 text-left hover:bg-muted/50 rounded-lg"
+                          >
+                            {isOpen ? <ChevronDown className="h-4 w-4 shrink-0" /> : <ChevronRight className="h-4 w-4 shrink-0" />}
+                            <MessagesSquare className="h-4 w-4 shrink-0 text-muted-foreground" />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <h4 className={`text-sm truncate ${t.unreadCount > 0 ? 'font-semibold' : 'font-medium'}`}>
+                                  {t.subject}
+                                </h4>
+                                <Badge variant="secondary" className="text-xs shrink-0">
+                                  {t.items.length}
+                                </Badge>
+                                {t.unreadCount > 0 && (
+                                  <Badge variant="default" className="text-xs shrink-0">
+                                    {t.unreadCount} nouveau{t.unreadCount > 1 ? 'x' : ''}
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                Dernier message: {formatDate(t.latestAt)}
+                              </p>
+                            </div>
+                          </button>
+                          {isOpen && (
+                            <div className="px-3 pb-3 space-y-2 border-t pt-3">
+                              {t.items.map(renderEmailItem)}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </ScrollArea>
+              </TabsContent>
+
               <TabsContent value="all" className="mt-4">
                 <ScrollArea className="h-[400px] w-full">
                   <div className="space-y-3 pr-4">
@@ -447,7 +543,7 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
               ) : (
                 <Send className="h-4 w-4 text-blue-600" />
               )}
-              {selectedEmail?.subject || '(Aucun sujet)'}
+              {decodeMimeHeader(selectedEmail?.subject) || '(Aucun sujet)'}
             </DialogTitle>
             <DialogDescription className="text-left">
               <div className="flex flex-col gap-1 text-sm">
@@ -493,7 +589,7 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
           setSelectedEmail(null);
         }}
         toEmail={selectedEmail?.from_email || ''}
-        subject={`Re: ${selectedEmail?.subject || ''}`}
+        subject={`Re: ${decodeMimeHeader(selectedEmail?.subject) || ''}`}
         preText={`\n\n---\nDe: ${selectedEmail?.from_name || selectedEmail?.from_email}\nDate: ${selectedEmail && formatDate(selectedEmail.received_at || selectedEmail.sent_at || selectedEmail.created_at)}\n\n${stripTags(selectedEmail?.html_content || selectedEmail?.content || '')}`}
       />
     </>
