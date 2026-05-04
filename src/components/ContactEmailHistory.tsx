@@ -308,7 +308,7 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
       };
     });
     return result.sort((a, b) => new Date(b.latestAt).getTime() - new Date(a.latestAt).getTime());
-  }, [contactEmails]);
+  }, [filteredEmails]);
 
   const [expandedThreads, setExpandedThreads] = React.useState<Set<string>>(new Set());
   const toggleThread = (key: string) =>
