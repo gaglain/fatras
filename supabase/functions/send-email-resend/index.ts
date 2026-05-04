@@ -186,6 +186,59 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('✅ Email envoyé avec succès:', emailResponse);
 
+    // Persister chaque destinataire dans la table `emails` pour qu'ils
+    // apparaissent dans l'historique du contact (parité avec SMTP/IMAP).
+    try {
+      const sentAt = new Date().toISOString();
+      const messageId = emailResponse.data?.id;
+      const plainContent = (html || '').replace(/<[^>]*>/g, '').trim();
+      const recipientList = Array.isArray(to) ? to : [to];
+
+      // Extraire l'email "pur" depuis finalFrom (ex: "Name <a@b.com>")
+      const fromMatch = finalFrom.match(/<([^>]+)>/);
+      const fromEmailClean = (fromMatch ? fromMatch[1] : fromEmail).toLowerCase().trim();
+
+      // Lookup batch des contacts par adresse
+      const lowerRecipients = recipientList
+        .map((r) => (typeof r === 'string' ? r.toLowerCase().trim() : ''))
+        .filter(Boolean);
+      let contactsByEmail = new Map<string, string>();
+      if (lowerRecipients.length > 0) {
+        const { data: contactsData } = await supabase
+          .from('contacts')
+          .select('id, email')
+          .in('email', lowerRecipients);
+        for (const c of contactsData || []) {
+          if (c.email) contactsByEmail.set(c.email.toLowerCase().trim(), c.id);
+        }
+      }
+
+      const rows = recipientList.map((recipient: string) => ({
+        user_id: effectiveUserId,
+        message_id: messageId,
+        from_email: fromEmailClean,
+        from_name: fromName,
+        to_email: recipient,
+        subject,
+        html_content: html,
+        content: plainContent,
+        status: 'sent',
+        sent_at: sentAt,
+        direction: 'outbound',
+        provider: 'resend',
+        contact_id: contactsByEmail.get(recipient.toLowerCase().trim()) || null,
+      }));
+
+      const { error: dbError } = await supabase.from('emails').insert(rows);
+      if (dbError) {
+        console.error('⚠️ Erreur stockage email Resend:', dbError);
+      } else {
+        console.log(`✅ ${rows.length} email(s) Resend stocké(s) en base`);
+      }
+    } catch (persistErr) {
+      console.error('⚠️ Exception persistance email Resend:', persistErr);
+    }
+
     return new Response(JSON.stringify({
       success: true,
       message: 'Email envoyé avec succès',

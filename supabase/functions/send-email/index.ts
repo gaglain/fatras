@@ -76,6 +76,60 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Email sent successfully:", emailResponse);
 
+    // Persister chaque destinataire dans la table `emails` pour qu'ils
+    // apparaissent dans l'historique du contact (parité avec SMTP/IMAP).
+    try {
+      const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+      if (serviceKey) {
+        const adminSb = createClient(supabaseUrl, serviceKey);
+        const sentAt = new Date().toISOString();
+        const messageId = emailResponse.data?.id;
+        const plainContent = (html || '').replace(/<[^>]*>/g, '').trim();
+        const fromHeader = from || 'Fatras <booking@fatras.net>';
+        const fromMatch = fromHeader.match(/<([^>]+)>/);
+        const fromEmailClean = (fromMatch ? fromMatch[1] : fromHeader).toLowerCase().trim();
+        const fromNameMatch = fromHeader.match(/^(.*?)\s*</);
+        const fromName = fromNameMatch ? fromNameMatch[1].trim() : undefined;
+
+        const lowerRecipients = to.map((r) => r.toLowerCase().trim()).filter(Boolean);
+        const contactsByEmail = new Map<string, string>();
+        if (lowerRecipients.length > 0) {
+          const { data: contactsData } = await adminSb
+            .from('contacts')
+            .select('id, email')
+            .in('email', lowerRecipients);
+          for (const c of contactsData || []) {
+            if (c.email) contactsByEmail.set(c.email.toLowerCase().trim(), c.id);
+          }
+        }
+
+        const rows = to.map((recipient: string) => ({
+          user_id: user.id,
+          message_id: messageId,
+          from_email: fromEmailClean,
+          from_name: fromName,
+          to_email: recipient,
+          subject,
+          html_content: html,
+          content: plainContent,
+          status: 'sent',
+          sent_at: sentAt,
+          direction: 'outbound',
+          provider: 'resend',
+          contact_id: contactsByEmail.get(recipient.toLowerCase().trim()) || null,
+        }));
+
+        const { error: dbError } = await adminSb.from('emails').insert(rows);
+        if (dbError) {
+          console.error('⚠️ Erreur stockage email Resend:', dbError);
+        } else {
+          console.log(`✅ ${rows.length} email(s) Resend stocké(s) en base`);
+        }
+      }
+    } catch (persistErr) {
+      console.error('⚠️ Exception persistance email Resend:', persistErr);
+    }
+
     return new Response(JSON.stringify({ 
       success: true, 
       id: emailResponse.data?.id,
