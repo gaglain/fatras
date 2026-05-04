@@ -589,7 +589,7 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
           setSelectedEmail(null);
         }}
         toEmail={selectedEmail?.from_email || ''}
-        subject={`Re: ${selectedEmail?.subject || ''}`}
+        subject={`Re: ${decodeMimeHeader(selectedEmail?.subject) || ''}`}
         preText={`\n\n---\nDe: ${selectedEmail?.from_name || selectedEmail?.from_email}\nDate: ${selectedEmail && formatDate(selectedEmail.received_at || selectedEmail.sent_at || selectedEmail.created_at)}\n\n${stripTags(selectedEmail?.html_content || selectedEmail?.content || '')}`}
       />
     </>
