@@ -249,7 +249,7 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
             return false;
           }
         }
-        if (statusFilter === 'campaign' && e.source !== 'campaign') return false;
+        if (statusFilter === 'campaign' && (e as any).source !== 'campaign') return false;
       }
       // Date
       const ts = new Date(e.received_at || e.sent_at || e.created_at).getTime();
