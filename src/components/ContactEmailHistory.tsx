@@ -3,8 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Mail, Send, Inbox, Clock, User, RefreshCw, Reply, Megaphone, MessagesSquare, ChevronDown, ChevronRight } from 'lucide-react';
+import { Mail, Send, Inbox, Clock, User, RefreshCw, Reply, Megaphone, MessagesSquare, ChevronDown, ChevronRight, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useUnifiedEmails } from '@/hooks/useUnifiedEmails';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { EmailComposer } from '@/components/email/EmailComposer';
@@ -205,18 +207,87 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
     });
   }, [emails, campaignEmails, contactId, normalizedContactEmail, normalizeAddress]);
 
+  // === Recherche & filtres ===
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [statusFilter, setStatusFilter] = React.useState<string>('all');
+  const [dateFilter, setDateFilter] = React.useState<string>('all');
+  const [dateFrom, setDateFrom] = React.useState<string>('');
+  const [dateTo, setDateTo] = React.useState<string>('');
+
+  const filteredEmails = React.useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    const now = Date.now();
+    const ranges: Record<string, number> = {
+      '7d': 7 * 24 * 3600 * 1000,
+      '30d': 30 * 24 * 3600 * 1000,
+      '90d': 90 * 24 * 3600 * 1000,
+      '365d': 365 * 24 * 3600 * 1000,
+    };
+    const fromTs = dateFrom ? new Date(dateFrom).getTime() : null;
+    const toTs = dateTo ? new Date(dateTo).getTime() + 24 * 3600 * 1000 - 1 : null;
+
+    return contactEmails.filter((e) => {
+      // Texte (sujet + contenu + expéditeur/destinataire)
+      if (q) {
+        const subj = decodeMimeHeader(e.subject || '').toLowerCase();
+        const body = stripTags(e.html_content || e.content || '').toLowerCase();
+        const from = `${e.from_name || ''} ${e.from_email || ''}`.toLowerCase();
+        const to = `${e.to_name || ''} ${e.to_email || ''}`.toLowerCase();
+        if (!subj.includes(q) && !body.includes(q) && !from.includes(q) && !to.includes(q)) {
+          return false;
+        }
+      }
+      // Statut
+      if (statusFilter !== 'all') {
+        if (statusFilter === 'received' && e.direction !== 'received') return false;
+        if (statusFilter === 'unread' && !(e.direction === 'received' && !e.read_at)) return false;
+        if (['sent', 'delivered', 'opened', 'clicked', 'bounced'].includes(statusFilter)) {
+          if (e.direction !== 'sent') return false;
+          if (statusFilter === 'sent') {
+            // OK: tout email envoyé
+          } else if (e.status !== statusFilter) {
+            return false;
+          }
+        }
+        if (statusFilter === 'campaign' && (e as any).source !== 'campaign') return false;
+      }
+      // Date
+      const ts = new Date(e.received_at || e.sent_at || e.created_at).getTime();
+      if (dateFilter !== 'all' && dateFilter !== 'custom') {
+        const span = ranges[dateFilter];
+        if (span && now - ts > span) return false;
+      }
+      if (dateFilter === 'custom') {
+        if (fromTs && ts < fromTs) return false;
+        if (toTs && ts > toTs) return false;
+      }
+      return true;
+    });
+  }, [contactEmails, searchQuery, statusFilter, dateFilter, dateFrom, dateTo]);
+
+  const hasActiveFilters =
+    !!searchQuery || statusFilter !== 'all' || dateFilter !== 'all';
+
+  const resetFilters = () => {
+    setSearchQuery('');
+    setStatusFilter('all');
+    setDateFilter('all');
+    setDateFrom('');
+    setDateTo('');
+  };
+
   const receivedEmails = React.useMemo(() => 
-    contactEmails.filter(email => email.direction === 'received'), 
-    [contactEmails]);
+    filteredEmails.filter(email => email.direction === 'received'), 
+    [filteredEmails]);
   
   const sentEmails = React.useMemo(() => 
-    contactEmails.filter(email => email.direction === 'sent'), 
-    [contactEmails]);
+    filteredEmails.filter(email => email.direction === 'sent'), 
+    [filteredEmails]);
 
   // Group by normalized subject for Gmail-style conversation view
   const threads = React.useMemo(() => {
     const map = new Map<string, any[]>();
-    for (const e of contactEmails) {
+    for (const e of filteredEmails) {
       const key = normalizeSubject(e.subject) || `__no_subject_${e.id}`;
       const arr = map.get(key) || [];
       arr.push(e);
@@ -237,7 +308,7 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
       };
     });
     return result.sort((a, b) => new Date(b.latestAt).getTime() - new Date(a.latestAt).getTime());
-  }, [contactEmails]);
+  }, [filteredEmails]);
 
   const [expandedThreads, setExpandedThreads] = React.useState<Set<string>>(new Set());
   const toggleThread = (key: string) =>
@@ -468,6 +539,77 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
               <p className="text-sm">Les échanges d'emails avec ce contact apparaîtront ici</p>
             </div>
           ) : (
+            <>
+              {/* Barre de recherche & filtres */}
+              <div className="mb-4 space-y-2">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Rechercher par objet, contenu, expéditeur…"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-full sm:w-44">
+                      <SelectValue placeholder="Statut" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tous les statuts</SelectItem>
+                      <SelectItem value="received">Reçus</SelectItem>
+                      <SelectItem value="unread">Non lus</SelectItem>
+                      <SelectItem value="sent">Envoyés</SelectItem>
+                      <SelectItem value="delivered">Livrés</SelectItem>
+                      <SelectItem value="opened">Ouverts</SelectItem>
+                      <SelectItem value="clicked">Cliqués</SelectItem>
+                      <SelectItem value="bounced">Rebonds</SelectItem>
+                      <SelectItem value="campaign">Campagnes</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={dateFilter} onValueChange={setDateFilter}>
+                    <SelectTrigger className="w-full sm:w-44">
+                      <SelectValue placeholder="Date" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Toutes les dates</SelectItem>
+                      <SelectItem value="7d">7 derniers jours</SelectItem>
+                      <SelectItem value="30d">30 derniers jours</SelectItem>
+                      <SelectItem value="90d">90 derniers jours</SelectItem>
+                      <SelectItem value="365d">12 derniers mois</SelectItem>
+                      <SelectItem value="custom">Période personnalisée</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {hasActiveFilters && (
+                    <Button variant="ghost" size="sm" onClick={resetFilters} className="shrink-0">
+                      <X className="h-4 w-4 mr-1" /> Réinitialiser
+                    </Button>
+                  )}
+                </div>
+                {dateFilter === 'custom' && (
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Input
+                      type="date"
+                      value={dateFrom}
+                      onChange={(e) => setDateFrom(e.target.value)}
+                      className="sm:w-44"
+                    />
+                    <Input
+                      type="date"
+                      value={dateTo}
+                      onChange={(e) => setDateTo(e.target.value)}
+                      className="sm:w-44"
+                    />
+                  </div>
+                )}
+                {hasActiveFilters && (
+                  <p className="text-xs text-muted-foreground">
+                    {filteredEmails.length} résultat{filteredEmails.length > 1 ? 's' : ''} sur {contactEmails.length}
+                  </p>
+                )}
+              </div>
+
             <Tabs defaultValue="threads" className="w-full">
               <TabsList className="grid w-full grid-cols-4 h-auto">
                 <TabsTrigger value="threads" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2">
@@ -476,7 +618,7 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
                 </TabsTrigger>
                 <TabsTrigger value="all" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2">
                   <Mail className="h-3 w-3 shrink-0" />
-                  <span className="text-xs sm:text-sm">Tous ({contactEmails.length})</span>
+                  <span className="text-xs sm:text-sm">Tous ({filteredEmails.length})</span>
                 </TabsTrigger>
                 <TabsTrigger value="received" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2">
                   <Inbox className="h-3 w-3 shrink-0" />
@@ -536,7 +678,14 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
               <TabsContent value="all" className="mt-4">
                 <ScrollArea className="h-[400px] w-full">
                   <div className="space-y-3 pr-4">
-                    {contactEmails.map(renderEmailItem)}
+                    {filteredEmails.length === 0 ? (
+                      <div className="text-center text-muted-foreground py-8">
+                        <Mail className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                        <p className="text-sm">Aucun email ne correspond aux filtres</p>
+                      </div>
+                    ) : (
+                      filteredEmails.map(renderEmailItem)
+                    )}
                   </div>
                 </ScrollArea>
               </TabsContent>
@@ -571,6 +720,7 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
                 </ScrollArea>
               </TabsContent>
             </Tabs>
+            </>
           )}
         </CardContent>
       </Card>
