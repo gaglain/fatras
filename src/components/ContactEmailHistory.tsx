@@ -543,7 +543,7 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
               ) : (
                 <Send className="h-4 w-4 text-blue-600" />
               )}
-              {selectedEmail?.subject || '(Aucun sujet)'}
+              {decodeMimeHeader(selectedEmail?.subject) || '(Aucun sujet)'}
             </DialogTitle>
             <DialogDescription className="text-left">
               <div className="flex flex-col gap-1 text-sm">
