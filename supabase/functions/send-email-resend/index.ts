@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.9';
+import { normalizeEmail, canonicalEmail, findContactByEmail } from "../_shared/emailMatching.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -198,38 +199,34 @@ const handler = async (req: Request): Promise<Response> => {
       const fromMatch = finalFrom.match(/<([^>]+)>/);
       const fromEmailClean = (fromMatch ? fromMatch[1] : fromEmail).toLowerCase().trim();
 
-      // Lookup batch des contacts par adresse
-      const lowerRecipients = recipientList
-        .map((r) => (typeof r === 'string' ? r.toLowerCase().trim() : ''))
-        .filter(Boolean);
-      let contactsByEmail = new Map<string, string>();
-      if (lowerRecipients.length > 0) {
-        const { data: contactsData } = await supabase
-          .from('contacts')
-          .select('id, email')
-          .in('email', lowerRecipients);
-        for (const c of contactsData || []) {
-          if (c.email) contactsByEmail.set(c.email.toLowerCase().trim(), c.id);
-        }
+      // Lookup robuste des contacts par adresse (exact + canonique gmail/+alias)
+      const contactIdByRecipient = new Map<string, string>();
+      for (const r of recipientList) {
+        if (typeof r !== 'string' || !r) continue;
+        const match = await findContactByEmail(supabase, r, effectiveUserId);
+        if (match) contactIdByRecipient.set(normalizeEmail(r), match.contactId);
       }
 
-      const rows = recipientList.map((recipient: string) => ({
-        user_id: effectiveUserId,
-        // Utiliser l'email_id Resend comme message_id pour que le webhook
-        // (delivered/opened/clicked/bounced) puisse retrouver et mettre à jour cette ligne.
-        message_id: messageId,
-        from_email: fromEmailClean,
-        from_name: fromName,
-        to_email: recipient,
-        subject,
-        html_content: html,
-        content: plainContent,
-        status: 'sent',
-        sent_at: sentAt,
-        direction: 'outbound',
-        provider: 'resend',
-        contact_id: contactsByEmail.get(recipient.toLowerCase().trim()) || null,
-      }));
+      const rows = recipientList.map((recipient: string) => {
+        const norm = normalizeEmail(recipient);
+        return {
+          user_id: effectiveUserId,
+          // Utiliser l'email_id Resend comme message_id pour que le webhook
+          // (delivered/opened/clicked/bounced) puisse retrouver et mettre à jour cette ligne.
+          message_id: messageId,
+          from_email: fromEmailClean,
+          from_name: fromName,
+          to_email: recipient,
+          subject,
+          html_content: html,
+          content: plainContent,
+          status: 'sent',
+          sent_at: sentAt,
+          direction: 'outbound',
+          provider: 'resend',
+          contact_id: contactIdByRecipient.get(norm) || null,
+        };
+      });
 
       const { error: dbError } = await supabase.from('emails').insert(rows);
       if (dbError) {

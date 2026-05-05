@@ -78,6 +78,18 @@ export const useContactEngagement = (contactId?: string) => {
       if (!contact) return null;
 
       const contactEmailLc = (contact.email || '').toLowerCase().trim();
+      // Forme canonique pour matcher gmail.com avec +alias et points
+      const canonicalize = (raw: string): string => {
+        const v = (raw || '').toLowerCase().trim();
+        if (!v.includes('@')) return v;
+        let [local, domain] = v.split('@');
+        const plus = local.indexOf('+');
+        if (plus >= 0) local = local.slice(0, plus);
+        if (domain === 'googlemail.com') domain = 'gmail.com';
+        if (domain === 'gmail.com') local = local.replace(/\./g, '');
+        return `${local}@${domain}`;
+      };
+      const contactCanonical = canonicalize(contactEmailLc);
 
       // Get analytics events for this contact (par contact_id OU par adresse email)
       let analyticsQuery = supabase
@@ -105,7 +117,12 @@ export const useContactEngagement = (contactId?: string) => {
 
       const filters: string[] = [`contact_id.eq.${cId}`];
       if (contactEmailLc) filters.push(`to_email.ilike.%${contactEmailLc}%`);
-      const { data: emails } = await emailsQuery.or(filters.join(','));
+      const { data: emailsRaw } = await emailsQuery.or(filters.join(','));
+      // Filtrage canonique en mémoire pour rattraper +aliases / points gmail
+      const emails = (emailsRaw || []).filter(e => {
+        if (e.contact_id === cId) return true;
+        return canonicalize(e.to_email || '') === contactCanonical;
+      });
 
       const emailsSent = (emails || []).filter(e => e.sent_at).length;
       const emailsDelivered = (emails || []).filter(e => e.delivered_at || e.status === 'delivered' || e.status === 'sent').length;

@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.9';
 import { Webhook } from "https://esm.sh/svix@1.24.0";
+import { normalizeEmail, canonicalEmail, findContactByEmail } from "../_shared/emailMatching.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -123,6 +124,9 @@ async function processWebhookEvent(supabase: any, body: any) {
     .eq('message_id', data.email_id)
     .maybeSingle();
 
+  let resolvedUserId: string | null = null;
+  let resolvedToEmail: string | null = null;
+
   if (email) {
     // Update email status in emails table
     const updateData: any = { status };
@@ -147,8 +151,62 @@ async function processWebhookEvent(supabase: any, body: any) {
     if (email.campaign_id) {
       campaignId = email.campaign_id;
     }
+    resolvedUserId = email.user_id;
+    resolvedToEmail = email.to_email;
+
+    // Fallback de matching contact si non fourni dans les tags
+    if (!contactId && resolvedToEmail) {
+      const match = await findContactByEmail(supabase, resolvedToEmail, resolvedUserId || undefined);
+      if (match) {
+        contactId = match.contactId;
+        // Backfill contact_id sur la ligne emails pour les futurs lookups
+        if (!email.contact_id) {
+          await supabase.from('emails').update({ contact_id: contactId }).eq('id', email.id);
+        }
+        console.log(`✅ Contact résolu via ${match.matchType}: ${contactId}`);
+      }
+    }
   } else {
     console.log('Email not found in emails table for message_id:', data.email_id);
+    // Tentative de matching via les destinataires du payload Resend
+    const recipients: string[] = Array.isArray(data?.to) ? data.to : (data?.to ? [data.to] : []);
+    for (const r of recipients) {
+      const match = await findContactByEmail(supabase, r);
+      if (match) {
+        contactId = match.contactId;
+        resolvedToEmail = normalizeEmail(r);
+        console.log(`✅ Contact résolu (sans ligne emails) via ${match.matchType}: ${contactId}`);
+        break;
+      }
+    }
+  }
+
+  // 🚨 Alerte : ouverture/clic Resend non associable à un contact
+  if ((type === 'email.opened' || type === 'email.clicked') && !contactId) {
+    const targetUserId = resolvedUserId;
+    const recipientForAlert = resolvedToEmail
+      || (Array.isArray(data?.to) ? data.to[0] : data?.to)
+      || 'inconnu';
+    console.warn('⚠️ Événement Resend non associé à un contact:', { type, recipientForAlert, email_id: data.email_id });
+
+    if (targetUserId) {
+      try {
+        await supabase.from('notifications').insert({
+          user_id: targetUserId,
+          type: 'email_unmatched',
+          title: type === 'email.opened' ? 'Ouverture email non rattachée' : 'Clic email non rattaché',
+          message: `Un événement Resend (${type}) pour ${recipientForAlert} n'a pas pu être associé à un contact connu.`,
+          data: {
+            email_id: data.email_id,
+            recipient: recipientForAlert,
+            recipient_canonical: canonicalEmail(recipientForAlert),
+            event_type: type,
+          },
+        });
+      } catch (notifErr) {
+        console.error('Erreur création notification email_unmatched:', notifErr);
+      }
+    }
   }
 
   // If this is a campaign email (from tags or email record), update campaign stats
@@ -178,6 +236,19 @@ async function processWebhookEvent(supabase: any, body: any) {
       } catch (analyticsError) {
         console.error('Error logging analytics:', analyticsError);
       }
+    }
+  } else if (contactId && resolvedUserId) {
+    // Pas de campagne mais ouverture/clic individuel : on log quand même pour l'historique d'engagement
+    try {
+      await supabase.from('email_analytics').insert({
+        user_id: resolvedUserId,
+        campaign_id: null,
+        contact_id: contactId,
+        event_type: status,
+        event_data: { email_id: data.email_id, timestamp: new Date().toISOString() },
+      });
+    } catch (e) {
+      console.error('Erreur log email_analytics individuel:', e);
     }
   }
 
