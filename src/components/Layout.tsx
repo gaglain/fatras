@@ -7,6 +7,7 @@ import { ChatWidget } from '@/components/ChatWidget';
 import { TaskNotificationBanner } from '@/components/TaskNotificationBanner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileBottomNav } from '@/components/mobile/MobileBottomNav';
+import { FloatingActionButton } from '@/components/mobile/FloatingActionButton';
 import { MobileTopBar } from '@/components/mobile/MobileTopBar';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useEmailNotifications } from '@/hooks/useEmailNotifications';
