@@ -66,8 +66,8 @@ export const FloatingActionButton: React.FC = () => {
             
             return (
               <button
-                key={action.path}
-                onClick={() => handleActionClick(action.path)}
+                key={action.label}
+                onClick={() => handleActionClick(action)}
                 className={cn(
                   "absolute pointer-events-auto",
                   "w-14 h-14 rounded-full shadow-lg",
