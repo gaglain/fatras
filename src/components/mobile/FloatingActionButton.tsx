@@ -110,6 +110,8 @@ export const FloatingActionButton: React.FC = () => {
           <Plus className="h-6 w-6" />
         )}
       </button>
+
+      <PhoneLookupDialog open={phoneLookupOpen} onOpenChange={setPhoneLookupOpen} />
     </>
   );
 };
