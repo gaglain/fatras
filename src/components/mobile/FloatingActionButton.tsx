@@ -2,52 +2,41 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Home, 
-  Users, 
   Calendar, 
   ContactRound, 
   Plus,
   X,
-  PhoneCall,
+  Users,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { PhoneLookupDialog } from './PhoneLookupDialog';
 
 interface FABAction {
   icon: React.ElementType;
   label: string;
-  action: 'navigate' | 'phone-lookup';
-  path?: string;
+  path: string;
   color: string;
 }
 
 const actions: FABAction[] = [
-  { icon: PhoneCall, label: 'Identifier appel', action: 'phone-lookup', color: 'bg-primary' },
-  { icon: Home, label: 'Dashboard', action: 'navigate', path: '/dashboard', color: 'bg-secondary' },
-  { icon: Calendar, label: 'Événements', action: 'navigate', path: '/events', color: 'bg-accent' },
-  { icon: ContactRound, label: 'Contacts', action: 'navigate', path: '/contacts', color: 'bg-muted' },
+  { icon: Home, label: 'Dashboard', path: '/dashboard', color: 'bg-secondary' },
+  { icon: Users, label: 'Artistes', path: '/artists', color: 'bg-primary' },
+  { icon: Calendar, label: 'Événements', path: '/events', color: 'bg-accent' },
+  { icon: ContactRound, label: 'Contacts', path: '/contacts', color: 'bg-muted' },
 ];
 
 export const FloatingActionButton: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [phoneLookupOpen, setPhoneLookupOpen] = useState(false);
   const navigate = useNavigate();
 
-  const handleActionClick = (action: FABAction) => {
-    if (action.action === 'phone-lookup') {
-      setPhoneLookupOpen(true);
-    } else if (action.path) {
-      navigate(action.path);
-    }
+  const handleActionClick = (path: string) => {
+    navigate(path);
     setIsOpen(false);
   };
 
-  const toggleMenu = () => {
-    setIsOpen(!isOpen);
-  };
+  const toggleMenu = () => setIsOpen(!isOpen);
 
   return (
     <>
-      {/* Backdrop */}
       {isOpen && (
         <div 
           className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 animate-fade-in"
@@ -55,7 +44,6 @@ export const FloatingActionButton: React.FC = () => {
         />
       )}
 
-      {/* Radial Menu Items */}
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
           {actions.map((action, index) => {
@@ -67,7 +55,7 @@ export const FloatingActionButton: React.FC = () => {
             return (
               <button
                 key={action.label}
-                onClick={() => handleActionClick(action)}
+                onClick={() => handleActionClick(action.path)}
                 className={cn(
                   "absolute pointer-events-auto",
                   "w-14 h-14 rounded-full shadow-lg",
@@ -90,7 +78,6 @@ export const FloatingActionButton: React.FC = () => {
         </div>
       )}
 
-      {/* Main FAB Button */}
       <button
         onClick={toggleMenu}
         className={cn(
@@ -104,14 +91,8 @@ export const FloatingActionButton: React.FC = () => {
           isOpen && "rotate-45"
         )}
       >
-        {isOpen ? (
-          <X className="h-6 w-6" />
-        ) : (
-          <Plus className="h-6 w-6" />
-        )}
+        {isOpen ? <X className="h-6 w-6" /> : <Plus className="h-6 w-6" />}
       </button>
-
-      <PhoneLookupDialog open={phoneLookupOpen} onOpenChange={setPhoneLookupOpen} />
     </>
   );
 };
