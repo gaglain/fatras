@@ -6,30 +6,38 @@ import {
   Calendar, 
   ContactRound, 
   Plus,
-  X 
+  X,
+  PhoneCall,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { PhoneLookupDialog } from './PhoneLookupDialog';
 
 interface FABAction {
   icon: React.ElementType;
   label: string;
-  path: string;
+  action: 'navigate' | 'phone-lookup';
+  path?: string;
   color: string;
 }
 
 const actions: FABAction[] = [
-  { icon: Home, label: 'Dashboard', path: '/dashboard', color: 'bg-primary' },
-  { icon: Users, label: 'Artistes', path: '/artists', color: 'bg-secondary' },
-  { icon: Calendar, label: 'Événements', path: '/events', color: 'bg-accent' },
-  { icon: ContactRound, label: 'Contacts', path: '/contacts', color: 'bg-muted' },
+  { icon: PhoneCall, label: 'Identifier appel', action: 'phone-lookup', color: 'bg-primary' },
+  { icon: Home, label: 'Dashboard', action: 'navigate', path: '/dashboard', color: 'bg-secondary' },
+  { icon: Calendar, label: 'Événements', action: 'navigate', path: '/events', color: 'bg-accent' },
+  { icon: ContactRound, label: 'Contacts', action: 'navigate', path: '/contacts', color: 'bg-muted' },
 ];
 
 export const FloatingActionButton: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [phoneLookupOpen, setPhoneLookupOpen] = useState(false);
   const navigate = useNavigate();
 
-  const handleActionClick = (path: string) => {
-    navigate(path);
+  const handleActionClick = (action: FABAction) => {
+    if (action.action === 'phone-lookup') {
+      setPhoneLookupOpen(true);
+    } else if (action.path) {
+      navigate(action.path);
+    }
     setIsOpen(false);
   };
 
@@ -58,8 +66,8 @@ export const FloatingActionButton: React.FC = () => {
             
             return (
               <button
-                key={action.path}
-                onClick={() => handleActionClick(action.path)}
+                key={action.label}
+                onClick={() => handleActionClick(action)}
                 className={cn(
                   "absolute pointer-events-auto",
                   "w-14 h-14 rounded-full shadow-lg",
@@ -102,6 +110,8 @@ export const FloatingActionButton: React.FC = () => {
           <Plus className="h-6 w-6" />
         )}
       </button>
+
+      <PhoneLookupDialog open={phoneLookupOpen} onOpenChange={setPhoneLookupOpen} />
     </>
   );
 };

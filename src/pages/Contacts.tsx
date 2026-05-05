@@ -64,11 +64,12 @@ export const Contacts: React.FC = () => {
   useEffect(() => { if (user) { fetchContacts({ reset: true }); fetchEvents(); fetchArtists(); } }, [user]);
   useEffect(() => { filterContacts(); }, [contacts, searchTerm, statusFilter, roleFilter, tagFilters, sourceFilter, cityFilter, departmentFilter, eventFilter, artistFilter, contactEvents, contactArtists]);
 
-  // Open the contact creation dialog with prefilled data when arriving with ?prefillEmail / ?prefillName
+  // Open the contact creation dialog with prefilled data when arriving with ?prefillEmail / ?prefillName / ?prefillPhone
   useEffect(() => {
     const prefillEmail = searchParams.get('prefillEmail');
     const prefillName = searchParams.get('prefillName') || '';
-    if (!prefillEmail) return;
+    const prefillPhone = searchParams.get('prefillPhone');
+    if (!prefillEmail && !prefillPhone) return;
 
     const cleanName = prefillName.replace(/<[^>]+>/g, '').replace(/"/g, '').trim();
     const parts = cleanName.split(/\s+/).filter(Boolean);
@@ -79,10 +80,11 @@ export const Contacts: React.FC = () => {
     setEditingContact({
       first_name,
       last_name,
-      email: prefillEmail,
-      phone: '', position: '', company: '',
+      email: prefillEmail || '',
+      phone: prefillPhone || '',
+      position: '', company: '',
       address: '', city: '', postal_code: '', country: 'France',
-      status: 'prospect', source: 'email', notes: '', tags: [], role: 'contact',
+      status: 'prospect', source: prefillPhone ? 'phone' : 'email', notes: '', tags: [], role: 'contact',
     } as Contact);
     setDialogOpen(true);
 
@@ -90,6 +92,7 @@ export const Contacts: React.FC = () => {
     const next = new URLSearchParams(searchParams);
     next.delete('prefillEmail');
     next.delete('prefillName');
+    next.delete('prefillPhone');
     setSearchParams(next, { replace: true });
   }, [searchParams, setSearchParams]);
   useEffect(() => {
