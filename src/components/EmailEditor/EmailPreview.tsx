@@ -1,13 +1,14 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import DOMPurify from 'dompurify';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Send } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const sanitizeHtml = (html: string): string => {
   return DOMPurify.sanitize(html, {
-    ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li', 'span', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
-    ALLOWED_ATTR: ['href', 'target', 'style', 'class'],
+    ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li', 'span', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'img'],
+    ALLOWED_ATTR: ['href', 'target', 'style', 'class', 'src', 'alt', 'width', 'height'],
   });
 };
 
@@ -15,9 +16,25 @@ interface EmailPreviewProps {
   blocks: any[];
   onClose: () => void;
   onSave: () => void;
+  includeSignature?: boolean;
 }
 
-export const EmailPreview: React.FC<EmailPreviewProps> = ({ blocks, onClose, onSave }) => {
+export const EmailPreview: React.FC<EmailPreviewProps> = ({ blocks, onClose, onSave, includeSignature }) => {
+  const [signature, setSignature] = useState<string>('');
+
+  useEffect(() => {
+    if (!includeSignature) { setSignature(''); return; }
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from('user_profiles')
+        .select('email_signature')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      setSignature((data as any)?.email_signature?.trim() || '');
+    })();
+  }, [includeSignature]);
   const renderBlockForPreview = (block: any) => {
     switch (block.type) {
       case 'text':
