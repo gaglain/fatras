@@ -80,7 +80,7 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({ initialBlocks = [], on
   const handleSelectTemplate = (templateBlocks: EmailBlock[]) => { setBlocks(templateBlocks); setShowTemplateSelector(false); toast.success('Modèle appliqué avec succès'); };
 
   if (showTemplateSelector) return <EmailTemplates onSelectTemplate={handleSelectTemplate} onBack={() => setShowTemplateSelector(false)} />;
-  if (showPreview) return <EmailPreview blocks={blocks} onClose={() => setShowPreview(false)} onSave={handleSave} />;
+  if (showPreview) return <EmailPreview blocks={blocks} onClose={() => setShowPreview(false)} onSave={handleSave} includeSignature={includeSignature} />;
   if (showStats) return <EmailStatsView onBack={() => setShowStats(false)} />;
 
   return (
