@@ -24,9 +24,10 @@ interface EmailEditorProps {
   onSave: (blocks: EmailBlock[]) => void;
   onPreview: (blocks: EmailBlock[]) => void;
   showTemplates?: boolean;
+  includeSignature?: boolean;
 }
 
-export const EmailEditor: React.FC<EmailEditorProps> = ({ initialBlocks = [], onSave, onPreview, showTemplates = false }) => {
+export const EmailEditor: React.FC<EmailEditorProps> = ({ initialBlocks = [], onSave, onPreview, showTemplates = false, includeSignature = false }) => {
   const [blocks, setBlocks] = useState<EmailBlock[]>(initialBlocks);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
