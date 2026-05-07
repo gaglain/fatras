@@ -24,9 +24,10 @@ interface EmailEditorProps {
   onSave: (blocks: EmailBlock[]) => void;
   onPreview: (blocks: EmailBlock[]) => void;
   showTemplates?: boolean;
+  includeSignature?: boolean;
 }
 
-export const EmailEditor: React.FC<EmailEditorProps> = ({ initialBlocks = [], onSave, onPreview, showTemplates = false }) => {
+export const EmailEditor: React.FC<EmailEditorProps> = ({ initialBlocks = [], onSave, onPreview, showTemplates = false, includeSignature = false }) => {
   const [blocks, setBlocks] = useState<EmailBlock[]>(initialBlocks);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
@@ -79,7 +80,7 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({ initialBlocks = [], on
   const handleSelectTemplate = (templateBlocks: EmailBlock[]) => { setBlocks(templateBlocks); setShowTemplateSelector(false); toast.success('Modèle appliqué avec succès'); };
 
   if (showTemplateSelector) return <EmailTemplates onSelectTemplate={handleSelectTemplate} onBack={() => setShowTemplateSelector(false)} />;
-  if (showPreview) return <EmailPreview blocks={blocks} onClose={() => setShowPreview(false)} onSave={handleSave} />;
+  if (showPreview) return <EmailPreview blocks={blocks} onClose={() => setShowPreview(false)} onSave={handleSave} includeSignature={includeSignature} />;
   if (showStats) return <EmailStatsView onBack={() => setShowStats(false)} />;
 
   return (
