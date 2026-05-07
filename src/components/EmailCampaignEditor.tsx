@@ -415,6 +415,7 @@ export const EmailCampaignEditor: React.FC<EmailCampaignEditorProps> = ({
             initialBlocks={editedCampaign.blocks}
             onSave={handleBlocksChange}
             onPreview={() => {}}
+            includeSignature={editedCampaign.include_signature ?? false}
           />
         </div>
       </div>
