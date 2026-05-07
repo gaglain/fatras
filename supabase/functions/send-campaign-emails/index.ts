@@ -127,15 +127,16 @@ const handler = async (req: Request): Promise<Response> => {
         .maybeSingle();
       const signatureHtml = profile?.email_signature?.trim();
       if (signatureHtml) {
-        // Inject signature before closing the inner content cell so styling stays consistent
+        // Append signature at the END of the email content (below the body)
         const injection = `<div style="margin-top:24px;padding-top:16px;border-top:1px solid #eee;font-size:14px;color:#333;">${signatureHtml}</div>`;
-        if (htmlContent.includes('</td>\n              </tr>\n            </table>')) {
-          htmlContent = htmlContent.replace(
-            '</td>\n              </tr>\n            </table>',
-            `${injection}</td>\n              </tr>\n            </table>`
-          );
-        } else {
+        // Insert before the LAST closing </td> of the inner content cell (right before </tr></table></td></tr></table></body>)
+        const innerCloseRegex = /(\s*<\/td>\s*<\/tr>\s*<\/table>\s*<\/td>\s*<\/tr>\s*<\/table>\s*<\/body>)/i;
+        if (innerCloseRegex.test(htmlContent)) {
+          htmlContent = htmlContent.replace(innerCloseRegex, `${injection}$1`);
+        } else if (htmlContent.includes('</body>')) {
           htmlContent = htmlContent.replace('</body>', `${injection}</body>`);
+        } else {
+          htmlContent = htmlContent + injection;
         }
       }
     }
