@@ -27,7 +27,7 @@ const tabOptions = [
   { value: 'contact', label: 'Contact', icon: MapPin },
   { value: 'appearance', label: 'Apparence', icon: Palette },
   { value: 'notifications', label: 'Notifications', icon: Bell },
-  { value: 'email', label: 'IMAP', icon: Settings },
+  { value: 'email', label: 'Email', icon: Mail },
   { value: 'smtp', label: 'SMTP', icon: Mail },
   { value: 'calendar', label: 'Agenda', icon: Calendar },
   { value: 'gmail', label: 'Gmail', icon: Mail },
