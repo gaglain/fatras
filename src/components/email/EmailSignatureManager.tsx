@@ -74,13 +74,20 @@ export const EmailSignatureManager: React.FC<EmailSignatureManagerProps> = ({
     }
   };
 
-  const defaultSignature = `<p>--</p>
-<p><strong>[Votre Nom]</strong><br>
-[Votre Titre]<br>
-Fatras Booking<br>
-📧 [Votre Email]<br>
-📞 [Votre Téléphone]</p>
-<p>🌐 Visitez notre site: <a href="[URL]">[URL]</a></p>`;
+  const defaultSignature = `<div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
+  <div style="border-left: 3px solid #8b5cf6; padding-left: 15px; margin: 20px 0;">
+    <img src="https://i.pravatar.cc/120?img=12" alt="Photo" style="width: 60px; height: 60px; border-radius: 50%; margin-bottom: 10px; object-fit: cover;" />
+    <div style="font-weight: bold; font-size: 16px; color: #8b5cf6;">[Votre Nom]</div>
+    <div style="color: #666; margin: 2px 0;">Fatras Booking</div>
+    <div style="margin: 5px 0;">✉️ <a href="mailto:Booking@fatras.net" style="color: #333; text-decoration: none;">Booking@fatras.net</a></div>
+    <div style="margin: 5px 0;">🌐 <a href="https://fatras.net" style="color: #8b5cf6; text-decoration: none;">https://fatras.net</a></div>
+    <div style="margin: 10px 0;">
+      <a href="https://www.facebook.com/fatrasmusic" style="margin-right: 10px; color: #8b5cf6; text-decoration: none;">Facebook</a>
+      <a href="https://www.instagram.com/fatrasmusic" style="margin-right: 10px; color: #8b5cf6; text-decoration: none;">Instagram</a>
+      <a href="https://www.youtube.com/@fatrasmusic" style="color: #8b5cf6; text-decoration: none;">YouTube</a>
+    </div>
+  </div>
+</div>`;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
