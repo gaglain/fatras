@@ -10,6 +10,7 @@ interface EmailCampaign {
   subject: string;
   content: string;
   status: string;
+  include_signature?: boolean;
   template_id?: string;
   recipient_count: number;
   sent_count: number;
@@ -147,7 +148,8 @@ export const useEmailCampaigns = () => {
           user_id: user.id,
           status: 'draft',
           artist_id: campaignData.artist_id || null,
-          event_id: campaignData.event_id || null
+          event_id: campaignData.event_id || null,
+          include_signature: !!campaignData.include_signature
         })
         .select()
         .single();
