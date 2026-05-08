@@ -12,6 +12,22 @@ const sanitizeHtml = (html: string): string => {
   });
 };
 
+// Convert plain text signatures into HTML: preserve line breaks + auto-link URLs/emails/phones
+const formatSignature = (raw: string): string => {
+  if (!raw) return '';
+  const hasHtml = /<\/?[a-z][\s\S]*>/i.test(raw);
+  let html = raw;
+  if (!hasHtml) {
+    const escape = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    html = escape(raw)
+      .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" style="color:#8b5cf6;text-decoration:underline;">$1</a>')
+      .replace(/\b([\w.+-]+@[\w-]+\.[\w.-]+)\b/g, '<a href="mailto:$1" style="color:#8b5cf6;text-decoration:underline;">$1</a>')
+      .replace(/(\+?\d[\d\s().-]{7,}\d)/g, '<a href="tel:$1" style="color:#8b5cf6;text-decoration:underline;">$1</a>')
+      .replace(/\n/g, '<br/>');
+  }
+  return html;
+};
+
 interface EmailPreviewProps {
   blocks: any[];
   onClose: () => void;
@@ -191,7 +207,7 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({ blocks, onClose, onS
             {includeSignature && signature && (
               <div
                 style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid #eee', fontSize: 14, color: '#333' }}
-                dangerouslySetInnerHTML={{ __html: sanitizeHtml(signature) }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(formatSignature(signature)) }}
               />
             )}
           </CardContent>
