@@ -189,9 +189,9 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Split contacts into batches of 100 (Resend batch API limit)
     const BATCH_SIZE = 100;
-    const batches: typeof uniqueContacts[] = [];
-    for (let i = 0; i < uniqueContacts.length; i += BATCH_SIZE) {
-      batches.push(uniqueContacts.slice(i, i + BATCH_SIZE));
+    const batches: typeof contactsToSend[] = [];
+    for (let i = 0; i < contactsToSend.length; i += BATCH_SIZE) {
+      batches.push(contactsToSend.slice(i, i + BATCH_SIZE));
     }
 
     console.log(`Split into ${batches.length} batches of max ${BATCH_SIZE} contacts`);
