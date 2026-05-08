@@ -207,7 +207,7 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({ blocks, onClose, onS
             {includeSignature && signature && (
               <div
                 style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid #eee', fontSize: 14, color: '#333' }}
-                dangerouslySetInnerHTML={{ __html: sanitizeHtml(signature) }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(formatSignature(signature)) }}
               />
             )}
           </CardContent>
