@@ -108,7 +108,51 @@ const handler = async (req: Request): Promise<Response> => {
       index === self.findIndex(c => c.email === contact.email)
     );
 
-    console.log(`Sending campaign to ${uniqueContacts.length} contacts`);
+    console.log(`Campaign has ${uniqueContacts.length} unique contacts`);
+
+    // ===== Daily limit (Resend = 200/jour) — étaler les envois sur plusieurs jours =====
+    const DAILY_LIMIT = 200;
+
+    // Contacts déjà envoyés POUR CETTE CAMPAGNE (lors d'exécutions précédentes)
+    const { data: alreadySentRows } = await supabase
+      .from('email_analytics')
+      .select('contact_id')
+      .eq('campaign_id', campaign.id)
+      .eq('event_type', 'sent');
+    const alreadySentIds = new Set((alreadySentRows || []).map((r: any) => r.contact_id));
+
+    // Total envoyé AUJOURD'HUI par cet utilisateur (toutes campagnes confondues)
+    const todayStart = new Date();
+    todayStart.setUTCHours(0, 0, 0, 0);
+    const { count: sentTodayCount } = await supabase
+      .from('email_analytics')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', campaign.user_id)
+      .eq('event_type', 'sent')
+      .gte('created_at', todayStart.toISOString());
+
+    const remainingQuota = Math.max(0, DAILY_LIMIT - (sentTodayCount || 0));
+    const pendingContacts = uniqueContacts.filter((c: any) => !alreadySentIds.has(c.id));
+    const contactsToSend = pendingContacts.slice(0, remainingQuota);
+    const leftoverAfter = pendingContacts.length - contactsToSend.length;
+
+    console.log(`Daily quota: ${remainingQuota}/${DAILY_LIMIT} restants. À envoyer maintenant: ${contactsToSend.length}. Reste après: ${leftoverAfter}.`);
+
+    if (contactsToSend.length === 0 && leftoverAfter > 0) {
+      // Quota déjà épuisé pour aujourd'hui → reprogrammer demain
+      const tomorrow = new Date();
+      tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+      tomorrow.setUTCHours(8, 0, 0, 0);
+      await supabase
+        .from('email_campaigns')
+        .update({ status: 'sending', scheduled_for: tomorrow.toISOString(), auto_send: true, recipient_count: uniqueContacts.length })
+        .eq('id', campaignId);
+      return new Response(JSON.stringify({
+        success: true, totalSent: 0, totalFailed: 0, totalContacts: uniqueContacts.length,
+        deferred: leftoverAfter, nextRunAt: tomorrow.toISOString(),
+        message: `Quota journalier Resend atteint. ${leftoverAfter} contacts seront envoyés à partir de ${tomorrow.toISOString()}.`
+      }), { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } });
+    }
 
     // Convert blocks to HTML
     const contentBlocks = typeof campaign.content === 'string' 
