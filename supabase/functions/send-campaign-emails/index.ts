@@ -285,26 +285,47 @@ const handler = async (req: Request): Promise<Response> => {
 
     const successCount = allResults.filter(r => r.success).length;
     const failCount = allResults.filter(r => !r.success).length;
+    const cumulativeSent = alreadySentIds.size + successCount;
+    const stillPending = pendingContacts.length - successCount;
 
-    // Update campaign status and stats
-    await supabase
-      .from('email_campaigns')
-      .update({ 
-        status: 'sent',
-        sent_at: new Date().toISOString(),
-        sent_count: successCount,
-        delivered_count: successCount,
-        recipient_count: uniqueContacts.length
-      })
-      .eq('id', campaignId);
-
-    console.log(`Campaign sent: ${successCount} successful, ${failCount} failed`);
+    if (stillPending > 0) {
+      // Reprogrammer demain matin pour la suite
+      const tomorrow = new Date();
+      tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+      tomorrow.setUTCHours(8, 0, 0, 0);
+      await supabase
+        .from('email_campaigns')
+        .update({
+          status: 'sending',
+          scheduled_for: tomorrow.toISOString(),
+          auto_send: true,
+          sent_count: cumulativeSent,
+          delivered_count: cumulativeSent,
+          recipient_count: uniqueContacts.length,
+        })
+        .eq('id', campaignId);
+      console.log(`Campaign partial: ${cumulativeSent}/${uniqueContacts.length} envoyés. ${stillPending} reprogrammés pour ${tomorrow.toISOString()}.`);
+    } else {
+      await supabase
+        .from('email_campaigns')
+        .update({
+          status: 'sent',
+          sent_at: new Date().toISOString(),
+          sent_count: cumulativeSent,
+          delivered_count: cumulativeSent,
+          recipient_count: uniqueContacts.length,
+        })
+        .eq('id', campaignId);
+      console.log(`Campaign sent: ${successCount} successful, ${failCount} failed`);
+    }
 
     return new Response(JSON.stringify({
       success: true,
       totalSent: successCount,
       totalFailed: failCount,
       totalContacts: uniqueContacts.length,
+      cumulativeSent,
+      deferred: stillPending,
       batchesProcessed: batches.length,
       results: allResults
     }), {
