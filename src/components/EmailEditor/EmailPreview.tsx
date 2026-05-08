@@ -12,18 +12,19 @@ const sanitizeHtml = (html: string): string => {
   });
 };
 
-// Convert plain text signatures into HTML: preserve line breaks + auto-link URLs/emails/phones
+// Convert signatures into HTML: preserve line breaks + auto-link URLs/emails/phones
 const formatSignature = (raw: string): string => {
   if (!raw) return '';
-  const hasHtml = /<\/?[a-z][\s\S]*>/i.test(raw);
+  const hasBlockHtml = /<(p|div|br|h[1-6]|ul|ol|li)[\s>]/i.test(raw);
   let html = raw;
-  if (!hasHtml) {
-    const escape = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    html = escape(raw)
-      .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" style="color:#8b5cf6;text-decoration:underline;">$1</a>')
-      .replace(/\b([\w.+-]+@[\w-]+\.[\w.-]+)\b/g, '<a href="mailto:$1" style="color:#8b5cf6;text-decoration:underline;">$1</a>')
-      .replace(/(\+?\d[\d\s().-]{7,}\d)/g, '<a href="tel:$1" style="color:#8b5cf6;text-decoration:underline;">$1</a>')
-      .replace(/\n/g, '<br/>');
+  // Auto-link plain URLs/emails/phones (skip text already inside an <a>)
+  html = html
+    .replace(/(^|[^"'>])(https?:\/\/[^\s<]+)/g, '$1<a href="$2" style="color:#8b5cf6;text-decoration:underline;">$2</a>')
+    .replace(/(^|[\s>])([\w.+-]+@[\w-]+\.[\w.-]+)(?![^<]*<\/a>)/g, '$1<a href="mailto:$2" style="color:#8b5cf6;text-decoration:underline;">$2</a>')
+    .replace(/(^|[\s>])(\+?\d[\d\s().-]{7,}\d)(?![^<]*<\/a>)/g, '$1<a href="tel:$2" style="color:#8b5cf6;text-decoration:underline;">$2</a>');
+  // Always convert newlines unless content already uses block tags
+  if (!hasBlockHtml) {
+    html = html.replace(/\r?\n/g, '<br/>');
   }
   return html;
 };
