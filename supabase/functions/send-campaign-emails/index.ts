@@ -100,8 +100,27 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Campaign has ${uniqueContacts.length} unique contacts`);
 
-    // ===== Daily limit (Resend = 200/jour) — étaler les envois sur plusieurs jours =====
-    const DAILY_LIMIT = 200;
+    // ===== Paramètres utilisateur (limite journalière + heure d'envoi) =====
+    // Réglages dans Préférences → Email. Par défaut 200 / 8h UTC.
+    let DAILY_LIMIT = 200;
+    let SEND_HOUR_UTC = 8;
+    try {
+      const { data: settingsRows } = await supabase
+        .from('app_settings')
+        .select('setting_key, setting_value')
+        .eq('user_id', campaign.user_id)
+        .in('setting_key', ['email_campaign_daily_limit', 'email_campaign_send_hour_utc']);
+      for (const r of (settingsRows || []) as any[]) {
+        if (r.setting_key === 'email_campaign_daily_limit') {
+          const n = parseInt(r.setting_value, 10);
+          if (!isNaN(n) && n > 0 && n <= 5000) DAILY_LIMIT = n;
+        }
+        if (r.setting_key === 'email_campaign_send_hour_utc') {
+          const n = parseInt(r.setting_value, 10);
+          if (!isNaN(n) && n >= 0 && n <= 23) SEND_HOUR_UTC = n;
+        }
+      }
+    } catch (_) { /* defaults */ }
 
     // Contacts déjà envoyés POUR CETTE CAMPAGNE (lors d'exécutions précédentes)
     const { data: alreadySentRows } = await supabase
@@ -129,10 +148,10 @@ const handler = async (req: Request): Promise<Response> => {
     console.log(`Daily quota: ${remainingQuota}/${DAILY_LIMIT} restants. À envoyer maintenant: ${contactsToSend.length}. Reste après: ${leftoverAfter}.`);
 
     if (contactsToSend.length === 0 && leftoverAfter > 0) {
-      // Quota déjà épuisé pour aujourd'hui → reprogrammer demain
+      // Quota déjà épuisé pour aujourd'hui → reprogrammer demain à l'heure configurée
       const tomorrow = new Date();
       tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
-      tomorrow.setUTCHours(8, 0, 0, 0);
+      tomorrow.setUTCHours(SEND_HOUR_UTC, 0, 0, 0);
       await supabase
         .from('email_campaigns')
         .update({ status: 'sending', scheduled_for: tomorrow.toISOString(), auto_send: true, recipient_count: uniqueContacts.length })
