@@ -27,21 +27,11 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const { campaignId }: SendCampaignRequest = await req.json();
 
-    // Get auth header
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      throw new Error('Authorization header required');
-    }
-
-    // Create Supabase client
+    // Use service role client (campaign ownership is enforced via campaign.user_id).
+    // This allows both authenticated UI calls and the scheduled cron caller to work uniformly.
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: authHeader },
-        },
-      }
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
     // Get campaign details
