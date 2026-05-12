@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Mail, Settings, Server, TestTube, ExternalLink, RefreshCw, Inbox, Zap } from 'lucide-react';
 import { EmailSignatureManager } from '@/components/email/EmailSignatureManager';
+import { CampaignSendSettings } from '@/components/email/CampaignSendSettings';
 import { EmailSmtpConfig } from '@/components/EmailSmtpConfig';
 import { NylasEmailManager } from '@/components/email/NylasEmailManager';
 import { NylasEmailTest } from '@/components/email/NylasEmailTest';
@@ -239,6 +240,7 @@ export const EmailTab: React.FC = () => {
         <TabsContent value="nylas" className="space-y-4">
           <NylasEmailManager />
           <NylasEmailTest />
+          <CampaignSendSettings />
         </TabsContent>
 
         <TabsContent value="legacy" className="space-y-6">
@@ -389,6 +391,7 @@ export const EmailTab: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="resend" className="space-y-6">
+          <CampaignSendSettings />
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
