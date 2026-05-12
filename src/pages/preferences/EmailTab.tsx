@@ -240,6 +240,7 @@ export const EmailTab: React.FC = () => {
         <TabsContent value="nylas" className="space-y-4">
           <NylasEmailManager />
           <NylasEmailTest />
+          <CampaignSendSettings />
         </TabsContent>
 
         <TabsContent value="legacy" className="space-y-6">
