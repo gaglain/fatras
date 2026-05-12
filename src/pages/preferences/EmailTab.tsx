@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Mail, Settings, Server, TestTube, ExternalLink, RefreshCw, Inbox, Zap } from 'lucide-react';
 import { EmailSignatureManager } from '@/components/email/EmailSignatureManager';
+import { CampaignSendSettings } from '@/components/email/CampaignSendSettings';
 import { EmailSmtpConfig } from '@/components/EmailSmtpConfig';
 import { NylasEmailManager } from '@/components/email/NylasEmailManager';
 import { NylasEmailTest } from '@/components/email/NylasEmailTest';
