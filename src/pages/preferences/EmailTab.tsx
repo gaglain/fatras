@@ -391,6 +391,7 @@ export const EmailTab: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="resend" className="space-y-6">
+          <CampaignSendSettings />
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
