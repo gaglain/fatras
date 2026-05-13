@@ -59,7 +59,7 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
       const campaignIds = Array.from(new Set(analytics.map((a: any) => a.campaign_id).filter(Boolean)));
       const { data: campaigns } = await supabase
         .from('email_campaigns')
-        .select('id, name, subject, content, sent_at, created_at')
+        .select('id, name, subject, content, rendered_html, sent_at, created_at')
         .in('id', campaignIds.length ? campaignIds : ['00000000-0000-0000-0000-000000000000']);
 
       const campaignMap = new Map<string, any>();
