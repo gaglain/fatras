@@ -196,11 +196,19 @@ export const useNylasEmail = () => {
       }
       if (contact?.id) {
         try {
+          // Toujours embarquer le HTML rendu dans event_data en filet de sécurité,
+          // pour pouvoir afficher le corps même si la ligne `emails` n'a pas été créée.
           await supabase.from('email_analytics').insert({
             user_id: user.id,
             contact_id: contact.id,
             event_type: 'sent',
-            event_data: { email_id: emailRecord?.id, subject: email.subject, source: 'individual' }
+            event_data: {
+              email_id: emailRecord?.id ?? null,
+              subject: email.subject,
+              source: 'individual',
+              provider: 'resend',
+              html: emailWithSignature,
+            }
           });
         } catch (e) { logger.warn('Analytics insert failed', e); }
       }
