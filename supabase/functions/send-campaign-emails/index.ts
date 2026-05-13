@@ -297,11 +297,16 @@ const handler = async (req: Request): Promise<Response> => {
     const cumulativeSent = alreadySentIds.size + successCount;
     const stillPending = pendingContacts.length - successCount;
 
-    if (stillPending > 0) {
-      // Reprogrammer demain matin pour la suite
+    // GARDE-FOU : ne marquer "sent" que si TOUS les destinataires ont reçu l'email.
+    // Tant que cumulativeSent < uniqueContacts.length, la campagne reste "sending"
+    // et est reprogrammée pour le lendemain à l'heure configurée par l'utilisateur.
+    const isFullyDelivered = cumulativeSent >= uniqueContacts.length && stillPending <= 0;
+
+    if (!isFullyDelivered) {
+      // Reprogrammer demain à l'heure configurée pour finir les envois restants
       const tomorrow = new Date();
       tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
-      tomorrow.setUTCHours(8, 0, 0, 0);
+      tomorrow.setUTCHours(SEND_HOUR_UTC, 0, 0, 0);
       await supabase
         .from('email_campaigns')
         .update({
@@ -313,7 +318,7 @@ const handler = async (req: Request): Promise<Response> => {
           recipient_count: uniqueContacts.length,
         })
         .eq('id', campaignId);
-      console.log(`Campaign partial: ${cumulativeSent}/${uniqueContacts.length} envoyés. ${stillPending} reprogrammés pour ${tomorrow.toISOString()}.`);
+      console.log(`Campaign partial: ${cumulativeSent}/${uniqueContacts.length} envoyés. ${Math.max(stillPending, uniqueContacts.length - cumulativeSent)} reprogrammés pour ${tomorrow.toISOString()}.`);
     } else {
       await supabase
         .from('email_campaigns')
@@ -325,7 +330,7 @@ const handler = async (req: Request): Promise<Response> => {
           recipient_count: uniqueContacts.length,
         })
         .eq('id', campaignId);
-      console.log(`Campaign sent: ${successCount} successful, ${failCount} failed`);
+      console.log(`Campaign fully sent: ${cumulativeSent}/${uniqueContacts.length} (${successCount} dans cette exécution, ${failCount} échecs).`);
     }
 
     return new Response(JSON.stringify({
