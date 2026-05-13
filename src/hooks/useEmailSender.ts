@@ -149,7 +149,13 @@ export const useEmailSender = () => {
             user_id: user.id,
             contact_id: contact.id,
             event_type: 'sent',
-            event_data: { email_id: emailRecord.id, subject: emailData.subject, provider, source: 'individual' }
+            event_data: {
+              email_id: emailRecord.id,
+              subject: emailData.subject,
+              provider,
+              source: 'individual',
+              html: trackedHtml,
+            }
           });
         } catch (e) { logger.warn('Analytics insert failed', e); }
       }
