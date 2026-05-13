@@ -764,9 +764,21 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
                   __html: sanitizeEmailHtml(selectedEmail.html_content) 
                 }} 
               />
-            ) : (
+            ) : selectedEmail?.content ? (
               <div className="whitespace-pre-wrap text-sm">
-                {selectedEmail?.content || 'Aucun contenu disponible'}
+                {selectedEmail.content}
+              </div>
+            ) : (
+              <div className="text-sm text-muted-foreground border border-dashed rounded-md p-4 bg-muted/30">
+                <p className="font-medium text-foreground mb-1">Corps du message non conservé</p>
+                <p>
+                  Cet email a bien été envoyé et tracé (voir le statut ci-dessus),
+                  mais son contenu HTML n'a pas été archivé en base au moment de l'envoi.
+                </p>
+                <p className="mt-2 text-xs">
+                  Cela concerne uniquement les anciens envois. Les nouveaux emails
+                  (individuels et campagnes) sont désormais sauvegardés intégralement.
+                </p>
               </div>
             )}
           </ScrollArea>
