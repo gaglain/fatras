@@ -139,7 +139,7 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
           to_name: '',
           subject: resolvedSubject,
           content: linkedEmail?.content || evData.content || '',
-          html_content: linkedEmail?.html_content || evData.html || (camp?.content && typeof camp.content === 'string' ? camp.content : '') || '',
+          html_content: linkedEmail?.html_content || evData.html || camp?.rendered_html || '',
           status: ev.event_type,
           provider: isIndividual ? 'resend' : 'campaign',
           sent_at: camp?.sent_at || ev.created_at,
