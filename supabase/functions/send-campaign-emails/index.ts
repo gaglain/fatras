@@ -196,6 +196,18 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Generated HTML length:', htmlContent.length);
 
+    // Archive le HTML rendu sur la campagne pour pouvoir l'afficher
+    // dans l'historique de chaque contact (filet de sécurité durable).
+    try {
+      await supabase
+        .from('email_campaigns')
+        .update({ rendered_html: htmlContent })
+        .eq('id', campaign.id)
+        .is('rendered_html', null);
+    } catch (e) {
+      console.warn('Could not archive rendered_html on campaign:', e);
+    }
+
     // Split contacts into batches of 100 (Resend batch API limit)
     const BATCH_SIZE = 100;
     const batches: typeof contactsToSend[] = [];

@@ -1138,6 +1138,7 @@ export type Database = {
           open_rate: number | null
           opened_count: number | null
           recipient_count: number | null
+          rendered_html: string | null
           scheduled_at: string | null
           scheduled_for: string | null
           sent_at: string | null
@@ -1165,6 +1166,7 @@ export type Database = {
           open_rate?: number | null
           opened_count?: number | null
           recipient_count?: number | null
+          rendered_html?: string | null
           scheduled_at?: string | null
           scheduled_for?: string | null
           sent_at?: string | null
@@ -1192,6 +1194,7 @@ export type Database = {
           open_rate?: number | null
           opened_count?: number | null
           recipient_count?: number | null
+          rendered_html?: string | null
           scheduled_at?: string | null
           scheduled_for?: string | null
           sent_at?: string | null
