@@ -42,6 +42,8 @@ export const useRoadshowStopEdit = (
       artists: stop.artists,
       accommodation: stop.accommodation || '',
       accommodationAddress: stop.accommodationAddress || '',
+      hasDressingRoom: stop.hasDressingRoom ?? false,
+      dressingRoomAddress: stop.dressingRoomAddress || '',
       localContact: stop.localContact || '',
       localContactPhone: stop.localContactPhone || '',
       transport: stop.transport || '',
