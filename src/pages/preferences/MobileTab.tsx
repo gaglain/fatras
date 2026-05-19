@@ -1,13 +1,23 @@
 
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Smartphone, Download, QrCode, ExternalLink } from "lucide-react";
+import { Smartphone, Download, QrCode, ExternalLink, PlayCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 export const MobileTab: React.FC = () => {
   const navigate = useNavigate();
+
+  const handleReplayTour = () => {
+    toast.success("Lancement du tour guidé…");
+    navigate("/dashboard");
+    // Let the route change settle before triggering
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent("fatras:start-onboarding"));
+    }, 400);
+  };
 
   return (
     <Card>
@@ -73,6 +83,19 @@ export const MobileTab: React.FC = () => {
               Google Play (Bientôt)
             </Button>
           </div>
+        </div>
+
+        <div className="pt-4 border-t space-y-3">
+          <h3 className="font-semibold flex items-center gap-2">
+            <PlayCircle className="h-4 w-4" /> Tour guidé de l'application
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Revoyez le tour de bienvenue pour redécouvrir les fonctionnalités principales selon votre rôle.
+          </p>
+          <Button onClick={handleReplayTour} variant="outline" className="w-full">
+            <PlayCircle className="h-4 w-4 mr-2" />
+            Relancer le tour guidé
+          </Button>
         </div>
       </CardContent>
     </Card>
