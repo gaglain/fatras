@@ -23,6 +23,8 @@ const initialFormData: FormData = {
   artists: [],
   accommodation: '',
   accommodationAddress: '',
+  hasDressingRoom: false,
+  dressingRoomAddress: '',
   localContact: '',
   localContactPhone: '',
   transport: '',
