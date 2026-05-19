@@ -101,6 +101,7 @@ export const useRoadshowStops = () => {
         status: stopData.status || 'pending', crew: stopData.crew || [], equipment: stopData.equipment || [],
         notes: stopData.notes, artists: stopData.artists || [],
         accommodation: stopData.accommodation, accommodation_address: stopData.accommodation_address,
+        has_dressing_room: stopData.has_dressing_room ?? false, dressing_room_address: stopData.dressing_room_address || null,
         local_contact: stopData.local_contact, local_contact_phone: stopData.local_contact_phone,
         transport: stopData.transport, artist_lineup: stopData.artist_lineup || [], invitations: stopData.invitations
       } as any).select().single()) as any;
@@ -129,6 +130,7 @@ export const useRoadshowStops = () => {
         capacity: stopData.capacity, tickets_available: stopData.tickets_available, status: stopData.status,
         crew: stopData.crew, equipment: stopData.equipment, notes: stopData.notes, artists: stopData.artists,
         accommodation: stopData.accommodation, accommodation_address: stopData.accommodation_address,
+        has_dressing_room: stopData.has_dressing_room ?? false, dressing_room_address: stopData.dressing_room_address || null,
         local_contact: stopData.local_contact, local_contact_phone: stopData.local_contact_phone,
         transport: stopData.transport, artist_lineup: stopData.artist_lineup, invitations: stopData.invitations
       } as any).eq('id', stopId).select().single()) as any;

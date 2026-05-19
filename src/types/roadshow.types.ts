@@ -28,6 +28,8 @@ export interface TourStop {
   createdBy: string;
   accommodation: string;
   accommodationAddress: string;
+  hasDressingRoom?: boolean;
+  dressingRoomAddress?: string;
   localContact: string;
   localContactPhone: string;
   transport: string;
@@ -70,6 +72,8 @@ export interface FormData {
   artists: string[];
   accommodation: string;
   accommodationAddress: string;
+  hasDressingRoom?: boolean;
+  dressingRoomAddress?: string;
   localContact: string;
   localContactPhone: string;
   transport: string;

@@ -260,6 +260,7 @@ export const generateTourStopPDF = (
   drawField('Transport :', tourStop.transport || '');
   drawField('Hebergement :', tourStop.accommodation || '');
   drawField('Adr. heberg. :', tourStop.accommodationAddress || '');
+  drawField('Loge :', tourStop.hasDressingRoom ? (tourStop.dressingRoomAddress ? `Oui - ${tourStop.dressingRoomAddress}` : 'Oui') : 'Non');
 
   if (tourStop.vehicleType || tourStop.distanceKm) {
     let travelInfo = '';

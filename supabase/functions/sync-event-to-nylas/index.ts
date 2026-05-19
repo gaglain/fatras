@@ -31,6 +31,8 @@ interface RouteSheet {
   local_contact_phone?: string
   accommodation?: string
   accommodation_address?: string
+  has_dressing_room?: boolean
+  dressing_room_address?: string
   transport?: string
   notes?: string
   crew?: string[]
@@ -101,6 +103,16 @@ function buildRouteSheetDescription(event: any, routeSheet: RouteSheet, quoteAmo
     lines.push('🏨 HÉBERGEMENT')
     if (routeSheet.accommodation) lines.push(`  ${routeSheet.accommodation}`)
     if (routeSheet.accommodation_address) lines.push(`  Adresse : ${routeSheet.accommodation_address}`)
+    lines.push('')
+  }
+
+  // 🚪 Loge
+  if (routeSheet.has_dressing_room === true || routeSheet.has_dressing_room === false) {
+    lines.push('🚪 LOGE')
+    lines.push(`  ${routeSheet.has_dressing_room ? 'Oui' : 'Non'}`)
+    if (routeSheet.has_dressing_room && routeSheet.dressing_room_address) {
+      lines.push(`  Adresse : ${routeSheet.dressing_room_address}`)
+    }
     lines.push('')
   }
 

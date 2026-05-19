@@ -3281,10 +3281,12 @@ export type Database = {
           departure_to_show_time: string | null
           distance_km: number | null
           doors_time: string | null
+          dressing_room_address: string | null
           equipment: string[] | null
           event_date: string | null
           event_id: string | null
           event_time: string | null
+          has_dressing_room: boolean
           id: string
           invitations: string | null
           is_archived: boolean
@@ -3328,10 +3330,12 @@ export type Database = {
           departure_to_show_time?: string | null
           distance_km?: number | null
           doors_time?: string | null
+          dressing_room_address?: string | null
           equipment?: string[] | null
           event_date?: string | null
           event_id?: string | null
           event_time?: string | null
+          has_dressing_room?: boolean
           id?: string
           invitations?: string | null
           is_archived?: boolean
@@ -3375,10 +3379,12 @@ export type Database = {
           departure_to_show_time?: string | null
           distance_km?: number | null
           doors_time?: string | null
+          dressing_room_address?: string | null
           equipment?: string[] | null
           event_date?: string | null
           event_id?: string | null
           event_time?: string | null
+          has_dressing_room?: boolean
           id?: string
           invitations?: string | null
           is_archived?: boolean

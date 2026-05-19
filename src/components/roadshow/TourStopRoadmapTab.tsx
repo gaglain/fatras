@@ -193,12 +193,19 @@ export const TourStopRoadmapTab: React.FC<TourStopRoadmapTabProps> = ({
         ) : <p className="text-gray-500 italic text-sm">Aucun artiste assigné</p>}
       </div>
 
-      {/* Hébergement et Transport */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {/* Hébergement, Loge et Transport */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="bg-gray-50 p-3 rounded-lg">
           <h3 className="font-semibold text-gray-900 mb-1 text-xs sm:text-sm">🏨 Hébergement</h3>
           <p className="text-xs sm:text-sm text-gray-700 truncate">{stop.accommodation || 'Non défini'}</p>
           <p className="text-[10px] sm:text-xs text-gray-600 truncate">{stop.accommodationAddress || '-'}</p>
+        </div>
+        <div className="bg-gray-50 p-3 rounded-lg">
+          <h3 className="font-semibold text-gray-900 mb-1 text-xs sm:text-sm">🚪 Loge</h3>
+          <p className="text-xs sm:text-sm text-gray-700">{stop.hasDressingRoom ? 'Oui' : 'Non'}</p>
+          {stop.hasDressingRoom && (
+            <p className="text-[10px] sm:text-xs text-gray-600 truncate">{stop.dressingRoomAddress || '-'}</p>
+          )}
         </div>
         <div className="bg-gray-50 p-3 rounded-lg">
           <h3 className="font-semibold text-gray-900 mb-1 text-xs sm:text-sm">🚐 Transport</h3>

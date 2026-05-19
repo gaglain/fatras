@@ -34,6 +34,8 @@ export interface RoadshowStop {
   artists: string[];
   accommodation?: string;
   accommodation_address?: string;
+  has_dressing_room?: boolean;
+  dressing_room_address?: string;
   local_contact?: string;
   local_contact_phone?: string;
   transport?: string;
@@ -77,6 +79,8 @@ export const transformStopFromDB = (stop: any): RoadshowStop => ({
   artists: stop.artists,
   accommodation: stop.accommodation,
   accommodation_address: stop.accommodation_address,
+  has_dressing_room: stop.has_dressing_room ?? false,
+  dressing_room_address: stop.dressing_room_address,
   local_contact: stop.local_contact,
   local_contact_phone: stop.local_contact_phone,
   transport: stop.transport,
@@ -125,6 +129,8 @@ export const convertToTourStop = (stop: RoadshowStop): TourStop => ({
   createdBy: stop.user_id,
   accommodation: stop.accommodation || '',
   accommodationAddress: stop.accommodation_address || '',
+  hasDressingRoom: stop.has_dressing_room ?? false,
+  dressingRoomAddress: stop.dressing_room_address || '',
   localContact: stop.local_contact || '',
   localContactPhone: stop.local_contact_phone || '',
   transport: stop.transport || '',
@@ -161,6 +167,8 @@ export const convertFromTourStop = (tourStop: Partial<TourStop>): Partial<Roadsh
   artists: tourStop.artists,
   accommodation: tourStop.accommodation,
   accommodation_address: tourStop.accommodationAddress,
+  has_dressing_room: tourStop.hasDressingRoom ?? false,
+  dressing_room_address: tourStop.dressingRoomAddress || null,
   local_contact: tourStop.localContact,
   local_contact_phone: tourStop.localContactPhone,
   transport: tourStop.transport,
