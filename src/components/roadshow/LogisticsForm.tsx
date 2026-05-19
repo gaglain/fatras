@@ -3,6 +3,7 @@ import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { FormData } from '@/types/roadshow.types';
 
 interface LogisticsFormProps {
@@ -188,6 +189,25 @@ export const LogisticsForm: React.FC<LogisticsFormProps> = ({ formData, setFormD
           className="min-h-[100px]"
         />
       </div>
-    </div>
+
+      <div className="rounded-md border border-border p-3 space-y-3">
+        <div className="flex items-center justify-between">
+          <label className="text-sm font-medium text-foreground">🚪 Loge disponible</label>
+          <Switch
+            checked={!!formData.hasDressingRoom}
+            onCheckedChange={(checked) => setFormData({ ...formData, hasDressingRoom: checked })}
+          />
+        </div>
+        {formData.hasDressingRoom && (
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Adresse / emplacement de la loge</label>
+            <Input
+              value={formData.dressingRoomAddress || ''}
+              onChange={(e) => setFormData({ ...formData, dressingRoomAddress: e.target.value })}
+              placeholder="Ex : 2e étage, côté cour, ou adresse séparée"
+            />
+          </div>
+        )}
+      </div>
   );
 };
