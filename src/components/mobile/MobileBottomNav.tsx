@@ -39,6 +39,7 @@ export const MobileBottomNav: React.FC = () => {
           return (
             <button
               key={item.path}
+              data-tour={`mobilenav-${item.path}`}
               onClick={() => navigate(item.path)}
               className={cn(
                 "relative flex flex-col items-center justify-center gap-0.5 flex-1 h-full",

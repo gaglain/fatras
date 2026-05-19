@@ -14,6 +14,7 @@ import { useEmailNotifications } from '@/hooks/useEmailNotifications';
 import { usePWABadge } from '@/hooks/usePWABadge';
 import { useUnreadBadgeCount } from '@/hooks/useUnreadBadgeCount';
 import { PushNotificationPrompt } from '@/components/notifications/PushNotificationPrompt';
+import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
 import { OfflineBanner } from '@/components/OfflineBanner';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { PullToRefreshIndicator } from '@/components/mobile/PullToRefreshIndicator';
