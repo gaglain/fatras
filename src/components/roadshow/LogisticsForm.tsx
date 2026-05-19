@@ -209,5 +209,6 @@ export const LogisticsForm: React.FC<LogisticsFormProps> = ({ formData, setFormD
           </div>
         )}
       </div>
+    </div>
   );
 };
