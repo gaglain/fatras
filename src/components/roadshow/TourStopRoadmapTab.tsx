@@ -170,12 +170,20 @@ export const TourStopRoadmapTab: React.FC<TourStopRoadmapTabProps> = ({
               return (
                 <Button size="sm" variant={currentUserInLineup.confirmed ? "outline" : "default"} className="mt-2"
                   onClick={async () => {
+                    const newValue = !currentUserInLineup.confirmed;
                     try {
-                      const { error } = await supabase.rpc('confirm_roadshow_attendance', { stop_id: stop.id, is_confirmed: !currentUserInLineup.confirmed });
+                      const { data, error } = await supabase.rpc('confirm_roadshow_attendance', { stop_id: stop.id, is_confirmed: newValue });
                       if (error) throw error;
-                      toast.success(currentUserInLineup.confirmed ? 'Présence annulée' : 'Présence confirmée !');
-                      currentUserInLineup.confirmed = !currentUserInLineup.confirmed;
-                    } catch { toast.error('Erreur lors de la confirmation'); }
+                      if (data === false) throw new Error('not_in_lineup');
+                      toast.success(newValue ? 'Présence confirmée !' : 'Présence annulée');
+                      // Optimistic local update + trigger parent refresh via expenses fetch (forces re-render path)
+                      currentUserInLineup.confirmed = newValue;
+                      (currentUserInLineup as any).declined = !newValue;
+                      fetchExpenses();
+                    } catch (e: any) {
+                      console.error('confirm_roadshow_attendance error', e);
+                      toast.error(e?.message === 'not_in_lineup' ? "Vous n'êtes pas dans le casting de cette étape" : 'Erreur lors de la confirmation');
+                    }
                   }}>
                   <CheckCircle className="h-4 w-4 mr-1" />{currentUserInLineup.confirmed ? 'Annuler ma confirmation' : 'Confirmer ma présence'}
                 </Button>

@@ -33,7 +33,7 @@ export const ArtistConfirmationPopup: React.FC<ArtistConfirmationPopupProps> = (
   // Find stops where this user is in the lineup but hasn't confirmed
   const pendingStops = useMemo(() => {
     return stops.filter(stop =>
-      stop.artistLineup?.some(a => a.userId === userId && !a.confirmed) &&
+      stop.artistLineup?.some(a => a.userId === userId && !a.confirmed && !a.declined) &&
       !dismissedIds.has(stop.id)
     );
   }, [stops, userId, dismissedIds]);

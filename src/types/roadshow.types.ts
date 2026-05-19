@@ -31,7 +31,7 @@ export interface TourStop {
   localContact: string;
   localContactPhone: string;
   transport: string;
-  artistLineup: {userId: string, confirmed: boolean}[];
+  artistLineup: {userId: string, confirmed: boolean, declined?: boolean}[];
   invitations: string;
   vehicleType?: string;
   distanceKm?: number;
@@ -73,7 +73,7 @@ export interface FormData {
   localContact: string;
   localContactPhone: string;
   transport: string;
-  artistLineup: {userId: string, confirmed: boolean}[];
+  artistLineup: {userId: string, confirmed: boolean, declined?: boolean}[];
   invitations: string;
   vehicleType?: string;
   distanceKm?: number;
