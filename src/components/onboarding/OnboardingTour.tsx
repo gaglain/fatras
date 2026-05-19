@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { driver, type DriveStep, type Driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
@@ -312,7 +312,7 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ forceStart = fal
       } catch {}
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rolesLoading, onbLoading, completed, forceStart, isMobile]);
+  }, [rolesLoading, onbLoading, completed, forceStart, isMobile, externalTrigger]);
 
   return null;
 };
