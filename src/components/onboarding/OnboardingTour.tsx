@@ -300,6 +300,7 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ forceStart = fal
         markCompleted();
         onFinish?.();
         startedRef.current = false;
+        setExternalTrigger(0);
       },
     });
     driverRef.current = d;
