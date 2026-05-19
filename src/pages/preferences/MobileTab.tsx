@@ -1,24 +1,22 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Smartphone, Download, QrCode, ExternalLink, PlayCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useNavigate } from "react-router-dom";
-import { useOnboarding } from "@/hooks/useOnboarding";
-import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
 import { toast } from "sonner";
 
 export const MobileTab: React.FC = () => {
   const navigate = useNavigate();
-  const { resetCompleted } = useOnboarding();
-  const [replayTour, setReplayTour] = useState(false);
 
-  const handleReplayTour = async () => {
-    await resetCompleted();
-    setReplayTour(true);
+  const handleReplayTour = () => {
     toast.success("Lancement du tour guidé…");
     navigate("/dashboard");
+    // Let the route change settle before triggering
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent("fatras:start-onboarding"));
+    }, 400);
   };
 
   return (
