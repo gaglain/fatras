@@ -98,7 +98,6 @@ export const MobileTab: React.FC = () => {
           </Button>
         </div>
       </CardContent>
-      {replayTour && <OnboardingTour forceStart onFinish={() => setReplayTour(false)} />}
     </Card>
   );
 };
