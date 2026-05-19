@@ -86,7 +86,21 @@ export const MobileTab: React.FC = () => {
             </Button>
           </div>
         </div>
+
+        <div className="pt-4 border-t space-y-3">
+          <h3 className="font-semibold flex items-center gap-2">
+            <PlayCircle className="h-4 w-4" /> Tour guidé de l'application
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Revoyez le tour de bienvenue pour redécouvrir les fonctionnalités principales selon votre rôle.
+          </p>
+          <Button onClick={handleReplayTour} variant="outline" className="w-full">
+            <PlayCircle className="h-4 w-4 mr-2" />
+            Relancer le tour guidé
+          </Button>
+        </div>
       </CardContent>
+      {replayTour && <OnboardingTour forceStart onFinish={() => setReplayTour(false)} />}
     </Card>
   );
 };
