@@ -194,16 +194,28 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ forceStart = fal
   const location = useLocation();
   const navigate = useNavigate();
   const { userRoles, loading: rolesLoading } = usePermissions();
-  const { completed, loading: onbLoading, markCompleted } = useOnboarding();
+  const { completed, loading: onbLoading, markCompleted, resetCompleted } = useOnboarding();
   const { requestPermission, permission, isSupported } = useWebPushNotifications();
   const driverRef = useRef<Driver | null>(null);
   const startedRef = useRef(false);
+  const [externalTrigger, setExternalTrigger] = useState(0);
+
+  // Listen for global "replay tour" event
+  useEffect(() => {
+    const handler = () => {
+      startedRef.current = false;
+      resetCompleted();
+      setExternalTrigger(v => v + 1);
+    };
+    window.addEventListener('fatras:start-onboarding', handler);
+    return () => window.removeEventListener('fatras:start-onboarding', handler);
+  }, [resetCompleted]);
 
   useEffect(() => {
     if (rolesLoading || onbLoading) return;
-    const shouldStart = forceStart || (completed === false);
+    const shouldStart = forceStart || externalTrigger > 0 || completed === false;
     if (!shouldStart || startedRef.current) return;
-    if (!location.pathname.startsWith('/dashboard') && !forceStart) {
+    if (!location.pathname.startsWith('/dashboard')) {
       // ensure tour runs from dashboard for stable selectors
       navigate('/dashboard', { replace: true });
       return;
