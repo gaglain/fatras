@@ -43,6 +43,11 @@ export const usePullToRefresh = ({
     }
   }, [disabled, isRefreshing, threshold]);
 
+  const resetPull = useCallback(() => {
+    pulling.current = false;
+    setPullDistance(0);
+  }, []);
+
   const handleTouchEnd = useCallback(async () => {
     if (!pulling.current) return;
     pulling.current = false;
@@ -68,13 +73,15 @@ export const usePullToRefresh = ({
     container.addEventListener('touchstart', handleTouchStart, { passive: true });
     container.addEventListener('touchmove', handleTouchMove, { passive: false });
     container.addEventListener('touchend', handleTouchEnd);
+    container.addEventListener('touchcancel', resetPull);
 
     return () => {
       container.removeEventListener('touchstart', handleTouchStart);
       container.removeEventListener('touchmove', handleTouchMove);
       container.removeEventListener('touchend', handleTouchEnd);
+      container.removeEventListener('touchcancel', resetPull);
     };
-  }, [handleTouchStart, handleTouchMove, handleTouchEnd]);
+  }, [handleTouchStart, handleTouchMove, handleTouchEnd, resetPull]);
 
   return {
     containerRef,
