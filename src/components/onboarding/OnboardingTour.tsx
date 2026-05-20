@@ -391,6 +391,25 @@ const adminSteps = (isMobile: boolean): DriveStep[] => [
         },
       ]
     : []),
+
+  /* CHAT WIDGET FAB - accessible everywhere */
+  {
+    element: '[data-tour="chat-widget-fab"]',
+    popover: {
+      title: '💬 Raccourci messagerie — bouton flottant',
+      description: `
+        <p>Le <b>bouton orange en bas à droite</b> ouvre la messagerie interne <b>sans quitter la page</b> sur laquelle vous travaillez.</p>
+        <ul style="padding-left:1.1rem;line-height:1.55;font-size:0.88rem">
+          <li>Disponible partout dans l'app</li>
+          <li>Pastille rouge = nouveaux messages non lus</li>
+          <li>Accès direct au canal d'une tournée depuis sa fiche</li>
+          <li>Réponse rapide aux mentions & DM sans changer de page</li>
+        </ul>
+      `,
+      side: isMobile ? 'top' : 'left',
+    },
+  },
+
 ];
 
 /* =============================================================
