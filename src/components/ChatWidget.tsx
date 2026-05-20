@@ -321,7 +321,7 @@ export const ChatWidget: React.FC = () => {
         </div>
       )}
       
-      <button onClick={() => setIsOpen(!isOpen)} className={cn("relative w-14 h-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group bg-primary text-primary-foreground hover:bg-primary/90", isOpen && isMobile && "hidden")}>
+      <button data-tour="chat-widget-fab" onClick={() => setIsOpen(!isOpen)} className={cn("relative w-14 h-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group bg-primary text-primary-foreground hover:bg-primary/90", isOpen && isMobile && "hidden")}>
         <MessageSquare className="h-6 w-6 group-hover:scale-110 transition-transform duration-200" />
         {messagingUnreadCount > 0 && <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center animate-pulse">{messagingUnreadCount > 9 ? '9+' : messagingUnreadCount}</span>}
       </button>

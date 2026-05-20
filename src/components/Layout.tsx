@@ -100,7 +100,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         className="flex flex-col min-h-screen min-h-[100dvh] w-full max-w-full overflow-x-hidden bg-background"
         style={{ 
           paddingTop: 'calc(3.5rem + env(safe-area-inset-top))',
-          paddingBottom: 'calc(4rem + env(safe-area-inset-bottom))'
+          paddingBottom: 'calc(5.5rem + env(safe-area-inset-bottom))'
         }}
       >
         <OfflineBanner />

@@ -358,21 +358,22 @@ const adminSteps = (isMobile: boolean): DriveStep[] => [
         {
           element: 'a[href="/messagerie"]',
           popover: {
-            title: '💬 Messagerie interne (style Slack)',
+            title: '💬 Messagerie interne',
             description: `
-              <p>Communication d'équipe en temps réel :</p>
+              <p>Communication d'équipe en temps réel, accessible depuis cette page <b>et</b> via le <b>bouton flottant orange en bas à droite</b> 💬 présent partout dans l'app.</p>
               <ul style="padding-left:1.1rem;line-height:1.55;font-size:0.9rem">
-                <li><b>Canaux par tournée</b> (créés automatiquement, accès castés uniquement)</li>
+                <li><b>Canaux par tournée</b> créés automatiquement (accès castés uniquement)</li>
                 <li>Canal général d'équipe & messages privés</li>
                 <li><b>Mentions @utilisateur</b> avec notifications push + email</li>
                 <li>Notifications instantanées multi-canal (badge, son, OS)</li>
-                <li>Réactivité en temps réel (realtime DB)</li>
+                <li>Réactivité en temps réel</li>
               </ul>
-              <p style="margin-top:0.5rem;font-size:0.8rem;opacity:0.75">💡 Une vraie intégration Slack externe est possible — demandez-la si besoin.</p>
+              <p style="margin-top:0.5rem;font-size:0.85rem;opacity:0.85">💡 Le <b>pop-up en bas à droite</b> vous permet d'envoyer un message sans quitter la page sur laquelle vous travaillez.</p>
             `,
             side: 'right' as const,
           },
         },
+
       ]),
 
   /* MOBILE: condensed messagerie step */
@@ -390,6 +391,25 @@ const adminSteps = (isMobile: boolean): DriveStep[] => [
         },
       ]
     : []),
+
+  /* CHAT WIDGET FAB - accessible everywhere */
+  {
+    element: '[data-tour="chat-widget-fab"]',
+    popover: {
+      title: '💬 Raccourci messagerie — bouton flottant',
+      description: `
+        <p>Le <b>bouton orange en bas à droite</b> ouvre la messagerie interne <b>sans quitter la page</b> sur laquelle vous travaillez.</p>
+        <ul style="padding-left:1.1rem;line-height:1.55;font-size:0.88rem">
+          <li>Disponible partout dans l'app</li>
+          <li>Pastille rouge = nouveaux messages non lus</li>
+          <li>Accès direct au canal d'une tournée depuis sa fiche</li>
+          <li>Réponse rapide aux mentions & DM sans changer de page</li>
+        </ul>
+      `,
+      side: isMobile ? 'top' : 'left',
+    },
+  },
+
 ];
 
 /* =============================================================
@@ -493,7 +513,18 @@ const artistSteps = (isMobile: boolean): DriveStep[] => [
       side: isMobile ? 'top' : 'right',
     },
   },
+  {
+    element: '[data-tour="chat-widget-fab"]',
+    popover: {
+      title: '💬 Raccourci messagerie — bouton flottant',
+      description: `
+        <p>Le <b>bouton orange en bas à droite</b> ouvre la messagerie depuis n'importe quelle page, sans perdre ce que vous étiez en train de consulter (feuille de route, agenda…).</p>
+      `,
+      side: isMobile ? 'top' : 'left',
+    },
+  },
 ];
+
 
 /* =============================================================
    COMPONENT
