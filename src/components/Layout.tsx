@@ -97,18 +97,19 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   if (isMobile) {
     return (
       <div
-        className="flex flex-col min-h-screen min-h-[100dvh] w-full max-w-full overflow-x-hidden bg-background"
-        style={{ 
-          paddingTop: 'calc(3.5rem + env(safe-area-inset-top))',
-          paddingBottom: 'calc(5.5rem + env(safe-area-inset-bottom))'
-        }}
+        className="h-screen h-[100dvh] w-full max-w-full overflow-hidden bg-background"
       >
         <OfflineBanner />
         <MobileTopBar />
         
         <main 
           ref={containerRef}
-          className="flex-1 overflow-y-auto overflow-x-hidden p-3 bg-background"
+          className="fixed left-0 right-0 overflow-y-auto overflow-x-hidden p-3 pb-6 bg-background"
+          style={{
+            top: 'calc(3.5rem + env(safe-area-inset-top))',
+            bottom: 'calc(4rem + env(safe-area-inset-bottom))',
+            WebkitOverflowScrolling: 'touch'
+          }}
         >
           <PullToRefreshIndicator
             pullDistance={pullDistance}
