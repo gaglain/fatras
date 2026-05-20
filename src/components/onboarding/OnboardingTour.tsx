@@ -513,7 +513,18 @@ const artistSteps = (isMobile: boolean): DriveStep[] => [
       side: isMobile ? 'top' : 'right',
     },
   },
+  {
+    element: '[data-tour="chat-widget-fab"]',
+    popover: {
+      title: '💬 Raccourci messagerie — bouton flottant',
+      description: `
+        <p>Le <b>bouton orange en bas à droite</b> ouvre la messagerie depuis n'importe quelle page, sans perdre ce que vous étiez en train de consulter (feuille de route, agenda…).</p>
+      `,
+      side: isMobile ? 'top' : 'left',
+    },
+  },
 ];
+
 
 /* =============================================================
    COMPONENT
