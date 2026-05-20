@@ -20,7 +20,7 @@ export const MobileTab: React.FC = () => {
   };
 
   return (
-    <Card className="mb-24 md:mb-0">
+    <Card>
       <CardHeader>
         <CardTitle className="flex items-center">
           <Smartphone className="h-5 w-5 mr-2" />
