@@ -207,8 +207,6 @@ export const BackgroundImageBlock: React.FC<BackgroundImageBlockProps> = ({
   const getFontClass = (font?: string) => {
     const fontMap: Record<string, string> = {
       sans: 'font-sans',
-      serif: 'font-serif',
-      playfair: 'font-playfair',
       roboto: 'font-roboto',
       opensans: 'font-opensans'
     };
