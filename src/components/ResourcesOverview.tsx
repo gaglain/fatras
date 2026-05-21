@@ -4,8 +4,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
   FileText, Music, Image as ImageIcon, FileEdit, 
-  ArrowRight, Pin, Clock, Folder 
+  ArrowRight, Pin, Clock, Folder, File as FileIcon
 } from 'lucide-react';
+
+const isImageUrl = (url?: string, name?: string) => {
+  const s = `${url || ''} ${name || ''}`.toLowerCase();
+  return /\.(png|jpe?g|gif|webp|svg|avif|bmp)(\?|$)/.test(s);
+};
 import { useShowBible } from '@/hooks/useShowBible';
 import { useShowBibleNotes } from '@/hooks/useShowBibleNotes';
 import { useShowBibleSetlists } from '@/hooks/useShowBibleSetlists';
