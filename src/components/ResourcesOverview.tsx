@@ -224,59 +224,9 @@ export const ResourcesOverview: React.FC<ResourcesOverviewProps> = ({ onNavigate
           ) : (
             <>
               <div className="grid grid-cols-3 gap-2">
-                {recentImages.map(image => {
-                  const url = image.url;
-                  const thumb = image.thumbnail_url || image.url;
-                  const showImg = isImageUrl(thumb, image.name);
-                  const showPdf = !showImg && isPdfUrl(url, image.name);
-                  return (
-                    <a
-                      key={image.id}
-                      href={url}
-                      target="_blank"
-                      rel="noreferrer"
-                      title={image.name}
-                      className="group block aspect-square rounded-md overflow-hidden bg-muted border border-border relative hover:ring-2 hover:ring-primary transition"
-                    >
-                      {showImg ? (
-                        <img
-                          src={thumb}
-                          alt={image.name}
-                          loading="lazy"
-                          className="w-full h-full object-cover"
-                          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-                        />
-                      ) : showPdf ? (
-                        <>
-                          <object
-                            data={`${url}#toolbar=0&navpanes=0&scrollbar=0&view=FitH&page=1`}
-                            type="application/pdf"
-                            className="w-full h-full pointer-events-none"
-                            aria-label={image.name}
-                          >
-                            <div className="w-full h-full flex flex-col items-center justify-center gap-1 p-2 text-center">
-                              <FileText className="h-6 w-6 text-primary shrink-0" />
-                              <span className="text-[10px] leading-tight text-muted-foreground line-clamp-2 break-all">{image.name}</span>
-                            </div>
-                          </object>
-                          <div className="absolute bottom-0 inset-x-0 bg-background/85 backdrop-blur-sm border-t border-border px-1.5 py-1">
-                            <p className="text-[10px] font-medium truncate flex items-center gap-1">
-                              <FileText className="h-3 w-3 text-primary shrink-0" />
-                              {image.name}
-                            </p>
-                          </div>
-                        </>
-                      ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center gap-1 p-2 text-center">
-                          <FileIcon className="h-6 w-6 text-muted-foreground shrink-0" />
-                          <span className="text-[10px] leading-tight text-muted-foreground line-clamp-2 break-all">
-                            {image.name}
-                          </span>
-                        </div>
-                      )}
-                    </a>
-                  );
-                })}
+                {recentImages.map(image => (
+                  <MediaTile key={image.id} image={image} />
+                ))}
               </div>
               <div className="text-xs text-muted-foreground text-center pt-3 border-t mt-3">
                 {images.length} média{images.length > 1 ? 's' : ''} au total
