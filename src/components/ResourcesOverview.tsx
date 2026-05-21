@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { useShowBible } from '@/hooks/useShowBible';
 import { useShowBibleNotes } from '@/hooks/useShowBibleNotes';
 import { useShowBibleSetlists } from '@/hooks/useShowBibleSetlists';
 import { useBackgroundImages, type BackgroundImage } from '@/hooks/useBackgroundImages';
+import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -22,12 +23,52 @@ const isPdfUrl = (url?: string, name?: string) => {
   return /\.pdf(\?|$|#)/.test(s);
 };
 
+// Parses a Supabase storage URL and returns { bucket, path } when applicable
+const parseSupabaseStorageUrl = (url: string): { bucket: string; path: string } | null => {
+  const m = url.match(/\/storage\/v1\/object\/(?:public|sign)\/([^/]+)\/(.+?)(?:\?|$)/);
+  if (!m) return null;
+  return { bucket: m[1], path: decodeURIComponent(m[2]) };
+};
+
 const MediaTile: React.FC<{ image: BackgroundImage }> = ({ image }) => {
+  const initial = image.thumbnail_url || image.url;
+  const [resolvedUrl, setResolvedUrl] = useState<string>(initial);
+  const [linkUrl, setLinkUrl] = useState<string>(image.url);
   const [imgFailed, setImgFailed] = useState(false);
-  const url = image.url;
-  const thumb = image.thumbnail_url || image.url;
-  const isImg = isImageUrl(thumb, image.name) || isImageUrl(url, image.name);
-  const isPdf = !isImg && isPdfUrl(url, image.name);
+  const [triedSign, setTriedSign] = useState(false);
+  const isImg = isImageUrl(image.url, image.name);
+  const isPdf = !isImg && isPdfUrl(image.url, image.name);
+
+  // If the (public) URL fails (private bucket), fall back to a signed URL
+  const handleFailure = async () => {
+    if (triedSign) { setImgFailed(true); return; }
+    setTriedSign(true);
+    const info = parseSupabaseStorageUrl(image.url);
+    if (!info) { setImgFailed(true); return; }
+    const { data } = await supabase.storage.from(info.bucket).createSignedUrl(info.path, 3600);
+    if (data?.signedUrl) {
+      setResolvedUrl(data.signedUrl);
+      setLinkUrl(data.signedUrl);
+    } else {
+      setImgFailed(true);
+    }
+  };
+
+  // Pre-sign immediately for known-private buckets to avoid a failed request flash
+  useEffect(() => {
+    const info = parseSupabaseStorageUrl(image.url);
+    if (!info) return;
+    if (image.url.includes('/object/public/') && info.bucket !== 'background-images' && !triedSign) {
+      setTriedSign(true);
+      supabase.storage.from(info.bucket).createSignedUrl(info.path, 3600).then(({ data }) => {
+        if (data?.signedUrl) {
+          setResolvedUrl(data.signedUrl);
+          setLinkUrl(data.signedUrl);
+        }
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [image.url]);
 
   const Fallback = (
     <div className="w-full h-full flex flex-col items-center justify-center gap-1 p-2 text-center bg-muted">
@@ -40,7 +81,7 @@ const MediaTile: React.FC<{ image: BackgroundImage }> = ({ image }) => {
 
   return (
     <a
-      href={url}
+      href={linkUrl}
       target="_blank"
       rel="noreferrer"
       title={image.name}
@@ -48,16 +89,16 @@ const MediaTile: React.FC<{ image: BackgroundImage }> = ({ image }) => {
     >
       {isImg && !imgFailed ? (
         <img
-          src={thumb}
+          src={resolvedUrl}
           alt={image.name}
           loading="lazy"
           className="w-full h-full object-cover"
-          onError={() => setImgFailed(true)}
+          onError={handleFailure}
         />
-      ) : isPdf ? (
+      ) : isPdf && !imgFailed ? (
         <>
           <object
-            data={`${url}#toolbar=0&navpanes=0&scrollbar=0&view=FitH&page=1`}
+            data={`${resolvedUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH&page=1`}
             type="application/pdf"
             className="w-full h-full pointer-events-none bg-card"
             aria-label={image.name}
