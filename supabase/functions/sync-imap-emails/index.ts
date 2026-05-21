@@ -434,17 +434,23 @@ const handler = async (req: Request): Promise<Response> => {
             return { syncedCount: 0, totalMessages, emails: [] };
           }
 
-          // Limiter à 200 messages max pour éviter les timeouts
-          const msgsToFetch = messageNums.slice(-200);
-          const fetchRange = msgsToFetch.join(',');
-          
-          console.log(`🔍 Fetching ${msgsToFetch.length} messages from ${folderName}`);
-          response = await sendCommand(`FETCH ${fetchRange} (FLAGS ENVELOPE BODY.PEEK[])`);
-          
-          const emails = parseEmailsFromResponse(response, folderName);
-          console.log(`📧 ${emails.length} emails parsés depuis ${folderName}`);
+          // Limiter à 50 messages max par run pour rester dans le CPU budget
+          const msgsToFetch = messageNums.slice(-50);
 
-          return { syncedCount: 0, totalMessages, emails };
+          // Fetch par petits lots (5) pour éviter "CPU Time exceeded"
+          const BATCH_SIZE = 5;
+          const allEmails: any[] = [];
+          for (let i = 0; i < msgsToFetch.length; i += BATCH_SIZE) {
+            const batch = msgsToFetch.slice(i, i + BATCH_SIZE);
+            const fetchRange = batch.join(',');
+            console.log(`🔍 Fetching batch ${i / BATCH_SIZE + 1} (${batch.length} msgs) from ${folderName}`);
+            const batchResp = await sendCommand(`FETCH ${fetchRange} (FLAGS ENVELOPE BODY.PEEK[])`);
+            const batchEmails = parseEmailsFromResponse(batchResp, folderName);
+            allEmails.push(...batchEmails);
+          }
+
+          console.log(`📧 ${allEmails.length} emails parsés depuis ${folderName}`);
+          return { syncedCount: 0, totalMessages, emails: allEmails };
         } catch (error) {
           console.error(`❌ Error syncing folder ${folderName}:`, error);
           return { syncedCount: 0, totalMessages: 0, emails: [] };
