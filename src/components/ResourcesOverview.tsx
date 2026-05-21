@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -6,21 +6,78 @@ import {
   FileText, Music, Image as ImageIcon, FileEdit, 
   ArrowRight, Pin, Clock, Folder, File as FileIcon
 } from 'lucide-react';
-
-const isImageUrl = (url?: string, name?: string) => {
-  const s = `${url || ''} ${name || ''}`.toLowerCase();
-  return /\.(png|jpe?g|gif|webp|svg|avif|bmp)(\?|$)/.test(s);
-};
-const isPdfUrl = (url?: string, name?: string) => {
-  const s = `${url || ''} ${name || ''}`.toLowerCase();
-  return /\.pdf(\?|$)/.test(s);
-};
 import { useShowBible } from '@/hooks/useShowBible';
 import { useShowBibleNotes } from '@/hooks/useShowBibleNotes';
 import { useShowBibleSetlists } from '@/hooks/useShowBibleSetlists';
-import { useBackgroundImages } from '@/hooks/useBackgroundImages';
+import { useBackgroundImages, type BackgroundImage } from '@/hooks/useBackgroundImages';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+
+const isImageUrl = (url?: string, name?: string) => {
+  const s = `${url || ''} ${name || ''}`.toLowerCase();
+  return /\.(png|jpe?g|gif|webp|svg|avif|bmp)(\?|$|#)/.test(s);
+};
+const isPdfUrl = (url?: string, name?: string) => {
+  const s = `${url || ''} ${name || ''}`.toLowerCase();
+  return /\.pdf(\?|$|#)/.test(s);
+};
+
+const MediaTile: React.FC<{ image: BackgroundImage }> = ({ image }) => {
+  const [imgFailed, setImgFailed] = useState(false);
+  const url = image.url;
+  const thumb = image.thumbnail_url || image.url;
+  const isImg = isImageUrl(thumb, image.name) || isImageUrl(url, image.name);
+  const isPdf = !isImg && isPdfUrl(url, image.name);
+
+  const Fallback = (
+    <div className="w-full h-full flex flex-col items-center justify-center gap-1 p-2 text-center bg-muted">
+      <FileIcon className="h-7 w-7 text-muted-foreground shrink-0" />
+      <span className="text-[10px] leading-tight text-muted-foreground line-clamp-2 break-all">
+        {image.name}
+      </span>
+    </div>
+  );
+
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noreferrer"
+      title={image.name}
+      className="group block aspect-square rounded-md overflow-hidden bg-muted border border-border relative hover:ring-2 hover:ring-primary transition"
+    >
+      {isImg && !imgFailed ? (
+        <img
+          src={thumb}
+          alt={image.name}
+          loading="lazy"
+          className="w-full h-full object-cover"
+          onError={() => setImgFailed(true)}
+        />
+      ) : isPdf ? (
+        <>
+          <object
+            data={`${url}#toolbar=0&navpanes=0&scrollbar=0&view=FitH&page=1`}
+            type="application/pdf"
+            className="w-full h-full pointer-events-none bg-card"
+            aria-label={image.name}
+          >
+            {Fallback}
+          </object>
+          <div className="absolute bottom-0 inset-x-0 bg-background/90 backdrop-blur-sm border-t border-border px-1.5 py-1">
+            <p className="text-[10px] font-medium truncate flex items-center gap-1">
+              <FileText className="h-3 w-3 text-primary shrink-0" />
+              {image.name}
+            </p>
+          </div>
+        </>
+      ) : (
+        Fallback
+      )}
+    </a>
+  );
+};
+
 
 interface ResourcesOverviewProps {
   onNavigate: (tab: string) => void;
@@ -167,59 +224,9 @@ export const ResourcesOverview: React.FC<ResourcesOverviewProps> = ({ onNavigate
           ) : (
             <>
               <div className="grid grid-cols-3 gap-2">
-                {recentImages.map(image => {
-                  const url = image.url;
-                  const thumb = image.thumbnail_url || image.url;
-                  const showImg = isImageUrl(thumb, image.name);
-                  const showPdf = !showImg && isPdfUrl(url, image.name);
-                  return (
-                    <a
-                      key={image.id}
-                      href={url}
-                      target="_blank"
-                      rel="noreferrer"
-                      title={image.name}
-                      className="group block aspect-square rounded-md overflow-hidden bg-muted border border-border relative hover:ring-2 hover:ring-primary transition"
-                    >
-                      {showImg ? (
-                        <img
-                          src={thumb}
-                          alt={image.name}
-                          loading="lazy"
-                          className="w-full h-full object-cover"
-                          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-                        />
-                      ) : showPdf ? (
-                        <>
-                          <object
-                            data={`${url}#toolbar=0&navpanes=0&scrollbar=0&view=FitH&page=1`}
-                            type="application/pdf"
-                            className="w-full h-full pointer-events-none"
-                            aria-label={image.name}
-                          >
-                            <div className="w-full h-full flex flex-col items-center justify-center gap-1 p-2 text-center">
-                              <FileText className="h-6 w-6 text-primary shrink-0" />
-                              <span className="text-[10px] leading-tight text-muted-foreground line-clamp-2 break-all">{image.name}</span>
-                            </div>
-                          </object>
-                          <div className="absolute bottom-0 inset-x-0 bg-background/85 backdrop-blur-sm border-t border-border px-1.5 py-1">
-                            <p className="text-[10px] font-medium truncate flex items-center gap-1">
-                              <FileText className="h-3 w-3 text-primary shrink-0" />
-                              {image.name}
-                            </p>
-                          </div>
-                        </>
-                      ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center gap-1 p-2 text-center">
-                          <FileIcon className="h-6 w-6 text-muted-foreground shrink-0" />
-                          <span className="text-[10px] leading-tight text-muted-foreground line-clamp-2 break-all">
-                            {image.name}
-                          </span>
-                        </div>
-                      )}
-                    </a>
-                  );
-                })}
+                {recentImages.map(image => (
+                  <MediaTile key={image.id} image={image} />
+                ))}
               </div>
               <div className="text-xs text-muted-foreground text-center pt-3 border-t mt-3">
                 {images.length} média{images.length > 1 ? 's' : ''} au total
