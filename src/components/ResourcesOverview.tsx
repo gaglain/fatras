@@ -11,6 +11,10 @@ const isImageUrl = (url?: string, name?: string) => {
   const s = `${url || ''} ${name || ''}`.toLowerCase();
   return /\.(png|jpe?g|gif|webp|svg|avif|bmp)(\?|$)/.test(s);
 };
+const isPdfUrl = (url?: string, name?: string) => {
+  const s = `${url || ''} ${name || ''}`.toLowerCase();
+  return /\.pdf(\?|$)/.test(s);
+};
 import { useShowBible } from '@/hooks/useShowBible';
 import { useShowBibleNotes } from '@/hooks/useShowBibleNotes';
 import { useShowBibleSetlists } from '@/hooks/useShowBibleSetlists';
