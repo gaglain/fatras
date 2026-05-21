@@ -142,25 +142,23 @@ const handler = async (req: Request): Promise<Response> => {
       const tag = `A${commandTag.toString().padStart(3, '0')}`;
       commandTag++;
       const fullCommand = `${tag} ${command}`;
-      
+
       console.log('→', fullCommand.replace(/LOGIN .+ .+/, 'LOGIN [hidden]'));
       await conn.write(encoder.encode(fullCommand + '\r\n'));
-      
-      let response = '';
-      let lines: string[] = [];
-      
-      // Lire jusqu'à avoir la réponse complète avec le tag
+
+      const tagMarker = `\n${tag} `;
+      const parts: string[] = [];
+      let lastTail = '';
+
+      // Lire jusqu'à recevoir la ligne taggée finale (sans re-split la string entière à chaque tour)
       while (true) {
-        const data = await readResponse();
-        response += data;
-        lines = response.split('\r\n');
-        
-        // Chercher la ligne de réponse finale avec notre tag
-        const finalResponse = lines.find(line => line.startsWith(`${tag} `));
-        if (finalResponse) {
-          console.log('←', response.trim());
-          return response;
+        const data = await readResponse(15000);
+        parts.push(data);
+        const window = lastTail + data;
+        if (window.includes(tagMarker) || window.startsWith(`${tag} `)) {
+          return parts.join('');
         }
+        lastTail = data.slice(-Math.min(data.length, 256));
       }
     };
 
@@ -436,17 +434,23 @@ const handler = async (req: Request): Promise<Response> => {
             return { syncedCount: 0, totalMessages, emails: [] };
           }
 
-          // Limiter à 200 messages max pour éviter les timeouts
-          const msgsToFetch = messageNums.slice(-200);
-          const fetchRange = msgsToFetch.join(',');
-          
-          console.log(`🔍 Fetching ${msgsToFetch.length} messages from ${folderName}`);
-          response = await sendCommand(`FETCH ${fetchRange} (FLAGS ENVELOPE BODY.PEEK[])`);
-          
-          const emails = parseEmailsFromResponse(response, folderName);
-          console.log(`📧 ${emails.length} emails parsés depuis ${folderName}`);
+          // Limiter à 50 messages max par run pour rester dans le CPU budget
+          const msgsToFetch = messageNums.slice(-50);
 
-          return { syncedCount: 0, totalMessages, emails };
+          // Fetch par petits lots (5) pour éviter "CPU Time exceeded"
+          const BATCH_SIZE = 5;
+          const allEmails: any[] = [];
+          for (let i = 0; i < msgsToFetch.length; i += BATCH_SIZE) {
+            const batch = msgsToFetch.slice(i, i + BATCH_SIZE);
+            const fetchRange = batch.join(',');
+            console.log(`🔍 Fetching batch ${i / BATCH_SIZE + 1} (${batch.length} msgs) from ${folderName}`);
+            const batchResp = await sendCommand(`FETCH ${fetchRange} (FLAGS ENVELOPE BODY.PEEK[])`);
+            const batchEmails = parseEmailsFromResponse(batchResp, folderName);
+            allEmails.push(...batchEmails);
+          }
+
+          console.log(`📧 ${allEmails.length} emails parsés depuis ${folderName}`);
+          return { syncedCount: 0, totalMessages, emails: allEmails };
         } catch (error) {
           console.error(`❌ Error syncing folder ${folderName}:`, error);
           return { syncedCount: 0, totalMessages: 0, emails: [] };
