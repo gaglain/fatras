@@ -13,10 +13,116 @@ import {
 import { useBackgroundImages, BackgroundImage, MEDIA_CATEGORIES } from '@/hooks/useBackgroundImages';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { getDocumentUrl } from '@/utils/documentPermalinks';
 import { MediaBankUploadDialog } from './MediaBankUploadDialog';
 
 interface Artist { id: string; name: string; }
+
+const mediaHasExtension = (image: BackgroundImage, extensions: string[]) => {
+  return [image.url, image.name, image.file_path].some((value) => {
+    if (!value) return false;
+    const cleanValue = value.split(/[?#]/)[0].toLowerCase();
+    return extensions.some((extension) => cleanValue.endsWith(`.${extension}`));
+  });
+};
+
+const isImageMedia = (image: BackgroundImage) => mediaHasExtension(image, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'bmp', 'svg']);
+const isPdfMedia = (image: BackgroundImage) => mediaHasExtension(image, ['pdf']);
+
+const parseSupabaseStorageUrl = (url: string): { bucket: string; path: string } | null => {
+  const match = url.match(/\/storage\/v1\/object\/(?:public|sign)\/([^/]+)\/(.+?)(?:\?|$)/);
+  if (!match) return null;
+  return { bucket: match[1], path: decodeURIComponent(match[2]) };
+};
+
+const getStorageInfo = (image: BackgroundImage): { bucket: string; path: string } | null => {
+  if (image.bucket_name && image.file_path) return { bucket: image.bucket_name, path: image.file_path };
+  return parseSupabaseStorageUrl(image.url);
+};
+
+const getInitialMediaUrl = (image: BackgroundImage) => {
+  const storageInfo = getStorageInfo(image);
+  if (storageInfo) return supabase.storage.from(storageInfo.bucket).getPublicUrl(storageInfo.path).data.publicUrl;
+  return image.url;
+};
+
+const MediaPreview: React.FC<{ image: BackgroundImage; variant: 'thumb' | 'dialog' }> = ({ image, variant }) => {
+  const [resolvedUrl, setResolvedUrl] = useState(() => getInitialMediaUrl(image));
+  const [failed, setFailed] = useState(false);
+  const [triedSignedUrl, setTriedSignedUrl] = useState(false);
+  const imageMedia = isImageMedia(image);
+  const pdfMedia = isPdfMedia(image);
+
+  useEffect(() => {
+    const initialUrl = getInitialMediaUrl(image);
+    setResolvedUrl(initialUrl);
+    setFailed(false);
+    setTriedSignedUrl(false);
+
+    const storageInfo = getStorageInfo(image);
+    if (!storageInfo || storageInfo.bucket === 'background-images') return;
+
+    supabase.storage.from(storageInfo.bucket).createSignedUrl(storageInfo.path, 3600).then(({ data }) => {
+      if (data?.signedUrl) {
+        setResolvedUrl(data.signedUrl);
+        setFailed(false);
+        setTriedSignedUrl(true);
+      }
+    });
+  }, [image.id, image.url, image.bucket_name, image.file_path]);
+
+  const trySignedUrl = async () => {
+    if (triedSignedUrl) {
+      setFailed(true);
+      return;
+    }
+
+    const storageInfo = getStorageInfo(image);
+    if (!storageInfo) {
+      setFailed(true);
+      return;
+    }
+
+    setTriedSignedUrl(true);
+    const { data } = await supabase.storage.from(storageInfo.bucket).createSignedUrl(storageInfo.path, 3600);
+    if (data?.signedUrl) {
+      setResolvedUrl(data.signedUrl);
+      setFailed(false);
+    }
+    else setFailed(true);
+  };
+
+  const fallback = (
+    <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-muted p-3 text-center">
+      <FileText className={variant === 'dialog' ? 'h-16 w-16 text-muted-foreground' : 'h-10 w-10 text-muted-foreground'} />
+      <span className="text-xs text-muted-foreground line-clamp-2 break-all">{image.name}</span>
+    </div>
+  );
+
+  if (imageMedia && !failed) {
+    return (
+      <img
+        src={resolvedUrl}
+        alt={image.name}
+        loading={variant === 'thumb' ? 'lazy' : undefined}
+        className={variant === 'dialog' ? 'w-full h-full object-contain' : 'w-full h-full object-contain p-2'}
+        onError={trySignedUrl}
+      />
+    );
+  }
+
+  if (pdfMedia && !failed) {
+    return (
+      <iframe
+        src={`${resolvedUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH&page=1`}
+        title={image.name}
+        className="w-full h-full bg-card"
+        onError={trySignedUrl}
+      />
+    );
+  }
+
+  return fallback;
+};
 
 export const MediaBankManager: React.FC = () => {
   const { user } = useAuth();
@@ -62,6 +168,17 @@ export const MediaBankManager: React.FC = () => {
   const handleDelete = async (image: BackgroundImage) => {
     const ok = await confirmAction({ title: 'Supprimer', description: 'Supprimer cette image définitivement ?', variant: 'destructive' });
     if (ok) await deleteImage(image.id);
+  };
+
+  const openMediaInNewTab = async (image: BackgroundImage) => {
+    const storageInfo = getStorageInfo(image);
+    if (storageInfo && storageInfo.bucket !== 'background-images') {
+      const { data } = await supabase.storage.from(storageInfo.bucket).createSignedUrl(storageInfo.path, 3600);
+      window.open(data?.signedUrl || getInitialMediaUrl(image), '_blank');
+      return;
+    }
+
+    window.open(getInitialMediaUrl(image), '_blank');
   };
 
   const getCategoryLabel = (category: string) => MEDIA_CATEGORIES.find(c => c.value === category)?.label || category;
@@ -134,12 +251,8 @@ export const MediaBankManager: React.FC = () => {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {filteredImages.map((image) => (
-              <div key={image.id} className="group relative bg-muted rounded-lg overflow-hidden aspect-square">
-                {image.url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
-                  <img src={image.bucket_name && image.file_path ? getDocumentUrl(image.bucket_name, image.file_path, image.category) : image.url} alt={image.name} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-muted"><FileText className="h-10 w-10 text-muted-foreground" /></div>
-                )}
+              <div key={image.id} className="group relative bg-muted rounded-lg overflow-hidden aspect-square border border-border">
+                <MediaPreview image={image} variant="thumb" />
                 <div className="absolute top-2 left-2 flex flex-col gap-1">
                   <Badge className={`text-xs ${getCategoryColor(image.category || 'general')}`}>{getCategoryLabel(image.category || 'general')}</Badge>
                   {image.source_id && <Badge variant="secondary" className="text-xs"><Music className="h-3 w-3 mr-1" />{getArtistName(image.source_id)}</Badge>}
@@ -179,10 +292,7 @@ export const MediaBankManager: React.FC = () => {
             <DialogTitle className="flex items-center justify-between">
               <span className="truncate">{selectedImage?.name}</span>
               <Button variant="outline" size="sm" onClick={() => {
-                if (selectedImage) {
-                  const url = selectedImage.bucket_name && selectedImage.file_path ? getDocumentUrl(selectedImage.bucket_name, selectedImage.file_path, selectedImage.category) : selectedImage.url;
-                  window.open(url, '_blank');
-                }
+                if (selectedImage) openMediaInNewTab(selectedImage);
               }}>
                 <ExternalLink className="h-4 w-4 mr-2" />Ouvrir
               </Button>
@@ -191,13 +301,7 @@ export const MediaBankManager: React.FC = () => {
           {selectedImage && (
             <div className="space-y-4">
               <div className="aspect-video bg-muted rounded-lg overflow-hidden">
-                {selectedImage.url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
-                  <img src={selectedImage.bucket_name && selectedImage.file_path ? getDocumentUrl(selectedImage.bucket_name, selectedImage.file_path, selectedImage.category) : selectedImage.url} alt={selectedImage.name} className="w-full h-full object-contain" />
-                ) : selectedImage.url.match(/\.pdf$/i) ? (
-                  <iframe src={selectedImage.bucket_name && selectedImage.file_path ? getDocumentUrl(selectedImage.bucket_name, selectedImage.file_path, selectedImage.category) : selectedImage.url} title={selectedImage.name} className="w-full h-full" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center"><FileText className="h-16 w-16 text-muted-foreground" /></div>
-                )}
+                <MediaPreview image={selectedImage} variant="dialog" />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
