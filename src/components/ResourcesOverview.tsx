@@ -94,7 +94,7 @@ const MediaTile: React.FC<{ image: BackgroundImage }> = ({ image }) => {
           src={resolvedUrl}
           alt={image.name}
           loading="lazy"
-          className="w-full h-full object-cover"
+          className="w-full h-full object-contain p-1 bg-card"
           onError={handleFailure}
         />
       ) : isPdf && !imgFailed ? (
