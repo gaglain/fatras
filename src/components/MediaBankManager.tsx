@@ -61,9 +61,12 @@ const MediaPreview: React.FC<{ image: BackgroundImage; variant: 'thumb' | 'dialo
     const storageInfo = getStorageInfo(image);
     if (!storageInfo || storageInfo.bucket === 'background-images') return;
 
-    setTriedSignedUrl(true);
     supabase.storage.from(storageInfo.bucket).createSignedUrl(storageInfo.path, 3600).then(({ data }) => {
-      if (data?.signedUrl) setResolvedUrl(data.signedUrl);
+      if (data?.signedUrl) {
+        setResolvedUrl(data.signedUrl);
+        setFailed(false);
+        setTriedSignedUrl(true);
+      }
     });
   }, [image.id, image.url, image.bucket_name, image.file_path]);
 
@@ -81,7 +84,10 @@ const MediaPreview: React.FC<{ image: BackgroundImage; variant: 'thumb' | 'dialo
 
     setTriedSignedUrl(true);
     const { data } = await supabase.storage.from(storageInfo.bucket).createSignedUrl(storageInfo.path, 3600);
-    if (data?.signedUrl) setResolvedUrl(data.signedUrl);
+    if (data?.signedUrl) {
+      setResolvedUrl(data.signedUrl);
+      setFailed(false);
+    }
     else setFailed(true);
   };
 
