@@ -20,8 +20,7 @@ export default {
 		extend: {
 			fontFamily: {
 				sans: ['Outfit', 'Inter', 'system-ui', 'sans-serif'],
-				display: ['"Instrument Serif"', 'Georgia', 'serif'],
-				serif: ['"Instrument Serif"', 'Georgia', 'serif'],
+				display: ['Outfit', 'Inter', 'system-ui', 'sans-serif'],
 				mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
 			},
 			fontSize: {
