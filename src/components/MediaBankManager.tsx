@@ -13,7 +13,6 @@ import {
 import { useBackgroundImages, BackgroundImage, MEDIA_CATEGORIES } from '@/hooks/useBackgroundImages';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { getDocumentUrl } from '@/utils/documentPermalinks';
 import { MediaBankUploadDialog } from './MediaBankUploadDialog';
 
 interface Artist { id: string; name: string; }
@@ -287,10 +286,7 @@ export const MediaBankManager: React.FC = () => {
             <DialogTitle className="flex items-center justify-between">
               <span className="truncate">{selectedImage?.name}</span>
               <Button variant="outline" size="sm" onClick={() => {
-                if (selectedImage) {
-                  const url = selectedImage.bucket_name && selectedImage.file_path ? getDocumentUrl(selectedImage.bucket_name, selectedImage.file_path, selectedImage.category) : selectedImage.url;
-                  window.open(url, '_blank');
-                }
+                if (selectedImage) openMediaInNewTab(selectedImage);
               }}>
                 <ExternalLink className="h-4 w-4 mr-2" />Ouvrir
               </Button>
@@ -299,13 +295,7 @@ export const MediaBankManager: React.FC = () => {
           {selectedImage && (
             <div className="space-y-4">
               <div className="aspect-video bg-muted rounded-lg overflow-hidden">
-                {selectedImage.url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
-                  <img src={selectedImage.bucket_name && selectedImage.file_path ? getDocumentUrl(selectedImage.bucket_name, selectedImage.file_path, selectedImage.category) : selectedImage.url} alt={selectedImage.name} className="w-full h-full object-contain" />
-                ) : selectedImage.url.match(/\.pdf$/i) ? (
-                  <iframe src={selectedImage.bucket_name && selectedImage.file_path ? getDocumentUrl(selectedImage.bucket_name, selectedImage.file_path, selectedImage.category) : selectedImage.url} title={selectedImage.name} className="w-full h-full" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center"><FileText className="h-16 w-16 text-muted-foreground" /></div>
-                )}
+                <MediaPreview image={selectedImage} variant="dialog" />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
