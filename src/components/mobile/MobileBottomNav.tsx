@@ -30,10 +30,10 @@ export const MobileBottomNav: React.FC = () => {
 
   return (
     <nav 
-      className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-md border-t z-30"
+      className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-xl border-t border-border z-30"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      <div className="flex items-center justify-around h-16">
+      <div className="flex items-stretch justify-around h-16 px-2">
         {navItems.map((item) => {
           const active = isActive(item.path);
           return (
@@ -42,34 +42,28 @@ export const MobileBottomNav: React.FC = () => {
               data-tour={`mobilenav-${item.path}`}
               onClick={() => navigate(item.path)}
               className={cn(
-                "relative flex flex-col items-center justify-center gap-0.5 flex-1 h-full",
+                "relative flex flex-col items-center justify-center gap-1 flex-1 my-1.5 rounded-md",
                 "transition-all duration-200 active:scale-95",
-                active 
-                  ? "text-primary" 
-                  : "text-muted-foreground"
+                active
+                  ? "text-primary-foreground bg-foreground shadow-sm"
+                  : "text-foreground/70 hover:text-foreground"
               )}
             >
-              {/* Active indicator dot */}
-              {active && (
-                <span className="absolute top-1.5 w-1 h-1 rounded-full bg-primary animate-in fade-in zoom-in duration-200" />
-              )}
-              
-              <div className="relative mt-1">
+              <div className="relative">
                 <item.icon className={cn(
-                  "h-5 w-5 transition-all duration-200",
-                  active && "stroke-[2.5] scale-110"
+                  "h-[18px] w-[18px] transition-all duration-200",
+                  active ? "stroke-[2]" : "stroke-[1.75]"
                 )} />
-                {/* Unread badge */}
                 {item.badge && item.badge > 0 && (
-                  <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center">
+                  <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center border border-card">
                     {item.badge > 99 ? '99+' : item.badge}
                   </span>
                 )}
               </div>
-              
+
               <span className={cn(
-                "text-[10px] leading-tight transition-all duration-200",
-                active ? "font-semibold" : "font-normal"
+                "text-[10px] leading-none tracking-wide uppercase transition-all",
+                active ? "font-semibold" : "font-medium"
               )}>
                 {item.label}
               </span>
