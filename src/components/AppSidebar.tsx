@@ -62,7 +62,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
                     onClick={() => toggleSection(item.name)}
                     className="w-full"
                   >
-                    <SidebarGroupLabel className="text-sm font-semibold text-sidebar-foreground/70 uppercase tracking-wider flex items-center justify-between hover:bg-sidebar-accent px-2 py-1 rounded">
+                    <SidebarGroupLabel className="eyebrow text-sidebar-foreground/60 flex items-center justify-between hover:bg-sidebar-accent px-2 py-1 rounded">
                       <span>{item.name}</span>
                       <ChevronRight className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-90' : ''}`} />
                     </SidebarGroupLabel>
