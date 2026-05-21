@@ -93,30 +93,33 @@ export const MobileTopBar: React.FC = () => {
     <>
       {/* Top Bar - safe area for PWA standalone mode */}
       <header
-        className="fixed top-0 left-0 right-0 h-14 bg-background border-b z-40 flex items-center justify-between px-4"
+        className="fixed top-0 left-0 right-0 h-14 bg-card/90 backdrop-blur-xl border-b border-border z-40 flex items-center justify-between px-4"
         style={{
           paddingTop: 'env(safe-area-inset-top)',
           height: 'calc(3.5rem + env(safe-area-inset-top))',
         }}
       >
-        <div className="flex items-center gap-2">
+        <button
+          onClick={() => navigate('/dashboard')}
+          className="flex items-center gap-2.5 -ml-1 pr-2 py-1 rounded-md"
+        >
           {appLogo ? (
-            <img 
-              src={appLogo} 
-              alt="Logo" 
-              className="h-8 w-8 rounded object-cover"
+            <img
+              src={appLogo}
+              alt="Logo"
+              className="h-8 w-8 rounded-sm object-cover border border-border"
               onError={(e) => e.currentTarget.style.display = 'none'}
             />
           ) : (
-            <img 
-              src="/lovable-uploads/0dc85f93-e1c6-4afe-9b81-8b29ee2a3dcf.png" 
-              alt="Logo" 
-              className="h-6 w-6"
+            <img
+              src="/lovable-uploads/0dc85f93-e1c6-4afe-9b81-8b29ee2a3dcf.png"
+              alt="Logo"
+              className="h-7 w-7"
               onError={(e) => e.currentTarget.style.display = 'none'}
             />
           )}
-          <h1 className="font-semibold text-sm">Fatras</h1>
-        </div>
+          <h1 className="font-display text-2xl leading-none tracking-tight">Fatras</h1>
+        </button>
 
         <div className="flex items-center gap-2">
           <Button
