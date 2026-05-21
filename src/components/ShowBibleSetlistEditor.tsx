@@ -48,6 +48,7 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
   const [isEditSetlistDialogOpen, setIsEditSetlistDialogOpen] = useState(false);
   const [isAddSongDialogOpen, setIsAddSongDialogOpen] = useState(false);
   const [editingSong, setEditingSong] = useState<SetlistSong | null>(null);
+  const [previewSong, setPreviewSong] = useState<SetlistSong | null>(null);
   const [artists, setArtists] = useState<Artist[]>([]);
   const [librarySearchQuery, setLibrarySearchQuery] = useState('');
   const [addSongTab, setAddSongTab] = useState<'new' | 'library'>('library');
@@ -239,6 +240,7 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
                                   )}
                                 </div>
                                 <div className="flex gap-1">
+                                  <Button variant="ghost" size="sm" onClick={() => setPreviewSong(song)} title="Aperçu plein écran"><Eye className="h-4 w-4" /></Button>
                                   <Button variant="ghost" size="sm" onClick={() => { setEditingSong(song); setNewSongData({ title: song.title, duration: song.duration || '', notes: song.notes || '', tonality: song.tonality || '', bpm: song.bpm?.toString() || '', lyrics: song.lyrics || '', sacem_number: (song as any).sacem_number || '' }); }}>
                                     <Edit className="h-4 w-4" />
                                   </Button>
@@ -296,6 +298,41 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
               if (result) { setIsEditSetlistDialogOpen(false); setSelectedSetlist(prev => prev ? { ...prev, title: newSetlistData.title, description: newSetlistData.description, sacem_program_number: newSetlistData.sacem_program_number || undefined } : prev); }
             }} className="w-full">Enregistrer</Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Song full-page preview */}
+      <Dialog open={!!previewSong} onOpenChange={(open) => { if (!open) setPreviewSong(null); }}>
+        <DialogContent className="max-w-5xl w-[95vw] h-[92vh] p-0 flex flex-col overflow-hidden">
+          {previewSong && (
+            <>
+              <DialogHeader className="px-6 pt-6 pb-4 border-b shrink-0">
+                <DialogTitle className="text-2xl break-words pr-8">{previewSong.title}</DialogTitle>
+                <div className="flex items-center gap-2 flex-wrap mt-2">
+                  {previewSong.duration && <Badge variant="outline">Durée : {previewSong.duration}</Badge>}
+                  {previewSong.tonality && <Badge variant="outline">Tonalité : {previewSong.tonality}</Badge>}
+                  {previewSong.bpm && <Badge variant="secondary">{previewSong.bpm} BPM</Badge>}
+                  {(previewSong as any).sacem_number && <Badge variant="secondary">SACEM : {(previewSong as any).sacem_number}</Badge>}
+                </div>
+              </DialogHeader>
+              <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+                {previewSong.notes && (
+                  <section>
+                    <h4 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-2">Notes</h4>
+                    <p className="whitespace-pre-wrap text-base leading-relaxed">{previewSong.notes}</p>
+                  </section>
+                )}
+                <section>
+                  <h4 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-2 flex items-center gap-2"><FileText className="h-4 w-4" />Paroles</h4>
+                  {previewSong.lyrics ? (
+                    <pre className="whitespace-pre-wrap font-serif text-lg leading-8 bg-muted/30 rounded-lg p-6 border">{previewSong.lyrics}</pre>
+                  ) : (
+                    <p className="text-muted-foreground italic">Aucune parole renseignée</p>
+                  )}
+                </section>
+              </div>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </div>
