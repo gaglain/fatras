@@ -240,6 +240,7 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
                                   )}
                                 </div>
                                 <div className="flex gap-1">
+                                  <Button variant="ghost" size="sm" onClick={() => setPreviewSong(song)} title="Aperçu plein écran"><Eye className="h-4 w-4" /></Button>
                                   <Button variant="ghost" size="sm" onClick={() => { setEditingSong(song); setNewSongData({ title: song.title, duration: song.duration || '', notes: song.notes || '', tonality: song.tonality || '', bpm: song.bpm?.toString() || '', lyrics: song.lyrics || '', sacem_number: (song as any).sacem_number || '' }); }}>
                                     <Edit className="h-4 w-4" />
                                   </Button>
