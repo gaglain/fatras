@@ -48,6 +48,7 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
   const [isEditSetlistDialogOpen, setIsEditSetlistDialogOpen] = useState(false);
   const [isAddSongDialogOpen, setIsAddSongDialogOpen] = useState(false);
   const [editingSong, setEditingSong] = useState<SetlistSong | null>(null);
+  const [previewSong, setPreviewSong] = useState<SetlistSong | null>(null);
   const [artists, setArtists] = useState<Artist[]>([]);
   const [librarySearchQuery, setLibrarySearchQuery] = useState('');
   const [addSongTab, setAddSongTab] = useState<'new' | 'library'>('library');
