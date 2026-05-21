@@ -4,8 +4,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
   FileText, Music, Image as ImageIcon, FileEdit, 
-  ArrowRight, Pin, Clock, Folder 
+  ArrowRight, Pin, Clock, Folder, File as FileIcon
 } from 'lucide-react';
+
+const isImageUrl = (url?: string, name?: string) => {
+  const s = `${url || ''} ${name || ''}`.toLowerCase();
+  return /\.(png|jpe?g|gif|webp|svg|avif|bmp)(\?|$)/.test(s);
+};
 import { useShowBible } from '@/hooks/useShowBible';
 import { useShowBibleNotes } from '@/hooks/useShowBibleNotes';
 import { useShowBibleSetlists } from '@/hooks/useShowBibleSetlists';
@@ -158,18 +163,33 @@ export const ResourcesOverview: React.FC<ResourcesOverviewProps> = ({ onNavigate
           ) : (
             <>
               <div className="grid grid-cols-3 gap-2">
-                {recentImages.map(image => (
-                  <div 
-                    key={image.id} 
-                    className="aspect-square rounded-md overflow-hidden bg-muted"
-                  >
-                    <img 
-                      src={image.thumbnail_url || image.url} 
-                      alt={image.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ))}
+                {recentImages.map(image => {
+                  const showImg = isImageUrl(image.thumbnail_url || image.url, image.name);
+                  return (
+                    <div 
+                      key={image.id} 
+                      className="aspect-square rounded-md overflow-hidden bg-muted border border-border relative"
+                      title={image.name}
+                    >
+                      {showImg ? (
+                        <img 
+                          src={image.thumbnail_url || image.url} 
+                          alt={image.name}
+                          loading="lazy"
+                          className="w-full h-full object-cover"
+                          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center gap-1 p-2 text-center">
+                          <FileIcon className="h-6 w-6 text-muted-foreground shrink-0" />
+                          <span className="text-[10px] leading-tight text-muted-foreground line-clamp-2 break-all">
+                            {image.name}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
               <div className="text-xs text-muted-foreground text-center pt-3 border-t mt-3">
                 {images.length} média{images.length > 1 ? 's' : ''} au total
