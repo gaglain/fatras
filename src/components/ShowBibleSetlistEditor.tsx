@@ -303,7 +303,7 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
 
       {/* Song full-page preview */}
       <Dialog open={!!previewSong} onOpenChange={(open) => { if (!open) setPreviewSong(null); }}>
-        <DialogContent className="max-w-5xl w-[95vw] h-[92vh] p-0 flex flex-col overflow-hidden">
+        <DialogContent className="sm:!max-w-5xl sm:!w-[95vw] sm:!h-[92vh] sm:!max-h-[92vh] !p-0 !flex !flex-col !overflow-hidden">
           {previewSong && (
             <>
               <DialogHeader className="px-6 pt-6 pb-4 border-b shrink-0">
