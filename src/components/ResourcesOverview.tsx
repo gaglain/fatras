@@ -49,6 +49,7 @@ const MediaTile: React.FC<{ image: BackgroundImage }> = ({ image }) => {
     if (data?.signedUrl) {
       setResolvedUrl(data.signedUrl);
       setLinkUrl(data.signedUrl);
+      setImgFailed(false);
     } else {
       setImgFailed(true);
     }
@@ -59,11 +60,12 @@ const MediaTile: React.FC<{ image: BackgroundImage }> = ({ image }) => {
     const info = parseSupabaseStorageUrl(image.url);
     if (!info) return;
     if (image.url.includes('/object/public/') && info.bucket !== 'background-images' && !triedSign) {
-      setTriedSign(true);
       supabase.storage.from(info.bucket).createSignedUrl(info.path, 3600).then(({ data }) => {
         if (data?.signedUrl) {
           setResolvedUrl(data.signedUrl);
           setLinkUrl(data.signedUrl);
+          setImgFailed(false);
+          setTriedSign(true);
         }
       });
     }
