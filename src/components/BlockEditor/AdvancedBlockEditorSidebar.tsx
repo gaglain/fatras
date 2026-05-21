@@ -8,10 +8,8 @@ import { Plus, ArrowLeft, Save, Eye, Settings, Type, Image, Layout, Users, Palet
 import type { Block, BlockType } from './types';
 
 const fontFamilies = [
-  { value: 'font-sans', label: 'Sans Serif (Inter)' },
-  { value: 'font-serif', label: 'Serif (Times)' },
+  { value: 'font-sans', label: 'Sans Serif (Outfit)' },
   { value: 'font-mono', label: 'Monospace' },
-  { value: 'font-playfair', label: 'Playfair Display' },
   { value: 'font-roboto', label: 'Roboto' },
   { value: 'font-opensans', label: 'Open Sans' }
 ];

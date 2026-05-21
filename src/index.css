@@ -190,14 +190,14 @@ body {
   font-family: 'Outfit', Inter, system-ui, sans-serif;
 }
 
-/* Editorial display headings — paper & ink */
+/* Display headings — sans-serif only */
 h1, h2, h3, .font-display {
-  font-family: 'Instrument Serif', Georgia, serif;
-  font-weight: 400;
-  letter-spacing: -0.01em;
+  font-family: 'Outfit', Inter, system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
-h1 { line-height: 1.05; }
-h2 { line-height: 1.1; }
+h1 { line-height: 1.1; }
+h2 { line-height: 1.15; }
 h3 { line-height: 1.2; }
 
 /* Editorial small-caps eyebrow */

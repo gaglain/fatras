@@ -39,7 +39,7 @@ interface AdvancedHeroBlockProps {
 }
 
 const getFontClass = (font?: string) => {
-  const fontMap: Record<string, string> = { sans: 'font-sans', serif: 'font-serif', playfair: 'font-playfair', roboto: 'font-roboto', opensans: 'font-opensans' };
+  const fontMap: Record<string, string> = { sans: 'font-sans', roboto: 'font-roboto', opensans: 'font-opensans' };
   return fontMap[font || 'sans'] || 'font-sans';
 };
 
