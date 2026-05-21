@@ -187,6 +187,27 @@ body {
   font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-family: 'Outfit', Inter, system-ui, sans-serif;
+}
+
+/* Editorial display headings — paper & ink */
+h1, h2, h3, .font-display {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+h1 { line-height: 1.05; }
+h2 { line-height: 1.1; }
+h3 { line-height: 1.2; }
+
+/* Editorial small-caps eyebrow */
+.eyebrow {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: hsl(var(--muted-foreground));
 }
 
 #root {
