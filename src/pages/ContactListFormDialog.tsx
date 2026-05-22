@@ -69,30 +69,11 @@ export const ContactListFormDialog: React.FC<ContactListFormDialogProps> = ({
 
           {showContacts && (
             <div>
-              <h3 className="text-lg font-semibold mb-4">Sélectionner les contacts ({contacts.length} disponibles)</h3>
-              <div className="space-y-2 max-h-64 overflow-y-auto border rounded-lg p-4">
-                {contacts.map((contact) => (
-                  <div key={contact.id} className="flex items-center justify-between p-2 border rounded">
-                    <div className="flex items-center space-x-3 flex-1">
-                      <Checkbox
-                        checked={formData.selectedContacts.includes(contact.id)}
-                        onCheckedChange={(checked) => {
-                          const sc = checked
-                            ? [...formData.selectedContacts, contact.id]
-                            : formData.selectedContacts.filter((id: string) => id !== contact.id);
-                          setFormData({ ...formData, selectedContacts: sc });
-                        }}
-                      />
-                      <div className="flex-1">
-                        <p className="font-medium">{contact.first_name} {contact.last_name}</p>
-                        <p className="text-sm text-muted-foreground">{contact.email}</p>
-                      </div>
-                    </div>
-                    {!contact.accepts_marketing_emails && <Badge variant="secondary" className="text-xs">N'accepte pas les emails marketing</Badge>}
-                  </div>
-                ))}
-                {contacts.length === 0 && <p className="text-muted-foreground text-center py-4">Aucun contact disponible</p>}
-              </div>
+              <ContactPickerSection
+                contacts={contacts}
+                selectedIds={formData.selectedContacts}
+                onChange={(ids) => setFormData({ ...formData, selectedContacts: ids })}
+              />
             </div>
           )}
 
