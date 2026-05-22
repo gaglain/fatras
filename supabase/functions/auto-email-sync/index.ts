@@ -48,17 +48,34 @@ serve(async (req) => {
         console.log(`🔄 Syncing account: ${account.email} (${account.provider})`);
 
         const syncStartedAt = new Date();
-        const lastSyncAt = account.last_sync_at ? new Date(account.last_sync_at).getTime() : 0;
-        if (lastSyncAt && syncStartedAt.getTime() - lastSyncAt < MIN_AUTO_SYNC_INTERVAL_MS) {
+        const staleBefore = new Date(syncStartedAt.getTime() - MIN_AUTO_SYNC_INTERVAL_MS).toISOString();
+        let { data: claimedAccount, error: claimError } = await supabaseClient
+          .from('email_accounts')
+          .update({ last_sync_at: syncStartedAt.toISOString() })
+          .eq('id', account.id)
+          .lt('last_sync_at', staleBefore)
+          .select('id')
+          .maybeSingle();
+
+        if (!claimedAccount && !account.last_sync_at && !claimError) {
+          const nullClaim = await supabaseClient
+            .from('email_accounts')
+            .update({ last_sync_at: syncStartedAt.toISOString() })
+            .eq('id', account.id)
+            .is('last_sync_at', null)
+            .select('id')
+            .maybeSingle();
+          claimedAccount = nullClaim.data;
+          claimError = nullClaim.error;
+        }
+
+        if (claimError) throw claimError;
+
+        if (!claimedAccount) {
           console.log(`⏭️ Skipping ${account.email}: sync already running or completed recently`);
           results.skipped++;
           continue;
         }
-
-        await supabaseClient
-          .from('email_accounts')
-          .update({ last_sync_at: syncStartedAt.toISOString() })
-          .eq('id', account.id);
 
         let syncResult;
         
