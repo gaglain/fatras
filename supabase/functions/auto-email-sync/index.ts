@@ -6,6 +6,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const MIN_AUTO_SYNC_INTERVAL_MS = 4 * 60 * 1000;
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -36,6 +38,7 @@ serve(async (req) => {
       total: emailAccounts?.length || 0,
       synced: 0,
       failed: 0,
+      skipped: 0,
       errors: [] as any[]
     };
 
@@ -43,6 +46,36 @@ serve(async (req) => {
     for (const account of emailAccounts || []) {
       try {
         console.log(`🔄 Syncing account: ${account.email} (${account.provider})`);
+
+        const syncStartedAt = new Date();
+        const staleBefore = new Date(syncStartedAt.getTime() - MIN_AUTO_SYNC_INTERVAL_MS).toISOString();
+        let { data: claimedAccount, error: claimError } = await supabaseClient
+          .from('email_accounts')
+          .update({ last_sync_at: syncStartedAt.toISOString() })
+          .eq('id', account.id)
+          .lt('last_sync_at', staleBefore)
+          .select('id')
+          .maybeSingle();
+
+        if (!claimedAccount && !account.last_sync_at && !claimError) {
+          const nullClaim = await supabaseClient
+            .from('email_accounts')
+            .update({ last_sync_at: syncStartedAt.toISOString() })
+            .eq('id', account.id)
+            .is('last_sync_at', null)
+            .select('id')
+            .maybeSingle();
+          claimedAccount = nullClaim.data;
+          claimError = nullClaim.error;
+        }
+
+        if (claimError) throw claimError;
+
+        if (!claimedAccount) {
+          console.log(`⏭️ Skipping ${account.email}: sync already running or completed recently`);
+          results.skipped++;
+          continue;
+        }
 
         let syncResult;
         
