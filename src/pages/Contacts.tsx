@@ -64,6 +64,24 @@ export const Contacts: React.FC = () => {
   useEffect(() => { if (user) { fetchContacts({ reset: true }); fetchEvents(); fetchArtists(); } }, [user]);
   useEffect(() => { filterContacts(); }, [contacts, searchTerm, statusFilter, roleFilter, tagFilters, sourceFilter, cityFilter, departmentFilter, eventFilter, artistFilter, contactEvents, contactArtists]);
 
+  // Auto-load all remaining pages when any filter is active so search/filters cover the full DB
+  const hasActiveFilter = (
+    searchTerm.trim() !== '' ||
+    statusFilter !== 'all' ||
+    roleFilter !== 'all' ||
+    tagFilters.length > 0 ||
+    sourceFilter !== 'all' ||
+    cityFilter !== 'all' ||
+    departmentFilter.trim() !== '' ||
+    eventFilter !== 'all' ||
+    artistFilter !== 'all'
+  );
+  useEffect(() => {
+    if (hasActiveFilter && hasMore && !isLoadingMore && !loading) {
+      fetchContacts({ reset: false });
+    }
+  }, [hasActiveFilter, hasMore, isLoadingMore, loading]);
+
   // Open the contact creation dialog with prefilled data when arriving with ?prefillEmail / ?prefillName / ?prefillPhone
   useEffect(() => {
     const prefillEmail = searchParams.get('prefillEmail');
