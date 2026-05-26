@@ -393,6 +393,28 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Export PDF Dialog */}
+      <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader><DialogTitle>Exporter la setlist en PDF</DialogTitle></DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-muted-foreground">Choisissez les contenus à inclure :</p>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <Checkbox checked={exportOptions.includeNotes} onCheckedChange={(v) => setExportOptions(o => ({ ...o, includeNotes: !!v }))} />
+              <span className="text-sm">Inclure les notes</span>
+            </label>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <Checkbox checked={exportOptions.includeLyrics} onCheckedChange={(v) => setExportOptions(o => ({ ...o, includeLyrics: !!v }))} />
+              <span className="text-sm">Inclure les paroles (textes)</span>
+            </label>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" onClick={() => setExportDialogOpen(false)}>Annuler</Button>
+              <Button onClick={handleExportSetlist}><FileDown className="h-4 w-4 mr-2" />Exporter</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
