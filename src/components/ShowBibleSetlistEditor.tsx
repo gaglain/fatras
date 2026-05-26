@@ -232,11 +232,11 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
                                     {song.tonality && <Badge variant="outline" className="text-xs">{song.tonality}</Badge>}
                                     {song.bpm && <Badge variant="secondary" className="text-xs">{song.bpm} BPM</Badge>}
                                   </div>
-                                  {song.notes && <p className="text-sm text-muted-foreground mt-1">{song.notes}</p>}
+                                  {song.notes && <div className="prose prose-sm max-w-none text-muted-foreground mt-1 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5" dangerouslySetInnerHTML={{ __html: song.notes }} />}
                                   {song.lyrics && (
                                     <details className="mt-2">
                                       <summary className="text-xs text-primary cursor-pointer flex items-center gap-1"><FileText className="h-3 w-3" />Voir les paroles</summary>
-                                      <pre className="text-xs text-muted-foreground mt-2 whitespace-pre-wrap bg-muted/50 p-2 rounded">{song.lyrics}</pre>
+                                      <div className="prose prose-sm max-w-none text-muted-foreground mt-2 bg-muted/50 p-2 rounded [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5" dangerouslySetInnerHTML={{ __html: song.lyrics }} />
                                     </details>
                                   )}
                                 </div>
