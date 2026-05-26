@@ -27,6 +27,7 @@ const PageLoader = () => (
 // Lazy loaded pages - PUBLIC
 const Index = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Install = lazy(() => import("./pages/Install"));
 const PublicForm = lazy(() => import("./pages/PublicForm"));
 const NotFound = lazy(() => import("./pages/NotFound").then(m => ({ default: m.NotFound })));
@@ -239,6 +240,8 @@ const App = () => {
                         
                         <Route path="/artist-showcase" element={<FrontArtistShowcase />} />
                         <Route path="/auth" element={<Auth />} />
+                        <Route path="/auth/reset-password" element={<ResetPassword />} />
+                        <Route path="/reset-password" element={<ResetPassword />} />
                         <Route path="/install" element={<Install />} />
                         
                         {/* Routes du back-office - PROTÉGÉES */}

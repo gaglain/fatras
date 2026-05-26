@@ -30,10 +30,13 @@ const handler = async (req: Request): Promise<Response> => {
       }
     )
 
-    // Generate password reset link
+    // Generate password reset link with explicit redirectTo
     const { data, error } = await supabaseAdmin.auth.admin.generateLink({
       type: 'recovery',
       email: email,
+      options: {
+        redirectTo: resetUrl || 'https://booking.fatras.net/auth/reset-password',
+      },
     })
 
     if (error) {
