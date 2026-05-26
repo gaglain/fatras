@@ -1,0 +1,136 @@
+import jsPDF from 'jspdf';
+
+export interface SongPdfData {
+  title: string;
+  duration?: string;
+  tonality?: string;
+  bpm?: number;
+  notes?: string;
+  lyrics?: string;
+  sacem_number?: string;
+}
+
+const COLORS = {
+  primary: [196, 101, 74] as const,
+  text: [30, 30, 30] as const,
+  muted: [120, 113, 108] as const,
+  border: [214, 211, 209] as const,
+  bg: [245, 243, 238] as const,
+};
+
+export const generateSongPDF = (song: SongPdfData, setlistTitle?: string) => {
+  const doc = new jsPDF();
+  const pw = doc.internal.pageSize.width;
+  const ph = doc.internal.pageSize.height;
+  const m = 18;
+  const contentW = pw - 2 * m;
+  let y = m;
+
+  const setColor = (c: readonly number[]) => doc.setTextColor(c[0], c[1], c[2]);
+  const setFill = (c: readonly number[]) => doc.setFillColor(c[0], c[1], c[2]);
+  const setDraw = (c: readonly number[]) => doc.setDrawColor(c[0], c[1], c[2]);
+
+  const checkPage = (need: number) => {
+    if (y + need > ph - 18) {
+      doc.addPage();
+      y = m;
+    }
+  };
+
+  // Header band
+  setFill(COLORS.bg);
+  doc.rect(0, 0, pw, 42, 'F');
+  setFill(COLORS.primary);
+  doc.rect(0, 0, pw, 3, 'F');
+
+  y = 16;
+  if (setlistTitle) {
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    setColor(COLORS.muted);
+    doc.text(setlistTitle.toUpperCase(), m, y);
+    y += 6;
+  }
+  doc.setFontSize(22);
+  doc.setFont('helvetica', 'bold');
+  setColor(COLORS.text);
+  const titleLines = doc.splitTextToSize(song.title || 'Sans titre', contentW);
+  doc.text(titleLines, m, y);
+  y = 46;
+
+  // Meta line
+  const meta: string[] = [];
+  if (song.duration) meta.push(`Durée : ${song.duration}`);
+  if (song.tonality) meta.push(`Tonalité : ${song.tonality}`);
+  if (song.bpm) meta.push(`${song.bpm} BPM`);
+  if (song.sacem_number) meta.push(`SACEM : ${song.sacem_number}`);
+  if (meta.length) {
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    setColor(COLORS.muted);
+    doc.text(meta.join('   •   '), m, y);
+    y += 6;
+  }
+
+  setDraw(COLORS.border);
+  doc.setLineWidth(0.4);
+  doc.line(m, y, pw - m, y);
+  y += 8;
+
+  // Notes
+  if (song.notes && song.notes.trim()) {
+    checkPage(14);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    setColor(COLORS.primary);
+    doc.text('NOTES', m, y);
+    y += 6;
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    setColor(COLORS.text);
+    const noteLines = doc.splitTextToSize(song.notes, contentW);
+    noteLines.forEach((ln: string) => {
+      checkPage(6);
+      doc.text(ln, m, y);
+      y += 5;
+    });
+    y += 4;
+  }
+
+  // Lyrics
+  if (song.lyrics && song.lyrics.trim()) {
+    checkPage(14);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    setColor(COLORS.primary);
+    doc.text('PAROLES', m, y);
+    y += 6;
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    setColor(COLORS.text);
+    const lyricsLines = doc.splitTextToSize(song.lyrics, contentW);
+    lyricsLines.forEach((ln: string) => {
+      checkPage(6);
+      doc.text(ln, m, y);
+      y += 5.5;
+    });
+  }
+
+  // Footer
+  const pageCount = doc.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'italic');
+    setColor(COLORS.muted);
+    doc.text(
+      `Fatras — ${new Date().toLocaleDateString('fr-FR')}   ·   Page ${i}/${pageCount}`,
+      pw / 2,
+      ph - 8,
+      { align: 'center' }
+    );
+  }
+
+  const safe = (song.title || 'chanson').replace(/[^a-z0-9-]+/gi, '-').toLowerCase();
+  doc.save(`${safe}.pdf`);
+};

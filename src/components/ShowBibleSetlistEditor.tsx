@@ -8,11 +8,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Music, GripVertical, Trash2, Edit, Plus, Eye, Filter, FileText } from 'lucide-react';
+import { Music, GripVertical, Trash2, Edit, Plus, Eye, Filter, FileText, FileDown } from 'lucide-react';
 import { useShowBibleSetlists, Setlist, SetlistSong, LibrarySong } from '@/hooks/useShowBibleSetlists';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { SetlistSongDialog, SongFormData } from './setlist/SetlistSongDialog';
+import { generateSongPDF } from '@/utils/songPdfGenerator';
 
 interface ShowBibleSetlistEditorProps {
   artistId?: string;
@@ -241,6 +242,7 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
                                 </div>
                                 <div className="flex gap-1">
                                   <Button variant="ghost" size="sm" onClick={() => setPreviewSong(song)} title="Aperçu plein écran"><Eye className="h-4 w-4" /></Button>
+                                  <Button variant="ghost" size="sm" onClick={() => generateSongPDF({ title: song.title, duration: song.duration, tonality: song.tonality, bpm: song.bpm, notes: song.notes, lyrics: song.lyrics, sacem_number: (song as any).sacem_number }, selectedSetlist.title)} title="Exporter en PDF"><FileDown className="h-4 w-4" /></Button>
                                   <Button variant="ghost" size="sm" onClick={() => { setEditingSong(song); setNewSongData({ title: song.title, duration: song.duration || '', notes: song.notes || '', tonality: song.tonality || '', bpm: song.bpm?.toString() || '', lyrics: song.lyrics || '', sacem_number: (song as any).sacem_number || '' }); }}>
                                     <Edit className="h-4 w-4" />
                                   </Button>
