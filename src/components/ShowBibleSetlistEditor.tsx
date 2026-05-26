@@ -8,12 +8,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Music, GripVertical, Trash2, Edit, Plus, Eye, Filter, FileText, FileDown } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Music, GripVertical, Trash2, Edit, Plus, Eye, Filter, FileText, FileDown, Link2, Share2 } from 'lucide-react';
 import { useShowBibleSetlists, Setlist, SetlistSong, LibrarySong } from '@/hooks/useShowBibleSetlists';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { SetlistSongDialog, SongFormData } from './setlist/SetlistSongDialog';
 import { generateSongPDF } from '@/utils/songPdfGenerator';
+import { generateSetlistPDF } from '@/utils/setlistPdfGenerator';
 
 interface ShowBibleSetlistEditorProps {
   artistId?: string;
@@ -54,6 +56,8 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
   const [librarySearchQuery, setLibrarySearchQuery] = useState('');
   const [addSongTab, setAddSongTab] = useState<'new' | 'library'>('library');
   const [artistIdFilter, setArtistIdFilter] = useState<string>(artistId || 'all');
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
+  const [exportOptions, setExportOptions] = useState({ includeNotes: true, includeLyrics: true });
 
   const [newSetlistData, setNewSetlistData] = useState({ title: '', description: '', artist_id: artistId || '', sacem_program_number: '' });
   const [newSongData, setNewSongData] = useState<SongFormData>({ title: '', duration: '', notes: '', tonality: '', bpm: '', lyrics: '', sacem_number: '' });
@@ -108,6 +112,51 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
     const [reorderedSong] = songs.splice(result.source.index, 1);
     songs.splice(result.destination.index, 0, reorderedSong);
     reorderSongs(selectedSetlist.id, songs);
+  };
+
+  const handleShareSetlist = async (setlist: Setlist, songId?: string) => {
+    let token = setlist.share_token;
+    if (!token) {
+      const { data, error } = await supabase
+        .from('show_bible_setlists')
+        .update({ share_token: crypto.randomUUID() } as any)
+        .eq('id', setlist.id)
+        .select('share_token')
+        .single();
+      if (error || !data) { toast.error('Impossible de générer le lien'); return; }
+      token = (data as any).share_token;
+      setSelectedSetlist({ ...setlist, share_token: token } as Setlist);
+    }
+    const url = `${window.location.origin}/setlist/${token}${songId ? `#song-${songId}` : ''}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success(songId ? 'Lien de la chanson copié' : 'Lien de la setlist copié');
+    } catch {
+      toast.info(url);
+    }
+  };
+
+  const handleExportSetlist = () => {
+    if (!selectedSetlist) return;
+    generateSetlistPDF(
+      {
+        title: selectedSetlist.title,
+        description: selectedSetlist.description || undefined,
+        sacem_program_number: selectedSetlist.sacem_program_number || undefined,
+        artistName: artists.find(a => a.id === selectedSetlist.artist_id)?.name,
+      },
+      (selectedSetlist.songs || []).map((s) => ({
+        title: s.title,
+        duration: s.duration || undefined,
+        tonality: s.tonality || undefined,
+        bpm: s.bpm || undefined,
+        notes: s.notes || undefined,
+        lyrics: s.lyrics || undefined,
+        sacem_number: (s as any).sacem_number || undefined,
+      })),
+      exportOptions
+    );
+    setExportDialogOpen(false);
   };
 
   if (loading) return <div className="text-muted-foreground">Chargement...</div>;
@@ -188,7 +237,13 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
                     {selectedSetlist.sacem_program_number && <Badge variant="secondary" className="text-xs">SACEM: {selectedSetlist.sacem_program_number}</Badge>}
                   </div>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                  <Button size="sm" variant="outline" onClick={() => handleShareSetlist(selectedSetlist)} title="Partager via lien privé">
+                    <Share2 className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Partager</span>
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setExportDialogOpen(true)} title="Exporter en PDF">
+                    <FileDown className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">PDF</span>
+                  </Button>
                   <Button size="sm" variant="outline" onClick={() => { setNewSetlistData({ title: selectedSetlist.title, description: selectedSetlist.description || '', artist_id: selectedSetlist.artist_id || '', sacem_program_number: selectedSetlist.sacem_program_number || '' }); setIsEditSetlistDialogOpen(true); }}>
                     <Edit className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Modifier</span>
                   </Button>
@@ -243,6 +298,7 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
                                 <div className="flex gap-1">
                                   <Button variant="ghost" size="sm" onClick={() => setPreviewSong(song)} title="Aperçu plein écran"><Eye className="h-4 w-4" /></Button>
                                   <Button variant="ghost" size="sm" onClick={() => generateSongPDF({ title: song.title, duration: song.duration, tonality: song.tonality, bpm: song.bpm, notes: song.notes, lyrics: song.lyrics, sacem_number: (song as any).sacem_number }, selectedSetlist.title)} title="Exporter en PDF"><FileDown className="h-4 w-4" /></Button>
+                                  <Button variant="ghost" size="sm" onClick={() => handleShareSetlist(selectedSetlist, song.id)} title="Lien privé vers cette chanson"><Link2 className="h-4 w-4" /></Button>
                                   <Button variant="ghost" size="sm" onClick={() => { setEditingSong(song); setNewSongData({ title: song.title, duration: song.duration || '', notes: song.notes || '', tonality: song.tonality || '', bpm: song.bpm?.toString() || '', lyrics: song.lyrics || '', sacem_number: (song as any).sacem_number || '' }); }}>
                                     <Edit className="h-4 w-4" />
                                   </Button>
@@ -335,6 +391,28 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
               </div>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Export PDF Dialog */}
+      <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader><DialogTitle>Exporter la setlist en PDF</DialogTitle></DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-muted-foreground">Choisissez les contenus à inclure :</p>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <Checkbox checked={exportOptions.includeNotes} onCheckedChange={(v) => setExportOptions(o => ({ ...o, includeNotes: !!v }))} />
+              <span className="text-sm">Inclure les notes</span>
+            </label>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <Checkbox checked={exportOptions.includeLyrics} onCheckedChange={(v) => setExportOptions(o => ({ ...o, includeLyrics: !!v }))} />
+              <span className="text-sm">Inclure les paroles (textes)</span>
+            </label>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" onClick={() => setExportDialogOpen(false)}>Annuler</Button>
+              <Button onClick={handleExportSetlist}><FileDown className="h-4 w-4 mr-2" />Exporter</Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

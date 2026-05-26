@@ -3696,6 +3696,7 @@ export type Database = {
           description: string | null
           id: string
           sacem_program_number: string | null
+          share_token: string | null
           title: string
           updated_at: string
           user_id: string
@@ -3706,6 +3707,7 @@ export type Database = {
           description?: string | null
           id?: string
           sacem_program_number?: string | null
+          share_token?: string | null
           title: string
           updated_at?: string
           user_id: string
@@ -3716,6 +3718,7 @@ export type Database = {
           description?: string | null
           id?: string
           sacem_program_number?: string | null
+          share_token?: string | null
           title?: string
           updated_at?: string
           user_id?: string

@@ -56,3 +56,6 @@ verify_jwt = false
 
 [functions.sync-event-to-nylas]
 verify_jwt = false
+
+[functions.get-shared-setlist]
+verify_jwt = false
