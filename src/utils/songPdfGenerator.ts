@@ -18,6 +18,24 @@ const COLORS = {
   bg: [245, 243, 238] as const,
 };
 
+const htmlToText = (html?: string): string => {
+  if (!html) return '';
+  if (!/<[a-z][\s\S]*>/i.test(html)) return html;
+  return html
+    .replace(/<\s*br\s*\/?>/gi, '\n')
+    .replace(/<\/(p|div|h[1-6]|li|blockquote)>/gi, '\n')
+    .replace(/<li[^>]*>/gi, '• ')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+};
+
 export const generateSongPDF = (song: SongPdfData, setlistTitle?: string) => {
   const doc = new jsPDF();
   const pw = doc.internal.pageSize.width;
@@ -78,7 +96,8 @@ export const generateSongPDF = (song: SongPdfData, setlistTitle?: string) => {
   y += 8;
 
   // Notes
-  if (song.notes && song.notes.trim()) {
+  const notesText = htmlToText(song.notes);
+  if (notesText) {
     checkPage(14);
     doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
@@ -88,7 +107,7 @@ export const generateSongPDF = (song: SongPdfData, setlistTitle?: string) => {
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
     setColor(COLORS.text);
-    const noteLines = doc.splitTextToSize(song.notes, contentW);
+    const noteLines = doc.splitTextToSize(notesText, contentW);
     noteLines.forEach((ln: string) => {
       checkPage(6);
       doc.text(ln, m, y);
@@ -98,7 +117,8 @@ export const generateSongPDF = (song: SongPdfData, setlistTitle?: string) => {
   }
 
   // Lyrics
-  if (song.lyrics && song.lyrics.trim()) {
+  const lyricsText = htmlToText(song.lyrics);
+  if (lyricsText) {
     checkPage(14);
     doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
@@ -108,7 +128,7 @@ export const generateSongPDF = (song: SongPdfData, setlistTitle?: string) => {
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
     setColor(COLORS.text);
-    const lyricsLines = doc.splitTextToSize(song.lyrics, contentW);
+    const lyricsLines = doc.splitTextToSize(lyricsText, contentW);
     lyricsLines.forEach((ln: string) => {
       checkPage(6);
       doc.text(ln, m, y);

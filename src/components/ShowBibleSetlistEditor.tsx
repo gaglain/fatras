@@ -232,11 +232,11 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
                                     {song.tonality && <Badge variant="outline" className="text-xs">{song.tonality}</Badge>}
                                     {song.bpm && <Badge variant="secondary" className="text-xs">{song.bpm} BPM</Badge>}
                                   </div>
-                                  {song.notes && <p className="text-sm text-muted-foreground mt-1">{song.notes}</p>}
+                                  {song.notes && <div className="prose prose-sm max-w-none text-muted-foreground mt-1 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5" dangerouslySetInnerHTML={{ __html: song.notes }} />}
                                   {song.lyrics && (
                                     <details className="mt-2">
                                       <summary className="text-xs text-primary cursor-pointer flex items-center gap-1"><FileText className="h-3 w-3" />Voir les paroles</summary>
-                                      <pre className="text-xs text-muted-foreground mt-2 whitespace-pre-wrap bg-muted/50 p-2 rounded">{song.lyrics}</pre>
+                                      <div className="prose prose-sm max-w-none text-muted-foreground mt-2 bg-muted/50 p-2 rounded [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5" dangerouslySetInnerHTML={{ __html: song.lyrics }} />
                                     </details>
                                   )}
                                 </div>
@@ -321,13 +321,13 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
                 {previewSong.notes && (
                   <section>
                     <h4 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-2">Notes</h4>
-                    <p className="whitespace-pre-wrap text-base leading-relaxed">{previewSong.notes}</p>
+                    <div className="prose prose-base max-w-none leading-relaxed [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_blockquote]:border-l-2 [&_blockquote]:border-primary [&_blockquote]:pl-3 [&_blockquote]:italic" dangerouslySetInnerHTML={{ __html: previewSong.notes }} />
                   </section>
                 )}
                 <section>
                   <h4 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-2 flex items-center gap-2"><FileText className="h-4 w-4" />Paroles</h4>
                   {previewSong.lyrics ? (
-                    <pre className="whitespace-pre-wrap font-serif text-lg leading-8 bg-muted/30 rounded-lg p-6 border">{previewSong.lyrics}</pre>
+                    <div className="prose prose-lg max-w-none font-serif leading-8 bg-muted/30 rounded-lg p-6 border [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_blockquote]:border-l-2 [&_blockquote]:border-primary [&_blockquote]:pl-3 [&_blockquote]:italic" dangerouslySetInnerHTML={{ __html: previewSong.lyrics }} />
                   ) : (
                     <p className="text-muted-foreground italic">Aucune parole renseignée</p>
                   )}

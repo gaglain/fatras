@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Search, Plus, Library, FileText } from 'lucide-react';
 import { LibrarySong } from '@/hooks/useShowBibleSetlists';
+import { SongRichTextEditor } from './SongRichTextEditor';
 
 const TONALITIES = ['C', 'C#/Db', 'D', 'D#/Eb', 'E', 'F', 'F#/Gb', 'G', 'G#/Ab', 'A', 'A#/Bb', 'B'];
 const TONALITY_MODES = ['Majeur', 'Mineur'];
@@ -84,11 +85,21 @@ export const SetlistSongDialog: React.FC<SetlistSongDialogProps> = ({
         </div>
         <div className="col-span-2">
           <Label>Notes</Label>
-          <Textarea value={newSongData.notes} onChange={(e) => onNewSongDataChange({ ...newSongData, notes: e.target.value })} placeholder="Notes personnelles..." rows={isEditMode ? 4 : 2} />
+          <SongRichTextEditor
+            value={newSongData.notes}
+            onChange={(v) => onNewSongDataChange({ ...newSongData, notes: v })}
+            placeholder="Notes personnelles…"
+            minHeight={isEditMode ? 140 : 100}
+          />
         </div>
         <div className="col-span-2">
           <Label className="flex items-center gap-2"><FileText className="h-4 w-4" />Paroles</Label>
-          <Textarea value={newSongData.lyrics} onChange={(e) => onNewSongDataChange({ ...newSongData, lyrics: e.target.value })} placeholder="Paroles de la chanson..." rows={isEditMode ? 24 : 4} className={isEditMode ? 'min-h-[500px] font-mono text-sm leading-relaxed' : ''} />
+          <SongRichTextEditor
+            value={newSongData.lyrics}
+            onChange={(v) => onNewSongDataChange({ ...newSongData, lyrics: v })}
+            placeholder="Paroles de la chanson…"
+            minHeight={isEditMode ? 500 : 200}
+          />
         </div>
         <div className="col-span-2">
           <Label>N° SACEM</Label>
