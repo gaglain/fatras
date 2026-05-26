@@ -8,12 +8,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Music, GripVertical, Trash2, Edit, Plus, Eye, Filter, FileText, FileDown } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Music, GripVertical, Trash2, Edit, Plus, Eye, Filter, FileText, FileDown, Link2, Share2 } from 'lucide-react';
 import { useShowBibleSetlists, Setlist, SetlistSong, LibrarySong } from '@/hooks/useShowBibleSetlists';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { SetlistSongDialog, SongFormData } from './setlist/SetlistSongDialog';
 import { generateSongPDF } from '@/utils/songPdfGenerator';
+import { generateSetlistPDF } from '@/utils/setlistPdfGenerator';
 
 interface ShowBibleSetlistEditorProps {
   artistId?: string;
