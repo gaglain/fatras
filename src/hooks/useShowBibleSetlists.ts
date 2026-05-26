@@ -19,6 +19,7 @@ export interface SetlistSong {
 export interface Setlist {
   id: string; user_id: string; artist_id: string | null; title: string;
   description: string | null; sacem_program_number: string | null;
+  share_token?: string | null;
   created_at: string; updated_at: string; songs?: SetlistSong[];
 }
 
