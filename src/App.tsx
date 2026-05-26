@@ -237,6 +237,7 @@ const App = () => {
                         <Route path="/tournee" element={<FrontLayout><FrontTour /></FrontLayout>} />
                         <Route path="/front-tour" element={<FrontLayout><FrontTour /></FrontLayout>} />
                         <Route path="/feuille-de-route/:id" element={<RoadsheetPublic />} />
+                        <Route path="/setlist/:token" element={<SetlistPublic />} />
                         <Route path="/spectacles" element={<FrontLayout><FrontArtists /></FrontLayout>} />
                         
                         <Route path="/artist-showcase" element={<FrontArtistShowcase />} />
