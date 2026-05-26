@@ -240,6 +240,8 @@ const App = () => {
                         
                         <Route path="/artist-showcase" element={<FrontArtistShowcase />} />
                         <Route path="/auth" element={<Auth />} />
+                        <Route path="/auth/reset-password" element={<ResetPassword />} />
+                        <Route path="/reset-password" element={<ResetPassword />} />
                         <Route path="/install" element={<Install />} />
                         
                         {/* Routes du back-office - PROTÉGÉES */}
