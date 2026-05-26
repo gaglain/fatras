@@ -114,6 +114,51 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
     reorderSongs(selectedSetlist.id, songs);
   };
 
+  const handleShareSetlist = async (setlist: Setlist, songId?: string) => {
+    let token = setlist.share_token;
+    if (!token) {
+      const { data, error } = await supabase
+        .from('show_bible_setlists')
+        .update({ share_token: crypto.randomUUID() } as any)
+        .eq('id', setlist.id)
+        .select('share_token')
+        .single();
+      if (error || !data) { toast.error('Impossible de générer le lien'); return; }
+      token = (data as any).share_token;
+      setSelectedSetlist({ ...setlist, share_token: token } as Setlist);
+    }
+    const url = `${window.location.origin}/setlist/${token}${songId ? `#song-${songId}` : ''}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success(songId ? 'Lien de la chanson copié' : 'Lien de la setlist copié');
+    } catch {
+      toast.info(url);
+    }
+  };
+
+  const handleExportSetlist = () => {
+    if (!selectedSetlist) return;
+    generateSetlistPDF(
+      {
+        title: selectedSetlist.title,
+        description: selectedSetlist.description || undefined,
+        sacem_program_number: selectedSetlist.sacem_program_number || undefined,
+        artistName: artists.find(a => a.id === selectedSetlist.artist_id)?.name,
+      },
+      (selectedSetlist.songs || []).map((s) => ({
+        title: s.title,
+        duration: s.duration || undefined,
+        tonality: s.tonality || undefined,
+        bpm: s.bpm || undefined,
+        notes: s.notes || undefined,
+        lyrics: s.lyrics || undefined,
+        sacem_number: (s as any).sacem_number || undefined,
+      })),
+      exportOptions
+    );
+    setExportDialogOpen(false);
+  };
+
   if (loading) return <div className="text-muted-foreground">Chargement...</div>;
 
   const filteredSetlists = artistIdFilter === 'all' ? setlists : setlists.filter(s => s.artist_id === artistIdFilter);
