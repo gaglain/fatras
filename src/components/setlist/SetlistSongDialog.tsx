@@ -104,7 +104,7 @@ export const SetlistSongDialog: React.FC<SetlistSongDialogProps> = ({
   if (isEditMode) {
     return (
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-[95vw] w-[95vw] sm:max-w-5xl max-h-[95vh] overflow-y-auto">
+        <DialogContent className="sm:!max-w-[95vw] sm:!w-[95vw] sm:max-h-[95vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Modifier la chanson</DialogTitle></DialogHeader>
           {renderSongForm()}
         </DialogContent>
