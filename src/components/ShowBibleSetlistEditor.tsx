@@ -321,13 +321,13 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
                 {previewSong.notes && (
                   <section>
                     <h4 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-2">Notes</h4>
-                    <p className="whitespace-pre-wrap text-base leading-relaxed">{previewSong.notes}</p>
+                    <div className="prose prose-base max-w-none leading-relaxed [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_blockquote]:border-l-2 [&_blockquote]:border-primary [&_blockquote]:pl-3 [&_blockquote]:italic" dangerouslySetInnerHTML={{ __html: previewSong.notes }} />
                   </section>
                 )}
                 <section>
                   <h4 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-2 flex items-center gap-2"><FileText className="h-4 w-4" />Paroles</h4>
                   {previewSong.lyrics ? (
-                    <pre className="whitespace-pre-wrap font-serif text-lg leading-8 bg-muted/30 rounded-lg p-6 border">{previewSong.lyrics}</pre>
+                    <div className="prose prose-lg max-w-none font-serif leading-8 bg-muted/30 rounded-lg p-6 border [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_blockquote]:border-l-2 [&_blockquote]:border-primary [&_blockquote]:pl-3 [&_blockquote]:italic" dangerouslySetInnerHTML={{ __html: previewSong.lyrics }} />
                   ) : (
                     <p className="text-muted-foreground italic">Aucune parole renseignée</p>
                   )}
