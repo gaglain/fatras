@@ -84,11 +84,11 @@ export const SetlistSongDialog: React.FC<SetlistSongDialogProps> = ({
         </div>
         <div className="col-span-2">
           <Label>Notes</Label>
-          <Textarea value={newSongData.notes} onChange={(e) => onNewSongDataChange({ ...newSongData, notes: e.target.value })} placeholder="Notes personnelles..." rows={2} />
+          <Textarea value={newSongData.notes} onChange={(e) => onNewSongDataChange({ ...newSongData, notes: e.target.value })} placeholder="Notes personnelles..." rows={isEditMode ? 4 : 2} />
         </div>
         <div className="col-span-2">
           <Label className="flex items-center gap-2"><FileText className="h-4 w-4" />Paroles</Label>
-          <Textarea value={newSongData.lyrics} onChange={(e) => onNewSongDataChange({ ...newSongData, lyrics: e.target.value })} placeholder="Paroles de la chanson..." rows={isEditMode ? 6 : 4} />
+          <Textarea value={newSongData.lyrics} onChange={(e) => onNewSongDataChange({ ...newSongData, lyrics: e.target.value })} placeholder="Paroles de la chanson..." rows={isEditMode ? 24 : 4} className={isEditMode ? 'min-h-[500px] font-mono text-sm leading-relaxed' : ''} />
         </div>
         <div className="col-span-2">
           <Label>N° SACEM</Label>
