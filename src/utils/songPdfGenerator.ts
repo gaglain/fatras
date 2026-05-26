@@ -96,7 +96,8 @@ export const generateSongPDF = (song: SongPdfData, setlistTitle?: string) => {
   y += 8;
 
   // Notes
-  if (song.notes && song.notes.trim()) {
+  const notesText = htmlToText(song.notes);
+  if (notesText) {
     checkPage(14);
     doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
@@ -106,7 +107,7 @@ export const generateSongPDF = (song: SongPdfData, setlistTitle?: string) => {
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
     setColor(COLORS.text);
-    const noteLines = doc.splitTextToSize(song.notes, contentW);
+    const noteLines = doc.splitTextToSize(notesText, contentW);
     noteLines.forEach((ln: string) => {
       checkPage(6);
       doc.text(ln, m, y);
@@ -116,7 +117,8 @@ export const generateSongPDF = (song: SongPdfData, setlistTitle?: string) => {
   }
 
   // Lyrics
-  if (song.lyrics && song.lyrics.trim()) {
+  const lyricsText = htmlToText(song.lyrics);
+  if (lyricsText) {
     checkPage(14);
     doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
@@ -126,7 +128,7 @@ export const generateSongPDF = (song: SongPdfData, setlistTitle?: string) => {
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
     setColor(COLORS.text);
-    const lyricsLines = doc.splitTextToSize(song.lyrics, contentW);
+    const lyricsLines = doc.splitTextToSize(lyricsText, contentW);
     lyricsLines.forEach((ln: string) => {
       checkPage(6);
       doc.text(ln, m, y);
