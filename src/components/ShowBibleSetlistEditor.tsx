@@ -237,7 +237,13 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
                     {selectedSetlist.sacem_program_number && <Badge variant="secondary" className="text-xs">SACEM: {selectedSetlist.sacem_program_number}</Badge>}
                   </div>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                  <Button size="sm" variant="outline" onClick={() => handleShareSetlist(selectedSetlist)} title="Partager via lien privé">
+                    <Share2 className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Partager</span>
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setExportDialogOpen(true)} title="Exporter en PDF">
+                    <FileDown className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">PDF</span>
+                  </Button>
                   <Button size="sm" variant="outline" onClick={() => { setNewSetlistData({ title: selectedSetlist.title, description: selectedSetlist.description || '', artist_id: selectedSetlist.artist_id || '', sacem_program_number: selectedSetlist.sacem_program_number || '' }); setIsEditSetlistDialogOpen(true); }}>
                     <Edit className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Modifier</span>
                   </Button>
