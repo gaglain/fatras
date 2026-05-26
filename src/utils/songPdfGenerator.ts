@@ -18,6 +18,24 @@ const COLORS = {
   bg: [245, 243, 238] as const,
 };
 
+const htmlToText = (html?: string): string => {
+  if (!html) return '';
+  if (!/<[a-z][\s\S]*>/i.test(html)) return html;
+  return html
+    .replace(/<\s*br\s*\/?>/gi, '\n')
+    .replace(/<\/(p|div|h[1-6]|li|blockquote)>/gi, '\n')
+    .replace(/<li[^>]*>/gi, '• ')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+};
+
 export const generateSongPDF = (song: SongPdfData, setlistTitle?: string) => {
   const doc = new jsPDF();
   const pw = doc.internal.pageSize.width;
