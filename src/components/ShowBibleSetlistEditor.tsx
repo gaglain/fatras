@@ -56,6 +56,8 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
   const [librarySearchQuery, setLibrarySearchQuery] = useState('');
   const [addSongTab, setAddSongTab] = useState<'new' | 'library'>('library');
   const [artistIdFilter, setArtistIdFilter] = useState<string>(artistId || 'all');
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
+  const [exportOptions, setExportOptions] = useState({ includeNotes: true, includeLyrics: true });
 
   const [newSetlistData, setNewSetlistData] = useState({ title: '', description: '', artist_id: artistId || '', sacem_program_number: '' });
   const [newSongData, setNewSongData] = useState<SongFormData>({ title: '', duration: '', notes: '', tonality: '', bpm: '', lyrics: '', sacem_number: '' });
