@@ -78,6 +78,38 @@ export const Resources: React.FC = () => {
     filter === 'images' ? m.url.match(/\.(png|jpe?g|gif|webp|svg)$/i) : true
   );
 
+  const handleDownload = async (m: MediaItem) => {
+    try {
+      const { data, error } = await supabase.storage.from(m.bucket).download(m.path);
+      if (error || !data) throw error;
+      const blobUrl = URL.createObjectURL(data);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = m.name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(blobUrl);
+    } catch (e) {
+      console.error(e);
+      toast.error('Erreur lors du téléchargement');
+    }
+  };
+
+  const handleShare = async (m: MediaItem) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from(m.bucket)
+        .createSignedUrl(m.path, 60 * 60 * 24 * 7); // 7 jours
+      if (error || !data?.signedUrl) throw error;
+      await navigator.clipboard.writeText(data.signedUrl);
+      toast.success('Lien privé copié (valide 7 jours)');
+    } catch (e) {
+      console.error(e);
+      toast.error('Erreur lors de la création du lien');
+    }
+  };
+
   return (
     <div className="space-y-6 p-4 lg:p-0">
       <div className="flex items-center justify-between">
@@ -121,16 +153,26 @@ export const Resources: React.FC = () => {
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {filtered.map((m) => (
-                <a key={`${m.bucket}-${m.path}`} href={m.url} target="_blank" rel="noreferrer" className="group block">
-                  <div className="aspect-square overflow-hidden rounded border">
-                    {m.url.match(/\.(png|jpe?g|gif|webp|svg)$/i) ? (
-                      <img src={m.url} alt={`Media ${m.name}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform" loading="lazy" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-sm text-muted-foreground">Fichier</div>
-                    )}
-                  </div>
+                <div key={`${m.bucket}-${m.path}`} className="group block">
+                  <a href={m.url} target="_blank" rel="noreferrer">
+                    <div className="aspect-square overflow-hidden rounded border">
+                      {m.url.match(/\.(png|jpe?g|gif|webp|svg)$/i) ? (
+                        <img src={m.url} alt={`Media ${m.name}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform" loading="lazy" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-sm text-muted-foreground">Fichier</div>
+                      )}
+                    </div>
+                  </a>
                   <div className="mt-2 text-xs truncate" title={`${m.bucket}/${m.name}`}>{m.name}</div>
-                </a>
+                  <div className="mt-1 flex gap-1">
+                    <Button variant="outline" size="sm" className="h-7 flex-1 px-2" onClick={() => handleDownload(m)}>
+                      <Download className="h-3 w-3 mr-1" /> <span className="text-xs">Télécharger</span>
+                    </Button>
+                    <Button variant="outline" size="sm" className="h-7 px-2" onClick={() => handleShare(m)} title="Copier un lien privé (7 jours)">
+                      <Link2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
               ))}
             </div>
           )}
