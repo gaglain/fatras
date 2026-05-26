@@ -43,6 +43,7 @@ const FrontShop = lazy(() => import("./pages/FrontShop").then(m => ({ default: m
 const FrontDynamicPage = lazy(() => import("./pages/FrontDynamicPage").then(m => ({ default: m.FrontDynamicPage })));
 const FrontArtistShowcase = lazy(() => import("./pages/FrontArtistShowcase").then(m => ({ default: m.FrontArtistShowcase })));
 const RoadsheetPublic = lazy(() => import("./pages/RoadsheetPublic").then(m => ({ default: m.RoadsheetPublic })));
+const SetlistPublic = lazy(() => import("./pages/SetlistPublic").then(m => ({ default: m.SetlistPublic })));
 
 // Lazy loaded pages - BACK-OFFICE (protected)
 const Dashboard = lazy(() => import("./pages/Dashboard"));
