@@ -310,6 +310,15 @@ export const generateTourStopPDF = (
     y += 4;
   }
 
+  if (tourStop.technicalContactName || tourStop.technicalContactEmail || tourStop.technicalContactPhone) {
+    drawSectionHeader('CONTACT TECHNIQUE SUR PLACE');
+    if (tourStop.technicalContactName) drawField('Nom :', tourStop.technicalContactName);
+    if (tourStop.technicalContactEmail) drawField('Email :', tourStop.technicalContactEmail);
+    if (tourStop.technicalContactPhone) drawField('Telephone :', tourStop.technicalContactPhone);
+    y += 4;
+  }
+
+
   // ==========================================
   // INVITATIONS
   // ==========================================
