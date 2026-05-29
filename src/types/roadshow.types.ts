@@ -79,6 +79,9 @@ export interface FormData {
   dressingRoomAddress?: string;
   localContact: string;
   localContactPhone: string;
+  technicalContactName?: string;
+  technicalContactEmail?: string;
+  technicalContactPhone?: string;
   transport: string;
   artistLineup: {userId: string, confirmed: boolean, declined?: boolean}[];
   invitations: string;
