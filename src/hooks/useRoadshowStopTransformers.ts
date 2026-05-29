@@ -86,6 +86,9 @@ export const transformStopFromDB = (stop: any): RoadshowStop => ({
   dressing_room_address: stop.dressing_room_address,
   local_contact: stop.local_contact,
   local_contact_phone: stop.local_contact_phone,
+  technical_contact_name: stop.technical_contact_name,
+  technical_contact_email: stop.technical_contact_email,
+  technical_contact_phone: stop.technical_contact_phone,
   transport: stop.transport,
   artist_lineup: Array.isArray(stop.artist_lineup)
     ? (stop.artist_lineup as unknown as ArtistLineupItem[]).map((item) => ({
