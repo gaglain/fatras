@@ -3308,6 +3308,9 @@ export type Database = {
           show_start_time: string | null
           soundcheck_time: string | null
           status: string
+          technical_contact_email: string | null
+          technical_contact_name: string | null
+          technical_contact_phone: string | null
           tickets_available: number | null
           transport: string | null
           updated_at: string
@@ -3357,6 +3360,9 @@ export type Database = {
           show_start_time?: string | null
           soundcheck_time?: string | null
           status?: string
+          technical_contact_email?: string | null
+          technical_contact_name?: string | null
+          technical_contact_phone?: string | null
           tickets_available?: number | null
           transport?: string | null
           updated_at?: string
@@ -3406,6 +3412,9 @@ export type Database = {
           show_start_time?: string | null
           soundcheck_time?: string | null
           status?: string
+          technical_contact_email?: string | null
+          technical_contact_name?: string | null
+          technical_contact_phone?: string | null
           tickets_available?: number | null
           transport?: string | null
           updated_at?: string
