@@ -238,7 +238,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({ form, onSubmit }) =>
         return <h3 className="text-lg font-semibold">{field.label}</h3>;
 
       case 'paragraph':
-        return <p className="text-muted-foreground">{field.placeholder}</p>;
+        return <p className="text-muted-foreground whitespace-pre-wrap">{field.description || field.placeholder}</p>;
 
       default:
         return null;
