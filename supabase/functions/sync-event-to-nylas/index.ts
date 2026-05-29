@@ -93,6 +93,15 @@ function buildRouteSheetDescription(event: any, routeSheet: RouteSheet, quoteAmo
     lines.push('')
   }
 
+  // 🛠️ Contact technique sur place
+  if (routeSheet.technical_contact_name || routeSheet.technical_contact_email || routeSheet.technical_contact_phone) {
+    lines.push('🛠️ CONTACT TECHNIQUE SUR PLACE')
+    if (routeSheet.technical_contact_name) lines.push(`  Nom : ${routeSheet.technical_contact_name}`)
+    if (routeSheet.technical_contact_email) lines.push(`  Email : ${routeSheet.technical_contact_email}`)
+    if (routeSheet.technical_contact_phone) lines.push(`  Tél : ${routeSheet.technical_contact_phone}`)
+    lines.push('')
+  }
+
   // 🚗 Transport
   if (routeSheet.transport || routeSheet.departure_address) {
     lines.push('🚗 TRANSPORT')
