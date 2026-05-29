@@ -33,6 +33,38 @@ export const ContactsForm: React.FC<ContactsFormProps> = ({ formData, setFormDat
         />
       </div>
 
+      <div className="pt-2 border-t">
+        <h4 className="text-sm font-semibold text-gray-800 mb-3">Contact technique sur place</h4>
+        <div className="space-y-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Nom</label>
+            <Input
+              value={formData.technicalContactName || ''}
+              onChange={(e) => setFormData({ ...formData, technicalContactName: e.target.value })}
+              placeholder="Nom du régisseur / technicien"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+            <Input
+              type="email"
+              value={formData.technicalContactEmail || ''}
+              onChange={(e) => setFormData({ ...formData, technicalContactEmail: e.target.value })}
+              placeholder="technique@salle.fr"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Téléphone</label>
+            <Input
+              value={formData.technicalContactPhone || ''}
+              onChange={(e) => setFormData({ ...formData, technicalContactPhone: e.target.value })}
+              placeholder="+33 6 12 34 56 78"
+            />
+          </div>
+        </div>
+      </div>
+
+
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">Équipe technique</label>
         <Input
