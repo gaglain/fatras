@@ -38,6 +38,9 @@ export interface RoadshowStop {
   dressing_room_address?: string;
   local_contact?: string;
   local_contact_phone?: string;
+  technical_contact_name?: string;
+  technical_contact_email?: string;
+  technical_contact_phone?: string;
   transport?: string;
   artist_lineup: { userId: string; confirmed: boolean }[];
   invitations?: string;
@@ -83,6 +86,9 @@ export const transformStopFromDB = (stop: any): RoadshowStop => ({
   dressing_room_address: stop.dressing_room_address,
   local_contact: stop.local_contact,
   local_contact_phone: stop.local_contact_phone,
+  technical_contact_name: stop.technical_contact_name,
+  technical_contact_email: stop.technical_contact_email,
+  technical_contact_phone: stop.technical_contact_phone,
   transport: stop.transport,
   artist_lineup: Array.isArray(stop.artist_lineup)
     ? (stop.artist_lineup as unknown as ArtistLineupItem[]).map((item) => ({
@@ -133,6 +139,9 @@ export const convertToTourStop = (stop: RoadshowStop): TourStop => ({
   dressingRoomAddress: stop.dressing_room_address || '',
   localContact: stop.local_contact || '',
   localContactPhone: stop.local_contact_phone || '',
+  technicalContactName: stop.technical_contact_name || '',
+  technicalContactEmail: stop.technical_contact_email || '',
+  technicalContactPhone: stop.technical_contact_phone || '',
   transport: stop.transport || '',
   artistLineup: stop.artist_lineup,
   invitations: stop.invitations || '',
@@ -171,6 +180,9 @@ export const convertFromTourStop = (tourStop: Partial<TourStop>): Partial<Roadsh
   dressing_room_address: tourStop.dressingRoomAddress || null,
   local_contact: tourStop.localContact,
   local_contact_phone: tourStop.localContactPhone,
+  technical_contact_name: tourStop.technicalContactName,
+  technical_contact_email: tourStop.technicalContactEmail,
+  technical_contact_phone: tourStop.technicalContactPhone,
   transport: tourStop.transport,
   artist_lineup: tourStop.artistLineup || [],
   invitations: tourStop.invitations,

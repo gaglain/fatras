@@ -103,6 +103,7 @@ export const useRoadshowStops = () => {
         accommodation: stopData.accommodation, accommodation_address: stopData.accommodation_address,
         has_dressing_room: stopData.has_dressing_room ?? false, dressing_room_address: stopData.dressing_room_address || null,
         local_contact: stopData.local_contact, local_contact_phone: stopData.local_contact_phone,
+        technical_contact_name: stopData.technical_contact_name, technical_contact_email: stopData.technical_contact_email, technical_contact_phone: stopData.technical_contact_phone,
         transport: stopData.transport, artist_lineup: stopData.artist_lineup || [], invitations: stopData.invitations
       } as any).select().single()) as any;
       if (error) throw error;
@@ -132,6 +133,7 @@ export const useRoadshowStops = () => {
         accommodation: stopData.accommodation, accommodation_address: stopData.accommodation_address,
         has_dressing_room: stopData.has_dressing_room ?? false, dressing_room_address: stopData.dressing_room_address || null,
         local_contact: stopData.local_contact, local_contact_phone: stopData.local_contact_phone,
+        technical_contact_name: stopData.technical_contact_name, technical_contact_email: stopData.technical_contact_email, technical_contact_phone: stopData.technical_contact_phone,
         transport: stopData.transport, artist_lineup: stopData.artist_lineup, invitations: stopData.invitations
       } as any).eq('id', stopId).select().single()) as any;
       if (error) throw error;

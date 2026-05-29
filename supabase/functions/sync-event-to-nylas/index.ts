@@ -29,6 +29,9 @@ interface RouteSheet {
   departure_address?: string
   local_contact?: string
   local_contact_phone?: string
+  technical_contact_name?: string
+  technical_contact_email?: string
+  technical_contact_phone?: string
   accommodation?: string
   accommodation_address?: string
   has_dressing_room?: boolean
@@ -87,6 +90,15 @@ function buildRouteSheetDescription(event: any, routeSheet: RouteSheet, quoteAmo
     lines.push('👤 CONTACT LOCAL')
     if (routeSheet.local_contact) lines.push(`  Nom : ${routeSheet.local_contact}`)
     if (routeSheet.local_contact_phone) lines.push(`  Tél : ${routeSheet.local_contact_phone}`)
+    lines.push('')
+  }
+
+  // 🛠️ Contact technique sur place
+  if (routeSheet.technical_contact_name || routeSheet.technical_contact_email || routeSheet.technical_contact_phone) {
+    lines.push('🛠️ CONTACT TECHNIQUE SUR PLACE')
+    if (routeSheet.technical_contact_name) lines.push(`  Nom : ${routeSheet.technical_contact_name}`)
+    if (routeSheet.technical_contact_email) lines.push(`  Email : ${routeSheet.technical_contact_email}`)
+    if (routeSheet.technical_contact_phone) lines.push(`  Tél : ${routeSheet.technical_contact_phone}`)
     lines.push('')
   }
 
