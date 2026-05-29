@@ -38,6 +38,9 @@ export interface RoadshowStop {
   dressing_room_address?: string;
   local_contact?: string;
   local_contact_phone?: string;
+  technical_contact_name?: string;
+  technical_contact_email?: string;
+  technical_contact_phone?: string;
   transport?: string;
   artist_lineup: { userId: string; confirmed: boolean }[];
   invitations?: string;
