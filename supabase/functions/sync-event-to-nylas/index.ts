@@ -29,6 +29,9 @@ interface RouteSheet {
   departure_address?: string
   local_contact?: string
   local_contact_phone?: string
+  technical_contact_name?: string
+  technical_contact_email?: string
+  technical_contact_phone?: string
   accommodation?: string
   accommodation_address?: string
   has_dressing_room?: boolean
