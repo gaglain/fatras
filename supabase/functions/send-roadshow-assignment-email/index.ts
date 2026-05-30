@@ -25,7 +25,23 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    const { userIds, stopId, city, venue } = await req.json();
+    const { userIds, stopId, city, venue, _test } = await req.json();
+
+    const DEFAULT_CFG = {
+      enabled: true,
+      subject: '🎤 Invitation : {city} — {venue}',
+      intro: "Vous avez été invité(e) à participer à la feuille de route ci-dessous. Veuillez prendre connaissance des détails et confirmer votre disponibilité dans l'application.",
+    };
+    const { data: cfgRow } = await supabase
+      .from('app_settings').select('setting_value')
+      .eq('setting_key', 'roadshow_email_invitation')
+      .order('updated_at', { ascending: false }).limit(1).maybeSingle();
+    let cfg = DEFAULT_CFG;
+    if (cfgRow?.setting_value) { try { cfg = { ...DEFAULT_CFG, ...JSON.parse(cfgRow.setting_value) }; } catch {} }
+
+    if (!cfg.enabled && !_test) {
+      return new Response(JSON.stringify({ skipped: true, reason: 'disabled' }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
       return new Response(JSON.stringify({ error: "No userIds provided" }), {
@@ -34,14 +50,12 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Fetch stop details
-    const { data: stop } = await supabase
+    const { data: stop } = stopId ? await supabase
       .from("roadshow_stops")
       .select("*")
       .eq("id", stopId)
-      .single();
+      .single() : { data: null as any };
 
-    // Fetch user profiles for assigned users
     const { data: profiles } = await supabase
       .from("user_profiles")
       .select("user_id, email, first_name, last_name, username")
@@ -52,6 +66,10 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    const subjectLine = (cfg.subject || DEFAULT_CFG.subject)
+      .replaceAll('{city}', city || '').replaceAll('{venue}', venue || '');
+    const introText = cfg.intro || DEFAULT_CFG.intro;
 
     const formatTime = (t: string | null) => t || "—";
     const formatDate = (d: string | null) => {
@@ -83,8 +101,9 @@ Deno.serve(async (req) => {
     <div style="padding:24px;">
       <p style="font-size:15px;color:#333;">Bonjour <strong>${firstName}</strong>,</p>
       <p style="font-size:14px;color:#555;line-height:1.6;">
-        Vous avez été invité(e) à participer à la feuille de route ci-dessous. Veuillez prendre connaissance des détails et <strong>confirmer votre disponibilité</strong> dans l'application.
+        ${introText}
       </p>
+      
       
       <div style="background:#f8fafc;border-radius:8px;padding:16px;margin:16px 0;">
         <h3 style="margin:0 0 12px;color:#1a1a2e;font-size:16px;">📍 ${city} — ${venue}</h3>
@@ -139,7 +158,7 @@ Deno.serve(async (req) => {
           body: JSON.stringify({
             from: "Fatras <noreply@fatras.net>",
             to: [profile.email],
-            subject: `🎤 Invitation : ${city} — ${venue}`,
+            subject: subjectLine,
             html: htmlContent,
           }),
         });

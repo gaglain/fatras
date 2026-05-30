@@ -1,7 +1,7 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Globe, Palette, Bell, Smartphone, Calendar, Mail, Settings, MapPin, User } from 'lucide-react';
+import { Globe, Palette, Bell, Smartphone, Calendar, Mail, Settings, MapPin, User, Route } from 'lucide-react';
 import { CustomColorsForm } from "./preferences/CustomColorsForm";
 import { GoogleCalendarTab } from "./preferences/GoogleCalendarTab";
 import { GmailTab } from "./preferences/GmailTab";
@@ -15,6 +15,7 @@ import {
   ColorsTab,
   EmailTab,
   SmtpTab,
+  RoadshowEmailsTab,
 } from "./preferences";
 import { AccountTab } from "./preferences/AccountTab";
 import { ContactSettingsTab } from '@/components/preferences/ContactSettingsTab';
@@ -29,6 +30,7 @@ const tabOptions = [
   { value: 'notifications', label: 'Notifications', icon: Bell },
   { value: 'email', label: 'Email', icon: Mail },
   { value: 'smtp', label: 'SMTP', icon: Mail },
+  { value: 'roadshow-emails', label: 'Emails Feuilles de route', icon: Route },
   { value: 'calendar', label: 'Agenda', icon: Calendar },
   { value: 'gmail', label: 'Gmail', icon: Mail },
   { value: 'mobile', label: 'Mobile', icon: Smartphone },
@@ -99,6 +101,9 @@ export const Preferences: React.FC = () => {
         </TabsContent>
         <TabsContent value="smtp" className="space-y-6">
           <SmtpTab />
+        </TabsContent>
+        <TabsContent value="roadshow-emails" className="space-y-4">
+          <RoadshowEmailsTab />
         </TabsContent>
         <TabsContent value="calendar" className="space-y-4">
           <GoogleCalendarTab />

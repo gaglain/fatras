@@ -6,7 +6,13 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-const REMINDER_DAYS = [15, 7, 1];
+const DEFAULT_DAYS = [15, 7, 1];
+const DEFAULT_CFG = {
+  enabled: true,
+  days: DEFAULT_DAYS,
+  subjectTemplate: '🎤 Rappel : {city} – {venue} {daysLabel}',
+  intro: 'Voici le récapitulatif de votre prochaine date {daysLabel} :',
+};
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -20,12 +26,25 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
+    // Load settings
+    const { data: cfgRow } = await supabase
+      .from('app_settings').select('setting_value')
+      .eq('setting_key', 'roadshow_email_reminders')
+      .order('updated_at', { ascending: false }).limit(1).maybeSingle();
+    let cfg = DEFAULT_CFG;
+    if (cfgRow?.setting_value) { try { cfg = { ...DEFAULT_CFG, ...JSON.parse(cfgRow.setting_value) }; } catch {} }
+
+    if (!cfg.enabled) {
+      return new Response(JSON.stringify({ skipped: true, reason: 'disabled' }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     const results: Array<{ stopId: string; city: string; reminderType: string; emailsSent: number }> = [];
 
-    for (const days of REMINDER_DAYS) {
+    const reminderDays = Array.isArray(cfg.days) && cfg.days.length > 0 ? cfg.days : DEFAULT_DAYS;
+    for (const days of reminderDays) {
       const targetDate = new Date(today);
       targetDate.setDate(targetDate.getDate() + days);
       const targetDateStr = targetDate.toISOString().split("T")[0];
@@ -81,8 +100,12 @@ Deno.serve(async (req) => {
           const userName = [profile.first_name, profile.last_name].filter(Boolean).join(" ") || "Membre de l'équipe";
           const eventDate = stop.event_date ? new Date(stop.event_date).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" }) : "Date non définie";
 
-          const daysLabel = days === 1 ? "demain" : `dans ${days} jours`;
-          const subject = `🎤 Rappel : ${stop.city} – ${stop.venue} ${daysLabel}`;
+          const daysLabel = days === 0 ? "aujourd'hui" : (days === 1 ? "demain" : `dans ${days} jours`);
+          const subject = (cfg.subjectTemplate || DEFAULT_CFG.subjectTemplate)
+            .replaceAll('{city}', stop.city || '')
+            .replaceAll('{venue}', stop.venue || '')
+            .replaceAll('{daysLabel}', daysLabel);
+          const introLine = (cfg.intro || DEFAULT_CFG.intro).replaceAll('{daysLabel}', daysLabel);
 
           const html = buildEmailHtml({
             userName,
@@ -108,6 +131,7 @@ Deno.serve(async (req) => {
             localContactPhone: stop.local_contact_phone,
             shareUrl,
             daysLabel,
+            introLine,
           });
 
           // Send via Resend
@@ -187,6 +211,7 @@ interface EmailParams {
   localContactPhone: string | null;
   shareUrl: string;
   daysLabel: string;
+  introLine: string;
 }
 
 function buildEmailHtml(p: EmailParams): string {
@@ -210,7 +235,7 @@ function buildEmailHtml(p: EmailParams): string {
 
     <div style="padding:24px;">
       <p style="font-size:15px;color:#333;">Bonjour ${p.userName},</p>
-      <p style="font-size:15px;color:#333;">Voici le récapitulatif de votre prochaine date <strong>${p.daysLabel}</strong> :</p>
+      <p style="font-size:15px;color:#333;">${p.introLine}</p>
 
       <div style="background:#f8fafc;border-radius:8px;padding:16px;margin:16px 0;border-left:4px solid #3b82f6;">
         <h2 style="margin:0 0 4px;font-size:18px;color:#1e293b;">${p.venue}</h2>
