@@ -214,8 +214,9 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
                   <p className="text-xs text-muted-foreground">{setlist.songs?.length || 0} chanson(s)</p>
                 </div>
                 <div className="flex items-center gap-1">
-                  <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setSelectedSetlist(setlist); }}><Eye className="h-4 w-4" /></Button>
-                  <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); deleteSetlist(setlist.id); }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                  <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setSelectedSetlist(setlist); }} title="Voir"><Eye className="h-4 w-4" /></Button>
+                  <Button variant="ghost" size="sm" onClick={async (e) => { e.stopPropagation(); const r = await duplicateSetlist(setlist.id); if (r) setSelectedSetlist(r as Setlist); }} title="Dupliquer"><Copy className="h-4 w-4" /></Button>
+                  <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); deleteSetlist(setlist.id); }} title="Supprimer"><Trash2 className="h-4 w-4 text-destructive" /></Button>
                 </div>
               </div>
             </div>
