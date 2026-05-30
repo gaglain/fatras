@@ -772,6 +772,50 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
               <div className="whitespace-pre-wrap text-sm">
                 {selectedEmail.content}
               </div>
+            ) : selectedEmail?.direction === 'received' ? (
+              <div className="text-sm text-muted-foreground border border-dashed rounded-md p-4 bg-muted/30 space-y-3">
+                <div>
+                  <p className="font-medium text-foreground mb-1">Contenu non récupéré</p>
+                  <p>
+                    Cet email reçu a été indexé avant que la récupération du corps
+                    ne soit activée. Vous pouvez le retélécharger depuis le serveur IMAP.
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={isBackfilling}
+                  onClick={async () => {
+                    const dateRef = selectedEmail.received_at || selectedEmail.created_at;
+                    if (!dateRef) { toast.error('Date de l\'email introuvable'); return; }
+                    const since = new Date(new Date(dateRef).getTime() - 24 * 3600 * 1000).toISOString();
+                    setIsBackfilling(true);
+                    try {
+                      await syncEmails(since);
+                      await loadEmails({ contactId, contactEmail: normalizedContactEmail, limit: 500 });
+                      // Recharge l'email sélectionné depuis la base
+                      const { data: refreshed } = await supabase
+                        .from('emails')
+                        .select('content, html_content')
+                        .eq('id', selectedEmail.id)
+                        .maybeSingle();
+                      if (refreshed && (refreshed.content || refreshed.html_content)) {
+                        setSelectedEmail({ ...selectedEmail, ...refreshed });
+                        toast.success('Contenu récupéré');
+                      } else {
+                        toast.info('Aucun contenu trouvé sur le serveur');
+                      }
+                    } catch (err: any) {
+                      toast.error(`Erreur: ${err?.message || 'sync échouée'}`);
+                    } finally {
+                      setIsBackfilling(false);
+                    }
+                  }}
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${isBackfilling ? 'animate-spin' : ''}`} />
+                  {isBackfilling ? 'Récupération...' : 'Récupérer le contenu'}
+                </Button>
+              </div>
             ) : (
               <div className="text-sm text-muted-foreground border border-dashed rounded-md p-4 bg-muted/30">
                 <p className="font-medium text-foreground mb-1">Corps du message non conservé</p>
