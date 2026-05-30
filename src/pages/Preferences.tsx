@@ -30,6 +30,7 @@ const tabOptions = [
   { value: 'notifications', label: 'Notifications', icon: Bell },
   { value: 'email', label: 'Email', icon: Mail },
   { value: 'smtp', label: 'SMTP', icon: Mail },
+  { value: 'roadshow-emails', label: 'Emails Feuilles de route', icon: Route },
   { value: 'calendar', label: 'Agenda', icon: Calendar },
   { value: 'gmail', label: 'Gmail', icon: Mail },
   { value: 'mobile', label: 'Mobile', icon: Smartphone },
