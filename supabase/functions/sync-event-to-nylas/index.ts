@@ -456,6 +456,40 @@ Deno.serve(async (req) => {
       if (!response.ok) {
         const errorText = await response.text()
         console.error('Nylas update error:', response.status, errorText)
+
+        // If the remote event no longer exists (deleted on Google/Nylas), recreate it.
+        if (response.status === 404 || response.status === 410) {
+          console.log(`⚠️ Nylas event ${nylas_event_id} missing remotely — recreating.`)
+          const createUrl = `${NYLAS_API_BASE}/grants/${grantId}/events?calendar_id=${encodeURIComponent(calendarId)}`
+          const createResp = await fetch(createUrl, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${nylasApiKey}`,
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: JSON.stringify(nylasEventBody),
+          })
+          if (!createResp.ok) {
+            const recreateErr = await createResp.text()
+            console.error('Nylas recreate error:', createResp.status, recreateErr)
+            return new Response(
+              JSON.stringify({ success: false, error: `Nylas recreate failed: ${createResp.status}`, details: recreateErr }),
+              { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+            )
+          }
+          const created = await createResp.json()
+          const newId = created?.data?.id || created?.id
+          if (newId) {
+            await supabase.from('events').update({ nylas_event_id: newId }).eq('id', event_id)
+            console.log(`✅ Nylas event recreated: ${newId} for "${event.title}"`)
+            return new Response(
+              JSON.stringify({ success: true, action: 'recreated', nylas_event_id: newId }),
+              { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+            )
+          }
+        }
+
         return new Response(
           JSON.stringify({ success: false, error: `Nylas update failed: ${response.status}`, details: errorText }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
@@ -470,6 +504,7 @@ Deno.serve(async (req) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       )
     }
+
   } catch (error) {
     console.error('sync-event-to-nylas error:', error)
     return new Response(
