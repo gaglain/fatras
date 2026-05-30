@@ -8,3 +8,4 @@ export { NotificationsTab } from './NotificationsTab';
 export { SidebarTab } from './SidebarTab';
 export { EmailTab } from './EmailTab';
 export { SmtpTab } from './SmtpTab';
+export { RoadshowEmailsTab } from './RoadshowEmailsTab';
