@@ -100,8 +100,12 @@ Deno.serve(async (req) => {
           const userName = [profile.first_name, profile.last_name].filter(Boolean).join(" ") || "Membre de l'équipe";
           const eventDate = stop.event_date ? new Date(stop.event_date).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" }) : "Date non définie";
 
-          const daysLabel = days === 1 ? "demain" : `dans ${days} jours`;
-          const subject = `🎤 Rappel : ${stop.city} – ${stop.venue} ${daysLabel}`;
+          const daysLabel = days === 0 ? "aujourd'hui" : (days === 1 ? "demain" : `dans ${days} jours`);
+          const subject = (cfg.subjectTemplate || DEFAULT_CFG.subjectTemplate)
+            .replaceAll('{city}', stop.city || '')
+            .replaceAll('{venue}', stop.venue || '')
+            .replaceAll('{daysLabel}', daysLabel);
+          const introLine = (cfg.intro || DEFAULT_CFG.intro).replaceAll('{daysLabel}', daysLabel);
 
           const html = buildEmailHtml({
             userName,
