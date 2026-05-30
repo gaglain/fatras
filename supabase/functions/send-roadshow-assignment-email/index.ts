@@ -101,8 +101,9 @@ Deno.serve(async (req) => {
     <div style="padding:24px;">
       <p style="font-size:15px;color:#333;">Bonjour <strong>${firstName}</strong>,</p>
       <p style="font-size:14px;color:#555;line-height:1.6;">
-        Vous avez été invité(e) à participer à la feuille de route ci-dessous. Veuillez prendre connaissance des détails et <strong>confirmer votre disponibilité</strong> dans l'application.
+        ${introText}
       </p>
+      
       
       <div style="background:#f8fafc;border-radius:8px;padding:16px;margin:16px 0;">
         <h3 style="margin:0 0 12px;color:#1a1a2e;font-size:16px;">📍 ${city} — ${venue}</h3>
