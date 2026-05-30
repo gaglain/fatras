@@ -445,9 +445,11 @@ export const useUser = () => {
     updateUser: context.updateUser,
     deactivateUser: context.deactivateUser,
     removeUser: context.removeUser,
-    changeOwnership: context.changeOwnership
+    changeOwnership: context.changeOwnership,
+    refreshUsers: context.refreshUsers
   };
 };
+
 
 // Re-export types for backward compatibility
 export type { UserProfile as User };
