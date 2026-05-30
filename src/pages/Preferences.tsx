@@ -1,7 +1,7 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Globe, Palette, Bell, Smartphone, Calendar, Mail, Settings, MapPin, User } from 'lucide-react';
+import { Globe, Palette, Bell, Smartphone, Calendar, Mail, Settings, MapPin, User, Route } from 'lucide-react';
 import { CustomColorsForm } from "./preferences/CustomColorsForm";
 import { GoogleCalendarTab } from "./preferences/GoogleCalendarTab";
 import { GmailTab } from "./preferences/GmailTab";
