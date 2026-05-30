@@ -4,10 +4,11 @@ import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
 import {
   fetchSetlistsData, fetchLibrarySongsData,
-  createSetlistOp, updateSetlistOp, deleteSetlistOp,
+  createSetlistOp, updateSetlistOp, deleteSetlistOp, duplicateSetlistOp,
   addSongToLibraryOp, addSongOp, updateSongOp, updateLibrarySongOp,
   deleteSongOp, deleteLibrarySongOp, reorderSongsOp
 } from './useSetlistOperations';
+
 
 export interface SetlistSong {
   id: string; setlist_id: string; title: string; duration: string | null;
