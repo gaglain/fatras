@@ -99,57 +99,61 @@ export const SetlistPublic: React.FC = () => {
       { includeNotes: true, includeLyrics: true }
     );
 
+  const proseClasses =
+    'prose prose-base sm:prose-sm max-w-none break-words ' +
+    '[&_*]:break-words [&_p]:my-2 [&_p]:leading-relaxed ' +
+    '[&_h1]:text-xl [&_h2]:text-lg [&_h3]:text-base ' +
+    '[&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5';
+
   return (
     <div className="min-h-screen bg-background">
       <SEOHead title={`${setlist.title} — Setlist`} description={setlist.description || 'Setlist partagée'} />
-      <div className="max-w-3xl mx-auto p-4 sm:p-8 space-y-6">
-        <header className="space-y-2">
+      <div className="max-w-3xl mx-auto px-4 py-5 sm:p-8 space-y-5 sm:space-y-6">
+        <header className="space-y-3">
           {artistName && (
-            <p className="text-xs uppercase tracking-wider text-muted-foreground">{artistName}</p>
+            <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{artistName}</p>
           )}
-          <div className="flex items-start justify-between gap-3 flex-wrap">
-            <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight">{setlist.title}</h1>
-            <Button variant="outline" size="sm" onClick={handleExport}>
-              <FileDown className="h-4 w-4 mr-2" />Exporter PDF
-            </Button>
-          </div>
+          <h1 className="text-2xl sm:text-4xl font-semibold tracking-tight break-words">{setlist.title}</h1>
           {setlist.description && (
-            <p className="text-muted-foreground">{setlist.description}</p>
+            <p className="text-sm sm:text-base text-muted-foreground break-words">{setlist.description}</p>
           )}
-          <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground flex-wrap">
             <span>{songs.length} chanson(s)</span>
             {setlist.sacem_program_number && (
               <Badge variant="secondary">SACEM : {setlist.sacem_program_number}</Badge>
             )}
           </div>
+          <Button variant="outline" size="sm" onClick={handleExport} className="w-full sm:w-auto">
+            <FileDown className="h-4 w-4 mr-2" />Exporter PDF
+          </Button>
         </header>
 
         <div className="space-y-3">
           {songs.map((song, idx) => (
-            <Card key={song.id} id={`song-${song.id}`} className="p-4">
-              <div className="flex items-start gap-3 flex-wrap">
-                <span className="text-sm text-muted-foreground tabular-nums mt-1">
+            <Card key={song.id} id={`song-${song.id}`} className="p-3 sm:p-4">
+              <div className="flex items-start gap-2 sm:gap-3">
+                <span className="text-xs sm:text-sm text-muted-foreground tabular-nums mt-1 shrink-0">
                   {(idx + 1).toString().padStart(2, '0')}
                 </span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h2 className="text-lg font-medium">{song.title}</h2>
-                    {song.duration && <span className="text-sm text-muted-foreground">({song.duration})</span>}
-                    {song.tonality && <Badge variant="outline" className="text-xs">{song.tonality}</Badge>}
-                    {song.bpm && <Badge variant="secondary" className="text-xs">{song.bpm} BPM</Badge>}
-                    {song.sacem_number && <Badge variant="outline" className="text-xs">SACEM : {song.sacem_number}</Badge>}
+                    <h2 className="text-base sm:text-lg font-medium break-words">{song.title}</h2>
+                    {song.duration && <span className="text-xs sm:text-sm text-muted-foreground">({song.duration})</span>}
+                    {song.tonality && <Badge variant="outline" className="text-[10px] sm:text-xs">{song.tonality}</Badge>}
+                    {song.bpm && <Badge variant="secondary" className="text-[10px] sm:text-xs">{song.bpm} BPM</Badge>}
+                    {song.sacem_number && <Badge variant="outline" className="text-[10px] sm:text-xs">SACEM : {song.sacem_number}</Badge>}
                   </div>
                   {song.notes && (
                     <div
-                      className="prose prose-sm max-w-none text-muted-foreground mt-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5"
+                      className={`${proseClasses} text-muted-foreground mt-2 text-[15px] sm:text-sm leading-relaxed`}
                       dangerouslySetInnerHTML={{ __html: song.notes }}
                     />
                   )}
                   {song.lyrics && (
                     <div className="mt-3 border-t pt-3">
-                      <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Paroles</p>
+                      <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">Paroles</p>
                       <div
-                        className="prose prose-sm max-w-none [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5"
+                        className={`${proseClasses} text-[15px] sm:text-sm leading-relaxed`}
                         dangerouslySetInnerHTML={{ __html: song.lyrics }}
                       />
                     </div>
@@ -163,7 +167,7 @@ export const SetlistPublic: React.FC = () => {
           )}
         </div>
 
-        <footer className="text-center text-xs text-muted-foreground pt-8">Fatras</footer>
+        <footer className="text-center text-xs text-muted-foreground pt-8 pb-4">Fatras</footer>
       </div>
     </div>
   );
