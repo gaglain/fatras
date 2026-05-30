@@ -49,6 +49,48 @@ export async function deleteSetlistOp(id: string) {
   toast.success('Setlist supprimée');
 }
 
+export async function duplicateSetlistOp(userId: string, id: string) {
+  const { data: original, error: fetchErr } = await supabase
+    .from('show_bible_setlists').select('*').eq('id', id).single();
+  if (fetchErr || !original) throw fetchErr || new Error('Setlist introuvable');
+
+  const { data: songs, error: songsErr } = await supabase
+    .from('show_bible_setlist_songs').select('*').eq('setlist_id', id).order('position', { ascending: true });
+  if (songsErr) throw songsErr;
+
+  const { data: newSetlist, error: insErr } = await supabase
+    .from('show_bible_setlists')
+    .insert([{
+      user_id: userId,
+      title: `${original.title} (copie)`,
+      description: original.description,
+      artist_id: original.artist_id,
+      sacem_program_number: original.sacem_program_number,
+    }])
+    .select().single();
+  if (insErr || !newSetlist) throw insErr || new Error('Erreur duplication');
+
+  if (songs && songs.length > 0) {
+    const rows = songs.map((s, idx) => ({
+      setlist_id: newSetlist.id,
+      title: s.title,
+      duration: s.duration,
+      notes: s.notes,
+      tonality: s.tonality,
+      bpm: s.bpm,
+      lyrics: s.lyrics,
+      library_song_id: s.library_song_id,
+      position: idx,
+    }));
+    const { error: songInsErr } = await supabase.from('show_bible_setlist_songs').insert(rows);
+    if (songInsErr) throw songInsErr;
+  }
+
+  toast.success('Setlist dupliquée');
+  return newSetlist;
+}
+
+
 export async function addSongToLibraryOp(userId: string, song: {
   title: string; duration?: string; notes?: string; tonality?: string;
   bpm?: number; lyrics?: string; sacem_number?: string; artist_id?: string;
