@@ -35,16 +35,18 @@ export async function upsertUserProfile(authUserId: string | undefined, userData
 }
 
 export async function updateProfileFields(userId: string, userData: Partial<ExtendedUserProfile>) {
+  // Only columns that actually exist on public.user_profiles.
+  // Sensitive fields (birth_date, social_security_number, bank_details, identity_documents,
+  // guso_id, nationality, birth_place) live in user_sensitive_data and must be updated
+  // via the update_my_sensitive_data RPC by the user themselves.
   const { error } = await supabase.from('user_profiles').update({
     first_name: userData.first_name, last_name: userData.last_name, username: userData.username,
     phone: userData.phone, role: userData.role, address: userData.address, city: userData.city,
     function_title: userData.function_title, show_name: userData.show_name, avatar_url: userData.avatar_url,
-    birth_date: userData.birth_date || null, birth_place: userData.birth_place,
-    social_security_number: userData.social_security_number, guso_id: userData.guso_id,
-    nationality: userData.nationality, entertainment_leave_number: userData.entertainment_leave_number,
-    tax_reduction: userData.tax_reduction, bank_details: userData.bank_details,
+    entertainment_leave_number: userData.entertainment_leave_number,
+    tax_reduction: userData.tax_reduction,
     contracts_fees: userData.contracts_fees, availability: userData.availability,
-    skills: userData.skills, identity_documents: userData.identity_documents,
+    skills: userData.skills,
     updated_at: new Date().toISOString(),
   }).eq('user_id', userId);
   if (error) throw error;
