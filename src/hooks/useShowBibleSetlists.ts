@@ -121,7 +121,7 @@ export const useShowBibleSetlists = (artistId?: string) => {
 
   return {
     setlists, librarySongs, loading,
-    createSetlist, updateSetlist, deleteSetlist,
+    createSetlist, updateSetlist, deleteSetlist, duplicateSetlist,
     addSong, addSongFromLibrary, addSongToLibrary,
     updateSong, updateLibrarySong, deleteSong, deleteLibrarySong,
     reorderSongs, refetch: fetchSetlists, refetchLibrary: fetchLibrarySongs
