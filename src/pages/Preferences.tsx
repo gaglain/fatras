@@ -15,6 +15,7 @@ import {
   ColorsTab,
   EmailTab,
   SmtpTab,
+  RoadshowEmailsTab,
 } from "./preferences";
 import { AccountTab } from "./preferences/AccountTab";
 import { ContactSettingsTab } from '@/components/preferences/ContactSettingsTab';
