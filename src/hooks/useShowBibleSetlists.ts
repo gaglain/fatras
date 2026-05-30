@@ -4,10 +4,11 @@ import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
 import {
   fetchSetlistsData, fetchLibrarySongsData,
-  createSetlistOp, updateSetlistOp, deleteSetlistOp,
+  createSetlistOp, updateSetlistOp, deleteSetlistOp, duplicateSetlistOp,
   addSongToLibraryOp, addSongOp, updateSongOp, updateLibrarySongOp,
   deleteSongOp, deleteLibrarySongOp, reorderSongsOp
 } from './useSetlistOperations';
+
 
 export interface SetlistSong {
   id: string; setlist_id: string; title: string; duration: string | null;
@@ -69,6 +70,13 @@ export const useShowBibleSetlists = (artistId?: string) => {
     catch (e) { logger.error('Error:', e); toast.error('Erreur suppression'); return false; }
   };
 
+  const duplicateSetlist = async (id: string) => {
+    if (!user) { toast.error('Vous devez être connecté'); return null; }
+    try { const r = await duplicateSetlistOp(user.id, id); await fetchSetlists(); return r; }
+    catch (e) { logger.error('Error:', e); toast.error('Erreur duplication'); return null; }
+  };
+
+
   const addSongToLibrary = async (song: { title: string; duration?: string; notes?: string; tonality?: string; bpm?: number; lyrics?: string; sacem_number?: string; artist_id?: string }) => {
     if (!user) return null;
     try { const r = await addSongToLibraryOp(user.id, song); await fetchLibrarySongs(); return r; }
@@ -113,7 +121,7 @@ export const useShowBibleSetlists = (artistId?: string) => {
 
   return {
     setlists, librarySongs, loading,
-    createSetlist, updateSetlist, deleteSetlist,
+    createSetlist, updateSetlist, deleteSetlist, duplicateSetlist,
     addSong, addSongFromLibrary, addSongToLibrary,
     updateSong, updateLibrarySong, deleteSong, deleteLibrarySong,
     reorderSongs, refetch: fetchSetlists, refetchLibrary: fetchLibrarySongs
