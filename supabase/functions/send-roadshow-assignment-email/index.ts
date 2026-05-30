@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
 <body style="margin:0;padding:0;background:#f4f4f5;font-family:Arial,sans-serif;">
   <div style="max-width:600px;margin:20px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
     <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);padding:32px 24px;text-align:center;">
-      <h1 style="color:#fff;margin:0;font-size:22px;">🎤 Nouvelle assignation</h1>
+      <h1 style="color:#fff;margin:0;font-size:22px;">🎤 Nouvelle invitation</h1>
       <p style="color:#a0aec0;margin:8px 0 0;font-size:14px;">Feuille de route — ${city} / ${venue}</p>
     </div>
     <div style="padding:24px;">
