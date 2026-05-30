@@ -211,6 +211,7 @@ interface EmailParams {
   localContactPhone: string | null;
   shareUrl: string;
   daysLabel: string;
+  introLine: string;
 }
 
 function buildEmailHtml(p: EmailParams): string {
