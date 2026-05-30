@@ -139,7 +139,7 @@ Deno.serve(async (req) => {
           body: JSON.stringify({
             from: "Fatras <noreply@fatras.net>",
             to: [profile.email],
-            subject: `🎤 Assignation : ${city} — ${venue}`,
+            subject: `🎤 Invitation : ${city} — ${venue}`,
             html: htmlContent,
           }),
         });
