@@ -77,13 +77,13 @@ Deno.serve(async (req) => {
 <body style="margin:0;padding:0;background:#f4f4f5;font-family:Arial,sans-serif;">
   <div style="max-width:600px;margin:20px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
     <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);padding:32px 24px;text-align:center;">
-      <h1 style="color:#fff;margin:0;font-size:22px;">🎤 Nouvelle assignation</h1>
+      <h1 style="color:#fff;margin:0;font-size:22px;">🎤 Nouvelle invitation</h1>
       <p style="color:#a0aec0;margin:8px 0 0;font-size:14px;">Feuille de route — ${city} / ${venue}</p>
     </div>
     <div style="padding:24px;">
       <p style="font-size:15px;color:#333;">Bonjour <strong>${firstName}</strong>,</p>
       <p style="font-size:14px;color:#555;line-height:1.6;">
-        Vous avez été assigné(e) à la feuille de route ci-dessous. Veuillez prendre connaissance des détails et <strong>confirmer votre disponibilité</strong> dans l'application.
+        Vous avez été invité(e) à participer à la feuille de route ci-dessous. Veuillez prendre connaissance des détails et <strong>confirmer votre disponibilité</strong> dans l'application.
       </p>
       
       <div style="background:#f8fafc;border-radius:8px;padding:16px;margin:16px 0;">
@@ -139,14 +139,14 @@ Deno.serve(async (req) => {
           body: JSON.stringify({
             from: "Fatras <noreply@fatras.net>",
             to: [profile.email],
-            subject: `🎤 Assignation : ${city} — ${venue}`,
+            subject: `🎤 Invitation : ${city} — ${venue}`,
             html: htmlContent,
           }),
         });
 
         if (res.ok) {
           emailsSent++;
-          console.log(`Assignment email sent to ${profile.email}`);
+          console.log(`Invitation email sent to ${profile.email}`);
         } else {
           const errText = await res.text();
           console.error(`Failed to send to ${profile.email}:`, errText);
