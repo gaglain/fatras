@@ -26,12 +26,25 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
+    // Load settings
+    const { data: cfgRow } = await supabase
+      .from('app_settings').select('setting_value')
+      .eq('setting_key', 'roadshow_email_reminders')
+      .order('updated_at', { ascending: false }).limit(1).maybeSingle();
+    let cfg = DEFAULT_CFG;
+    if (cfgRow?.setting_value) { try { cfg = { ...DEFAULT_CFG, ...JSON.parse(cfgRow.setting_value) }; } catch {} }
+
+    if (!cfg.enabled) {
+      return new Response(JSON.stringify({ skipped: true, reason: 'disabled' }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     const results: Array<{ stopId: string; city: string; reminderType: string; emailsSent: number }> = [];
 
-    for (const days of REMINDER_DAYS) {
+    const reminderDays = Array.isArray(cfg.days) && cfg.days.length > 0 ? cfg.days : DEFAULT_DAYS;
+    for (const days of reminderDays) {
       const targetDate = new Date(today);
       targetDate.setDate(targetDate.getDate() + days);
       const targetDateStr = targetDate.toISOString().split("T")[0];
