@@ -6,7 +6,13 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-const REMINDER_DAYS = [15, 7, 1];
+const DEFAULT_DAYS = [15, 7, 1];
+const DEFAULT_CFG = {
+  enabled: true,
+  days: DEFAULT_DAYS,
+  subjectTemplate: '🎤 Rappel : {city} – {venue} {daysLabel}',
+  intro: 'Voici le récapitulatif de votre prochaine date {daysLabel} :',
+};
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
