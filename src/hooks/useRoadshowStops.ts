@@ -70,6 +70,53 @@ const syncLineupWithChannel = async (
   } catch (error) { logger.error('Error syncing lineup with channel:', error); }
 };
 
+const WATCHED_FIELDS: Array<{ key: keyof RoadshowStop; label: string }> = [
+  { key: 'city', label: 'Ville' },
+  { key: 'venue', label: 'Lieu' },
+  { key: 'address', label: 'Adresse' },
+  { key: 'event_date', label: 'Date' },
+  { key: 'event_time', label: 'Heure du show' },
+  { key: 'check_in_time', label: 'Check-in' },
+  { key: 'departure_time', label: 'Heure de départ' },
+  { key: 'meeting_point_time', label: 'Rendez-vous équipe' },
+  { key: 'meeting_point_location', label: 'Lieu de RDV' },
+  { key: 'departure_to_show_time', label: 'Départ vers le lieu' },
+  { key: 'soundcheck_time', label: 'Balance' },
+  { key: 'doors_time', label: 'Ouverture portes' },
+  { key: 'show_start_time', label: 'Début du show' },
+  { key: 'show_end_time', label: 'Fin du show' },
+  { key: 'curfew_time', label: 'Couvre-feu' },
+  { key: 'meal_time', label: 'Repas' },
+  { key: 'meal_location', label: 'Lieu du repas' },
+  { key: 'accommodation', label: 'Hébergement' },
+  { key: 'accommodation_address', label: 'Adresse hébergement' },
+  { key: 'transport', label: 'Transport' },
+  { key: 'local_contact', label: 'Contact local' },
+  { key: 'local_contact_phone', label: 'Tél. contact local' },
+];
+
+const detectChanges = (oldStop: RoadshowStop | undefined, newStop: RoadshowStop): string[] => {
+  if (!oldStop) return [];
+  const changes: string[] = [];
+  for (const { key, label } of WATCHED_FIELDS) {
+    const a = (oldStop as any)[key] ?? '';
+    const b = (newStop as any)[key] ?? '';
+    if (String(a) !== String(b)) changes.push(label);
+  }
+  return changes;
+};
+
+const notifyStopUpdated = async (stopId: string, newStop: RoadshowStop, changes: string[]) => {
+  try {
+    const lineup = (newStop.artist_lineup || []) as ArtistLineupItem[];
+    const userIds = lineup.map(l => l.userId).filter(Boolean);
+    if (userIds.length === 0 || changes.length === 0) return;
+    await supabase.functions.invoke('send-roadshow-update-email', {
+      body: { userIds, stopId, city: newStop.city, venue: newStop.venue, changes },
+    });
+  } catch (e) { logger.warn('Update email dispatch failed (non-blocking):', e); }
+};
+
 export const useRoadshowStops = () => {
   const { user } = useAuth();
   const [stops, setStops] = useState<RoadshowStop[]>([]);
