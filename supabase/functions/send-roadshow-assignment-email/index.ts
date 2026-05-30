@@ -25,7 +25,23 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    const { userIds, stopId, city, venue } = await req.json();
+    const { userIds, stopId, city, venue, _test } = await req.json();
+
+    const DEFAULT_CFG = {
+      enabled: true,
+      subject: '🎤 Invitation : {city} — {venue}',
+      intro: "Vous avez été invité(e) à participer à la feuille de route ci-dessous. Veuillez prendre connaissance des détails et confirmer votre disponibilité dans l'application.",
+    };
+    const { data: cfgRow } = await supabase
+      .from('app_settings').select('setting_value')
+      .eq('setting_key', 'roadshow_email_invitation')
+      .order('updated_at', { ascending: false }).limit(1).maybeSingle();
+    let cfg = DEFAULT_CFG;
+    if (cfgRow?.setting_value) { try { cfg = { ...DEFAULT_CFG, ...JSON.parse(cfgRow.setting_value) }; } catch {} }
+
+    if (!cfg.enabled && !_test) {
+      return new Response(JSON.stringify({ skipped: true, reason: 'disabled' }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
       return new Response(JSON.stringify({ error: "No userIds provided" }), {
@@ -34,14 +50,12 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Fetch stop details
-    const { data: stop } = await supabase
+    const { data: stop } = stopId ? await supabase
       .from("roadshow_stops")
       .select("*")
       .eq("id", stopId)
-      .single();
+      .single() : { data: null as any };
 
-    // Fetch user profiles for assigned users
     const { data: profiles } = await supabase
       .from("user_profiles")
       .select("user_id, email, first_name, last_name, username")
@@ -52,6 +66,10 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    const subjectLine = (cfg.subject || DEFAULT_CFG.subject)
+      .replaceAll('{city}', city || '').replaceAll('{venue}', venue || '');
+    const introText = cfg.intro || DEFAULT_CFG.intro;
 
     const formatTime = (t: string | null) => t || "—";
     const formatDate = (d: string | null) => {
