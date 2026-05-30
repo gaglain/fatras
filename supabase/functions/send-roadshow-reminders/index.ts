@@ -131,6 +131,7 @@ Deno.serve(async (req) => {
             localContactPhone: stop.local_contact_phone,
             shareUrl,
             daysLabel,
+            introLine,
           });
 
           // Send via Resend
