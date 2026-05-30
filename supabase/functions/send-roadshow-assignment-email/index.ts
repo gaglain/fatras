@@ -146,7 +146,7 @@ Deno.serve(async (req) => {
 
         if (res.ok) {
           emailsSent++;
-          console.log(`Assignment email sent to ${profile.email}`);
+          console.log(`Invitation email sent to ${profile.email}`);
         } else {
           const errText = await res.text();
           console.error(`Failed to send to ${profile.email}:`, errText);
