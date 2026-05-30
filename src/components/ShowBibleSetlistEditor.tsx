@@ -44,7 +44,7 @@ const calculateTotalDuration = (songs: SetlistSong[]): string => {
 };
 
 export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps) => {
-  const { setlists, librarySongs, loading, createSetlist, updateSetlist, deleteSetlist, addSong, addSongFromLibrary, updateSong, deleteSong, reorderSongs } = useShowBibleSetlists();
+  const { setlists, librarySongs, loading, createSetlist, updateSetlist, deleteSetlist, duplicateSetlist, addSong, addSongFromLibrary, updateSong, deleteSong, reorderSongs } = useShowBibleSetlists();
 
   const [selectedSetlist, setSelectedSetlist] = useState<Setlist | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
