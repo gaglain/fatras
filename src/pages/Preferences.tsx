@@ -102,6 +102,9 @@ export const Preferences: React.FC = () => {
         <TabsContent value="smtp" className="space-y-6">
           <SmtpTab />
         </TabsContent>
+        <TabsContent value="roadshow-emails" className="space-y-4">
+          <RoadshowEmailsTab />
+        </TabsContent>
         <TabsContent value="calendar" className="space-y-4">
           <GoogleCalendarTab />
         </TabsContent>
