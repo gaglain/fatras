@@ -192,6 +192,8 @@ export const useRoadshowStops = () => {
       }
       setStops(prev => prev.map(s => s.id === stopId ? transformed : s));
       syncLinkedEventsToNylas(stopId);
+      const changes = detectChanges(currentStop, transformed);
+      if (changes.length > 0) notifyStopUpdated(stopId, transformed, changes);
       return transformed;
     } catch (error) { logger.error('Error updating roadshow stop:', error); return null; }
   };
