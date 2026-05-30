@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useUnifiedEmails } from '@/hooks/useUnifiedEmails';
+import { useEmailSync } from '@/hooks/useEmailSync';
+import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { EmailComposer } from '@/components/email/EmailComposer';
 import { sanitizeEmailHtml } from '@/lib/sanitize';
@@ -24,9 +26,11 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
   contactEmail 
 }) => {
   const { emails, isLoading, loadEmails, markAsRead, syncNow } = useUnifiedEmails({ autoLoad: false });
+  const { syncEmails } = useEmailSync();
   const [selectedEmail, setSelectedEmail] = React.useState<any | null>(null);
   const [showReply, setShowReply] = React.useState(false);
   const [isSyncing, setIsSyncing] = React.useState(false);
+  const [isBackfilling, setIsBackfilling] = React.useState(false);
   const [campaignEmails, setCampaignEmails] = React.useState<any[]>([]);
 
   const normalizeAddress = React.useCallback((value?: string) => {
@@ -767,6 +771,50 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
             ) : selectedEmail?.content ? (
               <div className="whitespace-pre-wrap text-sm">
                 {selectedEmail.content}
+              </div>
+            ) : selectedEmail?.direction === 'received' ? (
+              <div className="text-sm text-muted-foreground border border-dashed rounded-md p-4 bg-muted/30 space-y-3">
+                <div>
+                  <p className="font-medium text-foreground mb-1">Contenu non récupéré</p>
+                  <p>
+                    Cet email reçu a été indexé avant que la récupération du corps
+                    ne soit activée. Vous pouvez le retélécharger depuis le serveur IMAP.
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={isBackfilling}
+                  onClick={async () => {
+                    const dateRef = selectedEmail.received_at || selectedEmail.created_at;
+                    if (!dateRef) { toast.error('Date de l\'email introuvable'); return; }
+                    const since = new Date(new Date(dateRef).getTime() - 24 * 3600 * 1000).toISOString();
+                    setIsBackfilling(true);
+                    try {
+                      await syncEmails(since);
+                      await loadEmails({ contactId, contactEmail: normalizedContactEmail, limit: 500 });
+                      // Recharge l'email sélectionné depuis la base
+                      const { data: refreshed } = await supabase
+                        .from('emails')
+                        .select('content, html_content')
+                        .eq('id', selectedEmail.id)
+                        .maybeSingle();
+                      if (refreshed && (refreshed.content || refreshed.html_content)) {
+                        setSelectedEmail({ ...selectedEmail, ...refreshed });
+                        toast.success('Contenu récupéré');
+                      } else {
+                        toast.info('Aucun contenu trouvé sur le serveur');
+                      }
+                    } catch (err: any) {
+                      toast.error(`Erreur: ${err?.message || 'sync échouée'}`);
+                    } finally {
+                      setIsBackfilling(false);
+                    }
+                  }}
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${isBackfilling ? 'animate-spin' : ''}`} />
+                  {isBackfilling ? 'Récupération...' : 'Récupérer le contenu'}
+                </Button>
               </div>
             ) : (
               <div className="text-sm text-muted-foreground border border-dashed rounded-md p-4 bg-muted/30">
