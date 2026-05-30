@@ -235,7 +235,7 @@ function buildEmailHtml(p: EmailParams): string {
 
     <div style="padding:24px;">
       <p style="font-size:15px;color:#333;">Bonjour ${p.userName},</p>
-      <p style="font-size:15px;color:#333;">Voici le récapitulatif de votre prochaine date <strong>${p.daysLabel}</strong> :</p>
+      <p style="font-size:15px;color:#333;">${p.introLine}</p>
 
       <div style="background:#f8fafc;border-radius:8px;padding:16px;margin:16px 0;border-left:4px solid #3b82f6;">
         <h2 style="margin:0 0 4px;font-size:18px;color:#1e293b;">${p.venue}</h2>
