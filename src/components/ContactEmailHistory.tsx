@@ -26,9 +26,11 @@ export const ContactEmailHistory: React.FC<ContactEmailHistoryProps> = ({
   contactEmail 
 }) => {
   const { emails, isLoading, loadEmails, markAsRead, syncNow } = useUnifiedEmails({ autoLoad: false });
+  const { syncEmails } = useEmailSync();
   const [selectedEmail, setSelectedEmail] = React.useState<any | null>(null);
   const [showReply, setShowReply] = React.useState(false);
   const [isSyncing, setIsSyncing] = React.useState(false);
+  const [isBackfilling, setIsBackfilling] = React.useState(false);
   const [campaignEmails, setCampaignEmails] = React.useState<any[]>([]);
 
   const normalizeAddress = React.useCallback((value?: string) => {
