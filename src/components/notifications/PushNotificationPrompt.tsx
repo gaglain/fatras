@@ -30,7 +30,7 @@ export const PushNotificationPrompt: React.FC = () => {
   };
 
   // Show if permission is not granted OR permission granted but subscription missing
-  if (!isSupported || (permission === 'granted' && isSubscribed) || (!needsResubscribe && isDismissed)) {
+  if (!isSupported || (permission === 'granted' && isSubscribed) || isDismissed) {
     return null;
   }
 
