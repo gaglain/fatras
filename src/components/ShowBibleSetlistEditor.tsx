@@ -70,6 +70,13 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
     fetchArtists();
   }, []);
 
+  // Keep selectedSetlist in sync with refreshed setlists (so reorders/edits reflect in UI)
+  useEffect(() => {
+    if (!selectedSetlist) return;
+    const fresh = setlists.find(s => s.id === selectedSetlist.id);
+    if (fresh && fresh !== selectedSetlist) setSelectedSetlist(fresh);
+  }, [setlists]);
+
   const filteredLibrarySongs = useMemo(() => {
     let songs = librarySongs;
     if (selectedSetlist?.artist_id) songs = songs.filter(s => s.artist_id === selectedSetlist.artist_id);
