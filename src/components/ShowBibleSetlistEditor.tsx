@@ -70,6 +70,13 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
     fetchArtists();
   }, []);
 
+  // Keep selectedSetlist in sync with refreshed setlists (so reorders/edits reflect in UI)
+  useEffect(() => {
+    if (!selectedSetlist) return;
+    const fresh = setlists.find(s => s.id === selectedSetlist.id);
+    if (fresh && fresh !== selectedSetlist) setSelectedSetlist(fresh);
+  }, [setlists]);
+
   const filteredLibrarySongs = useMemo(() => {
     let songs = librarySongs;
     if (selectedSetlist?.artist_id) songs = songs.filter(s => s.artist_id === selectedSetlist.artist_id);
@@ -111,7 +118,9 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
     const songs = Array.from(selectedSetlist.songs || []);
     const [reorderedSong] = songs.splice(result.source.index, 1);
     songs.splice(result.destination.index, 0, reorderedSong);
-    reorderSongs(selectedSetlist.id, songs);
+    const reindexed = songs.map((s, i) => ({ ...s, position: i }));
+    setSelectedSetlist({ ...selectedSetlist, songs: reindexed });
+    reorderSongs(selectedSetlist.id, reindexed);
   };
 
   const handleShareSetlist = async (setlist: Setlist, songId?: string) => {
