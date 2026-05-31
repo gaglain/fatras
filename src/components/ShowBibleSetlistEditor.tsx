@@ -118,7 +118,9 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
     const songs = Array.from(selectedSetlist.songs || []);
     const [reorderedSong] = songs.splice(result.source.index, 1);
     songs.splice(result.destination.index, 0, reorderedSong);
-    reorderSongs(selectedSetlist.id, songs);
+    const reindexed = songs.map((s, i) => ({ ...s, position: i }));
+    setSelectedSetlist({ ...selectedSetlist, songs: reindexed });
+    reorderSongs(selectedSetlist.id, reindexed);
   };
 
   const handleShareSetlist = async (setlist: Setlist, songId?: string) => {
