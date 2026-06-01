@@ -86,15 +86,15 @@ export const ExpensesForm: React.FC<ExpensesFormProps> = ({ roadshowStopId }) =>
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
+    <div className="space-y-4 w-full max-w-full overflow-x-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="min-w-0">
           <h3 className="text-lg font-medium">Notes de frais</h3>
           <p className="text-sm text-muted-foreground">
             Ajoutez vos notes de frais avec photos ou PDF
           </p>
         </div>
-        <Button onClick={() => setShowDialog(true)}>
+        <Button onClick={() => setShowDialog(true)} className="w-full sm:w-auto shrink-0">
           <Upload className="h-4 w-4 mr-2" />
           Ajouter
         </Button>
