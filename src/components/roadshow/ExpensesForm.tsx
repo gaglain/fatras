@@ -149,7 +149,7 @@ export const ExpensesForm: React.FC<ExpensesFormProps> = ({ roadshowStopId }) =>
       )}
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Ajouter une note de frais</DialogTitle>
           </DialogHeader>
@@ -179,6 +179,7 @@ export const ExpensesForm: React.FC<ExpensesFormProps> = ({ roadshowStopId }) =>
                 id="amount"
                 type="number"
                 step="0.01"
+                inputMode="decimal"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.00"
@@ -189,28 +190,31 @@ export const ExpensesForm: React.FC<ExpensesFormProps> = ({ roadshowStopId }) =>
               <Input
                 id="file"
                 type="file"
-                accept="image/*,.pdf"
+                accept="image/*,application/pdf,.pdf"
                 onChange={handleFileSelect}
                 required
+                className="block w-full text-sm file:mr-2 file:py-1 file:px-2 file:rounded file:border file:bg-muted file:text-foreground"
               />
               {selectedFile && (
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="text-sm text-muted-foreground mt-1 break-all">
                   ✓ {selectedFile.name}
                 </p>
               )}
             </div>
-            <div className="flex gap-2 justify-end">
+            <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
               <Button 
                 type="button" 
                 variant="outline" 
                 onClick={() => setShowDialog(false)}
                 disabled={loading}
+                className="w-full sm:w-auto"
               >
                 Annuler
               </Button>
               <Button 
                 type="submit"
                 disabled={!title || !selectedFile || loading}
+                className="w-full sm:w-auto"
               >
                 {loading ? 'Ajout...' : 'Ajouter'}
               </Button>
