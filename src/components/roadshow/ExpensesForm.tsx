@@ -86,21 +86,21 @@ export const ExpensesForm: React.FC<ExpensesFormProps> = ({ roadshowStopId }) =>
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
+    <div className="space-y-4 w-full max-w-full overflow-x-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="min-w-0">
           <h3 className="text-lg font-medium">Notes de frais</h3>
           <p className="text-sm text-muted-foreground">
             Ajoutez vos notes de frais avec photos ou PDF
           </p>
         </div>
-        <Button onClick={() => setShowDialog(true)}>
+        <Button onClick={() => setShowDialog(true)} className="w-full sm:w-auto shrink-0">
           <Upload className="h-4 w-4 mr-2" />
           Ajouter
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-3 grid-cols-1 md:grid-cols-2">
         {expenses.map((expense) => (
           <Card key={expense.id}>
             <CardContent className="p-4">
@@ -149,7 +149,7 @@ export const ExpensesForm: React.FC<ExpensesFormProps> = ({ roadshowStopId }) =>
       )}
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Ajouter une note de frais</DialogTitle>
           </DialogHeader>
@@ -179,6 +179,7 @@ export const ExpensesForm: React.FC<ExpensesFormProps> = ({ roadshowStopId }) =>
                 id="amount"
                 type="number"
                 step="0.01"
+                inputMode="decimal"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.00"
@@ -189,28 +190,31 @@ export const ExpensesForm: React.FC<ExpensesFormProps> = ({ roadshowStopId }) =>
               <Input
                 id="file"
                 type="file"
-                accept="image/*,.pdf"
+                accept="image/*,application/pdf,.pdf"
                 onChange={handleFileSelect}
                 required
+                className="block w-full text-sm file:mr-2 file:py-1 file:px-2 file:rounded file:border file:bg-muted file:text-foreground"
               />
               {selectedFile && (
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="text-sm text-muted-foreground mt-1 break-all">
                   ✓ {selectedFile.name}
                 </p>
               )}
             </div>
-            <div className="flex gap-2 justify-end">
+            <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
               <Button 
                 type="button" 
                 variant="outline" 
                 onClick={() => setShowDialog(false)}
                 disabled={loading}
+                className="w-full sm:w-auto"
               >
                 Annuler
               </Button>
               <Button 
                 type="submit"
                 disabled={!title || !selectedFile || loading}
+                className="w-full sm:w-auto"
               >
                 {loading ? 'Ajout...' : 'Ajouter'}
               </Button>
