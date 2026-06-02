@@ -122,12 +122,12 @@ export const ContactLists: React.FC = () => {
       />
 
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-5xl w-[95vw] h-[90vh] max-h-[90vh] p-0 flex flex-col overflow-hidden">
+        <DialogContent className="!flex sm:!flex max-w-5xl sm:!max-w-5xl w-[95vw] sm:!w-[95vw] h-[90dvh] sm:!h-[90vh] max-h-[90dvh] sm:!max-h-[90vh] p-0 flex-col overflow-hidden">
           <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-2 shrink-0">
             <DialogTitle>Modifier la liste de contacts</DialogTitle>
           </DialogHeader>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 flex-1 min-h-0 px-4 sm:px-6 pb-4 sm:pb-6 overflow-y-auto lg:overflow-hidden">
-            <div className="lg:col-span-1 lg:overflow-y-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 flex-1 min-h-0 px-4 sm:px-6 pb-4 sm:pb-6 overflow-y-auto lg:overflow-hidden overscroll-contain">
+            <div className="lg:col-span-1 min-h-0 lg:overflow-y-auto">
               <div className="space-y-4 p-4 bg-muted/30 rounded-lg border">
                 <h3 className="font-semibold">Informations</h3>
                 <div><label className="block text-sm font-medium mb-2">Nom</label><Input value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} /></div>
@@ -135,7 +135,7 @@ export const ContactLists: React.FC = () => {
                 <Button onClick={handleUpdateList} disabled={!formData.name.trim()} className="w-full">Sauvegarder les infos</Button>
               </div>
             </div>
-            <div className="lg:col-span-2 min-h-0 flex flex-col lg:overflow-hidden">
+            <div className="lg:col-span-2 min-h-0 h-full flex flex-col overflow-hidden">
               {selectedList && <ContactListMemberManager listId={selectedList.id} listName={selectedList.name} open={true} onOpenChange={() => {}} embedded />}
             </div>
           </div>
