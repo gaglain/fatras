@@ -138,7 +138,7 @@ export const ContactListMemberManager: React.FC<ContactListMemberManagerProps> =
         {loading ? (
           <div className="flex items-center justify-center py-8"><Loader2 className="h-8 w-8 animate-spin" /></div>
         ) : (
-          <div className="overflow-y-auto flex-1 space-y-2 pr-2">
+          <div className="overflow-y-auto flex-1 min-h-0 max-h-[50vh] lg:max-h-none space-y-2 pr-2">
             {filteredContacts.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">Aucun contact trouvé</div>
             ) : filteredContacts.map(contact => {
