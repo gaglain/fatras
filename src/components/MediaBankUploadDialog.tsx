@@ -35,7 +35,7 @@ export const MediaBankUploadDialog: React.FC<MediaBankUploadDialogProps> = ({
 }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-lg w-[95vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>Ajouter un fichier</DialogTitle></DialogHeader>
         <div className="space-y-4">
           <div>

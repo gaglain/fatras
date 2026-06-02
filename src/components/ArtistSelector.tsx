@@ -128,7 +128,7 @@ export const ArtistSelector: React.FC<ArtistSelectorProps> = ({
             }
           </Button>
         </DialogTrigger>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl w-[95vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Sélectionner des artistes</DialogTitle>
           </DialogHeader>

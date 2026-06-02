@@ -170,7 +170,7 @@ export const RoadShow: React.FC = () => {
                 Nouvelle
               </Button>
             </DialogTrigger>
-         <DialogContent className="sm:!max-w-3xl overflow-x-hidden" onPointerDownOutside={(e) => e.preventDefault()}>
+          <DialogContent className="sm:!max-w-3xl w-[95vw] max-h-[90vh] overflow-y-auto overflow-x-hidden" onPointerDownOutside={(e) => e.preventDefault()}>
             <DialogHeader>
               <DialogTitle>Créer une nouvelle étape de tournée</DialogTitle>
             </DialogHeader>
@@ -371,7 +371,7 @@ export const RoadShow: React.FC = () => {
 
       {/* Dialog de modification */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="sm:!max-w-3xl overflow-x-hidden" onPointerDownOutside={(e) => e.preventDefault()}>
+        <DialogContent className="sm:!max-w-3xl w-[95vw] max-h-[90vh] overflow-y-auto overflow-x-hidden" onPointerDownOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Modifier l'étape de tournée</DialogTitle>
           </DialogHeader>
