@@ -163,18 +163,24 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
       });
 
       const batchSize = 50;
-      let totalImported = 0;
+      const insertedAll: any[] = [];
+      let hadError = false;
       for (let i = 0; i < mappedData.length; i += batchSize) {
         const batch = mappedData.slice(i, i + batchSize);
-        const { error } = await supabase.from('contacts').insert(batch);
-        if (error) { logger.error('Error inserting batch:', error); toast.error(`Erreur lors de l'import du lot (${totalImported}/${mappedData.length})`); break; }
-        totalImported += batch.length;
+        const { data: inserted, error } = await supabase.from('contacts').insert(batch).select('id');
+        if (error) {
+          logger.error('Error inserting batch:', error);
+          toast.error(`Erreur lors de l'import du lot (${insertedAll.length}/${mappedData.length})`);
+          hadError = true;
+          break;
+        }
+        if (inserted) insertedAll.push(...inserted);
       }
 
-      if (totalImported === mappedData.length) {
-        toast.success(`${mappedData.length} contacts importés avec succès !`);
+      if (insertedAll.length > 0) {
+        if (!hadError) toast.success(`${insertedAll.length} contacts importés avec succès !`);
         onImport(mappedData);
-        setImportedContacts(mappedData);
+        setImportedContacts(insertedAll);
         setStep('assign-list');
       }
     } catch (error) {
@@ -185,6 +191,7 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
     }
   };
 
+
   const resetImporter = () => {
     setCsvData([]); setHeaders([]); setMapping({}); setStep('upload');
     setImporting(false); setSelectedListId(''); setNewListName(''); setImportedContacts([]);
@@ -192,24 +199,17 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
 
   const handleAssignToList = async () => {
     try {
+      const contactIds = importedContacts.map((c: any) => c.id).filter(Boolean);
+      if (contactIds.length === 0) throw new Error('Aucun contact importé à assigner');
+
       if (newListName.trim() && onCreateList) {
-        const { data: insertedContacts, error } = await supabase.from('contacts').select('id')
-          .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
-          .order('created_at', { ascending: false }).limit(importedContacts.length);
-        if (error || !insertedContacts) throw new Error('Erreur lors de la récupération des contacts importés');
-        const contactIds = insertedContacts.map(contact => contact.id);
         await onCreateList(newListName.trim(), contactIds);
         toast.success(`Liste "${newListName}" créée avec ${contactIds.length} contacts`);
       } else if (selectedListId) {
-        const { data: insertedContacts, error } = await supabase.from('contacts').select('id')
-          .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
-          .order('created_at', { ascending: false }).limit(importedContacts.length);
-        if (!error && insertedContacts) {
-          const members = insertedContacts.map(contact => ({ contact_list_id: selectedListId, contact_id: contact.id }));
-          const { error: memberError } = await supabase.from('contact_list_members').insert(members);
-          if (!memberError) toast.success(`${insertedContacts.length} contacts ajoutés à la liste`);
-          else throw memberError;
-        }
+        const members = contactIds.map(contact_id => ({ contact_list_id: selectedListId, contact_id }));
+        const { error: memberError } = await supabase.from('contact_list_members').insert(members);
+        if (memberError) throw memberError;
+        toast.success(`${contactIds.length} contacts ajoutés à la liste`);
       }
       resetImporter();
       onClose();
@@ -218,6 +218,7 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
       toast.error('Erreur lors de l\'assignation à la liste');
     }
   };
+
 
   const isValid = () => expectedFields.filter(f => f.required).every(field => mapping[field.key]);
 
