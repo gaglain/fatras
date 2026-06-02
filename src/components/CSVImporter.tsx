@@ -163,18 +163,24 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
       });
 
       const batchSize = 50;
-      let totalImported = 0;
+      const insertedAll: any[] = [];
+      let hadError = false;
       for (let i = 0; i < mappedData.length; i += batchSize) {
         const batch = mappedData.slice(i, i + batchSize);
-        const { error } = await supabase.from('contacts').insert(batch);
-        if (error) { logger.error('Error inserting batch:', error); toast.error(`Erreur lors de l'import du lot (${totalImported}/${mappedData.length})`); break; }
-        totalImported += batch.length;
+        const { data: inserted, error } = await supabase.from('contacts').insert(batch).select('id');
+        if (error) {
+          logger.error('Error inserting batch:', error);
+          toast.error(`Erreur lors de l'import du lot (${insertedAll.length}/${mappedData.length})`);
+          hadError = true;
+          break;
+        }
+        if (inserted) insertedAll.push(...inserted);
       }
 
-      if (totalImported === mappedData.length) {
-        toast.success(`${mappedData.length} contacts importés avec succès !`);
+      if (insertedAll.length > 0) {
+        if (!hadError) toast.success(`${insertedAll.length} contacts importés avec succès !`);
         onImport(mappedData);
-        setImportedContacts(mappedData);
+        setImportedContacts(insertedAll);
         setStep('assign-list');
       }
     } catch (error) {
@@ -184,6 +190,7 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
       setImporting(false);
     }
   };
+
 
   const resetImporter = () => {
     setCsvData([]); setHeaders([]); setMapping({}); setStep('upload');
