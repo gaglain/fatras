@@ -142,7 +142,7 @@ export const QuoteEditor: React.FC<QuoteEditorProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="sm:!max-w-2xl">
+      <DialogContent className="sm:!max-w-2xl w-[95vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-base">
             Modifier — {quote?.quote_number || quote?.title}

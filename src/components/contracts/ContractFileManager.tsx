@@ -168,7 +168,7 @@ export const ContractFileManager: React.FC<ContractFileManagerProps> = ({ artist
             </Button>
           </DialogTrigger>
           
-          <DialogContent>
+          <DialogContent className="max-w-lg w-[95vw] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Ajouter un document</DialogTitle>
             </DialogHeader>

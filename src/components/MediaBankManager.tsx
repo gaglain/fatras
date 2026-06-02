@@ -287,7 +287,7 @@ export const MediaBankManager: React.FC = () => {
 
       {/* Preview/Edit Dialog */}
       <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
-        <DialogContent className="max-w-4xl max-h-[90vh]">
+        <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
               <span className="truncate">{selectedImage?.name}</span>

@@ -85,7 +85,7 @@ export const EmailSenderComponent: React.FC = () => {
               </Button>
             </DialogTrigger>
             
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-2xl w-[95vw] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Composer un nouvel email</DialogTitle>
               </DialogHeader>

@@ -43,7 +43,7 @@ export const TourStopPreview: React.FC<TourStopPreviewProps> = ({ stop, isOpen, 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-4xl overflow-x-hidden">
+      <DialogContent className="sm:max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader className="pb-2 sm:pb-4">
           <DialogTitle className="flex flex-col gap-3">
             <span className="text-base sm:text-xl font-semibold">Aperçu - {stop.city}</span>

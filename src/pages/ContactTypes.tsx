@@ -150,7 +150,7 @@ export default function ContactTypes() {
               Nouveau Type
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-md w-[95vw] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
                 {editingType ? 'Modifier le type' : 'Créer un nouveau type'}
