@@ -147,11 +147,11 @@ export const Contacts: React.FC = () => {
     } catch {}
   };
 
-  const fetchContacts = async ({ reset }: { reset: boolean }) => {
+  const fetchContacts = async ({ reset, silent = false }: { reset: boolean; silent?: boolean }) => {
     const targetPage = reset ? 0 : page;
     const from = targetPage * PAGE_SIZE;
     const to = from + PAGE_SIZE - 1;
-    if (reset) { setLoading(true); setContacts([]); setFilteredContacts([]); setSelectedContactIds([]); setContactEvents({}); setContactArtists({}); setPage(0); } else { setIsLoadingMore(true); }
+    if (reset) { if (!silent) setLoading(true); setContacts([]); setFilteredContacts([]); setSelectedContactIds([]); setContactEvents({}); setContactArtists({}); setPage(0); } else { setIsLoadingMore(true); }
     try {
       const { data, error, count } = await supabase.from('contacts').select('*', { count: 'exact' }).order('created_at', { ascending: false }).range(from, to);
       if (error) throw error;
@@ -163,7 +163,7 @@ export const Contacts: React.FC = () => {
       const total = typeof count === 'number' ? count : totalContactsCount;
       setHasMore(total ? mergedCount < total : newContacts.length === PAGE_SIZE);
       await fetchRelationsForContacts(newContacts.map(c => c.id).filter(Boolean));
-    } catch { toast.error('Erreur lors du chargement des contacts'); } finally { setLoading(false); setIsLoadingMore(false); }
+    } catch { toast.error('Erreur lors du chargement des contacts'); } finally { if (!silent) setLoading(false); setIsLoadingMore(false); }
   };
 
   const fetchEvents = async () => { try { const { data } = await supabase.from('events').select('id, title').order('start_date', { ascending: false }); setEvents(data || []); } catch {} };
@@ -262,7 +262,7 @@ export const Contacts: React.FC = () => {
       </Tabs>
 
       <ContactDialog isOpen={dialogOpen} onClose={() => { setDialogOpen(false); setEditingContact(null); }} contact={editingContact} onSave={() => fetchContacts({ reset: true })} />
-      <CSVImporter isOpen={csvImportOpen} onClose={() => setCsvImportOpen(false)} onImport={() => { fetchContacts({ reset: true }); }} contactLists={contactLists} onCreateList={async (listName, contactIds) => { await createContactList({ name: listName, contactIds }); }} />
+      <CSVImporter isOpen={csvImportOpen} onClose={() => setCsvImportOpen(false)} onImport={() => { fetchContacts({ reset: true, silent: true }); }} contactLists={contactLists} onCreateList={async (listName, contactIds) => { await createContactList({ name: listName, contactIds }); }} />
       <CSVExporter isOpen={csvExportOpen} onClose={() => setCsvExportOpen(false)} contacts={filteredContacts} />
       <BulkContactListAssignment isOpen={bulkListAssignmentOpen} onClose={() => setBulkListAssignmentOpen(false)} selectedContactIds={selectedContactIds} contactLists={contactLists} onListCreated={() => { setSelectedContactIds([]); setBulkListAssignmentOpen(false); }} />
       <EmailComposer isOpen={emailComposer.isOpen} onClose={() => setEmailComposer({ isOpen: false, to: '', toName: '' })} toEmail={emailComposer.to} subject="" preText="" />
