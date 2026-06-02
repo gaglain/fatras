@@ -118,7 +118,8 @@ export const ContactListMemberManager: React.FC<ContactListMemberManagerProps> =
         </div>
       )}
 
-      <div className="space-y-4 flex-1 overflow-hidden flex flex-col">
+      <div className="space-y-4 flex-1 min-h-0 overflow-hidden flex flex-col">
+        <div className="shrink-0">
         <ContactListFilters
           searchTerm={searchTerm} setSearchTerm={setSearchTerm}
           showFilters={showFilters} setShowFilters={setShowFilters}
@@ -134,6 +135,7 @@ export const ContactListMemberManager: React.FC<ContactListMemberManagerProps> =
           onDeselectAll={() => setSelectedContacts([])}
           onInvertSelection={() => { const ids = filteredContacts.map(c => c.id); setSelectedContacts(ids.filter(id => !selectedContacts.includes(id))); }}
         />
+        </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-8"><Loader2 className="h-8 w-8 animate-spin" /></div>
@@ -169,7 +171,7 @@ export const ContactListMemberManager: React.FC<ContactListMemberManagerProps> =
         )}
       </div>
 
-      <div className="flex gap-2 pt-4 border-t">
+      <div className="flex gap-2 pt-4 border-t shrink-0">
         <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving} className="flex-1">Annuler</Button>
         <Button onClick={handleSave} disabled={saving || loading} className="flex-1">
           {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Enregistrer
