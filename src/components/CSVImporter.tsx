@@ -199,24 +199,17 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
 
   const handleAssignToList = async () => {
     try {
+      const contactIds = importedContacts.map((c: any) => c.id).filter(Boolean);
+      if (contactIds.length === 0) throw new Error('Aucun contact importé à assigner');
+
       if (newListName.trim() && onCreateList) {
-        const { data: insertedContacts, error } = await supabase.from('contacts').select('id')
-          .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
-          .order('created_at', { ascending: false }).limit(importedContacts.length);
-        if (error || !insertedContacts) throw new Error('Erreur lors de la récupération des contacts importés');
-        const contactIds = insertedContacts.map(contact => contact.id);
         await onCreateList(newListName.trim(), contactIds);
         toast.success(`Liste "${newListName}" créée avec ${contactIds.length} contacts`);
       } else if (selectedListId) {
-        const { data: insertedContacts, error } = await supabase.from('contacts').select('id')
-          .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
-          .order('created_at', { ascending: false }).limit(importedContacts.length);
-        if (!error && insertedContacts) {
-          const members = insertedContacts.map(contact => ({ contact_list_id: selectedListId, contact_id: contact.id }));
-          const { error: memberError } = await supabase.from('contact_list_members').insert(members);
-          if (!memberError) toast.success(`${insertedContacts.length} contacts ajoutés à la liste`);
-          else throw memberError;
-        }
+        const members = contactIds.map(contact_id => ({ contact_list_id: selectedListId, contact_id }));
+        const { error: memberError } = await supabase.from('contact_list_members').insert(members);
+        if (memberError) throw memberError;
+        toast.success(`${contactIds.length} contacts ajoutés à la liste`);
       }
       resetImporter();
       onClose();
@@ -225,6 +218,7 @@ export const CSVImporter: React.FC<CSVImporterProps> = ({ isOpen, onClose, onImp
       toast.error('Erreur lors de l\'assignation à la liste');
     }
   };
+
 
   const isValid = () => expectedFields.filter(f => f.required).every(field => mapping[field.key]);
 
