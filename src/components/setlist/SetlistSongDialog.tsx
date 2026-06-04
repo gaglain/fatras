@@ -11,6 +11,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Search, Plus, Library, FileText } from 'lucide-react';
 import { LibrarySong } from '@/hooks/useShowBibleSetlists';
 import { SongRichTextEditor } from './SongRichTextEditor';
+import { SongAudioField } from './SongAudioField';
 
 const TONALITIES = ['C', 'C#/Db', 'D', 'D#/Eb', 'E', 'F', 'F#/Gb', 'G', 'G#/Ab', 'A', 'A#/Bb', 'B'];
 const TONALITY_MODES = ['Majeur', 'Mineur'];
@@ -23,6 +24,8 @@ interface SongFormData {
   bpm: string;
   lyrics: string;
   sacem_number: string;
+  audio_url: string;
+  audio_name: string;
 }
 
 interface SetlistSongDialogProps {
@@ -104,6 +107,13 @@ export const SetlistSongDialog: React.FC<SetlistSongDialogProps> = ({
         <div className="col-span-2">
           <Label>N° SACEM</Label>
           <Input value={newSongData.sacem_number} onChange={(e) => onNewSongDataChange({ ...newSongData, sacem_number: e.target.value })} placeholder="ex: 1234567890" />
+        </div>
+        <div className="col-span-2">
+          <SongAudioField
+            audioUrl={newSongData.audio_url || ''}
+            audioName={newSongData.audio_name || ''}
+            onChange={(url, name) => onNewSongDataChange({ ...newSongData, audio_url: url, audio_name: name })}
+          />
         </div>
       </div>
       <Button onClick={isEditMode ? onUpdateSong : onAddSong} className="w-full">

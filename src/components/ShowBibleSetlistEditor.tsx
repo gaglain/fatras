@@ -60,7 +60,7 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
   const [exportOptions, setExportOptions] = useState({ includeNotes: true, includeLyrics: true });
 
   const [newSetlistData, setNewSetlistData] = useState({ title: '', description: '', artist_id: artistId || '', sacem_program_number: '' });
-  const [newSongData, setNewSongData] = useState<SongFormData>({ title: '', duration: '', notes: '', tonality: '', bpm: '', lyrics: '', sacem_number: '' });
+  const [newSongData, setNewSongData] = useState<SongFormData>({ title: '', duration: '', notes: '', tonality: '', bpm: '', lyrics: '', sacem_number: '', audio_url: '', audio_name: '' });
 
   useEffect(() => {
     const fetchArtists = async () => {
@@ -87,7 +87,7 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
     return songs;
   }, [librarySongs, selectedSetlist?.artist_id, librarySearchQuery]);
 
-  const resetNewSongData = () => setNewSongData({ title: '', duration: '', notes: '', tonality: '', bpm: '', lyrics: '', sacem_number: '' });
+  const resetNewSongData = () => setNewSongData({ title: '', duration: '', notes: '', tonality: '', bpm: '', lyrics: '', sacem_number: '', audio_url: '', audio_name: '' });
 
   const handleCreateSetlist = async () => {
     if (!newSetlistData.title.trim()) { toast.error('Le titre est requis'); return; }
@@ -97,7 +97,7 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
 
   const handleAddSong = async () => {
     if (!selectedSetlist || !newSongData.title.trim()) { toast.error('Le titre de la chanson est requis'); return; }
-    const result = await addSong(selectedSetlist.id, { title: newSongData.title, duration: newSongData.duration || undefined, notes: newSongData.notes || undefined, tonality: newSongData.tonality || undefined, bpm: newSongData.bpm ? parseInt(newSongData.bpm) : undefined, lyrics: newSongData.lyrics || undefined, sacem_number: newSongData.sacem_number || undefined }, selectedSetlist.artist_id || undefined);
+    const result = await addSong(selectedSetlist.id, { title: newSongData.title, duration: newSongData.duration || undefined, notes: newSongData.notes || undefined, tonality: newSongData.tonality || undefined, bpm: newSongData.bpm ? parseInt(newSongData.bpm) : undefined, lyrics: newSongData.lyrics || undefined, sacem_number: newSongData.sacem_number || undefined, audio_url: newSongData.audio_url || undefined, audio_name: newSongData.audio_name || undefined }, selectedSetlist.artist_id || undefined);
     if (result) { setIsAddSongDialogOpen(false); resetNewSongData(); }
   };
 
@@ -109,7 +109,7 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
 
   const handleUpdateSong = async () => {
     if (!editingSong || !newSongData.title.trim()) { toast.error('Le titre de la chanson est requis'); return; }
-    const result = await updateSong(editingSong.id, { title: newSongData.title, duration: newSongData.duration || undefined, notes: newSongData.notes || undefined, tonality: newSongData.tonality || undefined, bpm: newSongData.bpm ? parseInt(newSongData.bpm) : undefined, lyrics: newSongData.lyrics || undefined });
+    const result = await updateSong(editingSong.id, { title: newSongData.title, duration: newSongData.duration || undefined, notes: newSongData.notes || undefined, tonality: newSongData.tonality || undefined, bpm: newSongData.bpm ? parseInt(newSongData.bpm) : undefined, lyrics: newSongData.lyrics || undefined, audio_url: newSongData.audio_url || null, audio_name: newSongData.audio_name || null });
     if (result) { setEditingSong(null); resetNewSongData(); }
   };
 
@@ -295,7 +295,7 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
                                     <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setPreviewSong(song)} title="Aperçu plein écran"><Eye className="h-4 w-4" /></Button>
                                     <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => generateSongPDF({ title: song.title, duration: song.duration, tonality: song.tonality, bpm: song.bpm, notes: song.notes, lyrics: song.lyrics, sacem_number: (song as any).sacem_number }, selectedSetlist.title)} title="Exporter en PDF"><FileDown className="h-4 w-4" /></Button>
                                     <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => handleShareSetlist(selectedSetlist, song.id)} title="Lien privé"><Link2 className="h-4 w-4" /></Button>
-                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => { setEditingSong(song); setNewSongData({ title: song.title, duration: song.duration || '', notes: song.notes || '', tonality: song.tonality || '', bpm: song.bpm?.toString() || '', lyrics: song.lyrics || '', sacem_number: (song as any).sacem_number || '' }); }}><Edit className="h-4 w-4" /></Button>
+                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => { setEditingSong(song); setNewSongData({ title: song.title, duration: song.duration || '', notes: song.notes || '', tonality: song.tonality || '', bpm: song.bpm?.toString() || '', lyrics: song.lyrics || '', sacem_number: (song as any).sacem_number || '', audio_url: (song as any).audio_url || '', audio_name: (song as any).audio_name || '' }); }}><Edit className="h-4 w-4" /></Button>
                                     <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => deleteSong(song.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                                   </div>
                                 </div>
@@ -314,12 +314,20 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
                                       <div className="prose prose-sm max-w-none text-muted-foreground mt-2 bg-muted/50 p-2 rounded [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5" dangerouslySetInnerHTML={{ __html: song.lyrics }} />
                                     </details>
                                   )}
+                                  {(song as any).audio_url && (
+                                    <div className="mt-2 space-y-1">
+                                      <audio controls src={(song as any).audio_url} className="w-full" preload="metadata" />
+                                      <a href={(song as any).audio_url} download={(song as any).audio_name || ''} className="text-xs text-primary hover:underline inline-flex items-center gap-1">
+                                        <FileDown className="h-3 w-3" />Télécharger{(song as any).audio_name ? ` (${(song as any).audio_name})` : ''}
+                                      </a>
+                                    </div>
+                                  )}
                                 </div>
                                 <div className="hidden sm:flex gap-1 shrink-0">
                                   <Button variant="ghost" size="sm" onClick={() => setPreviewSong(song)} title="Aperçu plein écran"><Eye className="h-4 w-4" /></Button>
                                   <Button variant="ghost" size="sm" onClick={() => generateSongPDF({ title: song.title, duration: song.duration, tonality: song.tonality, bpm: song.bpm, notes: song.notes, lyrics: song.lyrics, sacem_number: (song as any).sacem_number }, selectedSetlist.title)} title="Exporter en PDF"><FileDown className="h-4 w-4" /></Button>
                                   <Button variant="ghost" size="sm" onClick={() => handleShareSetlist(selectedSetlist, song.id)} title="Lien privé vers cette chanson"><Link2 className="h-4 w-4" /></Button>
-                                  <Button variant="ghost" size="sm" onClick={() => { setEditingSong(song); setNewSongData({ title: song.title, duration: song.duration || '', notes: song.notes || '', tonality: song.tonality || '', bpm: song.bpm?.toString() || '', lyrics: song.lyrics || '', sacem_number: (song as any).sacem_number || '' }); }}>
+                                  <Button variant="ghost" size="sm" onClick={() => { setEditingSong(song); setNewSongData({ title: song.title, duration: song.duration || '', notes: song.notes || '', tonality: song.tonality || '', bpm: song.bpm?.toString() || '', lyrics: song.lyrics || '', sacem_number: (song as any).sacem_number || '', audio_url: (song as any).audio_url || '', audio_name: (song as any).audio_name || '' }); }}>
                                     <Edit className="h-4 w-4" />
                                   </Button>
                                   <Button variant="ghost" size="sm" onClick={() => deleteSong(song.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
