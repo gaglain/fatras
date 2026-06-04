@@ -97,7 +97,7 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
 
   const handleAddSong = async () => {
     if (!selectedSetlist || !newSongData.title.trim()) { toast.error('Le titre de la chanson est requis'); return; }
-    const result = await addSong(selectedSetlist.id, { title: newSongData.title, duration: newSongData.duration || undefined, notes: newSongData.notes || undefined, tonality: newSongData.tonality || undefined, bpm: newSongData.bpm ? parseInt(newSongData.bpm) : undefined, lyrics: newSongData.lyrics || undefined, sacem_number: newSongData.sacem_number || undefined }, selectedSetlist.artist_id || undefined);
+    const result = await addSong(selectedSetlist.id, { title: newSongData.title, duration: newSongData.duration || undefined, notes: newSongData.notes || undefined, tonality: newSongData.tonality || undefined, bpm: newSongData.bpm ? parseInt(newSongData.bpm) : undefined, lyrics: newSongData.lyrics || undefined, sacem_number: newSongData.sacem_number || undefined, audio_url: newSongData.audio_url || undefined, audio_name: newSongData.audio_name || undefined }, selectedSetlist.artist_id || undefined);
     if (result) { setIsAddSongDialogOpen(false); resetNewSongData(); }
   };
 
@@ -109,7 +109,7 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
 
   const handleUpdateSong = async () => {
     if (!editingSong || !newSongData.title.trim()) { toast.error('Le titre de la chanson est requis'); return; }
-    const result = await updateSong(editingSong.id, { title: newSongData.title, duration: newSongData.duration || undefined, notes: newSongData.notes || undefined, tonality: newSongData.tonality || undefined, bpm: newSongData.bpm ? parseInt(newSongData.bpm) : undefined, lyrics: newSongData.lyrics || undefined });
+    const result = await updateSong(editingSong.id, { title: newSongData.title, duration: newSongData.duration || undefined, notes: newSongData.notes || undefined, tonality: newSongData.tonality || undefined, bpm: newSongData.bpm ? parseInt(newSongData.bpm) : undefined, lyrics: newSongData.lyrics || undefined, audio_url: newSongData.audio_url || null, audio_name: newSongData.audio_name || null });
     if (result) { setEditingSong(null); resetNewSongData(); }
   };
 
