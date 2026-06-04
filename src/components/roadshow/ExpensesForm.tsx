@@ -119,8 +119,14 @@ export const ExpensesForm: React.FC<ExpensesFormProps> = ({ roadshowStopId }) =>
                     {expense.description && (
                       <p className="text-sm text-muted-foreground mt-1">{expense.description}</p>
                     )}
-                    {expense.amount && (
-                      <p className="text-sm font-semibold mt-2">{expense.amount}€</p>
+                    {expense.amount != null && (
+                      <div className="mt-2 text-sm">
+                        <p className="font-semibold">{expense.amount.toFixed(2)} € TTC</p>
+                        <p className="text-xs text-muted-foreground">
+                          {(expense.amount / (1 + (expense.tax_rate ?? 20) / 100)).toFixed(2)} € HT
+                          {' · '}TVA {expense.tax_rate ?? 20}%
+                        </p>
+                      </div>
                     )}
                     <ExpenseFileLink
                       fileUrl={expense.file_url}
