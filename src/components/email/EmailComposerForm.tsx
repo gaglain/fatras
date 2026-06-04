@@ -131,11 +131,11 @@ export const EmailComposerForm: React.FC<EmailComposerFormProps> = (props) => {
       </div>
 
       <div>
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
           <Label htmlFor="content">Message *</Label>
           <VariableInserter onInsert={(variable) => props.onContentChange(props.content + variable)} />
         </div>
-        <RichTextEditor value={props.content} onChange={props.onContentChange} placeholder="Votre message..." className="min-h-[300px]" />
+        <RichTextEditor value={props.content} onChange={props.onContentChange} placeholder="Votre message..." className="min-h-[400px] sm:min-h-[500px]" />
       </div>
 
       {props.selectedTemplate && props.selectedTemplate.variables.length > 0 && (
@@ -154,8 +154,8 @@ export const EmailComposerForm: React.FC<EmailComposerFormProps> = (props) => {
         <Label htmlFor="attachments">Pièces jointes</Label>
         <div className="space-y-2">
           <input id="attachments" type="file" multiple onChange={props.onFileSelect} className="hidden" />
-          <div className="grid grid-cols-2 gap-2">
-            <Button type="button" variant="outline" onClick={() => document.getElementById('attachments')?.click()}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <Button type="button" variant="outline" className="w-full justify-center" onClick={() => document.getElementById('attachments')?.click()}>
               <Paperclip className="h-4 w-4 mr-2" />Depuis l'ordinateur
             </Button>
             <ImageGalleryPicker onSelect={props.onMediaBankSelect} buttonText={props.addingFromMediaBank ? "Chargement..." : "Depuis la banque de médias"} acceptedTypes={['image', 'pdf', 'audio', 'video', 'text', 'other']} />
@@ -172,6 +172,7 @@ export const EmailComposerForm: React.FC<EmailComposerFormProps> = (props) => {
           )}
         </div>
       </div>
+
 
       <div className="flex items-center space-x-2">
         <input type="checkbox" id="includeSignature" checked={props.includeSignature} onChange={(e) => props.onIncludeSignatureChange(e.target.checked)} className="h-4 w-4" />
