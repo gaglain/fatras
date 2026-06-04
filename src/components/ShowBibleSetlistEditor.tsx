@@ -216,13 +216,13 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
           <h4 className="font-medium mb-4">Mes Setlists ({filteredSetlists.length})</h4>
           {filteredSetlists.length === 0 ? <p className="text-sm text-muted-foreground">Aucune setlist</p> : filteredSetlists.map((setlist) => (
             <div key={setlist.id} className={`p-3 rounded-lg border cursor-pointer transition-colors ${selectedSetlist?.id === setlist.id ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`} onClick={() => setSelectedSetlist(setlist)}>
-              <div className="flex items-start justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
                 <div className="flex-1 min-w-0">
-                  <h5 className="font-medium truncate">{setlist.title}</h5>
-                  {setlist.artist_id && <p className="text-xs text-muted-foreground truncate">{artists.find(a => a.id === setlist.artist_id)?.name}</p>}
+                  <h5 className="font-medium break-words">{setlist.title}</h5>
+                  {setlist.artist_id && <p className="text-xs text-muted-foreground break-words">{artists.find(a => a.id === setlist.artist_id)?.name}</p>}
                   <p className="text-xs text-muted-foreground">{setlist.songs?.length || 0} chanson(s)</p>
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 self-end sm:self-auto shrink-0">
                   <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setSelectedSetlist(setlist); }} title="Voir"><Eye className="h-4 w-4" /></Button>
                   <Button variant="ghost" size="sm" onClick={async (e) => { e.stopPropagation(); const r = await duplicateSetlist(setlist.id); if (r) setSelectedSetlist(r as Setlist); }} title="Dupliquer"><Copy className="h-4 w-4" /></Button>
                   <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); deleteSetlist(setlist.id); }} title="Supprimer"><Trash2 className="h-4 w-4 text-destructive" /></Button>
