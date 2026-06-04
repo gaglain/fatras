@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -134,7 +134,7 @@ const MediaPreview: React.FC<{ image: BackgroundImage; variant: 'thumb' | 'dialo
     });
   }, [image.id, image.url, image.bucket_name, image.file_path]);
 
-  const trySignedUrl = async () => {
+  const trySignedUrl = useCallback(async () => {
     if (triedSignedUrl) {
       setFailed(true);
       return;
@@ -153,7 +153,7 @@ const MediaPreview: React.FC<{ image: BackgroundImage; variant: 'thumb' | 'dialo
       setFailed(false);
     }
     else setFailed(true);
-  };
+  }, [image, triedSignedUrl]);
 
   const fallback = (
     <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-muted p-3 text-center">
