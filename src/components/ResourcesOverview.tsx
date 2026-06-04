@@ -314,7 +314,11 @@ export const ResourcesOverview: React.FC<ResourcesOverviewProps> = ({ onNavigate
           ) : (
             <>
               {recentDocs.map(doc => (
-                <div key={doc.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-accent/20 border">
+                <button
+                  key={doc.id}
+                  onClick={() => onNavigate('documents')}
+                  className="w-full text-left flex items-center gap-3 p-2 rounded-lg hover:bg-accent/20 border transition"
+                >
                   <div className="h-10 w-10 rounded bg-primary/10 flex items-center justify-center shrink-0">
                     <FileText className="h-5 w-5 text-primary" />
                   </div>
@@ -326,7 +330,7 @@ export const ResourcesOverview: React.FC<ResourcesOverviewProps> = ({ onNavigate
                       <span>{doc.category}</span>
                     </div>
                   </div>
-                </div>
+                </button>
               ))}
               <div className="text-xs text-muted-foreground text-center pt-2 border-t">
                 {documents.length} document{documents.length > 1 ? 's' : ''} au total
