@@ -11,6 +11,7 @@ export interface RoadshowExpense {
   title: string;
   description?: string;
   amount?: number;
+  tax_rate?: number;
   file_url: string;
   file_type: 'image' | 'pdf';
   created_at: string;
