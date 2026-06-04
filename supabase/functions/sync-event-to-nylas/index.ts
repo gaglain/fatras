@@ -326,60 +326,86 @@ Deno.serve(async (req) => {
       console.log(`💰 Quote found: ${quoteAmount} € (${quote.status})`)
     }
 
-    // Load route sheet if route_sheet_id exists (for any synced status)
+    // Load route sheet — ALWAYS prefer the stop that belongs to this event (by event_id),
+    // never trust events.route_sheet_id alone because it can become stale or shared between
+    // events after deduplication, which causes one event's roadmap to leak onto another.
     let description: string
+    let routeSheet: any = null
 
-    if (event.route_sheet_id) {
-      console.log(`📋 Loading route sheet ${event.route_sheet_id} for event (status: ${status})`)
-      const { data: routeSheet, error: rsError } = await supabase
+    // 1) Look up by roadshow_stops.event_id (most reliable, scoped to this event)
+    const { data: stopsByEvent, error: rsByEventError } = await supabase
+      .from('roadshow_stops')
+      .select('*')
+      .eq('event_id', event_id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+
+    if (rsByEventError) {
+      console.error('Route sheet lookup by event_id error:', rsByEventError)
+    }
+
+    if (stopsByEvent && stopsByEvent.length > 0) {
+      routeSheet = stopsByEvent[0]
+      console.log(`📋 Route sheet found via event_id: ${routeSheet.id} (${routeSheet.venue || routeSheet.city || 'no venue/city'})`)
+
+      // Self-heal: if events.route_sheet_id is stale or shared with another event, fix it.
+      if (event.route_sheet_id !== routeSheet.id) {
+        console.log(`🔧 Repairing stale route_sheet_id: ${event.route_sheet_id} → ${routeSheet.id}`)
+        await supabase.from('events').update({ route_sheet_id: routeSheet.id }).eq('id', event_id)
+      }
+    } else if (event.route_sheet_id) {
+      // 2) Fallback to events.route_sheet_id ONLY if no stop is linked by event_id,
+      // and validate that the stop is not bound to a different event.
+      const { data: rsById } = await supabase
         .from('roadshow_stops')
         .select('*')
         .eq('id', event.route_sheet_id)
         .single()
 
-      if (rsError) {
-        console.error('Route sheet fetch error:', rsError)
+      if (rsById && (!rsById.event_id || rsById.event_id === event_id)) {
+        routeSheet = rsById
+        console.log(`📋 Route sheet found via route_sheet_id: ${rsById.id}`)
+      } else if (rsById) {
+        console.warn(`⚠️ route_sheet_id ${event.route_sheet_id} belongs to event ${rsById.event_id}, ignoring to prevent data leak`)
+        await supabase.from('events').update({ route_sheet_id: null }).eq('id', event_id)
       }
+    }
 
-      if (routeSheet) {
-        console.log(`📋 Route sheet found: ${routeSheet.venue || routeSheet.city || 'no venue/city'}`)
-        
-        // Resolve crew UUIDs to names
-        let crewNames: string[] = []
-        const crewIds = routeSheet.crew as string[] | undefined
-        if (crewIds && crewIds.length > 0) {
-          const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-          const areUuids = crewIds.every((id: string) => uuidPattern.test(id))
-          
-          if (areUuids) {
-            const { data: profiles } = await supabase
-              .from('user_profiles')
-              .select('user_id, first_name, last_name, function_title')
-              .in('user_id', crewIds)
-            
-            if (profiles && profiles.length > 0) {
-              const profileMap = new Map(profiles.map((p: any) => [p.user_id, p]))
-              crewNames = crewIds.map((id: string) => {
-                const p = profileMap.get(id)
-                if (p) {
-                  const name = [p.first_name, p.last_name].filter(Boolean).join(' ') || 'Membre'
-                  return p.function_title ? `${name} (${p.function_title})` : name
-                }
-                return id
-              })
-              console.log(`👥 Resolved ${crewNames.length} crew members`)
-            }
+    if (routeSheet) {
+      // Resolve crew UUIDs to names
+      let crewNames: string[] = []
+      const crewIds = routeSheet.crew as string[] | undefined
+      if (crewIds && crewIds.length > 0) {
+        const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+        const areUuids = crewIds.every((id: string) => uuidPattern.test(id))
+
+        if (areUuids) {
+          const { data: profiles } = await supabase
+            .from('user_profiles')
+            .select('user_id, first_name, last_name, function_title')
+            .in('user_id', crewIds)
+
+          if (profiles && profiles.length > 0) {
+            const profileMap = new Map(profiles.map((p: any) => [p.user_id, p]))
+            crewNames = crewIds.map((id: string) => {
+              const p = profileMap.get(id)
+              if (p) {
+                const name = [p.first_name, p.last_name].filter(Boolean).join(' ') || 'Membre'
+                return p.function_title ? `${name} (${p.function_title})` : name
+              }
+              return id
+            })
+            console.log(`👥 Resolved ${crewNames.length} crew members`)
           }
         }
-        
-        description = buildRouteSheetDescription(event, routeSheet as RouteSheet, quoteAmount, crewNames)
-      } else {
-        console.log(`📋 No route sheet found for id ${event.route_sheet_id}`)
-        description = buildGenericDescription(event)
       }
+
+      description = buildRouteSheetDescription(event, routeSheet as RouteSheet, quoteAmount, crewNames)
     } else {
+      console.log(`📋 No route sheet found for event ${event_id}`)
       description = buildGenericDescription(event)
     }
+
 
     // Build full location string
     const locationParts: string[] = []
