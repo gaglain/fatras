@@ -314,6 +314,14 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
                                       <div className="prose prose-sm max-w-none text-muted-foreground mt-2 bg-muted/50 p-2 rounded [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5" dangerouslySetInnerHTML={{ __html: song.lyrics }} />
                                     </details>
                                   )}
+                                  {(song as any).audio_url && (
+                                    <div className="mt-2 space-y-1">
+                                      <audio controls src={(song as any).audio_url} className="w-full" preload="metadata" />
+                                      <a href={(song as any).audio_url} download={(song as any).audio_name || ''} className="text-xs text-primary hover:underline inline-flex items-center gap-1">
+                                        <FileDown className="h-3 w-3" />Télécharger{(song as any).audio_name ? ` (${(song as any).audio_name})` : ''}
+                                      </a>
+                                    </div>
+                                  )}
                                 </div>
                                 <div className="hidden sm:flex gap-1 shrink-0">
                                   <Button variant="ghost" size="sm" onClick={() => setPreviewSong(song)} title="Aperçu plein écran"><Eye className="h-4 w-4" /></Button>
