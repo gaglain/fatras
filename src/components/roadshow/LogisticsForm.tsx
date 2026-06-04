@@ -134,7 +134,7 @@ export const LogisticsForm: React.FC<LogisticsFormProps> = ({ formData, setFormD
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs font-medium text-muted-foreground mb-1">Heure de départ</label>
+          <label className="block text-xs font-medium text-muted-foreground mb-1">Départ après le spectacle</label>
           <Input
             type="time"
             value={formData.departureTime}
