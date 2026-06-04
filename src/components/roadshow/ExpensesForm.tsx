@@ -182,18 +182,52 @@ export const ExpensesForm: React.FC<ExpensesFormProps> = ({ roadshowStopId }) =>
                 placeholder="Détails supplémentaires..."
               />
             </div>
-            <div>
-              <Label htmlFor="amount">Montant (€)</Label>
-              <Input
-                id="amount"
-                type="number"
-                step="0.01"
-                inputMode="decimal"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="0.00"
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="amount">Montant TTC (€)</Label>
+                <Input
+                  id="amount"
+                  type="number"
+                  step="0.01"
+                  inputMode="decimal"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder="0.00"
+                />
+              </div>
+              <div>
+                <Label htmlFor="taxRate">TVA (%)</Label>
+                <Input
+                  id="taxRate"
+                  type="number"
+                  step="0.1"
+                  inputMode="decimal"
+                  value={taxRate}
+                  onChange={(e) => setTaxRate(e.target.value)}
+                  placeholder="20"
+                />
+              </div>
             </div>
+            {amount && !isNaN(parseFloat(amount)) && (
+              <div className="rounded-md border border-border bg-muted/30 p-3 text-sm space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Montant HT</span>
+                  <span className="font-medium">
+                    {(parseFloat(amount) / (1 + (parseFloat(taxRate || '0') || 0) / 100)).toFixed(2)} €
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">TVA ({taxRate || 0}%)</span>
+                  <span className="font-medium">
+                    {(parseFloat(amount) - parseFloat(amount) / (1 + (parseFloat(taxRate || '0') || 0) / 100)).toFixed(2)} €
+                  </span>
+                </div>
+                <div className="flex justify-between border-t border-border pt-1">
+                  <span className="text-muted-foreground">Montant TTC</span>
+                  <span className="font-semibold">{parseFloat(amount).toFixed(2)} €</span>
+                </div>
+              </div>
+            )}
             <div>
               <Label htmlFor="file">Fichier (Image ou PDF) *</Label>
               <Input
