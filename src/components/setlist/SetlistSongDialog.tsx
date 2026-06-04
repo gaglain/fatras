@@ -108,6 +108,13 @@ export const SetlistSongDialog: React.FC<SetlistSongDialogProps> = ({
           <Label>N° SACEM</Label>
           <Input value={newSongData.sacem_number} onChange={(e) => onNewSongDataChange({ ...newSongData, sacem_number: e.target.value })} placeholder="ex: 1234567890" />
         </div>
+        <div className="col-span-2">
+          <SongAudioField
+            audioUrl={newSongData.audio_url || ''}
+            audioName={newSongData.audio_name || ''}
+            onChange={(url, name) => onNewSongDataChange({ ...newSongData, audio_url: url, audio_name: name })}
+          />
+        </div>
       </div>
       <Button onClick={isEditMode ? onUpdateSong : onAddSong} className="w-full">
         {isEditMode ? 'Enregistrer' : 'Ajouter'}
