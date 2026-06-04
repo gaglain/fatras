@@ -11,6 +11,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Search, Plus, Library, FileText } from 'lucide-react';
 import { LibrarySong } from '@/hooks/useShowBibleSetlists';
 import { SongRichTextEditor } from './SongRichTextEditor';
+import { SongAudioField } from './SongAudioField';
 
 const TONALITIES = ['C', 'C#/Db', 'D', 'D#/Eb', 'E', 'F', 'F#/Gb', 'G', 'G#/Ab', 'A', 'A#/Bb', 'B'];
 const TONALITY_MODES = ['Majeur', 'Mineur'];
@@ -23,6 +24,8 @@ interface SongFormData {
   bpm: string;
   lyrics: string;
   sacem_number: string;
+  audio_url: string;
+  audio_name: string;
 }
 
 interface SetlistSongDialogProps {
