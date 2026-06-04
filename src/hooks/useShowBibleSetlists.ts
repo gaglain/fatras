@@ -14,6 +14,7 @@ export interface SetlistSong {
   id: string; setlist_id: string; title: string; duration: string | null;
   position: number; notes: string | null; tonality: string | null;
   bpm: number | null; lyrics: string | null; library_song_id: string | null;
+  audio_url: string | null; audio_name: string | null;
   created_at: string; updated_at: string;
 }
 
@@ -28,6 +29,7 @@ export interface LibrarySong {
   id: string; user_id: string; artist_id: string | null; title: string;
   duration: string | null; notes: string | null; tonality: string | null;
   bpm: number | null; lyrics: string | null; sacem_number: string | null;
+  audio_url: string | null; audio_name: string | null;
   created_at: string; updated_at: string;
 }
 
