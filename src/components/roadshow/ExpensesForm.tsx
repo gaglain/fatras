@@ -105,7 +105,10 @@ export const ExpensesForm: React.FC<ExpensesFormProps> = ({ roadshowStopId }) =>
         </Button>
       </div>
 
+      <ExpensesSummaryBlock stopId={roadshowStopId} expenses={expenses} />
+
       <div className="grid gap-3 grid-cols-1 md:grid-cols-2">
+
         {expenses.map((expense) => (
           <Card key={expense.id}>
             <CardContent className="p-4">
