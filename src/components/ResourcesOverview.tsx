@@ -171,16 +171,24 @@ export const ResourcesOverview: React.FC<ResourcesOverviewProps> = ({ onNavigate
           ) : (
             <>
               {pinnedNotes.map(note => (
-                <div key={note.id} className="flex items-start gap-2 p-2 rounded-lg bg-accent/30 border border-accent">
+                <button
+                  key={note.id}
+                  onClick={() => onNavigate('notes')}
+                  className="w-full text-left flex items-start gap-2 p-2 rounded-lg bg-accent/30 border border-accent hover:bg-accent/50 transition"
+                >
                   <Pin className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate">{note.title}</p>
                     <p className="text-xs text-muted-foreground line-clamp-1">{note.content}</p>
                   </div>
-                </div>
+                </button>
               ))}
               {recentNotes.map(note => (
-                <div key={note.id} className="flex items-start gap-2 p-2 rounded-lg hover:bg-accent/20">
+                <button
+                  key={note.id}
+                  onClick={() => onNavigate('notes')}
+                  className="w-full text-left flex items-start gap-2 p-2 rounded-lg hover:bg-accent/20 transition"
+                >
                   <FileText className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate">{note.title}</p>
@@ -189,7 +197,7 @@ export const ResourcesOverview: React.FC<ResourcesOverviewProps> = ({ onNavigate
                       <span>{formatDate(note.updated_at)}</span>
                     </div>
                   </div>
-                </div>
+                </button>
               ))}
               <div className="text-xs text-muted-foreground text-center pt-2 border-t">
                 {notes.length} note{notes.length > 1 ? 's' : ''} au total
