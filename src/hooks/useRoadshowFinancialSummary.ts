@@ -57,7 +57,7 @@ export const useRoadshowFinancialSummary = (
       // Fetch all expenses for all stops
       const { data: expenses, error: expError } = await supabase
         .from('roadshow_expenses')
-        .select('roadshow_stop_id, amount')
+        .select('roadshow_stop_id, amount, tax_rate')
         .in('roadshow_stop_id', stopIds);
 
       if (expError) throw expError;
