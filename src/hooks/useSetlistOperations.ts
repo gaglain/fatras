@@ -80,6 +80,8 @@ export async function duplicateSetlistOp(userId: string, id: string) {
       bpm: s.bpm,
       lyrics: s.lyrics,
       library_song_id: s.library_song_id,
+      audio_url: (s as any).audio_url || null,
+      audio_name: (s as any).audio_name || null,
       position: idx,
     }));
     const { error: songInsErr } = await supabase.from('show_bible_setlist_songs').insert(rows);
