@@ -157,6 +157,7 @@ export const useRoadshowFinancialSummary = (
 
       // Global
       const totExp = activeSummaries.reduce((a, s) => a + s.totalExpenses, 0);
+      const totExpHT = activeSummaries.reduce((a, s) => a + s.totalExpensesHT, 0);
       const totQuotes = activeSummaries.reduce((a, s) => a + s.totalQuotes, 0);
       const totTravel = activeSummaries.reduce((a, s) => a + s.travelCost, 0);
       const totCosts = totExp + totTravel;
@@ -164,6 +165,7 @@ export const useRoadshowFinancialSummary = (
 
       setGlobalSummary({
         totalExpenses: totExp,
+        totalExpensesHT: totExpHT,
         totalQuotes: totQuotes,
         totalTravelCosts: totTravel,
         totalCosts: totCosts,
