@@ -10,6 +10,8 @@ import { useRoadshowExpenses, RoadshowExpense } from '@/hooks/useRoadshowExpense
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useConfirm } from '@/components/ui/confirm-dialog';
 import { ExpenseFileLink } from './ExpenseFileLink';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface ExpensesFormProps {
   roadshowStopId?: string;
