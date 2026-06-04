@@ -40,6 +40,7 @@ export const useRoadshowFinancialSummary = (
   const [stopSummaries, setStopSummaries] = useState<StopFinancialSummary[]>([]);
   const [globalSummary, setGlobalSummary] = useState<GlobalFinancialSummary>({
     totalExpenses: 0,
+    totalExpensesHT: 0,
     totalQuotes: 0,
     totalTravelCosts: 0,
     totalCosts: 0,
