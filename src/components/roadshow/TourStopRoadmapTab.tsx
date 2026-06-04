@@ -123,7 +123,7 @@ export const TourStopRoadmapTab: React.FC<TourStopRoadmapTabProps> = ({
             {stop.showStartTime && <div><span className="text-[10px] sm:text-xs text-muted-foreground uppercase">Début show: </span><span className="text-xs sm:text-sm font-medium text-foreground">{stop.showStartTime}</span></div>}
             <div><span className="text-[10px] sm:text-xs text-muted-foreground uppercase">Spectacle: </span><span className="text-xs sm:text-sm font-medium text-foreground">{stop.time || '-'}</span></div>
             {stop.showEndTime && <div><span className="text-[10px] sm:text-xs text-muted-foreground uppercase">Fin show: </span><span className="text-xs sm:text-sm font-medium text-foreground">{stop.showEndTime}</span></div>}
-            {stop.curfewTime && <div><span className="text-[10px] sm:text-xs text-muted-foreground uppercase">Couvre-feu: </span><span className="text-xs sm:text-sm font-medium text-foreground">{stop.curfewTime}</span></div>}
+            {stop.curfewTime && <div><span className="text-[10px] sm:text-xs text-muted-foreground uppercase">Fin de l'évènement: </span><span className="text-xs sm:text-sm font-medium text-foreground">{stop.curfewTime}</span></div>}
             {(stop.mealTime || stop.mealLocation) && <div><span className="text-[10px] sm:text-xs text-muted-foreground uppercase">🍽️ Repas: </span><span className="text-xs sm:text-sm font-medium text-foreground">{stop.mealTime || ''}{stop.mealLocation ? ` — ${stop.mealLocation}` : ''}</span></div>}
             {stop.departureTime && <div><span className="text-[10px] sm:text-xs text-muted-foreground uppercase">Départ: </span><span className="text-xs sm:text-sm font-medium text-foreground">{stop.departureTime}</span></div>}
           </div>
