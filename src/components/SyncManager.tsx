@@ -124,11 +124,12 @@ export const SyncManager: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <Button 
               variant="outline" 
               onClick={handleManualEmailSync}
               disabled={emailSyncLoading}
+              className="w-full sm:w-auto"
             >
               {emailSyncLoading ? 'Synchronisation...' : 'Synchroniser maintenant'}
             </Button>
@@ -136,10 +137,12 @@ export const SyncManager: React.FC = () => {
               variant="outline" 
               onClick={testImapConnection}
               disabled={emailSyncLoading}
+              className="w-full sm:w-auto"
             >
               Tester la connexion IMAP
             </Button>
           </div>
+
 
           {emailTask?.last_sync_at && (
             <div className="text-sm text-muted-foreground">
