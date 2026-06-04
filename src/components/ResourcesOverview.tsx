@@ -171,16 +171,24 @@ export const ResourcesOverview: React.FC<ResourcesOverviewProps> = ({ onNavigate
           ) : (
             <>
               {pinnedNotes.map(note => (
-                <div key={note.id} className="flex items-start gap-2 p-2 rounded-lg bg-accent/30 border border-accent">
+                <button
+                  key={note.id}
+                  onClick={() => onNavigate('notes')}
+                  className="w-full text-left flex items-start gap-2 p-2 rounded-lg bg-accent/30 border border-accent hover:bg-accent/50 transition"
+                >
                   <Pin className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate">{note.title}</p>
                     <p className="text-xs text-muted-foreground line-clamp-1">{note.content}</p>
                   </div>
-                </div>
+                </button>
               ))}
               {recentNotes.map(note => (
-                <div key={note.id} className="flex items-start gap-2 p-2 rounded-lg hover:bg-accent/20">
+                <button
+                  key={note.id}
+                  onClick={() => onNavigate('notes')}
+                  className="w-full text-left flex items-start gap-2 p-2 rounded-lg hover:bg-accent/20 transition"
+                >
                   <FileText className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate">{note.title}</p>
@@ -189,7 +197,7 @@ export const ResourcesOverview: React.FC<ResourcesOverviewProps> = ({ onNavigate
                       <span>{formatDate(note.updated_at)}</span>
                     </div>
                   </div>
-                </div>
+                </button>
               ))}
               <div className="text-xs text-muted-foreground text-center pt-2 border-t">
                 {notes.length} note{notes.length > 1 ? 's' : ''} au total
@@ -222,7 +230,11 @@ export const ResourcesOverview: React.FC<ResourcesOverviewProps> = ({ onNavigate
           ) : (
             <>
               {recentSetlists.map(setlist => (
-                <div key={setlist.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-accent/20 border">
+                <button
+                  key={setlist.id}
+                  onClick={() => onNavigate('setlists')}
+                  className="w-full text-left flex items-center justify-between p-2 rounded-lg hover:bg-accent/20 border transition"
+                >
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate">{setlist.title}</p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -234,7 +246,7 @@ export const ResourcesOverview: React.FC<ResourcesOverviewProps> = ({ onNavigate
                       )}
                     </div>
                   </div>
-                </div>
+                </button>
               ))}
               <div className="text-xs text-muted-foreground text-center pt-2 border-t">
                 {setlists.length} setlist{setlists.length > 1 ? 's' : ''} au total
@@ -302,7 +314,11 @@ export const ResourcesOverview: React.FC<ResourcesOverviewProps> = ({ onNavigate
           ) : (
             <>
               {recentDocs.map(doc => (
-                <div key={doc.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-accent/20 border">
+                <button
+                  key={doc.id}
+                  onClick={() => onNavigate('documents')}
+                  className="w-full text-left flex items-center gap-3 p-2 rounded-lg hover:bg-accent/20 border transition"
+                >
                   <div className="h-10 w-10 rounded bg-primary/10 flex items-center justify-center shrink-0">
                     <FileText className="h-5 w-5 text-primary" />
                   </div>
@@ -314,7 +330,7 @@ export const ResourcesOverview: React.FC<ResourcesOverviewProps> = ({ onNavigate
                       <span>{doc.category}</span>
                     </div>
                   </div>
-                </div>
+                </button>
               ))}
               <div className="text-xs text-muted-foreground text-center pt-2 border-t">
                 {documents.length} document{documents.length > 1 ? 's' : ''} au total
