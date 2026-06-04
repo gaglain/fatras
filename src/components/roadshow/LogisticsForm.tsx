@@ -97,7 +97,7 @@ export const LogisticsForm: React.FC<LogisticsFormProps> = ({ formData, setFormD
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1">Couvre-feu</label>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Fin de l'évènement</label>
             <Input
               type="time"
               value={formData.curfewTime || ''}
