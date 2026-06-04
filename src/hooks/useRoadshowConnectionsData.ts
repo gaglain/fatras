@@ -107,5 +107,27 @@ export async function fetchRoadshowConnections(roadshowStopId: string) {
   }
 
   const uniqBy = <T extends RoadshowEntityConnection>(arr: T[]) => Array.from(new Map(arr.map(i => [i.entityId, i])).values());
-  return { contacts: uniqBy(contacts), events: uniqBy(events), quotes: uniqBy(quotes), contracts };
+
+  // Sécurité : ne garder que les devis cohérents avec cet arrêt
+  // (devis canonique du stop OU devis liés à l'un des événements de l'arrêt)
+  const stopEventIds = new Set<string>();
+  const { data: stopEventRow } = await supabase.from('roadshow_stops').select('event_id').eq('id', roadshowStopId).maybeSingle();
+  if (stopEventRow?.event_id) stopEventIds.add(stopEventRow.event_id);
+  events.forEach(e => e.entityId && stopEventIds.add(e.entityId));
+
+  let filteredQuotes = uniqBy(quotes);
+  if (stopEventIds.size > 0 && filteredQuotes.length > 0) {
+    const quoteIds = filteredQuotes.map(q => q.entityId);
+    const { data: quoteRows } = await supabase.from('quotes').select('id, event_id').in('id', quoteIds);
+    const canonicalQuoteId = stopRow?.quote_id || null;
+    const allowedQuoteIds = new Set<string>();
+    (quoteRows || []).forEach((q: any) => {
+      if (q.id === canonicalQuoteId) allowedQuoteIds.add(q.id);
+      else if (q.event_id && stopEventIds.has(q.event_id)) allowedQuoteIds.add(q.id);
+      else if (!q.event_id) allowedQuoteIds.add(q.id);
+    });
+    filteredQuotes = filteredQuotes.filter(q => allowedQuoteIds.has(q.entityId));
+  }
+
+  return { contacts: uniqBy(contacts), events: uniqBy(events), quotes: filteredQuotes, contracts };
 }
