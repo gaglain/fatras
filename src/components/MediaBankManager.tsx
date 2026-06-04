@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import * as pdfjsLib from 'pdfjs-dist';
+import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -16,6 +18,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { MediaBankUploadDialog } from './MediaBankUploadDialog';
 
 interface Artist { id: string; name: string; }
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
 const mediaHasExtension = (image: BackgroundImage, extensions: string[]) => {
   return [image.url, image.name, image.file_path].some((value) => {
@@ -43,6 +47,66 @@ const getInitialMediaUrl = (image: BackgroundImage) => {
   const storageInfo = getStorageInfo(image);
   if (storageInfo) return supabase.storage.from(storageInfo.bucket).getPublicUrl(storageInfo.path).data.publicUrl;
   return image.url;
+};
+
+const PdfCanvasPreview: React.FC<{ url: string; title: string; variant: 'thumb' | 'dialog'; onError: () => void }> = ({ url, title, variant, onError }) => {
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    let loadingTask: pdfjsLib.PDFDocumentLoadingTask | null = null;
+
+    const renderFirstPage = async () => {
+      setLoading(true);
+      setPreviewUrl(null);
+
+      try {
+        loadingTask = pdfjsLib.getDocument({ url, disableStream: true, disableRange: true });
+        const pdf = await loadingTask.promise;
+        if (cancelled) return;
+
+        const page = await pdf.getPage(1);
+        if (cancelled) return;
+
+        const baseViewport = page.getViewport({ scale: 1 });
+        const targetWidth = variant === 'dialog' ? 1100 : 460;
+        const viewport = page.getViewport({ scale: targetWidth / baseViewport.width });
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+
+        if (!context) throw new Error('Canvas indisponible');
+
+        canvas.width = Math.ceil(viewport.width);
+        canvas.height = Math.ceil(viewport.height);
+
+        await page.render({ canvasContext: context, viewport }).promise;
+        if (!cancelled) setPreviewUrl(canvas.toDataURL('image/png'));
+      } catch (error) {
+        if (!cancelled) onError();
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    renderFirstPage();
+
+    return () => {
+      cancelled = true;
+      loadingTask?.destroy();
+    };
+  }, [url, variant, onError]);
+
+  if (previewUrl) {
+    return <img src={previewUrl} alt={title} className={variant === 'dialog' ? 'w-full h-full object-contain' : 'w-full h-full object-contain p-2'} />;
+  }
+
+  return (
+    <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-muted p-3 text-center">
+      <FileText className={variant === 'dialog' ? 'h-16 w-16 text-muted-foreground' : 'h-10 w-10 text-muted-foreground'} />
+      <span className="text-xs text-muted-foreground line-clamp-2 break-all">{loading ? 'Chargement du PDF…' : title}</span>
+    </div>
+  );
 };
 
 const MediaPreview: React.FC<{ image: BackgroundImage; variant: 'thumb' | 'dialog' }> = ({ image, variant }) => {
@@ -111,14 +175,7 @@ const MediaPreview: React.FC<{ image: BackgroundImage; variant: 'thumb' | 'dialo
   }
 
   if (pdfMedia && !failed) {
-    return (
-      <iframe
-        src={`${resolvedUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH&page=1`}
-        title={image.name}
-        className="w-full h-full bg-card"
-        onError={trySignedUrl}
-      />
-    );
+    return <PdfCanvasPreview url={resolvedUrl} title={image.name} variant={variant} onError={trySignedUrl} />;
   }
 
   return fallback;
