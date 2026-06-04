@@ -527,7 +527,7 @@ Deno.serve(async (req) => {
         // If the remote event no longer exists (deleted on Google/Nylas), recreate it.
         if (response.status === 404 || response.status === 410) {
           console.log(`⚠️ Nylas event ${nylas_event_id} missing remotely — recreating.`)
-          const createUrl = `${NYLAS_API_BASE}/grants/${grantId}/events?calendar_id=${encodeURIComponent(calendarId)}`
+          const createUrl = `${NYLAS_API_BASE}/grants/${grantId}/events?calendar_id=${encodeURIComponent(calendarId)}&notify_participants=false`
           const createResp = await fetch(createUrl, {
             method: 'POST',
             headers: {
