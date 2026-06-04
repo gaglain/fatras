@@ -175,6 +175,8 @@ export type Database = {
       artist_songs: {
         Row: {
           artist_id: string | null
+          audio_name: string | null
+          audio_url: string | null
           bpm: number | null
           created_at: string
           duration: string | null
@@ -189,6 +191,8 @@ export type Database = {
         }
         Insert: {
           artist_id?: string | null
+          audio_name?: string | null
+          audio_url?: string | null
           bpm?: number | null
           created_at?: string
           duration?: string | null
@@ -203,6 +207,8 @@ export type Database = {
         }
         Update: {
           artist_id?: string | null
+          audio_name?: string | null
+          audio_url?: string | null
           bpm?: number | null
           created_at?: string
           duration?: string | null
@@ -3640,6 +3646,8 @@ export type Database = {
       }
       show_bible_setlist_songs: {
         Row: {
+          audio_name: string | null
+          audio_url: string | null
           bpm: number | null
           created_at: string
           duration: string | null
@@ -3654,6 +3662,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          audio_name?: string | null
+          audio_url?: string | null
           bpm?: number | null
           created_at?: string
           duration?: string | null
@@ -3668,6 +3678,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          audio_name?: string | null
+          audio_url?: string | null
           bpm?: number | null
           created_at?: string
           duration?: string | null

@@ -1,0 +1,2 @@
+ALTER TABLE public.show_bible_setlist_songs ADD COLUMN IF NOT EXISTS audio_url text, ADD COLUMN IF NOT EXISTS audio_name text;
+ALTER TABLE public.artist_songs ADD COLUMN IF NOT EXISTS audio_url text, ADD COLUMN IF NOT EXISTS audio_name text;
