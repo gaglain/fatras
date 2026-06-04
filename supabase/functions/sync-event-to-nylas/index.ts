@@ -168,6 +168,42 @@ function toUnixTimestamp(dateStr: string): number {
   return Math.floor(new Date(dateStr).getTime() / 1000)
 }
 
+// IMAP grants are email-only in Nylas and cannot access calendars.
+const CALENDAR_CAPABLE_PROVIDERS = ['gmail', 'google', 'outlook', 'microsoft']
+
+async function getCalendarCapableGrantId(supabase: any, userId: string, currentGrantId?: string | null): Promise<string | null> {
+  const { data: accounts, error } = await supabase
+    .from('email_accounts')
+    .select('grant_id, provider, email, is_active, updated_at')
+    .eq('user_id', userId)
+    .not('grant_id', 'is', null)
+    .order('is_active', { ascending: false })
+    .order('updated_at', { ascending: false })
+
+  if (error) {
+    console.error('Could not load Nylas accounts:', error)
+    return currentGrantId || null
+  }
+
+  const currentAccount = accounts?.find((account: any) => account.grant_id === currentGrantId)
+  if (currentAccount && CALENDAR_CAPABLE_PROVIDERS.includes(String(currentAccount.provider || '').toLowerCase())) {
+    return currentGrantId || null
+  }
+
+  const calendarAccount = accounts?.find((account: any) =>
+    CALENDAR_CAPABLE_PROVIDERS.includes(String(account.provider || '').toLowerCase())
+  )
+
+  if (calendarAccount?.grant_id) {
+    if (currentGrantId !== calendarAccount.grant_id) {
+      console.log(`📅 Switching calendar sync grant from ${currentAccount?.provider || 'unknown'} to ${calendarAccount.provider} (${calendarAccount.email})`)
+    }
+    return calendarAccount.grant_id
+  }
+
+  return currentGrantId || null
+}
+
 // Fetch the primary calendar ID for a grant
 async function getPrimaryCalendarId(grantId: string, nylasApiKey: string): Promise<string | null> {
   try {
@@ -239,15 +275,16 @@ Deno.serve(async (req) => {
     }
 
     const { status, nylas_event_id } = event
-    let grantId = grant_id_override || event.nylas_grant_id
+    let grantId = await getCalendarCapableGrantId(supabase, event.user_id, grant_id_override || event.nylas_grant_id)
 
     // If no grant_id configured, try to find one from email_accounts
     if (!grantId) {
       const { data: account } = await supabase
         .from('email_accounts')
-        .select('grant_id')
+        .select('grant_id, provider')
         .eq('user_id', event.user_id)
         .eq('is_active', true)
+        .in('provider', CALENDAR_CAPABLE_PROVIDERS)
         .not('grant_id', 'is', null)
         .limit(1)
         .single()
@@ -271,6 +308,10 @@ Deno.serve(async (req) => {
         JSON.stringify({ success: true, message: 'No sync needed for this status' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       )
+    }
+
+    if (event.nylas_grant_id !== grantId) {
+      await supabase.from('events').update({ nylas_grant_id: grantId }).eq('id', event_id)
     }
 
     // Get primary calendar ID (required by Nylas v3)
