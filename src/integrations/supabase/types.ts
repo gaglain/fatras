@@ -3295,6 +3295,7 @@ export type Database = {
           doors_time: string | null
           dressing_room_address: string | null
           equipment: string[] | null
+          estimated_expenses: number | null
           event_date: string | null
           event_id: string | null
           event_time: string | null
@@ -3347,6 +3348,7 @@ export type Database = {
           doors_time?: string | null
           dressing_room_address?: string | null
           equipment?: string[] | null
+          estimated_expenses?: number | null
           event_date?: string | null
           event_id?: string | null
           event_time?: string | null
@@ -3399,6 +3401,7 @@ export type Database = {
           doors_time?: string | null
           dressing_room_address?: string | null
           equipment?: string[] | null
+          estimated_expenses?: number | null
           event_date?: string | null
           event_id?: string | null
           event_time?: string | null
