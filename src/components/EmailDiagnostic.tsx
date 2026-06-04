@@ -198,8 +198,8 @@ export const EmailDiagnostic: React.FC = () => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex gap-2">
-          <Button onClick={runDiagnostic} disabled={isRunning}>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button onClick={runDiagnostic} disabled={isRunning} className="w-full sm:w-auto">
             {isRunning ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -215,11 +215,13 @@ export const EmailDiagnostic: React.FC = () => {
           <Button 
             variant="outline" 
             onClick={() => window.open('/preferences?tab=email', '_blank')}
+            className="w-full sm:w-auto"
           >
             <Settings className="h-4 w-4 mr-2" />
             Configurer
           </Button>
         </div>
+
 
         {results.length > 0 && (
           <div className="space-y-3">
