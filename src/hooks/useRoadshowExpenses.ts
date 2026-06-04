@@ -11,6 +11,7 @@ export interface RoadshowExpense {
   title: string;
   description?: string;
   amount?: number;
+  tax_rate?: number;
   file_url: string;
   file_type: 'image' | 'pdf';
   created_at: string;
@@ -105,7 +106,8 @@ export const useRoadshowExpenses = (roadshowStopId?: string) => {
     title: string,
     file: File,
     description?: string,
-    amount?: number
+    amount?: number,
+    taxRate?: number
   ) => {
     if (!user) return false;
 
@@ -124,6 +126,7 @@ export const useRoadshowExpenses = (roadshowStopId?: string) => {
           title,
           description,
           amount,
+          tax_rate: taxRate ?? 20,
           file_url: fileUrl,
           file_type: fileType
         });

@@ -22,6 +22,7 @@ export const ExpensesForm: React.FC<ExpensesFormProps> = ({ roadshowStopId }) =>
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
+  const [taxRate, setTaxRate] = useState('20');
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -50,7 +51,8 @@ export const ExpensesForm: React.FC<ExpensesFormProps> = ({ roadshowStopId }) =>
       title,
       selectedFile,
       description,
-      amount ? parseFloat(amount) : undefined
+      amount ? parseFloat(amount) : undefined,
+      taxRate ? parseFloat(taxRate) : 20
     );
 
     if (success) {
@@ -59,6 +61,7 @@ export const ExpensesForm: React.FC<ExpensesFormProps> = ({ roadshowStopId }) =>
       setTitle('');
       setDescription('');
       setAmount('');
+      setTaxRate('20');
       fetchExpenses();
     }
   };
@@ -116,8 +119,14 @@ export const ExpensesForm: React.FC<ExpensesFormProps> = ({ roadshowStopId }) =>
                     {expense.description && (
                       <p className="text-sm text-muted-foreground mt-1">{expense.description}</p>
                     )}
-                    {expense.amount && (
-                      <p className="text-sm font-semibold mt-2">{expense.amount}€</p>
+                    {expense.amount != null && (
+                      <div className="mt-2 text-sm">
+                        <p className="font-semibold">{expense.amount.toFixed(2)} € TTC</p>
+                        <p className="text-xs text-muted-foreground">
+                          {(expense.amount / (1 + (expense.tax_rate ?? 20) / 100)).toFixed(2)} € HT
+                          {' · '}TVA {expense.tax_rate ?? 20}%
+                        </p>
+                      </div>
                     )}
                     <ExpenseFileLink
                       fileUrl={expense.file_url}
@@ -173,18 +182,52 @@ export const ExpensesForm: React.FC<ExpensesFormProps> = ({ roadshowStopId }) =>
                 placeholder="Détails supplémentaires..."
               />
             </div>
-            <div>
-              <Label htmlFor="amount">Montant (€)</Label>
-              <Input
-                id="amount"
-                type="number"
-                step="0.01"
-                inputMode="decimal"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="0.00"
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="amount">Montant TTC (€)</Label>
+                <Input
+                  id="amount"
+                  type="number"
+                  step="0.01"
+                  inputMode="decimal"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder="0.00"
+                />
+              </div>
+              <div>
+                <Label htmlFor="taxRate">TVA (%)</Label>
+                <Input
+                  id="taxRate"
+                  type="number"
+                  step="0.1"
+                  inputMode="decimal"
+                  value={taxRate}
+                  onChange={(e) => setTaxRate(e.target.value)}
+                  placeholder="20"
+                />
+              </div>
             </div>
+            {amount && !isNaN(parseFloat(amount)) && (
+              <div className="rounded-md border border-border bg-muted/30 p-3 text-sm space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Montant HT</span>
+                  <span className="font-medium">
+                    {(parseFloat(amount) / (1 + (parseFloat(taxRate || '0') || 0) / 100)).toFixed(2)} €
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">TVA ({taxRate || 0}%)</span>
+                  <span className="font-medium">
+                    {(parseFloat(amount) - parseFloat(amount) / (1 + (parseFloat(taxRate || '0') || 0) / 100)).toFixed(2)} €
+                  </span>
+                </div>
+                <div className="flex justify-between border-t border-border pt-1">
+                  <span className="text-muted-foreground">Montant TTC</span>
+                  <span className="font-semibold">{parseFloat(amount).toFixed(2)} €</span>
+                </div>
+              </div>
+            )}
             <div>
               <Label htmlFor="file">Fichier (Image ou PDF) *</Label>
               <Input

@@ -2950,6 +2950,7 @@ export type Database = {
           file_url: string
           id: string
           roadshow_stop_id: string
+          tax_rate: number
           title: string
           updated_at: string
           user_id: string
@@ -2962,6 +2963,7 @@ export type Database = {
           file_url: string
           id?: string
           roadshow_stop_id: string
+          tax_rate?: number
           title: string
           updated_at?: string
           user_id: string
@@ -2974,6 +2976,7 @@ export type Database = {
           file_url?: string
           id?: string
           roadshow_stop_id?: string
+          tax_rate?: number
           title?: string
           updated_at?: string
           user_id?: string

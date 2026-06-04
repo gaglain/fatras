@@ -1,0 +1,1 @@
+ALTER TABLE public.roadshow_expenses ADD COLUMN IF NOT EXISTS tax_rate numeric NOT NULL DEFAULT 20;
