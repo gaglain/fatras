@@ -168,6 +168,42 @@ function toUnixTimestamp(dateStr: string): number {
   return Math.floor(new Date(dateStr).getTime() / 1000)
 }
 
+// IMAP grants are email-only in Nylas and cannot access calendars.
+const CALENDAR_CAPABLE_PROVIDERS = ['gmail', 'google', 'outlook', 'microsoft']
+
+async function getCalendarCapableGrantId(supabase: any, userId: string, currentGrantId?: string | null): Promise<string | null> {
+  const { data: accounts, error } = await supabase
+    .from('email_accounts')
+    .select('grant_id, provider, email, is_active, updated_at')
+    .eq('user_id', userId)
+    .not('grant_id', 'is', null)
+    .order('is_active', { ascending: false })
+    .order('updated_at', { ascending: false })
+
+  if (error) {
+    console.error('Could not load Nylas accounts:', error)
+    return currentGrantId || null
+  }
+
+  const currentAccount = accounts?.find((account: any) => account.grant_id === currentGrantId)
+  if (currentAccount && CALENDAR_CAPABLE_PROVIDERS.includes(String(currentAccount.provider || '').toLowerCase())) {
+    return currentGrantId || null
+  }
+
+  const calendarAccount = accounts?.find((account: any) =>
+    CALENDAR_CAPABLE_PROVIDERS.includes(String(account.provider || '').toLowerCase())
+  )
+
+  if (calendarAccount?.grant_id) {
+    if (currentGrantId !== calendarAccount.grant_id) {
+      console.log(`📅 Switching calendar sync grant from ${currentAccount?.provider || 'unknown'} to ${calendarAccount.provider} (${calendarAccount.email})`)
+    }
+    return calendarAccount.grant_id
+  }
+
+  return currentGrantId || null
+}
+
 // Fetch the primary calendar ID for a grant
 async function getPrimaryCalendarId(grantId: string, nylasApiKey: string): Promise<string | null> {
   try {
