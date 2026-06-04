@@ -108,7 +108,7 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
 
   return (
     <>
-      <Card className="hover:shadow-lg transition-shadow">
+      <Card className="hover:shadow-lg transition-shadow overflow-hidden min-w-0 max-w-full">
         <CardHeader className="pb-2 sm:pb-4 px-3 sm:px-6">
           <div className="flex items-start justify-between gap-2">
             <CardTitle className="flex min-w-0 items-center gap-2 text-base sm:text-lg">
@@ -144,7 +144,7 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
 
           {/* RDV équipe */}
           {(stop.meetingPointTime || stop.meetingPointLocation || stop.departureToShowTime) && (
-            <div className="flex flex-wrap gap-2 sm:gap-3 mb-3 text-xs sm:text-sm text-muted-foreground bg-muted/50 rounded-md p-2">
+            <div className="flex flex-wrap gap-2 sm:gap-3 mb-3 text-xs sm:text-sm text-muted-foreground bg-muted/50 rounded-md p-2 break-words">
               {stop.meetingPointTime && <span>📍 RDV: {stop.meetingPointTime}</span>}
               {stop.meetingPointLocation && <span>→ {stop.meetingPointLocation}</span>}
               {stop.departureToShowTime && <span>🚗 Départ spectacle: {stop.departureToShowTime}</span>}
@@ -153,7 +153,7 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
 
           {/* Horaires détaillés */}
           {(stop.checkInTime || stop.departureTime || stop.soundcheckTime || stop.doorsTime || stop.showStartTime || stop.showEndTime || stop.curfewTime || stop.mealTime) && (
-            <div className="flex flex-wrap gap-2 sm:gap-3 mb-3 text-xs sm:text-sm text-muted-foreground">
+            <div className="flex flex-wrap gap-2 sm:gap-3 mb-3 text-xs sm:text-sm text-muted-foreground break-words">
               {stop.checkInTime && <span>🚪 Arrivée: {stop.checkInTime}</span>}
               {stop.soundcheckTime && <span>🎵 Balance: {stop.soundcheckTime}</span>}
               {stop.mealTime && <span>🍽️ Repas: {stop.mealTime}{stop.mealLocation ? ` (${stop.mealLocation})` : ''}</span>}
