@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { Mail } from 'lucide-react';
+
 import { useEmailSender } from '@/hooks/useEmailSender';
 import { supabase } from '@/integrations/supabase/client';
 import { useNylasEmail } from '@/hooks/useNylasEmail';
