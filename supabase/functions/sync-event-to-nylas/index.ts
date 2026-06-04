@@ -75,7 +75,7 @@ function buildRouteSheetDescription(event: any, routeSheet: RouteSheet, quoteAmo
   if (routeSheet.doors_time) timings.push(`  Ouverture portes : ${routeSheet.doors_time}`)
   if (routeSheet.show_start_time) timings.push(`  Début concert : ${routeSheet.show_start_time}`)
   if (routeSheet.show_end_time) timings.push(`  Fin concert : ${routeSheet.show_end_time}`)
-  if (routeSheet.curfew_time) timings.push(`  Couvre-feu : ${routeSheet.curfew_time}`)
+  if (routeSheet.curfew_time) timings.push(`  Fin de l'évènement : ${routeSheet.curfew_time}`)
   if (routeSheet.meal_time) timings.push(`  🍽️ Repas : ${routeSheet.meal_time}${routeSheet.meal_location ? ' - ' + routeSheet.meal_location : ''}`)
   if (routeSheet.departure_time) timings.push(`  Départ : ${routeSheet.departure_time}`)
 
