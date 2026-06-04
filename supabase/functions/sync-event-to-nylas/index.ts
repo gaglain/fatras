@@ -310,6 +310,10 @@ Deno.serve(async (req) => {
       )
     }
 
+    if (event.nylas_grant_id !== grantId) {
+      await supabase.from('events').update({ nylas_grant_id: grantId }).eq('id', event_id)
+    }
+
     // Get primary calendar ID (required by Nylas v3)
     const calendarId = await getPrimaryCalendarId(grantId, nylasApiKey)
     if (!calendarId) {
