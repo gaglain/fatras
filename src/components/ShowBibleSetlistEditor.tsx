@@ -60,7 +60,7 @@ export const ShowBibleSetlistEditor = ({ artistId }: ShowBibleSetlistEditorProps
   const [exportOptions, setExportOptions] = useState({ includeNotes: true, includeLyrics: true });
 
   const [newSetlistData, setNewSetlistData] = useState({ title: '', description: '', artist_id: artistId || '', sacem_program_number: '' });
-  const [newSongData, setNewSongData] = useState<SongFormData>({ title: '', duration: '', notes: '', tonality: '', bpm: '', lyrics: '', sacem_number: '' });
+  const [newSongData, setNewSongData] = useState<SongFormData>({ title: '', duration: '', notes: '', tonality: '', bpm: '', lyrics: '', sacem_number: '', audio_url: '', audio_name: '' });
 
   useEffect(() => {
     const fetchArtists = async () => {
