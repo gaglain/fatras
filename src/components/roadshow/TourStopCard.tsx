@@ -108,7 +108,7 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
 
   return (
     <>
-      <Card className="hover:shadow-lg transition-shadow">
+      <Card className="hover:shadow-lg transition-shadow overflow-hidden min-w-0 max-w-full">
         <CardHeader className="pb-2 sm:pb-4 px-3 sm:px-6">
           <div className="flex items-start justify-between gap-2">
             <CardTitle className="flex min-w-0 items-center gap-2 text-base sm:text-lg">
