@@ -165,30 +165,31 @@ export const EmailTemplateManager: React.FC = () => {
       ) : (
         <div className="grid gap-4">
           {filteredTemplates.map(t => (
-            <Card key={t.id}>
+            <Card key={t.id} className="overflow-hidden min-w-0 max-w-full">
               <CardHeader className="pb-3">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <CardTitle className="text-lg">{t.name}</CardTitle>
+                <div className="flex items-start justify-between flex-wrap gap-2 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap min-w-0 flex-1">
+                    <CardTitle className="text-lg break-words">{t.name}</CardTitle>
                     <Badge variant="outline">{categories.find(c => c.value === t.category)?.label}</Badge>
                     {t.artist_id && artistMap[t.artist_id] && (
-                      <Badge variant="secondary" className="gap-1"><Music className="h-3 w-3" />{artistMap[t.artist_id]}</Badge>
+                      <Badge variant="secondary" className="gap-1 max-w-full"><Music className="h-3 w-3 shrink-0" /><span className="truncate">{artistMap[t.artist_id]}</span></Badge>
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 shrink-0">
                     <Button variant="ghost" size="sm" onClick={() => duplicateTemplate(t.id)} title="Dupliquer"><Copy className="h-4 w-4" /></Button>
                     <Button variant="ghost" size="sm" onClick={() => handleEdit(t)}><Edit2 className="h-4 w-4" /></Button>
                     <Button variant="ghost" size="sm" onClick={() => handleDelete(t.id)}><Trash2 className="h-4 w-4" /></Button>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm font-medium mb-2">Objet: {t.subject}</p>
-                <p className="text-sm text-muted-foreground line-clamp-3">{t.content}</p>
+              <CardContent className="min-w-0">
+                <p className="text-sm font-medium mb-2 break-words">Objet: {t.subject}</p>
+                <p className="text-sm text-muted-foreground line-clamp-3 break-all">{t.content.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').trim()}</p>
                 {t.variables.length > 0 && <div className="mt-3 flex flex-wrap gap-1">{t.variables.map(v => <Badge key={v} variant="secondary" className="text-xs">{`{{${v}}}`}</Badge>)}</div>}
                 {t.attachments?.length > 0 && <p className="mt-3 text-xs text-muted-foreground">{t.attachments.length} pièce(s) jointe(s)</p>}
               </CardContent>
             </Card>
+
           ))}
         </div>
       )}
