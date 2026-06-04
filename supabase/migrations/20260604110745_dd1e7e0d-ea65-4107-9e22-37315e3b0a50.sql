@@ -1,0 +1,1 @@
+DELETE FROM public.roadshow_stop_quotes WHERE id='1fe2c1d9-657d-441d-955b-b16c047075fb';
