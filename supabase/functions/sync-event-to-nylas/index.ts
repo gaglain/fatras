@@ -75,7 +75,7 @@ function buildRouteSheetDescription(event: any, routeSheet: RouteSheet, quoteAmo
   if (routeSheet.doors_time) timings.push(`  Ouverture portes : ${routeSheet.doors_time}`)
   if (routeSheet.show_start_time) timings.push(`  Début concert : ${routeSheet.show_start_time}`)
   if (routeSheet.show_end_time) timings.push(`  Fin concert : ${routeSheet.show_end_time}`)
-  if (routeSheet.curfew_time) timings.push(`  Couvre-feu : ${routeSheet.curfew_time}`)
+  if (routeSheet.curfew_time) timings.push(`  Fin de l'évènement : ${routeSheet.curfew_time}`)
   if (routeSheet.meal_time) timings.push(`  🍽️ Repas : ${routeSheet.meal_time}${routeSheet.meal_location ? ' - ' + routeSheet.meal_location : ''}`)
   if (routeSheet.departure_time) timings.push(`  Départ : ${routeSheet.departure_time}`)
 
@@ -509,7 +509,7 @@ Deno.serve(async (req) => {
     } else {
       // Update existing Nylas event
       console.log(`Updating Nylas event ${nylas_event_id} for "${event.title}"...`)
-      const url = `${NYLAS_API_BASE}/grants/${grantId}/events/${nylas_event_id}?calendar_id=${encodeURIComponent(calendarId)}`
+      const url = `${NYLAS_API_BASE}/grants/${grantId}/events/${nylas_event_id}?calendar_id=${encodeURIComponent(calendarId)}&notify_participants=false`
       const response = await fetch(url, {
         method: 'PUT',
         headers: {
@@ -527,7 +527,7 @@ Deno.serve(async (req) => {
         // If the remote event no longer exists (deleted on Google/Nylas), recreate it.
         if (response.status === 404 || response.status === 410) {
           console.log(`⚠️ Nylas event ${nylas_event_id} missing remotely — recreating.`)
-          const createUrl = `${NYLAS_API_BASE}/grants/${grantId}/events?calendar_id=${encodeURIComponent(calendarId)}`
+          const createUrl = `${NYLAS_API_BASE}/grants/${grantId}/events?calendar_id=${encodeURIComponent(calendarId)}&notify_participants=false`
           const createResp = await fetch(createUrl, {
             method: 'POST',
             headers: {
