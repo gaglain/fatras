@@ -160,7 +160,7 @@ export const TourStopCard: React.FC<TourStopCardProps> = ({
               {stop.doorsTime && <span>🚪 Portes: {stop.doorsTime}</span>}
               {stop.showStartTime && <span>🎭 Début: {stop.showStartTime}</span>}
               {stop.showEndTime && <span>🏁 Fin: {stop.showEndTime}</span>}
-              {stop.curfewTime && <span>⏰ Couvre-feu: {stop.curfewTime}</span>}
+              {stop.curfewTime && <span>⏰ Fin de l'évènement: {stop.curfewTime}</span>}
               {stop.departureTime && <span>🚌 Départ: {stop.departureTime}</span>}
             </div>
           )}
